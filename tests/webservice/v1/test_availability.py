@@ -109,3 +109,26 @@ class TestAvailabilityURLValidation:
         response = client.get("/v1/feedstocks/availability/resources/wheat_straw")
         # Should be 404 because the route requires geoid
         assert response.status_code in [404, 405]  # 405 Method Not Allowed is also acceptable
+
+
+class TestAvailabilityDiscovery:
+    """Tests for availability discovery endpoints."""
+
+    def test_discovery_resources(self, client: TestClient, test_availability_data):
+        response = client.get("/v1/feedstocks/availability/resources")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+        assert len(body["values"]) > 0
+        assert "wheat_straw" in body["values"]
+        assert "rice_straw" in body["values"]
+
+    def test_discovery_geoids(self, client: TestClient, test_availability_data):
+        response = client.get("/v1/feedstocks/availability/geoids")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+        assert len(body["values"]) > 0
+        assert "06067" in body["values"]

@@ -162,3 +162,30 @@ class TestAnalysisURLValidation:
         )
         # Should return 404 because resource name doesn't match
         assert response.status_code == 404
+
+
+class TestAnalysisDiscovery:
+    """Tests for analysis discovery endpoints."""
+
+    def test_discovery_resources(self, client: TestClient, test_analysis_data):
+        response = client.get("/v1/feedstocks/analysis/resources")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+        assert len(body["values"]) > 0
+
+    def test_discovery_geoids(self, client: TestClient, test_analysis_data):
+        response = client.get("/v1/feedstocks/analysis/geoids")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+
+    def test_discovery_parameters(self, client: TestClient, test_analysis_data):
+        response = client.get("/v1/feedstocks/analysis/parameters")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+        assert len(body["values"]) > 0

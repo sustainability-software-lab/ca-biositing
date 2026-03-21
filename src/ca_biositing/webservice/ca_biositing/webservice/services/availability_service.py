@@ -86,3 +86,24 @@ class AvailabilityService:
             "from_month": availability.from_month,
             "to_month": availability.to_month,
         }
+
+    @staticmethod
+    def list_resources(session: Session) -> list[str]:
+        """Return distinct resource names that have availability data."""
+        stmt = (
+            select(Resource.name)
+            .join(ResourceAvailability, ResourceAvailability.resource_id == Resource.id)
+            .distinct()
+            .order_by(Resource.name)
+        )
+        return [r for (r,) in session.execute(stmt).all()]
+
+    @staticmethod
+    def list_geoids(session: Session) -> list[str]:
+        """Return distinct geoids that have availability data."""
+        stmt = (
+            select(ResourceAvailability.geoid)
+            .distinct()
+            .order_by(ResourceAvailability.geoid)
+        )
+        return [g for (g,) in session.execute(stmt).all()]

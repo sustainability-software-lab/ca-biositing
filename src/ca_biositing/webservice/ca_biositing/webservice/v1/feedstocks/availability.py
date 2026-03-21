@@ -13,9 +13,36 @@ from ca_biositing.webservice.dependencies import SessionDep
 from ca_biositing.webservice.services.availability_service import AvailabilityService
 from ca_biositing.webservice.v1.feedstocks.schemas import (
     AvailabilityResponse,
+    DiscoveryResponse,
 )
 
 router = APIRouter(prefix="/availability", tags=["Availability"])
+
+
+@router.get("/resources", response_model=DiscoveryResponse)
+def list_availability_resources(session: SessionDep) -> DiscoveryResponse:
+    """List all distinct resource names that have availability data.
+
+    Example:
+        GET /v1/feedstocks/availability/resources
+
+    Returns:
+        DiscoveryResponse with list of resource name strings
+    """
+    return DiscoveryResponse(values=AvailabilityService.list_resources(session))
+
+
+@router.get("/geoids", response_model=DiscoveryResponse)
+def list_availability_geoids(session: SessionDep) -> DiscoveryResponse:
+    """List all distinct geoids that have availability data.
+
+    Example:
+        GET /v1/feedstocks/availability/geoids
+
+    Returns:
+        DiscoveryResponse with list of geoid strings
+    """
+    return DiscoveryResponse(values=AvailabilityService.list_geoids(session))
 
 
 @router.get(
@@ -24,7 +51,7 @@ router = APIRouter(prefix="/availability", tags=["Availability"])
 )
 def get_availability_by_resource(
     session: SessionDep,
-    resource: str = Path(..., description="Resource name (e.g., almond_hulls, corn_stover)"),
+    resource: str = Path(..., description="Resource name (e.g., almond hulls, corn stover whole). Use GET /v1/feedstocks/availability/resources to discover available values."),
     geoid: str = Path(..., description="Geographic identifier (e.g., 06001)"),
 ) -> AvailabilityResponse:
     """Get seasonal availability window for a specific resource and geographic area.
@@ -32,7 +59,7 @@ def get_availability_by_resource(
     Returns the months during which the resource is available for harvest/collection.
 
     Example:
-        GET /v1/feedstocks/availability/resources/almond_hulls/geoid/06001
+        GET /v1/feedstocks/availability/resources/almond hulls/geoid/06001
 
     Args:
         session: Database session (injected)

@@ -7,6 +7,9 @@ These tests require a running server with seeded data. Run with:
     pytest src/ca_biositing/webservice/tests/test_smoke.py -m integration -v
 """
 
+import os
+
+import httpx
 import pytest
 
 
@@ -119,25 +122,26 @@ def test_discovery_survey_parameters(client):
 
 @pytest.mark.integration
 def test_smoke_analysis_endpoints(client):
-    """Smoke test analysis data endpoints using values from discovery.
-
-    FAILS with a descriptive message if analysis_data_view has 0 geoids (known bug).
-    Will pass automatically once the view bug is resolved.
-    """
+    """Smoke test analysis data endpoints using values from discovery."""
     resources = client.get("/v1/feedstocks/analysis/resources").json()["values"]
     geoids = client.get("/v1/feedstocks/analysis/geoids").json()["values"]
-    parameters = client.get("/v1/feedstocks/analysis/parameters").json()["values"]
 
-    if not geoids:
-        pytest.fail(
-            "Analysis data endpoints: 0 geoids available in analysis_data_view "
-            "(known data issue — geoids are NULL). "
-            "Will pass once the analysis view geoid bug is resolved."
-        )
+    assert resources, "No resources returned by analysis discovery"
+    assert geoids, "No geoids returned by analysis discovery — ETL data may be missing"
 
-    resource = resources[0]
-    geoid = geoids[0]
-    parameter = parameters[0]
+    # Find a resource+geoid combo that actually has data
+    resource, geoid, parameter = None, None, None
+    for r in resources[:10]:
+        for g in geoids[:10]:
+            list_resp = client.get(f"/v1/feedstocks/analysis/resources/{r}/geoid/{g}/parameters")
+            if list_resp.status_code == 200 and list_resp.json().get("data"):
+                resource, geoid = r, g
+                parameter = list_resp.json()["data"][0]["parameter"]
+                break
+        if resource:
+            break
+
+    assert resource, "Could not find any resource+geoid combo with analysis data"
 
     resp = client.get(
         f"/v1/feedstocks/analysis/resources/{resource}/geoid/{geoid}/parameters/{parameter}"
@@ -150,6 +154,26 @@ def test_smoke_analysis_endpoints(client):
     )
     assert resp.status_code == 200
     assert resp.json()
+
+
+@pytest.mark.integration
+def test_smoke_availability_endpoint(client):
+    """Smoke test availability endpoint using discovery."""
+    resources = client.get("/v1/feedstocks/availability/resources").json()["values"]
+    geoids = client.get("/v1/feedstocks/availability/geoids").json()["values"]
+
+    assert resources, "No resources returned by availability discovery"
+    assert geoids, "No geoids returned by availability discovery"
+
+    resource = resources[0]
+    geoid = geoids[0]
+    resp = client.get(f"/v1/feedstocks/availability/resources/{resource}/geoid/{geoid}")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["resource"] == resource
+    assert body["geoid"] == geoid
+    assert isinstance(body["from_month"], int)
+    assert isinstance(body["to_month"], int)
 
 
 @pytest.mark.integration
@@ -294,3 +318,60 @@ def test_smoke_survey_by_resource_endpoints(client):
     )
     assert resp.status_code == 200
     assert resp.json()
+
+
+# ---------------------------------------------------------------------------
+# Infrastructure endpoint smoke tests (6 tests)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.integration
+def test_root_endpoint(base_url):
+    """Root endpoint is accessible without authentication."""
+    with httpx.Client(base_url=base_url) as c:
+        resp = c.get("/")
+    assert resp.status_code == 200
+    assert "message" in resp.json()
+
+
+@pytest.mark.integration
+def test_health_endpoint(base_url):
+    """Health check endpoint returns 200."""
+    with httpx.Client(base_url=base_url) as c:
+        resp = c.get("/v1/health")
+    assert resp.status_code == 200
+
+
+@pytest.mark.integration
+def test_auth_login(base_url):
+    """Login with valid credentials returns an access token."""
+    username = os.getenv("CA_BIOSITING_TEST_USERNAME")
+    password = os.getenv("CA_BIOSITING_TEST_PASSWORD")
+    if not username or not password:
+        pytest.skip("CA_BIOSITING_TEST_USERNAME/PASSWORD env vars not set")
+    with httpx.Client(base_url=base_url) as c:
+        resp = c.post("/v1/auth/token", data={"username": username, "password": password})
+    assert resp.status_code == 200
+    assert "access_token" in resp.json()
+
+
+@pytest.mark.integration
+def test_auth_refresh(client):
+    """Token refresh returns a new access token for an authenticated user."""
+    resp = client.post("/v1/auth/refresh")
+    assert resp.status_code == 200
+    assert "access_token" in resp.json()
+
+
+@pytest.mark.integration
+def test_auth_logout(client):
+    """Logout endpoint returns 200."""
+    resp = client.post("/v1/auth/logout")
+    assert resp.status_code == 200
+
+
+@pytest.mark.integration
+def test_auth_protected_without_token(base_url):
+    """Protected endpoint returns 401 when no token is provided."""
+    with httpx.Client(base_url=base_url) as c:
+        resp = c.get("/v1/feedstocks/analysis/resources")
+    assert resp.status_code == 401

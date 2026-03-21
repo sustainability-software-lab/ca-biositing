@@ -475,3 +475,39 @@ class TestObservationQueryRegression:
 
         assert response.status_code == 200
         assert response.json()["value"] == 25000.0
+
+
+class TestCensusDiscovery:
+    """Tests for USDA census discovery endpoints."""
+
+    def test_discovery_crops(self, client: TestClient, test_census_data):
+        response = client.get("/v1/feedstocks/usda/census/crops")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+        assert len(body["values"]) > 0
+
+    def test_discovery_resources(self, client: TestClient, test_census_data):
+        response = client.get("/v1/feedstocks/usda/census/resources")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+        assert len(body["values"]) > 0
+
+    def test_discovery_geoids(self, client: TestClient, test_census_data):
+        response = client.get("/v1/feedstocks/usda/census/geoids")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+        assert len(body["values"]) > 0
+
+    def test_discovery_parameters(self, client: TestClient, test_census_data):
+        response = client.get("/v1/feedstocks/usda/census/parameters")
+        assert response.status_code == 200
+        body = response.json()
+        assert "values" in body
+        assert isinstance(body["values"], list)
+        assert len(body["values"]) > 0
