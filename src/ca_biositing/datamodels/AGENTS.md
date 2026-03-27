@@ -103,14 +103,26 @@ migrations**. There is no code generation step.
 4.  **Review**: Check the generated script in `alembic/versions/`.
 5.  **Apply Migration**:
     ```bash
-    pixi run migrate
+    # Note: On macOS, you may need to set POSTGRES_HOST=localhost if running from host
+    POSTGRES_HOST=localhost pixi run migrate
     ```
 
 ### Materialized Views
 
-Seven views are defined in `views.py` as SQLAlchemy Core `select()` expressions.
-They are created/modified through manual Alembic migrations. Refresh after data
-loads:
+Views are defined in `views.py` as SQLAlchemy Core `select()` expressions. They
+are created/modified through **manual** Alembic migrations.
+
+**CRITICAL:** Alembic `autogenerate` does NOT detect changes to materialized
+views. When updating a view:
+
+1. Generate an empty migration:
+   `pixi run migrate-autogenerate -m "Update view X"`
+2. Manually edit the script to use `op.execute()` to `DROP` and `CREATE` the
+   view.
+3. Use `stmt.compile()` with `literal_binds=True` to generate the SQL from the
+   SQLAlchemy expression.
+
+Refresh after data loads:
 
 ```bash
 pixi run refresh-views
@@ -184,11 +196,13 @@ from ca_biositing.datamodels.models import Resource, FieldSample
 are running inside the Pixi environment (`pixi run ...`) where all namespace
 packages are installed. See root `AGENTS.md` for details.
 
-### Issue: Alembic hangs in Docker
+### Issue: Alembic hangs or fails to connect in Docker
 
 **Solution:** Always use `pixi run migrate-autogenerate` and `pixi run migrate`.
-These are configured to run locally to bypass Docker Desktop performance issues
-on macOS.
+These are configured to run locally. On macOS, ensure `POSTGRES_HOST=localhost`
+is set in your environment or prefixed to the command if the connection fails
+(since the host sees the DB container at `localhost:5432`, but internal configs
+might point to `db`).
 
 ### Issue: New model not detected by Alembic autogenerate
 

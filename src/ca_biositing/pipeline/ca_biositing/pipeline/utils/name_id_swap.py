@@ -105,16 +105,18 @@ def replace_name_with_id_df(
     # Flush to get IDs without ending the transaction
     db.flush()
 
-    # Re-query just-created rows
+    # Re-query just-created rows using lowercased names to match what we inserted
+    clean_new_names = [str(name).lower().strip() for name in new_names]
     refreshed = db.execute(
       select(ref_model).where(
-        getattr(ref_model, model_name_attr).in_(new_names)
+        getattr(ref_model, model_name_attr).in_(clean_new_names)
       )
     ).scalars().all()
 
     for record in refreshed:
+      # Use lowercased keys for the map to ensure matches
       name_to_id_map[
-        getattr(record, model_name_attr)
+        str(getattr(record, model_name_attr)).lower()
       ] = getattr(record, id_column_name)
 
   # 4. Replace name column with ID column using case-insensitive mapping

@@ -5,7 +5,7 @@ from prefect import task, get_run_logger
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-@task
+@task(retries=3, retry_delay_seconds=10)
 def load_fermentation_record(df: pd.DataFrame):
     """
     Upserts Fermentation records into the database.

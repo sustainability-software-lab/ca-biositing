@@ -6,7 +6,7 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from ca_biositing.pipeline.utils.engine import get_engine
 
-@task
+@task(retries=3, retry_delay_seconds=10)
 def load_ultimate_record(df: pd.DataFrame):
     """
     Upserts Ultimate records into the database.

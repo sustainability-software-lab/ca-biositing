@@ -107,6 +107,10 @@ def transform_observation(
         try:
             obs_df = normalized_df[required_cols].copy().rename(columns={'analysis_type': 'record_type'})
 
+            # Normalize record_id to lowercase to match parent record tables
+            if 'record_id' in obs_df.columns:
+                obs_df['record_id'] = obs_df['record_id'].astype(str).str.lower()
+
             obs_df = obs_df.dropna(subset=['record_id', 'parameter_id', 'value'])
 
             # Remove duplicates based on (record_id, record_type, parameter_id, unit_id) to avoid ON CONFLICT errors

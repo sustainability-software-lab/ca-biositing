@@ -24,6 +24,7 @@ class Resource(BaseEntity, table=True):
     resource_subclass_id: Optional[int] = Field(default=None, foreign_key="resource_subclass.id")
     resource_code: Optional[str] = Field(default=None)
     description: Optional[str] = Field(default=None)
+    uri: Optional[str] = Field(default=None)
 
     # Relationships
     primary_ag_product: Optional["PrimaryAgProduct"] = Relationship()

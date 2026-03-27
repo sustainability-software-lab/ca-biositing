@@ -15,11 +15,15 @@ def aim2_bioconversion_flow(*args, **kwargs):
     from ca_biositing.pipeline.etl.load.analysis.fermentation_record import load_fermentation_record
     from ca_biositing.pipeline.etl.load.analysis.observation import load_observation
     from ca_biositing.pipeline.utils.lineage import create_etl_run_record, create_lineage_group
+    from ca_biositing.pipeline.flows.analysis_type import analysis_type_flow
 
     logger = get_run_logger()
     logger.info("Starting Aim 2 Bioconversion ETL flow...")
 
-    # 0. Lineage Tracking Setup
+    # 0. Dependencies and Lineage Tracking Setup
+    # Ensure Analysis Types exist first
+    analysis_type_flow()
+
     etl_run_id = create_etl_run_record(pipeline_name="Aim 2 Bioconversion ETL")
 
     # --- PART 1: Pretreatment ---
@@ -35,6 +39,10 @@ def aim2_bioconversion_flow(*args, **kwargs):
         # Transform Observations
         pretreatment_raw_copy = pretreatment_raw.copy()
         pretreatment_raw_copy['analysis_type'] = 'pretreatment'
+        # Ensure dataset is present for normalization
+        if 'dataset' not in pretreatment_raw_copy.columns:
+            pretreatment_raw_copy['dataset'] = 'biocirv'
+
         obs_pre_df = transform_observation(
             [pretreatment_raw_copy],
             etl_run_id=etl_run_id,
@@ -66,7 +74,11 @@ def aim2_bioconversion_flow(*args, **kwargs):
     if fermentation_raw is not None and not fermentation_raw.empty:
         # Transform Observations
         fermentation_raw_copy = fermentation_raw.copy()
-        fermentation_raw_copy['analysis_type'] = 'fermentation' # Assuming this type exists or will be added
+        fermentation_raw_copy['analysis_type'] = 'fermentation'
+        # Ensure dataset is present for normalization
+        if 'dataset' not in fermentation_raw_copy.columns:
+            fermentation_raw_copy['dataset'] = 'biocirv'
+
         obs_ferm_df = transform_observation(
             [fermentation_raw_copy],
             etl_run_id=etl_run_id,

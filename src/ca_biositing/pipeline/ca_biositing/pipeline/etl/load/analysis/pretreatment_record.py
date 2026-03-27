@@ -8,7 +8,7 @@ from prefect import task, get_run_logger
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
-@task
+@task(retries=3, retry_delay_seconds=10)
 def load_pretreatment_record(df: pd.DataFrame):
     """
     Loads transformed Pretreatment record data into the database.

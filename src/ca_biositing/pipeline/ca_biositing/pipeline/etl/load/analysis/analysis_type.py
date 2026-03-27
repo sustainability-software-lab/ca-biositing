@@ -4,7 +4,7 @@ from sqlmodel import Session, select
 from ca_biositing.datamodels.database import engine
 from ca_biositing.datamodels.models import AnalysisType
 
-@task
+@task(retries=3, retry_delay_seconds=10)
 def load_analysis_analysis_type(analysis_types_df: pd.DataFrame):
     """
     Loads the data from the analysis_types DataFrame into the database.

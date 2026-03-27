@@ -30,20 +30,25 @@ def analysis_records_flow(*args, **kwargs):
     logger = get_run_logger()
     logger.info("Starting Analysis Records ETL flow...")
 
-    # 0. Lineage Tracking Setup
+    # 0. Dependencies and Lineage Tracking Setup
     logger.info("Setting up lineage tracking...")
     from ca_biositing.pipeline.utils.lineage import create_etl_run_record, create_lineage_group
-    etl_run_id = create_etl_run_record.fn(pipeline_name="Analysis Records ETL")
+    from ca_biositing.pipeline.flows.analysis_type import analysis_type_flow
+
+    # Ensure Analysis Types exist first
+    analysis_type_flow()
+
+    etl_run_id = create_etl_run_record(pipeline_name="Analysis Records ETL")
     logger.info(f"ETL Run ID: {etl_run_id}")
 
-    lineage_group_id = create_lineage_group.fn(etl_run_id=etl_run_id, note="Analytical records (Prox, Ult, Comp, ICP, XRF, Cal, XRD)")
+    lineage_group_id = create_lineage_group(etl_run_id=etl_run_id, note="Analytical records (Prox, Ult, Comp, ICP, XRF, Cal, XRD)")
     logger.info(f"Lineage Group ID: {lineage_group_id}")
 
     # 1. Extract
     def safe_extract(extractor, name, analysis_type=None):
         try:
             logger.info(f"Extracting {name} data...")
-            df = extractor.extract.fn()
+            df = extractor.extract()
             if df is not None and analysis_type is not None:
                 df = df.copy()
                 # Drop existing analysis_type columns (including variations like "Analysis Type")
@@ -53,6 +58,9 @@ def analysis_records_flow(*args, **kwargs):
                     logger.info(f"Dropping existing analysis_type columns from {name}: {cols_to_drop}")
                     df = df.drop(columns=cols_to_drop)
                 df['analysis_type'] = analysis_type
+                # Ensure dataset is present for normalization
+                if 'dataset' not in df.columns:
+                    df['dataset'] = 'biocirv'
             return df
         except (ValueError, IOError):
             logger.exception(f"Failed to extract {name} data")
@@ -74,39 +82,40 @@ def analysis_records_flow(*args, **kwargs):
     # 2. Transform (Now includes cleaning, coercion, and normalization)
     logger.info("Starting transformations...")
 
-    obs_df = transform_observation.fn(raw_data, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
+    obs_df = transform_observation(raw_data, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
 
     logger.info("Transforming Proximate records...")
-    prox_rec_df = transform_proximate_record.fn(prox_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
+    prox_rec_df = transform_proximate_record(prox_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
 
     logger.info("Transforming Ultimate records...")
-    ult_rec_df = transform_ultimate_record.fn(ult_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
+    ult_rec_df = transform_ultimate_record(ult_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
 
     logger.info("Transforming Compositional records...")
-    comp_rec_df = transform_compositional_record.fn(cmpana_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
+    comp_rec_df = transform_compositional_record(cmpana_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
 
     logger.info("Transforming ICP records...")
-    icp_rec_df = transform_icp_record.fn(icp_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
+    icp_rec_df = transform_icp_record(icp_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
 
     logger.info("Transforming XRF records...")
-    xrf_rec_df = transform_xrf_record.fn(xrf_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
+    xrf_rec_df = transform_xrf_record(xrf_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
 
     logger.info("Transforming Calorimetry records...")
-    cal_rec_df = transform_calorimetry_record.fn(cal_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
+    cal_rec_df = transform_calorimetry_record(cal_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
 
     logger.info("Transforming XRD records...")
-    xrd_rec_df = transform_xrd_record.fn(xrd_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
+    xrd_rec_df = transform_xrd_record(xrd_raw, etl_run_id=etl_run_id, lineage_group_id=lineage_group_id)
 
     # 3. Load
     logger.info("Starting database load...")
-    load_observation.fn(obs_df)
-    load_proximate_record.fn(prox_rec_df)
-    load_ultimate_record.fn(ult_rec_df)
-    load_compositional_record.fn(comp_rec_df)
-    load_icp_record.fn(icp_rec_df)
-    load_xrf_record.fn(xrf_rec_df)
-    load_calorimetry_record.fn(cal_rec_df)
-    load_xrd_record.fn(xrd_rec_df)
+    # Using tasks normally allows for retries if defined on the tasks
+    load_observation(obs_df)
+    load_proximate_record(prox_rec_df)
+    load_ultimate_record(ult_rec_df)
+    load_compositional_record(comp_rec_df)
+    load_icp_record(icp_rec_df)
+    load_xrf_record(xrf_rec_df)
+    load_calorimetry_record(cal_rec_df)
+    load_xrd_record(xrd_rec_df)
 
     logger.info("Analysis Records ETL flow completed successfully.")
 

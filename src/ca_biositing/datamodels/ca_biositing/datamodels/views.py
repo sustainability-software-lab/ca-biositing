@@ -400,8 +400,25 @@ def refresh_all_views(engine):
         refresh_all_views(engine)
     """
     with engine.connect() as conn:
+        # 1. Refresh ca_biositing schema views
         for view_name, _ in VIEW_DEFINITIONS:
             conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.{view_name}"))
         conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.usda_resource_commodity_view"))
         conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.analysis_average_view"))
+
+        # 2. Refresh data_portal schema views
+        data_portal_views = [
+            "mv_biomass_search",
+            "mv_biomass_composition",
+            "mv_biomass_county_production",
+            "mv_usda_county_production",
+            "mv_biomass_availability",
+            "mv_biomass_sample_stats",
+            "mv_biomass_fermentation",
+            "mv_biomass_gasification",
+            "mv_biomass_pricing",
+        ]
+        for view_name in data_portal_views:
+            conn.execute(text(f"REFRESH MATERIALIZED VIEW CONCURRENTLY data_portal.{view_name}"))
+
         conn.commit()
