@@ -3,6 +3,40 @@
 Auto-generated reference for `ca_biositing.datamodels` — the SQLModel-based
 database models used across the project.
 
+## How to use this page
+
+This page documents every SQLModel class — their fields, types, and inheritance
+— rendered directly from source-code docstrings.
+
+**Who this is for:** developers who need to understand how the database schema
+is organized, what fields a model contains, or how models relate to each other
+when writing custom queries, extending existing models, or debugging data issues.
+
+**This is not the HTTP REST API reference.** For endpoint usage (parameters,
+request bodies, response schemas), see the Webservice API page or the
+interactive Swagger UI at `http://localhost:8000/docs` while the service is
+running.
+
+### Contents
+
+- [Base Classes](#base-classes)
+- [Resource & Biomass Models](#resource-biomass-models)
+- [Geographic Models](#geographic-models)
+- [Field Sampling](#field-sampling)
+- [Aim 1 Analytical Records](#aim-1-analytical-records)
+- [Aim 2 Processing Records](#aim-2-processing-records)
+- [External Data Models](#external-data-models)
+- [General Analysis](#general-analysis)
+- [People & Organizations](#people-organizations)
+- [Experiment & Equipment](#experiment-equipment)
+- [Methods, Parameters & Units](#methods-parameters-units)
+- [Core Metadata (ETL Lineage)](#core-metadata-etl-lineage)
+- [Data Sources Metadata](#data-sources-metadata)
+- [Sample Preparation](#sample-preparation)
+- [Infrastructure](#infrastructure)
+
+---
+
 ## Base Classes
 
 ::: ca_biositing.datamodels.models.base

@@ -511,87 +511,91 @@ Environments:
 
 ### Container Orchestration
 
-- **Development**: Docker Compose for local services
-- **Production**: Kubernetes or cloud container services
-- **Image Building**: Multi-stage Dockerfiles for optimization
-- **Environment Configuration**: Environment variables and secrets
+Local development uses Docker Compose to run all services together — the
+PostgreSQL database, Prefect workflow server, and Prefect worker run as
+co-located containers defined in `resources/docker/docker-compose.yml`. The
+`setup-db` service runs `alembic upgrade head` at startup so the database schema
+is always current before the worker comes online.
 
 ### Database Management
 
-- **Schema Versioning**: Alembic migrations for schema changes
-- **Backup Strategy**: Automated database backups
-- **Performance Monitoring**: Query optimization and indexing
-- **Geospatial Optimization**: PostGIS spatial indexes
+Schema changes are version-controlled with Alembic migrations. Developers
+generate migrations locally with `pixi run migrate-autogenerate`, review the
+generated script in `alembic/versions/`, and apply it with `pixi run migrate`.
+There is no separate schema synchronization step — Alembic is the single source
+of truth for schema state.
 
 ### Monitoring & Observability
 
-- **Application Monitoring**: Health checks and metrics
-- **Pipeline Monitoring**: Prefect UI for workflow visibility
-- **Database Monitoring**: PostgreSQL performance metrics
-- **Log Aggregation**: Centralized logging for troubleshooting
+The Prefect UI (`http://localhost:4200`) provides visibility into pipeline run
+history, task state, and logs for each flow run. Application health is exposed
+via the `/v1/health` endpoint on the FastAPI service.
 
 ## Security Considerations
 
-### Data Security
+### Authentication & API Security
 
-- **Authentication**: Google Cloud service account authentication
-- **API Security**: CORS configuration and rate limiting
-- **Database Security**: Connection encryption and access controls
-- **Credential Management**: Secure storage of API keys and passwords
+API access is controlled via JWT (JSON Web Token) authentication. Clients obtain
+a token from `/v1/auth/token` using username and password credentials;
+subsequent requests include the token in the `Authorization: Bearer` header. The
+FastAPI service validates the token signature on each request — no server-side
+session state is stored.
 
-### Privacy & Compliance
+Google Sheets access uses a Google Cloud service account credential file
+(`credentials.json`), which is loaded at ETL runtime and never committed to the
+repository.
 
-- **Data Anonymization**: Geographic location anonymization options
-- **Access Controls**: Role-based access to sensitive data
-- **Audit Logging**: Tracking of data access and modifications
-- **Data Retention**: Policies for data lifecycle management
+### Data Handling
+
+Development credentials (`biocirv_dev_password`) are clearly scoped to local
+Docker use and defined in `resources/docker/.env.example`. Production
+deployments use secrets managed outside the repository via environment variables
+injected at runtime.
 
 ## Scalability & Performance
 
-### Database Optimization
+The current architecture is optimized for the project's scale: a single
+PostgreSQL instance with PostGIS handles all spatial and relational queries.
+Analytical queries are accelerated by materialized views in the `ca_biositing`
+schema that pre-compute joins and aggregations — these are refreshed after each
+ETL load with `pixi run refresh-views`.
 
-- **Indexing Strategy**: Optimized indexes for common queries
-- **Geospatial Performance**: PostGIS spatial indexes and optimization
-- **Query Optimization**: Efficient SQL generation via SQLModel
-- **Connection Pooling**: Database connection management
-
-### API Performance
-
-- **Caching Strategy**: Redis for frequently accessed data
-- **Pagination**: Efficient handling of large result sets
-- **Async Processing**: FastAPI async support for I/O operations
-- **Rate Limiting**: API throttling for resource protection
-
-### Pipeline Scalability
-
-- **Parallel Processing**: Prefect concurrent task execution
-- **Batch Processing**: Efficient bulk data operations
-- **Error Recovery**: Automatic retry and failure handling
-- **Resource Management**: Memory and CPU optimization
+The FastAPI service uses async request handling (Uvicorn/ASGI) for I/O-bound
+operations, and pagination is implemented on all collection endpoints to bound
+response sizes. The Prefect worker processes ETL tasks concurrently where
+dependencies allow, with automatic retry on transient failures.
 
 ## Future Architecture Considerations
 
-### Microservices Evolution
+### Service Decomposition
 
-- **Service Decomposition**: Breaking monolith into focused services
-- **API Gateway**: Centralized API management and routing
-- **Event-Driven Architecture**: Asynchronous communication patterns
-- **Service Mesh**: Advanced networking and observability
+The current monorepo structure works well while the team is small and components
+are tightly coupled through shared data models. If different parts of the system
+— for example, the ETL pipeline and the web service — need to scale
+independently, be deployed on different schedules, or be maintained by separate
+teams, breaking them into standalone services with an API gateway would reduce
+coupling. This is not planned imminently; the namespace package structure
+(`ca_biositing.*`) already provides the logical separation that would make such
+a transition tractable when the need arises.
 
-### Cloud-Native Enhancements
+### Cloud-Native Migration
 
-- **Serverless Functions**: Google Cloud Functions for specific tasks
-- **Managed Services**: Cloud SQL, Cloud Storage, Cloud Monitoring
-- **Auto-scaling**: Horizontal scaling based on demand
-- **Multi-region Deployment**: Geographic distribution for performance
+The pipeline currently runs on a single Docker host. As data volume or
+processing frequency increases, moving the Prefect worker to a managed cloud
+execution environment — such as Cloud Run jobs or Vertex AI pipelines — would
+allow per-run scaling without a persistent worker process. The Prefect
+deployment configuration in `resources/prefect/` is already structured to
+support this migration path.
 
-### Advanced Analytics
+### Analytical Query Layer
 
-- **Data Warehouse**: BigQuery integration for analytics
-- **Machine Learning**: ML pipelines for predictive analytics
-- **Real-time Processing**: Stream processing for live data
-- **Data Lake**: Large-scale data storage and processing
+As the number and complexity of research questions grows, the current
+materialized view approach may reach its limits. A dedicated analytical layer —
+such as a set of curated summary tables or integration with an OLAP store —
+could improve query performance and make it easier for researchers to explore
+the data without writing raw SQL. The existing `ca_biositing` materialized view
+schema is the first step in this direction.
 
-This architecture supports the project's mission of providing a robust, scalable
-platform for California biodiversity data management while maintaining
-flexibility for future enhancements and cloud deployment.
+This architecture supports the project's mission of providing a robust,
+maintainable platform for California bioeconomy data management, with clear
+extension points for future growth.

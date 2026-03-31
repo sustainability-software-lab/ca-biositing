@@ -18,12 +18,39 @@ for verifying that migrations have been applied correctly.
 ### Install pgschema (optional)
 
 `pgschema` is a Go-based binary. It is only needed if you want to run validation
-diffs:
+diffs against the reference SQL file.
+
+#### macOS (Homebrew)
 
 ```bash
-# macOS (Homebrew)
 brew tap pgplex/pgschema
 brew install pgschema
+```
+
+#### Linux
+
+Download the pre-built binary for your architecture from the
+[pgschema releases page](https://github.com/pgplex/pgschema/releases), then:
+
+```bash
+chmod +x pgschema
+sudo mv pgschema /usr/local/bin/
+```
+
+#### Windows
+
+Download the `.exe` binary from the
+[pgschema releases page](https://github.com/pgplex/pgschema/releases) and add it
+to a directory on your `PATH`. Note: this workflow is primarily developed and
+tested on macOS and Linux — Windows support is best-effort.
+
+#### Cross-platform (pixi)
+
+The `install-pgschema` task installs the binary directly into your pixi
+environment on macOS and Linux:
+
+```bash
+pixi run install-pgschema
 ```
 
 ## The Current Workflow

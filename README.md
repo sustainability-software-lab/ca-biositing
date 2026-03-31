@@ -78,19 +78,21 @@ Then start and use the services:
 
 ```bash
 # 1. Start all services (PostgreSQL, Prefect server, worker)
-# This will also automatically apply any pending database migrations.
 pixi run start-services
 
 # 2. Deploy flows to Prefect
 pixi run deploy
 
-# 3. Run the ETL pipeline
+# 3. Apply any pending database migrations
+# Note: start-services automatically applies migrations at startup via the
+# setup-db container. Run this step manually when you pull new migration
+# files without restarting services.
+pixi run migrate
+
+# 4. Run the ETL pipeline
 pixi run run-etl
 
 # Monitor via Prefect UI: http://localhost:4200
-
-# To apply new migrations after the initial setup
-pixi run migrate
 
 # Stop services
 pixi run teardown-services

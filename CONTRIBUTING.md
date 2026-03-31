@@ -88,10 +88,20 @@ pixi run pre-commit-all
 
 #### Available Pixi Environments
 
-- `default`: Basic execution environment.
-- `gis`: Environment for GIS-related work
+| Environment  | Purpose                                                   |
+| ------------ | --------------------------------------------------------- |
+| `default`    | General development, testing, and pre-commit hooks        |
+| `py312`      | Pin to Python 3.12 for cross-version testing              |
+| `py313`      | Pin to Python 3.13 for cross-version testing              |
+| `gis`        | Adds QGIS, rasterio, shapely, and geospatial tools        |
+| `etl`        | ETL pipeline dependencies (used inside Docker containers) |
+| `webservice` | FastAPI service dependencies                              |
+| `frontend`   | Node.js/npm for the React/Next.js frontend                |
+| `docs`       | MkDocs and documentation-build tools                      |
+| `deployment` | Google Cloud CLI, Pulumi, and infrastructure tools        |
 
-To activate one of these environments, run the following command:
+Each environment is a distinct dependency set — same Python/conda base,
+different packages installed on top. To activate an environment:
 
 ```bash
 pixi shell -e <environment>
@@ -143,11 +153,12 @@ can execute the following command to run the full test suite:
 pixi run test
 ```
 
-This command executes `python -m pytest -ra --cov=ca_biositing`, which:
+This command executes `python -m pytest tests/ --verbose`, which:
 
 - Runs all tests in the `tests/` directory.
-- Shows a short test summary (`-ra`).
-- Generates coverage reports for the `src/ca_biositing` package.
+- Prints the name of each test as it runs (`--verbose`).
+
+For a coverage report, use `pixi run test-cov` instead.
 
 #### Running Tests with Coverage
 
