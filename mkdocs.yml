@@ -3,6 +3,7 @@ repo_url: https://github.com/sustainability-software-lab/ca-biositing
 
 theme:
   name: material
+  custom_dir: docs/overrides
   features:
     - navigation.expand
     - navigation.sections
@@ -43,6 +44,7 @@ markdown_extensions:
   - pymdownx.tabbed
   - pymdownx.inlinehilite
   - pymdownx.emoji
+  - md_in_html
 
 nav:
   - Home: README.md
@@ -71,7 +73,9 @@ nav:
       - Overview: api/index.md
       - Datamodels: api/datamodels.md
       - Pipeline: api/pipeline.md
+      - Webservice API: api/webservice.md
   - Deployment: deployment/README.md
+  - Changelog: CHANGELOG.md
   - Contributing: CONTRIBUTING.md
   - Code of Conduct: CODE_OF_CONDUCT.md
   - ERD View: ERD_VIEW.md

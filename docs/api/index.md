@@ -12,11 +12,18 @@ This section provides auto-generated reference documentation for the
 
 ## Webservice REST API
 
-For the **webservice REST API** (endpoint usage, parameters, and response
-schemas), see the interactive Swagger documentation at
-[http://localhost:8000/docs](http://localhost:8000/docs) when the webservice is
-running:
+See the **[Webservice API](webservice.md)** page for a static reference that
+works without a running server.
+
+For live interactive exploration, start the webservice and visit
+[http://localhost:8000/docs](http://localhost:8000/docs):
 
 ```bash
 pixi run start-webservice
+```
+
+To regenerate the static spec after API changes:
+
+```bash
+pixi run -e webservice generate-openapi
 ```

@@ -1,0 +1,2095 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "CA Biositing API",
+    "description": "REST API for CA Biositing bioeconomy data",
+    "version": "0.1.dev91"
+  },
+  "paths": {
+    "/": {
+      "get": {
+        "tags": [
+          "root"
+        ],
+        "summary": "Read Root",
+        "description": "Root endpoint providing API information.\n\nReturns:\n    Dictionary with API message and version",
+        "operationId": "read_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Read Root  Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/hello": {
+      "get": {
+        "tags": [
+          "root"
+        ],
+        "summary": "Read Hello",
+        "description": "Hello endpoint for testing.\n\nReturns:\n    Dictionary with hello message",
+        "operationId": "read_hello_hello_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Read Hello Hello Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Check",
+        "description": "Health check endpoint.\n\nReturns:\n    Dictionary with status field set to \"ok\".",
+        "operationId": "health_check_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check V1 Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/token": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Login",
+        "description": "Authenticate with username/password and receive a JWT access token.\n\nAlso sets an HTTP-only `access_token` cookie for browser SPA clients.",
+        "operationId": "login_v1_auth_token_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_v1_auth_token_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/auth/register": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Register",
+        "description": "Create a new API user. Requires admin privileges.",
+        "operationId": "register_v1_auth_register_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh",
+        "description": "Issue a new access token for the currently authenticated user.\n\nRequires a valid (non-expired) token via Bearer header or cookie.\nAlso updates the HTTP-only cookie with the new token.",
+        "operationId": "refresh_v1_auth_refresh_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "auth"
+        ],
+        "summary": "Logout",
+        "description": "Clear the access_token cookie, effectively logging out browser clients.\n\nNote: the JWT itself remains valid until expiry. Bearer-token clients should\ndiscard the token client-side. Only the HTTP-only cookie is cleared here.",
+        "operationId": "logout_v1_auth_logout_post",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "type": "object",
+                  "title": "Response Logout V1 Auth Logout Post"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/usda/census/crops": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Census"
+        ],
+        "summary": "List Census Crops",
+        "description": "List all distinct USDA crop names available for census queries.\n\nExample:\n    GET /v1/feedstocks/usda/census/crops\n\nReturns:\n    DiscoveryResponse with list of crop name strings",
+        "operationId": "list_census_crops_v1_feedstocks_usda_census_crops_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/usda/census/resources": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Census"
+        ],
+        "summary": "List Census Resources",
+        "description": "List all distinct resource names available for census queries.\n\nExample:\n    GET /v1/feedstocks/usda/census/resources\n\nReturns:\n    DiscoveryResponse with list of resource name strings",
+        "operationId": "list_census_resources_v1_feedstocks_usda_census_resources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/usda/census/geoids": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Census"
+        ],
+        "summary": "List Census Geoids",
+        "description": "List all distinct geoids available for census queries.\n\nExample:\n    GET /v1/feedstocks/usda/census/geoids\n\nReturns:\n    DiscoveryResponse with list of geoid strings",
+        "operationId": "list_census_geoids_v1_feedstocks_usda_census_geoids_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/usda/census/parameters": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Census"
+        ],
+        "summary": "List Census Parameters",
+        "description": "List all distinct parameter names available for census queries.\n\nExample:\n    GET /v1/feedstocks/usda/census/parameters\n\nReturns:\n    DiscoveryResponse with list of parameter name strings",
+        "operationId": "list_census_parameters_v1_feedstocks_usda_census_parameters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/usda/census/crops/{crop}/geoid/{geoid}/parameters/{parameter}": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Census"
+        ],
+        "summary": "Get Census Data By Crop",
+        "description": "Get a single census parameter for a specific crop and geographic area.\n\nExample:\n    GET /v1/feedstocks/usda/census/crops/corn/geoid/06047/parameters/area harvested\n\nArgs:\n    session: Database session (injected)\n    crop: USDA crop name\n    geoid: Geographic identifier (county FIPS code)\n    parameter: Parameter name to retrieve\n\nReturns:\n    CensusDataResponse with the parameter value and metadata\n\nRaises:\n    CropNotFoundException: If crop not found in database\n    ParameterNotFoundException: If parameter not found for crop/geoid",
+        "operationId": "get_census_data_by_crop_v1_feedstocks_usda_census_crops__crop__geoid__geoid__parameters__parameter__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "crop",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "USDA crop name (e.g., corn, almonds, wheat). Case-insensitive. Use GET /v1/feedstocks/usda/census/crops to discover available values.",
+              "title": "Crop"
+            },
+            "description": "USDA crop name (e.g., corn, almonds, wheat). Case-insensitive. Use GET /v1/feedstocks/usda/census/crops to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/census/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/census/geoids to discover available values."
+          },
+          {
+            "name": "parameter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Parameter name (e.g., area harvested, production). Use GET /v1/feedstocks/usda/census/parameters to discover available values.",
+              "title": "Parameter"
+            },
+            "description": "Parameter name (e.g., area harvested, production). Use GET /v1/feedstocks/usda/census/parameters to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CensusDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/usda/census/resources/{resource}/geoid/{geoid}/parameters/{parameter}": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Census"
+        ],
+        "summary": "Get Census Data By Resource",
+        "description": "Get a single census parameter for a specific resource and geographic area.\n\nResources are mapped to USDA crops internally via the resource mapping table.\n\nExample:\n    GET /v1/feedstocks/usda/census/resources/corn stover whole/geoid/06047/parameters/area harvested\n\nArgs:\n    session: Database session (injected)\n    resource: Resource name\n    geoid: Geographic identifier (county FIPS code)\n    parameter: Parameter name to retrieve\n\nReturns:\n    CensusDataResponse with the parameter value and metadata\n\nRaises:\n    ResourceNotFoundException: If resource not found in database\n    ParameterNotFoundException: If parameter not found for resource/geoid",
+        "operationId": "get_census_data_by_resource_v1_feedstocks_usda_census_resources__resource__geoid__geoid__parameters__parameter__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource name mapped to a USDA crop (e.g., corn stover whole, almond hulls). Case-insensitive. Use GET /v1/feedstocks/usda/census/resources to discover available values.",
+              "title": "Resource"
+            },
+            "description": "Resource name mapped to a USDA crop (e.g., corn stover whole, almond hulls). Case-insensitive. Use GET /v1/feedstocks/usda/census/resources to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/census/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/census/geoids to discover available values."
+          },
+          {
+            "name": "parameter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Parameter name (e.g., area harvested, production). Use GET /v1/feedstocks/usda/census/parameters to discover available values.",
+              "title": "Parameter"
+            },
+            "description": "Parameter name (e.g., area harvested, production). Use GET /v1/feedstocks/usda/census/parameters to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CensusDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/usda/census/crops/{crop}/geoid/{geoid}/parameters": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Census"
+        ],
+        "summary": "List Census Data By Crop",
+        "description": "List all available census parameters for a specific crop and geographic area.\n\nExample:\n    GET /v1/feedstocks/usda/census/crops/corn/geoid/06047/parameters\n\nArgs:\n    session: Database session (injected)\n    crop: USDA crop name\n    geoid: Geographic identifier (county FIPS code)\n\nReturns:\n    CensusListResponse with list of all parameters and their values\n\nRaises:\n    CropNotFoundException: If crop not found in database\n    ParameterNotFoundException: If no data found for crop/geoid",
+        "operationId": "list_census_data_by_crop_v1_feedstocks_usda_census_crops__crop__geoid__geoid__parameters_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "crop",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "USDA crop name (e.g., corn, almonds, wheat). Case-insensitive. Use GET /v1/feedstocks/usda/census/crops to discover available values.",
+              "title": "Crop"
+            },
+            "description": "USDA crop name (e.g., corn, almonds, wheat). Case-insensitive. Use GET /v1/feedstocks/usda/census/crops to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/census/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/census/geoids to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CensusListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/usda/census/resources/{resource}/geoid/{geoid}/parameters": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Census"
+        ],
+        "summary": "List Census Data By Resource",
+        "description": "List all available census parameters for a specific resource and geographic area.\n\nResources are mapped to USDA crops internally via the resource mapping table.\n\nExample:\n    GET /v1/feedstocks/usda/census/resources/corn stover whole/geoid/06047/parameters\n\nArgs:\n    session: Database session (injected)\n    resource: Resource name\n    geoid: Geographic identifier (county FIPS code)\n\nReturns:\n    CensusListResponse with list of all parameters and their values\n\nRaises:\n    ResourceNotFoundException: If resource not found in database\n    ParameterNotFoundException: If no data found for resource/geoid",
+        "operationId": "list_census_data_by_resource_v1_feedstocks_usda_census_resources__resource__geoid__geoid__parameters_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource name mapped to a USDA crop (e.g., corn stover whole, almond hulls). Case-insensitive. Use GET /v1/feedstocks/usda/census/resources to discover available values.",
+              "title": "Resource"
+            },
+            "description": "Resource name mapped to a USDA crop (e.g., corn stover whole, almond hulls). Case-insensitive. Use GET /v1/feedstocks/usda/census/resources to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/census/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/census/geoids to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CensusListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/usda/survey/crops": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Survey"
+        ],
+        "summary": "List Survey Crops",
+        "description": "List all distinct USDA crop names available for survey queries.\n\nExample:\n    GET /v1/feedstocks/usda/survey/crops\n\nReturns:\n    DiscoveryResponse with list of crop name strings",
+        "operationId": "list_survey_crops_v1_feedstocks_usda_survey_crops_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/usda/survey/resources": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Survey"
+        ],
+        "summary": "List Survey Resources",
+        "description": "List all distinct resource names available for survey queries.\n\nExample:\n    GET /v1/feedstocks/usda/survey/resources\n\nReturns:\n    DiscoveryResponse with list of resource name strings",
+        "operationId": "list_survey_resources_v1_feedstocks_usda_survey_resources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/usda/survey/geoids": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Survey"
+        ],
+        "summary": "List Survey Geoids",
+        "description": "List all distinct geoids available for survey queries.\n\nExample:\n    GET /v1/feedstocks/usda/survey/geoids\n\nReturns:\n    DiscoveryResponse with list of geoid strings",
+        "operationId": "list_survey_geoids_v1_feedstocks_usda_survey_geoids_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/usda/survey/parameters": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Survey"
+        ],
+        "summary": "List Survey Parameters",
+        "description": "List all distinct parameter names available for survey queries.\n\nExample:\n    GET /v1/feedstocks/usda/survey/parameters\n\nReturns:\n    DiscoveryResponse with list of parameter name strings",
+        "operationId": "list_survey_parameters_v1_feedstocks_usda_survey_parameters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/usda/survey/crops/{crop}/geoid/{geoid}/parameters/{parameter}": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Survey"
+        ],
+        "summary": "Get Survey Data By Crop",
+        "description": "Get a single survey parameter for a specific crop and geographic area.\n\nExample:\n    GET /v1/feedstocks/usda/survey/crops/wheat/geoid/06047/parameters/area harvested\n\nArgs:\n    session: Database session (injected)\n    crop: USDA crop name\n    geoid: Geographic identifier (county FIPS code)\n    parameter: Parameter name to retrieve\n\nReturns:\n    SurveyDataResponse with the parameter value and survey metadata\n\nRaises:\n    CropNotFoundException: If crop not found in database\n    ParameterNotFoundException: If parameter not found for crop/geoid",
+        "operationId": "get_survey_data_by_crop_v1_feedstocks_usda_survey_crops__crop__geoid__geoid__parameters__parameter__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "crop",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "USDA crop name (e.g., corn, wheat, tomatoes). Case-insensitive. Use GET /v1/feedstocks/usda/survey/crops to discover available values.",
+              "title": "Crop"
+            },
+            "description": "USDA crop name (e.g., corn, wheat, tomatoes). Case-insensitive. Use GET /v1/feedstocks/usda/survey/crops to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/survey/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/survey/geoids to discover available values."
+          },
+          {
+            "name": "parameter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Parameter name (e.g., area harvested, production). Use GET /v1/feedstocks/usda/survey/parameters to discover available values.",
+              "title": "Parameter"
+            },
+            "description": "Parameter name (e.g., area harvested, production). Use GET /v1/feedstocks/usda/survey/parameters to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/usda/survey/resources/{resource}/geoid/{geoid}/parameters/{parameter}": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Survey"
+        ],
+        "summary": "Get Survey Data By Resource",
+        "description": "Get a single survey parameter for a specific resource and geographic area.\n\nResources are mapped to USDA crops internally via the resource mapping table.\n\nExample:\n    GET /v1/feedstocks/usda/survey/resources/wheat straw/geoid/06047/parameters/area harvested\n\nArgs:\n    session: Database session (injected)\n    resource: Resource name\n    geoid: Geographic identifier (county FIPS code)\n    parameter: Parameter name to retrieve\n\nReturns:\n    SurveyDataResponse with the parameter value and survey metadata\n\nRaises:\n    ResourceNotFoundException: If resource not found in database\n    ParameterNotFoundException: If parameter not found for resource/geoid",
+        "operationId": "get_survey_data_by_resource_v1_feedstocks_usda_survey_resources__resource__geoid__geoid__parameters__parameter__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource name mapped to a USDA crop (e.g., corn stover whole, wheat straw). Case-insensitive. Use GET /v1/feedstocks/usda/survey/resources to discover available values.",
+              "title": "Resource"
+            },
+            "description": "Resource name mapped to a USDA crop (e.g., corn stover whole, wheat straw). Case-insensitive. Use GET /v1/feedstocks/usda/survey/resources to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/survey/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/survey/geoids to discover available values."
+          },
+          {
+            "name": "parameter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Parameter name (e.g., area harvested, production). Use GET /v1/feedstocks/usda/survey/parameters to discover available values.",
+              "title": "Parameter"
+            },
+            "description": "Parameter name (e.g., area harvested, production). Use GET /v1/feedstocks/usda/survey/parameters to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/usda/survey/crops/{crop}/geoid/{geoid}/parameters": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Survey"
+        ],
+        "summary": "List Survey Data By Crop",
+        "description": "List all available survey parameters for a specific crop and geographic area.\n\nExample:\n    GET /v1/feedstocks/usda/survey/crops/wheat/geoid/06047/parameters\n\nArgs:\n    session: Database session (injected)\n    crop: USDA crop name\n    geoid: Geographic identifier (county FIPS code)\n\nReturns:\n    SurveyListResponse with list of all parameters and their values\n\nRaises:\n    CropNotFoundException: If crop not found in database\n    ParameterNotFoundException: If no data found for crop/geoid",
+        "operationId": "list_survey_data_by_crop_v1_feedstocks_usda_survey_crops__crop__geoid__geoid__parameters_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "crop",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "USDA crop name (e.g., corn, wheat, tomatoes). Case-insensitive. Use GET /v1/feedstocks/usda/survey/crops to discover available values.",
+              "title": "Crop"
+            },
+            "description": "USDA crop name (e.g., corn, wheat, tomatoes). Case-insensitive. Use GET /v1/feedstocks/usda/survey/crops to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/survey/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/survey/geoids to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/usda/survey/resources/{resource}/geoid/{geoid}/parameters": {
+      "get": {
+        "tags": [
+          "USDA",
+          "Survey"
+        ],
+        "summary": "List Survey Data By Resource",
+        "description": "List all available survey parameters for a specific resource and geographic area.\n\nResources are mapped to USDA crops internally via the resource mapping table.\n\nExample:\n    GET /v1/feedstocks/usda/survey/resources/wheat straw/geoid/06047/parameters\n\nArgs:\n    session: Database session (injected)\n    resource: Resource name\n    geoid: Geographic identifier (county FIPS code)\n\nReturns:\n    SurveyListResponse with list of all parameters and their values\n\nRaises:\n    ResourceNotFoundException: If resource not found in database\n    ParameterNotFoundException: If no data found for resource/geoid",
+        "operationId": "list_survey_data_by_resource_v1_feedstocks_usda_survey_resources__resource__geoid__geoid__parameters_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource name mapped to a USDA crop (e.g., corn stover whole, wheat straw). Case-insensitive. Use GET /v1/feedstocks/usda/survey/resources to discover available values.",
+              "title": "Resource"
+            },
+            "description": "Resource name mapped to a USDA crop (e.g., corn stover whole, wheat straw). Case-insensitive. Use GET /v1/feedstocks/usda/survey/resources to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/survey/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06047, 06077, 06099). Use GET /v1/feedstocks/usda/survey/geoids to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SurveyListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/analysis/resources": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "List Analysis Resources",
+        "description": "List all distinct resource names available for analysis queries.\n\nExample:\n    GET /v1/feedstocks/analysis/resources\n\nReturns:\n    DiscoveryResponse with list of resource name strings",
+        "operationId": "list_analysis_resources_v1_feedstocks_analysis_resources_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/analysis/geoids": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "List Analysis Geoids",
+        "description": "List all distinct geoids available for analysis queries.\n\nReturns an empty list until the known analysis_data_view geoid bug is resolved.\nUse GET /v1/feedstocks/analysis/resources to discover available resources.\n\nExample:\n    GET /v1/feedstocks/analysis/geoids\n\nReturns:\n    DiscoveryResponse with list of geoid strings",
+        "operationId": "list_analysis_geoids_v1_feedstocks_analysis_geoids_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/analysis/parameters": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "List Analysis Parameters",
+        "description": "List all distinct parameter names available for analysis queries.\n\nExample:\n    GET /v1/feedstocks/analysis/parameters\n\nReturns:\n    DiscoveryResponse with list of parameter name strings",
+        "operationId": "list_analysis_parameters_v1_feedstocks_analysis_parameters_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DiscoveryResponse"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/v1/feedstocks/analysis/resources/{resource}/geoid/{geoid}/parameters/{parameter}": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "Get Analysis Data By Resource",
+        "description": "Get a single analysis parameter for a specific resource and geographic area.\n\nQueries analysis data from proximate, ultimate, and compositional analysis records.\n\nExample:\n    GET /v1/feedstocks/analysis/resources/almond hulls/geoid/06047/parameters/ash\n\nArgs:\n    session: Database session (injected)\n    resource: Resource name\n    geoid: Geographic identifier (county FIPS code)\n    parameter: Parameter name to retrieve\n\nReturns:\n    AnalysisDataResponse with the parameter value and metadata\n\nRaises:\n    ResourceNotFoundException: If resource not found in database\n    ParameterNotFoundException: If parameter not found for resource/geoid",
+        "operationId": "get_analysis_data_by_resource_v1_feedstocks_analysis_resources__resource__geoid__geoid__parameters__parameter__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource name (e.g., almond hulls, corn stover whole). Case-insensitive; spaces and underscores are treated equivalently. Use GET /v1/feedstocks/analysis/resources to discover available values.",
+              "title": "Resource"
+            },
+            "description": "Resource name (e.g., almond hulls, corn stover whole). Case-insensitive; spaces and underscores are treated equivalently. Use GET /v1/feedstocks/analysis/resources to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (county FIPS code). Use GET /v1/feedstocks/analysis/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (county FIPS code). Use GET /v1/feedstocks/analysis/geoids to discover available values."
+          },
+          {
+            "name": "parameter",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Parameter name (e.g., ash, moisture, nitrogen). Use GET /v1/feedstocks/analysis/parameters to discover available values.",
+              "title": "Parameter"
+            },
+            "description": "Parameter name (e.g., ash, moisture, nitrogen). Use GET /v1/feedstocks/analysis/parameters to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisDataResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/analysis/resources/{resource}/geoid/{geoid}/parameters": {
+      "get": {
+        "tags": [
+          "Analysis"
+        ],
+        "summary": "List Analysis Data By Resource",
+        "description": "List all analysis parameters for a specific resource and geographic area.\n\nQueries all available analysis data from proximate, ultimate, and compositional records.\n\nExample:\n    GET /v1/feedstocks/analysis/resources/almond hulls/geoid/06047/parameters\n\nArgs:\n    session: Database session (injected)\n    resource: Resource name\n    geoid: Geographic identifier (county FIPS code)\n\nReturns:\n    AnalysisListResponse with all available parameters and their values\n\nRaises:\n    ResourceNotFoundException: If resource not found in database",
+        "operationId": "list_analysis_data_by_resource_v1_feedstocks_analysis_resources__resource__geoid__geoid__parameters_get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource name (e.g., almond hulls, corn stover whole). Case-insensitive; spaces and underscores are treated equivalently. Use GET /v1/feedstocks/analysis/resources to discover available values.",
+              "title": "Resource"
+            },
+            "description": "Resource name (e.g., almond hulls, corn stover whole). Case-insensitive; spaces and underscores are treated equivalently. Use GET /v1/feedstocks/analysis/resources to discover available values."
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (county FIPS code). Use GET /v1/feedstocks/analysis/geoids to discover available values.",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (county FIPS code). Use GET /v1/feedstocks/analysis/geoids to discover available values."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnalysisListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/feedstocks/availability/resources/{resource}/geoid/{geoid}": {
+      "get": {
+        "tags": [
+          "Availability"
+        ],
+        "summary": "Get Availability By Resource",
+        "description": "Get seasonal availability window for a specific resource and geographic area.\n\nReturns the months during which the resource is available for harvest/collection.\n\nExample:\n    GET /v1/feedstocks/availability/resources/almond_hulls/geoid/06001\n\nArgs:\n    session: Database session (injected)\n    resource: Resource name\n    geoid: Geographic identifier (county FIPS code)\n\nReturns:\n    AvailabilityResponse with from_month and to_month values\n\nRaises:\n    ResourceNotFoundException: If resource not found or no availability data",
+        "operationId": "get_availability_by_resource_v1_feedstocks_availability_resources__resource__geoid__geoid__get",
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "resource",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Resource name (e.g., almond_hulls, corn_stover)",
+              "title": "Resource"
+            },
+            "description": "Resource name (e.g., almond_hulls, corn_stover)"
+          },
+          {
+            "name": "geoid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Geographic identifier (e.g., 06001)",
+              "title": "Geoid"
+            },
+            "description": "Geographic identifier (e.g., 06001)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AvailabilityResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AnalysisDataResponse": {
+        "properties": {
+          "resource": {
+            "type": "string",
+            "title": "Resource",
+            "description": "Resource name"
+          },
+          "geoid": {
+            "type": "string",
+            "title": "Geoid",
+            "description": "Geographic identifier"
+          },
+          "parameter": {
+            "type": "string",
+            "title": "Parameter",
+            "description": "Parameter name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Parameter value (may be null if not available)"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Unit of measurement"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource",
+          "geoid",
+          "parameter",
+          "unit"
+        ],
+        "title": "AnalysisDataResponse",
+        "description": "Response for single feedstock analysis parameter.\n\nReturned when requesting a specific analysis parameter for a resource and geoid."
+      },
+      "AnalysisListResponse": {
+        "properties": {
+          "resource": {
+            "type": "string",
+            "title": "Resource",
+            "description": "Resource name"
+          },
+          "geoid": {
+            "type": "string",
+            "title": "Geoid",
+            "description": "Geographic identifier"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DataItemResponse"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "List of parameter data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource",
+          "geoid",
+          "data"
+        ],
+        "title": "AnalysisListResponse",
+        "description": "Response for list of feedstock analysis parameters.\n\nReturned when listing all analysis parameters for a resource and geoid."
+      },
+      "AvailabilityResponse": {
+        "properties": {
+          "resource": {
+            "type": "string",
+            "title": "Resource",
+            "description": "Resource name"
+          },
+          "geoid": {
+            "type": "string",
+            "title": "Geoid",
+            "description": "Geographic identifier"
+          },
+          "from_month": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "From Month",
+            "description": "Starting month (1-12)"
+          },
+          "to_month": {
+            "type": "integer",
+            "maximum": 12.0,
+            "minimum": 1.0,
+            "title": "To Month",
+            "description": "Ending month (1-12)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "resource",
+          "geoid",
+          "from_month",
+          "to_month"
+        ],
+        "title": "AvailabilityResponse",
+        "description": "Response for resource availability data.\n\nReturned when requesting seasonal availability for a resource and geoid."
+      },
+      "Body_login_v1_auth_token_post": {
+        "properties": {
+          "grant_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "password"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_v1_auth_token_post"
+      },
+      "CensusDataResponse": {
+        "properties": {
+          "usda_crop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usda Crop",
+            "description": "USDA crop name (if queried by crop)"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource",
+            "description": "Resource name (if queried by resource)"
+          },
+          "geoid": {
+            "type": "string",
+            "title": "Geoid",
+            "description": "Geographic identifier"
+          },
+          "parameter": {
+            "type": "string",
+            "title": "Parameter",
+            "description": "Parameter name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Parameter value (may be null if not available)"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Unit of measurement"
+          },
+          "dimension": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension",
+            "description": "Dimension name (if applicable)"
+          },
+          "dimension_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension Value",
+            "description": "Dimension value (if applicable)"
+          },
+          "dimension_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension Unit",
+            "description": "Dimension unit (if applicable)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "geoid",
+          "parameter",
+          "unit"
+        ],
+        "title": "CensusDataResponse",
+        "description": "Response for single USDA census parameter.\n\nReturned when requesting a specific parameter for a crop/resource and geoid."
+      },
+      "CensusListResponse": {
+        "properties": {
+          "usda_crop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usda Crop",
+            "description": "USDA crop name (if queried by crop)"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource",
+            "description": "Resource name (if queried by resource)"
+          },
+          "geoid": {
+            "type": "string",
+            "title": "Geoid",
+            "description": "Geographic identifier"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DataItemResponse"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "List of parameter data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "geoid",
+          "data"
+        ],
+        "title": "CensusListResponse",
+        "description": "Response for list of USDA census parameters.\n\nReturned when listing all parameters for a crop/resource and geoid."
+      },
+      "DataItemResponse": {
+        "properties": {
+          "parameter": {
+            "type": "string",
+            "title": "Parameter",
+            "description": "Parameter name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Parameter value (may be null if not available)"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Unit of measurement"
+          },
+          "dimension": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension",
+            "description": "Dimension name (if applicable)"
+          },
+          "dimension_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension Value",
+            "description": "Dimension value (if applicable)"
+          },
+          "dimension_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension Unit",
+            "description": "Dimension unit (if applicable)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "parameter",
+          "unit"
+        ],
+        "title": "DataItemResponse",
+        "description": "Individual data item in list responses.\n\nUsed when listing all parameters for a crop/resource/geoid combination.\nEach item represents one parameter with its value and metadata."
+      },
+      "DiscoveryResponse": {
+        "properties": {
+          "values": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Values",
+            "description": "Distinct non-NULL values available for querying"
+          }
+        },
+        "type": "object",
+        "required": [
+          "values"
+        ],
+        "title": "DiscoveryResponse",
+        "description": "List of distinct queryable values for a given field."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "SurveyDataResponse": {
+        "properties": {
+          "usda_crop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usda Crop",
+            "description": "USDA crop name (if queried by crop)"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource",
+            "description": "Resource name (if queried by resource)"
+          },
+          "geoid": {
+            "type": "string",
+            "title": "Geoid",
+            "description": "Geographic identifier"
+          },
+          "parameter": {
+            "type": "string",
+            "title": "Parameter",
+            "description": "Parameter name"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value",
+            "description": "Parameter value (may be null if not available)"
+          },
+          "unit": {
+            "type": "string",
+            "title": "Unit",
+            "description": "Unit of measurement"
+          },
+          "dimension": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension",
+            "description": "Dimension name (if applicable)"
+          },
+          "dimension_value": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension Value",
+            "description": "Dimension value (if applicable)"
+          },
+          "dimension_unit": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dimension Unit",
+            "description": "Dimension unit (if applicable)"
+          },
+          "survey_program_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Survey Program Id",
+            "description": "Survey program ID"
+          },
+          "survey_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Survey Period",
+            "description": "Survey period"
+          },
+          "reference_month": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Month",
+            "description": "Reference month"
+          },
+          "seasonal_flag": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seasonal Flag",
+            "description": "Whether data is seasonal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "geoid",
+          "parameter",
+          "unit"
+        ],
+        "title": "SurveyDataResponse",
+        "description": "Response for single USDA survey parameter.\n\nSimilar to CensusDataResponse but for survey data, which includes\nadditional survey-specific metadata fields."
+      },
+      "SurveyListResponse": {
+        "properties": {
+          "usda_crop": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usda Crop",
+            "description": "USDA crop name (if queried by crop)"
+          },
+          "resource": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource",
+            "description": "Resource name (if queried by resource)"
+          },
+          "geoid": {
+            "type": "string",
+            "title": "Geoid",
+            "description": "Geographic identifier"
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/DataItemResponse"
+            },
+            "type": "array",
+            "title": "Data",
+            "description": "List of parameter data"
+          },
+          "survey_program_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Survey Program Id",
+            "description": "Survey program ID"
+          },
+          "survey_period": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Survey Period",
+            "description": "Survey period"
+          },
+          "reference_month": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reference Month",
+            "description": "Reference month"
+          },
+          "seasonal_flag": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seasonal Flag",
+            "description": "Whether data is seasonal"
+          }
+        },
+        "type": "object",
+        "required": [
+          "geoid",
+          "data"
+        ],
+        "title": "SurveyListResponse",
+        "description": "Response for list of USDA survey parameters.\n\nReturned when listing all parameters for a crop/resource and geoid."
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type"
+        ],
+        "title": "Token",
+        "description": "JWT access token response."
+      },
+      "UserCreate": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "maxLength": 64,
+            "minLength": 3,
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 8,
+            "title": "Password"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 254
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "UserCreate",
+        "description": "Payload for creating a new API user."
+      },
+      "UserResponse": {
+        "properties": {
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Email"
+          },
+          "full_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Full Name"
+          },
+          "is_admin": {
+            "type": "boolean",
+            "title": "Is Admin"
+          },
+          "disabled": {
+            "type": "boolean",
+            "title": "Disabled"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "username",
+          "is_admin",
+          "disabled"
+        ],
+        "title": "UserResponse",
+        "description": "Public representation of an API user (no password hash)."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {},
+            "tokenUrl": "/v1/auth/token"
+          }
+        }
+      }
+    }
+  }
+}
