@@ -33,7 +33,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up pixi
-        uses: prefix-dev/setup-pixi@v0.9.4
+        uses: prefix-dev/setup-pixi@v0.9.5
         with:
           pixi-version: v0.63.2
           environments: ${{ matrix.python-version }}
@@ -54,6 +54,6 @@ jobs:
           pixi run pytest src/ca_biositing/webservice -m "not integration" --cov=ca_biositing.webservice --cov-report=xml --cov-append --cov-report=term-missing
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v5.5.2
+        uses: codecov/codecov-action@v6.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
