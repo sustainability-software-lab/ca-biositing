@@ -1,7 +1,7 @@
 # ca-biositing
 
-<span><img src="https://img.shields.io/badge/SSEC-Project-purple?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAOCAQAAABedl5ZAAAACXBIWXMAAAHKAAABygHMtnUxAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAMNJREFUGBltwcEqwwEcAOAfc1F2sNsOTqSlNUopSv5jW1YzHHYY/6YtLa1Jy4mbl3Bz8QIeyKM4fMaUxr4vZnEpjWnmLMSYCysxTcddhF25+EvJia5hhCudULAePyRalvUteXIfBgYxJufRuaKuprKsbDjVUrUj40FNQ11PTzEmrCmrevPhRcVQai8m1PRVvOPZgX2JttWYsGhD3atbHWcyUqX4oqDtJkJiJHUYv+R1JbaNHJmP/+Q1HLu2GbNoSm3Ft0+Y1YMdPSTSwQAAAABJRU5ErkJggg==&style=plastic" /></span>
-![BSD License](https://badgen.net/badge/license/BSD-3-Clause/blue)
+[![ssec](https://img.shields.io/badge/SSEC-Project-purple?logo=data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAA0AAAAOCAQAAABedl5ZAAAACXBIWXMAAAHKAAABygHMtnUxAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAAMNJREFUGBltwcEqwwEcAOAfc1F2sNsOTqSlNUopSv5jW1YzHHYY/6YtLa1Jy4mbl3Bz8QIeyKM4fMaUxr4vZnEpjWnmLMSYCysxTcddhF25+EvJia5hhCudULAePyRalvUteXIfBgYxJufRuaKuprKsbDjVUrUj40FNQ11PTzEmrCmrevPhRcVQai8m1PRVvOPZgX2JttWYsGhD3atbHWcyUqX4oqDtJkJiJHUYv+R1JbaNHJmP/+Q1HLu2GbNoSm3Ft0+Y1YMdPSTSwQAAAABJRU5ErkJggg==&style=plastic)](https://escience.washington.edu/software-engineering/ssec/)
+[![BSD License](https://badgen.net/badge/license/BSD-3-Clause/blue)](./LICENSE)
 [![Pixi Badge](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/prefix-dev/pixi/main/assets/badge/v0.json)](https://pixi.sh)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![DOI](https://zenodo.org/badge/1036998116.svg)](https://zenodo.org/badge/latestdoi/1036998116)
@@ -10,10 +10,9 @@
 CA-BioSiting is the backend data platform for
 [Cal BioScape](https://calbioscape.org), a web-based tool supporting the
 development of a circular bioeconomy in California's Northern San Joaquin Valley
-(San Joaquin, Stanislaus, and Merced counties). The platform is developed at the
-[University of Washington Scientific Software Engineering Center (SSEC)](https://escience.washington.edu/software-engineering/ssec/)
-as part of the [BioCircular Valley](https://calbioscape.org/about) initiative --
-a multi-institutional collaboration involving Lawrence Berkeley National
+(San Joaquin, Stanislaus, and Merced counties). The platform is a part of the
+[BioCircular Valley](https://calbioscape.org/about) initiative, a
+multi-institutional collaboration involving Lawrence Berkeley National
 Laboratory, UC Berkeley, UC Merced, UC Agriculture and Natural Resources, USDA
 Albany Agricultural Research Station, the Almond Board of California, and BEAM
 Circular. The initiative is funded through Schmidt Sciences' Virtual Institute
@@ -197,6 +196,13 @@ component-specific details:
   pipeline and Prefect workflows
 - [`docs/webservice/CONTRIBUTING.md`](docs/webservice/CONTRIBUTING.md) --
   FastAPI web service
+
+## Acknowledgement
+
+We'd like to acknowledge the software engineering efforts from the
+[University of Washington Scientific Software Engineering Center (SSEC)](https://escience.washington.edu/software-engineering/ssec/),
+as part of the
+[Schmidt Sciences' Virtual Institute for Scientific Software (VISS)](https://www.schmidtsciences.org/viss/).
 
 ## License
 
