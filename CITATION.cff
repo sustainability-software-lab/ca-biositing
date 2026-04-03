@@ -1,0 +1,66 @@
+cff-version: 1.2.0
+title: "CA-BioSiting: Backend Data Platform"
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+license: BSD-3-Clause
+repository-code: "https://github.com/sustainability-software-lab/ca-biositing"
+url: "https://calbioscape.org"
+# -------------------------------
+# Zenodo DOI will be added after the first release
+# doi: 10.xxxx/zenodo.xxxxxxx
+# -------------------------------
+abstract: >-
+  CA-BioSiting is the backend data platform for Cal BioScape,
+  a web-based tool supporting the development of a circular
+  bioeconomy in California's Northern San Joaquin Valley.
+  The platform automates ingestion of biomass characterization
+  data, LandIQ crop mapping, USDA agricultural statistics,
+  and DOE Billion Ton Study records into a spatially-enabled
+  PostgreSQL database, and exposes them through a REST API
+  for downstream analysis, visualization, and data export.
+authors:
+  - given-names: Landung
+    family-names: Setiawan
+    affiliation: >-
+      University of Washington, eScience Institute,
+      Scientific Software Engineering Center
+    orcid: "https://orcid.org/0000-0002-1624-2667"
+  - given-names: Vraj
+    family-names: Rajpura
+    orcid: "https://orcid.org/0009-0000-4988-3279"
+  - given-names: Niki
+    family-names: Burggraf
+    affiliation: >-
+      University of Washington, eScience Institute,
+      Scientific Software Engineering Center
+    orcid: "https://orcid.org/0009-0000-4572-5898"
+  - given-names: Meili
+    family-names: Gong
+    affiliation: Lawrence Berkeley National Laboratory
+    orcid: "https://orcid.org/0000-0001-8480-9306"
+  - given-names: Peter
+    family-names: Smith
+    affiliation: University of California, Berkeley
+    orcid: "https://orcid.org/0000-0002-9276-5099"
+  - given-names: Tyler
+    family-names: Huntington
+    affiliation: Lawrence Berkeley National Laboratory
+    orcid: "https://orcid.org/0000-0002-3213-0382"
+  - given-names: Avi
+    family-names: Wong
+    affiliation: University of California, Berkeley
+    orcid: "https://orcid.org/0009-0008-2025-6122"
+keywords:
+  - bioeconomy
+  - biomass
+  - geospatial
+  - etl
+  - fastapi
+  - postgresql
+  - postgis
+  - california
+  - agriculture
+version: "2026.4.6"
+date-released: "2026-04-06"
