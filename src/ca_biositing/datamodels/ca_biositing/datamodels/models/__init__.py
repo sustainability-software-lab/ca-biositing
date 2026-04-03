@@ -13,6 +13,9 @@ from .aim2_records import AutoclaveRecord, FermentationRecord, GasificationRecor
 # Core
 from .core import EntityLineage, EtlRun, LineageGroup
 
+# Calculations
+from .calculations import MethodAssumption, TechnicalAssumption
+
 # Data Sources Metadata
 from .data_sources_metadata import DataSource, DataSourceType, FileObjectMetadata, LocationResolution, SourceType
 
@@ -41,7 +44,7 @@ from .people import Contact, Provider
 from .places import LocationAddress, Place
 
 # Resource Information
-from .resource_information import PrimaryAgProduct, Resource, ResourceAvailability, ResourceClass, ResourceCounterfactual, ResourceMorphology, ResourceSubclass
+from .resource_information import PrimaryAgProduct, Resource, ResourceAvailability, ResourceClass, ResourceCounterfactual, ResourceEndUseRecord, ResourceMorphology, ResourcePriceRecord, ResourceProductionRecord, ResourceStorageRecord, ResourceSubclass, ResourceTransportRecord
 
 # Sample Preparation
 from .sample_preparation import PreparationMethod, PreparationMethodAbbreviation, PreparedSample

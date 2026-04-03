@@ -13,7 +13,6 @@ import sqlmodel
 from ca_biositing.datamodels.data_portal_views import (
     mv_biomass_search,
     mv_biomass_composition,
-    mv_biomass_county_production,
     mv_biomass_availability,
     mv_biomass_sample_stats,
     mv_biomass_fermentation,
@@ -47,9 +46,6 @@ def upgrade() -> None:
 
     create_mv("mv_biomass_composition", mv_biomass_composition)
     op.execute("CREATE UNIQUE INDEX idx_mv_biomass_composition_key ON data_portal.mv_biomass_composition (resource_id, analysis_type, parameter_name, unit)")
-
-    create_mv("mv_biomass_county_production", mv_biomass_county_production)
-    op.execute("CREATE UNIQUE INDEX idx_mv_biomass_county_production_id ON data_portal.mv_biomass_county_production (id)")
 
     create_mv("mv_biomass_availability", mv_biomass_availability)
     op.execute("CREATE UNIQUE INDEX idx_mv_biomass_availability_resource_id ON data_portal.mv_biomass_availability (resource_id)")
