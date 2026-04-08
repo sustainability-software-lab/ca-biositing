@@ -74,7 +74,6 @@ nav:
   - Deployment: deployment/README.md
   - Contributing: CONTRIBUTING.md
   - Code of Conduct: CODE_OF_CONDUCT.md
-  - ERD View: ERD_VIEW.md
-  - Changelong: CHANGELOG.md
+  - Changelog: CHANGELOG.md
   - Security: SECURITY.md
   - License: LICENSE
