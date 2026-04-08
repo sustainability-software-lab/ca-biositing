@@ -186,17 +186,17 @@ pixi run -e docs docs-serve
 
 ## Contributing
 
-See [`CONTRIBUTING.md`](CONTRIBUTING.md) for general contribution guidelines
+See our [Contributing Page](https://ca-biositing.readthedocs.io/en/latest/CONTRIBUTING/) for general contribution guidelines
 (branching, PRs, commit style, pre-commit setup).
 
 Each namespace package also has its own contributing guide with
 component-specific details:
 
-- [`datamodels/CONTRIBUTING.md`](datamodels/CONTRIBUTING.md) -- Data models and
+- [Datamodels](https://ca-biositing.readthedocs.io/en/latest/datamodels/CONTRIBUTING/): Data models and
   database schema
-- [`pipeline/CONTRIBUTING.md`](pipeline/CONTRIBUTING.md) -- ETL pipeline and
+- [Pipeline](https://ca-biositing.readthedocs.io/en/latest/pipeline/CONTRIBUTING/): ETL pipeline and
   Prefect workflows
-- [`webservice/CONTRIBUTING.md`](webservice/CONTRIBUTING.md) -- FastAPI web
+- [Webservice](https://ca-biositing.readthedocs.io/en/latest/webservice/CONTRIBUTING/): FastAPI web
   service
 
 ## Acknowledgement
@@ -210,16 +210,16 @@ as part of the
 
 To report a security vulnerability, please use
 [GitHub Security Advisories](https://github.com/sustainability-software-lab/ca-biositing/security/advisories/new).
-See [`SECURITY.md`](SECURITY.md) for the full security policy including
+See [Security Page](https://ca-biositing.readthedocs.io/en/latest/SECURITY/) for the full security policy including
 supported versions, reporting guidelines, and disclosure process.
 
 ## Changelog
 
 Notable changes for each release are documented in
-[`CHANGELOG.md`](CHANGELOG.md), following the
+[Changelog Page](https://ca-biositing.readthedocs.io/en/latest/CHANGELOG/), following the
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 
 ## License
 
-This project is licensed under the BSD 3-Clause License. See [LICENSE](LICENSE)
+This project is licensed under the BSD 3-Clause License. See [License Page](https://ca-biositing.readthedocs.io/en/latest/LICENSE/)
 for details.
