@@ -186,17 +186,19 @@ pixi run -e docs docs-serve
 
 ## Contributing
 
-See [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md) for general contribution
-guidelines (branching, PRs, commit style, pre-commit setup).
+See our
+[Contributing Page](https://ca-biositing.readthedocs.io/en/latest/CONTRIBUTING/)
+for general contribution guidelines (branching, PRs, commit style, pre-commit
+setup).
 
 Each namespace package also has its own contributing guide with
 component-specific details:
 
-- [`docs/datamodels/CONTRIBUTING.md`](docs/datamodels/CONTRIBUTING.md) -- Data
-  models and database schema
-- [`docs/pipeline/CONTRIBUTING.md`](docs/pipeline/CONTRIBUTING.md) -- ETL
-  pipeline and Prefect workflows
-- [`docs/webservice/CONTRIBUTING.md`](docs/webservice/CONTRIBUTING.md) --
+- [Datamodels](https://ca-biositing.readthedocs.io/en/latest/datamodels/CONTRIBUTING/):
+  Data models and database schema
+- [Pipeline](https://ca-biositing.readthedocs.io/en/latest/pipeline/CONTRIBUTING/):
+  ETL pipeline and Prefect workflows
+- [Webservice](https://ca-biositing.readthedocs.io/en/latest/webservice/CONTRIBUTING/):
   FastAPI web service
 
 ## Acknowledgement
@@ -210,16 +212,18 @@ as part of the
 
 To report a security vulnerability, please use
 [GitHub Security Advisories](https://github.com/sustainability-software-lab/ca-biositing/security/advisories/new).
-See [`SECURITY.md`](SECURITY.md) for the full security policy including
-supported versions, reporting guidelines, and disclosure process.
+See [Security Page](https://ca-biositing.readthedocs.io/en/latest/SECURITY/) for
+the full security policy including supported versions, reporting guidelines, and
+disclosure process.
 
 ## Changelog
 
 Notable changes for each release are documented in
-[`CHANGELOG.md`](CHANGELOG.md), following the
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
+[Changelog Page](https://ca-biositing.readthedocs.io/en/latest/CHANGELOG/),
+following the [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) format.
 
 ## License
 
-This project is licensed under the BSD 3-Clause License. See [LICENSE](LICENSE)
-for details.
+This project is licensed under the BSD 3-Clause License. See
+[License Page](https://ca-biositing.readthedocs.io/en/latest/LICENSE/) for
+details.
