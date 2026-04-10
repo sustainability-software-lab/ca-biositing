@@ -30,7 +30,8 @@ python = "~=3.12"
 pre-commit = ">=4.2.0,<5"
 pytest = ">=8.4.2,<9"
 pytest-cov = ">=7.0.0,<8"
-pip = ">=25.2,<26"
+pip-audit = ">=2.7.3,<3"
+pip = ">=26.0,<27"
 docker-compose = ">=2.39.2,<3"
 docker-cli = ">=28.3.1,<29"
 testcontainers = ">=4.13.2,<5"
@@ -45,10 +46,14 @@ pandas = ">=2.2,<3"
 packaging = "<25.1"
 importlib-metadata = "<8.8"
 pytz = "<2026"
+requests = ">=2.33.0"
+aiohttp = ">=3.13.4"
+pygments = ">=2.20.0"
 
 [tasks]
 pre-commit-all = "pre-commit run --all-files"
 pre-commit-install = "pre-commit install"
+pip-audit = { cmd = "pip-audit", description = "Scan installed Python packages for known vulnerabilities." }
 initial-migration = { cmd = [
     "docker-compose",
     "-f",
@@ -295,7 +300,7 @@ depends-on = [{ task = "start-services" }]
 # Webservice Dependencies
 [feature.webservice.pypi-dependencies]
 ca-biositing-webservice = { path = "./src/ca_biositing/webservice", editable = true }
-fastapi = ">=0.111.0,<0.115.0"
+fastapi = ">=0.115.0"
 pydantic = ">=2.5,<3.0"
 pyjwt = ">=2.0,<3"
 pwdlib = { version = ">=0.2.0", extras = ["argon2"] }
@@ -435,3 +440,5 @@ matplotlib = "*"
 
 [pypi-dependencies]
 sqlalchemy = ">=2.0.44, <3"
+# Minimum versions to address known CVEs in transitive dependencies
+starlette = ">=0.47.2"
