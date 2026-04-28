@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from prefect import task, get_run_logger
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
+from sqlalchemy import delete as sa_delete
 
 @task(retries=3, retry_delay_seconds=10)
 def load_strain(df: pd.DataFrame):
@@ -55,6 +56,23 @@ def load_strain(df: pd.DataFrame):
                     )
                     session.execute(upsert_stmt)
                     session.commit()
+
+                    # Conservative cleanup: remove stale strain rows that have no taxonomy
+                    # fields (genus, species, strain) and are NOT in the newly loaded set.
+                    try:
+                        loaded_names = [r.get('name') for r in clean_records if r.get('name')]
+                        if loaded_names:
+                            del_stmt = sa_delete(Strain).where(
+                                Strain.genus.is_(None),
+                                Strain.species.is_(None),
+                                Strain.strain.is_(None),
+                                ~Strain.name.in_(loaded_names)
+                            )
+                            res = session.execute(del_stmt)
+                            session.commit()
+                            logger.info(f"Deleted {res.rowcount} stale Strain rows with null taxonomy and not in loaded set")
+                    except Exception:
+                        logger.exception("Failed during Strain cleanup step")
 
         logger.info("Successfully upserted Strain records.")
     except Exception:

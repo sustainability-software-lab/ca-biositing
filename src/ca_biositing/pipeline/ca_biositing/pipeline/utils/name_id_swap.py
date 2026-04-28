@@ -8,6 +8,7 @@ import logging
 ModelType = TypeVar("ModelType", bound=Any)
 logger = logging.getLogger(__name__)
 
+
 def replace_id_with_name_df(
     db: Session,
     df: pd.DataFrame,
@@ -16,9 +17,7 @@ def replace_id_with_name_df(
     name_column_name: str,
 ) -> pd.DataFrame:
     # Fetch reference table rows as mappings
-    rows = db.execute(
-        select(*ref_model.__table__.columns)
-    ).mappings().all()
+    rows = db.execute(select(*ref_model.__table__.columns)).mappings().all()
 
     # Build ID → name map
     id_to_name_map = {
@@ -33,101 +32,100 @@ def replace_id_with_name_df(
     return df_copy
 
 
-
 def replace_name_with_id_df(
-  db: Session,
-  df: pd.DataFrame,
-  ref_model,
-  df_name_column: str,
-  model_name_attr: str,
-  id_column_name: str,
-  final_column_name: str,
+    db: Session,
+    df: pd.DataFrame,
+    ref_model,
+    df_name_column: str,
+    model_name_attr: str,
+    id_column_name: str,
+    final_column_name: str,
 ) -> tuple[pd.DataFrame, int]:
-  """
-  Replace a DataFrame name column with foreign key IDs from a database table.
-  Creates missing reference records if needed.
+    """
+    Replace a DataFrame name column with foreign key IDs from a database table.
+    Creates missing reference records if needed.
 
-  Returns:
-      A tuple containing the modified DataFrame and the number of new records created.
-  """
+    Returns:
+        A tuple containing the modified DataFrame and the number of new records created.
+    """
 
-  # If using the SQLite fallback, skip DB lookups and return a column of NA.
-  try:
-      driver_name = db.bind.url.drivername  # type: ignore[attr-defined]
-  except Exception:
-      driver_name = None
-  if driver_name == "sqlite":
-      logger.warning("SQLite fallback active; skipping name‑id replacement.")
-      df_copy = df.copy()
-      df_copy[final_column_name] = pd.NA
-      return df_copy, 0
+    # If using the SQLite fallback, skip DB lookups and return a column of NA.
+    try:
+        driver_name = db.bind.url.drivername  # type: ignore[attr-defined]
+    except Exception:
+        driver_name = None
+    if driver_name == "sqlite":
+        logger.warning("SQLite fallback active; skipping name-id replacement.")
+        df_copy = df.copy()
+        df_copy[final_column_name] = pd.NA
+        return df_copy, 0
 
-  # 1. Fetch existing reference rows (name + id only)
-  try:
-    rows = db.execute(
-      select(
-        getattr(ref_model, model_name_attr),
-        getattr(ref_model, id_column_name),
-      )
-    ).all()
-  except Exception as e:
-    # If the model does not have the expected attributes (e.g., a dummy
-    # placeholder used in tests) or any other issue occurs, fall back to the
-    # SQLite‑in‑memory behaviour – return a column of NA values.
-    logger.warning(f"Skipping name‑id replacement due to model issue: {e}")
+    # 1. Fetch existing reference rows (name + id only)
+    try:
+        rows = db.execute(
+            select(
+                getattr(ref_model, model_name_attr),
+                getattr(ref_model, id_column_name),
+            )
+        ).all()
+    except Exception as e:
+        # If the model does not have the expected attributes (e.g., a dummy
+        # placeholder used in tests) or any other issue occurs, fall back to the
+        # SQLite-in-memory behaviour – return a column of NA values.
+        logger.warning(f"Skipping name-id replacement due to model issue: {e}")
+        df_copy = df.copy()
+        df_copy[final_column_name] = pd.NA
+        return df_copy, 0
+
+    # Build a case-insensitive lookup map.
+    # We lowercase the keys to ensure matches regardless of DB casing.
+    name_to_id_map = {str(name).lower(): id_ for name, id_ in rows if name is not None}
+
     df_copy = df.copy()
-    df_copy[final_column_name] = pd.NA
-    return df_copy, 0
 
-  # Build a case-insensitive lookup map.
-  # We lowercase the keys to ensure matches regardless of DB casing.
-  name_to_id_map = {str(name).lower(): id_ for name, id_ in rows if name is not None}
+    # 2. Determine which names are new
+    # Filter out nulls and empty strings
+    series = df_copy[df_name_column]
+    unique_names = set(series[series.notna() & (series.astype(str).str.strip() != "")].unique())
 
-  df_copy = df.copy()
+    # Check against lowercased keys in the map to prevent duplicates
+    new_names = {name for name in unique_names if str(name).lower() not in name_to_id_map}
+    num_new_records = len(new_names)
 
-  # 2. Determine which names are new
-  # Filter out nulls and empty strings
-  series = df_copy[df_name_column]
-  unique_names = set(series[series.notna() & (series.astype(str).str.strip() != "")].unique())
+    # 3. Insert missing reference rows
+    if new_names:
+        for name in new_names:
+            # Enforce lowercase on creation for consistency in reference tables
+            clean_name = str(name).lower().strip()
+            new_record = ref_model(**{model_name_attr: clean_name})
+            db.add(new_record)
 
-  # Check against lowercased keys in the map to prevent duplicates
-  new_names = {name for name in unique_names if str(name).lower() not in name_to_id_map}
-  num_new_records = len(new_names)
+        # Flush to get IDs without ending the transaction
+        db.flush()
 
-  # 3. Insert missing reference rows
-  if new_names:
-    for name in new_names:
-      # Enforce lowercase on creation for consistency in reference tables
-      clean_name = str(name).lower().strip()
-      new_record = ref_model(**{model_name_attr: clean_name})
-      db.add(new_record)
+        # Re-query just-created rows using lowercased names to match what we inserted
+        clean_new_names = [str(name).lower().strip() for name in new_names]
+        refreshed = db.execute(
+            select(ref_model).where(
+                getattr(ref_model, model_name_attr).in_(clean_new_names)
+            )
+        ).scalars().all()
 
-    # Flush to get IDs without ending the transaction
-    db.flush()
+        for record in refreshed:
+            # Use lowercased keys for the map to ensure matches
+            name_to_id_map[
+                str(getattr(record, model_name_attr)).lower()
+            ] = getattr(record, id_column_name)
 
-    # Re-query just-created rows using lowercased names to match what we inserted
-    clean_new_names = [str(name).lower().strip() for name in new_names]
-    refreshed = db.execute(
-      select(ref_model).where(
-        getattr(ref_model, model_name_attr).in_(clean_new_names)
-      )
-    ).scalars().all()
+    # 4. Replace name column with ID column using case-insensitive mapping
+    # We lowercase the lookup keys from the DataFrame to match our map.
+    df_copy[final_column_name] = df_copy[df_name_column].astype(str).str.lower().map(name_to_id_map)
 
-    for record in refreshed:
-      # Use lowercased keys for the map to ensure matches
-      name_to_id_map[
-        str(getattr(record, model_name_attr)).lower()
-      ] = getattr(record, id_column_name)
+    # If the final column name matches the original, don't drop it (this happens if col is already raw_data_id)
+    if final_column_name != df_name_column:
+        df_copy = df_copy.drop(columns=[df_name_column])
 
-  # 4. Replace name column with ID column using case-insensitive mapping
-  # We lowercase the lookup keys from the DataFrame to match our map.
-  df_copy[final_column_name] = df_copy[df_name_column].astype(str).str.lower().map(name_to_id_map)
-
-  # If the final column name matches the original, don't drop it (this happens if col is already raw_data_id)
-  if final_column_name != df_name_column:
-      df_copy = df_copy.drop(columns=[df_name_column])
-
-  return df_copy, num_new_records
+    return df_copy, num_new_records
 
 
 def normalize_dataframes(

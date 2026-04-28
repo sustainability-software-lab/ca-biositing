@@ -30,13 +30,19 @@ EM = aliased(Method, name="em")
 BM = aliased(Method, name="bm")
 ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BM.duration)
 
+SPECIES_DISPLAY_NAME = func.concat(
+    func.upper(func.left(Strain.genus, 1)),
+    ". ",
+    func.lower(Strain.species)
+)
+
 mv_biomass_fermentation = select(
     func.row_number().over(order_by=(FermentationRecord.resource_id, LocationAddress.geography_id, Strain.name, PM.name, EM.name, BM.name, Parameter.name, Unit.name)).label("id"),
     FermentationRecord.resource_id,
     Resource.name.label("resource_name"),
     LocationAddress.geography_id.label("geoid"),
     Place.county_name.label("county"),
-    Strain.name.label("strain_name"),
+    SPECIES_DISPLAY_NAME.label("species_display_name"),
     PM.name.label("pretreatment_method"),
     EM.name.label("enzyme_name"),
     BM.name.label("bioconversion_method"),
@@ -62,4 +68,4 @@ mv_biomass_fermentation = select(
  .join(Parameter, Observation.parameter_id == Parameter.id)\
  .outerjoin(Unit, Observation.unit_id == Unit.id)\
  .where(FermentationRecord.qc_pass != "fail")\
- .group_by(FermentationRecord.resource_id, Resource.name, LocationAddress.geography_id, Place.county_name, Strain.name, PM.name, EM.name, BM.name, ELAPSED_TIME, Parameter.name, Unit.name)
+ .group_by(FermentationRecord.resource_id, Resource.name, LocationAddress.geography_id, Place.county_name, Strain.name, Strain.genus, Strain.species, PM.name, EM.name, BM.name, ELAPSED_TIME, Parameter.name, Unit.name)

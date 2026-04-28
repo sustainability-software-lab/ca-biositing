@@ -42,28 +42,31 @@ def transform_fermentation_record(
     # Pre-clean names to catch normalization-induced duplicates
     raw_df = cleaning_mod.clean_names_df(raw_df)
 
-    # Rename bioconv_method or strain_name to strain if it exists to match normalization expectations
-    # We prioritize bioconv_method as it contains the actual strain names in this dataset.
-    # BioConv_Method (e.g. "1Sac-EtOH") serves dual purpose:
-    #   1. It is the strain name → normalized to strain_id via 'strain' column
-    #   2. It is also the method name → normalized to method_id via 'method_id' column
-    # We copy it to method_id before renaming to strain so both FKs are populated.
-    if 'bioconv_method' in raw_df.columns:
-        # If both exist, rename strain_name to something else to avoid confusion
-        if 'strain_name' in raw_df.columns:
-            raw_df = raw_df.rename(columns={'strain_name': 'original_strain_name'})
-        # Copy bioconv_method to method_id so it gets normalized to method.id FK
-        raw_df['method_id'] = raw_df['bioconv_method']
-        raw_df = raw_df.rename(columns={'bioconv_method': 'strain'})
-    elif 'strain_name' in raw_df.columns:
-        raw_df = raw_df.rename(columns={'strain_name': 'strain'})
+    # Map legacy/variant column names to the expected normalized names used
+    # by downstream normalization. This handles variants like 'bioconv_method',
+    # 'bioconversion_method', 'pretreatment_method', 'enzyme_method', etc.
+    col_map = {}
+    for c in list(raw_df.columns):
+        lc = str(c).lower().strip()
+        # Bioconversion method variants -> method_id (used to lookup Method.name)
+        if 'bioconv' in lc or 'bioconversion' in lc or lc in ('bio_conv_method', 'bioconv_method'):
+            col_map[c] = 'method_id'
+        # Pretreatment / decon variants -> decon_method
+        if 'pretreatment' in lc or 'decon' in lc:
+            col_map[c] = 'decon_method'
+        # Enzyme / eh variants -> eh_method
+        if 'enzyme' in lc or lc in ('eh_method', 'enzyme_method'):
+            col_map[c] = 'eh_method'
+
+    if col_map:
+        raw_df = raw_df.rename(columns=col_map)
 
     if raw_df.columns.duplicated().any():
         dupes = raw_df.columns[raw_df.columns.duplicated()].unique().tolist()
         logger.warning(f"FermentationRecord: Duplicate columns found and removed: {dupes}")
         raw_df = raw_df.loc[:, ~raw_df.columns.duplicated()]
 
-    logger.info(f"Columns after potential strain rename: {list(raw_df.columns)}")
+    logger.info(f"Columns after normalization prep: {list(raw_df.columns)}")
     if 'strain' in raw_df.columns:
         logger.info(f"Strain column non-null count: {raw_df['strain'].notna().sum()}")
         logger.info(f"Strain column unique values: {raw_df['strain'].unique().tolist()[:5]}")
@@ -98,6 +101,46 @@ def transform_fermentation_record(
         datetime_cols=['created_at', 'updated_at']
     )
 
+    # Unmistakable debug marker to trace strain propagation through transform
+    try:
+        sample_vals = []
+        if 'strain' in coerced_df.columns:
+            sample_vals = coerced_df['strain'].dropna().astype(str).str.strip().unique()[:10].tolist()
+        logger.info(f"XXX_STRain_DEBUG: after coercion - has_strain_column={ 'strain' in coerced_df.columns }, sample_vals={sample_vals}, total_non_null={int(coerced_df['strain'].notna().sum()) if 'strain' in coerced_df.columns else 0}")
+    except Exception as _:
+        logger.exception("XXX_STRain_DEBUG: failed to log strain sample after coercion")
+
+    # Prevent creation of new Strain lookup rows from free-text in the fermentation data.
+    # Only allow strain names that already exist in the `strain` table (seeded from setup/methods).
+    if 'strain' in coerced_df.columns:
+        try:
+            from ca_biositing.datamodels.models.aim2_records.strain import Strain as StrainModel
+            from ca_biositing.pipeline.utils.engine import engine as etl_engine
+            from sqlmodel import Session, select
+            with Session(etl_engine) as db:
+                rows = db.exec(select(StrainModel.name)).scalars().all()
+            existing_names = {str(n).lower().strip() for n in rows if n is not None}
+            logger.info(f"DB strain names (first 10 lowercase): {sorted(existing_names)[:10]}")
+
+            coerced_strain_vals = coerced_df['strain'].astype(object).astype(str).str.lower().str.strip()
+            logger.info(f"Coerced strain values (first 10): {coerced_strain_vals.dropna().unique()[:10].tolist()}")
+            logger.info(f"Coerced strain non-null count before filter: {coerced_strain_vals.notna().sum()}")
+
+            # Replace any strain not in existing_names with NA so normalization won't create it
+            matches = coerced_strain_vals.isin(existing_names)
+            logger.info(f"Strain values matching DB set: {matches.sum()}, not matching: {(~matches).sum()}")
+
+            coerced_df['strain'] = coerced_df['strain'].where(
+                matches,
+                pd.NA
+            )
+            logger.info(f"Strain non-null count after filter: {coerced_df['strain'].notna().sum()}")
+        except Exception as e:
+            # Fail closed: never allow free-text strain values to create lookup rows
+            # when DB-backed validation is unavailable.
+            logger.warning(f"Could not validate 'strain' against DB ({e}) — nulling strain values to prevent new lookup inserts")
+            coerced_df['strain'] = pd.NA
+
     # 2. Normalization
     # Note: method_id in cleaned_df comes from Method_ID in raw data
     # The decon_method and eh_method columns will be created if they exist in cleaned_df,
@@ -127,6 +170,15 @@ def transform_fermentation_record(
     logger.info(f"Normalized data columns: {list(normalized_df.columns)}")
     logger.info(f"Checking for decon_method_id: {'decon_method_id' in normalized_df.columns}")
     logger.info(f"Checking for eh_method_id: {'eh_method_id' in normalized_df.columns}")
+
+    # Log null counts for normalized method columns to aid debugging of missing durations
+    for norm_col in ('method_id_id', 'decon_method_id', 'eh_method_id'):
+        if norm_col in normalized_df.columns:
+            try:
+                null_count = int(normalized_df[norm_col].isna().sum())
+                logger.info(f"Normalized column '{norm_col}' null count: {null_count}")
+            except Exception:
+                logger.warning(f"Could not compute null count for '{norm_col}'")
 
     # 3. Table Specific Mapping
     rename_map = {

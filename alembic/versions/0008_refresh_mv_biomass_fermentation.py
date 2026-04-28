@@ -1,4 +1,4 @@
-"""Refresh mv_biomass_fermentation with elapsed_time output.
+"""Refresh mv_biomass_fermentation with elapsed_time and species_display_name output.
 
 Revision ID: 0008bf16e6e2
 Revises: 0007a2cc5f91
@@ -18,6 +18,7 @@ depends_on: Union[str, Sequence[str], None] = None
 DROP_INDEX_STATEMENTS = [
     "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_resource_strain",
     "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_product_name",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_species_display_name",
     "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_strain_name",
     "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_county",
     "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_geoid",
@@ -26,6 +27,17 @@ DROP_INDEX_STATEMENTS = [
 ]
 
 CREATE_INDEX_STATEMENTS = [
+    "CREATE UNIQUE INDEX idx_mv_biomass_fermentation_id ON data_portal.mv_biomass_fermentation (id)",
+    "CREATE INDEX idx_mv_biomass_fermentation_resource_id ON data_portal.mv_biomass_fermentation (resource_id)",
+    "CREATE INDEX idx_mv_biomass_fermentation_geoid ON data_portal.mv_biomass_fermentation (geoid)",
+    "CREATE INDEX idx_mv_biomass_fermentation_county ON data_portal.mv_biomass_fermentation (county)",
+    "CREATE INDEX idx_mv_biomass_fermentation_species_display_name ON data_portal.mv_biomass_fermentation (species_display_name)",
+    "CREATE INDEX idx_mv_biomass_fermentation_product_name ON data_portal.mv_biomass_fermentation (product_name)",
+]
+
+# Downgrade restores PREVIOUS_MV_SQL which has no species_display_name column,
+# so we use a separate index list without that index.
+PREVIOUS_CREATE_INDEX_STATEMENTS = [
     "CREATE UNIQUE INDEX idx_mv_biomass_fermentation_id ON data_portal.mv_biomass_fermentation (id)",
     "CREATE INDEX idx_mv_biomass_fermentation_resource_id ON data_portal.mv_biomass_fermentation (resource_id)",
     "CREATE INDEX idx_mv_biomass_fermentation_geoid ON data_portal.mv_biomass_fermentation (geoid)",
@@ -51,7 +63,7 @@ SELECT row_number() OVER (
        resource.name AS resource_name,
        location_address.geography_id AS geoid,
        place.county_name AS county,
-       strain.name AS strain_name,
+       LEFT(strain.genus, 1) || '. ' || strain.species AS species_display_name,
        pm.name AS pretreatment_method,
        em.name AS enzyme_name,
        bm.name AS bioconversion_method,
@@ -82,6 +94,8 @@ GROUP BY fermentation_record.resource_id,
          location_address.geography_id,
          place.county_name,
          strain.name,
+         strain.genus,
+         strain.species,
          pm.name,
          em.name,
          bm.name,
@@ -153,12 +167,12 @@ def upgrade() -> None:
 
 
 def downgrade() -> None:
-    """Restore previous mv_biomass_fermentation definition."""
+    """Restore previous mv_biomass_fermentation definition (without species_display_name)."""
     for statement in DROP_INDEX_STATEMENTS:
         op.execute(statement)
 
     op.execute("DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_fermentation CASCADE")
     op.execute(PREVIOUS_MV_SQL)
 
-    for statement in CREATE_INDEX_STATEMENTS:
+    for statement in PREVIOUS_CREATE_INDEX_STATEMENTS:
         op.execute(statement)
