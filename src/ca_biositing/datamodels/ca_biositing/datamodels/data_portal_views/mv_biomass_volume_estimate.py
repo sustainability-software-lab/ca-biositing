@@ -7,8 +7,11 @@ This module provides dual-path volume estimation:
 1. Production-based: county_ag_report_record × residue_factors for most agricultural residues
 2. Census-based: USDA census bearing_acres × prune_trim_yield for orchard crops
 
-Required index:
+Required indexes:
     CREATE UNIQUE INDEX idx_mv_biomass_volume_estimate_id ON data_portal.mv_biomass_volume_estimate (id)
+    CREATE INDEX idx_mv_biomass_volume_estimate_resource_id ON data_portal.mv_biomass_volume_estimate (resource_id)
+    CREATE INDEX idx_mv_biomass_volume_estimate_geoid ON data_portal.mv_biomass_volume_estimate (geoid)
+    CREATE INDEX idx_mv_biomass_volume_estimate_resource_year ON data_portal.mv_biomass_volume_estimate (resource_id, dataset_year)
 """
 
 from sqlalchemy import select, func, union_all, literal, case, cast, String, and_, or_

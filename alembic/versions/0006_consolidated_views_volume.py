@@ -88,6 +88,9 @@ def upgrade() -> None:
        ) AS volumes
    """)
     op.execute("CREATE UNIQUE INDEX idx_mv_biomass_volume_estimate_id ON data_portal.mv_biomass_volume_estimate (id)")
+    op.execute("CREATE INDEX idx_mv_biomass_volume_estimate_resource_id ON data_portal.mv_biomass_volume_estimate (resource_id)")
+    op.execute("CREATE INDEX idx_mv_biomass_volume_estimate_geoid ON data_portal.mv_biomass_volume_estimate (geoid)")
+    op.execute("CREATE INDEX idx_mv_biomass_volume_estimate_resource_year ON data_portal.mv_biomass_volume_estimate (resource_id, dataset_year)")
     op.execute("GRANT SELECT ON data_portal.mv_biomass_volume_estimate TO biocirv_readonly")
 
     # 2. Update mv_biomass_search to query from mv_biomass_volume_estimate
