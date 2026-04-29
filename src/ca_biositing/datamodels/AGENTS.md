@@ -198,6 +198,18 @@ packages are installed. See root `AGENTS.md` for details.
 
 ### Issue: Alembic hangs or fails to connect in Docker
 
+**Solution:** Ensure `POSTGRES_HOST=localhost` is set when running migrations
+from the host on macOS.
+
+## Linear Alembic Chain
+
+This project requires a **linear migration chain**.
+
+1. Always rebase your work onto the latest `upstream/main`.
+2. Ensure your local migrations follow the head of `upstream/main` in a single
+   sequence.
+3. This matches the state of our staging and production environments.
+
 **Solution:** Always use `pixi run migrate-autogenerate` and `pixi run migrate`.
 These are configured to run locally. On macOS, ensure `POSTGRES_HOST=localhost`
 is set in your environment or prefixed to the command if the connection fails

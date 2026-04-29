@@ -1,0 +1,1037 @@
+BioCirV - Materialized Views Specification for MVP
+
+Date: 2026-02-23
+From: Web App Engineering Team
+To: Data Team
+Status: Draft - awaiting data team review
+Context
+
+The BioCirV web app reads biomass data from your PostgreSQL database in read-only mode. We need 9 materialized views that flatten and pre-aggregate data into the shapes our frontend pages consume. You own the view definitions and refresh schedule; we just SELECT from them.
+This document defines the expected columns and data shape for each view, mapped directly to the prototype UI.
+What Pages/Tabs Need Data (From Prototype)
+
+The profile page has 5 tabs. Each tab needs different data:
+Page / Tab
+Purpose
+Key Data
+Discovery/Search
+Search + filter + paginated card grid
+Resource name, type, subclass, volume summary, composition summary, image
+Detail → Overview
+Summary KPIs + overview charts
+Moisture %, sugar %, annual volume, compositional donut, proximate donut, ultimate bar, volume-by-location, bioconversion yields, gasification yields
+Detail → Characterization
+All analysis charts
+Compositional, Proximate, Ultimate, XRF, ICP, Calorimetry, XRD, FT-NIR
+Detail → Volumes
+Geographic volume + pricing
+Volume by location (monthly by county), pricing trends (yearly by county)
+Detail → Bioconversion
+Fermentation experiment data
+Pre-treatment, microbe/product selection, titers, yields, time-series concentrations
+Detail → Gasification
+Gasification experiment data
+Reactor type, gas composition, temperature/flow/pressure time series, byproducts
+Filters Panel
+Dynamic filter options + ranges
+Available categories, counties, composition ranges, volume ranges
+Required Materialized Views
+
+Overview
+
+#
+View Name
+Grain
+Purpose
+1
+mv_biomass_search
+One row per resource
+Search results, card display, quick filters
+2
+mv_biomass_composition
+One row per resource × county × parameter × analysis type
+Characterization tab (all 8 analysis types), dynamic filters
+3
+mv_usda_county_production
+One row per resource × county × year
+Volumes tab, county filter, map view
+4
+mv_biomass_availability
+One row per resource
+Seasonality display and filtering
+5
+mv_biomass_sample_stats
+One row per resource
+Detail header ("X samples from Y unique suppliers")
+6
+mv_biomass_fermentation
+One row per resource × county × strain × pretreatment + enzyme × product
+Bioconversion tab
+7
+mv_biomass_gasification
+One row per resource × reactor type × parameter
+Gasification tab
+8
+mv_biomass_pricing
+One row per resource × county × report source × report date
+Volumes tab pricing chart
+9
+mv_biomass_end_uses
+One row per resource × use case
+Profile page end use breakdown (use case, % share, trend, $/ton)
+MV 1: mv_biomass_search
+
+Purpose: Primary view for search results and listing page cards. One flat row per resource with pre-aggregated summary metrics.
+Grain: One row per resource.id
+Why: Currently the API runs 5 correlated subqueries per resource (moisture, sugar, volume, unit, image). This view eliminates all of them.
+Expected columns:
+Column
+Type
+Nullable
+Description
+id
+integer
+No
+Resource PK
+name
+text
+No
+Resource name (e.g., "almond hulls")
+resource_code
+text
+No
+Short code (e.g., "almhu")
+description
+text
+Yes
+Long-form qualitative description of the resource (e.g., "Almond shells are the hard outer covering...") — needs to be populated
+tags
+text[]
+
+Pre-computed descriptive tags provided by the data team (e.g., "high moisture", "low moisture", "high sugar"). Should not be derived by the app — data team owns the values.
+literature_uri
+text
+Yes
+URL to primary literature reference for the resource
+resource_class
+text
+Yes
+Classification (e.g., "agricultural land resource")
+resource_subclass
+text
+Yes
+Subclass (e.g., "agricultural processing waste")
+primary_product
+text
+Yes
+Primary ag product (e.g., "almonds")
+moisture_percent
+float
+Yes
+Average moisture % from proximate analysis
+sugar_content_percent
+float
+Yes
+Average sugar % (glucose preferred, glucan fallback)
+ash_percent
+float
+Yes
+Average ash % from proximate analysis
+lignin_percent
+float
+Yes
+Average lignin % from compositional analysis
+carbon_percent
+float
+Yes
+Average carbon % from ultimate analysis
+hydrogen_percent
+float
+Yes
+Average hydrogen % from ultimate analysis
+cn_ratio
+float
+Yes
+Average C/N ratio from ultimate analysis
+total_annual_volume
+integer
+Yes
+Total production in dry tons (aggregated across counties, single scenario)
+calculated_estimate_volume_min
+float
+Yes
+Minimum county-level calculated biomass volume estimate (dry tons) — MIN(calculated_estimate_volume) across all counties from mv_usda_county_production
+calculated_estimate_volume_max
+float
+Yes
+Maximum county-level calculated biomass volume estimate (dry tons) — MAX(calculated_estimate_volume) across all counties from mv_usda_county_production
+calculated_estimate_volume_mid
+float
+Yes
+Midpoint of the county-level calculated biomass volume distribution — (MIN + MAX) / 2 of calculated_estimate_volume across all counties from mv_usda_county_production
+county_count
+integer
+Yes
+Number of counties with volume data
+volume_unit
+text
+Yes
+Unit label (e.g., "dt")
+season_from_month
+integer
+Yes
+Harvest start month (1–12)
+season_to_month
+integer
+Yes
+Harvest end month (1–12)
+year_round
+boolean
+Yes
+Whether available year-round
+image_url
+text
+Yes
+Image URL/URI from resource_morphology
+storage_notes
+text
+Yes
+Qualitative storage description (e.g., "Can store 6-12 months covered; 1 week uncovered")
+transport_notes
+text
+Yes
+Qualitative transport description (e.g., "Short haul truck <20mi, long haul rail in 500kg super sacks")
+has_moisture_data
+boolean
+No
+Whether moisture data exists
+has_sugar_data
+boolean
+No
+Whether sugar data exists
+has_volume_data
+boolean
+No
+Whether volume data exists
+has_image
+boolean
+No
+Whether an image exists
+has_compositional
+boolean
+No
+Whether compositional records exist
+has_proximate
+boolean
+No
+Whether proximate records exist
+has_ultimate
+boolean
+No
+Whether ultimate records exist
+has_xrf
+boolean
+No
+Whether XRF records exist
+has_icp
+boolean
+No
+Whether ICP records exist
+has_calorimetry
+boolean
+No
+Whether calorimetry records exist
+has_xrd
+boolean
+No
+Whether XRD records exist
+has_fermentation
+boolean
+No
+Whether fermentation records exist
+has_gasification
+boolean
+No
+Whether gasification records exist
+search_vector
+tsvector
+No
+Pre-computed full-text search vector (name + description + class + subclass + product)
+created_at
+timestamp
+No
+Resource created timestamp
+updated_at
+timestamp
+No
+Resource updated timestamp
+Recommended indexes:
+UNIQUE index on id (required for REFRESH CONCURRENTLY)
+GIN index on search_vector (full-text search)
+GIN index on name using gin_trgm_ops (fuzzy/typo-tolerant search)
+B-tree on resource_class, resource_subclass, primary_product (filter queries)
+Note on image carousel: The image_url column holds a single image and is sufficient for MVP. To support a carousel of multiple images per resource (as shown in the UI designs), we will introduce a separate plain table biomass_resource_images — see the Additional Tables section below. When that table is in place, the default card image will be the first row by sort_order from that table. The image_url column here will be kept for backward compatibility until the table is fully adopted, then can be dropped.
+MV 2: mv_biomass_composition
+
+Purpose: Full analysis data per resource per parameter. Covers all 8 analysis types shown on the Characterization tab: compositional, proximate, ultimate, XRF, ICP, calorimetry, XRD, and FT-NIR. Also used for Overview tab charts and dynamic range filtering.
+Grain: One row per resource × county × parameter × analysis type (aggregated across experiments within that county)
+Aggregation approach: Because the grain includes geoid, this view does not contain a pre-aggregated "all counties" row. When the Characterization tab is shown without a county filter, Cube.js aggregates across all county rows at query time — using SUM(avg_value * observation_count) / SUM(observation_count) for weighted average, and MIN(min_value) / MAX(max_value) for ranges. std_dev is only displayed in the UI when a specific county is selected — it cannot be correctly reconstructed from county-level pre-aggregates, and is scientifically ambiguous when mixing samples from different counties.
+Prototype sections served:
+Overview tab → Compositional donut, Proximate donut, Ultimate bar chart
+Characterization tab → All 8 analysis sections
+Expected columns:
+Column
+Type
+Nullable
+Description
+resource_id
+integer
+No
+Resource FK
+resource_name
+text
+No
+Resource name
+geoid
+text
+Yes
+FIPS GEOID for county
+county
+text
+Yes
+County name
+analysis_type
+text
+No
+One of: compositional, proximate, ultimate, xrf, icp, calorimetry, xrd, ftnir
+parameter_name
+text
+No
+Parameter name (e.g., "glucan", "moisture", "carbon", "ca", "hhv", "crystallinity")
+avg_value
+float
+Yes
+Mean value across observations within this county
+min_value
+float
+Yes
+Minimum observed value within this county
+max_value
+float
+Yes
+Maximum observed value within this county
+std_dev
+float
+Yes
+Standard deviation within this county (shown in UI only when county filter is active)
+observation_count
+integer
+No
+Number of observations within this county (used by Cube.js for weighted aggregation across counties)
+unit
+text
+Yes
+Unit label (e.g., "% total weight", "ppm", "MJ/kg")
+Example rows:
+resource_id
+resource_name
+analysis_type
+parameter_name
+avg_value
+std_dev
+observation_count
+unit
+3
+almond shells
+compositional
+glucan
+27.0
+1.5
+3
+% total weight
+3
+almond shells
+proximate
+moisture
+15.26
+0.161
+7
+% total weight
+3
+almond shells
+ultimate
+carbon
+48.85
+0.32
+3
+%
+3
+almond shells
+xrf
+ca
+9940
+null
+1
+ppm
+3
+almond shells
+icp
+k
+74.87
+12.3
+3
+ppm
+3
+almond shells
+calorimetry
+hhv
+18.4
+1.2
+5
+MJ/kg
+3
+almond shells
+xrd
+crystallinity
+54.95
+1.2
+3
+%
+Recommended indexes:
+B-tree on resource_id
+B-tree on geoid, county
+B-tree on analysis_type
+B-tree on parameter_name
+Composite on (resource_id, analysis_type)
+Composite on (resource_id, geoid, analysis_type)
+Composite on (resource_id, parameter_name)
+Note on XRD/FT-NIR raw data: The prototype shows XRD as a diffraction pattern chart (2θ vs intensity) and FT-NIR as a spectral chart (wavenumber vs absorbance). These are raw spectral data, not aggregated values. For these charts we will need either raw observation data stored as (x, y) pairs, or file references (S3/CDN URLs) pointing to downloadable data files. The aggregated view above covers the summary statistics only.
+MV 3: mv_usda_county_production
+
+Note (2026-03-25): This view replaces the earlier mv_biomass_county_production (BillionTon 2023 scenario data). Column spec below reflects the actual schema as of the Mar 24 dump. Several columns from our original request are not yet present (resource_class, scenario, price_offered_usd, energy_content, density_dt_per_sqmi, county_sq_miles). known_biomass_volume is present but empty pending Beau's data integration. Unit inconsistencies (tons vs dry tons, orchard fruits state-level only) are under discussion between Peter and Rebecca.
+Purpose: County-level USDA production volumes per resource. Used for the Volumes tab "Volume by Location" chart and county filtering.
+Grain: One row per resource × county × dataset year
+Prototype sections served:
+Overview tab → Volume by Location chart
+Volumes tab → Volume by Location (monthly by county), county production table
+Actual columns (Mar 24 dump):
+Column
+Type
+Nullable
+Description
+id
+bigint
+No
+Record PK
+resource_id
+integer
+Yes
+Resource FK
+resource_name
+varchar
+Yes
+Resource name
+primary_ag_product
+varchar
+Yes
+Primary agricultural product (e.g., "hay - alfalfa")
+geoid
+varchar
+Yes
+FIPS GEOID for county
+county
+varchar
+Yes
+County name
+state
+varchar
+Yes
+State name
+dataset_year
+integer
+Yes
+Year of the USDA dataset (e.g., 2022)
+primary_product_volume
+numeric
+Yes
+USDA-reported primary product volume (in volume_unit)
+volume_unit
+text
+Yes
+Unit for primary_product_volume (e.g., "tons" — not always dry tons)
+production_acres
+numeric
+Yes
+Harvested acres for the primary ag product
+known_biomass_volume
+text
+Yes
+Directly measured/reported biomass volume — currently empty (pending Beau's data)
+calculated_estimate_volume
+double precision
+Yes
+Calculated biomass volume estimate (dry tons/acre × production_acres)
+biomass_unit
+text
+Yes
+Unit for calculated_estimate_volume (e.g., "dry_tons_acre")
+Indexes present:
+UNIQUE on id ✅
+B-tree on resource_id ✅
+B-tree on geoid ✅
+Columns from original spec not yet in view:
+Missing column
+Notes
+resource_class
+Not present
+scenario
+Replaced by dataset_year
+price_offered_usd
+Not present
+production (dry tons total)
+Not present — primary_product_volume is in raw USDA units
+energy_content, energy_unit
+Not present
+density_dt_per_sqmi, county_sq_miles
+Not present
+MV 4: mv_biomass_availability
+
+Purpose: Seasonality and residue factor data per resource. Used to display harvest availability windows and to derive the monthly volume distribution in the Volumes tab chart.
+Grain: One row per resource
+Note on monthly volume chart: This view provides the harvest window (from_month → to_month) and residue factors per acre, but not explicit monthly volume breakdowns. The app will derive monthly distribution by distributing annual volume evenly across harvest months. If the data team has actual month-by-month production data (e.g., a record per resource × month), please let us know and we will add a separate view for it.
+Expected columns:
+Column
+Type
+Nullable
+Description
+resource_id
+integer
+No
+Resource FK
+resource_name
+text
+No
+Resource name
+from_month
+integer
+Yes
+Harvest start month (1–12)
+to_month
+integer
+Yes
+Harvest end month (1–12)
+year_round
+boolean
+Yes
+Whether available year-round
+dry_tons_per_acre
+float
+Yes
+Residue factor (dry tons/acre)
+wet_tons_per_acre
+float
+Yes
+Residue factor (wet tons/acre)
+Recommended indexes:
+UNIQUE index on resource_id (required for REFRESH CONCURRENTLY)
+MV 5: mv_biomass_sample_stats
+
+Purpose: Per-resource sample and dataset counts. The profile page header shows "Includes X samples from Y unique suppliers" — this view pre-computes those numbers.
+Grain: One row per resource
+Prototype section served:
+Profile page header: "Includes 105 samples from 80 unique suppliers"
+Expected columns:
+Column
+Type
+Nullable
+Description
+resource_id
+integer
+No
+Resource FK
+resource_name
+text
+No
+Resource name
+sample_count
+integer
+No
+Total distinct prepared samples across all analysis types (compositional, proximate, ultimate, XRF, ICP, calorimetry, XRD, fermentation, gasification)
+supplier_count
+integer
+No
+Total distinct suppliers (providers) — count of distinct provider_id values via field_sample → provider
+dataset_count
+integer
+No
+Total distinct datasets (data sources) across all analysis types
+total_record_count
+integer
+No
+Total analysis records across all types
+Recommended indexes:
+UNIQUE index on resource_id (required for REFRESH CONCURRENTLY)
+MV 6: mv_biomass_fermentation
+
+Purpose: Aggregated bioconversion/fermentation data per resource, grouped by strain, pretreatment+enzyme combination, and product. Powers the Bioconversion tab KPIs and comparison charts.
+Grain: One row per resource × county × strain × pretreatment + enzyme combination × product
+Prototype sections served:
+Bioconversion tab → KPIs (ethanol produced, product yield, sugar % change, OD, product rate, fermentation time)
+Bioconversion tab → Product Titer & Yield comparison chart
+Bioconversion tab → Relative Growth (%) comparison chart
+Expected columns:
+Column
+Type
+Nullable
+Description
+resource_id
+integer
+No
+Resource FK
+resource_name
+text
+No
+Resource name
+geoid
+text
+Yes
+FIPS GEOID for county (ETL in progress — include now for forward compatibility)
+county
+text
+Yes
+County name
+strain_name
+text
+Yes
+Microbe strain (e.g., "S. cerevisiae")
+pretreatment_method
+text
+Yes
+Pre-treatment method (e.g., "None", "Acid") — always paired with enzyme
+enzyme_name
+text
+Yes
+Enzyme used (always paired with pretreatment_method)
+product_name
+text
+No
+Product parameter name (e.g., "ethanol", "butanol")
+avg_value
+float
+Yes
+Mean value
+min_value
+float
+Yes
+Minimum value
+max_value
+float
+Yes
+Maximum value
+std_dev
+float
+Yes
+Standard deviation
+elapsed_time
+float
+Yes
+Total fermentation elapsed time in hours — duration from experiment start to end
+observation_count
+integer
+No
+Number of observations
+unit
+text
+Yes
+Unit label
+Action item (data team — targeted for Thu Apr 17 MV PR): The pretreatment_method, enzyme_name, and strain_name columns are defined above but are currently NULL across all rows in the live view. Please populate these from the source fermentation tables in the next MV refresh/migration.
+Recommended indexes:
+B-tree on resource_id
+B-tree on geoid, county
+B-tree on strain_name, product_name
+Composite on (resource_id, strain_name)
+Composite on (resource_id, geoid, strain_name)
+Composite on (resource_id, pretreatment_method, enzyme_name)
+Note: The Bioconversion tab also shows time-series charts (pre-treatment concentrations over reaction time, fermentation concentrations over time). These require individual observation-level data, not aggregated summaries. We will need either a separate raw-data view with per-observation rows, or direct read access to the underlying tables for time-series queries.
+MV 7: mv_biomass_gasification
+
+Purpose: Aggregated gasification data per resource, grouped by reactor type and output parameter. Powers the Gasification tab KPIs and charts.
+Grain: One row per resource × reactor type × parameter
+Prototype sections served:
+Gasification tab → KPIs (H2 produced, CO produced, biochar, peak temperature, energy in/out)
+Gasification tab → Gas Composition bar chart
+Gasification tab → Byproducts chart (tar, biochar, ash)
+Expected columns:
+Column
+Type
+Nullable
+Description
+resource_id
+integer
+No
+Resource FK
+resource_name
+text
+No
+Resource name
+reactor_type
+text
+Yes
+Reactor type (e.g., "Air", "Heated Air", "Oxygen") — required for Gasification tab filter
+parameter_name
+text
+No
+Output parameter (e.g., "H2", "CO", "biochar", "tar")
+avg_value
+float
+Yes
+Mean value
+min_value
+float
+Yes
+Minimum value
+max_value
+float
+Yes
+Maximum value
+std_dev
+float
+Yes
+Standard deviation
+observation_count
+integer
+No
+Number of observations
+unit
+text
+Yes
+Unit label (e.g., "mol%", "%", "MJ")
+bed_temperature
+float
+Yes
+Reactor bed temperature
+gas_flow_rate
+float
+Yes
+Gas flow rate
+Recommended indexes:
+B-tree on resource_id
+B-tree on reactor_type
+B-tree on parameter_name
+Composite: (resource_id, reactor_type, parameter_name)
+Note: Same as fermentation — the Gasification tab shows time-series charts (temperature, flow rate, pressure over time). We will need either a separate time-series view or direct table access for those.
+MV 8: mv_biomass_pricing
+
+Purpose: Market pricing data per resource over time by county. Powers the Volumes tab "Pricing" chart.
+Grain: One row per resource × county × report source × report date
+Prototype sections served:
+Volumes tab → Pricing chart (price trends by county, 2019–2025)
+Volumes tab → Current Avg, 5yr Low, 5yr High summary
+Expected columns:
+Column
+Type
+Nullable
+Description
+id
+integer
+No
+Record PK
+resource_id
+integer
+No
+Resource FK — links pricing row to a specific biomass resource
+resource_name
+text
+No
+Resource name (e.g., "almond hulls") — replaces commodity_name
+county
+text
+Yes
+County name
+geoid
+text
+Yes
+FIPS GEOID
+state
+text
+Yes
+State name
+report_source
+text
+No
+Data source label (e.g., "county ag report", "USDA AMS", "BEAM") — used for filtering and display
+report_date
+date
+No
+Market report end date
+market_type_category
+text
+Yes
+Market type category
+sale_type
+text
+Yes
+Sale type
+price_min
+float
+Yes
+Minimum price value in reporting period
+price_max
+float
+Yes
+Maximum price value in reporting period
+price_avg
+float
+Yes
+Average price value in reporting period
+price_unit
+text
+No
+Unit label (e.g., "$/ton") — required; price values without a unit are not displayable
+Recommended indexes:
+UNIQUE index on id (required for REFRESH CONCURRENTLY)
+B-tree on resource_id
+B-tree on geoid, county
+B-tree on report_source, report_date
+Composite on (resource_id, report_date)
+Note (2026-04-14): The original spec used commodity_name and a single price column. The live view instead uses price_min/price_avg/price_max plus state, market_type_category, and sale_type — the spec has been updated to match. Additionally, based on feedback from Mei (Apr 14): commodity_name is replaced by resource_name + resource_id (all pricing data is resource-linked, not just USDA), and report_source is added to distinguish data origins.
+MV 9: mv_biomass_end_uses
+
+Purpose: End use breakdown per resource. Powers the qualitative "End Uses" section on the profile page overview tab, showing how the biomass is used in practice (e.g. animal feed, bioenergy), its market share, price trend, and delivered value range.
+Grain: One row per resource × use case
+Prototype sections served:
+Profile page → Overview tab → End Uses section (use case list with %, trend, $/ton)
+Expected columns:
+Column
+Type
+Nullable
+Description
+resource_id
+integer
+No
+Resource FK
+resource_name
+text
+No
+Resource name
+use_case
+text
+No
+Use case label (e.g., "Animal Feed", "Bioenergy/cogeneration", "Mulch/Soil amendment")
+percentage_low
+float
+Yes
+Lower bound of % share (e.g., 90 for a "90-97%" range)
+percentage_high
+float
+Yes
+Upper bound of % share (e.g., 97 for a "90-97%" range); equal to percentage_low when a single value
+trend
+text
+Yes
+Market direction: "up", "down", or null (no trend data)
+value_low_usd
+float
+Yes
+Lower bound of $/ton delivered range
+value_high_usd
+float
+Yes
+Upper bound of $/ton delivered range
+value_notes
+text
+Yes
+Free-text value note for non-numeric values (e.g., "5-10x", ">100x – 1,000x", "$0")
+Example rows:
+resource_id
+resource_name
+use_case
+percentage_low
+percentage_high
+trend
+value_low_usd
+value_high_usd
+value_notes
+1
+almond hull
+Animal Feed
+90
+97
+null
+80
+150
+null
+1
+almond hull
+Bioenergy/cogeneration
+3
+4
+down
+40
+80
+null
+1
+almond hull
+Human fiber additive
+null
+1
+up
+null
+null
+5-10x
+1
+almond hull
+Nutraceutical/extractive
+null
+1
+up
+null
+null
+500-1,000x
+2
+almond shell
+Animal Feed
+50
+70
+up
+20
+35
+null
+2
+almond shell
+Carryover/Stockpile
+10
+20
+null
+0
+0
+null
+Recommended indexes:
+UNIQUE index on (resource_id, use_case) (required for REFRESH CONCURRENTLY)
+B-tree on resource_id
+Additional Tables
+
+These are plain transactional tables (not materialized views) managed by the web engineering team. They are not part of the ETL pipeline and do not need a refresh schedule.
+biomass_resource_images
+
+Purpose: Stores one or more image URLs per resource to support image carousels on the profile page. Decoupled from mv_biomass_search so new images can be added by simply inserting new rows with GCS bucket URLs — no schema changes required.
+Grain: One row per resource per image
+Why a plain table (not an MV): Images don't require aggregation or ETL joins. A plain table is simpler to update (insert new rows pointing to GCS bucket URLs) and is managed independently by the web engineering team.
+API exposure: The profile API returns images as an ordered array. The frontend iterates and renders the carousel. Starting with one image and adding more is fully backward-compatible.
+Default image: The row with the lowest sort_order (typically 0) is used as the default/primary image — equivalent to what mv_biomass_search.image_url currently holds. Once this table is fully populated, image_url in the search MV can be dropped.
+Columns:
+Column
+Type
+Nullable
+Description
+id
+uuid
+No
+Record PK
+resource_id
+integer
+No
+Resource FK (references resource.id)
+image_url
+text
+No
+Full GCS bucket URL for the image
+sort_order
+integer
+No
+Display order (0 = first/default); lowest value renders first in carousel
+created_at
+timestamp
+No
+Record created timestamp
+Recommended indexes:
+B-tree on resource_id
+Composite on (resource_id, sort_order) (for ordered fetches)
+Refresh Strategy
+
+These views are relatively small (< 10,000 rows total). Recommended approach:
+Use REFRESH MATERIALIZED VIEW CONCURRENTLY (allows reads during refresh, requires a UNIQUE index on each view)
+Refresh all 9 views after each ETL run, or on a daily cron as a fallback
+Frequency
+When
+After each ETL run
+Whenever new data is loaded into the source tables
+Daily (fallback)
+If no ETL trigger exists, a nightly cron is sufficient
+On-demand
+We can also call a refresh manually during development
+PostgreSQL Extensions
+
+Confirmed present on the database:
+pg_trgm — trigram similarity for fuzzy/typo-tolerant search
+unaccent — accent-insensitive search
+btree_gin — combined B-tree + GIN indexes
+No additional extensions needed.
+Schema Placement
+
+We recommend placing these views in a dedicated schema (e.g., biocirv_app), but public or ca_biositing also works. We just need to know the schema so we can configure our Django models to point to the correct db_table.
+Summary: What We Need
+
+Create the 9 materialized views with the columns defined above (column names can differ — just let us know the final schema)
+Add the recommended indexes for each view (critical for search and filter performance)
+Pick a schema and tell us the name
+Set up a refresh trigger or cron (daily or after ETL)
+We are happy to iterate on column definitions if your internal schema differs or if adjustments are needed. The column names and types are what matter most for our Django model mapping.
+Deprecated Views
+
+mv_biomass_county_production (replaced by mv_usda_county_production)
+
+Replaced: 2026-03-25
+Reason: Superseded by the USDA-based county production view. BillionTon 2023 scenario data is preserved in the view but no longer used by the application.
+Columns (as of Mar 24 dump):
+Column
+Type
+Description
+id
+bigint
+Record PK
+resource_id
+integer
+Resource FK
+resource_name
+varchar
+Resource name
+resource_class
+varchar
+Classification name
+geoid
+varchar
+FIPS GEOID for county
+county
+varchar
+County name
+state
+varchar
+State name
+scenario
+varchar
+BillionTon scenario name (e.g., "near-term", "emerging")
+price_offered_usd
+numeric
+Price offered in USD
+production
+integer
+Production in dry tons
+production_unit
+varchar
+Unit label
+energy_content
+bigint
+Production energy content
+energy_unit
+varchar
+Energy unit label
+density_dt_per_sqmi
+numeric
+Product density (dry tons per square mile)
+county_square_miles
+double precision
+County area in square miles
+year
+integer
+Data year
