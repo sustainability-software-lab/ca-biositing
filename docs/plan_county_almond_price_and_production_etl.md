@@ -15,7 +15,7 @@ This ETL ingests county-level agricultural price and production data from a Goog
 - Multi-sheet ingest (extract all except `etl_notes` and `almond_hull_prices_usda_AMS`)
 - Parameter definitions stored in the `parameters` sheet with a "price_production_county_ag_reports" marker
 - Observation values extracted from columns D-K (price columns with county-specific headers)
-- County information parsed from header (convention: `county_parameter`) and stored as geoid in observations
+- County information parsed from header (convention: `county_parameter`) in the transform. Melt the county price columns into a long format, use a county dictionary {"merced_price": "Merced", "stanislaus_price": "Stanislaus", "san_joaquin_price": "San Joaquin"} to map the column headers to clean county names, and dynamically query the place table to resolve the geoid.
 - Year, resource, and county/geoid mapped to `resource_price_record` or `resource_production_record` as appropriate
 - Integrated into the existing `qualitative_etl_flow` as a sub-flow
 - **USDA AMS data deferred:** Currently excluding `almond_hull_prices_usda_AMS` for fast delivery; thorough AMS data download planned separately
@@ -29,7 +29,7 @@ This ETL ingests county-level agricultural price and production data from a Goog
 
 **Sheets to Ingest:**
 - `parameters` → Extract parameter definitions (filter by "price_production_county_ag_reports" in column A)
-- All other sheets except: `etl_notes`, `almond_hull_prices_usda_AMS`
+- `almond_county_prices` and `almond_production` tabs
 
 **Sheet Exclusions:**
 - `etl_notes`: Internal documentation, not data
@@ -53,10 +53,14 @@ This ETL ingests county-level agricultural price and production data from a Goog
 
 **Deduplication:** Idempotent by parameter name (normalized); update existing if name matches, insert if new.
 
+**Filter** Add a primary crop filter: df = df[df['primary_ag_product'] != 'Meat/Kernel']
+
+**Melt** Use pd.melt() to unpivot the wide county columns into a long format, use a hardcoded dictionary to map the column headers to clean county strings, and dynamically query the place table to resolve the geoid.
+
 ### Price Columns (D-K) → Observations + Records
 
 **Header Convention:** `county_parameter`  
-**Example:** `napa_price_per_ton`, `kern_production_acreage`
+**Example:** `san_joaquin_price`, `merced_production`
 
 **Transformation Steps:**
 1. **Header Parsing:** Split `county_parameter` into county name and parameter name
@@ -78,19 +82,28 @@ This ETL ingests county-level agricultural price and production data from a Goog
 ### Provenance Mapping
 
 **Required Tables (must already exist in database):**
-- `Dataset`
-- `MethodCategory`
-- `Method`
-- `Place` (for county geoid records)
+- `Dataset` : Two new datasets should be inserted
+    - name: "BEAM whitepaper county ag report almond prices", "BEAM whitepaper county ag report almond production"
+         Future grape ETL will have something akin to "Grape production mannually extracted from NSJV county ag reports" and "Grape resource prices calculated from NSJV county ag reports"
+    - record_type: "resource_price_record" and "resource_production_record" as is appropriate
+    - source_id: "1" corresponding with "Market and End-Use Analysis for the Biomass Feedstock Landscape in the North San Joaquin Valley"
+    - start_date: 2017-01-01
+    - end_date: 2024-12-31
+    - description: "Almond resource prices mannually extracted from NSJV county ag reports" , "Almond production mannually extracted from NSJV county ag reports"
+
+- `Method` :  1 single new entry for all data with infor below
+    - created_at/updated_at/etl_run_id/lineage_group_id: follow existing etl patterns
+    - method_category_id: "w" corresponding with "manual extraction of values from PDF report"
+    - source_id: "1" corresponding with "Market and End-Use Analysis for the Biomass Feedstock Landscape in the North San Joaquin Valley"
+- `MethodCategory`: 1 single new entry for all data with info below
+    - name: "manual extraction of values from PDF report"
+    - description: "manual meaning extracted "by-hand" by human(s)"
+
+- `Place` : For county geoid records, no new counties not already in the database should be added. 
+- `DataSource` : "1" corresponding with "Market and End-Use Analysis for the Biomass Feedstock Landscape in the North San Joaquin Valley"
 
 **Current Status:** TBD by Transform Agent  
-**Action Item for Next Agent:** When implementing the **Transform** task, prompt user to clarify:
-- Which `dataset` record should observations reference?
-- Which `method_category` and `method` records describe this data collection?
-- Which `place` records (counties) are already in the database?
-- Should we upsert or assume records exist?
-
-**Note:** Unlike qualitative flow, do NOT auto-create provenance rows. Assume they already exist; fail with clear error if missing.
+**Action Item for Next Agent:** When implementing the **Transform** task, prompt user to clarify anything that seems important and unclear. 
 
 ---
 
@@ -113,7 +126,7 @@ This ETL will be implemented across **5 separate agent tasks**, each with its ow
 
 **Goal:** Pull raw data from Google Sheet and validate row counts per sheet.
 
-**Deliverable:** `src/ca_biositing/pipeline/ca_biositing/pipeline/etl/extract/county_ag_reports.py`
+**Deliverable:** `src/ca_biositing/pipeline/ca_biositing/pipeline/etl/extract/almond_nsjv.py`
 
 **Requirements:**
 1. Use the factory pattern (see `extract/factory.py`) to create extractors for each sheet
@@ -145,14 +158,10 @@ This ETL will be implemented across **5 separate agent tasks**, each with its ow
 
 **Goal:** Clean, normalize, and reshape raw data into payloads for Parameters, Records, and Observations.
 
-**Deliverable:** `src/ca_biositing/pipeline/ca_biositing/pipeline/etl/transform/analysis/county_ag_reports.py`
+**Deliverable:** `src/ca_biositing/pipeline/ca_biositing/pipeline/etl/transform/analysis/almond_nsjv.py`
 
 **BLOCKING DECISION POINT:**  
-**Before starting:** Prompt user to clarify:
-- Which `dataset` should observations reference? (ID or name to look up)
-- Which `method_category` and `method`? (ID or name)
-- Which `place` records (counties) already exist in the database?
-- County-to-geoid mapping strategy: use existing lookup or create/update?
+**Before starting:** Prompt user to clarify understanding based on transformation section above. 
 
 **Requirements:**
 1. Create separate transform tasks for:
@@ -195,7 +204,7 @@ This ETL will be implemented across **5 separate agent tasks**, each with its ow
 
 **Goal:** Insert transformed payloads into database tables with idempotent upserts and error handling.
 
-**Deliverable:** `src/ca_biositing/pipeline/ca_biositing/pipeline/etl/load/analysis/county_ag_reports.py`
+**Deliverable:** `src/ca_biositing/pipeline/ca_biositing/pipeline/etl/load/analysis/almond_nsjv.py`
 
 **Requirements:**
 1. Create load task `load_county_ag_reports()` that accepts transformed payload dict
@@ -203,6 +212,7 @@ This ETL will be implemented across **5 separate agent tasks**, each with its ow
    - Parameters (if new, insert; if exists by name, update description/unit)
    - Records (price and production records, keyed by resource/geoid/year/parameter combination)
    - Observations (keyed by dataset/method/geoid/parameter/year/resource combination)
+   - Do not to use the Dual-ID linkage and to link only to the resource_id
 3. **Error handling:**
    - If geoid lookup fails, log clear error and skip row (do not insert partial data)
    - If parameter_id missing, log and skip
@@ -218,22 +228,16 @@ This ETL will be implemented across **5 separate agent tasks**, each with its ow
 
 ### Task 5: Flow Integration
 
-**Goal:** Wire Extract → Transform → Load into the existing Qualitative ETL Flow.
+**Goal:** Wire Extract → Transform → Load into the existing a new ETL flow.
 
-**Deliverable:** Update `src/ca_biositing/pipeline/ca_biositing/pipeline/flows/qualitative.py` to call the new ETL
+**Deliverable:** Create a new `src/ca_biositing/pipeline/ca_biositing/pipeline/flows/BEAM_analysis.py` to call the new ETL
 
 **Requirements:**
-1. Import extract, transform, load tasks from `county_ag_reports` module
-2. Add sub-flow call inside `qualitative_etl_flow()` after existing qualitative tasks:
-   ```python
-   # Inside qualitative_etl_flow()
-   raw_county_ag = extract_county_ag_reports()
-   transformed_county_ag = transform_county_ag_payloads(raw_county_ag, etl_run_id, lineage_group_id)
-   county_ag_result = load_county_ag_reports(transformed_county_ag)
-   ```
-3. Update ETL run logging to include county_ag_reports row counts
-4. **Full Prefect test:** Deploy flow locally and run end-to-end (full flow execution)
-5. Verify Prefect UI shows the flow completing successfully
+1. Define a main orchestrator function decorated with Prefect's @flow (e.g., county_ag_reports_etl_flow()).
+2. Import the extract, transform, and load tasks from your newly created county_ag_reports modules.
+3. Wire the tasks sequentially (Extract → Transform → Load), ensuring it successfully passes the Almond pricing and production data through the pipeline.
+4. Use get_run_logger() to update the ETL run logging to output the row counts at the end of the flow.
+5. Full Prefect test: Deploy the flow locally and run it end-to-end. Verify the Prefect UI (http://localhost:4200) shows the flow completing successfully.
 
 **Handoff:** Flow integrated and tested. Ready for PR.
 
