@@ -215,26 +215,26 @@ class TestMvBiomassFermentationView:
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
 
-        assert 'ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BM.duration)' in source
+        assert 'ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BCM.time_h)' in source
         assert 'ELAPSED_TIME.label("elapsed_time")' in source
 
-    def test_view_source_file_has_bm_alias(self):
-        """Verify that mv_biomass_fermentation.py uses BM alias for bioconversion method."""
+    def test_view_source_file_has_bcm_alias(self):
+        """Verify that mv_biomass_fermentation.py uses BCM alias for bioconversion method."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
-        assert 'BM = aliased(Method' in source
+        assert 'BCM = aliased(BioconversionMethod' in source
 
-    def test_view_source_file_joins_on_method_id(self):
-        """Verify that mv_biomass_fermentation.py joins BM alias on fermentation_record.method_id (inherited from Aim2RecordBase)."""
+    def test_view_source_file_joins_on_bioconversion_method_id(self):
+        """Verify that mv_biomass_fermentation.py joins BCM alias on fermentation_record.bioconversion_method_id."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
-        assert 'FermentationRecord.method_id == BM.id' in source
+        assert 'FermentationRecord.bioconversion_method_id == BCM.id' in source
 
     def test_view_source_file_labels_bioconversion_method(self):
         """Verify that mv_biomass_fermentation.py labels bioconversion_method correctly."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
-        assert 'BM.name.label("bioconversion_method")' in source
+        assert 'BCM.name.label("bioconversion_method")' in source
 
     def test_view_source_file_labels_species_display_name(self):
         """Verify that mv_biomass_fermentation.py projects species_display_name from genus and species."""
