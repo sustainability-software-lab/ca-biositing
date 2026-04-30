@@ -1,7 +1,7 @@
 """Add duration column to method table and genus/species/strain columns to strain table.
 
 Revision ID: 0007a2cc5f91
-Revises: d2b6b2a7c9d1
+Revises: consolidated_views_volume
 Create Date: 2026-04-27 11:00:00.000000
 
 """
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = "0007a2cc5f91"
-down_revision: Union[str, Sequence[str], None] = "d2b6b2a7c9d1"
+down_revision: Union[str, Sequence[str], None] = "consolidated_views_volume"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
