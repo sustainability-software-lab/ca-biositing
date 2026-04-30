@@ -21,6 +21,7 @@ from .mv_biomass_pricing import mv_biomass_pricing
 from .mv_usda_county_production import mv_usda_county_production
 from .mv_biomass_search import mv_biomass_search
 from .mv_biomass_end_uses import mv_biomass_end_uses
+from .mv_biomass_volume_estimate import mv_biomass_volume_estimate
 
 __all__ = [
     "mv_biomass_availability",
@@ -33,4 +34,5 @@ __all__ = [
     "mv_usda_county_production",
     "mv_biomass_search",
     "mv_biomass_end_uses",
+    "mv_biomass_volume_estimate",
 ]

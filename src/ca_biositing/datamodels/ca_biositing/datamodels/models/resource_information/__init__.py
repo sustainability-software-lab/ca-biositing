@@ -1,4 +1,5 @@
 from .primary_ag_product import PrimaryAgProduct
+from .residue_factor import ResidueFactor
 from .resource import Resource
 from .resource_availability import ResourceAvailability
 from .resource import ResourceClass

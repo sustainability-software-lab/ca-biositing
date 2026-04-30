@@ -1,0 +1,1109 @@
+{
+  "timestamp": "2026-04-07T16:51:21.085213",
+  "gsheet_name": "SampleMetadata_v03-BioCirV",
+  "extraction_log": [
+    {
+      "worksheet": "01_Sample_IDs",
+      "status": "SUCCESS",
+      "row_count": 137,
+      "column_count": 6
+    },
+    {
+      "worksheet": "02_Sample_Desc",
+      "status": "SUCCESS",
+      "row_count": 104,
+      "column_count": 20
+    },
+    {
+      "worksheet": "03_Qty_FieldStorage",
+      "status": "SUCCESS",
+      "row_count": 142,
+      "column_count": 14
+    },
+    {
+      "worksheet": "04_Producers",
+      "status": "SUCCESS",
+      "row_count": 64,
+      "column_count": 23
+    }
+  ],
+  "worksheets": [
+    {
+      "worksheet": "01_Sample_IDs",
+      "status": "OK",
+      "row_count": 137,
+      "column_count": 6,
+      "columns": [
+        {
+          "name": "Index",
+          "dtype": "object",
+          "non_null_count": 137,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 137,
+          "sample_values": ["1296E642", "7691DB2E", "74810A87"]
+        },
+        {
+          "name": "Sample_name",
+          "dtype": "object",
+          "non_null_count": 137,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 103,
+          "sample_values": ["Riv-TmPm03", "Pin-TmPm02", "Oak-TmPm01"]
+        },
+        {
+          "name": "Resource",
+          "dtype": "object",
+          "non_null_count": 137,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 50,
+          "sample_values": ["Tomato pomace", "Tomato pomace", "Tomato pomace"]
+        },
+        {
+          "name": "ProviderCode",
+          "dtype": "object",
+          "non_null_count": 137,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 37,
+          "sample_values": ["Riverstone", "Pinecrest", "Oakleaf"]
+        },
+        {
+          "name": "FV_Date_Time",
+          "dtype": "object",
+          "non_null_count": 137,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 56,
+          "sample_values": [
+            "2024-09-09 15:00:00",
+            "2024-09-21 9:00:00",
+            "2024-09-24 11:40:00"
+          ]
+        },
+        {
+          "name": "FV_Folder",
+          "dtype": "object",
+          "non_null_count": 137,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 28,
+          "sample_values": [
+            "",
+            "",
+            "https://drive.google.com/drive/folders/1NfDUEDoLgMsyozcjqByfuITAlTFLvVvR?usp=drive_link"
+          ]
+        }
+      ],
+      "sample_rows": [
+        {
+          "Index": "1296E642",
+          "Sample_name": "Riv-TmPm03",
+          "Resource": "Tomato pomace",
+          "ProviderCode": "Riverstone",
+          "FV_Date_Time": "2024-09-09 15:00:00",
+          "FV_Folder": ""
+        },
+        {
+          "Index": "7691DB2E",
+          "Sample_name": "Pin-TmPm02",
+          "Resource": "Tomato pomace",
+          "ProviderCode": "Pinecrest",
+          "FV_Date_Time": "2024-09-21 9:00:00",
+          "FV_Folder": ""
+        },
+        {
+          "Index": "74810A87",
+          "Sample_name": "Oak-TmPm01",
+          "Resource": "Tomato pomace",
+          "ProviderCode": "Oakleaf",
+          "FV_Date_Time": "2024-09-24 11:40:00",
+          "FV_Folder": "https://drive.google.com/drive/folders/1NfDUEDoLgMsyozcjqByfuITAlTFLvVvR?usp=drive_link"
+        },
+        {
+          "Index": "9A1C2144",
+          "Sample_name": "Jag-Olpm026",
+          "Resource": "Olive pomace",
+          "ProviderCode": "Jaguar",
+          "FV_Date_Time": "2024-10-17 12:00:00",
+          "FV_Folder": ""
+        },
+        {
+          "Index": "AC47B0E4",
+          "Sample_name": "Jag-OlSt027",
+          "Resource": "Olive stems / leaves",
+          "ProviderCode": "Jaguar",
+          "FV_Date_Time": "2024-10-17 12:00:00",
+          "FV_Folder": ""
+        }
+      ],
+      "null_counts": {
+        "Index": 0,
+        "Sample_name": 0,
+        "Resource": 0,
+        "ProviderCode": 0,
+        "FV_Date_Time": 0,
+        "FV_Folder": 0
+      },
+      "duplicate_counts": {},
+      "data_quality_issues": []
+    },
+    {
+      "worksheet": "02_Sample_Desc",
+      "status": "OK",
+      "row_count": 104,
+      "column_count": 20,
+      "columns": [
+        {
+          "name": "Index",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 104,
+          "sample_values": ["1296E642", "7691DB2E", "74810A87"]
+        },
+        {
+          "name": "Sample_name",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 103,
+          "sample_values": ["Riv-TmPm03", "Pin-TmPm02", "Oak-TmPm01"]
+        },
+        {
+          "name": "Resource",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 49,
+          "sample_values": ["Tomato pomace", "Tomato pomace", "Tomato pomace"]
+        },
+        {
+          "name": "ProviderCode",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 36,
+          "sample_values": ["Riverstone", "Pinecrest", "Oakleaf"]
+        },
+        {
+          "name": "FV_Date_Time",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 55,
+          "sample_values": [
+            "2024-09-09 15:00:00",
+            "2024-09-21 9:00:00",
+            "2024-09-24 11:40:00"
+          ]
+        },
+        {
+          "name": "Sampling_Location",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 17,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Sampling_Street",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 31,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Sampling_City",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 15,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Sampling_Zip",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 20,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Sampling_LatLong",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 39,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Sample_TS",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 58,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Sample_Source",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 32,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Processing_Method",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 25,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Storage_Mode",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 15,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Storage_Dur_Value",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 10,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Storage_Dur_Units",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 8,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Particle_L_cm",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 24,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Particle_W_cm",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 19,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Particle_H_cm",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 19,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Sample_Notes",
+          "dtype": "object",
+          "non_null_count": 104,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 18,
+          "sample_values": ["", "", ""]
+        }
+      ],
+      "sample_rows": [
+        {
+          "Index": "1296E642",
+          "Sample_name": "Riv-TmPm03",
+          "Resource": "Tomato pomace",
+          "ProviderCode": "Riverstone",
+          "FV_Date_Time": "2024-09-09 15:00:00",
+          "Sampling_Location": "",
+          "Sampling_Street": "",
+          "Sampling_City": "",
+          "Sampling_Zip": "",
+          "Sampling_LatLong": "",
+          "Sample_TS": "",
+          "Sample_Source": "",
+          "Processing_Method": "",
+          "Storage_Mode": "",
+          "Storage_Dur_Value": "",
+          "Storage_Dur_Units": "",
+          "Particle_L_cm": "",
+          "Particle_W_cm": "",
+          "Particle_H_cm": "",
+          "Sample_Notes": ""
+        },
+        {
+          "Index": "7691DB2E",
+          "Sample_name": "Pin-TmPm02",
+          "Resource": "Tomato pomace",
+          "ProviderCode": "Pinecrest",
+          "FV_Date_Time": "2024-09-21 9:00:00",
+          "Sampling_Location": "",
+          "Sampling_Street": "",
+          "Sampling_City": "",
+          "Sampling_Zip": "",
+          "Sampling_LatLong": "",
+          "Sample_TS": "",
+          "Sample_Source": "",
+          "Processing_Method": "",
+          "Storage_Mode": "",
+          "Storage_Dur_Value": "",
+          "Storage_Dur_Units": "",
+          "Particle_L_cm": "",
+          "Particle_W_cm": "",
+          "Particle_H_cm": "",
+          "Sample_Notes": ""
+        },
+        {
+          "Index": "74810A87",
+          "Sample_name": "Oak-TmPm01",
+          "Resource": "Tomato pomace",
+          "ProviderCode": "Oakleaf",
+          "FV_Date_Time": "2024-09-24 11:40:00",
+          "Sampling_Location": "",
+          "Sampling_Street": "",
+          "Sampling_City": "",
+          "Sampling_Zip": "",
+          "Sampling_LatLong": "",
+          "Sample_TS": "",
+          "Sample_Source": "",
+          "Processing_Method": "",
+          "Storage_Mode": "",
+          "Storage_Dur_Value": "",
+          "Storage_Dur_Units": "",
+          "Particle_L_cm": "",
+          "Particle_W_cm": "",
+          "Particle_H_cm": "",
+          "Sample_Notes": ""
+        },
+        {
+          "Index": "9A1C2144",
+          "Sample_name": "Jag-Olpm026",
+          "Resource": "Olive pomace",
+          "ProviderCode": "Jaguar",
+          "FV_Date_Time": "2024-10-17 12:00:00",
+          "Sampling_Location": "",
+          "Sampling_Street": "",
+          "Sampling_City": "",
+          "Sampling_Zip": "",
+          "Sampling_LatLong": "",
+          "Sample_TS": "",
+          "Sample_Source": "",
+          "Processing_Method": "",
+          "Storage_Mode": "",
+          "Storage_Dur_Value": "",
+          "Storage_Dur_Units": "",
+          "Particle_L_cm": "",
+          "Particle_W_cm": "",
+          "Particle_H_cm": "",
+          "Sample_Notes": ""
+        },
+        {
+          "Index": "AC47B0E4",
+          "Sample_name": "Jag-OlSt027",
+          "Resource": "Olive stems / leaves",
+          "ProviderCode": "Jaguar",
+          "FV_Date_Time": "2024-10-17 12:00:00",
+          "Sampling_Location": "",
+          "Sampling_Street": "",
+          "Sampling_City": "",
+          "Sampling_Zip": "",
+          "Sampling_LatLong": "",
+          "Sample_TS": "",
+          "Sample_Source": "",
+          "Processing_Method": "",
+          "Storage_Mode": "",
+          "Storage_Dur_Value": "",
+          "Storage_Dur_Units": "",
+          "Particle_L_cm": "",
+          "Particle_W_cm": "",
+          "Particle_H_cm": "",
+          "Sample_Notes": ""
+        }
+      ],
+      "null_counts": {
+        "Index": 0,
+        "Sample_name": 0,
+        "Resource": 0,
+        "ProviderCode": 0,
+        "FV_Date_Time": 0,
+        "Sampling_Location": 0,
+        "Sampling_Street": 0,
+        "Sampling_City": 0,
+        "Sampling_Zip": 0,
+        "Sampling_LatLong": 0,
+        "Sample_TS": 0,
+        "Sample_Source": 0,
+        "Processing_Method": 0,
+        "Storage_Mode": 0,
+        "Storage_Dur_Value": 0,
+        "Storage_Dur_Units": 0,
+        "Particle_L_cm": 0,
+        "Particle_W_cm": 0,
+        "Particle_H_cm": 0,
+        "Sample_Notes": 0
+      },
+      "duplicate_counts": {},
+      "data_quality_issues": []
+    },
+    {
+      "worksheet": "03_Qty_FieldStorage",
+      "status": "OK",
+      "row_count": 142,
+      "column_count": 14,
+      "columns": [
+        {
+          "name": "Index",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 104,
+          "sample_values": ["EBD7B1F2", "EBD7B1F2", "D3CCC49D"]
+        },
+        {
+          "name": "Sample_name",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 101,
+          "sample_values": ["Pos-Alf033", "Pos-Alf033", "Pos-Alf035"]
+        },
+        {
+          "name": "Resource",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 50,
+          "sample_values": ["Alfalfa", "Alfalfa", "Alfalfa"]
+        },
+        {
+          "name": "ProviderCode",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 37,
+          "sample_values": ["possessive", "possessive", "possessive"]
+        },
+        {
+          "name": "FV_Date_Time",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 55,
+          "sample_values": [
+            "6/30/2025 10:30",
+            "6/30/2025 10:30",
+            "6/30/2025 10:30"
+          ]
+        },
+        {
+          "name": "Sample_Container",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 9,
+          "sample_values": ["Bucket (5 gal.)", "Core", "Bucket (5 gal.)"]
+        },
+        {
+          "name": "Qty",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 4,
+          "sample_values": ["1", "1", "1"]
+        },
+        {
+          "name": "Primary_Collector",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 11,
+          "sample_values": ["Ziad Nasef", "Xihui Kang", "Ziad Nasef"]
+        },
+        {
+          "name": "Collection_Team",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 7,
+          "sample_values": ["UCM-Diaz", "LBNL", "UCM-Diaz"]
+        },
+        {
+          "name": "Destination_Lab",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 3,
+          "sample_values": ["UCM-Diaz", "LBNL", "UCM-Diaz"]
+        },
+        {
+          "name": "FieldStorage_Location",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 5,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "FieldStorage_Conditions",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 4,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "FieldStorage_Duration",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 3,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "FieldStorage_Dur_Units",
+          "dtype": "object",
+          "non_null_count": 142,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 3,
+          "sample_values": ["", "", ""]
+        }
+      ],
+      "sample_rows": [
+        {
+          "Index": "EBD7B1F2",
+          "Sample_name": "Pos-Alf033",
+          "Resource": "Alfalfa",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30",
+          "Sample_Container": "Bucket (5 gal.)",
+          "Qty": "1",
+          "Primary_Collector": "Ziad Nasef",
+          "Collection_Team": "UCM-Diaz",
+          "Destination_Lab": "UCM-Diaz",
+          "FieldStorage_Location": "",
+          "FieldStorage_Conditions": "",
+          "FieldStorage_Duration": "",
+          "FieldStorage_Dur_Units": ""
+        },
+        {
+          "Index": "EBD7B1F2",
+          "Sample_name": "Pos-Alf033",
+          "Resource": "Alfalfa",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30",
+          "Sample_Container": "Core",
+          "Qty": "1",
+          "Primary_Collector": "Xihui Kang",
+          "Collection_Team": "LBNL",
+          "Destination_Lab": "LBNL",
+          "FieldStorage_Location": "",
+          "FieldStorage_Conditions": "",
+          "FieldStorage_Duration": "",
+          "FieldStorage_Dur_Units": ""
+        },
+        {
+          "Index": "D3CCC49D",
+          "Sample_name": "Pos-Alf035",
+          "Resource": "Alfalfa",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30",
+          "Sample_Container": "Bucket (5 gal.)",
+          "Qty": "1",
+          "Primary_Collector": "Ziad Nasef",
+          "Collection_Team": "UCM-Diaz",
+          "Destination_Lab": "UCM-Diaz",
+          "FieldStorage_Location": "",
+          "FieldStorage_Conditions": "",
+          "FieldStorage_Duration": "",
+          "FieldStorage_Dur_Units": ""
+        },
+        {
+          "Index": "D3CCC49D",
+          "Sample_name": "Pos-Alf035",
+          "Resource": "Alfalfa",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30",
+          "Sample_Container": "Core",
+          "Qty": "1",
+          "Primary_Collector": "Xihui Kang",
+          "Collection_Team": "LBNL",
+          "Destination_Lab": "LBNL",
+          "FieldStorage_Location": "",
+          "FieldStorage_Conditions": "",
+          "FieldStorage_Duration": "",
+          "FieldStorage_Dur_Units": ""
+        },
+        {
+          "Index": "D3CCC49D",
+          "Sample_name": "Pos-Alf035",
+          "Resource": "Alfalfa",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30",
+          "Sample_Container": "Bale",
+          "Qty": "1",
+          "Primary_Collector": "Xihui Kang",
+          "Collection_Team": "LBNL",
+          "Destination_Lab": "LBNL",
+          "FieldStorage_Location": "",
+          "FieldStorage_Conditions": "",
+          "FieldStorage_Duration": "",
+          "FieldStorage_Dur_Units": ""
+        }
+      ],
+      "null_counts": {
+        "Index": 0,
+        "Sample_name": 0,
+        "Resource": 0,
+        "ProviderCode": 0,
+        "FV_Date_Time": 0,
+        "Sample_Container": 0,
+        "Qty": 0,
+        "Primary_Collector": 0,
+        "Collection_Team": 0,
+        "Destination_Lab": 0,
+        "FieldStorage_Location": 0,
+        "FieldStorage_Conditions": 0,
+        "FieldStorage_Duration": 0,
+        "FieldStorage_Dur_Units": 0
+      },
+      "duplicate_counts": {},
+      "data_quality_issues": []
+    },
+    {
+      "worksheet": "04_Producers",
+      "status": "OK",
+      "row_count": 64,
+      "column_count": 23,
+      "columns": [
+        {
+          "name": "Index",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 58,
+          "sample_values": ["EBD7B1F2", "64AA3698", "21C2B270"]
+        },
+        {
+          "name": "Sample_name",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 57,
+          "sample_values": ["Pos-Alf033", "", "Pos-WSt034"]
+        },
+        {
+          "name": "Resource",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 33,
+          "sample_values": ["Alfalfa", "Wheat hay", "Wheat straw"]
+        },
+        {
+          "name": "ProviderCode",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 21,
+          "sample_values": ["possessive", "possessive", "possessive"]
+        },
+        {
+          "name": "FV_Date_Time",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 27,
+          "sample_values": [
+            "6/30/2025 10:30:00",
+            "6/30/2025 10:30:00",
+            "6/30/2025 10:30:00"
+          ]
+        },
+        {
+          "name": "Producer",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 16,
+          "sample_values": ["possessive", "possessive", "possessive"]
+        },
+        {
+          "name": "Prod_Location",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 9,
+          "sample_values": [
+            "Adjacent to sampling",
+            "Adjacent to sampling",
+            "Adjacent to sampling"
+          ]
+        },
+        {
+          "name": "Prod_Street",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 10,
+          "sample_values": [
+            "6871 Borba Rd",
+            "6871 Borba Rd",
+            "4400 W. Muller Rd"
+          ]
+        },
+        {
+          "name": "Prod_City",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 5,
+          "sample_values": ["Stockton", "Stockton", "Stockton"]
+        },
+        {
+          "name": "Prod_Zip",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 6,
+          "sample_values": ["95206", "95206", "95206"]
+        },
+        {
+          "name": "Prod_LatLong",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 24,
+          "sample_values": [
+            "37.897784, -121.360592",
+            "37.897784, -121.360592",
+            "37.904889, -121.367878"
+          ]
+        },
+        {
+          "name": "Prod_Date",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 20,
+          "sample_values": ["6/1/2025", "6/1/2025", "6/1/2025"]
+        },
+        {
+          "name": "Prod_Method",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 3,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Harvest_Method",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 7,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Treatment",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 4,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Last_Application_Month",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 1,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Treatment_Amt",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 1,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Treatment_Units",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 1,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Treatment_Notes",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 2,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Soil_Type",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 4,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Crop_Variety",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 24,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Crop_Cultivar",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 4,
+          "sample_values": ["", "", ""]
+        },
+        {
+          "name": "Production_Notes",
+          "dtype": "object",
+          "non_null_count": 64,
+          "null_count": 0,
+          "null_percentage": 0.0,
+          "unique_count": 20,
+          "sample_values": [
+            "Prod_Date is approximate.  Crop was baled in June 2025.",
+            "Prod_Date is approximate.  Crop was baled in June 2025.",
+            "Prod_Date is approximate.  Crop was baled in June 2025."
+          ]
+        }
+      ],
+      "sample_rows": [
+        {
+          "Index": "EBD7B1F2",
+          "Sample_name": "Pos-Alf033",
+          "Resource": "Alfalfa",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30:00",
+          "Producer": "possessive",
+          "Prod_Location": "Adjacent to sampling",
+          "Prod_Street": "6871 Borba Rd",
+          "Prod_City": "Stockton",
+          "Prod_Zip": "95206",
+          "Prod_LatLong": "37.897784, -121.360592",
+          "Prod_Date": "6/1/2025",
+          "Prod_Method": "",
+          "Harvest_Method": "",
+          "Treatment": "",
+          "Last_Application_Month": "",
+          "Treatment_Amt": "",
+          "Treatment_Units": "",
+          "Treatment_Notes": "",
+          "Soil_Type": "",
+          "Crop_Variety": "",
+          "Crop_Cultivar": "",
+          "Production_Notes": "Prod_Date is approximate.  Crop was baled in June 2025."
+        },
+        {
+          "Index": "64AA3698",
+          "Sample_name": "",
+          "Resource": "Wheat hay",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30:00",
+          "Producer": "possessive",
+          "Prod_Location": "Adjacent to sampling",
+          "Prod_Street": "6871 Borba Rd",
+          "Prod_City": "Stockton",
+          "Prod_Zip": "95206",
+          "Prod_LatLong": "37.897784, -121.360592",
+          "Prod_Date": "6/1/2025",
+          "Prod_Method": "",
+          "Harvest_Method": "",
+          "Treatment": "",
+          "Last_Application_Month": "",
+          "Treatment_Amt": "",
+          "Treatment_Units": "",
+          "Treatment_Notes": "",
+          "Soil_Type": "",
+          "Crop_Variety": "",
+          "Crop_Cultivar": "",
+          "Production_Notes": "Prod_Date is approximate.  Crop was baled in June 2025."
+        },
+        {
+          "Index": "21C2B270",
+          "Sample_name": "Pos-WSt034",
+          "Resource": "Wheat straw",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30:00",
+          "Producer": "possessive",
+          "Prod_Location": "Adjacent to sampling",
+          "Prod_Street": "4400 W. Muller Rd",
+          "Prod_City": "Stockton",
+          "Prod_Zip": "95206",
+          "Prod_LatLong": "37.904889, -121.367878",
+          "Prod_Date": "6/1/2025",
+          "Prod_Method": "",
+          "Harvest_Method": "",
+          "Treatment": "",
+          "Last_Application_Month": "",
+          "Treatment_Amt": "",
+          "Treatment_Units": "",
+          "Treatment_Notes": "",
+          "Soil_Type": "",
+          "Crop_Variety": "",
+          "Crop_Cultivar": "",
+          "Production_Notes": "Prod_Date is approximate.  Crop was baled in June 2025."
+        },
+        {
+          "Index": "D3CCC49D",
+          "Sample_name": "Pos-Alf035",
+          "Resource": "Alfalfa",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30:00",
+          "Producer": "possessive",
+          "Prod_Location": "Adjacent to sampling",
+          "Prod_Street": "4689 S. Wilhoit Rd",
+          "Prod_City": "Stockton",
+          "Prod_Zip": "95206",
+          "Prod_LatLong": "37.916740, -121.354472",
+          "Prod_Date": "6/1/2025",
+          "Prod_Method": "",
+          "Harvest_Method": "",
+          "Treatment": "",
+          "Last_Application_Month": "",
+          "Treatment_Amt": "",
+          "Treatment_Units": "",
+          "Treatment_Notes": "",
+          "Soil_Type": "",
+          "Crop_Variety": "",
+          "Crop_Cultivar": "",
+          "Production_Notes": "Prod_Date is approximate.  Crop was baled in June 2025."
+        },
+        {
+          "Index": "E9339186",
+          "Sample_name": "Pos-RiSt036",
+          "Resource": "Rice straw",
+          "ProviderCode": "possessive",
+          "FV_Date_Time": "6/30/2025 10:30:00",
+          "Producer": "voiceover",
+          "Prod_Location": "Tiki Lagoon (~ 6 miles away)",
+          "Prod_Street": "13126 W. Neugerbauer Rd",
+          "Prod_City": "Stockton",
+          "Prod_Zip": "95206",
+          "Prod_LatLong": "37.980469, -121.464958",
+          "Prod_Date": "10/1/2024",
+          "Prod_Method": "",
+          "Harvest_Method": "",
+          "Treatment": "",
+          "Last_Application_Month": "",
+          "Treatment_Amt": "",
+          "Treatment_Units": "",
+          "Treatment_Notes": "",
+          "Soil_Type": "",
+          "Crop_Variety": "",
+          "Crop_Cultivar": "",
+          "Production_Notes": "Prod_Date is approximate.  Crop was baled in June 2025."
+        }
+      ],
+      "null_counts": {
+        "Index": 0,
+        "Sample_name": 0,
+        "Resource": 0,
+        "ProviderCode": 0,
+        "FV_Date_Time": 0,
+        "Producer": 0,
+        "Prod_Location": 0,
+        "Prod_Street": 0,
+        "Prod_City": 0,
+        "Prod_Zip": 0,
+        "Prod_LatLong": 0,
+        "Prod_Date": 0,
+        "Prod_Method": 0,
+        "Harvest_Method": 0,
+        "Treatment": 0,
+        "Last_Application_Month": 0,
+        "Treatment_Amt": 0,
+        "Treatment_Units": 0,
+        "Treatment_Notes": 0,
+        "Soil_Type": 0,
+        "Crop_Variety": 0,
+        "Crop_Cultivar": 0,
+        "Production_Notes": 0
+      },
+      "duplicate_counts": {},
+      "data_quality_issues": ["Found 2 duplicate rows"]
+    }
+  ]
+}
