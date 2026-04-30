@@ -297,8 +297,8 @@ class TestAim2BioconversionFlow:
         """Verify that strain seeding reads name/genus/species/strain columns from the sheet."""
         flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
-        # New seeding logic uses the four taxonomy columns
-        assert "'name': 'name'" in source
+        # New seeding logic uses the taxonomy columns sourced from Strain_name
+        assert "'strain_name': 'name'" in source
         assert "'genus': 'genus'" in source
         assert "'species': 'species'" in source
         assert "'strain': 'strain'" in source

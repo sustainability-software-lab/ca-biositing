@@ -7,9 +7,10 @@ from ca_biositing.datamodels.models import BioconversionMethod, Strain
 class TestBioconversionMethodETL:
     def test_transform_bioconversion_method(self):
         # Mock raw data from 03.3-BioConversionMethods
+
         raw_data = {
             'Method_id': ['M1', 'M2'],
-            'Name': ['Strain A', 'Strain B'],
+            'Strain_name': ['Strain A', 'Strain B'],
             'Inoculum volume (L)': [0.1, 0.2],
             'Reaction volume (L)': [1.0, 2.0],
             'Temperature (C)': [30, 37],
@@ -31,9 +32,7 @@ class TestBioconversionMethodETL:
         assert 'strain_name' in transformed_df.columns
         assert 'inoculum_volume_L' in transformed_df.columns
         assert 'temperature_C' in transformed_df.columns
-        assert transformed_df.iloc[0]['name'] == 'm1' # standard_clean lowers values if they are categorical? No, standard_clean usually lowers headers.
-        # Actually standard_clean uses janitor's clean_names which snake_cases.
-        # Let's check what transform_bioconversion_method actually does.
+        assert transformed_df.iloc[0]['name'] == 'm1'
 
     def test_bioconversion_method_model_fields(self):
         assert hasattr(BioconversionMethod, 'name')

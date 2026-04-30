@@ -81,6 +81,7 @@ def transform_fermentation_record(
     normalize_columns = {
         'resource': (Resource, 'name'),
         'prepared_sample': (PreparedSample, 'name'),
+        'method_id': (Method, 'name'),
         'bioconversion_method': (BioconversionMethod, 'name'),
         'decon_method': (Method, 'name'),
         'eh_method': (Method, 'name'),
@@ -121,6 +122,7 @@ def transform_fermentation_record(
         'note': 'note',
         'etl_run_id': 'etl_run_id',
         'lineage_group_id': 'lineage_group_id',
+        'method_id_id': 'method_id',
         'bioconversion_method_id': 'bioconversion_method_id',
         'decon_method_id': 'pretreatment_method_id',
         'eh_method_id': 'eh_method_id',
