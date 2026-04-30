@@ -55,7 +55,7 @@ SELECT row_number() OVER (
                     strain.name,
                     pm.name,
                     em.name,
-                    bm.name,
+                    bcm.name,
                     parameter.name,
                     unit.name
        ) AS id,
@@ -66,8 +66,8 @@ SELECT row_number() OVER (
        LEFT(strain.genus, 1) || '. ' || strain.species AS species_display_name,
        pm.name AS pretreatment_method,
        em.name AS enzyme_name,
-       bm.name AS bioconversion_method,
-       coalesce(pm.duration, em.duration, bm.duration) AS elapsed_time,
+       bcm.name AS bioconversion_method,
+       coalesce(pm.duration, em.duration, bcm.time_h) AS elapsed_time,
        parameter.name AS product_name,
        avg(observation.value) AS avg_value,
        min(observation.value) AS min_value,
@@ -84,7 +84,7 @@ LEFT OUTER JOIN place ON location_address.geography_id = place.geoid
 LEFT OUTER JOIN strain ON fermentation_record.strain_id = strain.id
 LEFT OUTER JOIN method AS pm ON fermentation_record.pretreatment_method_id = pm.id
 LEFT OUTER JOIN method AS em ON fermentation_record.eh_method_id = em.id
-LEFT OUTER JOIN method AS bm ON fermentation_record.method_id = bm.id
+LEFT OUTER JOIN bioconversion_method AS bcm ON fermentation_record.bioconversion_method_id = bcm.id
 JOIN observation ON lower(observation.record_id) = lower(fermentation_record.record_id)
 JOIN parameter ON observation.parameter_id = parameter.id
 LEFT OUTER JOIN unit ON observation.unit_id = unit.id
@@ -98,8 +98,8 @@ GROUP BY fermentation_record.resource_id,
          strain.species,
          pm.name,
          em.name,
-         bm.name,
-         coalesce(pm.duration, em.duration, bm.duration),
+         bcm.name,
+         coalesce(pm.duration, em.duration, bcm.time_h),
          parameter.name,
          unit.name
 """
