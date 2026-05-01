@@ -71,11 +71,11 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
   geoid_df = pd.DataFrame(columns=["closest_geoid", "closest_state_name", "closest_state_fips", "closest_county_name", "closest_county_fips"])
 
   # put weird addresses in an array for displaying in a warning
-  unparseable = []
+  unparsable = []
   for index, row in df.iterrows():
     try:
       if row['is_na']:
-        # categorize as unparseable
+        # categorize as unparsable
         raise Exception
 
       info = geocode(row[address_column]).raw
@@ -120,11 +120,11 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
       geoid_result = {'closest_geoid': geoid, "closest_state_name": state, "closest_state_fips": state_fips, "closest_county_name": county, "closest_county_fips": county_fips}
 
       if geoid is None:
-        unparseable = unparseable + [str(index) + "\t" + str(row[address_column])]
+        unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
 
     except:
       # handle weird addresses
-      unparseable = unparseable + [str(index) + "\t" + str(row[address_column])]
+      unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
 
       if isinstance(row[lat], float) and isinstance(row[long], float):
         latitude = row[lat]
@@ -146,8 +146,8 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
   # )
 
   # print weird addresses
-  if len(unparseable) > 0:
-    logger.warn(f"Some addresses were unparseable: \n{"\n".join(unparseable)}")
+  if len(unparsable) > 0:
+    logger.warn(f"Some addresses were unparsable: \n{"\n".join(unparsable)}")
 
 
   # returns a gdf and a df that need to be added to the database

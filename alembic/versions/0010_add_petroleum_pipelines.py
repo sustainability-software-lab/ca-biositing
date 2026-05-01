@@ -1,7 +1,7 @@
 """updated biodiesel plants and added petroleum pipelines
 
 Revision ID: add_petroleum_pipelines
-Revises: consolidated_views_volume
+Revises: 55f93e3a6237
 Create Date: 2026-04-09 09:35:52.160720
 
 """
@@ -14,7 +14,7 @@ import geoalchemy2
 
 # revision identifiers, used by Alembic.
 revision: str = 'add_petroleum_pipelines'
-down_revision: Union[str, Sequence[str], None] = 'consolidated_views_volume'
+down_revision: Union[str, Sequence[str], None] = '55f93e3a6237'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
