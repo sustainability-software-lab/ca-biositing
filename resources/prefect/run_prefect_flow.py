@@ -7,6 +7,7 @@ from prefect.utilities.importtools import import_object
 AVAILABLE_FLOWS = {
     #"primary_ag_product": "ca_biositing.pipeline.flows.primary_ag_product.primary_ag_product_flow",
     #"analysis_type": "ca_biositing.pipeline.flows.analysis_type.analysis_type_flow",
+    "biodiesel_plants": "ca_biositing.pipeline.flows.biodiesel_plants.biodiesel_plants_flow",
     "residue_factors": "ca_biositing.pipeline.flows.residue_factors_flow.residue_factors_etl_flow",
     "resource_information": "ca_biositing.pipeline.flows.resource_information.resource_information_flow",
     "qualitative": "ca_biositing.pipeline.flows.qualitative.qualitative_etl_flow",
@@ -20,7 +21,7 @@ AVAILABLE_FLOWS = {
     "billion_ton": "ca_biositing.pipeline.flows.billion_ton_etl.billion_ton_etl_flow",
     "field_sample": "ca_biositing.pipeline.flows.field_sample_etl.field_sample_etl_flow",
     #"prepared_sample": "ca_biositing.pipeline.flows.prepared_sample_etl.prepared_sample_etl_flow",
-    "thermochem": "ca_biositing.pipeline.flows.thermochem_etl.thermochem_etl_flow",
+    "thermochem": "ca_biositing.pipeline.flows.thermochem_etl.thermochem_etl_flow"
 }
 
 @task(name="Refresh materialized views", retries=3, retry_delay_seconds=30)
