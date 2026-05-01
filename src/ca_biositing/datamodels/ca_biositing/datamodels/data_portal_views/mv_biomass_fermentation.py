@@ -43,7 +43,7 @@ mv_biomass_fermentation = select(
     Resource.name.label("resource_name"),
     LocationAddress.geography_id.label("geoid"),
     Place.county_name.label("county"),
-    SPECIES_DISPLAY_NAME.label("species_display_name"),
+    SPECIES_DISPLAY_NAME.label("strain_name"),
     PM.name.label("pretreatment_method"),
     EM.name.label("enzyme_name"),
     BCM.name.label("bioconversion_method"),
