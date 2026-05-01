@@ -63,6 +63,8 @@ def _normalize_parameter_name(value: Any) -> str:
     if value is None or pd.isna(value):
         return ""
     text = str(value).strip().lower().replace("’", "'")
+    # Keep an underscore-normalized form for internal parsing, but
+    # callers that need human-friendly names should use `_normalize_text`.
     text = re.sub(r"[\s_-]+", "_", text)
     text = re.sub(r"_+", "_", text)
     return text
@@ -93,7 +95,7 @@ def _parse_county_header(header: Any) -> tuple[str, str]:
 
 
 def _classify_metric(metric_name: str) -> Optional[str]:
-    normalized = _normalize_parameter_name(metric_name)
+    normalized = _normalize_text(metric_name)
     if normalized == "":
         return None
     if _PRICE_TOKEN in normalized:
@@ -115,6 +117,20 @@ def _load_place_lookup() -> dict[str, str]:
             geoid = getattr(row, "geoid", None)
             if county_name and geoid:
                 lookup[county_name] = str(geoid)
+                # Also add a variant without the trailing word 'county' if present
+                if county_name.endswith(" county"):
+                    short = county_name.replace(" county", "").strip()
+                    if short:
+                        lookup[short] = str(geoid)
+                # Also add a variant without the word 'co' or similar abbreviations
+                if county_name.endswith(" co"):
+                    short = county_name.replace(" co", "").strip()
+                    if short:
+                        lookup[short] = str(geoid)
+                # Also map common short keys from _COUNTY_TO_GEOID if available
+                for k, v in _COUNTY_TO_GEOID.items():
+                    if k in county_name and county_name not in lookup:
+                        lookup[k] = str(v)
     return lookup
 
 
@@ -122,6 +138,16 @@ def _resolve_geoid(county_name: str, place_lookup: dict[str, str]) -> Optional[s
     county_key = _normalize_text(county_name)
     if county_key in place_lookup:
         return place_lookup[county_key]
+    # Fallback: check canonical mapping
+    if county_key in _COUNTY_TO_GEOID:
+        return str(_COUNTY_TO_GEOID[county_key])
+    # Also try removing trailing word 'county'
+    if county_key.endswith(" county"):
+        short = county_key.replace(" county", "").strip()
+        if short in place_lookup:
+            return place_lookup[short]
+        if short in _COUNTY_TO_GEOID:
+            return str(_COUNTY_TO_GEOID[short])
     return None
 
 
@@ -299,7 +325,8 @@ def transform_county_ag_records(
                 payload.update(
                     {
                         "geoid": geoid,
-                        "metric_name": metric_name or _normalize_parameter_name(column),
+                        # store human-friendly parameter names (spaces, no underscores)
+                        "metric_name": metric_name or _normalize_text(_parse_county_header(column)[1] or column),
                         "county_name": county_name_normalized or _normalize_text(county_name),
                         "value": metric_value,
                         "record_type": record_type,
@@ -317,6 +344,9 @@ def transform_county_ag_records(
         if not df.empty:
             df["report_start_date"] = pd.to_datetime(df["report_year"].astype(int).astype(str) + "-01-01").dt.date
             df["report_end_date"] = pd.to_datetime(df["report_year"].astype(int).astype(str) + "-12-31").dt.date
+            # production records use a single report_date (Jan 1 of the year)
+            if df is production_records:
+                df["report_date"] = pd.to_datetime(df["report_year"].astype(int).astype(str) + "-01-01").dt.date
             df["dataset_dedupe_key"] = df["record_type"].astype(str) + "|" + df["geoid"].astype(str) + "|" + df["report_year"].astype(str)
 
     logger.info(

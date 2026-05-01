@@ -126,18 +126,30 @@ def _ensure_data_source(session: Session) -> tuple[Any, bool]:
     return instance, created
 
 
-def _ensure_method_category(session: Session) -> tuple[Any, bool]:
+def _ensure_method_category(session: Session, etl_run_id: Any = None, lineage_group_id: Any = None) -> tuple[Any, bool]:
     from ca_biositing.datamodels.models import MethodCategory
 
     payload = {
         "name": ALMOND_METHOD_CATEGORY_NAME,
         "description": "manual meaning extracted by hand by human(s)",
-        "updated_at": datetime.now(timezone.utc),
     }
-    return _upsert_by_name(session, MethodCategory, ALMOND_METHOD_CATEGORY_NAME, payload)
+    instance, created = _upsert_by_name(session, MethodCategory, ALMOND_METHOD_CATEGORY_NAME, payload)
+    # annotate provenance on create/update
+    now = datetime.now(timezone.utc)
+    if instance is not None:
+        # only set attributes that exist on this model
+        if hasattr(instance, "updated_at"):
+            instance.updated_at = now
+        if created and hasattr(instance, "created_at") and getattr(instance, "created_at", None) is None:
+            instance.created_at = now
+        if etl_run_id is not None and hasattr(instance, "etl_run_id"):
+            instance.etl_run_id = etl_run_id
+        if lineage_group_id is not None and hasattr(instance, "lineage_group_id"):
+            instance.lineage_group_id = lineage_group_id
+    return instance, created
 
 
-def _ensure_method(session: Session, data_source_id: int, method_category_id: int) -> tuple[Any, bool]:
+def _ensure_method(session: Session, data_source_id: int, method_category_id: int, etl_run_id: Any = None, lineage_group_id: Any = None) -> tuple[Any, bool]:
     from ca_biositing.datamodels.models import Method
 
     payload = {
@@ -147,7 +159,18 @@ def _ensure_method(session: Session, data_source_id: int, method_category_id: in
         "source_id": data_source_id,
         "updated_at": datetime.now(timezone.utc),
     }
-    return _upsert_by_name(session, Method, ALMOND_METHOD_NAME, payload)
+    instance, created = _upsert_by_name(session, Method, ALMOND_METHOD_NAME, payload)
+    now = datetime.now(timezone.utc)
+    if instance is not None:
+        if hasattr(instance, "updated_at"):
+            instance.updated_at = now
+        if created and hasattr(instance, "created_at") and getattr(instance, "created_at", None) is None:
+            instance.created_at = now
+        if etl_run_id is not None and hasattr(instance, "etl_run_id"):
+            instance.etl_run_id = etl_run_id
+        if lineage_group_id is not None and hasattr(instance, "lineage_group_id"):
+            instance.lineage_group_id = lineage_group_id
+    return instance, created
 
 
 def _ensure_dataset(
@@ -157,6 +180,8 @@ def _ensure_dataset(
     record_type: str,
     data_source_id: int,
     description: str,
+    etl_run_id: Any = None,
+    lineage_group_id: Any = None,
 ) -> tuple[Any, bool]:
     from ca_biositing.datamodels.models import Dataset
 
@@ -169,7 +194,18 @@ def _ensure_dataset(
         "description": description,
         "updated_at": datetime.now(timezone.utc),
     }
-    return _upsert_by_name(session, Dataset, name, payload)
+    instance, created = _upsert_by_name(session, Dataset, name, payload)
+    now = datetime.now(timezone.utc)
+    if instance is not None:
+        if hasattr(instance, "updated_at"):
+            instance.updated_at = now
+        if created and hasattr(instance, "created_at") and getattr(instance, "created_at", None) is None:
+            instance.created_at = now
+        if etl_run_id is not None and hasattr(instance, "etl_run_id"):
+            instance.etl_run_id = etl_run_id
+        if lineage_group_id is not None and hasattr(instance, "lineage_group_id"):
+            instance.lineage_group_id = lineage_group_id
+    return instance, created
 
 
 def _resolve_resource_id(session: Session, resource_value: Any) -> Optional[int]:
@@ -185,7 +221,15 @@ def _resolve_resource_id(session: Session, resource_value: Any) -> Optional[int]
     for row in session.exec(select(Resource)).all():
         if _normalize_text(getattr(row, "name", None)) == normalized_resource:
             return getattr(row, "id", None)
-    return None
+    # If not found, create a new Resource record using the provided name.
+    try:
+        now = datetime.now(timezone.utc)
+        new = Resource(name=str(resource_value).strip(), created_at=now, updated_at=now)
+        session.add(new)
+        session.flush()
+        return getattr(new, "id", None)
+    except Exception:
+        return None
 
 
 def _find_parameter(session: Session, name: str) -> Any:
@@ -210,6 +254,8 @@ def _resolve_parameter_by_name(session: Session, name: Any) -> Any:
     alias_map = {
         "weighted average price": "price production weighted average",
         "price production weighted average": "weighted average price",
+        "price": "price_avg",
+        "price_avg": "price",
     }
     alias_name = alias_map.get(normalized_name)
     if alias_name is None:
@@ -502,11 +548,29 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
             try:
                 data_source, created = _ensure_data_source(session)
                 counts["data_source"] += int(created)
+                # Determine provenance IDs from payloads (prefer parameter payload if present)
+                provenance_etl_run_id = None
+                provenance_lineage_group_id = None
+                try:
+                    if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty:
+                        provenance_etl_run_id = _clean_value(parameter_df.iloc[0].get("etl_run_id"))
+                        provenance_lineage_group_id = _clean_value(parameter_df.iloc[0].get("lineage_group_id"))
+                    else:
+                        # fallback to records payloads
+                        if isinstance(record_payloads, dict):
+                            for key in ("resource_price_record", "resource_production_record"):
+                                df = record_payloads.get(key)
+                                if isinstance(df, pd.DataFrame) and not df.empty:
+                                    provenance_etl_run_id = provenance_etl_run_id or _clean_value(df.iloc[0].get("etl_run_id"))
+                                    provenance_lineage_group_id = provenance_lineage_group_id or _clean_value(df.iloc[0].get("lineage_group_id"))
+                                    if provenance_etl_run_id and provenance_lineage_group_id:
+                                        break
+                except Exception:
+                    provenance_etl_run_id = provenance_etl_run_id
 
-                method_category, created = _ensure_method_category(session)
+                method_category, created = _ensure_method_category(session, etl_run_id=provenance_etl_run_id, lineage_group_id=provenance_lineage_group_id)
                 counts["method_category"] += int(created)
-
-                method, created = _ensure_method(session, data_source.id, method_category.id)
+                method, created = _ensure_method(session, data_source.id, method_category.id, etl_run_id=provenance_etl_run_id, lineage_group_id=provenance_lineage_group_id)
                 counts["method"] += int(created)
 
                 price_dataset, created = _ensure_dataset(
@@ -515,15 +579,18 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                     record_type="resource_price_record",
                     data_source_id=data_source.id,
                     description="Almond resource prices manually extracted from NSJV county ag reports",
+                    etl_run_id=provenance_etl_run_id,
+                    lineage_group_id=provenance_lineage_group_id,
                 )
                 counts["dataset"] += int(created)
-
                 production_dataset, created = _ensure_dataset(
                     session,
                     name=ALMOND_PRODUCTION_DATASET_NAME,
                     record_type="resource_production_record",
                     data_source_id=data_source.id,
                     description="Almond production manually extracted from NSJV county ag reports",
+                    etl_run_id=provenance_etl_run_id,
+                    lineage_group_id=provenance_lineage_group_id,
                 )
                 counts["dataset"] += int(created)
 
@@ -592,6 +659,14 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                                 counts["resource_production_record"] += 1
 
                 if isinstance(observation_df, pd.DataFrame) and not observation_df.empty:
+                    # build unit lookup for fallbacks
+                    from ca_biositing.datamodels.models import Unit
+
+                    unit_lookup: dict[str, int] = {}
+                    for u in session.exec(select(Unit)).all():
+                        if getattr(u, "name", None):
+                            unit_lookup[_normalize_text(getattr(u, "name"))] = getattr(u, "id")
+
                     for _, row in observation_df.iterrows():
                         record_type = _clean_value(row.get("record_type"))
                         dataset_id = dataset_by_record_type.get(record_type)
@@ -611,7 +686,15 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                                 resolved_parameter = getattr(resolved_parameter_row, "id", None)
                                 if _clean_value(row.get("unit_id")) is None:
                                     row = row.copy()
-                                    row["unit_id"] = getattr(resolved_parameter_row, "standard_unit_id", None)
+                                    # prefer parameter's standard unit
+                                    unit_id = getattr(resolved_parameter_row, "standard_unit_id", None)
+                                    # fallback by record_type if parameter unit missing
+                                    if unit_id is None:
+                                        if record_type == "resource_production_record":
+                                            unit_id = unit_lookup.get(_normalize_text("tons")) or unit_lookup.get(_normalize_text("ton"))
+                                        elif record_type == "resource_price_record":
+                                            unit_id = unit_lookup.get(_normalize_text("dollars per ton")) or unit_lookup.get(_normalize_text("dollars per ton delivered"))
+                                    row["unit_id"] = unit_id
 
                         if resolved_parameter is None:
                             logger.error(
