@@ -30,6 +30,13 @@ _COUNTY_TO_GEOID = {
 
 _ALLOWED_COUNTIES = {"merced", "san joaquin", "nsjv", "stanislaus"}
 
+_COUNTY_PREFIXES = [
+    ("san_joaquin_", "san joaquin"),
+    ("stanislaus_", "stanislaus"),
+    ("merced_", "merced"),
+    ("nsjv_", "nsjv"),
+]
+
 _PRICE_TOKEN = "price"
 _PRODUCTION_TOKEN = "production"
 
@@ -73,15 +80,15 @@ def _parse_county_header(header: Any) -> tuple[str, str]:
     if text == "":
         return "", ""
 
-    for county_key in ["san joaquin", "stanislaus", "merced"]:
-        if text.startswith(county_key):
-            suffix = text[len(county_key):].strip(" _-")
-            suffix = suffix.replace(" ", "_")
+    normalized = _normalize_parameter_name(text)
+    for prefix, county_key in _COUNTY_PREFIXES:
+        if normalized.startswith(prefix):
+            suffix = normalized[len(prefix):].strip(" _-")
             return county_key, suffix
 
-    parts = text.split(" ", 1)
+    parts = normalized.split("_", 1)
     if len(parts) == 2:
-        return parts[0], parts[1].replace(" ", "_")
+        return parts[0], parts[1]
     return text, ""
 
 
@@ -115,7 +122,7 @@ def _resolve_geoid(county_name: str, place_lookup: dict[str, str]) -> Optional[s
     county_key = _normalize_text(county_name)
     if county_key in place_lookup:
         return place_lookup[county_key]
-    return _COUNTY_TO_GEOID.get(county_key)
+    return None
 
 
 def _clean_sheet(df: pd.DataFrame) -> Optional[pd.DataFrame]:
@@ -169,7 +176,7 @@ def transform_county_ag_parameters(
         logger.warning("Expected parameter name column not found in parameters sheet.")
         return pd.DataFrame()
 
-    cleaned["name"] = cleaned["name"].apply(_normalize_parameter_name)
+    cleaned["name"] = cleaned["name"].apply(_normalize_text)
     cleaned = cleaned[cleaned["name"].astype(str).str.strip() != ""].copy()
     cleaned["calculated"] = cleaned["name"].str.contains("calculated|estimate", case=False, na=False)
     cleaned["parameter_dedupe_key"] = cleaned["name"].astype(str).str.strip().str.lower()
@@ -285,12 +292,13 @@ def transform_county_ag_records(
                 county_name = county_name_normalized or county_name
                 geoid = _resolve_geoid(county_name, place_lookup)
                 if not geoid:
-                    logger.warning("Skipping almond row with unresolved county/geoid: %s", county_name)
+                    logger.error("Skipping almond row with unresolved county/geoid: county=%s column=%s", county_name, column)
                     continue
 
                 payload = base_payload.copy()
                 payload.update(
                     {
+                        "geoid": geoid,
                         "metric_name": metric_name or _normalize_parameter_name(column),
                         "county_name": county_name_normalized or _normalize_text(county_name),
                         "value": metric_value,
@@ -341,7 +349,7 @@ def transform_county_ag_observations(
     with Session(engine) as session:
         rows = session.exec(select(Parameter)).all()
         for row in rows:
-            name = _normalize_parameter_name(getattr(row, "name", None))
+            name = _normalize_text(getattr(row, "name", None))
             if name:
                 parameter_lookup[name] = row.id
 
@@ -381,18 +389,15 @@ def transform_county_ag_observations(
                 if record_type is None:
                     continue
 
-                parameter_name = _normalize_parameter_name(_parse_county_header(column)[1] or column)
+                parameter_name = _normalize_text(_parse_county_header(column)[1] or column)
                 parameter_id = parameter_lookup.get(parameter_name)
-                if parameter_id is None:
-                    logger.warning("Skipping observation with missing parameter_id for %s", parameter_name)
-                    continue
 
                 county_name_normalized, _ = _parse_county_header(column)
                 if county_name_normalized not in _ALLOWED_COUNTIES:
                     continue
                 geoid = _resolve_geoid(county_name_normalized, place_lookup)
                 if not geoid:
-                    logger.warning("Skipping observation with unresolved county/geoid: %s", county_name_normalized)
+                    logger.error("Skipping observation with unresolved county/geoid: county=%s column=%s", county_name_normalized, column)
                     continue
 
                 observation_rows.append(
@@ -401,6 +406,7 @@ def transform_county_ag_observations(
                         "resource": resource_value,
                         "record_type": record_type,
                         "parameter_id": parameter_id,
+                        "parameter_name": parameter_name,
                         "value": value,
                         "year": int(float(report_year)),
                         "report_date": date(int(float(report_year)), 1, 1),
