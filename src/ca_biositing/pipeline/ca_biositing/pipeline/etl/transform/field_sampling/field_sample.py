@@ -1,5 +1,5 @@
 """
-ETL Transform for FieldSample using SampleMetadata_v03-BioCirV multi-worksheet extraction.
+ETL Transform for FieldSample using SampleMetadata-BioCirV multi-worksheet extraction.
 
 Refactored to use four separate worksheets with multi-way join strategy:
 - 01_Sample_IDs: Base dataset (sample_name, resource, provider, fv_date_time)
@@ -292,11 +292,11 @@ def transform_field_sample(
         if 'dataset_id' in normalized_df.columns:
             final_df['dataset_id'] = normalized_df['dataset_id']
 
-        logger.info(f"Successfully transformed {len(final_df)} FieldSample records (v03).")
+        logger.info(f"Successfully transformed {len(final_df)} FieldSample records ().")
         return final_df
 
     except Exception as e:
-        logger.error(f"Error during FieldSample v03 transform: {e}")
+        logger.error(f"Error during FieldSample  transform: {e}")
         import traceback
         logger.error(traceback.format_exc())
         return pd.DataFrame()

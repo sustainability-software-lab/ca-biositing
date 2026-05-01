@@ -1,5 +1,5 @@
 """
-ETL Transform for LocationAddress (v03 workflow).
+ETL Transform for LocationAddress ( workflow).
 
 Transforms raw sample metadata from four worksheets into unique LocationAddress records.
 Handles two types of locations:

@@ -8,6 +8,7 @@ class Method(BaseEntity, table=True):
     __tablename__ = "method"
 
     name: Optional[str] = Field(default=None)
+    duration: Optional[float] = Field(default=None)
     method_abbrev_id: Optional[int] = Field(default=None, foreign_key="method_abbrev.id")
     method_category_id: Optional[int] = Field(default=None, foreign_key="method_category.id")
     method_standard_id: Optional[int] = Field(default=None, foreign_key="method_standard.id")

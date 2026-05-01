@@ -1,5 +1,5 @@
 """
-Comprehensive integration test for Field Sample ETL v03 pipeline.
+Comprehensive integration test for Field Sample ETL  pipeline.
 
 Tests the complete workflow:
 1. Extract all four worksheets
@@ -99,8 +99,8 @@ def all_data_sources(sample_ids_data, sample_desc_data, qty_field_storage_data, 
     }
 
 
-class TestFieldSampleV03Pipeline:
-    """Integration tests for complete Field Sample v03 ETL pipeline."""
+class TestFieldSamplePipeline:
+    """Integration tests for complete Field Sample  ETL pipeline."""
 
     @patch('ca_biositing.pipeline.utils.gsheet_to_pandas.gsheet_to_df')
     def test_end_to_end_extract_all_worksheets(self, mock_gsheet, all_data_sources):

@@ -15,7 +15,7 @@ from ca_biositing.pipeline.utils.engine import engine
 @flow(name="Field Sample ETL")
 def field_sample_etl_flow():
     """
-    Field Sample ETL Flow - v03 (SampleMetadata_v03-BioCirV multi-worksheet strategy)
+    Field Sample ETL Flow -  (SampleMetadata-BioCirV multi-worksheet strategy)
 
     This flow implements a multi-way left-join strategy across four worksheets:
     - 01_Sample_IDs: Base dataset (137 rows) - serves as left-join key
@@ -34,14 +34,14 @@ def field_sample_etl_flow():
     6. Refresh materialized views
     """
     logger = get_run_logger()
-    logger.info("Starting Field Sample ETL flow (v03 - multi-worksheet strategy)...")
+    logger.info("Starting Field Sample ETL flow ( - multi-worksheet strategy)...")
 
     # 1. Lineage Tracking
     etl_run_id = create_etl_run_record("Field Sample ETL")
     lineage_group_id = create_lineage_group(etl_run_id)
 
     # 2. Extract all four worksheets in parallel (no dependencies between tasks)
-    logger.info("Extracting data from four worksheets of SampleMetadata_v03-BioCirV...")
+    logger.info("Extracting data from four worksheets of SampleMetadata-BioCirV...")
     sample_ids_df = extract_sample_ids()
     sample_desc_df = extract_sample_desc()
     qty_field_storage_df = extract_qty_field_storage()

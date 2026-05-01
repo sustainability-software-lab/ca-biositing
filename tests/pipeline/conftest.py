@@ -1,5 +1,5 @@
 """
-Pytest configuration and fixtures for Field Sample ETL v03 tests.
+Pytest configuration and fixtures for Field Sample ETL  tests.
 """
 
 import pytest
