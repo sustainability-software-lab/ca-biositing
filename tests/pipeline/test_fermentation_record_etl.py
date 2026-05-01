@@ -236,17 +236,16 @@ class TestMvBiomassFermentationView:
         source = view_file.read_text()
         assert 'BCM.name.label("bioconversion_method")' in source
 
-    def test_view_source_file_labels_species_display_name(self):
-        """Verify that mv_biomass_fermentation.py projects species_display_name from genus and species."""
+    def test_view_source_file_labels_strain_name(self):
+        """Verify that mv_biomass_fermentation.py projects strain_name from genus and species."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         assert 'SPECIES_DISPLAY_NAME' in source
-        assert 'species_display_name' in source
+        assert 'strain_name' in source
         assert 'Strain.genus' in source
         assert 'Strain.species' in source
         assert 'func.upper(func.left(Strain.genus, 1))' in source
         assert 'func.lower(Strain.species)' in source
-        assert 'strain_name' not in source
 
     def test_view_source_file_groups_by_genus_and_species(self):
         """Verify that mv_biomass_fermentation.py includes Strain.genus and Strain.species in group_by."""
