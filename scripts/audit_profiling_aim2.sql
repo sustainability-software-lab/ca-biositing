@@ -379,3 +379,257 @@ SELECT
         NULLIF(COUNT(*) FILTER (WHERE qc_pass != 'fail'), 0), 1)
 FROM pretreatment_record
 ORDER BY record_type;
+
+-- 11. COMPREHENSIVE FERMENTATION METADATA NULLABILITY AUDIT
+-- Audits ALL fermentation_record columns for null counts and completeness
+\echo '=== 11. FERMENTATION RECORD COMPREHENSIVE METADATA AUDIT ==='
+SELECT
+    'updated_at' AS column_name,
+    COUNT(*) AS total_records,
+    COUNT(*) FILTER (WHERE updated_at IS NULL) AS null_count,
+    COUNT(*) FILTER (WHERE updated_at IS NOT NULL) AS non_null_count,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE updated_at IS NOT NULL) /
+        NULLIF(COUNT(*), 0), 1) AS pct_populated
+FROM fermentation_record
+UNION ALL
+SELECT 'etl_run_id', COUNT(*), COUNT(*) FILTER (WHERE etl_run_id IS NULL),
+    COUNT(*) FILTER (WHERE etl_run_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE etl_run_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'lineage_group_id', COUNT(*), COUNT(*) FILTER (WHERE lineage_group_id IS NULL),
+    COUNT(*) FILTER (WHERE lineage_group_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE lineage_group_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'record_id', COUNT(*), COUNT(*) FILTER (WHERE record_id IS NULL),
+    COUNT(*) FILTER (WHERE record_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE record_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'dataset_id', COUNT(*), COUNT(*) FILTER (WHERE dataset_id IS NULL),
+    COUNT(*) FILTER (WHERE dataset_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE dataset_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'experiment_id', COUNT(*), COUNT(*) FILTER (WHERE experiment_id IS NULL),
+    COUNT(*) FILTER (WHERE experiment_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE experiment_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'resource_id', COUNT(*), COUNT(*) FILTER (WHERE resource_id IS NULL),
+    COUNT(*) FILTER (WHERE resource_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE resource_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'prepared_sample_id', COUNT(*), COUNT(*) FILTER (WHERE prepared_sample_id IS NULL),
+    COUNT(*) FILTER (WHERE prepared_sample_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE prepared_sample_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'technical_replicate_no', COUNT(*), COUNT(*) FILTER (WHERE technical_replicate_no IS NULL),
+    COUNT(*) FILTER (WHERE technical_replicate_no IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE technical_replicate_no IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'technical_replicate_total', COUNT(*), COUNT(*) FILTER (WHERE technical_replicate_total IS NULL),
+    COUNT(*) FILTER (WHERE technical_replicate_total IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE technical_replicate_total IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'method_id', COUNT(*), COUNT(*) FILTER (WHERE method_id IS NULL),
+    COUNT(*) FILTER (WHERE method_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE method_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'analyst_id', COUNT(*), COUNT(*) FILTER (WHERE analyst_id IS NULL),
+    COUNT(*) FILTER (WHERE analyst_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE analyst_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'raw_data_id', COUNT(*), COUNT(*) FILTER (WHERE raw_data_id IS NULL),
+    COUNT(*) FILTER (WHERE raw_data_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE raw_data_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'qc_pass', COUNT(*), COUNT(*) FILTER (WHERE qc_pass IS NULL),
+    COUNT(*) FILTER (WHERE qc_pass IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE qc_pass IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'note', COUNT(*), COUNT(*) FILTER (WHERE note IS NULL),
+    COUNT(*) FILTER (WHERE note IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE note IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'strain_id', COUNT(*), COUNT(*) FILTER (WHERE strain_id IS NULL),
+    COUNT(*) FILTER (WHERE strain_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE strain_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'bioconversion_method_id', COUNT(*), COUNT(*) FILTER (WHERE bioconversion_method_id IS NULL),
+    COUNT(*) FILTER (WHERE bioconversion_method_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE bioconversion_method_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'pretreatment_method_id', COUNT(*), COUNT(*) FILTER (WHERE pretreatment_method_id IS NULL),
+    COUNT(*) FILTER (WHERE pretreatment_method_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE pretreatment_method_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'eh_method_id', COUNT(*), COUNT(*) FILTER (WHERE eh_method_id IS NULL),
+    COUNT(*) FILTER (WHERE eh_method_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE eh_method_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'well_position', COUNT(*), COUNT(*) FILTER (WHERE well_position IS NULL),
+    COUNT(*) FILTER (WHERE well_position IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE well_position IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'vessel_id', COUNT(*), COUNT(*) FILTER (WHERE vessel_id IS NULL),
+    COUNT(*) FILTER (WHERE vessel_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE vessel_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT 'analyte_detection_equipment_id', COUNT(*), COUNT(*) FILTER (WHERE analyte_detection_equipment_id IS NULL),
+    COUNT(*) FILTER (WHERE analyte_detection_equipment_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE analyte_detection_equipment_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1)
+FROM fermentation_record
+ORDER BY pct_populated DESC, column_name;
+
+-- 12. DEEP DIVE: eh_method_id ANALYSIS
+-- Complete nullability analysis for eh_method_id with cross-references
+\echo '=== 12. EH_METHOD_ID DEEP DIVE ANALYSIS ==='
+SELECT
+    'eh_method_id Coverage' AS metric,
+    COUNT(*) AS total_records,
+    COUNT(*) FILTER (WHERE eh_method_id IS NULL) AS null_count,
+    COUNT(*) FILTER (WHERE eh_method_id IS NOT NULL) AS populated_count,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE eh_method_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1) AS pct_populated
+FROM fermentation_record
+UNION ALL
+SELECT
+    'eh_method_id with QC Pass',
+    COUNT(*) FILTER (WHERE qc_pass != 'fail'),
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND eh_method_id IS NULL),
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND eh_method_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE qc_pass != 'fail' AND eh_method_id IS NOT NULL) /
+        NULLIF(COUNT(*) FILTER (WHERE qc_pass != 'fail'), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT
+    'eh_method_id with strain_id',
+    COUNT(*) FILTER (WHERE strain_id IS NOT NULL),
+    COUNT(*) FILTER (WHERE strain_id IS NOT NULL AND eh_method_id IS NULL),
+    COUNT(*) FILTER (WHERE strain_id IS NOT NULL AND eh_method_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE strain_id IS NOT NULL AND eh_method_id IS NOT NULL) /
+        NULLIF(COUNT(*) FILTER (WHERE strain_id IS NOT NULL), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT
+    'eh_method_id with vessel_id',
+    COUNT(*) FILTER (WHERE vessel_id IS NOT NULL),
+    COUNT(*) FILTER (WHERE vessel_id IS NOT NULL AND eh_method_id IS NULL),
+    COUNT(*) FILTER (WHERE vessel_id IS NOT NULL AND eh_method_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE vessel_id IS NOT NULL AND eh_method_id IS NOT NULL) /
+        NULLIF(COUNT(*) FILTER (WHERE vessel_id IS NOT NULL), 0), 1)
+FROM fermentation_record;
+
+-- 13. DEEP DIVE: well_position ANALYSIS
+-- Complete nullability analysis for well_position
+\echo '=== 13. WELL_POSITION DEEP DIVE ANALYSIS ==='
+SELECT
+    'well_position Coverage' AS metric,
+    COUNT(*) AS total_records,
+    COUNT(*) FILTER (WHERE well_position IS NULL) AS null_count,
+    COUNT(*) FILTER (WHERE well_position IS NOT NULL) AS populated_count,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE well_position IS NOT NULL) / NULLIF(COUNT(*), 0), 1) AS pct_populated
+FROM fermentation_record
+UNION ALL
+SELECT
+    'well_position with QC Pass',
+    COUNT(*) FILTER (WHERE qc_pass != 'fail'),
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND well_position IS NULL),
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND well_position IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE qc_pass != 'fail' AND well_position IS NOT NULL) /
+        NULLIF(COUNT(*) FILTER (WHERE qc_pass != 'fail'), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT
+    'well_position with vessel_id',
+    COUNT(*) FILTER (WHERE vessel_id IS NOT NULL),
+    COUNT(*) FILTER (WHERE vessel_id IS NOT NULL AND well_position IS NULL),
+    COUNT(*) FILTER (WHERE vessel_id IS NOT NULL AND well_position IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE vessel_id IS NOT NULL AND well_position IS NOT NULL) /
+        NULLIF(COUNT(*) FILTER (WHERE vessel_id IS NOT NULL), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT
+    'Distinct well_position values (non-null)',
+    COUNT(DISTINCT well_position),
+    0,
+    COUNT(DISTINCT well_position),
+    100.0
+FROM fermentation_record
+WHERE well_position IS NOT NULL;
+
+-- 14. DEEP DIVE: vessel_id ANALYSIS
+-- Complete nullability analysis for vessel_id with linkage validation
+\echo '=== 14. VESSEL_ID DEEP DIVE ANALYSIS ==='
+SELECT
+    'vessel_id Coverage' AS metric,
+    COUNT(*) AS total_records,
+    COUNT(*) FILTER (WHERE vessel_id IS NULL) AS null_count,
+    COUNT(*) FILTER (WHERE vessel_id IS NOT NULL) AS populated_count,
+    ROUND(100.0 * COUNT(*) FILTER (WHERE vessel_id IS NOT NULL) / NULLIF(COUNT(*), 0), 1) AS pct_populated
+FROM fermentation_record
+UNION ALL
+SELECT
+    'vessel_id with QC Pass',
+    COUNT(*) FILTER (WHERE qc_pass != 'fail'),
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND vessel_id IS NULL),
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND vessel_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE qc_pass != 'fail' AND vessel_id IS NOT NULL) /
+        NULLIF(COUNT(*) FILTER (WHERE qc_pass != 'fail'), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT
+    'vessel_id with strain_id',
+    COUNT(*) FILTER (WHERE strain_id IS NOT NULL),
+    COUNT(*) FILTER (WHERE strain_id IS NOT NULL AND vessel_id IS NULL),
+    COUNT(*) FILTER (WHERE strain_id IS NOT NULL AND vessel_id IS NOT NULL),
+    ROUND(100.0 * COUNT(*) FILTER (WHERE strain_id IS NOT NULL AND vessel_id IS NOT NULL) /
+        NULLIF(COUNT(*) FILTER (WHERE strain_id IS NOT NULL), 0), 1)
+FROM fermentation_record
+UNION ALL
+SELECT
+    'Unique vessel_id values (non-null)',
+    COUNT(DISTINCT vessel_id),
+    0,
+    COUNT(DISTINCT vessel_id),
+    100.0
+FROM fermentation_record
+WHERE vessel_id IS NOT NULL;
+
+-- 15. METADATA COMPLETENESS MATRIX (QC-Pass Records Only)
+-- Summarizes completeness of key metadata fields for QC-pass records
+\echo '=== 15. METADATA COMPLETENESS MATRIX (QC-PASS RECORDS) ==='
+SELECT
+    COUNT(*) FILTER (WHERE qc_pass != 'fail') AS total_qc_pass,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND updated_at IS NOT NULL) AS updated_at_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND etl_run_id IS NOT NULL) AS etl_run_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND lineage_group_id IS NOT NULL) AS lineage_group_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND dataset_id IS NOT NULL) AS dataset_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND resource_id IS NOT NULL) AS resource_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND prepared_sample_id IS NOT NULL) AS prepared_sample_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND analyst_id IS NOT NULL) AS analyst_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND raw_data_id IS NOT NULL) AS raw_data_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND method_id IS NOT NULL) AS method_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND strain_id IS NOT NULL) AS strain_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND vessel_id IS NOT NULL) AS vessel_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND eh_method_id IS NOT NULL) AS eh_method_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND well_position IS NOT NULL) AS well_position_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND pretreatment_method_id IS NOT NULL) AS pretreatment_method_id_filled,
+    COUNT(*) FILTER (WHERE qc_pass != 'fail' AND bioconversion_method_id IS NOT NULL) AS bioconversion_method_id_filled
+FROM fermentation_record;
