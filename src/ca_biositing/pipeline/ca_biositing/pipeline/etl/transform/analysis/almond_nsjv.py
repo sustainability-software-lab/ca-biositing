@@ -19,7 +19,7 @@ from ca_biositing.pipeline.utils.cleaning_functions import cleaning as cleaning_
 from ca_biositing.pipeline.utils.engine import get_engine
 from ca_biositing.pipeline.utils.name_id_swap import normalize_dataframes
 
-EXTRACT_SOURCES = ["parameters", "price_production_county_ag_reports"]
+EXTRACT_SOURCES = ["parameters", "price_freight_terms", "price_production_county_ag_reports"]
 
 _COUNTY_TO_GEOID = {
     "merced": "06047",
@@ -151,6 +151,45 @@ def _resolve_geoid(county_name: str, place_lookup: dict[str, str]) -> Optional[s
     return None
 
 
+def _load_freight_terms_lookup(df: Optional[pd.DataFrame]) -> dict[str, str]:
+    lookup: dict[str, str] = {}
+    if df is None or df.empty:
+        return lookup
+
+    cleaned = _clean_sheet(df)
+    if cleaned is None or cleaned.empty:
+        return lookup
+
+    county_col = _first_existing_column(cleaned, ["county", "county_name", "place", "name"])
+    geoid_col = _first_existing_column(cleaned, ["geoid", "geo_id"])
+    freight_terms_col = _first_existing_column(cleaned, ["freight_terms", "freight_term", "terms"])
+    if freight_terms_col is None:
+        return lookup
+
+    for _, row in cleaned.iterrows():
+        freight_terms = row.get(freight_terms_col)
+        if freight_terms is None or (isinstance(freight_terms, str) and freight_terms.strip() == ""):
+            continue
+
+        freight_text = str(freight_terms).strip()
+        if freight_text == "":
+            continue
+
+        county_name = _normalize_text(row.get(county_col)) if county_col else ""
+        geoid = _normalize_text(row.get(geoid_col)) if geoid_col else ""
+
+        if county_name:
+            lookup[county_name] = freight_text
+            if county_name.endswith(" county"):
+                lookup[county_name.replace(" county", "").strip()] = freight_text
+            if county_name.endswith(" co"):
+                lookup[county_name.replace(" co", "").strip()] = freight_text
+        if geoid:
+            lookup[str(geoid)] = freight_text
+
+    return lookup
+
+
 def _clean_sheet(df: pd.DataFrame) -> Optional[pd.DataFrame]:
     cleaned = cleaning_mod.standard_clean(df)
     if cleaned is None:
@@ -224,10 +263,6 @@ def transform_county_ag_parameters(
         "etl_run_id",
         "lineage_group_id",
     ]
-    for column in desired_columns:
-        if column not in normalized.columns:
-            normalized[column] = pd.NA
-
     logger.info("Prepared %s almond parameters.", len(normalized))
     return normalized[desired_columns].copy()
 
@@ -251,6 +286,7 @@ def transform_county_ag_records(
         }
 
     place_lookup = _load_place_lookup()
+    freight_terms_lookup = _load_freight_terms_lookup(data_sources.get("price_freight_terms"))
     records: dict[str, list[dict[str, Any]]] = {
         "resource_price_record": [],
         "resource_production_record": [],
@@ -322,6 +358,10 @@ def transform_county_ag_records(
                     continue
 
                 payload = base_payload.copy()
+                freight_terms = None
+                if record_type == "resource_price_record":
+                    # We may want a join table later mapping county x commodity to reported freight term.
+                    freight_terms = freight_terms_lookup.get(county_name_normalized) or freight_terms_lookup.get(str(geoid))
                 payload.update(
                     {
                         "geoid": geoid,
@@ -331,6 +371,7 @@ def transform_county_ag_records(
                         "value": metric_value,
                         "record_type": record_type,
                         "source_sheet": "price_production_county_ag_reports",
+                        "freight_terms": freight_terms,
                     }
                 )
                 records[record_type].append(payload)

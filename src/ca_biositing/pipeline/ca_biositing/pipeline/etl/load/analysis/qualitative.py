@@ -33,11 +33,12 @@ def _normalize_name(value: Any) -> str:
 
 
 def _normalize_parameter_name(value: Any) -> str:
+    """Normalize parameter name to lowercase with spaces (matching database parameters 1-10)."""
     if value is None:
         return ""
-    text = str(value).strip().lower().replace("’", "'")
-    text = re.sub(r"[-\s]+", "_", text)
-    text = re.sub(r"_+", "_", text)
+    text = str(value).strip().lower().replace("'", "'")
+    text = text.replace("_", " ").replace("-", " ")
+    text = re.sub(r"\s+", " ", text)
     return text
 
 

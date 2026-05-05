@@ -21,6 +21,7 @@ def almond_nsjv_etl_flow():
 
     data_sources = {
         "parameters": almond_extract.parameters(),
+        "price_freight_terms": almond_extract.price_freight_terms(),
         "price_production_county_ag_reports": almond_extract.price_production_county_ag_reports(),
     }
 
