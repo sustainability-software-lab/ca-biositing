@@ -406,19 +406,19 @@ def refresh_all_views(engine):
         conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.usda_resource_commodity_view"))
         conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.analysis_average_view"))
 
-        # 2. Refresh data_portal schema views
-        data_portal_views = [
-            "mv_biomass_availability",
-            "mv_biomass_search",
-            "mv_biomass_composition",
-            "mv_biomass_county_production",
-            "mv_biomass_end_uses",
-            "mv_usda_county_production",
-            "mv_biomass_sample_stats",
-            "mv_biomass_fermentation",
-            "mv_biomass_gasification",
-            "mv_biomass_pricing",
-        ]
+        # 2. Refresh all data_portal schema views dynamically so new mat views
+        # are automatically picked up without updating this list.
+        data_portal_views = conn.execute(
+            text(
+                """
+                SELECT matviewname
+                FROM pg_matviews
+                WHERE schemaname = 'data_portal'
+                ORDER BY matviewname
+                """
+            )
+        ).scalars().all()
+
         for view_name in data_portal_views:
             conn.execute(text(f"REFRESH MATERIALIZED VIEW CONCURRENTLY data_portal.{view_name}"))
 

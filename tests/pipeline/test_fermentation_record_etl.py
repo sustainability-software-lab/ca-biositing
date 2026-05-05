@@ -40,21 +40,21 @@ class TestFermentationRecordTransform:
         from ca_biositing.pipeline.etl.transform.analysis.fermentation_record import transform_fermentation_record
         source = inspect.getsource(transform_fermentation_record.fn)
         # Check that the rename logic includes the mapping
-        assert "'decon_method': 'pretreatment_method_id'" in source
+        assert "'decon_method_id': 'pretreatment_method_id'" in source
 
     def test_eh_method_rename_mapping(self):
         """Verify that eh_method_id maps to eh_method_id."""
         from ca_biositing.pipeline.etl.transform.analysis.fermentation_record import transform_fermentation_record
         source = inspect.getsource(transform_fermentation_record.fn)
         # Check that the rename logic includes the mapping
-        assert "'eh_method': 'eh_method_id'" in source
+        assert "'eh_method_id': 'eh_method_id'" in source
 
     def test_strain_rename_mapping(self):
         """Verify that strain_id maps to strain_id."""
         from ca_biositing.pipeline.etl.transform.analysis.fermentation_record import transform_fermentation_record
         source = inspect.getsource(transform_fermentation_record.fn)
         # Check that the rename logic includes the mapping
-        assert "'strain': 'strain_id'" in source
+        assert "'strain_id': 'strain_id'" in source
 
     def test_transform_normalize_columns_structure(self):
         """Test that normalize_columns dict is properly structured for method fields."""
@@ -215,38 +215,37 @@ class TestMvBiomassFermentationView:
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
 
-        assert 'ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BM.duration)' in source
+        assert 'ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BCM.time_h)' in source
         assert 'ELAPSED_TIME.label("elapsed_time")' in source
 
-    def test_view_source_file_has_bm_alias(self):
-        """Verify that mv_biomass_fermentation.py uses BM alias for bioconversion method."""
+    def test_view_source_file_has_bcm_alias(self):
+        """Verify that mv_biomass_fermentation.py uses BCM alias for bioconversion method."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
-        assert 'BM = aliased(Method' in source
+        assert 'BCM = aliased(BioconversionMethod' in source
 
-    def test_view_source_file_joins_on_method_id(self):
-        """Verify that mv_biomass_fermentation.py joins BM alias on fermentation_record.method_id (inherited from Aim2RecordBase)."""
+    def test_view_source_file_joins_on_bioconversion_method_id(self):
+        """Verify that mv_biomass_fermentation.py joins BCM alias on fermentation_record.bioconversion_method_id."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
-        assert 'FermentationRecord.method_id == BM.id' in source
+        assert 'FermentationRecord.bioconversion_method_id == BCM.id' in source
 
     def test_view_source_file_labels_bioconversion_method(self):
         """Verify that mv_biomass_fermentation.py labels bioconversion_method correctly."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
-        assert 'BM.name.label("bioconversion_method")' in source
+        assert 'BCM.name.label("bioconversion_method")' in source
 
-    def test_view_source_file_labels_species_display_name(self):
-        """Verify that mv_biomass_fermentation.py projects species_display_name from genus and species."""
+    def test_view_source_file_labels_strain_name(self):
+        """Verify that mv_biomass_fermentation.py projects strain_name from genus and species."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         assert 'SPECIES_DISPLAY_NAME' in source
-        assert 'species_display_name' in source
+        assert 'strain_name' in source
         assert 'Strain.genus' in source
         assert 'Strain.species' in source
         assert 'func.upper(func.left(Strain.genus, 1))' in source
         assert 'func.lower(Strain.species)' in source
-        assert 'strain_name' not in source
 
     def test_view_source_file_groups_by_genus_and_species(self):
         """Verify that mv_biomass_fermentation.py includes Strain.genus and Strain.species in group_by."""
@@ -274,72 +273,53 @@ class TestAim2BioconversionFlow:
         flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
 
-        load_call = "load_method(method_load_df)"
+        load_call = "load_bioconversion_method(bcm_df)"
         fermentation_call = "fermentation_raw = bioconversion_data.extract()"
 
         assert load_call in source
         assert fermentation_call in source
         assert source.index(load_call) < source.index(fermentation_call)
 
-    def test_method_id_column_maps_to_method_name(self):
-        flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
-        source = flow_file.read_text()
-
-        assert "method_id_col" in source
-        assert "col.lower().strip() == 'method_id'" in source
-        assert "pd.DataFrame({'name': methods_df[method_id_col]})" in source
-
-    def test_transform_method_id_maps_to_method_id(self):
-        """Verify that transform_fermentation_record maps method_id to method_id (inherited Aim2RecordBase column)."""
+    def test_bioconversion_method_id_in_transform(self):
+        """Verify that transform_fermentation_record uses bioconversion_method_id."""
         from ca_biositing.pipeline.etl.transform.analysis.fermentation_record import transform_fermentation_record
-        import inspect
         source = inspect.getsource(transform_fermentation_record.fn)
-        assert "'method_id': 'method_id'" in source
+        assert "bioconversion_method_id" in source
 
-    def test_time_h_column_maps_to_duration(self):
-        flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
-        source = flow_file.read_text()
-
-        assert "col.lower().strip() == 'time_h'" in source
-        assert "method_load_df['duration'] = methods_df[time_col]" in source
+    def test_transform_bioconversion_method_id_mapping(self):
+        """Verify that transform_fermentation_record maps bioconversion_method_id."""
+        from ca_biositing.pipeline.etl.transform.analysis.fermentation_record import transform_fermentation_record
+        source = inspect.getsource(transform_fermentation_record.fn)
+        assert "'bioconversion_method_id': 'bioconversion_method_id'" in source
 
     def test_strain_seeding_uses_name_genus_species_strain_columns(self):
         """Verify that strain seeding reads name/genus/species/strain columns from the sheet."""
         flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
-        # New seeding logic uses the four taxonomy columns
-        assert "'name': 'name'" in source
+        # New seeding logic uses the taxonomy columns sourced from Strain_name
+        assert "'strain_name': 'name'" in source
         assert "'genus': 'genus'" in source
         assert "'species': 'species'" in source
         assert "'strain': 'strain'" in source
-        # Old bioconv_method-based seeding should be gone
-        assert "bioconv_method" not in source
 
-    def test_transform_uses_name_column_for_strain_fk(self):
-        """Verify that transform does not use free-text Name for strain FK resolution."""
+    def test_transform_uses_bioconversion_method_for_strain_fk(self):
+        """Verify that transform uses BioconversionMethod for strain FK resolution."""
         from ca_biositing.pipeline.etl.transform.analysis.fermentation_record import transform_fermentation_record
-        import inspect
         source = inspect.getsource(transform_fermentation_record.fn)
-        assert "rename(columns={'name': 'strain'})" not in source
-        assert "'strain': (Strain, 'name')" in source
+        assert "'bioconversion_method': (BioconversionMethod, 'name')" in source
 
     def test_strain_seeding_reads_methods_sheet_only(self):
         """Verify that strain seed loop reads methods only (03.3-BioConversionMethods)."""
         flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
-        assert "for source_df in [methods_raw]:" in source
-        assert "for source_df in [setup_raw, methods_raw]:" not in source
+        assert "src = methods_raw.copy()" in source
 
-    def test_flow_maps_bioconv_method_to_strain_via_methods_sheet(self):
-        """Verify 02.2 BioConv_method is mapped to 03.3 method_id -> Name for strain linkage."""
+    def test_flow_uses_new_transform_and_load_tasks(self):
+        """Verify new tasks are called in the flow."""
         flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
-        assert "method_key_col" in source
-        assert "col.lower().strip() == 'method_id'" in source
-        assert "strain_name_col" in source
-        assert "col.lower().strip() == 'name'" in source
-        assert "method_to_strain" in source
-        assert "fermentation_for_transform['strain']" in source
+        assert "transform_bioconversion_method" in source
+        assert "load_bioconversion_method" in source
 
 
 class TestMethodLoadTask:

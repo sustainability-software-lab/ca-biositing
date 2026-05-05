@@ -2,7 +2,7 @@
 ETL Load: Resource Images
 
 Loads transformed resource image data into the ResourceImage table.
-Uses upsert pattern with unique constraint on (resource_id, image_url).
+Uses upsert pattern with unique constraint on (resource_name, image_url, sort_order).
 """
 
 import pandas as pd
@@ -19,8 +19,7 @@ def load_resource_images(df: pd.DataFrame):
     """
     Upserts resource image records into the database.
 
-    Ensures resource_id is NOT NULL before loading.
-    Uses upsert pattern to handle duplicates (same resource_id and image_url).
+    Uses upsert pattern to handle duplicates (same resource_name, image_url, sort_order).
     """
     try:
         logger = get_run_logger()
@@ -39,16 +38,6 @@ def load_resource_images(df: pd.DataFrame):
         from ca_biositing.datamodels.models import ResourceImage
 
         now = datetime.now(timezone.utc)
-
-        # Validate resource_id is not null
-        if df['resource_id'].isna().any():
-            null_count = df['resource_id'].isna().sum()
-            logger.warning(f"Skipping {null_count} records with NULL resource_id")
-            df = df.dropna(subset=['resource_id'])
-
-        if df.empty:
-            logger.warning("No valid records to load after filtering NULL resource_id.")
-            return
 
         # Filter columns to match the table schema
         table_columns = {c.name for c in ResourceImage.__table__.columns}
@@ -70,32 +59,18 @@ def load_resource_images(df: pd.DataFrame):
                     if clean_record.get('created_at') is None:
                         clean_record['created_at'] = now
 
-                    # Ensure resource_id is set
-                    if clean_record.get('resource_id') is None:
-                        logger.warning(f"Skipping record {i} with NULL resource_id")
-                        continue
-
                     # Use upsert pattern (ON CONFLICT DO UPDATE)
-                    # Unique constraint is on (resource_id, image_url)
+                    # Unique constraint is on (resource_name, image_url, sort_order)
                     stmt = insert(ResourceImage.__table__).values(**clean_record)
-                    try:
-                        stmt = stmt.on_conflict_do_update(
-                            index_elements=['resource_id', 'image_url'],
-                            set_={
-                                'resource_name': stmt.excluded.resource_name,
-                                'sort_order': stmt.excluded.sort_order,
-                                'etl_run_id': stmt.excluded.etl_run_id,
-                                'lineage_group_id': stmt.excluded.lineage_group_id,
-                                'updated_at': stmt.excluded.updated_at,
-                            }
-                        )
-                    except Exception as constraint_error:
-                        logger.warning(
-                            f"Constraint error on record {i} - trying without ON CONFLICT: {constraint_error}. "
-                            f"This may indicate the unique constraint is defined differently."
-                        )
-                        # Fall back to simple insert if constraint doesn't match
-                        stmt = insert(ResourceImage.__table__).values(**clean_record)
+                    stmt = stmt.on_conflict_do_update(
+                        index_elements=['resource_name', 'image_url', 'sort_order'],
+                        set_={
+                            'resource_id': stmt.excluded.resource_id,
+                            'etl_run_id': stmt.excluded.etl_run_id,
+                            'lineage_group_id': stmt.excluded.lineage_group_id,
+                            'updated_at': stmt.excluded.updated_at,
+                        }
+                    )
                     session.execute(stmt)
                     success_count += 1
 

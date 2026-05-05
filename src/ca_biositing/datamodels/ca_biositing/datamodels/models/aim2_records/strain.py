@@ -11,3 +11,4 @@ class Strain(LookupBase, table=True):
     genus: Optional[str] = Field(default=None)
     species: Optional[str] = Field(default=None)
     strain: Optional[str] = Field(default=None)
+    note: Optional[str] = Field(default=None)

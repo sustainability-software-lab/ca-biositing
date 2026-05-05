@@ -57,7 +57,25 @@ def transform_resource_images(
     # standard_clean will convert column names to snake_case
     clean_df = cleaning_mod.standard_clean(df)
 
-    # Coerce sort_order to int
+    if clean_df is None:
+        logger.error("Standard clean returned None")
+        return pd.DataFrame()
+
+    # Drop existing resource_id if present, as it might be stale/incorrect in the source
+    if 'resource_id' in clean_df.columns:
+        logger.info("Dropping existing resource_id from source data to ensure fresh lookup.")
+        clean_df = clean_df.drop(columns=['resource_id'])
+
+    # Ensure we have the 'resource' column for name-to-ID lookup
+    if 'resource' not in clean_df.columns:
+        logger.error(f"Required column 'resource' missing for lookup. Available: {clean_df.columns.tolist()}")
+        return pd.DataFrame()
+
+    # 3. Preserve the resource name and perform ID lookup
+    # Copy 'resource' to 'resource_name' before normalization renames it to 'resource_id'
+    clean_df['resource_name'] = clean_df['resource']
+
+    # Coerce columns before normalization
     coerced_df = coercion_mod.coerce_columns(
         clean_df,
         int_cols=['sort_order'],
@@ -65,13 +83,11 @@ def transform_resource_images(
         datetime_cols=['created_at', 'updated_at']
     )
 
-    # 3. Normalization (Name-to-ID Swapping)
-    # Map 'resource' column to Resource.name to get resource_id
     normalize_columns = {
         'resource': (Resource, 'name'),
     }
 
-    logger.info("Normalizing data (swapping names for IDs)...")
+    logger.info("Normalizing data (looking up fresh resource_ids from names)...")
     normalized_dfs = normalize_dataframes(coerced_df, normalize_columns)
     normalized_df = normalized_dfs[0]
 
@@ -81,16 +97,7 @@ def transform_resource_images(
 
     # Filter for columns that exist
     available_cols = [col for col in output_columns if col in normalized_df.columns]
-
-    if 'resource_id' not in normalized_df.columns:
-        logger.error("Column 'resource_id' not found after normalization. Aborting.")
-        return pd.DataFrame()
-
     result_df = normalized_df[available_cols].copy()
-
-    # Add resource_name if not already present (use the original 'resource' name)
-    if 'resource_name' not in result_df.columns and 'resource' in normalized_df.columns:
-        result_df['resource_name'] = normalized_df['resource']
 
     # Add lineage tracking metadata
     if etl_run_id:

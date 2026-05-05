@@ -1,1 +1,19 @@
-The purpose of this directory is to establish an ETL pipeline for data for the BioCirV project.
+This is a document with helpful information about working with alembic locally within this repository
+
+## Development Workflow
+
+### Rapid Schema Iteration
+To quickly iterate on schema changes without full service rebuilds:
+1. Ensure `POSTGRES_HOST=localhost` is set in your environment.
+2. Use `pixi run migrate` to apply changes.
+3. To refresh a view defined in raw SQL in a migration, you can downgrade and then upgrade:
+   ```bash
+   POSTGRES_HOST=localhost pixi run alembic downgrade -1
+   POSTGRES_HOST=localhost pixi run migrate
+   ```
+
+### Linear Migration Chain
+It is critical to maintain a **linear migration chain**. Our standard practice is to ensure that all local migrations follow the head of `upstream/main` in a single sequence. This ensures compatibility with the staging and production environments where upstream migrations are already deployed.
+
+### Common Issues
+- **Explicit Foreign Key Nullability**: SQLModel defaults to `Optional` (nullable) unless specified otherwise. Always ensure your model's field nullability matches the database schema. If `alembic check` fails with `modify_nullable`, ensure the model's type hint matches the database's `NOT NULL` constraint.
