@@ -26,7 +26,15 @@ def main():
             stmt = select(Observation).where(Observation.record_type.in_(["resource_price_record", "resource_production_record"]))
             almond_obs = session.exec(stmt).all()
             for o in almond_obs[:100]:
-                print(getattr(o, "id", None), getattr(o, "record_id", None), getattr(o, "record_type", None), getattr(o, "parameter_id", None), getattr(o, "unit_id", None))
+                print(
+                    getattr(o, "id", None),
+                    getattr(o, "record_id", None),
+                    getattr(o, "record_type", None),
+                    getattr(o, "parameter_id", None),
+                    getattr(o, "unit_id", None),
+                    getattr(o, "etl_run_id", None),
+                    getattr(o, "lineage_group_id", None),
+                )
 
             # Quick statistics on the almond slice
             colon_count = sum(1 for o in almond_obs if isinstance(getattr(o, "record_id", None), str) and ":" in getattr(o, "record_id", ""))

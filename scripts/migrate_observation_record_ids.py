@@ -26,25 +26,30 @@ def parse_composite_record_id(record_id: str) -> Tuple[str, str, int, int] | Non
         return None
 
 
-def find_matching_record(session: Session, record_type: str, geoid: str, resource_id: int, year: int):
+def _find_candidate_records(session: Session, record_type: str, geoid: str, resource_id: int, year: int):
     if record_type == "resource_price_record":
-        # match by report_start_date year
         rows = session.exec(select(ResourcePriceRecord).where(ResourcePriceRecord.geoid == geoid, ResourcePriceRecord.resource_id == resource_id)).all()
         matches = [r for r in rows if getattr(r, "report_start_date") is not None and getattr(r, "report_start_date").year == year]
-        if len(matches) == 1:
-            return matches[0]
-        # fallback: try report_end_date year or any close match
+        if matches:
+            return sorted(matches, key=lambda r: getattr(r, "id", 0))
         matches = [r for r in rows if getattr(r, "report_end_date") is not None and getattr(r, "report_end_date").year == year]
-        if len(matches) == 1:
-            return matches[0]
-        return None
+        return sorted(matches, key=lambda r: getattr(r, "id", 0)) if matches else []
     elif record_type == "resource_production_record":
         rows = session.exec(select(ResourceProductionRecord).where(ResourceProductionRecord.geoid == geoid, ResourceProductionRecord.resource_id == resource_id)).all()
         matches = [r for r in rows if getattr(r, "report_date") is not None and getattr(r, "report_date").year == year]
-        if len(matches) == 1:
-            return matches[0]
-        return None
-    return None
+        return sorted(matches, key=lambda r: getattr(r, "id", 0)) if matches else []
+    return []
+
+
+def _pick_preferred_record(matches):
+    return sorted(
+        matches,
+        key=lambda r: (
+            getattr(r, "created_at", None) is None,
+            getattr(r, "created_at", None) or 0,
+            getattr(r, "id", 0),
+        ),
+    )[0] if matches else None
 
 
 def migrate(dry_run: bool = True):
@@ -62,16 +67,42 @@ def migrate(dry_run: bool = True):
             if parsed is None:
                 continue
             record_type, geoid, resource_id, year = parsed
-            match = find_matching_record(session, record_type, geoid, resource_id, year)
-            if match is None:
-                candidates.append((o.id, rid, None))
-            else:
-                candidates.append((o.id, rid, getattr(match, "id")))
+            matches = _find_candidate_records(session, record_type, geoid, resource_id, year)
+            candidates.append((o, rid, matches))
 
         print(f"Found {len(candidates)} candidate observation rows for migration (including unresolved).")
-        resolved = [c for c in candidates if c[2] is not None]
-        unresolved = [c for c in candidates if c[2] is None]
+
+        resolved: list[tuple[int, str, int]] = []
+        unresolved: list[tuple[int, str, list[Any]]] = []
+
+        for obs, old, matches in candidates:
+            preferred = _pick_preferred_record(matches)
+            if preferred is None:
+                unresolved.append((getattr(obs, "id", None), old, matches))
+                continue
+            resolved.append((getattr(obs, "id", None), old, getattr(preferred, "id", None)))
+
         print(f"Resolved candidates: {len(resolved)}; Unresolved: {len(unresolved)}")
+
+        if unresolved:
+            print("\nUnresolved key diagnostics (first 20):")
+            for obs_id, old, matches in unresolved[:20]:
+                parsed = parse_composite_record_id(old)
+                if parsed is None:
+                    print((obs_id, old, "unparseable"))
+                    continue
+                record_type, geoid, resource_id, year = parsed
+                print((obs_id, old, len(matches), [
+                    (
+                        getattr(r, "id", None),
+                        getattr(r, "report_start_date", None),
+                        getattr(r, "report_end_date", None),
+                        getattr(r, "report_date", None),
+                        getattr(r, "primary_ag_product_id", None),
+                        getattr(r, "freight_terms", None),
+                    )
+                    for r in matches[:5]
+                ]))
 
         if dry_run:
             print("\nSample resolved updates (obs_id, old_record_id, new_record_id):")
@@ -85,14 +116,40 @@ def migrate(dry_run: bool = True):
 
         # apply changes
         applied = 0
+        deleted = 0
+        skipped = 0
         for obs_id, old, new in resolved:
-            session.exec(select(Observation).where(Observation.id == obs_id)).one()
+            legacy_row = session.exec(select(Observation).where(Observation.id == obs_id)).one()
+            replacement = session.exec(
+                select(Observation).where(
+                    Observation.record_id == str(new),
+                    Observation.record_type == getattr(legacy_row, "record_type", None),
+                    Observation.parameter_id == getattr(legacy_row, "parameter_id", None),
+                    Observation.unit_id == getattr(legacy_row, "unit_id", None),
+                )
+            ).first()
+
+            if replacement is not None:
+                same_payload = all(
+                    getattr(replacement, field, None) == getattr(legacy_row, field, None)
+                    for field in ("dataset_id", "value", "note")
+                )
+                if same_payload:
+                    session.delete(legacy_row)
+                    deleted += 1
+                    continue
+                skipped += 1
+                print(
+                    f"Skipping conflicting legacy row obs_id={obs_id} old_record_id={old} new_record_id={new}; replacement id={getattr(replacement, 'id', None)} has different payload"
+                )
+                continue
+
             session.execute(
                 Observation.__table__.update().where(Observation.id == obs_id).values(record_id=str(new))
             )
             applied += 1
         session.commit()
-        print(f"Applied {applied} updates.")
+        print(f"Applied {applied} updates, deleted {deleted} duplicate legacy rows, skipped {skipped} conflicts.")
         if unresolved:
             print(f"{len(unresolved)} observations could not be resolved; see sample below:")
             for c in unresolved[:20]:
