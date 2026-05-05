@@ -188,6 +188,10 @@ migrate = { cmd = [
 
 migrate-autogenerate = { cmd = "alembic revision --autogenerate", description = "Auto-generate a new Alembic migration from model changes." }
 
+# Database Auditing
+audit = { cmd = "POSTGRES_HOST=localhost python audit/main.py --env local", description = "Run a comprehensive database audit locally (requires local services)." }
+audit-staging = { cmd = "python audit/main.py --env staging", description = "Run a comprehensive database audit against staging (requires auth-proxy tunnel)." }
+
 # pgschema CLI (pre-built binary, not on conda-forge)
 # See https://www.pgschema.com/installation#pre-built-binary
 install-pgschema = { cmd = "bash scripts/install-pgschema.sh", description = "Install pgschema CLI binary into the pixi environment." }
