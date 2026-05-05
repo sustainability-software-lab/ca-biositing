@@ -136,7 +136,7 @@ def _ensure_data_source(session: Session) -> tuple[Any, bool]:
 def _get_research_method_category(session: Session) -> Optional[Any]:
     """Query for the existing 'research method' method category."""
     from ca_biositing.datamodels.models import MethodCategory
-    
+
     for row in session.exec(select(MethodCategory)).all():
         if _normalize_text(getattr(row, "name", None)) == _normalize_text("research method"):
             return row
@@ -560,7 +560,7 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                 method_category = _get_research_method_category(session)
                 if method_category is None:
                     raise ValueError("Required method category 'research method' not found in database.")
-                
+
                 method, created = _ensure_method(session, data_source.id, method_category.id, etl_run_id=provenance_etl_run_id, lineage_group_id=provenance_lineage_group_id)
                 counts["method"] += int(created)
 

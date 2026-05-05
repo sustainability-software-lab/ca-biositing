@@ -89,7 +89,7 @@ def migrate(dry_run: bool = True):
             for obs_id, old, matches in unresolved[:20]:
                 parsed = parse_composite_record_id(old)
                 if parsed is None:
-                    print((obs_id, old, "unparseable"))
+                    print((obs_id, old, "unparsable"))
                     continue
                 record_type, geoid, resource_id, year = parsed
                 print((obs_id, old, len(matches), [
