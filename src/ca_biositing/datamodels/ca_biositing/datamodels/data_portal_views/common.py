@@ -31,7 +31,10 @@ from ca_biositing.datamodels.models.aim2_records.pretreatment_record import Pret
 analysis_metrics = select(
     Observation.record_id,
     Observation.record_type,
-    Parameter.name.label("parameter"),
+    case(
+        (Parameter.name == "ash", "ash solids"),
+        else_=Parameter.name
+    ).label("parameter"),
     Observation.value
 ).join(Parameter, Observation.parameter_id == Parameter.id)\
  .where(Observation.record_type.in_([

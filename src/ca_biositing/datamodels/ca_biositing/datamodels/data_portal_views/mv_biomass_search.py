@@ -75,7 +75,10 @@ analysis_sources = select(
 observations_filtered = select(
     cast(Observation.record_id, String).label("record_id"),
     cast(Observation.record_type, String).label("record_type"),
-    Parameter.name.label("parameter"),
+    case(
+        (Parameter.name == "ash", "ash solids"),
+        else_=Parameter.name
+    ).label("parameter"),
     Observation.value
 ).join(Parameter, Observation.parameter_id == Parameter.id)\
  .where(Observation.record_type.in_([
@@ -88,7 +91,7 @@ observations_filtered = select(
 resource_metrics_v2 = select(
     analysis_sources.c.resource_id,
     func.avg(case((observations_filtered.c.parameter == "moisture", observations_filtered.c.value))).label("moisture_percent"),
-    func.avg(case((observations_filtered.c.parameter == "ash", observations_filtered.c.value))).label("ash_percent"),
+    func.avg(case((observations_filtered.c.parameter == "ash solids", observations_filtered.c.value))).label("ash_percent"),
     case(
         (
             or_(
@@ -175,8 +178,8 @@ resource_tags_v2 = select(
          pg_array([
              case((resource_metrics_v2.c.moisture_percent <= thresholds_v2.c.moisture_low, "low moisture"), else_=None),
              case((resource_metrics_v2.c.moisture_percent >= thresholds_v2.c.moisture_high, "high moisture"), else_=None),
-             case((resource_metrics_v2.c.ash_percent <= thresholds_v2.c.ash_low, "low ash"), else_=None),
-             case((resource_metrics_v2.c.ash_percent >= thresholds_v2.c.ash_high, "high ash"), else_=None),
+             case((resource_metrics_v2.c.ash_percent <= thresholds_v2.c.ash_low, "low ash solids"), else_=None),
+             case((resource_metrics_v2.c.ash_percent >= thresholds_v2.c.ash_high, "high ash solids"), else_=None),
              case((resource_metrics_v2.c.lignin_percent <= thresholds_v2.c.lignin_low, "low lignin"), else_=None),
              case((resource_metrics_v2.c.lignin_percent >= thresholds_v2.c.lignin_high, "high lignin"), else_=None),
              case((resource_metrics_v2.c.glucan_percent <= thresholds_v2.c.glucan_low, "low glucan"), else_=None),
@@ -194,8 +197,8 @@ agg_vol = select(
      func.sum(BillionTon2023Record.production).label("total_annual_volume"),
      func.count(func.distinct(BillionTon2023Record.geoid)).label("county_count"),
      func.max(Unit.name).label("volume_unit")
- ).join(Unit, BillionTon2023Record.production_unit_id == Unit.id)\
-  .group_by(BillionTon2023Record.resource_id).subquery()
+  ).join(Unit, BillionTon2023Record.production_unit_id == Unit.id)\
+   .group_by(BillionTon2023Record.resource_id).subquery()
 
 # Biomass availability aggregation
 from .mv_biomass_availability import mv_biomass_availability
@@ -217,8 +220,8 @@ storage_notes_sq = select(
 volume_year_sq = select(
      mv_biomass_volume_estimate.c.resource_id,
      func.max(mv_biomass_volume_estimate.c.dataset_year).label("volume_estimate_year")
- ).select_from(mv_biomass_volume_estimate)\
-  .group_by(mv_biomass_volume_estimate.c.resource_id).subquery()
+  ).select_from(mv_biomass_volume_estimate)\
+   .group_by(mv_biomass_volume_estimate.c.resource_id).subquery()
 
 # Then aggregate volumes for the most recent year only
 volume_agg = select(
@@ -227,10 +230,10 @@ volume_agg = select(
      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_max).label("calculated_estimate_volume_max"),
      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_mid).label("calculated_estimate_volume_mid"),
      volume_year_sq.c.volume_estimate_year
- ).select_from(mv_biomass_volume_estimate)\
-  .join(volume_year_sq, mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id)\
-  .where(mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year)\
-  .group_by(mv_biomass_volume_estimate.c.resource_id, volume_year_sq.c.volume_estimate_year).subquery()
+  ).select_from(mv_biomass_volume_estimate)\
+   .join(volume_year_sq, mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id)\
+   .where(mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year)\
+   .group_by(mv_biomass_volume_estimate.c.resource_id, volume_year_sq.c.volume_estimate_year).subquery()
 
 mv_biomass_search = select(
      Resource.id,
@@ -290,22 +293,22 @@ mv_biomass_search = select(
          func.coalesce(ResourceSubclass.name, '') + ' ' +
          func.coalesce(func.coalesce(PrimaryAgProduct.name, primary_product_fallback_sq.c.primary_product_fallback), '')
      ).label("search_vector")
- ).select_from(Resource)\
-  .outerjoin(ResourceClass, Resource.resource_class_id == ResourceClass.id)\
-  .outerjoin(ResourceSubclass, Resource.resource_subclass_id == ResourceSubclass.id)\
-  .outerjoin(PrimaryAgProduct, Resource.primary_ag_product_id == PrimaryAgProduct.id)\
-  .outerjoin(primary_product_fallback_sq, primary_product_fallback_sq.c.resource_id == Resource.id)\
-  .outerjoin(ResourceMorphology, ResourceMorphology.resource_id == Resource.id)\
-  .outerjoin(agg_vol, agg_vol.c.resource_id == Resource.id)\
-  .outerjoin(volume_agg, volume_agg.c.resource_id == Resource.id)\
-  .outerjoin(resource_metrics_v2, resource_metrics_v2.c.resource_id == Resource.id)\
-  .outerjoin(resource_tags_v2, resource_tags_v2.c.resource_id == Resource.id)\
-  .outerjoin(mv_biomass_availability, mv_biomass_availability.c.resource_id == Resource.id)\
-  .outerjoin(transport_notes_sq, transport_notes_sq.c.resource_id == Resource.id)\
-  .outerjoin(storage_notes_sq, storage_notes_sq.c.resource_id == Resource.id)\
-  .where(
-      and_(
-          func.lower(Resource.name) != "sargassum",
-          func.lower(Resource.name) != "lab media",
-      )
-  )
+  ).select_from(Resource)\
+   .outerjoin(ResourceClass, Resource.resource_class_id == ResourceClass.id)\
+   .outerjoin(ResourceSubclass, Resource.resource_subclass_id == ResourceSubclass.id)\
+   .outerjoin(PrimaryAgProduct, Resource.primary_ag_product_id == PrimaryAgProduct.id)\
+   .outerjoin(primary_product_fallback_sq, primary_product_fallback_sq.c.resource_id == Resource.id)\
+   .outerjoin(ResourceMorphology, ResourceMorphology.resource_id == Resource.id)\
+   .outerjoin(agg_vol, agg_vol.c.resource_id == Resource.id)\
+   .outerjoin(volume_agg, volume_agg.c.resource_id == Resource.id)\
+   .outerjoin(resource_metrics_v2, resource_metrics_v2.c.resource_id == Resource.id)\
+   .outerjoin(resource_tags_v2, resource_tags_v2.c.resource_id == Resource.id)\
+   .outerjoin(mv_biomass_availability, mv_biomass_availability.c.resource_id == Resource.id)\
+   .outerjoin(transport_notes_sq, transport_notes_sq.c.resource_id == Resource.id)\
+   .outerjoin(storage_notes_sq, storage_notes_sq.c.resource_id == Resource.id)\
+   .where(
+       and_(
+           func.lower(Resource.name) != "sargassum",
+           func.lower(Resource.name) != "lab media",
+       )
+   )

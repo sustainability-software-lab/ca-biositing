@@ -12,7 +12,7 @@ Required index:
     CREATE UNIQUE INDEX idx_mv_biomass_composition_id ON data_portal.mv_biomass_composition (id)
 """
 
-from sqlalchemy import select, func, union_all, literal
+from sqlalchemy import select, func, union_all, literal, case
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
@@ -38,7 +38,10 @@ def get_composition_query(model, analysis_type):
     return select(
         model.resource_id,
         literal(analysis_type).label("analysis_type"),
-        Parameter.name.label("parameter_name"),
+        case(
+            (Parameter.name == "ash", "ash solids"),
+            else_=Parameter.name
+        ).label("parameter_name"),
         Observation.value.label("value"),
         Unit.name.label("unit"),
         LocationAddress.geography_id.label("geoid")
