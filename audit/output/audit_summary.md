@@ -1,6 +1,6 @@
 # Database Audit Summary (local)
 
-Generated: 2026-05-04T13:37:50.225778 Database: localhost:5432
+Generated: 2026-05-05T13:25:14.347965 Database: localhost:5432
 
 ---
 
@@ -320,6 +320,107 @@ Command executed successfully.
 | 294 | rho synthetic media   |
 | 295 | rhodo synthetic media |
 | 296 | sac synthetic media   |
+
+---
+
+## Module: materialized_views
+
+### Result 1
+
+| view_name                    | column_name         | data_type         | is_nullable |
+| ---------------------------- | ------------------- | ----------------- | ----------- |
+| mv_biomass_availability      | resource_id         | integer           | True        |
+| mv_biomass_availability      | resource_name       | character varying | True        |
+| mv_biomass_availability      | from_month          | integer           | True        |
+| mv_biomass_availability      | to_month            | integer           | True        |
+| mv_biomass_availability      | year_round          | boolean           | True        |
+| mv_biomass_availability      | dry_tons_per_acre   | double precision  | True        |
+| mv_biomass_availability      | wet_tons_per_acre   | double precision  | True        |
+| mv_biomass_composition       | id                  | bigint            | True        |
+| mv_biomass_composition       | resource_id         | integer           | True        |
+| mv_biomass_composition       | resource_name       | character varying | True        |
+| mv_biomass_composition       | analysis_type       | text              | True        |
+| mv_biomass_composition       | parameter_name      | character varying | True        |
+| mv_biomass_composition       | geoid               | character varying | True        |
+| mv_biomass_composition       | county              | character varying | True        |
+| mv_biomass_composition       | unit                | character varying | True        |
+| mv_biomass_composition       | avg_value           | numeric           | True        |
+| mv_biomass_composition       | min_value           | numeric           | True        |
+| mv_biomass_composition       | max_value           | numeric           | True        |
+| mv_biomass_composition       | std_dev             | numeric           | True        |
+| mv_biomass_composition       | observation_count   | bigint            | True        |
+| mv_biomass_county_production | id                  | bigint            | True        |
+| mv_biomass_county_production | resource_id         | integer           | True        |
+| mv_biomass_county_production | resource_name       | character varying | True        |
+| mv_biomass_county_production | resource_class      | character varying | True        |
+| mv_biomass_county_production | geoid               | character varying | True        |
+| mv_biomass_county_production | county              | character varying | True        |
+| mv_biomass_county_production | state               | character varying | True        |
+| mv_biomass_county_production | scenario            | character varying | True        |
+| mv_biomass_county_production | price_offered_usd   | numeric           | True        |
+| mv_biomass_county_production | production          | integer           | True        |
+| mv_biomass_county_production | production_unit     | character varying | True        |
+| mv_biomass_county_production | energy_content      | bigint            | True        |
+| mv_biomass_county_production | energy_unit         | character varying | True        |
+| mv_biomass_county_production | density_dt_per_sqmi | numeric           | True        |
+| mv_biomass_county_production | county_square_miles | double precision  | True        |
+| mv_biomass_county_production | year                | integer           | True        |
+| mv_biomass_end_uses          | resource_id         | integer           | True        |
+| mv_biomass_end_uses          | resource_name       | character varying | True        |
+| mv_biomass_end_uses          | use_case            | character varying | True        |
+| mv_biomass_end_uses          | percentage_low      | double precision  | True        |
+| mv_biomass_end_uses          | percentage_high     | double precision  | True        |
+| mv_biomass_end_uses          | trend               | text              | True        |
+| mv_biomass_end_uses          | value_low_usd       | double precision  | True        |
+| mv_biomass_end_uses          | value_high_usd      | double precision  | True        |
+| mv_biomass_end_uses          | value_notes         | text              | True        |
+| mv_biomass_fermentation      | id                  | bigint            | True        |
+| mv_biomass_fermentation      | resource_id         | integer           | True        |
+| mv_biomass_fermentation      | resource_name       | character varying | True        |
+| mv_biomass_fermentation      | geoid               | character varying | True        |
+| mv_biomass_fermentation      | county              | character varying | True        |
+
+_Truncated: showing 50 of 172 rows._
+
+### Result 2
+
+| schemaname  | view_name                    | indexname                                          | indexdef                                                                                                                                                       |
+| ----------- | ---------------------------- | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| data_portal | mv_biomass_availability      | idx_mv_biomass_availability_resource_id            | CREATE UNIQUE INDEX idx_mv_biomass_availability_resource_id ON data_portal.mv_biomass_availability USING btree (resource_id)                                   |
+| data_portal | mv_biomass_composition       | idx_mv_biomass_composition_analysis_type           | CREATE INDEX idx_mv_biomass_composition_analysis_type ON data_portal.mv_biomass_composition USING btree (analysis_type)                                        |
+| data_portal | mv_biomass_composition       | idx_mv_biomass_composition_county                  | CREATE INDEX idx_mv_biomass_composition_county ON data_portal.mv_biomass_composition USING btree (county)                                                      |
+| data_portal | mv_biomass_composition       | idx_mv_biomass_composition_geoid                   | CREATE INDEX idx_mv_biomass_composition_geoid ON data_portal.mv_biomass_composition USING btree (geoid)                                                        |
+| data_portal | mv_biomass_composition       | idx_mv_biomass_composition_id                      | CREATE UNIQUE INDEX idx_mv_biomass_composition_id ON data_portal.mv_biomass_composition USING btree (id)                                                       |
+| data_portal | mv_biomass_composition       | idx_mv_biomass_composition_parameter_name          | CREATE INDEX idx_mv_biomass_composition_parameter_name ON data_portal.mv_biomass_composition USING btree (parameter_name)                                      |
+| data_portal | mv_biomass_composition       | idx_mv_biomass_composition_resource_analysis       | CREATE INDEX idx_mv_biomass_composition_resource_analysis ON data_portal.mv_biomass_composition USING btree (resource_id, analysis_type)                       |
+| data_portal | mv_biomass_composition       | idx_mv_biomass_composition_resource_geoid_analysis | CREATE INDEX idx_mv_biomass_composition_resource_geoid_analysis ON data_portal.mv_biomass_composition USING btree (resource_id, geoid, analysis_type)          |
+| data_portal | mv_biomass_composition       | idx_mv_biomass_composition_resource_id             | CREATE INDEX idx_mv_biomass_composition_resource_id ON data_portal.mv_biomass_composition USING btree (resource_id)                                            |
+| data_portal | mv_biomass_county_production | idx_mv_biomass_county_production_id                | CREATE UNIQUE INDEX idx_mv_biomass_county_production_id ON data_portal.mv_biomass_county_production USING btree (id)                                           |
+| data_portal | mv_biomass_end_uses          | idx_mv_biomass_end_uses_resource_id                | CREATE INDEX idx_mv_biomass_end_uses_resource_id ON data_portal.mv_biomass_end_uses USING btree (resource_id)                                                  |
+| data_portal | mv_biomass_end_uses          | idx_mv_biomass_end_uses_resource_use_case          | CREATE UNIQUE INDEX idx_mv_biomass_end_uses_resource_use_case ON data_portal.mv_biomass_end_uses USING btree (resource_id, use_case)                           |
+| data_portal | mv_biomass_fermentation      | idx_mv_biomass_fermentation_county                 | CREATE INDEX idx_mv_biomass_fermentation_county ON data_portal.mv_biomass_fermentation USING btree (county)                                                    |
+| data_portal | mv_biomass_fermentation      | idx_mv_biomass_fermentation_geoid                  | CREATE INDEX idx_mv_biomass_fermentation_geoid ON data_portal.mv_biomass_fermentation USING btree (geoid)                                                      |
+| data_portal | mv_biomass_fermentation      | idx_mv_biomass_fermentation_id                     | CREATE UNIQUE INDEX idx_mv_biomass_fermentation_id ON data_portal.mv_biomass_fermentation USING btree (id)                                                     |
+| data_portal | mv_biomass_fermentation      | idx_mv_biomass_fermentation_product_name           | CREATE INDEX idx_mv_biomass_fermentation_product_name ON data_portal.mv_biomass_fermentation USING btree (product_name)                                        |
+| data_portal | mv_biomass_fermentation      | idx_mv_biomass_fermentation_resource_id            | CREATE INDEX idx_mv_biomass_fermentation_resource_id ON data_portal.mv_biomass_fermentation USING btree (resource_id)                                          |
+| data_portal | mv_biomass_fermentation      | idx_mv_biomass_fermentation_strain_name            | CREATE INDEX idx_mv_biomass_fermentation_strain_name ON data_portal.mv_biomass_fermentation USING btree (strain_name)                                          |
+| data_portal | mv_biomass_gasification      | idx_mv_biomass_gasification_id                     | CREATE UNIQUE INDEX idx_mv_biomass_gasification_id ON data_portal.mv_biomass_gasification USING btree (id)                                                     |
+| data_portal | mv_biomass_gasification      | idx_mv_biomass_gasification_parameter_name         | CREATE INDEX idx_mv_biomass_gasification_parameter_name ON data_portal.mv_biomass_gasification USING btree (parameter_name)                                    |
+| data_portal | mv_biomass_gasification      | idx_mv_biomass_gasification_reactor_type           | CREATE INDEX idx_mv_biomass_gasification_reactor_type ON data_portal.mv_biomass_gasification USING btree (reactor_type)                                        |
+| data_portal | mv_biomass_gasification      | idx_mv_biomass_gasification_resource_id            | CREATE INDEX idx_mv_biomass_gasification_resource_id ON data_portal.mv_biomass_gasification USING btree (resource_id)                                          |
+| data_portal | mv_biomass_gasification      | idx_mv_biomass_gasification_resource_reactor_param | CREATE INDEX idx_mv_biomass_gasification_resource_reactor_param ON data_portal.mv_biomass_gasification USING btree (resource_id, reactor_type, parameter_name) |
+| data_portal | mv_biomass_pricing           | idx_mv_biomass_pricing_commodity_name              | CREATE INDEX idx_mv_biomass_pricing_commodity_name ON data_portal.mv_biomass_pricing USING btree (commodity_name)                                              |
+| data_portal | mv_biomass_pricing           | idx_mv_biomass_pricing_county                      | CREATE INDEX idx_mv_biomass_pricing_county ON data_portal.mv_biomass_pricing USING btree (county)                                                              |
+| data_portal | mv_biomass_pricing           | idx_mv_biomass_pricing_id                          | CREATE UNIQUE INDEX idx_mv_biomass_pricing_id ON data_portal.mv_biomass_pricing USING btree (id)                                                               |
+| data_portal | mv_biomass_sample_stats      | idx_mv_biomass_sample_stats_resource_id            | CREATE UNIQUE INDEX idx_mv_biomass_sample_stats_resource_id ON data_portal.mv_biomass_sample_stats USING btree (resource_id)                                   |
+| data_portal | mv_biomass_search            | idx_mv_biomass_search_id                           | CREATE UNIQUE INDEX idx_mv_biomass_search_id ON data_portal.mv_biomass_search USING btree (id)                                                                 |
+| data_portal | mv_biomass_volume_estimate   | idx_mv_biomass_volume_estimate_geoid               | CREATE INDEX idx_mv_biomass_volume_estimate_geoid ON data_portal.mv_biomass_volume_estimate USING btree (geoid)                                                |
+| data_portal | mv_biomass_volume_estimate   | idx_mv_biomass_volume_estimate_id                  | CREATE UNIQUE INDEX idx_mv_biomass_volume_estimate_id ON data_portal.mv_biomass_volume_estimate USING btree (id)                                               |
+| data_portal | mv_biomass_volume_estimate   | idx_mv_biomass_volume_estimate_resource_id         | CREATE INDEX idx_mv_biomass_volume_estimate_resource_id ON data_portal.mv_biomass_volume_estimate USING btree (resource_id)                                    |
+| data_portal | mv_biomass_volume_estimate   | idx_mv_biomass_volume_estimate_resource_year       | CREATE INDEX idx_mv_biomass_volume_estimate_resource_year ON data_portal.mv_biomass_volume_estimate USING btree (resource_id, dataset_year)                    |
+| data_portal | mv_usda_county_production    | idx_mv_usda_county_production_geoid                | CREATE INDEX idx_mv_usda_county_production_geoid ON data_portal.mv_usda_county_production USING btree (geoid)                                                  |
+| data_portal | mv_usda_county_production    | idx_mv_usda_county_production_id                   | CREATE UNIQUE INDEX idx_mv_usda_county_production_id ON data_portal.mv_usda_county_production USING btree (id)                                                 |
+| data_portal | mv_usda_county_production    | idx_mv_usda_county_production_resource_id          | CREATE INDEX idx_mv_usda_county_production_resource_id ON data_portal.mv_usda_county_production USING btree (resource_id)                                      |
 
 ---
 

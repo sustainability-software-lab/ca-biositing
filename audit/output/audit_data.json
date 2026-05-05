@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "timestamp": "2026-05-04T13:37:50.225778",
+    "timestamp": "2026-05-05T13:25:14.347965",
     "environment": "local",
     "project": "ca-biositing",
     "database": "localhost:5432"
@@ -1233,6 +1233,1263 @@
             {
               "id": 296,
               "name": "sac synthetic media"
+            }
+          ]
+        }
+      ]
+    },
+    "materialized_views": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "from_month",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "to_month",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "year_round",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "dry_tons_per_acre",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "wet_tons_per_acre",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "analysis_type",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "parameter_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "avg_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "min_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "max_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "std_dev",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "observation_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "resource_class",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "state",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "scenario",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "price_offered_usd",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "production",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "production_unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "energy_content",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "energy_unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "density_dt_per_sqmi",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "county_square_miles",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "year",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "use_case",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "percentage_low",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "percentage_high",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "trend",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "value_low_usd",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "value_high_usd",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "value_notes",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "strain_name",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "pretreatment_method",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "enzyme_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "bioconversion_method",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "elapsed_time",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "product_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "avg_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "min_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "max_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "std_dev",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "observation_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "reactor_type",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "parameter_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "avg_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "min_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "max_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "std_dev",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "observation_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "commodity_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "state",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "report_date",
+              "data_type": "timestamp without time zone",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "market_type_category",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "sale_type",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "price_min",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "price_max",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "price_avg",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "price_unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "sample_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "supplier_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "dataset_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "total_record_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "resource_code",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "description",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "resource_class",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "resource_subclass",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "primary_product",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "image_url",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "literature_uri",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "total_annual_volume",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "county_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "volume_unit",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "moisture_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "sugar_content_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "glucan_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "xylan_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "ash_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "lignin_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "carbon_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "hydrogen_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "cn_ratio",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "transport_notes",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "storage_notes",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "tags",
+              "data_type": "text[]",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "season_from_month",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "season_to_month",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "year_round",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_proximate",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_compositional",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_ultimate",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_xrf",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_icp",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_calorimetry",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_xrd",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_ftnir",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_fermentation",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_gasification",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_pretreatment",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_moisture_data",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_sugar_data",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_image",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_volume_data",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "calculated_estimate_volume_min",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "calculated_estimate_volume_max",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "calculated_estimate_volume_mid",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "created_at",
+              "data_type": "timestamp without time zone",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "updated_at",
+              "data_type": "timestamp without time zone",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "search_vector",
+              "data_type": "tsvector",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "state",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "dataset_year",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "production_volume",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "county_crop_acres",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "production_unit",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "factor_min",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "factor_mid",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "factor_max",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "estimated_residue_volume_min",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "estimated_residue_volume_mid",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "estimated_residue_volume_max",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "volume_source",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "biomass_unit",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "primary_ag_product",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "state",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "dataset_year",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "primary_product_volume",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "volume_unit",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "production_acres",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "known_biomass_volume",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "calculated_estimate_volume",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "biomass_unit",
+              "data_type": "text",
+              "is_nullable": true
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_availability",
+              "indexname": "idx_mv_biomass_availability_resource_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_availability_resource_id ON data_portal.mv_biomass_availability USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_analysis_type",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_analysis_type ON data_portal.mv_biomass_composition USING btree (analysis_type)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_county",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_county ON data_portal.mv_biomass_composition USING btree (county)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_geoid",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_geoid ON data_portal.mv_biomass_composition USING btree (geoid)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_composition_id ON data_portal.mv_biomass_composition USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_parameter_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_parameter_name ON data_portal.mv_biomass_composition USING btree (parameter_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_resource_analysis",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_resource_analysis ON data_portal.mv_biomass_composition USING btree (resource_id, analysis_type)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_resource_geoid_analysis",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_resource_geoid_analysis ON data_portal.mv_biomass_composition USING btree (resource_id, geoid, analysis_type)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_resource_id ON data_portal.mv_biomass_composition USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_county_production",
+              "indexname": "idx_mv_biomass_county_production_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_county_production_id ON data_portal.mv_biomass_county_production USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_end_uses",
+              "indexname": "idx_mv_biomass_end_uses_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_end_uses_resource_id ON data_portal.mv_biomass_end_uses USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_end_uses",
+              "indexname": "idx_mv_biomass_end_uses_resource_use_case",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_end_uses_resource_use_case ON data_portal.mv_biomass_end_uses USING btree (resource_id, use_case)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_county",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_county ON data_portal.mv_biomass_fermentation USING btree (county)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_geoid",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_geoid ON data_portal.mv_biomass_fermentation USING btree (geoid)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_fermentation_id ON data_portal.mv_biomass_fermentation USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_product_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_product_name ON data_portal.mv_biomass_fermentation USING btree (product_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_resource_id ON data_portal.mv_biomass_fermentation USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_strain_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_strain_name ON data_portal.mv_biomass_fermentation USING btree (strain_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_gasification_id ON data_portal.mv_biomass_gasification USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_parameter_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_gasification_parameter_name ON data_portal.mv_biomass_gasification USING btree (parameter_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_reactor_type",
+              "indexdef": "CREATE INDEX idx_mv_biomass_gasification_reactor_type ON data_portal.mv_biomass_gasification USING btree (reactor_type)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_gasification_resource_id ON data_portal.mv_biomass_gasification USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_resource_reactor_param",
+              "indexdef": "CREATE INDEX idx_mv_biomass_gasification_resource_reactor_param ON data_portal.mv_biomass_gasification USING btree (resource_id, reactor_type, parameter_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_pricing",
+              "indexname": "idx_mv_biomass_pricing_commodity_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_pricing_commodity_name ON data_portal.mv_biomass_pricing USING btree (commodity_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_pricing",
+              "indexname": "idx_mv_biomass_pricing_county",
+              "indexdef": "CREATE INDEX idx_mv_biomass_pricing_county ON data_portal.mv_biomass_pricing USING btree (county)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_pricing",
+              "indexname": "idx_mv_biomass_pricing_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_pricing_id ON data_portal.mv_biomass_pricing USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_sample_stats",
+              "indexname": "idx_mv_biomass_sample_stats_resource_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_sample_stats_resource_id ON data_portal.mv_biomass_sample_stats USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_search",
+              "indexname": "idx_mv_biomass_search_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_search_id ON data_portal.mv_biomass_search USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_volume_estimate",
+              "indexname": "idx_mv_biomass_volume_estimate_geoid",
+              "indexdef": "CREATE INDEX idx_mv_biomass_volume_estimate_geoid ON data_portal.mv_biomass_volume_estimate USING btree (geoid)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_volume_estimate",
+              "indexname": "idx_mv_biomass_volume_estimate_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_volume_estimate_id ON data_portal.mv_biomass_volume_estimate USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_volume_estimate",
+              "indexname": "idx_mv_biomass_volume_estimate_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_volume_estimate_resource_id ON data_portal.mv_biomass_volume_estimate USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_volume_estimate",
+              "indexname": "idx_mv_biomass_volume_estimate_resource_year",
+              "indexdef": "CREATE INDEX idx_mv_biomass_volume_estimate_resource_year ON data_portal.mv_biomass_volume_estimate USING btree (resource_id, dataset_year)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_usda_county_production",
+              "indexname": "idx_mv_usda_county_production_geoid",
+              "indexdef": "CREATE INDEX idx_mv_usda_county_production_geoid ON data_portal.mv_usda_county_production USING btree (geoid)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_usda_county_production",
+              "indexname": "idx_mv_usda_county_production_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_usda_county_production_id ON data_portal.mv_usda_county_production USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_usda_county_production",
+              "indexname": "idx_mv_usda_county_production_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_usda_county_production_resource_id ON data_portal.mv_usda_county_production USING btree (resource_id)"
             }
           ]
         }

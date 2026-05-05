@@ -54,6 +54,22 @@ end_use_obs = select(
             )
         )
     ).label("value_high_usd"),
+    func.avg(
+        case(
+            (
+                func.lower(Parameter.name) == "resource_value_multiplier_low",
+                Observation.value,
+            )
+        )
+    ).label("value_multiplier_low"),
+    func.avg(
+        case(
+            (
+                func.lower(Parameter.name) == "resource_value_multiplier_high",
+                Observation.value,
+            )
+        )
+    ).label("value_multiplier_high"),
     func.max(
         case(
             (
@@ -93,6 +109,8 @@ mv_biomass_end_uses = select(
     cast(func.max(end_use_obs.c.trend), Text).label("trend"),
     cast(func.avg(end_use_obs.c.value_low_usd), Float).label("value_low_usd"),
     cast(func.avg(end_use_obs.c.value_high_usd), Float).label("value_high_usd"),
+    cast(func.avg(end_use_obs.c.value_multiplier_low), Float).label("value_multiplier_low"),
+    cast(func.avg(end_use_obs.c.value_multiplier_high), Float).label("value_multiplier_high"),
     cast(func.max(end_use_obs.c.value_unit), Text).label("value_notes"),
 ).select_from(ResourceEndUseRecord)\
  .join(Resource, ResourceEndUseRecord.resource_id == Resource.id)\

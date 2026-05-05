@@ -1,0 +1,369 @@
+"""Recreate all 9 materialized views with fixes.
+
+Revision ID: 0100_mv_view_fixes
+Revises: 55f93e3a6237
+Create Date: 2026-05-05
+
+This migration:
+1. Drops all indexes on the 9 data portal materialized views
+2. Drops all 9 materialized views in CASCADE mode
+3. Recreates all 9 views with updated SQL (fixes for mv_biomass_search, mv_biomass_pricing, mv_biomass_end_uses)
+4. Creates all required indexes for concurrent refresh and query performance
+5. Grants schema access to the readonly role
+
+Modified views:
+  - mv_biomass_search: Added volume_estimate_year column, updated sugar calculation to use glucan+xylan
+  - mv_biomass_pricing: Added resource_id and resource_name, replaced commodity mapping
+  - mv_biomass_end_uses: Added value_multiplier_low and value_multiplier_high columns
+
+"""
+from typing import Sequence, Union
+
+from alembic import op
+
+
+# revision identifiers, used by Alembic.
+revision: str = "0100_mv_view_fixes"
+down_revision: Union[str, Sequence[str], None] = "55f93e3a6237"
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+# Drop indexes (in reverse order)
+DROP_INDEX_STATEMENTS = [
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_search_vector",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_resource_class",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_resource_subclass",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_primary_product",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_composition_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_composition_resource_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_composition_geoid_county",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_composition_analysis_type",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_composition_parameter_name",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_composition_resource_analysis",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_composition_resource_geoid_analysis",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_composition_resource_parameter",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_volume_estimate_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_volume_estimate_resource_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_volume_estimate_geoid",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_volume_estimate_resource_year",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_availability_resource_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_sample_stats_resource_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_resource_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_geoid",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_county",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_strain_name",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_fermentation_product_name",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_gasification_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_gasification_resource_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_gasification_reactor_type",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_gasification_parameter_name",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_gasification_resource_reactor_param",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_pricing_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_pricing_resource_id",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_pricing_geoid_county",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_pricing_report_source_date",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_pricing_resource_date",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_end_uses_resource_use_case",
+    "DROP INDEX IF EXISTS data_portal.idx_mv_biomass_end_uses_resource_id",
+]
+
+# Drop views
+DROP_VIEW_STATEMENTS = [
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_search CASCADE",
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_composition CASCADE",
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_volume_estimate CASCADE",
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_availability CASCADE",
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_sample_stats CASCADE",
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_fermentation CASCADE",
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_gasification CASCADE",
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_pricing CASCADE",
+    "DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_end_uses CASCADE",
+]
+
+# View SQL definitions (compiled from SQLAlchemy)
+MV_BIOMASS_SEARCH_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_search AS
+SELECT resource.id, resource.name, resource.resource_code, resource.description, resource_class.name AS resource_class, resource_subclass.name AS resource_subclass, coalesce(primary_ag_product.name, anon_1.primary_product_fallback) AS primary_product, resource_morphology.morphology_uri AS image_url, resource.uri AS literature_uri, anon_2.total_annual_volume, anon_2.county_count, anon_2.volume_unit, anon_3.moisture_percent, anon_3.sugar_content_percent, anon_3.glucan_percent, anon_3.xylan_percent, anon_3.ash_percent, anon_3.lignin_percent, anon_3.carbon_percent, anon_3.hydrogen_percent, anon_3.cn_ratio, anon_4.transport_notes, anon_5.storage_notes, coalesce(anon_6.tags, CAST(ARRAY[] AS VARCHAR[])) AS tags, anon_7.from_month AS season_from_month, anon_7.to_month AS season_to_month, anon_7.year_round, coalesce(anon_3.has_proximate, false) AS has_proximate, coalesce(anon_3.has_compositional, false) AS has_compositional, coalesce(anon_3.has_ultimate, false) AS has_ultimate, coalesce(anon_3.has_xrf, false) AS has_xrf, coalesce(anon_3.has_icp, false) AS has_icp, coalesce(anon_3.has_calorimetry, false) AS has_calorimetry, coalesce(anon_3.has_xrd, false) AS has_xrd, coalesce(anon_3.has_ftnir, false) AS has_ftnir, coalesce(anon_3.has_fermentation, false) AS has_fermentation, coalesce(anon_3.has_gasification, false) AS has_gasification, coalesce(anon_3.has_pretreatment, false) AS has_pretreatment, CASE WHEN (anon_3.moisture_percent IS NOT NULL) THEN true ELSE false END AS has_moisture_data, CASE WHEN (anon_3.sugar_content_percent > 0) THEN true ELSE false END AS has_sugar_data, CASE WHEN (resource_morphology.morphology_uri IS NOT NULL) THEN true ELSE false END AS has_image, CASE WHEN (anon_2.total_annual_volume IS NOT NULL) THEN true ELSE false END AS has_volume_data, anon_8.calculated_estimate_volume_min, anon_8.calculated_estimate_volume_max, anon_8.calculated_estimate_volume_mid, anon_8.volume_estimate_year, resource.created_at, resource.updated_at, to_tsvector('english', coalesce(resource.name, '') || ' ' || coalesce(resource.description, '') || ' ' || coalesce(resource_class.name, '') || ' ' || coalesce(resource_subclass.name, '') || ' ' || coalesce(coalesce(primary_ag_product.name, anon_1.primary_product_fallback), '')) AS search_vector
+FROM resource LEFT OUTER JOIN resource_class ON resource.resource_class_id = resource_class.id LEFT OUTER JOIN resource_subclass ON resource.resource_subclass_id = resource_subclass.id LEFT OUTER JOIN primary_ag_product ON resource.primary_ag_product_id = primary_ag_product.id LEFT OUTER JOIN (SELECT resource_usda_commodity_map.resource_id AS resource_id, max(primary_ag_product.name) AS primary_product_fallback
+FROM resource_usda_commodity_map JOIN primary_ag_product ON resource_usda_commodity_map.primary_ag_product_id = primary_ag_product.id
+WHERE resource_usda_commodity_map.resource_id IS NOT NULL GROUP BY resource_usda_commodity_map.resource_id) AS anon_1 ON anon_1.resource_id = resource.id LEFT OUTER JOIN resource_morphology ON resource_morphology.resource_id = resource.id LEFT OUTER JOIN (SELECT billion_ton2023_record.resource_id AS resource_id, sum(billion_ton2023_record.production) AS total_annual_volume, count(distinct(billion_ton2023_record.geoid)) AS county_count, max(unit.name) AS volume_unit
+FROM billion_ton2023_record JOIN unit ON billion_ton2023_record.production_unit_id = unit.id GROUP BY billion_ton2023_record.resource_id) AS anon_2 ON anon_2.resource_id = resource.id LEFT OUTER JOIN (SELECT anon_9.resource_id AS resource_id, sum(anon_9.estimated_residue_volume_min) AS calculated_estimate_volume_min, sum(anon_9.estimated_residue_volume_max) AS calculated_estimate_volume_max, sum(anon_9.estimated_residue_volume_mid) AS calculated_estimate_volume_mid, anon_10.volume_estimate_year AS volume_estimate_year
+FROM (SELECT row_number() OVER (ORDER BY anon_11.resource_id, anon_11.geoid, anon_11.dataset_year, anon_11.volume_source) AS id, anon_11.resource_id AS resource_id, anon_11.resource_name AS resource_name, anon_11.geoid AS geoid, anon_11.county AS county, anon_11.state AS state, anon_11.dataset_year AS dataset_year, anon_11.primary_product_volume AS production_volume, anon_11.county_crop_acres AS county_crop_acres, anon_11.volume_unit AS production_unit, anon_11.factor_min AS factor_min, anon_11.factor_mid AS factor_mid, anon_11.factor_max AS factor_max, anon_11.estimated_residue_volume_min AS estimated_residue_volume_min, anon_11.estimated_residue_volume_mid AS estimated_residue_volume_mid, anon_11.estimated_residue_volume_max AS estimated_residue_volume_max, anon_11.volume_source AS volume_source, anon_11.biomass_unit AS biomass_unit
+FROM (SELECT resource.id AS resource_id, resource.name AS resource_name, county_ag_report_record.geoid AS geoid, place.county_name AS county, place.state_name AS state, county_ag_report_record.data_year AS dataset_year, county_ag_report_record.record_id AS record_id, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) AS primary_product_volume, avg(CASE WHEN (parameter.name = 'harvested acres') THEN observation.value END) AS county_crop_acres, max(CASE WHEN (parameter.name = 'production') THEN unit.name END) AS volume_unit, residue_factor.factor_min AS factor_min, residue_factor.factor_mid AS factor_mid, residue_factor.factor_max AS factor_max, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_min AS estimated_residue_volume_min, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_mid AS estimated_residue_volume_mid, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_max AS estimated_residue_volume_max, 'production_based' AS volume_source, 'dry_tons' AS biomass_unit
+FROM county_ag_report_record JOIN resource ON county_ag_report_record.primary_ag_product_id = resource.primary_ag_product_id JOIN residue_factor ON residue_factor.resource_id = resource.id JOIN place ON county_ag_report_record.geoid = place.geoid LEFT OUTER JOIN observation ON observation.record_id = county_ag_report_record.record_id AND observation.record_type = 'county_ag_report_record' LEFT OUTER JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id
+WHERE residue_factor.factor_type = 'weight' AND county_ag_report_record.data_year >= 2017 GROUP BY resource.id, resource.name, county_ag_report_record.geoid, place.county_name, place.state_name, county_ag_report_record.data_year, county_ag_report_record.record_id, residue_factor.factor_min, residue_factor.factor_mid, residue_factor.factor_max) AS anon_11 UNION ALL SELECT row_number() OVER (ORDER BY anon_12.resource_id, anon_12.geoid, anon_12.dataset_year, anon_12.volume_source) AS id, anon_12.resource_id AS resource_id, anon_12.resource_name AS resource_name, anon_12.geoid AS geoid, anon_12.county AS county, anon_12.state AS state, anon_12.dataset_year AS dataset_year, anon_12.bearing_acres AS production_volume, anon_12.county_crop_acres AS county_crop_acres, anon_12.volume_unit AS production_unit, NULL AS factor_min, NULL AS factor_mid, NULL AS factor_max, anon_12.estimated_residue_volume_min AS estimated_residue_volume_min, anon_12.estimated_residue_volume_mid AS estimated_residue_volume_mid, anon_12.estimated_residue_volume_max AS estimated_residue_volume_max, anon_12.volume_source AS volume_source, anon_12.biomass_unit AS biomass_unit
+FROM (SELECT resource.id AS resource_id, resource.name AS resource_name, usda_census_record.geoid AS geoid, place.county_name AS county, place.state_name AS state, usda_census_record.year AS dataset_year, usda_census_record.id AS record_id, avg(observation.value) AS bearing_acres, avg(observation.value) AS county_crop_acres, 'acres' AS volume_unit, residue_factor.prune_trim_yield AS prune_trim_yield, residue_factor.prune_trim_yield_unit_id AS prune_trim_yield_unit_id, max(unit.name) AS yield_unit, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_min, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_mid, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_max, 'census_bearing_acres' AS volume_source, 'dry_tons' AS biomass_unit
+FROM usda_census_record JOIN usda_commodity ON usda_census_record.commodity_code = usda_commodity.id JOIN resource_usda_commodity_map ON resource_usda_commodity_map.usda_commodity_id = usda_commodity.id JOIN resource ON resource.id = resource_usda_commodity_map.resource_id JOIN residue_factor ON residue_factor.resource_id = resource.id JOIN place ON usda_census_record.geoid = place.geoid LEFT OUTER JOIN observation ON observation.record_id = CAST(usda_census_record.id AS VARCHAR) AND observation.record_type = 'usda_census_record' LEFT OUTER JOIN unit ON residue_factor.prune_trim_yield_unit_id = unit.id
+WHERE residue_factor.prune_trim_yield IS NOT NULL AND usda_census_record.year >= 2017 GROUP BY resource.id, resource.name, usda_census_record.geoid, place.county_name, place.state_name, usda_census_record.year, usda_census_record.id, residue_factor.prune_trim_yield, residue_factor.prune_trim_yield_unit_id) AS anon_12) AS anon_9 JOIN (SELECT anon_9.resource_id AS resource_id, max(anon_9.dataset_year) AS volume_estimate_year
+FROM (SELECT row_number() OVER (ORDER BY anon_11.resource_id, anon_11.geoid, anon_11.dataset_year, anon_11.volume_source) AS id, anon_11.resource_id AS resource_id, anon_11.resource_name AS resource_name, anon_11.geoid AS geoid, anon_11.county AS county, anon_11.state AS state, anon_11.dataset_year AS dataset_year, anon_11.primary_product_volume AS production_volume, anon_11.county_crop_acres AS county_crop_acres, anon_11.volume_unit AS production_unit, anon_11.factor_min AS factor_min, anon_11.factor_mid AS factor_mid, anon_11.factor_max AS factor_max, anon_11.estimated_residue_volume_min AS estimated_residue_volume_min, anon_11.estimated_residue_volume_mid AS estimated_residue_volume_mid, anon_11.estimated_residue_volume_max AS estimated_residue_volume_max, anon_11.volume_source AS volume_source, anon_11.biomass_unit AS biomass_unit
+FROM (SELECT resource.id AS resource_id, resource.name AS resource_name, county_ag_report_record.geoid AS geoid, place.county_name AS county, place.state_name AS state, county_ag_report_record.data_year AS dataset_year, county_ag_report_record.record_id AS record_id, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) AS primary_product_volume, avg(CASE WHEN (parameter.name = 'harvested acres') THEN observation.value END) AS county_crop_acres, max(CASE WHEN (parameter.name = 'production') THEN unit.name END) AS volume_unit, residue_factor.factor_min AS factor_min, residue_factor.factor_mid AS factor_mid, residue_factor.factor_max AS factor_max, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_min AS estimated_residue_volume_min, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_mid AS estimated_residue_volume_mid, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_max AS estimated_residue_volume_max, 'production_based' AS volume_source, 'dry_tons' AS biomass_unit
+FROM county_ag_report_record JOIN resource ON county_ag_report_record.primary_ag_product_id = resource.primary_ag_product_id JOIN residue_factor ON residue_factor.resource_id = resource.id JOIN place ON county_ag_report_record.geoid = place.geoid LEFT OUTER JOIN observation ON observation.record_id = county_ag_report_record.record_id AND observation.record_type = 'county_ag_report_record' LEFT OUTER JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id
+WHERE residue_factor.factor_type = 'weight' AND county_ag_report_record.data_year >= 2017 GROUP BY resource.id, resource.name, county_ag_report_record.geoid, place.county_name, place.state_name, county_ag_report_record.data_year, county_ag_report_record.record_id, residue_factor.factor_min, residue_factor.factor_mid, residue_factor.factor_max) AS anon_11 UNION ALL SELECT row_number() OVER (ORDER BY anon_12.resource_id, anon_12.geoid, anon_12.dataset_year, anon_12.volume_source) AS id, anon_12.resource_id AS resource_id, anon_12.resource_name AS resource_name, anon_12.geoid AS geoid, anon_12.county AS county, anon_12.state AS state, anon_12.dataset_year AS dataset_year, anon_12.bearing_acres AS production_volume, anon_12.county_crop_acres AS county_crop_acres, anon_12.volume_unit AS production_unit, NULL AS factor_min, NULL AS factor_mid, NULL AS factor_max, anon_12.estimated_residue_volume_min AS estimated_residue_volume_min, anon_12.estimated_residue_volume_mid AS estimated_residue_volume_mid, anon_12.estimated_residue_volume_max AS estimated_residue_volume_max, anon_12.volume_source AS volume_source, anon_12.biomass_unit AS biomass_unit
+FROM (SELECT resource.id AS resource_id, resource.name AS resource_name, usda_census_record.geoid AS geoid, place.county_name AS county, place.state_name AS state, usda_census_record.year AS dataset_year, usda_census_record.id AS record_id, avg(observation.value) AS bearing_acres, avg(observation.value) AS county_crop_acres, 'acres' AS volume_unit, residue_factor.prune_trim_yield AS prune_trim_yield, residue_factor.prune_trim_yield_unit_id AS prune_trim_yield_unit_id, max(unit.name) AS yield_unit, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_min, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_mid, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_max, 'census_bearing_acres' AS volume_source, 'dry_tons' AS biomass_unit
+FROM usda_census_record JOIN usda_commodity ON usda_census_record.commodity_code = usda_commodity.id JOIN resource_usda_commodity_map ON resource_usda_commodity_map.usda_commodity_id = usda_commodity.id JOIN resource ON resource.id = resource_usda_commodity_map.resource_id JOIN residue_factor ON residue_factor.resource_id = resource.id JOIN place ON usda_census_record.geoid = place.geoid LEFT OUTER JOIN observation ON observation.record_id = CAST(usda_census_record.id AS VARCHAR) AND observation.record_type = 'usda_census_record' LEFT OUTER JOIN unit ON residue_factor.prune_trim_yield_unit_id = unit.id
+WHERE residue_factor.prune_trim_yield IS NOT NULL AND usda_census_record.year >= 2017 GROUP BY resource.id, resource.name, usda_census_record.geoid, place.county_name, place.state_name, usda_census_record.year, usda_census_record.id, residue_factor.prune_trim_yield, residue_factor.prune_trim_yield_unit_id) AS anon_12) AS anon_9 GROUP BY anon_9.resource_id) AS anon_10 ON anon_9.resource_id = anon_10.resource_id
+WHERE anon_9.dataset_year = anon_10.volume_estimate_year GROUP BY anon_9.resource_id, anon_10.volume_estimate_year) AS anon_8 ON anon_8.resource_id = resource.id LEFT OUTER JOIN (SELECT anon_13.resource_id AS resource_id, avg(CASE WHEN (anon_14.parameter = 'moisture') THEN anon_14.value END) AS moisture_percent, avg(CASE WHEN (anon_14.parameter = 'ash') THEN anon_14.value END) AS ash_percent, CASE WHEN (avg(CASE WHEN (anon_14.parameter = 'lignin') THEN anon_14.value END) IS NOT NULL OR avg(CASE WHEN (anon_14.parameter = 'lignin+') THEN anon_14.value END) IS NOT NULL) THEN coalesce(avg(CASE WHEN (anon_14.parameter = 'lignin') THEN anon_14.value END), 0) + coalesce(avg(CASE WHEN (anon_14.parameter = 'lignin+') THEN anon_14.value END), 0) END AS lignin_percent, CASE WHEN (avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END) IS NOT NULL OR avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END) IS NOT NULL) THEN coalesce(avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END), 0) + coalesce(avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END), 0) END AS sugar_content_percent, avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END) AS glucan_percent, avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END) AS xylan_percent, avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) AS carbon_percent, avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'hydrogen') THEN anon_14.value END) AS hydrogen_percent, CASE WHEN (avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) IS NOT NULL AND avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) IS NOT NULL AND avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) != 0) THEN avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) / CAST(CAST(avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) AS NUMERIC) AS NUMERIC) END AS cn_ratio, bool_or(anon_13.type = 'proximate analysis') AS has_proximate, bool_or(anon_13.type = 'compositional analysis') AS has_compositional, bool_or(anon_13.type = 'ultimate analysis') AS has_ultimate, bool_or(anon_13.type = 'xrf analysis') AS has_xrf, bool_or(anon_13.type = 'icp analysis') AS has_icp, bool_or(anon_13.type = 'calorimetry analysis') AS has_calorimetry, bool_or(anon_13.type = 'xrd analysis') AS has_xrd, bool_or(anon_13.type = 'ftnir analysis') AS has_ftnir, bool_or(anon_13.type = 'fermentation') AS has_fermentation, bool_or(anon_13.type = 'gasification') AS has_gasification, bool_or(anon_13.type = 'pretreatment') AS has_pretreatment
+FROM (SELECT CAST(compositional_record.resource_id AS INTEGER) AS resource_id, CAST(compositional_record.record_id AS VARCHAR) AS record_id, 'compositional analysis' AS type
+FROM compositional_record
+WHERE compositional_record.qc_pass != 'fail' UNION ALL SELECT CAST(proximate_record.resource_id AS INTEGER) AS resource_id, CAST(proximate_record.record_id AS VARCHAR) AS record_id, 'proximate analysis' AS anon_15
+FROM proximate_record
+WHERE proximate_record.qc_pass != 'fail' UNION ALL SELECT CAST(ultimate_record.resource_id AS INTEGER) AS resource_id, CAST(ultimate_record.record_id AS VARCHAR) AS record_id, 'ultimate analysis' AS anon_16
+FROM ultimate_record
+WHERE ultimate_record.qc_pass != 'fail' UNION ALL SELECT CAST(xrf_record.resource_id AS INTEGER) AS resource_id, CAST(xrf_record.record_id AS VARCHAR) AS record_id, 'xrf analysis' AS anon_17
+FROM xrf_record
+WHERE xrf_record.qc_pass != 'fail' UNION ALL SELECT CAST(icp_record.resource_id AS INTEGER) AS resource_id, CAST(icp_record.record_id AS VARCHAR) AS record_id, 'icp analysis' AS anon_18
+FROM icp_record
+WHERE icp_record.qc_pass != 'fail' UNION ALL SELECT CAST(calorimetry_record.resource_id AS INTEGER) AS resource_id, CAST(calorimetry_record.record_id AS VARCHAR) AS record_id, 'calorimetry analysis' AS anon_19
+FROM calorimetry_record
+WHERE calorimetry_record.qc_pass != 'fail' UNION ALL SELECT CAST(xrd_record.resource_id AS INTEGER) AS resource_id, CAST(xrd_record.record_id AS VARCHAR) AS record_id, 'xrd analysis' AS anon_20
+FROM xrd_record
+WHERE xrd_record.qc_pass != 'fail' UNION ALL SELECT CAST(ftnir_record.resource_id AS INTEGER) AS resource_id, CAST(ftnir_record.record_id AS VARCHAR) AS record_id, 'ftnir analysis' AS anon_21
+FROM ftnir_record
+WHERE ftnir_record.qc_pass != 'fail' UNION ALL SELECT CAST(fermentation_record.resource_id AS INTEGER) AS resource_id, CAST(fermentation_record.record_id AS VARCHAR) AS record_id, 'fermentation' AS anon_22
+FROM fermentation_record
+WHERE fermentation_record.qc_pass != 'fail' UNION ALL SELECT CAST(gasification_record.resource_id AS INTEGER) AS resource_id, CAST(gasification_record.record_id AS VARCHAR) AS record_id, 'gasification' AS anon_23
+FROM gasification_record
+WHERE gasification_record.qc_pass != 'fail' UNION ALL SELECT CAST(pretreatment_record.resource_id AS INTEGER) AS resource_id, CAST(pretreatment_record.record_id AS VARCHAR) AS record_id, 'pretreatment' AS anon_24
+FROM pretreatment_record
+WHERE pretreatment_record.qc_pass != 'fail') AS anon_13 LEFT OUTER JOIN (SELECT CAST(observation.record_id AS VARCHAR) AS record_id, CAST(observation.record_type AS VARCHAR) AS record_type, parameter.name AS parameter, observation.value AS value
+FROM observation JOIN parameter ON observation.parameter_id = parameter.id
+WHERE observation.record_type IN ('compositional analysis', 'proximate analysis', 'ultimate analysis', 'xrf analysis', 'icp analysis', 'calorimetry analysis', 'xrd analysis', 'ftnir analysis', 'pretreatment', 'gasification', 'fermentation')) AS anon_14 ON lower(anon_13.record_id) = lower(anon_14.record_id) AND anon_14.record_type = anon_13.type GROUP BY anon_13.resource_id) AS anon_3 ON anon_3.resource_id = resource.id LEFT OUTER JOIN (SELECT anon_3.resource_id AS resource_id, array_remove(ARRAY[CASE WHEN (anon_3.moisture_percent <= anon_25.moisture_low) THEN 'low moisture' END, CASE WHEN (anon_3.moisture_percent >= anon_25.moisture_high) THEN 'high moisture' END, CASE WHEN (anon_3.ash_percent <= anon_25.ash_low) THEN 'low ash' END, CASE WHEN (anon_3.ash_percent >= anon_25.ash_high) THEN 'high ash' END, CASE WHEN (anon_3.lignin_percent <= anon_25.lignin_low) THEN 'low lignin' END, CASE WHEN (anon_3.lignin_percent >= anon_25.lignin_high) THEN 'high lignin' END, CASE WHEN (anon_3.glucan_percent <= anon_25.glucan_low) THEN 'low glucan' END, CASE WHEN (anon_3.glucan_percent >= anon_25.glucan_high) THEN 'high glucan' END, CASE WHEN (anon_3.xylan_percent <= anon_25.xylan_low) THEN 'low xylan' END, CASE WHEN (anon_3.xylan_percent >= anon_25.xylan_high) THEN 'high xylan' END], NULL) AS tags
+FROM (SELECT anon_13.resource_id AS resource_id, avg(CASE WHEN (anon_14.parameter = 'moisture') THEN anon_14.value END) AS moisture_percent, avg(CASE WHEN (anon_14.parameter = 'ash') THEN anon_14.value END) AS ash_percent, CASE WHEN (avg(CASE WHEN (anon_14.parameter = 'lignin') THEN anon_14.value END) IS NOT NULL OR avg(CASE WHEN (anon_14.parameter = 'lignin+') THEN anon_14.value END) IS NOT NULL) THEN coalesce(avg(CASE WHEN (anon_14.parameter = 'lignin') THEN anon_14.value END), 0) + coalesce(avg(CASE WHEN (anon_14.parameter = 'lignin+') THEN anon_14.value END), 0) END AS lignin_percent, CASE WHEN (avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END) IS NOT NULL OR avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END) IS NOT NULL) THEN coalesce(avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END), 0) + coalesce(avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END), 0) END AS sugar_content_percent, avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END) AS glucan_percent, avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END) AS xylan_percent, avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) AS carbon_percent, avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'hydrogen') THEN anon_14.value END) AS hydrogen_percent, CASE WHEN (avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) IS NOT NULL AND avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) IS NOT NULL AND avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) != 0) THEN avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) / CAST(CAST(avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) AS NUMERIC) AS NUMERIC) END AS cn_ratio, bool_or(anon_13.type = 'proximate analysis') AS has_proximate, bool_or(anon_13.type = 'compositional analysis') AS has_compositional, bool_or(anon_13.type = 'ultimate analysis') AS has_ultimate, bool_or(anon_13.type = 'xrf analysis') AS has_xrf, bool_or(anon_13.type = 'icp analysis') AS has_icp, bool_or(anon_13.type = 'calorimetry analysis') AS has_calorimetry, bool_or(anon_13.type = 'xrd analysis') AS has_xrd, bool_or(anon_13.type = 'ftnir analysis') AS has_ftnir, bool_or(anon_13.type = 'fermentation') AS has_fermentation, bool_or(anon_13.type = 'gasification') AS has_gasification, bool_or(anon_13.type = 'pretreatment') AS has_pretreatment
+FROM (SELECT CAST(compositional_record.resource_id AS INTEGER) AS resource_id, CAST(compositional_record.record_id AS VARCHAR) AS record_id, 'compositional analysis' AS type
+FROM compositional_record
+WHERE compositional_record.qc_pass != 'fail' UNION ALL SELECT CAST(proximate_record.resource_id AS INTEGER) AS resource_id, CAST(proximate_record.record_id AS VARCHAR) AS record_id, 'proximate analysis' AS anon_15
+FROM proximate_record
+WHERE proximate_record.qc_pass != 'fail' UNION ALL SELECT CAST(ultimate_record.resource_id AS INTEGER) AS resource_id, CAST(ultimate_record.record_id AS VARCHAR) AS record_id, 'ultimate analysis' AS anon_16
+FROM ultimate_record
+WHERE ultimate_record.qc_pass != 'fail' UNION ALL SELECT CAST(xrf_record.resource_id AS INTEGER) AS resource_id, CAST(xrf_record.record_id AS VARCHAR) AS record_id, 'xrf analysis' AS anon_17
+FROM xrf_record
+WHERE xrf_record.qc_pass != 'fail' UNION ALL SELECT CAST(icp_record.resource_id AS INTEGER) AS resource_id, CAST(icp_record.record_id AS VARCHAR) AS record_id, 'icp analysis' AS anon_18
+FROM icp_record
+WHERE icp_record.qc_pass != 'fail' UNION ALL SELECT CAST(calorimetry_record.resource_id AS INTEGER) AS resource_id, CAST(calorimetry_record.record_id AS VARCHAR) AS record_id, 'calorimetry analysis' AS anon_19
+FROM calorimetry_record
+WHERE calorimetry_record.qc_pass != 'fail' UNION ALL SELECT CAST(xrd_record.resource_id AS INTEGER) AS resource_id, CAST(xrd_record.record_id AS VARCHAR) AS record_id, 'xrd analysis' AS anon_20
+FROM xrd_record
+WHERE xrd_record.qc_pass != 'fail' UNION ALL SELECT CAST(ftnir_record.resource_id AS INTEGER) AS resource_id, CAST(ftnir_record.record_id AS VARCHAR) AS record_id, 'ftnir analysis' AS anon_21
+FROM ftnir_record
+WHERE ftnir_record.qc_pass != 'fail' UNION ALL SELECT CAST(fermentation_record.resource_id AS INTEGER) AS resource_id, CAST(fermentation_record.record_id AS VARCHAR) AS record_id, 'fermentation' AS anon_22
+FROM fermentation_record
+WHERE fermentation_record.qc_pass != 'fail' UNION ALL SELECT CAST(gasification_record.resource_id AS INTEGER) AS resource_id, CAST(gasification_record.record_id AS VARCHAR) AS record_id, 'gasification' AS anon_23
+FROM gasification_record
+WHERE gasification_record.qc_pass != 'fail' UNION ALL SELECT CAST(pretreatment_record.resource_id AS INTEGER) AS resource_id, CAST(pretreatment_record.record_id AS VARCHAR) AS record_id, 'pretreatment' AS anon_24
+FROM pretreatment_record
+WHERE pretreatment_record.qc_pass != 'fail') AS anon_13 LEFT OUTER JOIN (SELECT CAST(observation.record_id AS VARCHAR) AS record_id, CAST(observation.record_type AS VARCHAR) AS record_type, parameter.name AS parameter, observation.value AS value
+FROM observation JOIN parameter ON observation.parameter_id = parameter.id
+WHERE observation.record_type IN ('compositional analysis', 'proximate analysis', 'ultimate analysis', 'xrf analysis', 'icp analysis', 'calorimetry analysis', 'xrd analysis', 'ftnir analysis', 'pretreatment', 'gasification', 'fermentation')) AS anon_14 ON lower(anon_13.record_id) = lower(anon_14.record_id) AND anon_14.record_type = anon_13.type GROUP BY anon_13.resource_id) AS anon_3 JOIN (SELECT percentile_cont(0.1) WITHIN GROUP (ORDER BY anon_3.moisture_percent) AS moisture_low, percentile_cont(0.9) WITHIN GROUP (ORDER BY anon_3.moisture_percent) AS moisture_high, percentile_cont(0.1) WITHIN GROUP (ORDER BY anon_3.ash_percent) AS ash_low, percentile_cont(0.9) WITHIN GROUP (ORDER BY anon_3.ash_percent) AS ash_high, percentile_cont(0.1) WITHIN GROUP (ORDER BY anon_3.lignin_percent) AS lignin_low, percentile_cont(0.9) WITHIN GROUP (ORDER BY anon_3.lignin_percent) AS lignin_high, percentile_cont(0.1) WITHIN GROUP (ORDER BY anon_3.sugar_content_percent) AS sugar_low, percentile_cont(0.9) WITHIN GROUP (ORDER BY anon_3.sugar_content_percent) AS sugar_high, percentile_cont(0.1) WITHIN GROUP (ORDER BY anon_3.glucan_percent) AS glucan_low, percentile_cont(0.9) WITHIN GROUP (ORDER BY anon_3.glucan_percent) AS glucan_high, percentile_cont(0.1) WITHIN GROUP (ORDER BY anon_3.xylan_percent) AS xylan_low, percentile_cont(0.9) WITHIN GROUP (ORDER BY anon_3.xylan_percent) AS xylan_high
+FROM (SELECT anon_13.resource_id AS resource_id, avg(CASE WHEN (anon_14.parameter = 'moisture') THEN anon_14.value END) AS moisture_percent, avg(CASE WHEN (anon_14.parameter = 'ash') THEN anon_14.value END) AS ash_percent, CASE WHEN (avg(CASE WHEN (anon_14.parameter = 'lignin') THEN anon_14.value END) IS NOT NULL OR avg(CASE WHEN (anon_14.parameter = 'lignin+') THEN anon_14.value END) IS NOT NULL) THEN coalesce(avg(CASE WHEN (anon_14.parameter = 'lignin') THEN anon_14.value END), 0) + coalesce(avg(CASE WHEN (anon_14.parameter = 'lignin+') THEN anon_14.value END), 0) END AS lignin_percent, CASE WHEN (avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END) IS NOT NULL OR avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END) IS NOT NULL) THEN coalesce(avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END), 0) + coalesce(avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END), 0) END AS sugar_content_percent, avg(CASE WHEN (anon_14.parameter = 'glucan') THEN anon_14.value END) AS glucan_percent, avg(CASE WHEN (anon_14.parameter = 'xylan') THEN anon_14.value END) AS xylan_percent, avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) AS carbon_percent, avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'hydrogen') THEN anon_14.value END) AS hydrogen_percent, CASE WHEN (avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) IS NOT NULL AND avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) IS NOT NULL AND avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) != 0) THEN avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'carbon') THEN anon_14.value END) / CAST(CAST(avg(CASE WHEN (anon_13.type = 'ultimate analysis' AND lower(anon_14.parameter) = 'nitrogen') THEN anon_14.value END) AS NUMERIC) AS NUMERIC) END AS cn_ratio, bool_or(anon_13.type = 'proximate analysis') AS has_proximate, bool_or(anon_13.type = 'compositional analysis') AS has_compositional, bool_or(anon_13.type = 'ultimate analysis') AS has_ultimate, bool_or(anon_13.type = 'xrf analysis') AS has_xrf, bool_or(anon_13.type = 'icp analysis') AS has_icp, bool_or(anon_13.type = 'calorimetry analysis') AS has_calorimetry, bool_or(anon_13.type = 'xrd analysis') AS has_xrd, bool_or(anon_13.type = 'ftnir analysis') AS has_ftnir, bool_or(anon_13.type = 'fermentation') AS has_fermentation, bool_or(anon_13.type = 'gasification') AS has_gasification, bool_or(anon_13.type = 'pretreatment') AS has_pretreatment
+FROM (SELECT CAST(compositional_record.resource_id AS INTEGER) AS resource_id, CAST(compositional_record.record_id AS VARCHAR) AS record_id, 'compositional analysis' AS type
+FROM compositional_record
+WHERE compositional_record.qc_pass != 'fail' UNION ALL SELECT CAST(proximate_record.resource_id AS INTEGER) AS resource_id, CAST(proximate_record.record_id AS VARCHAR) AS record_id, 'proximate analysis' AS anon_15
+FROM proximate_record
+WHERE proximate_record.qc_pass != 'fail' UNION ALL SELECT CAST(ultimate_record.resource_id AS INTEGER) AS resource_id, CAST(ultimate_record.record_id AS VARCHAR) AS record_id, 'ultimate analysis' AS anon_16
+FROM ultimate_record
+WHERE ultimate_record.qc_pass != 'fail' UNION ALL SELECT CAST(xrf_record.resource_id AS INTEGER) AS resource_id, CAST(xrf_record.record_id AS VARCHAR) AS record_id, 'xrf analysis' AS anon_17
+FROM xrf_record
+WHERE xrf_record.qc_pass != 'fail' UNION ALL SELECT CAST(icp_record.resource_id AS INTEGER) AS resource_id, CAST(icp_record.record_id AS VARCHAR) AS record_id, 'icp analysis' AS anon_18
+FROM icp_record
+WHERE icp_record.qc_pass != 'fail' UNION ALL SELECT CAST(calorimetry_record.resource_id AS INTEGER) AS resource_id, CAST(calorimetry_record.record_id AS VARCHAR) AS record_id, 'calorimetry analysis' AS anon_19
+FROM calorimetry_record
+WHERE calorimetry_record.qc_pass != 'fail' UNION ALL SELECT CAST(xrd_record.resource_id AS INTEGER) AS resource_id, CAST(xrd_record.record_id AS VARCHAR) AS record_id, 'xrd analysis' AS anon_20
+FROM xrd_record
+WHERE xrd_record.qc_pass != 'fail' UNION ALL SELECT CAST(ftnir_record.resource_id AS INTEGER) AS resource_id, CAST(ftnir_record.record_id AS VARCHAR) AS record_id, 'ftnir analysis' AS anon_21
+FROM ftnir_record
+WHERE ftnir_record.qc_pass != 'fail' UNION ALL SELECT CAST(fermentation_record.resource_id AS INTEGER) AS resource_id, CAST(fermentation_record.record_id AS VARCHAR) AS record_id, 'fermentation' AS anon_22
+FROM fermentation_record
+WHERE fermentation_record.qc_pass != 'fail' UNION ALL SELECT CAST(gasification_record.resource_id AS INTEGER) AS resource_id, CAST(gasification_record.record_id AS VARCHAR) AS record_id, 'gasification' AS anon_23
+FROM gasification_record
+WHERE gasification_record.qc_pass != 'fail' UNION ALL SELECT CAST(pretreatment_record.resource_id AS INTEGER) AS resource_id, CAST(pretreatment_record.record_id AS VARCHAR) AS record_id, 'pretreatment' AS anon_24
+FROM pretreatment_record
+WHERE pretreatment_record.qc_pass != 'fail') AS anon_13 LEFT OUTER JOIN (SELECT CAST(observation.record_id AS VARCHAR) AS record_id, CAST(observation.record_type AS VARCHAR) AS record_type, parameter.name AS parameter, observation.value AS value
+FROM observation JOIN parameter ON observation.parameter_id = parameter.id
+WHERE observation.record_type IN ('compositional analysis', 'proximate analysis', 'ultimate analysis', 'xrf analysis', 'icp analysis', 'calorimetry analysis', 'xrd analysis', 'ftnir analysis', 'pretreatment', 'gasification', 'fermentation')) AS anon_14 ON lower(anon_13.record_id) = lower(anon_14.record_id) AND anon_14.record_type = anon_13.type GROUP BY anon_13.resource_id) AS anon_3) AS anon_25 ON true) AS anon_6 ON anon_6.resource_id = resource.id LEFT OUTER JOIN (SELECT resource.id AS resource_id, resource.name AS resource_name, min(resource_availability.from_month) AS from_month, max(resource_availability.to_month) AS to_month, bool_or(resource_availability.year_round) AS year_round, avg(resource_availability.residue_factor_dry_tons_acre) AS dry_tons_per_acre, avg(resource_availability.residue_factor_wet_tons_acre) AS wet_tons_per_acre
+FROM resource_availability JOIN resource ON resource_availability.resource_id = resource.id GROUP BY resource.id, resource.name) AS anon_7 ON anon_7.resource_id = resource.id LEFT OUTER JOIN (SELECT resource_transport_record.resource_id AS resource_id, max(resource_transport_record.transport_description) AS transport_notes
+FROM resource_transport_record GROUP BY resource_transport_record.resource_id) AS anon_4 ON anon_4.resource_id = resource.id LEFT OUTER JOIN (SELECT resource_storage_record.resource_id AS resource_id, max(resource_storage_record.storage_description) AS storage_notes
+FROM resource_storage_record GROUP BY resource_storage_record.resource_id) AS anon_5 ON anon_5.resource_id = resource.id
+WHERE lower(resource.name) != 'sargassum' AND lower(resource.name) != 'lab media'
+"""
+MV_BIOMASS_COMPOSITION_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_composition AS
+SELECT row_number() OVER (ORDER BY anon_1.resource_id, anon_1.geoid, anon_1.analysis_type, anon_1.parameter_name, anon_1.unit) AS id, anon_1.resource_id, resource.name AS resource_name, anon_1.analysis_type, anon_1.parameter_name, anon_1.geoid, place.county_name AS county, anon_1.unit, avg(anon_1.value) AS avg_value, min(anon_1.value) AS min_value, max(anon_1.value) AS max_value, stddev(anon_1.value) AS std_dev, count(*) AS observation_count
+FROM (SELECT compositional_record.resource_id AS resource_id, 'compositional' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM compositional_record JOIN observation ON observation.record_id = compositional_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON compositional_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE compositional_record.qc_pass != 'fail' UNION ALL SELECT proximate_record.resource_id AS resource_id, 'proximate' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM proximate_record JOIN observation ON observation.record_id = proximate_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON proximate_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE proximate_record.qc_pass != 'fail' UNION ALL SELECT ultimate_record.resource_id AS resource_id, 'ultimate' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM ultimate_record JOIN observation ON observation.record_id = ultimate_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON ultimate_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE ultimate_record.qc_pass != 'fail' UNION ALL SELECT xrf_record.resource_id AS resource_id, 'xrf' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM xrf_record JOIN observation ON observation.record_id = xrf_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON xrf_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE xrf_record.qc_pass != 'fail' UNION ALL SELECT icp_record.resource_id AS resource_id, 'icp' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM icp_record JOIN observation ON observation.record_id = icp_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON icp_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE icp_record.qc_pass != 'fail' UNION ALL SELECT calorimetry_record.resource_id AS resource_id, 'calorimetry' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM calorimetry_record JOIN observation ON observation.record_id = calorimetry_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON calorimetry_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE calorimetry_record.qc_pass != 'fail' UNION ALL SELECT xrd_record.resource_id AS resource_id, 'xrd' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM xrd_record JOIN observation ON observation.record_id = xrd_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON xrd_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE xrd_record.qc_pass != 'fail' UNION ALL SELECT ftnir_record.resource_id AS resource_id, 'ftnir' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM ftnir_record JOIN observation ON observation.record_id = ftnir_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON ftnir_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE ftnir_record.qc_pass != 'fail' UNION ALL SELECT pretreatment_record.resource_id AS resource_id, 'pretreatment' AS analysis_type, parameter.name AS parameter_name, observation.value AS value, unit.name AS unit, location_address.geography_id AS geoid
+FROM pretreatment_record JOIN observation ON observation.record_id = pretreatment_record.record_id JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id LEFT OUTER JOIN prepared_sample ON pretreatment_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id
+WHERE pretreatment_record.qc_pass != 'fail') AS anon_1 JOIN resource ON anon_1.resource_id = resource.id LEFT OUTER JOIN place ON anon_1.geoid = place.geoid GROUP BY anon_1.resource_id, resource.name, anon_1.analysis_type, anon_1.parameter_name, anon_1.geoid, place.county_name, anon_1.unit
+"""
+MV_BIOMASS_VOLUME_ESTIMATE_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_volume_estimate AS
+SELECT row_number() OVER (ORDER BY anon_1.resource_id, anon_1.geoid, anon_1.dataset_year, anon_1.volume_source) AS id, anon_1.resource_id, anon_1.resource_name, anon_1.geoid, anon_1.county, anon_1.state, anon_1.dataset_year, anon_1.primary_product_volume AS production_volume, anon_1.county_crop_acres, anon_1.volume_unit AS production_unit, anon_1.factor_min, anon_1.factor_mid, anon_1.factor_max, anon_1.estimated_residue_volume_min, anon_1.estimated_residue_volume_mid, anon_1.estimated_residue_volume_max, anon_1.volume_source, anon_1.biomass_unit
+FROM (SELECT resource.id AS resource_id, resource.name AS resource_name, county_ag_report_record.geoid AS geoid, place.county_name AS county, place.state_name AS state, county_ag_report_record.data_year AS dataset_year, county_ag_report_record.record_id AS record_id, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) AS primary_product_volume, avg(CASE WHEN (parameter.name = 'harvested acres') THEN observation.value END) AS county_crop_acres, max(CASE WHEN (parameter.name = 'production') THEN unit.name END) AS volume_unit, residue_factor.factor_min AS factor_min, residue_factor.factor_mid AS factor_mid, residue_factor.factor_max AS factor_max, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_min AS estimated_residue_volume_min, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_mid AS estimated_residue_volume_mid, avg(CASE WHEN (parameter.name = 'production') THEN observation.value END) * residue_factor.factor_max AS estimated_residue_volume_max, 'production_based' AS volume_source, 'dry_tons' AS biomass_unit
+FROM county_ag_report_record JOIN resource ON county_ag_report_record.primary_ag_product_id = resource.primary_ag_product_id JOIN residue_factor ON residue_factor.resource_id = resource.id JOIN place ON county_ag_report_record.geoid = place.geoid LEFT OUTER JOIN observation ON observation.record_id = county_ag_report_record.record_id AND observation.record_type = 'county_ag_report_record' LEFT OUTER JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id
+WHERE residue_factor.factor_type = 'weight' AND county_ag_report_record.data_year >= 2017 GROUP BY resource.id, resource.name, county_ag_report_record.geoid, place.county_name, place.state_name, county_ag_report_record.data_year, county_ag_report_record.record_id, residue_factor.factor_min, residue_factor.factor_mid, residue_factor.factor_max) AS anon_1 UNION ALL SELECT row_number() OVER (ORDER BY anon_2.resource_id, anon_2.geoid, anon_2.dataset_year, anon_2.volume_source) AS id, anon_2.resource_id, anon_2.resource_name, anon_2.geoid, anon_2.county, anon_2.state, anon_2.dataset_year, anon_2.bearing_acres AS production_volume, anon_2.county_crop_acres, anon_2.volume_unit AS production_unit, NULL AS factor_min, NULL AS factor_mid, NULL AS factor_max, anon_2.estimated_residue_volume_min, anon_2.estimated_residue_volume_mid, anon_2.estimated_residue_volume_max, anon_2.volume_source, anon_2.biomass_unit
+FROM (SELECT resource.id AS resource_id, resource.name AS resource_name, usda_census_record.geoid AS geoid, place.county_name AS county, place.state_name AS state, usda_census_record.year AS dataset_year, usda_census_record.id AS record_id, avg(observation.value) AS bearing_acres, avg(observation.value) AS county_crop_acres, 'acres' AS volume_unit, residue_factor.prune_trim_yield AS prune_trim_yield, residue_factor.prune_trim_yield_unit_id AS prune_trim_yield_unit_id, max(unit.name) AS yield_unit, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_min, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_mid, avg(observation.value) * residue_factor.prune_trim_yield AS estimated_residue_volume_max, 'census_bearing_acres' AS volume_source, 'dry_tons' AS biomass_unit
+FROM usda_census_record JOIN usda_commodity ON usda_census_record.commodity_code = usda_commodity.id JOIN resource_usda_commodity_map ON resource_usda_commodity_map.usda_commodity_id = usda_commodity.id JOIN resource ON resource.id = resource_usda_commodity_map.resource_id JOIN residue_factor ON residue_factor.resource_id = resource.id JOIN place ON usda_census_record.geoid = place.geoid LEFT OUTER JOIN observation ON observation.record_id = CAST(usda_census_record.id AS VARCHAR) AND observation.record_type = 'usda_census_record' LEFT OUTER JOIN unit ON residue_factor.prune_trim_yield_unit_id = unit.id
+WHERE residue_factor.prune_trim_yield IS NOT NULL AND usda_census_record.year >= 2017 GROUP BY resource.id, resource.name, usda_census_record.geoid, place.county_name, place.state_name, usda_census_record.year, usda_census_record.id, residue_factor.prune_trim_yield, residue_factor.prune_trim_yield_unit_id) AS anon_2
+"""
+MV_BIOMASS_AVAILABILITY_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_availability AS
+SELECT resource.id AS resource_id, resource.name AS resource_name, min(resource_availability.from_month) AS from_month, max(resource_availability.to_month) AS to_month, bool_or(resource_availability.year_round) AS year_round, avg(resource_availability.residue_factor_dry_tons_acre) AS dry_tons_per_acre, avg(resource_availability.residue_factor_wet_tons_acre) AS wet_tons_per_acre
+FROM resource_availability JOIN resource ON resource_availability.resource_id = resource.id GROUP BY resource.id, resource.name
+"""
+MV_BIOMASS_SAMPLE_STATS_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_sample_stats AS
+SELECT resource.id AS resource_id, resource.name AS resource_name, count(distinct(anon_1.prepared_sample_id)) AS sample_count, count(distinct(provider.id)) AS supplier_count, count(distinct(anon_1.dataset_id)) AS dataset_count, count(*) AS total_record_count
+FROM resource LEFT OUTER JOIN (SELECT compositional_record.resource_id AS resource_id, compositional_record.prepared_sample_id AS prepared_sample_id, compositional_record.dataset_id AS dataset_id
+FROM compositional_record
+WHERE compositional_record.qc_pass != 'fail' UNION ALL SELECT proximate_record.resource_id AS resource_id, proximate_record.prepared_sample_id AS prepared_sample_id, proximate_record.dataset_id AS dataset_id
+FROM proximate_record
+WHERE proximate_record.qc_pass != 'fail' UNION ALL SELECT ultimate_record.resource_id AS resource_id, ultimate_record.prepared_sample_id AS prepared_sample_id, ultimate_record.dataset_id AS dataset_id
+FROM ultimate_record
+WHERE ultimate_record.qc_pass != 'fail' UNION ALL SELECT xrf_record.resource_id AS resource_id, xrf_record.prepared_sample_id AS prepared_sample_id, xrf_record.dataset_id AS dataset_id
+FROM xrf_record
+WHERE xrf_record.qc_pass != 'fail' UNION ALL SELECT icp_record.resource_id AS resource_id, icp_record.prepared_sample_id AS prepared_sample_id, icp_record.dataset_id AS dataset_id
+FROM icp_record
+WHERE icp_record.qc_pass != 'fail' UNION ALL SELECT calorimetry_record.resource_id AS resource_id, calorimetry_record.prepared_sample_id AS prepared_sample_id, calorimetry_record.dataset_id AS dataset_id
+FROM calorimetry_record
+WHERE calorimetry_record.qc_pass != 'fail' UNION ALL SELECT xrd_record.resource_id AS resource_id, xrd_record.prepared_sample_id AS prepared_sample_id, xrd_record.dataset_id AS dataset_id
+FROM xrd_record
+WHERE xrd_record.qc_pass != 'fail' UNION ALL SELECT ftnir_record.resource_id AS resource_id, ftnir_record.prepared_sample_id AS prepared_sample_id, ftnir_record.dataset_id AS dataset_id
+FROM ftnir_record
+WHERE ftnir_record.qc_pass != 'fail' UNION ALL SELECT fermentation_record.resource_id AS resource_id, fermentation_record.prepared_sample_id AS prepared_sample_id, fermentation_record.dataset_id AS dataset_id
+FROM fermentation_record
+WHERE fermentation_record.qc_pass != 'fail' UNION ALL SELECT gasification_record.resource_id AS resource_id, gasification_record.prepared_sample_id AS prepared_sample_id, gasification_record.dataset_id AS dataset_id
+FROM gasification_record
+WHERE gasification_record.qc_pass != 'fail' UNION ALL SELECT pretreatment_record.resource_id AS resource_id, pretreatment_record.prepared_sample_id AS prepared_sample_id, pretreatment_record.dataset_id AS dataset_id
+FROM pretreatment_record
+WHERE pretreatment_record.qc_pass != 'fail') AS anon_1 ON anon_1.resource_id = resource.id LEFT OUTER JOIN prepared_sample ON CAST(anon_1.prepared_sample_id AS INTEGER) = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN provider ON field_sample.provider_id = provider.id GROUP BY resource.id, resource.name
+"""
+MV_BIOMASS_FERMENTATION_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_fermentation AS
+SELECT row_number() OVER (ORDER BY fermentation_record.resource_id, location_address.geography_id, strain.name, pm.name, em.name, bcm.name, parameter.name, unit.name) AS id, fermentation_record.resource_id, resource.name AS resource_name, location_address.geography_id AS geoid, place.county_name AS county, concat(upper(left(strain.genus, 1)), '. ', lower(strain.species)) AS strain_name, pm.name AS pretreatment_method, em.name AS enzyme_name, bcm.name AS bioconversion_method, coalesce(pm.duration, em.duration, bcm.time_h) AS elapsed_time, parameter.name AS product_name, avg(observation.value) AS avg_value, min(observation.value) AS min_value, max(observation.value) AS max_value, stddev(observation.value) AS std_dev, count(*) AS observation_count, unit.name AS unit
+FROM fermentation_record JOIN resource ON fermentation_record.resource_id = resource.id LEFT OUTER JOIN prepared_sample ON fermentation_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id LEFT OUTER JOIN place ON location_address.geography_id = place.geoid LEFT OUTER JOIN strain ON fermentation_record.strain_id = strain.id LEFT OUTER JOIN method AS pm ON fermentation_record.pretreatment_method_id = pm.id LEFT OUTER JOIN method AS em ON fermentation_record.eh_method_id = em.id LEFT OUTER JOIN bioconversion_method AS bcm ON fermentation_record.bioconversion_method_id = bcm.id JOIN observation ON lower(observation.record_id) = lower(fermentation_record.record_id) JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id
+WHERE fermentation_record.qc_pass != 'fail' GROUP BY fermentation_record.resource_id, resource.name, location_address.geography_id, place.county_name, strain.name, strain.genus, strain.species, pm.name, em.name, bcm.name, coalesce(pm.duration, em.duration, bcm.time_h), parameter.name, unit.name
+"""
+MV_BIOMASS_GASIFICATION_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_gasification AS
+SELECT row_number() OVER (ORDER BY gasification_record.resource_id, location_address.geography_id, decon_vessel.name, parameter.name, unit.name) AS id, gasification_record.resource_id, resource.name AS resource_name, decon_vessel.name AS reactor_type, parameter.name AS parameter_name, location_address.geography_id AS geoid, avg(observation.value) AS avg_value, min(observation.value) AS min_value, max(observation.value) AS max_value, stddev(observation.value) AS std_dev, count(*) AS observation_count, unit.name AS unit
+FROM gasification_record JOIN resource ON gasification_record.resource_id = resource.id LEFT OUTER JOIN prepared_sample ON gasification_record.prepared_sample_id = prepared_sample.id LEFT OUTER JOIN field_sample ON prepared_sample.field_sample_id = field_sample.id LEFT OUTER JOIN location_address ON field_sample.sampling_location_id = location_address.id LEFT OUTER JOIN decon_vessel ON gasification_record.reactor_type_id = decon_vessel.id JOIN observation ON lower(observation.record_id) = lower(gasification_record.record_id) JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id
+WHERE gasification_record.qc_pass != 'fail' GROUP BY gasification_record.resource_id, resource.name, location_address.geography_id, decon_vessel.name, parameter.name, unit.name
+"""
+MV_BIOMASS_PRICING_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_pricing AS
+SELECT row_number() OVER (ORDER BY usda_market_record.id) AS id, resource.id AS resource_id, resource.name AS resource_name, place.geoid, place.county_name AS county, place.state_name AS state, usda_market_record.report_date, data_source.name AS report_source, usda_market_record.market_type_category, usda_market_record.sale_type, anon_1.price_min, anon_1.price_max, anon_1.price_avg, anon_1.price_unit
+FROM usda_market_record JOIN usda_market_report ON usda_market_record.report_id = usda_market_report.id JOIN usda_commodity ON usda_market_record.commodity_id = usda_commodity.id LEFT OUTER JOIN data_source ON usda_market_report.source_id = data_source.id JOIN resource_usda_commodity_map ON resource_usda_commodity_map.usda_commodity_id = usda_commodity.id JOIN resource ON resource.id = resource_usda_commodity_map.resource_id LEFT OUTER JOIN location_address ON usda_market_report.office_city_id = location_address.id LEFT OUTER JOIN place ON location_address.geography_id = place.geoid JOIN (SELECT observation.record_id AS record_id, avg(observation.value) AS price_avg, min(observation.value) AS price_min, max(observation.value) AS price_max, unit.name AS price_unit
+FROM observation JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id
+WHERE observation.record_type = 'usda_market_record' AND lower(parameter.name) = 'price received' GROUP BY observation.record_id, unit.name) AS anon_1 ON CAST(usda_market_record.id AS VARCHAR) = anon_1.record_id
+"""
+MV_BIOMASS_END_USES_SQL = """
+CREATE MATERIALIZED VIEW data_portal.mv_biomass_end_uses AS
+SELECT resource_end_use_record.resource_id, resource.name AS resource_name, coalesce(use_case.name, 'unknown') AS use_case, CAST(avg(anon_1.percentage_low) AS FLOAT) AS percentage_low, CAST(avg(anon_1.percentage_high) AS FLOAT) AS percentage_high, CAST(max(anon_1.trend) AS TEXT) AS trend, CAST(avg(anon_1.value_low_usd) AS FLOAT) AS value_low_usd, CAST(avg(anon_1.value_high_usd) AS FLOAT) AS value_high_usd, CAST(avg(anon_1.value_multiplier_low) AS FLOAT) AS value_multiplier_low, CAST(avg(anon_1.value_multiplier_high) AS FLOAT) AS value_multiplier_high, CAST(max(anon_1.value_unit) AS TEXT) AS value_notes
+FROM resource_end_use_record JOIN resource ON resource_end_use_record.resource_id = resource.id LEFT OUTER JOIN use_case ON resource_end_use_record.use_case_id = use_case.id LEFT OUTER JOIN (SELECT observation.record_id AS record_id, avg(CASE WHEN (lower(parameter.name) = 'resource_use_perc_low') THEN observation.value END) AS percentage_low, avg(CASE WHEN (lower(parameter.name) = 'resource_use_perc_high') THEN observation.value END) AS percentage_high, avg(CASE WHEN (lower(parameter.name) = 'resource_value_low') THEN observation.value END) AS value_low_usd, avg(CASE WHEN (lower(parameter.name) = 'resource_value_high') THEN observation.value END) AS value_high_usd, avg(CASE WHEN (lower(parameter.name) = 'resource_value_multiplier_low') THEN observation.value END) AS value_multiplier_low, avg(CASE WHEN (lower(parameter.name) = 'resource_value_multiplier_high') THEN observation.value END) AS value_multiplier_high, max(CASE WHEN (lower(parameter.name) = 'resource_use_perc_low') THEN unit.name END) AS unit, max(CASE WHEN (lower(parameter.name) = 'resource_use_trend') THEN CAST(observation.note AS VARCHAR) END) AS trend, max(CASE WHEN (lower(parameter.name) IN ('resource_value_low', 'resource_value_high')) THEN unit.name END) AS value_unit
+FROM observation JOIN parameter ON observation.parameter_id = parameter.id LEFT OUTER JOIN unit ON observation.unit_id = unit.id
+WHERE lower(observation.record_type) = 'resource_end_use_record' GROUP BY observation.record_id) AS anon_1 ON CAST(resource_end_use_record.id AS VARCHAR) = anon_1.record_id
+WHERE resource_end_use_record.resource_id IS NOT NULL GROUP BY resource_end_use_record.resource_id, resource.name, coalesce(use_case.name, 'unknown')
+"""
+
+# Create indexes
+CREATE_INDEX_STATEMENTS = [
+    "CREATE UNIQUE INDEX idx_mv_biomass_search_id ON data_portal.mv_biomass_search (id)",
+    "CREATE INDEX idx_mv_biomass_search_search_vector ON data_portal.mv_biomass_search USING GIN (search_vector)",
+    "CREATE INDEX idx_mv_biomass_search_resource_class ON data_portal.mv_biomass_search (resource_class)",
+    "CREATE INDEX idx_mv_biomass_search_resource_subclass ON data_portal.mv_biomass_search (resource_subclass)",
+    "CREATE INDEX idx_mv_biomass_search_primary_product ON data_portal.mv_biomass_search (primary_product)",
+    "CREATE UNIQUE INDEX idx_mv_biomass_composition_id ON data_portal.mv_biomass_composition (id)",
+    "CREATE INDEX idx_mv_biomass_composition_resource_id ON data_portal.mv_biomass_composition (resource_id)",
+    "CREATE INDEX idx_mv_biomass_composition_geoid_county ON data_portal.mv_biomass_composition (geoid, county)",
+    "CREATE INDEX idx_mv_biomass_composition_analysis_type ON data_portal.mv_biomass_composition (analysis_type)",
+    "CREATE INDEX idx_mv_biomass_composition_parameter_name ON data_portal.mv_biomass_composition (parameter_name)",
+    "CREATE INDEX idx_mv_biomass_composition_resource_analysis ON data_portal.mv_biomass_composition (resource_id, analysis_type)",
+    "CREATE INDEX idx_mv_biomass_composition_resource_geoid_analysis ON data_portal.mv_biomass_composition (resource_id, geoid, analysis_type)",
+    "CREATE INDEX idx_mv_biomass_composition_resource_parameter ON data_portal.mv_biomass_composition (resource_id, parameter_name)",
+    "CREATE UNIQUE INDEX idx_mv_biomass_volume_estimate_id ON data_portal.mv_biomass_volume_estimate (id)",
+    "CREATE INDEX idx_mv_biomass_volume_estimate_resource_id ON data_portal.mv_biomass_volume_estimate (resource_id)",
+    "CREATE INDEX idx_mv_biomass_volume_estimate_geoid ON data_portal.mv_biomass_volume_estimate (geoid)",
+    "CREATE INDEX idx_mv_biomass_volume_estimate_resource_year ON data_portal.mv_biomass_volume_estimate (resource_id, dataset_year)",
+    "CREATE UNIQUE INDEX idx_mv_biomass_availability_resource_id ON data_portal.mv_biomass_availability (resource_id)",
+    "CREATE UNIQUE INDEX idx_mv_biomass_sample_stats_resource_id ON data_portal.mv_biomass_sample_stats (resource_id)",
+    "CREATE UNIQUE INDEX idx_mv_biomass_fermentation_id ON data_portal.mv_biomass_fermentation (id)",
+    "CREATE INDEX idx_mv_biomass_fermentation_resource_id ON data_portal.mv_biomass_fermentation (resource_id)",
+    "CREATE INDEX idx_mv_biomass_fermentation_geoid ON data_portal.mv_biomass_fermentation (geoid)",
+    "CREATE INDEX idx_mv_biomass_fermentation_county ON data_portal.mv_biomass_fermentation (county)",
+    "CREATE INDEX idx_mv_biomass_fermentation_strain_name ON data_portal.mv_biomass_fermentation (strain_name)",
+    "CREATE INDEX idx_mv_biomass_fermentation_product_name ON data_portal.mv_biomass_fermentation (product_name)",
+    "CREATE UNIQUE INDEX idx_mv_biomass_gasification_id ON data_portal.mv_biomass_gasification (id)",
+    "CREATE INDEX idx_mv_biomass_gasification_resource_id ON data_portal.mv_biomass_gasification (resource_id)",
+    "CREATE INDEX idx_mv_biomass_gasification_reactor_type ON data_portal.mv_biomass_gasification (reactor_type)",
+    "CREATE INDEX idx_mv_biomass_gasification_parameter_name ON data_portal.mv_biomass_gasification (parameter_name)",
+    "CREATE INDEX idx_mv_biomass_gasification_resource_reactor_param ON data_portal.mv_biomass_gasification (resource_id, reactor_type, parameter_name)",
+    "CREATE UNIQUE INDEX idx_mv_biomass_pricing_id ON data_portal.mv_biomass_pricing (id)",
+    "CREATE INDEX idx_mv_biomass_pricing_resource_id ON data_portal.mv_biomass_pricing (resource_id)",
+    "CREATE INDEX idx_mv_biomass_pricing_geoid_county ON data_portal.mv_biomass_pricing (geoid, county)",
+    "CREATE INDEX idx_mv_biomass_pricing_report_source_date ON data_portal.mv_biomass_pricing (report_source, report_date)",
+    "CREATE INDEX idx_mv_biomass_pricing_resource_date ON data_portal.mv_biomass_pricing (resource_id, report_date)",
+    "CREATE UNIQUE INDEX idx_mv_biomass_end_uses_resource_use_case ON data_portal.mv_biomass_end_uses (resource_id, use_case)",
+    "CREATE INDEX idx_mv_biomass_end_uses_resource_id ON data_portal.mv_biomass_end_uses (resource_id)",
+]
+
+
+def upgrade() -> None:
+    """Recreate all 9 materialized views with fixes."""
+
+    # Drop all existing indexes
+    for statement in DROP_INDEX_STATEMENTS:
+        op.execute(statement)
+
+    # Drop all existing views
+    for statement in DROP_VIEW_STATEMENTS:
+        op.execute(statement)
+
+    # Create all views with new SQL
+    op.execute(MV_BIOMASS_SEARCH_SQL)
+    # Re-verify that all views are created
+    op.execute(MV_BIOMASS_COMPOSITION_SQL)
+    op.execute(MV_BIOMASS_VOLUME_ESTIMATE_SQL)
+    op.execute(MV_BIOMASS_AVAILABILITY_SQL)
+    op.execute(MV_BIOMASS_SAMPLE_STATS_SQL)
+    op.execute(MV_BIOMASS_FERMENTATION_SQL)
+    op.execute(MV_BIOMASS_GASIFICATION_SQL)
+    # Pricing View
+    op.execute(MV_BIOMASS_PRICING_SQL)
+    # End Uses View
+    op.execute(MV_BIOMASS_END_USES_SQL)
+
+    # Create all indexes
+    for statement in CREATE_INDEX_STATEMENTS:
+        op.execute(statement)
+
+    # Grant permissions to readonly role
+    op.execute("GRANT USAGE ON SCHEMA data_portal TO biocirv_readonly")
+    op.execute("GRANT SELECT ON ALL TABLES IN SCHEMA data_portal TO biocirv_readonly")
+
+
+def downgrade() -> None:
+    """Drop all 9 materialized views and their indexes."""
+
+    # Drop indexes
+    for statement in DROP_INDEX_STATEMENTS:
+        op.execute(statement)
+
+    # Drop views
+    for statement in DROP_VIEW_STATEMENTS:
+        op.execute(statement)

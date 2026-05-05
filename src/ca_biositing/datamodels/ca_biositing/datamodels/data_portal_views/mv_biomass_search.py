@@ -103,16 +103,16 @@ resource_metrics_v2 = select(
     case(
         (
             or_(
-                func.avg(case((observations_filtered.c.parameter == "glucose", observations_filtered.c.value))).is_not(None),
-                func.avg(case((observations_filtered.c.parameter == "xylose", observations_filtered.c.value))).is_not(None)
+                func.avg(case((observations_filtered.c.parameter == "glucan", observations_filtered.c.value))).is_not(None),
+                func.avg(case((observations_filtered.c.parameter == "xylan", observations_filtered.c.value))).is_not(None)
             ),
-            func.coalesce(func.avg(case((observations_filtered.c.parameter == "glucose", observations_filtered.c.value))), 0) +
-            func.coalesce(func.avg(case((observations_filtered.c.parameter == "xylose", observations_filtered.c.value))), 0)
+            func.coalesce(func.avg(case((observations_filtered.c.parameter == "glucan", observations_filtered.c.value))), 0) +
+            func.coalesce(func.avg(case((observations_filtered.c.parameter == "xylan", observations_filtered.c.value))), 0)
         ),
         else_=None
     ).label("sugar_content_percent"),
-    func.avg(case((observations_filtered.c.parameter == "glucose", observations_filtered.c.value))).label("glucan_percent"),
-    func.avg(case((observations_filtered.c.parameter == "xylose", observations_filtered.c.value))).label("xylan_percent"),
+    func.avg(case((observations_filtered.c.parameter == "glucan", observations_filtered.c.value))).label("glucan_percent"),
+    func.avg(case((observations_filtered.c.parameter == "xylan", observations_filtered.c.value))).label("xylan_percent"),
     func.avg(case((
         and_(analysis_sources.c.type == "ultimate analysis", func.lower(observations_filtered.c.parameter) == "carbon"),
         observations_filtered.c.value
@@ -213,14 +213,24 @@ storage_notes_sq = select(
 ).group_by(ResourceStorageRecord.resource_id).subquery()
 
 # Volume estimation aggregation (state-wide sum for latest data year)
+# First, get the most recent year per resource
+volume_year_sq = select(
+     mv_biomass_volume_estimate.c.resource_id,
+     func.max(mv_biomass_volume_estimate.c.dataset_year).label("volume_estimate_year")
+ ).select_from(mv_biomass_volume_estimate)\
+  .group_by(mv_biomass_volume_estimate.c.resource_id).subquery()
+
+# Then aggregate volumes for the most recent year only
 volume_agg = select(
-    mv_biomass_volume_estimate.c.resource_id,
-    func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_min).label("calculated_estimate_volume_min"),
-    func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_max).label("calculated_estimate_volume_max"),
-    func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_mid).label("calculated_estimate_volume_mid")
-).select_from(mv_biomass_volume_estimate)\
- .where(mv_biomass_volume_estimate.c.dataset_year == 2024)\
- .group_by(mv_biomass_volume_estimate.c.resource_id).subquery()
+     mv_biomass_volume_estimate.c.resource_id,
+     func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_min).label("calculated_estimate_volume_min"),
+     func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_max).label("calculated_estimate_volume_max"),
+     func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_mid).label("calculated_estimate_volume_mid"),
+     volume_year_sq.c.volume_estimate_year
+ ).select_from(mv_biomass_volume_estimate)\
+  .join(volume_year_sq, mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id)\
+  .where(mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year)\
+  .group_by(mv_biomass_volume_estimate.c.resource_id, volume_year_sq.c.volume_estimate_year).subquery()
 
 mv_biomass_search = select(
      Resource.id,
@@ -270,6 +280,7 @@ mv_biomass_search = select(
      volume_agg.c.calculated_estimate_volume_min,
      volume_agg.c.calculated_estimate_volume_max,
      volume_agg.c.calculated_estimate_volume_mid,
+     volume_agg.c.volume_estimate_year,
      Resource.created_at,
      Resource.updated_at,
      func.to_tsvector(text("'english'"),
