@@ -317,7 +317,7 @@ def transform_county_ag_records(
         metric_columns = [col for col in cleaned.columns if col not in {year_col, resource_col, primary_product_col, "note", "description"}]
         for _, row in cleaned.iterrows():
             resource_value = row.get(resource_col)
-            if resource_value is None or str(resource_value).strip() == "":
+            if pd.isna(resource_value) or str(resource_value).strip() == "":
                 # Keep the current filter: skip rows with no resource even if they only contain
                 # primary agricultural product information. This can be expanded later if needed.
                 continue
@@ -444,7 +444,7 @@ def transform_county_ag_observations(
 
         for _, row in cleaned.iterrows():
             resource_value = row.get("resource")
-            if resource_value is None or str(resource_value).strip() == "":
+            if pd.isna(resource_value) or str(resource_value).strip() == "":
                 continue
 
             report_year = row.get(year_col)

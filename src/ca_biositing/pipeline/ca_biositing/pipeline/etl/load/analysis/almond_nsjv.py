@@ -133,14 +133,16 @@ def _ensure_data_source(session: Session) -> tuple[Any, bool]:
     return instance, created
 
 
-def _get_research_method_category(session: Session) -> Optional[Any]:
-    """Query for the existing 'research method' method category."""
+def _ensure_method_category(session: Session) -> tuple[Any, bool]:
+    """Ensure the method category exists for almond ETL."""
     from ca_biositing.datamodels.models import MethodCategory
 
-    for row in session.exec(select(MethodCategory)).all():
-        if _normalize_text(getattr(row, "name", None)) == _normalize_text("research method"):
-            return row
-    return None
+    name = "research method"
+    payload = {
+        "name": name,
+        "description": "Research method for manual data extraction",
+    }
+    return _upsert_by_name(session, MethodCategory, name, payload)
 
 
 def _ensure_method(session: Session, data_source_id: int, method_category_id: int, etl_run_id: Any = None, lineage_group_id: Any = None) -> tuple[Any, bool]:
@@ -203,27 +205,51 @@ def _ensure_dataset(
 
 
 def _resolve_resource_id(session: Session, resource_value: Any) -> Optional[int]:
-    from ca_biositing.datamodels.models import Resource
+     from ca_biositing.datamodels.models import Resource
 
-    if isinstance(resource_value, (int, float)) and not pd.isna(resource_value):
-        return int(resource_value)
+     if isinstance(resource_value, (int, float)) and not pd.isna(resource_value):
+         return int(resource_value)
 
-    normalized_resource = _normalize_text(resource_value)
-    if normalized_resource == "":
-        return None
+     normalized_resource = _normalize_text(resource_value)
+     if normalized_resource == "":
+         return None
 
-    for row in session.exec(select(Resource)).all():
-        if _normalize_text(getattr(row, "name", None)) == normalized_resource:
-            return getattr(row, "id", None)
-    # If not found, create a new Resource record using the provided name.
-    try:
-        now = datetime.now(timezone.utc)
-        new = Resource(name=str(resource_value).strip(), created_at=now, updated_at=now)
-        session.add(new)
-        session.flush()
-        return getattr(new, "id", None)
-    except Exception:
-        return None
+     for row in session.exec(select(Resource)).all():
+         if _normalize_text(getattr(row, "name", None)) == normalized_resource:
+             return getattr(row, "id", None)
+     # If not found, create a new Resource record using the provided name.
+     try:
+         now = datetime.now(timezone.utc)
+         new = Resource(name=str(resource_value).strip(), created_at=now, updated_at=now)
+         session.add(new)
+         session.flush()
+         return getattr(new, "id", None)
+     except Exception:
+         return None
+
+
+def _ensure_unit(session: Session, unit_value: Any) -> Optional[int]:
+     """Resolve unit by name and create if missing (similar to _resolve_resource_id)."""
+     from ca_biositing.datamodels.models import Unit
+
+     if isinstance(unit_value, (int, float)) and not pd.isna(unit_value):
+         return int(unit_value)
+
+     normalized_unit = _normalize_text(unit_value)
+     if normalized_unit == "":
+         return None
+
+     for row in session.exec(select(Unit)).all():
+         if _normalize_text(getattr(row, "name", None)) == normalized_unit:
+             return getattr(row, "id", None)
+     # If not found, create a new Unit record using the provided name.
+     try:
+         new = Unit(name=str(unit_value).strip())
+         session.add(new)
+         session.flush()
+         return getattr(new, "id", None)
+     except Exception:
+         return None
 
 
 def _find_parameter(session: Session, name: str) -> Any:
@@ -557,9 +583,8 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                 except Exception:
                     provenance_etl_run_id = provenance_etl_run_id
 
-                method_category = _get_research_method_category(session)
-                if method_category is None:
-                    raise ValueError("Required method category 'research method' not found in database.")
+                method_category, created = _ensure_method_category(session)
+                counts["method_category"] += int(created)
 
                 method, created = _ensure_method(session, data_source.id, method_category.id, etl_run_id=provenance_etl_run_id, lineage_group_id=provenance_lineage_group_id)
                 counts["method"] += int(created)
@@ -632,7 +657,9 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                                 lineage_group_id=_clean_value(row.get("lineage_group_id")),
                             )
                             if record_db_id is not None and resource_id is not None and report_start_date is not None:
-                                record_id_lookup[("resource_price_record", str(_clean_value(row.get("geoid"))), int(resource_id), int(report_start_date.year))] = int(record_db_id)
+                                key = ("resource_price_record", str(_clean_value(row.get("geoid"))), int(resource_id), int(report_start_date.year))
+                                logger.info("Adding record to lookup: key=%s, record_db_id=%s", key, record_db_id)
+                                record_id_lookup[key] = int(record_db_id)
                             if inserted:
                                 counts["resource_price_record"] += 1
 
@@ -650,7 +677,9 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                                 lineage_group_id=_clean_value(row.get("lineage_group_id")),
                             )
                             if record_db_id is not None and resource_id is not None and report_date is not None:
-                                record_id_lookup[("resource_production_record", str(_clean_value(row.get("geoid"))), int(resource_id), int(report_date.year))] = int(record_db_id)
+                                key = ("resource_production_record", str(_clean_value(row.get("geoid"))), int(resource_id), int(report_date.year))
+                                logger.info("Adding record to lookup: key=%s, record_db_id=%s", key, record_db_id)
+                                record_id_lookup[key] = int(record_db_id)
                             if inserted:
                                 counts["resource_production_record"] += 1
 
@@ -675,57 +704,85 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
 
                         observation_resource_id = _resolve_resource_id(session, _get_first_present(row, ("resource_id", "resource")))
                         if observation_resource_id is None:
-                            logger.error("Skipping observation with unresolved resource.")
+                            logger.error(
+                                "Skipping observation with unresolved resource: resource_name=%s, geoid=%s, year=%s",
+                                _get_first_present(row, ("resource_id", "resource")),
+                                row.get("geoid"),
+                                row.get("year"),
+                            )
                             continue
 
                         observation_year = row.get("year")
                         if observation_year is None or pd.isna(observation_year):
-                            logger.error("Skipping observation with missing year.")
+                            logger.error(
+                                "Skipping observation with missing year: geoid=%s, resource_id=%s",
+                                row.get("geoid"),
+                                observation_resource_id,
+                            )
                             continue
 
-                        record_db_id = record_id_lookup.get((record_type, str(_clean_value(row.get("geoid"))), int(observation_resource_id), int(observation_year)))
+                        lookup_key = (record_type, str(_clean_value(row.get("geoid"))), int(observation_resource_id), int(observation_year))
+                        record_db_id = record_id_lookup.get(lookup_key)
                         if record_db_id is None:
                             logger.error(
-                                "Skipping observation with unresolved source record id: record_type=%s geoid=%s resource_id=%s year=%s",
-                                record_type,
+                                "Skipping observation with unresolved source record id: lookup_key=%s, geoid=%s, resource_id=%s, year=%s",
+                                lookup_key,
                                 row.get("geoid"),
                                 observation_resource_id,
                                 observation_year,
                             )
                             continue
 
-                        resolved_parameter = None
-                        if _clean_value(row.get("parameter_id")) is not None:
-                            resolved_parameter = _clean_value(row.get("parameter_id"))
-                        else:
+                        resolved_parameter = _clean_value(row.get("parameter_id"))
+                        resolved_parameter_row = None
+
+                        if resolved_parameter is None:
                             resolved_parameter_row = _resolve_parameter_by_name(session, row.get("parameter_name"))
                             if resolved_parameter_row is not None:
                                 resolved_parameter = getattr(resolved_parameter_row, "id", None)
-                                if _clean_value(row.get("unit_id")) is None:
-                                    row = row.copy()
-                                    # prefer parameter's standard unit
-                                    unit_id = getattr(resolved_parameter_row, "standard_unit_id", None)
-                                    # fallback by record_type if parameter unit missing
-                                    if unit_id is None:
-                                        if record_type == "resource_production_record":
-                                            # Production is always reported in tons for this ETL.
-                                            # We may want a join table later mapping county x commodity to reported freight term.
-                                            unit_id = unit_lookup.get(_normalize_text("tons")) or unit_lookup.get(_normalize_text("ton"))
-                                        elif record_type == "resource_price_record":
-                                            unit_id = unit_lookup.get(_normalize_text("dollars per ton")) or unit_lookup.get(_normalize_text("dollars per ton delivered"))
-                                    row["unit_id"] = unit_id
 
+                        # Unit resolution fallback (runs if unit_id is missing, regardless of how parameter was resolved)
+                        if resolved_parameter is not None and _clean_value(row.get("unit_id")) is None:
+                            row = row.copy()
+                            unit_id = None
+
+                            # 1. Try to get standard unit from the parameter if we have the row
+                            if resolved_parameter_row is None:
+                                from ca_biositing.datamodels.models import Parameter
+                                resolved_parameter_row = session.get(Parameter, resolved_parameter)
+
+                            if resolved_parameter_row is not None:
+                                unit_id = getattr(resolved_parameter_row, "standard_unit_id", None)
+
+                            # 2. Fallback by record_type if unit still missing
+                            if unit_id is None:
+                                if record_type == "resource_production_record":
+                                    unit_id = unit_lookup.get(_normalize_text("tons")) or unit_lookup.get(_normalize_text("ton"))
+                                    if unit_id is None:
+                                        unit_id = _ensure_unit(session, "tons")
+                                elif record_type == "resource_price_record":
+                                    unit_id = unit_lookup.get(_normalize_text("dollars per ton")) or unit_lookup.get(_normalize_text("dollars per ton delivered"))
+                                    if unit_id is None:
+                                        unit_id = _ensure_unit(session, "dollars per ton")
+
+                            row["unit_id"] = unit_id
                         if resolved_parameter is None:
                             logger.error(
-                                "Skipping observation with unresolved parameter: name=%s",
+                                "Skipping observation with unresolved parameter: name=%s, geoid=%s, resource_id=%s, year=%s",
                                 row.get("parameter_name") or row.get("parameter_id"),
+                                row.get("geoid"),
+                                _get_first_present(row, ("resource_id", "resource")),
+                                row.get("year"),
                             )
                             continue
 
                         if _clean_value(row.get("unit_id")) is None:
                             logger.error(
-                                "Skipping observation with missing unit_id after parameter resolution: name=%s",
-                                row.get("parameter_name") or row.get("parameter_id"),
+                                "Skipping observation with missing unit_id after parameter resolution: parameter=%s, geoid=%s, resource=%s, year=%s",
+                                row.get("parameter_name") or resolved_parameter,
+                                row.get("geoid"),
+                                row.get("resource") or observation_resource_id,
+                                observation_year,
                             )
                             continue
 
@@ -749,7 +806,7 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                 session.commit()
 
                 if counts["observation"] > 0:
-                    sample = session.exec(select(Observation).limit(1)).first()
+                    sample = session.exec(select(Observation).where(Observation.dataset_id.in_([price_dataset.id, production_dataset.id])).limit(1)).first()
                     if sample is not None:
                         logger.info(
                             "Spot check observation: record_id=%s, record_type=%s, value=%s",
