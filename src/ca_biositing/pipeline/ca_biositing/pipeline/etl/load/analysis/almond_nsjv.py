@@ -82,6 +82,12 @@ def _to_decimal(value: Any) -> Optional[Decimal]:
     if value is None or pd.isna(value):
         return None
     try:
+        if isinstance(value, str):
+            # Remove currency symbols, commas, and whitespace
+            cleaned = re.sub(r"[$,\s]+", "", value)
+            if cleaned == "":
+                return None
+            return Decimal(cleaned)
         return Decimal(str(value))
     except Exception:
         return None

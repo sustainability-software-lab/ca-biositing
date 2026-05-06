@@ -16,6 +16,7 @@ from prefect import get_run_logger, task
 from sqlmodel import Session, select
 
 from ca_biositing.pipeline.utils.cleaning_functions import cleaning as cleaning_mod
+from ca_biositing.pipeline.utils.cleaning_functions.coercion import coerce_columns
 from ca_biositing.pipeline.utils.engine import get_engine
 from ca_biositing.pipeline.utils.name_id_swap import normalize_dataframes
 
@@ -381,6 +382,11 @@ def transform_county_ag_records(
     price_records = pd.DataFrame(records["resource_price_record"])
     production_records = pd.DataFrame(records["resource_production_record"])
 
+    if not price_records.empty:
+        price_records = coerce_columns(price_records, float_cols=["value"])
+    if not production_records.empty:
+        production_records = coerce_columns(production_records, float_cols=["value"])
+
     for df in [price_records, production_records]:
         if not df.empty:
             df["report_start_date"] = pd.to_datetime(df["report_year"].astype(int).astype(str) + "-01-01").dt.date
@@ -490,6 +496,7 @@ def transform_county_ag_observations(
 
     observations = pd.DataFrame(observation_rows)
     if not observations.empty:
+        observations = coerce_columns(observations, float_cols=["value"])
         observations["observation_dedupe_key"] = (
             observations["record_type"].astype(str)
             + "|"
