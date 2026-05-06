@@ -796,14 +796,15 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                             row = row.copy()
                             row["parameter_id"] = resolved_parameter
 
+                        observation_record_id = f"{record_type}|{_clean_value(row.get('geoid'))}|{observation_resource_id}|{observation_year}"
                         row = row.copy()
-                        row["record_id"] = str(record_db_id)
+                        row["record_id"] = observation_record_id
 
                         if _upsert_observation(
                             session,
                             row.to_dict(),
                             dataset_id=dataset_id,
-                            record_id=str(record_db_id),
+                            record_id=observation_record_id,
                             etl_run_id=_clean_value(row.get("etl_run_id")),
                             lineage_group_id=_clean_value(row.get("lineage_group_id")),
                         ):

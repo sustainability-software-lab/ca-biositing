@@ -49,8 +49,8 @@ def test_load_county_ag_reports_upserts_and_spot_checks(monkeypatch):
     with Session(engine) as session:
         unit = Unit(name="usd_per_ton")
         resource = Resource(name="almonds")
-        parameter_price = Parameter(name="almond_price", description="old", standard_unit_id=None)
-        parameter_production = Parameter(name="almond_production", description="old", standard_unit_id=None)
+        parameter_price = Parameter(name="almond price", description="old", standard_unit_id=None)
+        parameter_production = Parameter(name="almond production", description="old", standard_unit_id=None)
         session.add(unit)
         session.add(resource)
         session.add(parameter_price)
