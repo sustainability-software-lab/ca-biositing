@@ -9,7 +9,8 @@ Required index:
     CREATE UNIQUE INDEX idx_mv_biomass_sample_stats_resource_id ON data_portal.mv_biomass_sample_stats (resource_id)
 """
 
-from sqlalchemy import select, func, union_all, cast, Integer
+from sqlalchemy import select, func, union_all, cast, Integer, and_
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.aim1_records.compositional_record import CompositionalRecord
 from ca_biositing.datamodels.models.aim1_records.proximate_record import ProximateRecord
@@ -62,6 +63,7 @@ mv_biomass_sample_stats = select(
     func.count().label("total_record_count")
 ).select_from(Resource)\
  .outerjoin(all_samples, all_samples.c.resource_id == Resource.id)\
+ .where(get_resource_filter(Resource))\
  .outerjoin(PreparedSample, cast(all_samples.c.prepared_sample_id, Integer) == PreparedSample.id)\
  .outerjoin(FieldSample, PreparedSample.field_sample_id == FieldSample.id)\
  .outerjoin(Provider, FieldSample.provider_id == Provider.id)\

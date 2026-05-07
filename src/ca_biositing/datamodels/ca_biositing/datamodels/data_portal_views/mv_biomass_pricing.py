@@ -9,6 +9,7 @@ Required index:
 
 from sqlalchemy import select, func, cast, String, and_
 
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.external_data.resource_usda_commodity_map import ResourceUsdaCommodityMap
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
@@ -56,4 +57,5 @@ mv_biomass_pricing = select(
   .join(Resource, Resource.id == ResourceUsdaCommodityMap.resource_id)\
   .outerjoin(LocationAddress, UsdaMarketReport.office_city_id == LocationAddress.id)\
   .outerjoin(Place, LocationAddress.geography_id == Place.geoid)\
-  .join(pricing_obs, cast(UsdaMarketRecord.id, String) == pricing_obs.c.record_id)
+  .join(pricing_obs, cast(UsdaMarketRecord.id, String) == pricing_obs.c.record_id)\
+  .where(get_resource_filter(Resource))

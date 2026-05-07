@@ -39,9 +39,11 @@ from .common import (
     get_carbon_avg_expr,
     get_hydrogen_avg_expr,
     get_nitrogen_avg_expr,
-    get_cn_ratio_expr
+    get_cn_ratio_expr,
+    get_resource_filter
 )
 from .mv_biomass_volume_estimate import mv_biomass_volume_estimate
+from .mv_biomass_composition import mv_biomass_composition
 
 
 # 1. Subquery for primary product fallback from USDA mapping
@@ -53,107 +55,71 @@ primary_product_fallback_sq = select(
  .group_by(ResourceUsdaCommodityMap.resource_id).subquery()
 
 # 2. Refined Analysis Metrics Subquery
-# We rebuild this to ensure exact alignment with the working SQL which uses explicit QC filters
-# and specific join criteria.
-analysis_sources = select(
-    cast(CompositionalRecord.resource_id, Integer).label("resource_id"),
-    cast(CompositionalRecord.record_id, String).label("record_id"),
-    literal("compositional analysis").label("type")
-).where(CompositionalRecord.qc_pass != "fail").union_all(
-    select(cast(ProximateRecord.resource_id, Integer), cast(ProximateRecord.record_id, String), literal("proximate analysis")).where(ProximateRecord.qc_pass != "fail"),
-    select(cast(UltimateRecord.resource_id, Integer), cast(UltimateRecord.record_id, String), literal("ultimate analysis")).where(UltimateRecord.qc_pass != "fail"),
-    select(cast(XrfRecord.resource_id, Integer), cast(XrfRecord.record_id, String), literal("xrf analysis")).where(XrfRecord.qc_pass != "fail"),
-    select(cast(IcpRecord.resource_id, Integer), cast(IcpRecord.record_id, String), literal("icp analysis")).where(IcpRecord.qc_pass != "fail"),
-    select(cast(CalorimetryRecord.resource_id, Integer), cast(CalorimetryRecord.record_id, String), literal("calorimetry analysis")).where(CalorimetryRecord.qc_pass != "fail"),
-    select(cast(XrdRecord.resource_id, Integer), cast(XrdRecord.record_id, String), literal("xrd analysis")).where(XrdRecord.qc_pass != "fail"),
-    select(cast(FtnirRecord.resource_id, Integer), cast(FtnirRecord.record_id, String), literal("ftnir analysis")).where(FtnirRecord.qc_pass != "fail"),
-    select(cast(FermentationRecord.resource_id, Integer), cast(FermentationRecord.record_id, String), literal("fermentation")).where(FermentationRecord.qc_pass != "fail"),
-    select(cast(GasificationRecord.resource_id, Integer), cast(GasificationRecord.record_id, String), literal("gasification")).where(GasificationRecord.qc_pass != "fail"),
-    select(cast(PretreatmentRecord.resource_id, Integer), cast(PretreatmentRecord.record_id, String), literal("pretreatment")).where(PretreatmentRecord.qc_pass != "fail")
-).subquery()
-
-observations_filtered = select(
-    cast(Observation.record_id, String).label("record_id"),
-    cast(Observation.record_type, String).label("record_type"),
-    case(
-        (Parameter.name == "ash", "ash solids"),
-        else_=Parameter.name
-    ).label("parameter"),
-    Observation.value
-).join(Parameter, Observation.parameter_id == Parameter.id)\
- .where(Observation.record_type.in_([
-     "compositional analysis", "proximate analysis", "ultimate analysis",
-     "xrf analysis", "icp analysis", "calorimetry analysis",
-     "xrd analysis", "ftnir analysis", "pretreatment",
-     "gasification", "fermentation"
- ])).subquery()
+# Pull metrics directly from mv_biomass_composition to ensure alignment
+# and inherit its QC filters (sum constraints, parameter filtering, etc.)
+comp_sq = mv_biomass_composition.subquery()
 
 resource_metrics_v2 = select(
-    analysis_sources.c.resource_id,
-    func.avg(case((observations_filtered.c.parameter == "moisture", observations_filtered.c.value))).label("moisture_percent"),
-    func.avg(case((observations_filtered.c.parameter == "ash solids", observations_filtered.c.value))).label("ash_percent"),
+    comp_sq.c.resource_id,
+    func.avg(case((comp_sq.c.parameter_name == "moisture", comp_sq.c.avg_value))).label("moisture_percent"),
+    func.avg(case((comp_sq.c.parameter_name == "ash solids", comp_sq.c.avg_value))).label("ash_percent"),
     case(
         (
             or_(
-                func.avg(case((observations_filtered.c.parameter == "lignin", observations_filtered.c.value))).is_not(None),
-                func.avg(case((observations_filtered.c.parameter == "lignin+", observations_filtered.c.value))).is_not(None)
+                func.avg(case((comp_sq.c.parameter_name == "lignin", comp_sq.c.avg_value))).is_not(None),
+                func.avg(case((comp_sq.c.parameter_name == "lignin+", comp_sq.c.avg_value))).is_not(None)
             ),
-            func.coalesce(func.avg(case((observations_filtered.c.parameter == "lignin", observations_filtered.c.value))), 0) +
-            func.coalesce(func.avg(case((observations_filtered.c.parameter == "lignin+", observations_filtered.c.value))), 0)
+            func.coalesce(func.avg(case((comp_sq.c.parameter_name == "lignin", comp_sq.c.avg_value))), 0) +
+            func.coalesce(func.avg(case((comp_sq.c.parameter_name == "lignin+", comp_sq.c.avg_value))), 0)
         ),
         else_=None
     ).label("lignin_percent"),
     case(
         (
             or_(
-                func.avg(case((observations_filtered.c.parameter == "glucan", observations_filtered.c.value))).is_not(None),
-                func.avg(case((observations_filtered.c.parameter == "xylan", observations_filtered.c.value))).is_not(None)
+                func.avg(case((comp_sq.c.parameter_name == "glucan", comp_sq.c.avg_value))).is_not(None),
+                func.avg(case((comp_sq.c.parameter_name == "xylan", comp_sq.c.avg_value))).is_not(None)
             ),
-            func.coalesce(func.avg(case((observations_filtered.c.parameter == "glucan", observations_filtered.c.value))), 0) +
-            func.coalesce(func.avg(case((observations_filtered.c.parameter == "xylan", observations_filtered.c.value))), 0)
+            func.coalesce(func.avg(case((comp_sq.c.parameter_name == "glucan", comp_sq.c.avg_value))), 0) +
+            func.coalesce(func.avg(case((comp_sq.c.parameter_name == "xylan", comp_sq.c.avg_value))), 0)
         ),
         else_=None
     ).label("sugar_content_percent"),
-    func.avg(case((observations_filtered.c.parameter == "glucan", observations_filtered.c.value))).label("glucan_percent"),
-    func.avg(case((observations_filtered.c.parameter == "xylan", observations_filtered.c.value))).label("xylan_percent"),
+    func.avg(case((comp_sq.c.parameter_name == "glucan", comp_sq.c.avg_value))).label("glucan_percent"),
+    func.avg(case((comp_sq.c.parameter_name == "xylan", comp_sq.c.avg_value))).label("xylan_percent"),
     func.avg(case((
-        and_(analysis_sources.c.type == "ultimate analysis", func.lower(observations_filtered.c.parameter) == "carbon"),
-        observations_filtered.c.value
+        and_(comp_sq.c.analysis_type == "ultimate", func.lower(comp_sq.c.parameter_name) == "carbon"),
+        comp_sq.c.avg_value
     ))).label("carbon_percent"),
     func.avg(case((
-        and_(analysis_sources.c.type == "ultimate analysis", func.lower(observations_filtered.c.parameter) == "hydrogen"),
-        observations_filtered.c.value
+        and_(comp_sq.c.analysis_type == "ultimate", func.lower(comp_sq.c.parameter_name) == "hydrogen"),
+        comp_sq.c.avg_value
     ))).label("hydrogen_percent"),
     case(
         (
             and_(
-                func.avg(case((and_(analysis_sources.c.type == "ultimate analysis", func.lower(observations_filtered.c.parameter) == "carbon"), observations_filtered.c.value))).is_not(None),
-                func.avg(case((and_(analysis_sources.c.type == "ultimate analysis", func.lower(observations_filtered.c.parameter) == "nitrogen"), observations_filtered.c.value))).is_not(None),
-                func.avg(case((and_(analysis_sources.c.type == "ultimate analysis", func.lower(observations_filtered.c.parameter) == "nitrogen"), observations_filtered.c.value))) != 0
+                func.avg(case((and_(comp_sq.c.analysis_type == "ultimate", func.lower(comp_sq.c.parameter_name) == "carbon"), comp_sq.c.avg_value))).is_not(None),
+                func.avg(case((and_(comp_sq.c.analysis_type == "ultimate", func.lower(comp_sq.c.parameter_name) == "nitrogen"), comp_sq.c.avg_value))).is_not(None),
+                func.avg(case((and_(comp_sq.c.analysis_type == "ultimate", func.lower(comp_sq.c.parameter_name) == "nitrogen"), comp_sq.c.avg_value))) != 0
             ),
-            func.avg(case((and_(analysis_sources.c.type == "ultimate analysis", func.lower(observations_filtered.c.parameter) == "carbon"), observations_filtered.c.value))) /
-            cast(func.avg(case((and_(analysis_sources.c.type == "ultimate analysis", func.lower(observations_filtered.c.parameter) == "nitrogen"), observations_filtered.c.value))), Numeric)
+            func.avg(case((and_(comp_sq.c.analysis_type == "ultimate", func.lower(comp_sq.c.parameter_name) == "carbon"), comp_sq.c.avg_value))) /
+            cast(func.avg(case((and_(comp_sq.c.analysis_type == "ultimate", func.lower(comp_sq.c.parameter_name) == "nitrogen"), comp_sq.c.avg_value))), Numeric)
         ),
         else_=None
     ).label("cn_ratio"),
-    # Flags
-    func.bool_or(analysis_sources.c.type == "proximate analysis").label("has_proximate"),
-    func.bool_or(analysis_sources.c.type == "compositional analysis").label("has_compositional"),
-    func.bool_or(analysis_sources.c.type == "ultimate analysis").label("has_ultimate"),
-    func.bool_or(analysis_sources.c.type == "xrf analysis").label("has_xrf"),
-    func.bool_or(analysis_sources.c.type == "icp analysis").label("has_icp"),
-    func.bool_or(analysis_sources.c.type == "calorimetry analysis").label("has_calorimetry"),
-    func.bool_or(analysis_sources.c.type == "xrd analysis").label("has_xrd"),
-    func.bool_or(analysis_sources.c.type == "ftnir analysis").label("has_ftnir"),
-    func.bool_or(analysis_sources.c.type == "fermentation").label("has_fermentation"),
-    func.bool_or(analysis_sources.c.type == "gasification").label("has_gasification"),
-    func.bool_or(analysis_sources.c.type == "pretreatment").label("has_pretreatment")
-).select_from(analysis_sources)\
- .join(observations_filtered, and_(
-     func.lower(analysis_sources.c.record_id) == func.lower(observations_filtered.c.record_id),
-     observations_filtered.c.record_type == analysis_sources.c.type
- ), isouter=True)\
- .group_by(analysis_sources.c.resource_id).subquery()
+    # Flags derived from analysis_type presence in composition view
+    func.bool_or(comp_sq.c.analysis_type == "proximate").label("has_proximate"),
+    func.bool_or(comp_sq.c.analysis_type == "compositional").label("has_compositional"),
+    func.bool_or(comp_sq.c.analysis_type == "ultimate").label("has_ultimate"),
+    func.bool_or(comp_sq.c.analysis_type == "xrf").label("has_xrf"),
+    func.bool_or(comp_sq.c.analysis_type == "icp").label("has_icp"),
+    func.bool_or(comp_sq.c.analysis_type == "calorimetry").label("has_calorimetry"),
+    func.bool_or(comp_sq.c.analysis_type == "xrd").label("has_xrd"),
+    func.bool_or(comp_sq.c.analysis_type == "ftnir").label("has_ftnir"),
+    func.bool_or(comp_sq.c.analysis_type == "fermentation").label("has_fermentation"),
+    func.bool_or(comp_sq.c.analysis_type == "gasification").label("has_gasification"),
+    func.bool_or(comp_sq.c.analysis_type == "pretreatment").label("has_pretreatment")
+).group_by(comp_sq.c.resource_id).subquery()
 
 # 3. Tag thresholds calculated from the QC-filtered metrics
 thresholds_v2 = select(
@@ -306,9 +272,4 @@ mv_biomass_search = select(
    .outerjoin(mv_biomass_availability, mv_biomass_availability.c.resource_id == Resource.id)\
    .outerjoin(transport_notes_sq, transport_notes_sq.c.resource_id == Resource.id)\
    .outerjoin(storage_notes_sq, storage_notes_sq.c.resource_id == Resource.id)\
-   .where(
-       and_(
-           func.lower(Resource.name) != "sargassum",
-           func.lower(Resource.name) != "lab media",
-       )
-   )
+   .where(get_resource_filter(Resource))

@@ -9,8 +9,9 @@ Required index:
     CREATE UNIQUE INDEX idx_mv_biomass_end_uses_resource_use_case ON data_portal.mv_biomass_end_uses (resource_id, use_case)
 """
 
-from sqlalchemy import select, func, case, cast, String, Float, Text, literal
+from sqlalchemy import select, func, case, cast, String, Float, Text, literal, and_
 
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.resource_information.resource_end_use_record import ResourceEndUseRecord
 from ca_biositing.datamodels.models.resource_information.use_case import UseCase
@@ -116,7 +117,12 @@ mv_biomass_end_uses = select(
  .join(Resource, ResourceEndUseRecord.resource_id == Resource.id)\
  .outerjoin(UseCase, ResourceEndUseRecord.use_case_id == UseCase.id)\
  .outerjoin(end_use_obs, cast(ResourceEndUseRecord.id, String) == end_use_obs.c.record_id)\
- .where(ResourceEndUseRecord.resource_id.is_not(None))\
+ .where(
+     and_(
+         ResourceEndUseRecord.resource_id.is_not(None),
+         get_resource_filter(Resource)
+     )
+ )\
  .group_by(
     ResourceEndUseRecord.resource_id,
     Resource.name,
