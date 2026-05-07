@@ -25,6 +25,7 @@ DB_USER = "biocirv_user"
 
 # Storage
 IMAGE_BUCKET_NAME = f"biocirv-{STACK_NAME}-bucket"
+BACKUP_BUCKET_NAME = f"biocirv-{STACK_NAME}-backups"
 
 # Read-only users
 READONLY_USERS = ["biocirv_readonly"]
