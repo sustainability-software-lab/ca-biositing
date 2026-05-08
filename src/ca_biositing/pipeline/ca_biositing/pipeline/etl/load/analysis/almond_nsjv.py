@@ -483,7 +483,7 @@ def _upsert_observation(
     row: dict[str, Any],
     *,
     dataset_id: int,
-    record_id: str,
+    record_id: int,
     etl_run_id: Any,
     lineage_group_id: Any,
 ) -> bool:
@@ -796,15 +796,15 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                             row = row.copy()
                             row["parameter_id"] = resolved_parameter
 
-                        observation_record_id = f"{record_type}|{_clean_value(row.get('geoid'))}|{observation_resource_id}|{observation_year}"
+                        # Use the actual record ID from the lookup instead of a composite string
                         row = row.copy()
-                        row["record_id"] = observation_record_id
+                        row["record_id"] = record_db_id
 
                         if _upsert_observation(
                             session,
                             row.to_dict(),
                             dataset_id=dataset_id,
-                            record_id=observation_record_id,
+                            record_id=record_db_id,
                             etl_run_id=_clean_value(row.get("etl_run_id")),
                             lineage_group_id=_clean_value(row.get("lineage_group_id")),
                         ):

@@ -342,7 +342,11 @@ def transform_county_ag_records(
 
             for column in metric_columns:
                 metric_value = row.get(column)
-                if metric_value is None or (isinstance(metric_value, str) and metric_value.strip() == ""):
+                if (
+                    metric_value is None
+                    or pd.isna(metric_value)
+                    or (isinstance(metric_value, str) and metric_value.strip() == "")
+                ):
                     continue
 
                 record_type = _classify_metric(column)
@@ -459,7 +463,11 @@ def transform_county_ag_observations(
 
             for column in metric_columns:
                 value = row.get(column)
-                if value is None or (isinstance(value, str) and value.strip() == ""):
+                if (
+                    value is None
+                    or pd.isna(value)
+                    or (isinstance(value, str) and value.strip() == "")
+                ):
                     continue
 
                 record_type = _classify_metric(column)
