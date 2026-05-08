@@ -1,0 +1,43 @@
+"""Permissions: Roles and Grants
+
+Revision ID: 0002
+Revises: 0001
+Create Date: 2024-05-08 18:25:00.000000
+
+"""
+from typing import Sequence, Union
+from alembic import op
+
+# revision identifiers, used by Alembic.
+revision: str = '0002'
+down_revision: Union[str, Sequence[str], None] = '0001'
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def upgrade() -> None:
+    # Ensure biocirv_readonly role exists
+    op.execute(
+        "DO $$ BEGIN"
+        " CREATE ROLE biocirv_readonly WITH LOGIN;"
+        " EXCEPTION WHEN duplicate_object THEN NULL;"
+        " END $$"
+    )
+
+    for schema in ["public", "ca_biositing", "data_portal"]:
+        op.execute(f"GRANT USAGE ON SCHEMA {schema} TO biocirv_readonly")
+        op.execute(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO biocirv_readonly")
+        op.execute(
+            f"ALTER DEFAULT PRIVILEGES FOR ROLE biocirv_user IN SCHEMA {schema}"
+            " GRANT SELECT ON TABLES TO biocirv_readonly"
+        )
+
+
+def downgrade() -> None:
+    for schema in ["public", "ca_biositing", "data_portal"]:
+        op.execute(
+            f"ALTER DEFAULT PRIVILEGES FOR ROLE biocirv_user IN SCHEMA {schema}"
+            " REVOKE SELECT ON TABLES FROM biocirv_readonly"
+        )
+        op.execute(f"REVOKE ALL ON ALL TABLES IN SCHEMA {schema} FROM biocirv_readonly")
+        op.execute(f"REVOKE USAGE ON SCHEMA {schema} FROM biocirv_readonly")
