@@ -26,13 +26,13 @@ QUERIES = {
     "sample_market_join": (
         "SELECT umr.id AS market_id, anon.record_id AS obs_record_id, anon.price_avg, anon.price_unit "
         "FROM usda_market_record umr "
-        "LEFT JOIN (" 
+        "LEFT JOIN ("
         "  SELECT observation.record_id AS record_id, avg(observation.value) AS price_avg, min(observation.value) AS price_min, max(observation.value) AS price_max, unit.name AS price_unit "
         "  FROM observation "
         "  JOIN parameter ON observation.parameter_id = parameter.id "
         "  LEFT JOIN unit ON observation.unit_id = unit.id "
         "  WHERE observation.record_type = 'usda_market_record' AND lower(parameter.name) = 'price received' "
-        "  GROUP BY observation.record_id, unit.name" 
+        "  GROUP BY observation.record_id, unit.name"
         " ) AS anon ON CAST(umr.id AS VARCHAR) = anon.record_id "
         "LIMIT 50"
     ),
