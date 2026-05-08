@@ -24,20 +24,31 @@ def upgrade() -> None:
         " END $$"
     )
 
+    # We apply default privileges for both the standard app user and postgres
+    # to ensure coverage in both Cloud (biocirv_user) and local dev (often postgres).
     for schema in ["public", "ca_biositing", "data_portal"]:
         op.execute(f"GRANT USAGE ON SCHEMA {schema} TO biocirv_readonly")
         op.execute(f"GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO biocirv_readonly")
-        op.execute(
-            f"ALTER DEFAULT PRIVILEGES FOR ROLE biocirv_user IN SCHEMA {schema}"
-            " GRANT SELECT ON TABLES TO biocirv_readonly"
-        )
+
+        for owner in ["biocirv_user", "postgres"]:
+            op.execute(
+                f"DO $$ BEGIN "
+                f"  ALTER DEFAULT PRIVILEGES FOR ROLE {owner} IN SCHEMA {schema} "
+                f"  GRANT SELECT ON TABLES TO biocirv_readonly; "
+                f"EXCEPTION WHEN undefined_object THEN NULL; "
+                f"END $$"
+            )
 
 
 def downgrade() -> None:
     for schema in ["public", "ca_biositing", "data_portal"]:
-        op.execute(
-            f"ALTER DEFAULT PRIVILEGES FOR ROLE biocirv_user IN SCHEMA {schema}"
-            " REVOKE SELECT ON TABLES FROM biocirv_readonly"
-        )
+        for owner in ["biocirv_user", "postgres"]:
+            op.execute(
+                f"DO $$ BEGIN "
+                f"  ALTER DEFAULT PRIVILEGES FOR ROLE {owner} IN SCHEMA {schema} "
+                f"  REVOKE SELECT ON TABLES FROM biocirv_readonly; "
+                f"EXCEPTION WHEN undefined_object THEN NULL; "
+                f"END $$"
+            )
         op.execute(f"REVOKE ALL ON ALL TABLES IN SCHEMA {schema} FROM biocirv_readonly")
         op.execute(f"REVOKE USAGE ON SCHEMA {schema} FROM biocirv_readonly")
