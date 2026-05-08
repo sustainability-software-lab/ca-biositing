@@ -1,5 +1,5 @@
 -- Raw observations with null counts
-SELECT COUNT(*) AS total_count, 
+SELECT COUNT(*) AS total_count,
        SUM(CASE WHEN value IS NULL THEN 1 ELSE 0 END) AS null_values,
        SUM(CASE WHEN parameter_id IS NULL THEN 1 ELSE 0 END) AS null_params,
        SUM(CASE WHEN unit_id IS NULL THEN 1 ELSE 0 END) AS null_units,
@@ -8,7 +8,7 @@ FROM observation
 WHERE record_type = 'resource_production_record';
 
 -- The 11 NULL value rows - all columns
-SELECT id, record_id, record_type, value, parameter_id, unit_id, dataset_id, 
+SELECT id, record_id, record_type, value, parameter_id, unit_id, dataset_id,
        dimension_type_id, dimension_value, dimension_unit_id, note, created_at
 FROM observation
 WHERE record_type = 'resource_production_record'
@@ -16,7 +16,7 @@ WHERE record_type = 'resource_production_record'
 ORDER BY id;
 
 -- Sample of NON-NULL rows - all columns
-SELECT id, record_id, record_type, value, parameter_id, unit_id, dataset_id, 
+SELECT id, record_id, record_type, value, parameter_id, unit_id, dataset_id,
        dimension_type_id, dimension_value, dimension_unit_id, note, created_at
 FROM observation
 WHERE record_type = 'resource_production_record'

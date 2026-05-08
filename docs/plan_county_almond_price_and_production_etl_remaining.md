@@ -1,6 +1,7 @@
 # Plan: Almond NSJV ETL Remaining Issues
 
-**Status:** In progress  **Date:** May 7, 2026  **Scope:** Fix remaining issues only
+**Status:** In progress **Date:** May 7, 2026 **Scope:** Fix remaining issues
+only
 
 ---
 
@@ -8,11 +9,14 @@
 
 The almond_nsjv ETL is mostly working. Three issues remain:
 
-1. Observation table rejects inserts associated with `resource_production_record`.
+1. Observation table rejects inserts associated with
+   `resource_production_record`.
 2. `mv_biomass_pricing` is failing or not updating as expected.
-3. `mv_biomass_county_production` does not include new years from the almond_nsjv ETL.
+3. `mv_biomass_county_production` does not include new years from the
+   almond_nsjv ETL.
 
-This plan focuses on diagnosing and resolving these specific problems without changing the overall ETL design.
+This plan focuses on diagnosing and resolving these specific problems without
+changing the overall ETL design.
 
 ---
 
@@ -20,7 +24,8 @@ This plan focuses on diagnosing and resolving these specific problems without ch
 
 - Ensure observations for production records load successfully.
 - Restore/validate `mv_biomass_pricing` output.
-- Ensure `mv_biomass_county_production` reflects the new years of production data.
+- Ensure `mv_biomass_county_production` reflects the new years of production
+  data.
 
 ---
 
@@ -28,11 +33,14 @@ This plan focuses on diagnosing and resolving these specific problems without ch
 
 ### Likely Causes
 
-- Foreign key mismatch (e.g., `resource_production_record_id` missing or not linked correctly).
-- Wrong record type or missing required fields (year/resource/parameter/geoid/unit).
+- Foreign key mismatch (e.g., `resource_production_record_id` missing or not
+  linked correctly).
+- Wrong record type or missing required fields
+  (year/resource/parameter/geoid/unit).
 - Dataset/method mismatches or missing IDs for production dataset.
 - Unique constraint conflict due to natural key usage or duplicated rows.
-- Incorrect column set in the production observation payload (e.g., missing `record_id` or using the wrong record id column).
+- Incorrect column set in the production observation payload (e.g., missing
+  `record_id` or using the wrong record id column).
 
 ### Diagnostics
 
@@ -42,12 +50,15 @@ This plan focuses on diagnosing and resolving these specific problems without ch
   - `resource_id` (if used), `year` (if required)
   - record reference field used by the observation schema
 - Compare price vs production observation payloads to identify schema drift.
-- Inspect the exact database error message for the rejected inserts and map it to the constraint.
+- Inspect the exact database error message for the rejected inserts and map it
+  to the constraint.
 
 ### Fix Checklist
 
-- Verify load order: parameters -> production records -> production observations.
-- Align observation payload columns with schema expectations for production records.
+- Verify load order: parameters -> production records -> production
+  observations.
+- Align observation payload columns with schema expectations for production
+  records.
 - Ensure dataset/method IDs for production are present and correct.
 - Deduplicate on the natural key used by observation upserts.
 
@@ -69,8 +80,10 @@ This plan focuses on diagnosing and resolving these specific problems without ch
 
 ### Diagnostics
 
-- Confirm that price observations exist for the almond dataset with the expected parameter names and units.
-- Check view definition for hard-coded filters (dataset, method category, parameter names).
+- Confirm that price observations exist for the almond dataset with the expected
+  parameter names and units.
+- Check view definition for hard-coded filters (dataset, method category,
+  parameter names).
 - Run a manual refresh to confirm it is not simply stale.
 
 ### Fix Checklist
@@ -89,7 +102,8 @@ This plan focuses on diagnosing and resolving these specific problems without ch
 
 ### Likely Causes
 
-- New years not present in observations (upsert did not insert or they are filtered out).
+- New years not present in observations (upsert did not insert or they are
+  filtered out).
 - View filters limit years or datasets.
 - View has not been refreshed after a successful ETL run.
 
