@@ -1,29 +1,35 @@
 # Plan: Almond NSJV ETL Remaining Issues
 
-**Status:** In progress **Date:** May 7, 2026 **Scope:** Fix remaining issues
-only
+**Status:** Partially complete **Date:** May 7, 2026 **Scope:** Fix remaining
+issues only
 
 ---
 
 ## Current State
 
-The almond_nsjv ETL is mostly working. Three issues remain:
+The almond_nsjv ETL price pipeline is now working end to end for the biomass
+pricing materialized view. One issue has been resolved in this pass, while the
+other items remain as separate follow-up work:
 
 1. Observation table rejects inserts associated with
    `resource_production_record`.
-2. `mv_biomass_pricing` is failing or not updating as expected.
+2. `mv_biomass_pricing` county price rows were missing before this fix, but the
+   ETL now loads them successfully and the view is returning the expected
+   county-level results.
 3. `mv_biomass_county_production` does not include new years from the
    almond_nsjv ETL.
 
-This plan focuses on diagnosing and resolving these specific problems without
-changing the overall ETL design.
+This plan now records the price-side resolution and keeps the remaining
+follow-up items visible without changing the overall ETL design.
 
 ---
 
 ## Goals
 
 - Ensure observations for production records load successfully.
-- Restore/validate `mv_biomass_pricing` output.
+- Populate `price received` observations and their associated price records for
+  San Joaquin, Stanislaus, and Merced so `mv_biomass_pricing` can aggregate
+  county-specific rows. This is now complete.
 - Ensure `mv_biomass_county_production` reflects the new years of production
   data.
 
@@ -69,32 +75,71 @@ changing the overall ETL design.
 
 ---
 
-## Issue 2: `mv_biomass_pricing` not working
+## Issue 2: `mv_biomass_pricing` missing county price rows
+
+### Resolution
+
+The fix was implemented in the almond NSJV load path so the canonical
+`price received` parameter is created and resolved before observation insertion.
+That lets the county-specific price records from the cleaned almond sheet load
+through the polymorphic hourglass design and feed the materialized view.
+
+### What Changed
+
+- Added explicit creation of the `price received` parameter during almond load.
+- Preserved the existing `price production weighted average` parameter path.
+- Added a defensive alias so legacy misspellings still resolve to
+  `price received`.
+- Updated the regression test to confirm a county price observation is linked to
+  the inserted `resource_price_record`.
+
+### Validation
+
+- `pixi run pytest tests/pipeline/test_almond_nsjv_load.py`
+- Manual ETL rerun confirmed `mv_biomass_pricing` now shows the county-level
+  price rows.
 
 ### Likely Causes
 
-- View definition assumes columns or values not present in new almond data.
-- Missing price observations for required parameters or units.
-- Join conditions exclude new dataset or method.
-- View has not been refreshed after the ETL run.
+- The almond ETL is only populating the weighted-average price parameter and not
+  the county-specific `price received` observations from the cleaned almond
+  sheet.
+- `resource_price_record` rows exist, but their associated observations are not
+  being loaded for San Joaquin, Stanislaus, and Merced.
+- The view is aggregating correctly, but there is no county-level price signal
+  for it to roll up.
+- The materialized view may also be stale and need a refresh after ETL fixes.
 
 ### Diagnostics
 
-- Confirm that price observations exist for the almond dataset with the expected
-  parameter names and units.
-- Check view definition for hard-coded filters (dataset, method category,
-  parameter names).
-- Run a manual refresh to confirm it is not simply stale.
+- Confirm the cleaned almond source still contains county price columns for San
+  Joaquin, Stanislaus, and Merced.
+- Verify the transform emits `resource_price_record` payload rows for those
+  counties and the load step creates matching observations with parameter
+  `price received`.
+- Confirm the record/observation hourglass linkage resolves to the expected
+  `record_id` values.
+- Refresh the materialized view only after the base data is fixed.
 
 ### Fix Checklist
 
-- Align almond price parameter naming with view filters.
-- Ensure correct dataset and method IDs are used in price observations.
+- Keep the canonical parameter name as `price received` in both transform and
+  load paths.
+- Ensure county price columns from the original cleaned almond sheet are
+  normalized into `resource_price_record` rows for the three NSJV counties.
+- Ensure observations for those rows are written with the existing
+  `price received` parameter so the polymorphic hourglass design is populated
+  end to end.
 - Refresh the materialized view after a successful ETL run.
 
 ### Acceptance Criteria
 
-- `mv_biomass_pricing` returns rows for almond counties and years expected.
+- `mv_biomass_pricing` returns price_min, price_max, and price_avg for each of
+  San Joaquin, Stanislaus, and Merced, plus the NSJV weighted-average row.
+
+### Status
+
+Completed for the price MV path.
 
 ---
 
@@ -128,14 +173,18 @@ changing the overall ETL design.
 ## Suggested Debug Order
 
 1. Fix production observation load rejects (Issue 1).
-2. Re-run ETL and confirm base observations contain new years.
-3. Refresh materialized views.
-4. Validate `mv_biomass_pricing` and `mv_biomass_county_production`.
+2. Confirm the price MV remains correct on future ETL runs.
+3. Re-run ETL and confirm base observations contain the county price records.
+4. Refresh materialized views.
+5. Validate `mv_biomass_pricing` and `mv_biomass_county_production`.
 
 ---
 
 ## Done When
 
 - All three issues are resolved.
-- A rerun of the almond_nsjv ETL completes without rejected observation inserts.
+- `price received` observations exist for the county price rows and the NSJV
+  weighted-average row.
 - Both materialized views return rows for the updated almond data.
+- The load-path regression test passes and the price MV shows the county-level
+  almond rows after an ETL rerun.

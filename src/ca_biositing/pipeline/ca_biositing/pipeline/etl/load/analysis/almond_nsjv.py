@@ -30,6 +30,7 @@ ALMOND_METHOD_NAME = ALMOND_METHOD_CATEGORY_NAME
 ALMOND_PRICE_DATASET_NAME = "BEAM whitepaper county ag report almond prices"
 ALMOND_PRODUCTION_DATASET_NAME = "BEAM whitepaper county ag report almond production"
 ALMOND_PRICE_PARAMETER_NAME = "price received"
+ALMOND_PRICE_PARAMETER_DESCRIPTION = "Price received"
 ALMOND_WEIGHTED_AVERAGE_PARAMETER_NAME = "price production weighted average"
 ALMOND_WEIGHTED_AVERAGE_PARAMETER_DESCRIPTION = "Price production weighted average"
 
@@ -354,6 +355,11 @@ def _ensure_weighted_average_parameter(
                     unit_id = candidate_unit_id
                     break
 
+    if unit_id is None:
+        existing_price_received = _find_parameter(session, ALMOND_PRICE_PARAMETER_NAME)
+        if existing_price_received is not None:
+            unit_id = getattr(existing_price_received, "standard_unit_id", None)
+
     now = datetime.now(timezone.utc)
     session.add(
         Parameter(
@@ -361,6 +367,56 @@ def _ensure_weighted_average_parameter(
             description=ALMOND_WEIGHTED_AVERAGE_PARAMETER_DESCRIPTION,
             standard_unit_id=unit_id,
             calculated=True,
+            created_at=now,
+            updated_at=now,
+            etl_run_id=etl_run_id,
+            lineage_group_id=lineage_group_id,
+        )
+    )
+    return True
+
+
+def _ensure_price_received_parameter(
+    session: Session,
+    parameter_df: Optional[pd.DataFrame],
+    etl_run_id: Any,
+    lineage_group_id: Any,
+) -> bool:
+    from ca_biositing.datamodels.models import Parameter
+
+    existing = _find_parameter(session, ALMOND_PRICE_PARAMETER_NAME)
+    if existing is not None:
+        return False
+
+    unit_id = None
+    if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty:
+        price_rows = parameter_df[
+            parameter_df["name"].astype(str).str.strip().str.lower() == ALMOND_PRICE_PARAMETER_NAME
+        ]
+        if not price_rows.empty:
+            unit_id = _clean_value(price_rows.iloc[0].get("standard_unit_id"))
+
+        if unit_id is None:
+            weighted_rows = parameter_df[
+                parameter_df["name"].astype(str).str.strip().str.lower() == ALMOND_WEIGHTED_AVERAGE_PARAMETER_NAME
+            ]
+            if not weighted_rows.empty:
+                unit_id = _clean_value(weighted_rows.iloc[0].get("standard_unit_id"))
+
+        if unit_id is None:
+            for _, row in parameter_df.iterrows():
+                candidate_unit_id = _clean_value(row.get("standard_unit_id"))
+                if candidate_unit_id is not None:
+                    unit_id = candidate_unit_id
+                    break
+
+    now = datetime.now(timezone.utc)
+    session.add(
+        Parameter(
+            name=ALMOND_PRICE_PARAMETER_NAME,
+            description=ALMOND_PRICE_PARAMETER_DESCRIPTION,
+            standard_unit_id=unit_id,
+            calculated=False,
             created_at=now,
             updated_at=now,
             etl_run_id=etl_run_id,
@@ -636,6 +692,14 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                             counts["parameter"] += 1
                 else:
                     logger.info("No parameter payload found for almond load.")
+
+                if _ensure_price_received_parameter(
+                    session,
+                    parameter_df=parameter_df,
+                    etl_run_id=(_clean_value(parameter_df.iloc[0]["etl_run_id"]) if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty and "etl_run_id" in parameter_df.columns else None),
+                    lineage_group_id=(_clean_value(parameter_df.iloc[0]["lineage_group_id"]) if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty and "lineage_group_id" in parameter_df.columns else None),
+                ):
+                    counts["parameter"] += 1
 
                 if _ensure_weighted_average_parameter(
                     session,
