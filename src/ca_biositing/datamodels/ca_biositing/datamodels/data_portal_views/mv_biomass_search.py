@@ -188,7 +188,9 @@ resource_tags_v2 = select(
      ).label("tags")
  ).select_from(resource_metrics_v2).join(thresholds_v2, literal(True)).subquery()
 
-# Aggregated volume from resource production records + observations
+# Aggregated volume from resource production records + observations 
+# Value is sum cross all NSJV counties for the most recent year of data for each resource
+# (excluding "NSJV" itself which is an outlier and not mappable to a single geoid)
 production_obs = select(
     cast(Observation.record_id, Integer).label("production_record_id"),
     Observation.value.label("production_value"),
@@ -200,6 +202,14 @@ production_obs = select(
      func.lower(Parameter.name).like("%production%"),
  )).subquery()
 
+latest_production_year = select(
+    ResourceProductionRecord.resource_id.label("resource_id"),
+    func.max(ResourceProductionRecord.report_date).label("latest_report_date"),
+).select_from(ResourceProductionRecord)\
+ .join(production_obs, production_obs.c.production_record_id == ResourceProductionRecord.id)\
+ .where(ResourceProductionRecord.geoid != "NSJV")\
+ .group_by(ResourceProductionRecord.resource_id).subquery()
+
 agg_vol = select(
      ResourceProductionRecord.resource_id,
      func.sum(production_obs.c.production_value).label("total_annual_volume"),
@@ -207,7 +217,12 @@ agg_vol = select(
      func.max(Unit.name).label("volume_unit")
  ).select_from(ResourceProductionRecord)\
   .join(production_obs, production_obs.c.production_record_id == ResourceProductionRecord.id)\
+  .join(latest_production_year, and_(
+      latest_production_year.c.resource_id == ResourceProductionRecord.resource_id,
+      latest_production_year.c.latest_report_date == ResourceProductionRecord.report_date,
+  ))\
   .outerjoin(Unit, production_obs.c.unit_id == Unit.id)\
+  .where(ResourceProductionRecord.geoid != "NSJV")\
   .group_by(ResourceProductionRecord.resource_id).subquery()
 
 # Biomass availability aggregation
