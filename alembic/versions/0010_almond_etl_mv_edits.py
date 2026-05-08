@@ -5,18 +5,54 @@ Revises: 55f93e3a6237
 Create Date: 2026-05-04 00:00:00.000000
 """
 
+from typing import Sequence, Union
+
 from alembic import op
+from sqlalchemy.dialects.postgresql import dialect as pg_dialect
+
+from ca_biositing.datamodels.data_portal_views import mv_biomass_search
 
 
 # revision identifiers, used by Alembic.
-revision = "0010_almond_etl_mv_edits"
+revision: str = "0010_almond_etl_mv_edits"
 down_revision = "55f93e3a6237"
-branch_labels = None
-depends_on = None
+branch_labels: Union[str, Sequence[str], None] = None
+depends_on: Union[str, Sequence[str], None] = None
+
+
+def _compile_view_sql(view_query) -> str:
+    compiled = view_query.compile(
+        dialect=pg_dialect(), compile_kwargs={"literal_binds": True}
+    )
+    return str(compiled)
 
 
 def upgrade() -> None:
     """Almond ETL materialized view edits - deferred for investigation."""
+    # Recreate search MV so volume fields derive from resource_production_record observations.
+    op.execute("DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_search CASCADE")
+    op.execute(
+        f"CREATE MATERIALIZED VIEW data_portal.mv_biomass_search AS {_compile_view_sql(mv_biomass_search)}"
+    )
+    op.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_mv_biomass_search_id ON data_portal.mv_biomass_search (id)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mv_biomass_search_search_vector ON data_portal.mv_biomass_search USING GIN (search_vector)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mv_biomass_search_name_trgm ON data_portal.mv_biomass_search USING GIN (name gin_trgm_ops)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mv_biomass_search_resource_class ON data_portal.mv_biomass_search (resource_class)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mv_biomass_search_resource_subclass ON data_portal.mv_biomass_search (resource_subclass)"
+    )
+    op.execute(
+        "CREATE INDEX IF NOT EXISTS idx_mv_biomass_search_primary_product ON data_portal.mv_biomass_search (primary_product)"
+    )
+
     op.execute("""
     DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_pricing;
 
@@ -92,6 +128,13 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Almond ETL materialized view edits - deferred for investigation."""
     op.execute("""
+    DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_primary_product;
+    DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_resource_subclass;
+    DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_resource_class;
+    DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_name_trgm;
+    DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_search_vector;
+    DROP INDEX IF EXISTS data_portal.idx_mv_biomass_search_id;
+    DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_search;
     DROP MATERIALIZED VIEW IF EXISTS data_portal.mv_biomass_pricing;
     DROP INDEX IF EXISTS data_portal.idx_mv_biomass_pricing_id;
     """)

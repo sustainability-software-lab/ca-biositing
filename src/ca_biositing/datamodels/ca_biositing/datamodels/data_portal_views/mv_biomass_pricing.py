@@ -42,7 +42,7 @@ pricing_obs = select(
     Unit.name.label("price_unit")
 ).join(Parameter, Observation.parameter_id == Parameter.id)\
  .outerjoin(Unit, Observation.unit_id == Unit.id)\
- .where(and_(func.lower(Parameter.name).in_(price_param_names), Observation.value != None, Observation.record_type.in_("usda_market_record", "resource_price_record")))\
+ .where(and_(func.lower(Parameter.name).in_(price_param_names), Observation.value != None, Observation.record_type.in_(["usda_market_record", "resource_price_record"])))\
  .group_by(Observation.record_id, Unit.name).subquery()
 
 # USDA-derived rows but only where the USDA commodity maps to a Resource (exclude primary-ag-only commodities)

@@ -13,11 +13,11 @@ from sqlalchemy.dialects.postgresql import array as pg_array
 from sqlalchemy.orm import aliased
 
 from ca_biositing.datamodels.models.resource_information.resource import Resource, ResourceClass, ResourceSubclass, ResourceMorphology
+from ca_biositing.datamodels.models.resource_information.resource_production_record import ResourceProductionRecord
 from ca_biositing.datamodels.models.resource_information.primary_ag_product import PrimaryAgProduct
 from ca_biositing.datamodels.models.resource_information.resource_transport_record import ResourceTransportRecord
 from ca_biositing.datamodels.models.resource_information.resource_storage_record import ResourceStorageRecord
 from ca_biositing.datamodels.models.external_data.resource_usda_commodity_map import ResourceUsdaCommodityMap
-from ca_biositing.datamodels.models.external_data.billion_ton import BillionTon2023Record
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
 from ca_biositing.datamodels.models.methods_parameters_units.unit import Unit
@@ -188,14 +188,27 @@ resource_tags_v2 = select(
      ).label("tags")
  ).select_from(resource_metrics_v2).join(thresholds_v2, literal(True)).subquery()
 
-# Aggregated volume from Billion Ton
+# Aggregated volume from resource production records + observations
+production_obs = select(
+    cast(Observation.record_id, Integer).label("production_record_id"),
+    Observation.value.label("production_value"),
+    Observation.unit_id.label("unit_id"),
+).join(Parameter, Observation.parameter_id == Parameter.id)\
+ .where(and_(
+     Observation.record_type == "resource_production_record",
+     Observation.value.is_not(None),
+     func.lower(Parameter.name).like("%production%"),
+ )).subquery()
+
 agg_vol = select(
-     BillionTon2023Record.resource_id,
-     func.sum(BillionTon2023Record.production).label("total_annual_volume"),
-     func.count(func.distinct(BillionTon2023Record.geoid)).label("county_count"),
+     ResourceProductionRecord.resource_id,
+     func.sum(production_obs.c.production_value).label("total_annual_volume"),
+     func.count(func.distinct(ResourceProductionRecord.geoid)).label("county_count"),
      func.max(Unit.name).label("volume_unit")
- ).join(Unit, BillionTon2023Record.production_unit_id == Unit.id)\
-  .group_by(BillionTon2023Record.resource_id).subquery()
+ ).select_from(ResourceProductionRecord)\
+  .join(production_obs, production_obs.c.production_record_id == ResourceProductionRecord.id)\
+  .outerjoin(Unit, production_obs.c.unit_id == Unit.id)\
+  .group_by(ResourceProductionRecord.resource_id).subquery()
 
 # Biomass availability aggregation
 from .mv_biomass_availability import mv_biomass_availability

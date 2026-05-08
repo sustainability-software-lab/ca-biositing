@@ -43,3 +43,33 @@ DELETE FROM observation
 WHERE record_type = 'resource_production_record'
   AND value IS NULL
   ;
+
+  select
+  id,
+  name,
+  resource_code,
+  total_annual_volume,
+  county_count,
+  volume_unit,
+  has_volume_data
+from data_portal.mv_biomass_search
+where total_annual_volume is not null
+order by total_annual_volume desc nulls last
+limit 20;
+
+select
+  r.name,
+  count(*) as production_rows,
+  count(distinct pr.geoid) as county_count,
+  sum(o.value) as total_volume,
+  max(u.name) as unit
+from resource_production_record pr
+join resource r on r.id = pr.resource_id
+left join observation o
+  on o.record_id = pr.id::text
+ and o.record_type = 'resource_production_record'
+left join parameter p on p.id = o.parameter_id
+left join unit u on u.id = o.unit_id
+where lower(p.name) like '%production%'
+group by r.name
+order by total_volume desc nulls last;
