@@ -40,6 +40,7 @@ _COUNTY_PREFIXES = [
 
 _PRICE_TOKEN = "price"
 _PRODUCTION_TOKEN = "production"
+_ALMOND_PRICE_PARAMETER_NAME = "price received"
 
 
 def _get_logger():
@@ -69,6 +70,13 @@ def _normalize_parameter_name(value: Any) -> str:
     text = re.sub(r"[\s_-]+", "_", text)
     text = re.sub(r"_+", "_", text)
     return text
+
+
+def _canonicalize_almond_parameter_name(value: Any) -> str:
+    normalized = _normalize_parameter_name(value)
+    if normalized == "price":
+        return _ALMOND_PRICE_PARAMETER_NAME
+    return normalized
 
 
 def _first_existing_column(df: pd.DataFrame, candidates: list[str]) -> Optional[str]:
@@ -242,7 +250,7 @@ def transform_county_ag_parameters(
         logger.warning("Expected parameter name column not found in parameters sheet.")
         return pd.DataFrame()
 
-    cleaned["name"] = cleaned["name"].apply(_normalize_text)
+    cleaned["name"] = cleaned["name"].apply(_canonicalize_almond_parameter_name)
     cleaned = cleaned[cleaned["name"].astype(str).str.strip() != ""].copy()
     cleaned["calculated"] = cleaned["name"].str.contains("calculated|estimate", case=False, na=False)
     cleaned["parameter_dedupe_key"] = cleaned["name"].astype(str).str.strip().str.lower()
@@ -474,7 +482,7 @@ def transform_county_ag_observations(
                 if record_type is None:
                     continue
 
-                parameter_name = _normalize_text(_parse_county_header(column)[1] or column)
+                parameter_name = _canonicalize_almond_parameter_name(_parse_county_header(column)[1] or column)
                 parameter_id = parameter_lookup.get(parameter_name)
 
                 county_name_normalized, _ = _parse_county_header(column)

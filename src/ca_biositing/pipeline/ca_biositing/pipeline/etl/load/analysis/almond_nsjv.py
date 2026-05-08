@@ -29,7 +29,7 @@ ALMOND_METHOD_CATEGORY_NAME = "manual extraction of values from PDF report"
 ALMOND_METHOD_NAME = ALMOND_METHOD_CATEGORY_NAME
 ALMOND_PRICE_DATASET_NAME = "BEAM whitepaper county ag report almond prices"
 ALMOND_PRODUCTION_DATASET_NAME = "BEAM whitepaper county ag report almond production"
-ALMOND_PRICE_PARAMETER_NAME = "price"
+ALMOND_PRICE_PARAMETER_NAME = "price received"
 ALMOND_WEIGHTED_AVERAGE_PARAMETER_NAME = "price production weighted average"
 ALMOND_WEIGHTED_AVERAGE_PARAMETER_DESCRIPTION = "Price production weighted average"
 
@@ -280,8 +280,8 @@ def _resolve_parameter_by_name(session: Session, name: Any) -> Any:
     alias_map = {
         "weighted average price": "price production weighted average",
         "price production weighted average": "weighted average price",
-        "price": "price_avg",
-        "price_avg": "price",
+        "price": "price received",
+        "price_avg": "price received",
     }
     alias_name = alias_map.get(normalized_name)
     if alias_name is None:
@@ -506,7 +506,7 @@ def _upsert_observation(
 
     for existing in session.exec(select(Observation)).all():
         if (
-            getattr(existing, "record_id", None) == record_id
+            str(getattr(existing, "record_id", None)) == str(record_id)
             and getattr(existing, "record_type", None) == record_type
             and getattr(existing, "parameter_id", None) == parameter_id
             and getattr(existing, "unit_id", None) == unit_id
@@ -521,7 +521,7 @@ def _upsert_observation(
 
     session.add(
         Observation(
-            record_id=record_id,
+            record_id=str(record_id),
             dataset_id=dataset_id,
             record_type=record_type,
             parameter_id=parameter_id,
