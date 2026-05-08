@@ -188,7 +188,7 @@ resource_tags_v2 = select(
      ).label("tags")
  ).select_from(resource_metrics_v2).join(thresholds_v2, literal(True)).subquery()
 
-# Aggregated volume from resource production records + observations 
+# Aggregated volume from resource production records + observations
 # Value is sum cross all NSJV counties for the most recent year of data for each resource
 # (excluding "NSJV" itself which is an outlier and not mappable to a single geoid)
 production_obs = select(
