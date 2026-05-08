@@ -9,7 +9,7 @@ Required index:
     CREATE UNIQUE INDEX idx_mv_biomass_fermentation_id ON data_portal.mv_biomass_fermentation (id)
 """
 
-from sqlalchemy import select, func, and_, or_, case
+from sqlalchemy import select, func, and_, or_, case, cast, Numeric
 from sqlalchemy.orm import aliased
 
 from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
@@ -121,15 +121,14 @@ mv_biomass_fermentation = select(
          get_resource_filter(Resource),
          # Sugar consumption validation with ~100% tolerance
          or_(
-             and_(
-                 fermentation_qc_stats.c.avg_sugar_cons.is_not(None),
-                 fermentation_qc_stats.c.avg_sugart0.is_not(None),
-                 fermentation_qc_stats.c.avg_sugart0 != 0
-             ).op("IS NOT TRUE")(True), # SQLAlchemy way to handle potential NULLs in or_ logic if needed, but and_ handles it
-             # Simple expression: abs(sugar_cons - calc_cons) <= 100
+             # If required metrics are missing or sugart0 is 0, we bypass validation
+             fermentation_qc_stats.c.avg_sugar_cons.is_(None),
+             fermentation_qc_stats.c.avg_sugart0.is_(None),
+             fermentation_qc_stats.c.avg_sugart0 == 0,
+             # Otherwise, validate sugar consumption consistency (abs error <= 100%)
              func.abs(
                  fermentation_qc_stats.c.avg_sugar_cons -
-                 ((fermentation_qc_stats.c.avg_sugart0 - fermentation_qc_stats.c.avg_sugarteof) / fermentation_qc_stats.c.avg_sugart0) * 100
+                 ((fermentation_qc_stats.c.avg_sugart0 - fermentation_qc_stats.c.avg_sugarteof) / cast(fermentation_qc_stats.c.avg_sugart0, Numeric)) * 100
              ) <= 100
          )
      )
