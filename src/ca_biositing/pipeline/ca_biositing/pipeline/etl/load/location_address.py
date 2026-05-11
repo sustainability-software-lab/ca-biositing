@@ -43,6 +43,23 @@ def load_location_address(df: pd.DataFrame):
             places = session.execute(select(Place.geoid, Place.county_name)).all()
             county_to_geoid = {p.county_name.lower(): p.geoid for p in places if p.county_name}
 
+            # First pass: collect all geoids that will be referenced
+            geoids_to_use = set()
+            for record in records:
+                raw_loc = record.get('sampling_location')
+                geography_id = get_geoid(raw_loc, county_to_geoid)
+                geoids_to_use.add(geography_id)
+
+            # Ensure all referenced Place records exist before inserting addresses
+            existing_geoids = {p.geoid for p in places}
+            for geoid in geoids_to_use:
+                if geoid not in existing_geoids:
+                    # Create Place record with minimal metadata (geoid only)
+                    place_data = {"geoid": geoid}
+                    session.add(Place(**place_data))
+                    logger.info(f"Created Place record for geoid={geoid}")
+            session.flush()
+
             # Fetch all existing LocationAddress records for bulk lookup
             existing_addresses = session.execute(select(LocationAddress)).scalars().all()
             addr_map = {}

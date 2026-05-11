@@ -18,7 +18,7 @@ AVAILABLE_FLOWS = {
     "usda_etl": "ca_biositing.pipeline.flows.usda_etl.usda_etl_flow",
     "landiq": "ca_biositing.pipeline.flows.landiq_etl.landiq_etl_flow",
     "billion_ton": "ca_biositing.pipeline.flows.billion_ton_etl.billion_ton_etl_flow",
-    "field_sample": "ca_biositing.pipeline.flows.field_sample_etl.field_sample_etl_flow",
+    #"field_sample": "ca_biositing.pipeline.flows.field_sample_etl.field_sample_etl_flow",
     #"prepared_sample": "ca_biositing.pipeline.flows.prepared_sample_etl.prepared_sample_etl_flow",
     "thermochem": "ca_biositing.pipeline.flows.thermochem_etl.thermochem_etl_flow",
 }
