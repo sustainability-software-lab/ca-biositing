@@ -1,8 +1,8 @@
 """Recreate all 9 materialized views with fixes.
 
-Revision ID: 0100_mv_view_fixes
-Revises: 55f93e3a6237
-Create Date: 2026-05-05
+Revision ID: 0005
+Revises: 0004
+Create Date: 2026-05-10
 
 This migration:
 1. Drops all indexes on the 9 data portal materialized views
@@ -23,8 +23,8 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = "0100_mv_view_fixes"
-down_revision: Union[str, Sequence[str], None] = "55f93e3a6237"
+revision: str = "0005"
+down_revision: Union[str, Sequence[str], None] = "0004"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
