@@ -131,7 +131,7 @@ mv_biomass_composition = select(
          func.coalesce(all_measurements.c.geoid, "") == func.coalesce(qc_analysis_stats.c.geoid, ""),
          all_measurements.c.analysis_type == qc_analysis_stats.c.analysis_type
      )
- )\
+  )\
  .where(
      and_(
          get_resource_filter(Resource),
@@ -139,14 +139,14 @@ mv_biomass_composition = select(
              all_measurements.c.analysis_type != "proximate",
              and_(
                  qc_analysis_stats.c.proximate_sum >= 95,
-                 qc_analysis_stats.c.proximate_sum <= 100
+                 qc_analysis_stats.c.proximate_sum <= 105
              )
          ),
          or_(
              all_measurements.c.analysis_type != "compositional",
              and_(
                  qc_analysis_stats.c.compositional_sum >= 40,
-                 qc_analysis_stats.c.compositional_sum <= 100
+                 qc_analysis_stats.c.compositional_sum <= 105
              )
          )
      )
