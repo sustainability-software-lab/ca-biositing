@@ -11,8 +11,9 @@ Required index:
     CREATE UNIQUE INDEX idx_mv_biomass_gasification_id ON data_portal.mv_biomass_gasification (id)
 """
 
-from sqlalchemy import select, func
+from sqlalchemy import select, func, and_
 
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
@@ -46,7 +47,12 @@ mv_biomass_gasification = select(
  .join(Observation, func.lower(Observation.record_id) == func.lower(GasificationRecord.record_id))\
  .join(Parameter, Observation.parameter_id == Parameter.id)\
  .outerjoin(Unit, Observation.unit_id == Unit.id)\
- .where(GasificationRecord.qc_pass != "fail")\
+ .where(
+     and_(
+         GasificationRecord.qc_pass != "fail",
+         get_resource_filter(Resource)
+     )
+ )\
  .group_by(
      GasificationRecord.resource_id,
      Resource.name,

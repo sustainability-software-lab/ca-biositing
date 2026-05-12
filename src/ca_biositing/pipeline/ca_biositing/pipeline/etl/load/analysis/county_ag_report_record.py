@@ -37,6 +37,7 @@ def load_county_ag_report_records(df: pd.DataFrame):
     try:
         # CRITICAL: Lazy import models inside the task to avoid Docker import hangs
         from ca_biositing.datamodels.models.external_data import CountyAgReportRecord
+        from ca_biositing.datamodels.models.places.place import Place
 
         now = datetime.now(timezone.utc)
 
@@ -61,6 +62,29 @@ def load_county_ag_report_records(df: pd.DataFrame):
         engine = get_engine()
         with engine.connect() as conn:
             with Session(bind=conn) as session:
+                # 1. Ensure referenced Place records exist before inserting records.
+                # Place is a reference table; we ensure the FK constraint is satisfied.
+                geoids = {r['geoid'] for r in records if r.get('geoid')}
+                if geoids:
+                    from sqlalchemy import select
+                    existing_geoids = {
+                        g[0] for g in session.execute(select(Place.geoid).where(Place.geoid.in_(geoids))).all()
+                    }
+                    missing_geoids = geoids - existing_geoids
+
+                    if missing_geoids:
+                        logger.info(f"Creating {len(missing_geoids)} missing Place records...")
+                        for geoid in missing_geoids:
+                            # Fallback: parse GEOID into state/county FIPS
+                            place_data = {
+                                "geoid": geoid,
+                                "state_fips": geoid[:2] if len(geoid) >= 2 else None,
+                                "county_fips": geoid[2:] if len(geoid) >= 5 else None,
+                                "state_name": "CALIFORNIA" if geoid.startswith("06") else None,
+                            }
+                            session.add(Place(**place_data))
+                        session.flush()
+
                 success_count = 0
                 for i, record in enumerate(records):
                     if i > 0 and i % 500 == 0:
