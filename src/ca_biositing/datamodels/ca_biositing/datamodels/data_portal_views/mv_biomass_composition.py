@@ -12,7 +12,12 @@ Required index:
     CREATE UNIQUE INDEX idx_mv_biomass_composition_id ON data_portal.mv_biomass_composition (id)
 """
 
-from sqlalchemy import select, func, union_all, literal
+from sqlalchemy import select, func, union_all, literal, case, and_, or_
+from ca_biositing.datamodels.data_portal_views.common import (
+    get_resource_filter,
+    get_ultimate_filter,
+    get_icp_filter
+)
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
@@ -38,7 +43,10 @@ def get_composition_query(model, analysis_type):
     return select(
         model.resource_id,
         literal(analysis_type).label("analysis_type"),
-        Parameter.name.label("parameter_name"),
+        case(
+            (Parameter.name == "ash", "ash solids"),
+            else_=Parameter.name
+        ).label("parameter_name"),
         Observation.value.label("value"),
         Unit.name.label("unit"),
         LocationAddress.geography_id.label("geoid")
@@ -48,7 +56,13 @@ def get_composition_query(model, analysis_type):
      .outerjoin(PreparedSample, model.prepared_sample_id == PreparedSample.id)\
      .outerjoin(FieldSample, PreparedSample.field_sample_id == FieldSample.id)\
      .outerjoin(LocationAddress, FieldSample.sampling_location_id == LocationAddress.id)\
-     .where(model.qc_pass != "fail")
+     .where(
+         and_(
+             model.qc_pass != "fail",
+             get_ultimate_filter(literal(analysis_type), Parameter.name),
+             get_icp_filter(literal(analysis_type), Unit.name)
+         )
+     )
 
 
 comp_queries = [
@@ -64,6 +78,34 @@ comp_queries = [
 ]
 
 all_measurements = union_all(*comp_queries).subquery()
+
+# QC Analysis Filtering: Calculate sums per (resource, geoid, analysis_type)
+# to apply proximate and compositional range constraints.
+qc_analysis_stats = select(
+    all_measurements.c.resource_id,
+    all_measurements.c.geoid,
+    all_measurements.c.analysis_type,
+    (
+        func.coalesce(func.avg(case((all_measurements.c.parameter_name == "moisture", all_measurements.c.value))), 0) +
+        func.coalesce(func.avg(case((all_measurements.c.parameter_name == "ash solids", all_measurements.c.value))), 0) +
+        func.coalesce(
+            func.avg(case((all_measurements.c.parameter_name == "volatile solids", all_measurements.c.value))),
+            100 - func.coalesce(func.avg(case((all_measurements.c.parameter_name == "fixed carbon", all_measurements.c.value))), 0)
+        )
+    ).label("proximate_sum"),
+    (
+        func.coalesce(func.avg(case((all_measurements.c.parameter_name == "glucan", all_measurements.c.value))), 0) +
+        func.coalesce(func.avg(case((all_measurements.c.parameter_name == "xylan", all_measurements.c.value))), 0) +
+        func.coalesce(
+            func.avg(case((all_measurements.c.parameter_name == "lignin", all_measurements.c.value))),
+            func.avg(case((all_measurements.c.parameter_name == "lignin+", all_measurements.c.value)))
+        )
+    ).label("compositional_sum")
+).group_by(
+    all_measurements.c.resource_id,
+    all_measurements.c.geoid,
+    all_measurements.c.analysis_type
+).subquery()
 
 mv_biomass_composition = select(
     func.row_number().over(order_by=(all_measurements.c.resource_id, all_measurements.c.geoid, all_measurements.c.analysis_type, all_measurements.c.parameter_name, all_measurements.c.unit)).label("id"),
@@ -82,6 +124,33 @@ mv_biomass_composition = select(
 ).select_from(all_measurements)\
  .join(Resource, all_measurements.c.resource_id == Resource.id)\
  .outerjoin(Place, all_measurements.c.geoid == Place.geoid)\
+ .join(
+     qc_analysis_stats,
+     and_(
+         all_measurements.c.resource_id == qc_analysis_stats.c.resource_id,
+         func.coalesce(all_measurements.c.geoid, "") == func.coalesce(qc_analysis_stats.c.geoid, ""),
+         all_measurements.c.analysis_type == qc_analysis_stats.c.analysis_type
+     )
+  )\
+ .where(
+     and_(
+         get_resource_filter(Resource),
+         or_(
+             all_measurements.c.analysis_type != "proximate",
+             and_(
+                 qc_analysis_stats.c.proximate_sum >= 95,
+                 qc_analysis_stats.c.proximate_sum <= 105
+             )
+         ),
+         or_(
+             all_measurements.c.analysis_type != "compositional",
+             and_(
+                 qc_analysis_stats.c.compositional_sum >= 40,
+                 qc_analysis_stats.c.compositional_sum <= 105
+             )
+         )
+     )
+ )\
  .group_by(
      all_measurements.c.resource_id,
      Resource.name,

@@ -1,0 +1,3124 @@
+{
+  "metadata": {
+    "timestamp": "2026-05-05T13:25:14.347965",
+    "environment": "local",
+    "project": "ca-biositing",
+    "database": "localhost:5432"
+  },
+  "modules": {
+    "common_quality": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": []
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "usda_census_record",
+              "record_id": "1",
+              "parameter": "area bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "1",
+              "parameter": "area bearing & non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "1",
+              "parameter": "area non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "1",
+              "parameter": "production",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "1",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "10",
+              "parameter": "area bearing & non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "10",
+              "parameter": "production",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "10",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "100",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "100",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "101",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "101",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "102",
+              "parameter": "area bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "102",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "103",
+              "parameter": "area bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "103",
+              "parameter": "area bearing & non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "103",
+              "parameter": "area non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "103",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "104",
+              "parameter": "area bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "104",
+              "parameter": "area bearing & non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "104",
+              "parameter": "area non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "104",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "105",
+              "parameter": "area bearing & non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "105",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "106",
+              "parameter": "area bearing & non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "106",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "107",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "107",
+              "parameter": "sales",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "107",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "108",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "108",
+              "parameter": "sales",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "108",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "109",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "109",
+              "parameter": "sales",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "109",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "11",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "11",
+              "parameter": "production",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "11",
+              "parameter": "sales",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "11",
+              "parameter": "production",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "11",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "110",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "110",
+              "parameter": "sales",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "110",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "111",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "111",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "112",
+              "parameter": "area harvested",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_survey_record",
+              "record_id": "112",
+              "parameter": "yield",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "113",
+              "parameter": "area bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "113",
+              "parameter": "area bearing & non-bearing",
+              "observation_count": 2
+            },
+            {
+              "record_type": "usda_census_record",
+              "record_id": "113",
+              "parameter": "area non-bearing",
+              "observation_count": 2
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "parameter": "area bearing",
+              "unique_units": 2,
+              "units": "acres, operations"
+            },
+            {
+              "parameter": "area bearing & non-bearing",
+              "unique_units": 2,
+              "units": "acres, operations"
+            },
+            {
+              "parameter": "area harvested",
+              "unique_units": 2,
+              "units": "acres, operations"
+            },
+            {
+              "parameter": "area non-bearing",
+              "unique_units": 2,
+              "units": "acres, operations"
+            },
+            {
+              "parameter": "ash",
+              "unique_units": 2,
+              "units": "g, % total weight"
+            },
+            {
+              "parameter": "ca",
+              "unique_units": 2,
+              "units": "pc, ppm"
+            },
+            {
+              "parameter": "k",
+              "unique_units": 2,
+              "units": "pc, ppm"
+            },
+            {
+              "parameter": "mg",
+              "unique_units": 2,
+              "units": "pc, ppm"
+            },
+            {
+              "parameter": "p",
+              "unique_units": 2,
+              "units": "pc, ppm"
+            },
+            {
+              "parameter": "production",
+              "unique_units": 5,
+              "units": "480 lb bales, bales, bu, cwt, tons"
+            },
+            {
+              "parameter": "sales",
+              "unique_units": 2,
+              "units": "$, operations"
+            },
+            {
+              "parameter": "yield",
+              "unique_units": 5,
+              "units": "bu / acre, bu / net planted acre, lb / acre, lb / net planted acre, tons / acre"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "type": "proximate",
+              "fail_count": 111
+            },
+            {
+              "type": "ultimate",
+              "fail_count": 3
+            },
+            {
+              "type": "compositional",
+              "fail_count": 0
+            },
+            {
+              "type": "icp",
+              "fail_count": 168
+            },
+            {
+              "type": "fermentation",
+              "fail_count": 285
+            }
+          ]
+        }
+      ]
+    },
+    "compositional": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "compositional",
+              "total_records": 968,
+              "qc_pass_count": 737,
+              "qc_fail_count": 0,
+              "qc_null_count": 231
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "compositional",
+              "total_qc_non_fail": 737,
+              "analyst_filled": 390,
+              "analyst_pct": "52.9",
+              "method_filled": 737,
+              "method_pct": "100.0",
+              "raw_data_filled": 284,
+              "raw_data_pct": "38.5",
+              "experiment_filled": 0,
+              "experiment_pct": "0.0",
+              "dataset_filled": 737,
+              "dataset_pct": "100.0"
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "compositional",
+              "unique_prepared_samples": 47,
+              "unique_resources": 25,
+              "unique_experiments": 0,
+              "unique_field_samples": 47,
+              "unique_primary_ag_products": 12,
+              "lineage_integrity_pct": "25.5"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "parameter": "xylan",
+              "obs_count": 144,
+              "unit_count": 1,
+              "units_used": "% dry weight",
+              "records_with_param": 144,
+              "record_coverage_pct": "19.5"
+            },
+            {
+              "parameter": "xylose",
+              "obs_count": 144,
+              "unit_count": 1,
+              "units_used": "% dry weight",
+              "records_with_param": 144,
+              "record_coverage_pct": "19.5"
+            },
+            {
+              "parameter": "glucan",
+              "obs_count": 144,
+              "unit_count": 1,
+              "units_used": "% dry weight",
+              "records_with_param": 144,
+              "record_coverage_pct": "19.5"
+            },
+            {
+              "parameter": "glucose",
+              "obs_count": 144,
+              "unit_count": 1,
+              "units_used": "% dry weight",
+              "records_with_param": 144,
+              "record_coverage_pct": "19.5"
+            },
+            {
+              "parameter": "lignin",
+              "obs_count": 132,
+              "unit_count": 1,
+              "units_used": "% dry weight",
+              "records_with_param": 132,
+              "record_coverage_pct": "17.9"
+            },
+            {
+              "parameter": "lignin+",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "% dry weight",
+              "records_with_param": 12,
+              "record_coverage_pct": "1.6"
+            },
+            {
+              "parameter": "arabinan",
+              "obs_count": 9,
+              "unit_count": 1,
+              "units_used": "% dry weight",
+              "records_with_param": 9,
+              "record_coverage_pct": "1.2"
+            },
+            {
+              "parameter": "arabinose",
+              "obs_count": 9,
+              "unit_count": 1,
+              "units_used": "% dry weight",
+              "records_with_param": 9,
+              "record_coverage_pct": "1.2"
+            }
+          ]
+        },
+        {
+          "query_index": 4,
+          "data": [
+            {
+              "parameter": "arabinan",
+              "min_val": "1.81",
+              "max_val": "2.41",
+              "avg_val": "2.1389",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "arabinose",
+              "min_val": "2.06",
+              "max_val": "2.74",
+              "avg_val": "2.4311",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "glucan",
+              "min_val": "5.57",
+              "max_val": "54.57",
+              "avg_val": "23.9038",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "glucose",
+              "min_val": "6.19",
+              "max_val": "60.64",
+              "avg_val": "26.5595",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "lignin",
+              "min_val": "8.57",
+              "max_val": "52.78",
+              "avg_val": "30.0073",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "lignin+",
+              "min_val": "30.53",
+              "max_val": "53.96",
+              "avg_val": "41.2517",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "xylan",
+              "min_val": "2.92",
+              "max_val": "25.71",
+              "avg_val": "13.8348",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "xylose",
+              "min_val": "3.32",
+              "max_val": "29.21",
+              "avg_val": "15.7221",
+              "negative_values_count": 0
+            }
+          ]
+        }
+      ]
+    },
+    "fermentation": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "fermentation",
+              "total_records": 4021,
+              "qc_pass_count": 3736,
+              "qc_fail_count": 285,
+              "qc_null_count": 0,
+              "pass_pct": "92.9"
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "fermentation",
+              "total_qc_non_fail": 3736,
+              "analyst_filled": 3736,
+              "method_filled": 0,
+              "raw_data_filled": 3736,
+              "experiment_filled": 0,
+              "strain_filled": 3736,
+              "vessel_filled": 3736,
+              "pretreatment_method_filled": 3505,
+              "eh_method_filled": 3735,
+              "bioconversion_method_filled": 3736,
+              "well_position_filled": 3736
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "fermentation",
+              "analyst_pct": "100.0",
+              "method_pct": "0.0",
+              "experiment_pct": "0.0",
+              "strain_pct": "100.0",
+              "pretreatment_pct": "93.8",
+              "eh_pct": "100.0",
+              "bioconversion_pct": "100.0"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "record_type": "fermentation",
+              "unique_prepared_samples": 58,
+              "unique_resources": 29,
+              "unique_experiments": 0,
+              "unique_field_samples": 56,
+              "unique_primary_ag_products": 13
+            }
+          ]
+        },
+        {
+          "query_index": 4,
+          "data": [
+            {
+              "parameter": "xylconcteof",
+              "unit": "g_l",
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "sugar_cons",
+              "unit": "pc",
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "sugart0",
+              "unit": "g_l",
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "sugarteof",
+              "unit": "g_l",
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "xylconct0",
+              "unit": "g_l",
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "gluconct0",
+              "unit": "g_l",
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "gluconcteof",
+              "unit": "g_l",
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "od600teof",
+              "unit": null,
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "rel_growth",
+              "unit": "pc",
+              "obs_count": 340,
+              "records_with_param": 340
+            },
+            {
+              "parameter": "3hpyield",
+              "unit": "mol_pc",
+              "obs_count": 268,
+              "records_with_param": 268
+            },
+            {
+              "parameter": "3hptiter",
+              "unit": "g_l",
+              "obs_count": 268,
+              "records_with_param": 268
+            },
+            {
+              "parameter": "etohtiter",
+              "unit": "g_l",
+              "obs_count": 72,
+              "records_with_param": 72
+            },
+            {
+              "parameter": "etohyield",
+              "unit": "mol_pc",
+              "obs_count": 72,
+              "records_with_param": 72
+            }
+          ]
+        }
+      ]
+    },
+    "ftnir": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "ftnir",
+              "total_records": 0,
+              "qc_pass_count": 0,
+              "qc_fail_count": 0,
+              "qc_null_count": 0
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "ftnir",
+              "total_qc_non_fail": 0,
+              "analyst_filled": 0,
+              "method_filled": 0,
+              "raw_data_filled": 0,
+              "experiment_filled": 0,
+              "dataset_filled": 0
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "ftnir",
+              "unique_prepared_samples": 0,
+              "unique_resources": 0,
+              "unique_field_samples": 0,
+              "unique_primary_ag_products": 0,
+              "lineage_integrity_pct": null
+            }
+          ]
+        }
+      ]
+    },
+    "gasification": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "gasification",
+              "total_records": 611,
+              "qc_pass_count": 382,
+              "qc_fail_count": 194,
+              "qc_null_count": 35,
+              "pass_pct": "62.5"
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "gasification",
+              "total_qc_non_fail": 382,
+              "analyst_filled": 382,
+              "analyst_pct": "100.0",
+              "method_filled": 0,
+              "method_pct": "0.0",
+              "experiment_filled": 382,
+              "experiment_pct": "100.0",
+              "reactor_filled": 382,
+              "dataset_filled": 382
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "gasification",
+              "unique_prepared_samples": 8,
+              "unique_resources": 6,
+              "unique_experiments": 12,
+              "unique_field_samples": 8,
+              "unique_primary_ag_products": 5,
+              "lineage_integrity_pct": "62.5"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "parameter": "h2",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "n2",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "o2",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "c3h8",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "c4h10(b)",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "c4h10(i)",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "c5h12",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "c6h14",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "ch4",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "c2h6",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "co",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "co2",
+              "obs_count": 21,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 21,
+              "record_coverage_pct": "5.5"
+            },
+            {
+              "parameter": "wme",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "%",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "bio",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "g",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "char",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "g",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "va",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "mps",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "ash",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "g",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "ta",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "c",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "tar",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "g",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "time",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "min",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "unc-bio",
+              "obs_count": 12,
+              "unit_count": 1,
+              "units_used": "g",
+              "records_with_param": 12,
+              "record_coverage_pct": "3.1"
+            },
+            {
+              "parameter": "pi",
+              "obs_count": 11,
+              "unit_count": 1,
+              "units_used": "psi",
+              "records_with_param": 11,
+              "record_coverage_pct": "2.9"
+            },
+            {
+              "parameter": "pv",
+              "obs_count": 11,
+              "unit_count": 1,
+              "units_used": "psi",
+              "records_with_param": 11,
+              "record_coverage_pct": "2.9"
+            }
+          ]
+        }
+      ]
+    },
+    "icp": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "icp",
+              "total_records": 1153,
+              "qc_pass_count": 985,
+              "qc_fail_count": 168,
+              "qc_null_count": 0
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "icp",
+              "total_qc_non_fail": 985,
+              "analyst_filled": 826,
+              "analyst_pct": "83.9",
+              "method_filled": 0,
+              "method_pct": "0.0",
+              "raw_data_filled": 827,
+              "raw_data_pct": "84.0",
+              "experiment_filled": 0,
+              "experiment_pct": "0.0",
+              "dataset_filled": 985,
+              "dataset_pct": "100.0"
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "icp",
+              "unique_prepared_samples": 25,
+              "unique_resources": 17,
+              "unique_field_samples": 24,
+              "unique_primary_ag_products": 6,
+              "lineage_integrity_pct": "24.0"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "parameter": "al",
+              "obs_count": 83,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 83,
+              "record_coverage_pct": "8.4"
+            },
+            {
+              "parameter": "nd",
+              "obs_count": 66,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 66,
+              "record_coverage_pct": "6.7"
+            },
+            {
+              "parameter": "cu",
+              "obs_count": 64,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 64,
+              "record_coverage_pct": "6.5"
+            },
+            {
+              "parameter": "fe",
+              "obs_count": 64,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 64,
+              "record_coverage_pct": "6.5"
+            },
+            {
+              "parameter": "zn",
+              "obs_count": 64,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 64,
+              "record_coverage_pct": "6.5"
+            },
+            {
+              "parameter": "ca",
+              "obs_count": 64,
+              "unit_count": 2,
+              "units_used": "pc, ppm",
+              "records_with_param": 64,
+              "record_coverage_pct": "6.5"
+            },
+            {
+              "parameter": "mn",
+              "obs_count": 64,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 64,
+              "record_coverage_pct": "6.5"
+            },
+            {
+              "parameter": "p",
+              "obs_count": 64,
+              "unit_count": 2,
+              "units_used": "pc, ppm",
+              "records_with_param": 64,
+              "record_coverage_pct": "6.5"
+            },
+            {
+              "parameter": "s",
+              "obs_count": 64,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 64,
+              "record_coverage_pct": "6.5"
+            },
+            {
+              "parameter": "mg",
+              "obs_count": 63,
+              "unit_count": 2,
+              "units_used": "pc, ppm",
+              "records_with_param": 63,
+              "record_coverage_pct": "6.4"
+            },
+            {
+              "parameter": "k",
+              "obs_count": 61,
+              "unit_count": 2,
+              "units_used": "pc, ppm",
+              "records_with_param": 61,
+              "record_coverage_pct": "6.2"
+            },
+            {
+              "parameter": "ti",
+              "obs_count": 60,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 60,
+              "record_coverage_pct": "6.1"
+            },
+            {
+              "parameter": "si",
+              "obs_count": 47,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 47,
+              "record_coverage_pct": "4.8"
+            },
+            {
+              "parameter": "na",
+              "obs_count": 45,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 45,
+              "record_coverage_pct": "4.6"
+            },
+            {
+              "parameter": "b",
+              "obs_count": 16,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 16,
+              "record_coverage_pct": "1.6"
+            }
+          ]
+        }
+      ]
+    },
+    "lineage": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "total_prepared": 296,
+              "linked_to_ag_product": 296,
+              "integrity_pct": "93.58"
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "id": 291,
+              "name": "boa-gppm053a(53)"
+            },
+            {
+              "id": 292,
+              "name": "war-al037"
+            },
+            {
+              "id": 293,
+              "name": "war-alf037a(b8)"
+            },
+            {
+              "id": 294,
+              "name": "rho synthetic media"
+            },
+            {
+              "id": 295,
+              "name": "rhodo synthetic media"
+            },
+            {
+              "id": 296,
+              "name": "sac synthetic media"
+            }
+          ]
+        }
+      ]
+    },
+    "materialized_views": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "from_month",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "to_month",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "year_round",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "dry_tons_per_acre",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_availability",
+              "column_name": "wet_tons_per_acre",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "analysis_type",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "parameter_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "avg_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "min_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "max_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "std_dev",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_composition",
+              "column_name": "observation_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "resource_class",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "state",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "scenario",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "price_offered_usd",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "production",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "production_unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "energy_content",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "energy_unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "density_dt_per_sqmi",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "county_square_miles",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_county_production",
+              "column_name": "year",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "use_case",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "percentage_low",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "percentage_high",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "trend",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "value_low_usd",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "value_high_usd",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_end_uses",
+              "column_name": "value_notes",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "strain_name",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "pretreatment_method",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "enzyme_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "bioconversion_method",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "elapsed_time",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "product_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "avg_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "min_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "max_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "std_dev",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "observation_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_fermentation",
+              "column_name": "unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "reactor_type",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "parameter_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "avg_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "min_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "max_value",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "std_dev",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "observation_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_gasification",
+              "column_name": "unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "commodity_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "state",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "report_date",
+              "data_type": "timestamp without time zone",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "market_type_category",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "sale_type",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "price_min",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "price_max",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "price_avg",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_pricing",
+              "column_name": "price_unit",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "sample_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "supplier_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "dataset_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_sample_stats",
+              "column_name": "total_record_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "resource_code",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "description",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "resource_class",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "resource_subclass",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "primary_product",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "image_url",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "literature_uri",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "total_annual_volume",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "county_count",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "volume_unit",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "moisture_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "sugar_content_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "glucan_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "xylan_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "ash_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "lignin_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "carbon_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "hydrogen_percent",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "cn_ratio",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "transport_notes",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "storage_notes",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "tags",
+              "data_type": "text[]",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "season_from_month",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "season_to_month",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "year_round",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_proximate",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_compositional",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_ultimate",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_xrf",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_icp",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_calorimetry",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_xrd",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_ftnir",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_fermentation",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_gasification",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_pretreatment",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_moisture_data",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_sugar_data",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_image",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "has_volume_data",
+              "data_type": "boolean",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "calculated_estimate_volume_min",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "calculated_estimate_volume_max",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "calculated_estimate_volume_mid",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "created_at",
+              "data_type": "timestamp without time zone",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "updated_at",
+              "data_type": "timestamp without time zone",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_search",
+              "column_name": "search_vector",
+              "data_type": "tsvector",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "state",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "dataset_year",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "production_volume",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "county_crop_acres",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "production_unit",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "factor_min",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "factor_mid",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "factor_max",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "estimated_residue_volume_min",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "estimated_residue_volume_mid",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "estimated_residue_volume_max",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "volume_source",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_biomass_volume_estimate",
+              "column_name": "biomass_unit",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "id",
+              "data_type": "bigint",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "resource_id",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "resource_name",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "primary_ag_product",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "geoid",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "county",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "state",
+              "data_type": "character varying",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "dataset_year",
+              "data_type": "integer",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "primary_product_volume",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "volume_unit",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "production_acres",
+              "data_type": "numeric",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "known_biomass_volume",
+              "data_type": "text",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "calculated_estimate_volume",
+              "data_type": "double precision",
+              "is_nullable": true
+            },
+            {
+              "view_name": "mv_usda_county_production",
+              "column_name": "biomass_unit",
+              "data_type": "text",
+              "is_nullable": true
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_availability",
+              "indexname": "idx_mv_biomass_availability_resource_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_availability_resource_id ON data_portal.mv_biomass_availability USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_analysis_type",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_analysis_type ON data_portal.mv_biomass_composition USING btree (analysis_type)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_county",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_county ON data_portal.mv_biomass_composition USING btree (county)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_geoid",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_geoid ON data_portal.mv_biomass_composition USING btree (geoid)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_composition_id ON data_portal.mv_biomass_composition USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_parameter_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_parameter_name ON data_portal.mv_biomass_composition USING btree (parameter_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_resource_analysis",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_resource_analysis ON data_portal.mv_biomass_composition USING btree (resource_id, analysis_type)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_resource_geoid_analysis",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_resource_geoid_analysis ON data_portal.mv_biomass_composition USING btree (resource_id, geoid, analysis_type)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_composition",
+              "indexname": "idx_mv_biomass_composition_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_composition_resource_id ON data_portal.mv_biomass_composition USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_county_production",
+              "indexname": "idx_mv_biomass_county_production_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_county_production_id ON data_portal.mv_biomass_county_production USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_end_uses",
+              "indexname": "idx_mv_biomass_end_uses_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_end_uses_resource_id ON data_portal.mv_biomass_end_uses USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_end_uses",
+              "indexname": "idx_mv_biomass_end_uses_resource_use_case",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_end_uses_resource_use_case ON data_portal.mv_biomass_end_uses USING btree (resource_id, use_case)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_county",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_county ON data_portal.mv_biomass_fermentation USING btree (county)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_geoid",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_geoid ON data_portal.mv_biomass_fermentation USING btree (geoid)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_fermentation_id ON data_portal.mv_biomass_fermentation USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_product_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_product_name ON data_portal.mv_biomass_fermentation USING btree (product_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_resource_id ON data_portal.mv_biomass_fermentation USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_fermentation",
+              "indexname": "idx_mv_biomass_fermentation_strain_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_fermentation_strain_name ON data_portal.mv_biomass_fermentation USING btree (strain_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_gasification_id ON data_portal.mv_biomass_gasification USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_parameter_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_gasification_parameter_name ON data_portal.mv_biomass_gasification USING btree (parameter_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_reactor_type",
+              "indexdef": "CREATE INDEX idx_mv_biomass_gasification_reactor_type ON data_portal.mv_biomass_gasification USING btree (reactor_type)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_gasification_resource_id ON data_portal.mv_biomass_gasification USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_gasification",
+              "indexname": "idx_mv_biomass_gasification_resource_reactor_param",
+              "indexdef": "CREATE INDEX idx_mv_biomass_gasification_resource_reactor_param ON data_portal.mv_biomass_gasification USING btree (resource_id, reactor_type, parameter_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_pricing",
+              "indexname": "idx_mv_biomass_pricing_commodity_name",
+              "indexdef": "CREATE INDEX idx_mv_biomass_pricing_commodity_name ON data_portal.mv_biomass_pricing USING btree (commodity_name)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_pricing",
+              "indexname": "idx_mv_biomass_pricing_county",
+              "indexdef": "CREATE INDEX idx_mv_biomass_pricing_county ON data_portal.mv_biomass_pricing USING btree (county)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_pricing",
+              "indexname": "idx_mv_biomass_pricing_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_pricing_id ON data_portal.mv_biomass_pricing USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_sample_stats",
+              "indexname": "idx_mv_biomass_sample_stats_resource_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_sample_stats_resource_id ON data_portal.mv_biomass_sample_stats USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_search",
+              "indexname": "idx_mv_biomass_search_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_search_id ON data_portal.mv_biomass_search USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_volume_estimate",
+              "indexname": "idx_mv_biomass_volume_estimate_geoid",
+              "indexdef": "CREATE INDEX idx_mv_biomass_volume_estimate_geoid ON data_portal.mv_biomass_volume_estimate USING btree (geoid)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_volume_estimate",
+              "indexname": "idx_mv_biomass_volume_estimate_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_biomass_volume_estimate_id ON data_portal.mv_biomass_volume_estimate USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_volume_estimate",
+              "indexname": "idx_mv_biomass_volume_estimate_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_biomass_volume_estimate_resource_id ON data_portal.mv_biomass_volume_estimate USING btree (resource_id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_biomass_volume_estimate",
+              "indexname": "idx_mv_biomass_volume_estimate_resource_year",
+              "indexdef": "CREATE INDEX idx_mv_biomass_volume_estimate_resource_year ON data_portal.mv_biomass_volume_estimate USING btree (resource_id, dataset_year)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_usda_county_production",
+              "indexname": "idx_mv_usda_county_production_geoid",
+              "indexdef": "CREATE INDEX idx_mv_usda_county_production_geoid ON data_portal.mv_usda_county_production USING btree (geoid)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_usda_county_production",
+              "indexname": "idx_mv_usda_county_production_id",
+              "indexdef": "CREATE UNIQUE INDEX idx_mv_usda_county_production_id ON data_portal.mv_usda_county_production USING btree (id)"
+            },
+            {
+              "schemaname": "data_portal",
+              "view_name": "mv_usda_county_production",
+              "indexname": "idx_mv_usda_county_production_resource_id",
+              "indexdef": "CREATE INDEX idx_mv_usda_county_production_resource_id ON data_portal.mv_usda_county_production USING btree (resource_id)"
+            }
+          ]
+        }
+      ]
+    },
+    "pretreatment": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "pretreatment",
+              "total_records": 906,
+              "qc_pass_count": 835,
+              "qc_fail_count": 65,
+              "qc_null_count": 6,
+              "pass_pct": "92.2"
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "pretreatment",
+              "total_qc_non_fail": 835,
+              "analyst_filled": 792,
+              "analyst_pct": "94.9",
+              "method_filled": 835,
+              "method_pct": "100.0",
+              "experiment_filled": 0,
+              "experiment_pct": "0.0",
+              "vessel_filled": 835,
+              "temperature_filled": 0,
+              "dataset_filled": 835
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "pretreatment",
+              "unique_prepared_samples": 61,
+              "unique_resources": 28,
+              "unique_experiments": 0,
+              "unique_field_samples": 61,
+              "unique_primary_ag_products": 13,
+              "lineage_integrity_pct": "21.3"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "parameter": "glucose_yld",
+              "obs_count": 430,
+              "unit_count": 1,
+              "units_used": "% of glucan",
+              "records_with_param": 430,
+              "record_coverage_pct": "51.5"
+            },
+            {
+              "parameter": "xylose_yld",
+              "obs_count": 405,
+              "unit_count": 1,
+              "units_used": "% of xylan",
+              "records_with_param": 405,
+              "record_coverage_pct": "48.5"
+            }
+          ]
+        }
+      ]
+    },
+    "proximate": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "proximate",
+              "total_records": 1339,
+              "qc_pass_count": 1223,
+              "qc_fail_count": 111,
+              "qc_null_count": 1,
+              "pass_pct": "91.3"
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "proximate",
+              "total_qc_non_fail": 1227,
+              "analyst_filled": 442,
+              "analyst_pct": "36.0",
+              "method_filled": 1227,
+              "method_pct": "100.0",
+              "raw_data_filled": 0,
+              "raw_data_pct": "0.0",
+              "experiment_filled": 0,
+              "experiment_pct": "0.0",
+              "dataset_filled": 1227,
+              "dataset_pct": "100.0"
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "proximate",
+              "unique_prepared_samples": 97,
+              "unique_resources": 40,
+              "unique_experiments": 0,
+              "unique_field_samples": 86,
+              "unique_primary_ag_products": 14,
+              "lineage_integrity_pct": "14.4"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "parameter": "total solids",
+              "obs_count": 318,
+              "unit_count": 1,
+              "units_used": "% total weight",
+              "records_with_param": 318,
+              "record_coverage_pct": "25.9"
+            },
+            {
+              "parameter": "ash",
+              "obs_count": 317,
+              "unit_count": 1,
+              "units_used": "% total weight",
+              "records_with_param": 317,
+              "record_coverage_pct": "25.8"
+            },
+            {
+              "parameter": "volatile solids",
+              "obs_count": 316,
+              "unit_count": 1,
+              "units_used": "% total weight",
+              "records_with_param": 316,
+              "record_coverage_pct": "25.8"
+            },
+            {
+              "parameter": "moisture",
+              "obs_count": 276,
+              "unit_count": 1,
+              "units_used": "% total weight",
+              "records_with_param": 276,
+              "record_coverage_pct": "22.5"
+            }
+          ]
+        },
+        {
+          "query_index": 4,
+          "data": [
+            {
+              "parameter": "ash",
+              "min_val": "0.03",
+              "max_val": "72.31",
+              "avg_val": "6.5611",
+              "median_val": 4.3,
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "moisture",
+              "min_val": "0.36",
+              "max_val": "97.56",
+              "avg_val": "30.0870",
+              "median_val": 14.275,
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "total solids",
+              "min_val": "2.44",
+              "max_val": "99.73",
+              "avg_val": "70.9086",
+              "median_val": 86.41,
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "volatile solids",
+              "min_val": "1.54",
+              "max_val": "98.62",
+              "avg_val": "50.8773",
+              "median_val": 55.605000000000004,
+              "negative_values_count": 0
+            }
+          ]
+        }
+      ]
+    },
+    "ultimate": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "ultimate",
+              "total_records": 84,
+              "qc_pass_count": 66,
+              "qc_fail_count": 3,
+              "qc_null_count": 15,
+              "pass_pct": "78.6"
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "ultimate",
+              "total_qc_non_fail": 66,
+              "analyst_filled": 0,
+              "method_filled": 66,
+              "raw_data_filled": 2,
+              "experiment_filled": 0,
+              "dataset_filled": 66
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "ultimate",
+              "unique_prepared_samples": 14,
+              "unique_resources": 10,
+              "unique_experiments": 0,
+              "unique_field_samples": 12,
+              "unique_primary_ag_products": 5,
+              "lineage_integrity_pct": "35.7"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "parameter": "adf-r",
+              "obs_count": 17,
+              "unit_count": 1,
+              "units_used": "pc",
+              "records_with_param": 17,
+              "record_coverage_pct": "25.8"
+            },
+            {
+              "parameter": "cf",
+              "obs_count": 17,
+              "unit_count": 1,
+              "units_used": "pc",
+              "records_with_param": 17,
+              "record_coverage_pct": "25.8"
+            },
+            {
+              "parameter": "nitrogen",
+              "obs_count": 17,
+              "unit_count": 1,
+              "units_used": "pc",
+              "records_with_param": 17,
+              "record_coverage_pct": "25.8"
+            },
+            {
+              "parameter": "dm",
+              "obs_count": 14,
+              "unit_count": 1,
+              "units_used": "pc",
+              "records_with_param": 14,
+              "record_coverage_pct": "21.2"
+            },
+            {
+              "parameter": "sulfur",
+              "obs_count": 1,
+              "unit_count": 1,
+              "units_used": "pc",
+              "records_with_param": 1,
+              "record_coverage_pct": "1.5"
+            }
+          ]
+        },
+        {
+          "query_index": 4,
+          "data": [
+            {
+              "parameter": "adf-r",
+              "min_val": "12.1",
+              "max_val": "82.9",
+              "avg_val": "44.4353",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "cf",
+              "min_val": "0.5",
+              "max_val": "10.0",
+              "avg_val": "4.1071",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "dm",
+              "min_val": "81.3",
+              "max_val": "97.3",
+              "avg_val": "91.2000",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "nitrogen",
+              "min_val": "0.23",
+              "max_val": "3.06",
+              "avg_val": "1.5659",
+              "negative_values_count": 0
+            },
+            {
+              "parameter": "sulfur",
+              "min_val": "270.0",
+              "max_val": "270.0",
+              "avg_val": "270.0000",
+              "negative_values_count": 0
+            }
+          ]
+        }
+      ]
+    },
+    "xrd": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "xrd",
+              "total_records": 28,
+              "qc_pass_count": 27,
+              "qc_fail_count": 0,
+              "qc_null_count": 1
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "xrd",
+              "total_qc_non_fail": 27,
+              "analyst_filled": 27,
+              "method_filled": 27,
+              "raw_data_filled": 0,
+              "experiment_filled": 0,
+              "dataset_filled": 27
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "xrd",
+              "unique_prepared_samples": 10,
+              "unique_resources": 6,
+              "unique_field_samples": 9,
+              "unique_primary_ag_products": 2,
+              "lineage_integrity_pct": "20.0"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "parameter": "crystallinity",
+              "obs_count": 27,
+              "unit_count": 1,
+              "units_used": "%",
+              "records_with_param": 27,
+              "record_coverage_pct": "100.0"
+            }
+          ]
+        }
+      ]
+    },
+    "xrf": {
+      "status": "success",
+      "data": [
+        {
+          "query_index": 0,
+          "data": [
+            {
+              "record_type": "xrf",
+              "total_records": 390,
+              "qc_pass_count": 0,
+              "qc_fail_count": 0,
+              "qc_null_count": 0
+            }
+          ]
+        },
+        {
+          "query_index": 1,
+          "data": [
+            {
+              "record_type": "xrf",
+              "total_qc_non_fail": 390,
+              "analyst_filled": 390,
+              "method_filled": 390,
+              "raw_data_filled": 1,
+              "experiment_filled": 0,
+              "dataset_filled": 390
+            }
+          ]
+        },
+        {
+          "query_index": 2,
+          "data": [
+            {
+              "record_type": "xrf",
+              "unique_prepared_samples": 10,
+              "unique_resources": 8,
+              "unique_field_samples": 10,
+              "unique_primary_ag_products": 3,
+              "lineage_integrity_pct": "30.0"
+            }
+          ]
+        },
+        {
+          "query_index": 3,
+          "data": [
+            {
+              "parameter": "zn",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "u",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "th",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "ca",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "sr",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "cu",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "fe",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "k",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "si",
+              "obs_count": 10,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 10,
+              "record_coverage_pct": "2.6"
+            },
+            {
+              "parameter": "s",
+              "obs_count": 9,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 9,
+              "record_coverage_pct": "2.3"
+            },
+            {
+              "parameter": "mn",
+              "obs_count": 9,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 9,
+              "record_coverage_pct": "2.3"
+            },
+            {
+              "parameter": "p",
+              "obs_count": 9,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 9,
+              "record_coverage_pct": "2.3"
+            },
+            {
+              "parameter": "mo",
+              "obs_count": 7,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 7,
+              "record_coverage_pct": "1.8"
+            },
+            {
+              "parameter": "al",
+              "obs_count": 6,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 6,
+              "record_coverage_pct": "1.5"
+            },
+            {
+              "parameter": "rb",
+              "obs_count": 6,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 6,
+              "record_coverage_pct": "1.5"
+            },
+            {
+              "parameter": "ti",
+              "obs_count": 6,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 6,
+              "record_coverage_pct": "1.5"
+            },
+            {
+              "parameter": "nd",
+              "obs_count": 5,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 5,
+              "record_coverage_pct": "1.3"
+            },
+            {
+              "parameter": "la",
+              "obs_count": 4,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 4,
+              "record_coverage_pct": "1.0"
+            },
+            {
+              "parameter": "ce",
+              "obs_count": 4,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 4,
+              "record_coverage_pct": "1.0"
+            },
+            {
+              "parameter": "pr",
+              "obs_count": 4,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 4,
+              "record_coverage_pct": "1.0"
+            },
+            {
+              "parameter": "ba",
+              "obs_count": 4,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 4,
+              "record_coverage_pct": "1.0"
+            },
+            {
+              "parameter": "zr",
+              "obs_count": 2,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 2,
+              "record_coverage_pct": "0.5"
+            },
+            {
+              "parameter": "pb",
+              "obs_count": 2,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 2,
+              "record_coverage_pct": "0.5"
+            },
+            {
+              "parameter": "ag",
+              "obs_count": 1,
+              "unit_count": 1,
+              "units_used": "ppm",
+              "records_with_param": 1,
+              "record_coverage_pct": "0.3"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
