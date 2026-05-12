@@ -23,6 +23,12 @@ from ca_biositing.datamodels.models.aim2_records.fermentation_record import Ferm
 from ca_biositing.datamodels.models.aim2_records.gasification_record import GasificationRecord
 from ca_biositing.datamodels.models.aim2_records.pretreatment_record import PretreatmentRecord
 
+# Global resource filters to exclude problematic records
+EXCLUDED_RESOURCES = ["sargassum", "#n/a", "lab media"]
+
+# Allowed parameters for Ultimate Analysis
+ULTIMATE_PARAMETERS = ["carbon", "nitrogen", "oxygen", "sulfur", "hydrogen"]
+
 # Subquery for analytical averages (moisture, ash, lignin, sugar)
 # Sugar = glucose + xylose
 # QC: filtered to exclude "fail" - only include observations from analytical records that are not marked as failed
@@ -31,7 +37,10 @@ from ca_biositing.datamodels.models.aim2_records.pretreatment_record import Pret
 analysis_metrics = select(
     Observation.record_id,
     Observation.record_type,
-    Parameter.name.label("parameter"),
+    case(
+        (Parameter.name == "ash", "ash solids"),
+        else_=Parameter.name
+    ).label("parameter"),
     Observation.value
 ).join(Parameter, Observation.parameter_id == Parameter.id)\
  .where(Observation.record_type.in_([
@@ -111,3 +120,26 @@ def get_nitrogen_avg_expr():
 def get_cn_ratio_expr():
     """Expression for carbon-to-nitrogen ratio."""
     return cn_ratio_expr
+
+
+def get_resource_filter(resource_model):
+    """Filter to exclude problematic resources."""
+    return and_(
+        func.lower(resource_model.name).not_in(EXCLUDED_RESOURCES)
+    )
+
+
+def get_ultimate_filter(analysis_type_col, parameter_name_col):
+    """Filter for ultimate analysis parameters."""
+    return or_(
+        analysis_type_col != "ultimate",
+        func.lower(parameter_name_col).in_(ULTIMATE_PARAMETERS)
+    )
+
+
+def get_icp_filter(analysis_type_col, unit_name_col):
+    """Filter for ICP analysis units."""
+    return or_(
+        analysis_type_col != "icp",
+        func.lower(unit_name_col) == "ppm"
+    )

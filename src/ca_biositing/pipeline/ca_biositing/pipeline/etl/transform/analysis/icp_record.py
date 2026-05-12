@@ -32,8 +32,13 @@ def transform_icp_record(
 
     # 1. Cleaning & Coercion
     df = raw_df.copy()
-    df = cleaning_mod.clean_names_df(df)
-    df = cleaning_mod.replace_empty_with_na(df)
+    df = cleaning_mod.standard_clean(df)
+
+    # Add ETL and Lineage IDs if provided
+    if etl_run_id:
+        df['etl_run_id'] = etl_run_id
+    if lineage_group_id:
+        df['lineage_group_id'] = lineage_group_id
 
     # 2. Normalization
     normalize_columns = {
@@ -52,6 +57,7 @@ def transform_icp_record(
     rename_map = {
         'record_id': 'record_id',
         'repl_no': 'technical_replicate_no',
+        'qc_result': 'qc_pass',
         'note': 'note',
         'etl_run_id': 'etl_run_id',
         'lineage_group_id': 'lineage_group_id'
