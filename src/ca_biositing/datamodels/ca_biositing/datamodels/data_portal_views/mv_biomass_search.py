@@ -293,7 +293,15 @@ mv_biomass_search = select(
      case((resource_metrics_v2.c.moisture_percent != None, True), else_=False).label("has_moisture_data"),
      case((resource_metrics_v2.c.sugar_content_percent > 0, True), else_=False).label("has_sugar_data"),
      case((ResourceMorphology.morphology_uri != None, True), else_=False).label("has_image"),
-     case((agg_vol.c.total_annual_volume != None, True), else_=False).label("has_volume_data"),
+     case((
+         or_(
+             agg_vol.c.total_annual_volume.is_not(None),
+             volume_agg.c.calculated_estimate_volume_min.is_not(None),
+             volume_agg.c.calculated_estimate_volume_mid.is_not(None),
+             volume_agg.c.calculated_estimate_volume_max.is_not(None),
+         ),
+         True,
+     ), else_=False).label("has_volume_data"),
      # Calculated volume estimates
      volume_agg.c.calculated_estimate_volume_min,
      volume_agg.c.calculated_estimate_volume_max,
