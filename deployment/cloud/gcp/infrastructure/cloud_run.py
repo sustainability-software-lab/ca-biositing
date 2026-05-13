@@ -490,6 +490,7 @@ def create_cloud_run_resources(
                         "sh", "-c",
                         "export DB_PASS=$(cat /secrets/db-password/value) "
                         "&& export USDA_NASS_API_KEY=$(cat /secrets/usda-api-key/value) "
+                        "&& export GOOGLE_MAPS_API_KEY=$(cat /secrets/google-maps-api-key/value) "
                         f"&& exec prefect worker start "
                         f"--pool {PREFECT_WORK_POOL_NAME} "
                         f"--type process --limit 3 --with-healthcheck",
@@ -555,6 +556,10 @@ def create_cloud_run_resources(
                             name="usda-api-key",
                             mount_path="/secrets/usda-api-key",
                         ),
+                        gcp.cloudrunv2.ServiceTemplateContainerVolumeMountArgs(
+                            name="google-maps-api-key",
+                            mount_path="/secrets/google-maps-api-key",
+                        ),
                     ],
                     startup_probe=gcp.cloudrunv2.ServiceTemplateContainerStartupProbeArgs(
                         tcp_socket=gcp.cloudrunv2.ServiceTemplateContainerStartupProbeTcpSocketArgs(
@@ -599,6 +604,15 @@ def create_cloud_run_resources(
                     name="usda-api-key",
                     secret=gcp.cloudrunv2.ServiceTemplateVolumeSecretArgs(
                         secret=secrets.usda_api_key_secret.name,
+                        items=[gcp.cloudrunv2.ServiceTemplateVolumeSecretItemArgs(
+                            version="latest", path="value",
+                        )],
+                    ),
+                ),
+                gcp.cloudrunv2.ServiceTemplateVolumeArgs(
+                    name="google-maps-api-key",
+                    secret=gcp.cloudrunv2.ServiceTemplateVolumeSecretArgs(
+                        secret=secrets.google_maps_api_key_secret.name,
                         items=[gcp.cloudrunv2.ServiceTemplateVolumeSecretItemArgs(
                             version="latest", path="value",
                         )],
