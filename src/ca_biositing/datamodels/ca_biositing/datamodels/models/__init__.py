@@ -29,7 +29,22 @@ from .field_sampling import AgTreatment, CollectionMethod, FieldSample, FieldSam
 from .general_analysis import AnalysisType, Dataset, DimensionType, Observation
 
 # Infrastructure
-from .infrastructure import FacilityRecord, InfrastructureBiodieselPlants, InfrastructureBiosolidsFacilities, InfrastructureCafoManureLocations, InfrastructureCombustionPlants, InfrastructureDistrictEnergySystems, InfrastructureEthanolBiorefineries, InfrastructureFoodProcessingFacilities, InfrastructureLandfills, InfrastructureLivestockAnaerobicDigesters, InfrastructureMswToEnergyAnaerobicDigesters, InfrastructureSafAndRenewableDieselPlants, InfrastructureWastewaterTreatmentPlants
+from .infrastructure import (
+    FacilityRecord,
+    InfrastructureBiodieselPlants,
+    InfrastructureBiosolidsFacilities,
+    InfrastructureCafoManureLocations,
+    InfrastructureCombustionPlants,
+    InfrastructureDistrictEnergySystems,
+    InfrastructureEthanolBiorefineries,
+    InfrastructureFoodProcessingFacilities,
+    InfrastructureLandfills,
+    InfrastructureLivestockAnaerobicDigesters,
+    InfrastructureMswToEnergyAnaerobicDigesters,
+    InfrastructurePetroleumPipelines,
+    InfrastructureSafAndRenewableDieselPlants,
+    InfrastructureWastewaterTreatmentPlants,
+)
 
 # Methods Parameters Units
 from .methods_parameters_units import Method, MethodAbbrev, MethodCategory, MethodStandard, Parameter, ParameterCategory, ParameterCategoryParameter, ParameterUnit, Unit, TechnicalAssumption, MethodAssumption
@@ -38,10 +53,26 @@ from .methods_parameters_units import Method, MethodAbbrev, MethodCategory, Meth
 from .people import Contact, Provider
 
 # Places
-from .places import LocationAddress, Place
+from .places import LocationAddress, Place, MultiLineString
 
 # Resource Information
-from .resource_information import PrimaryAgProduct, ResidueFactor, Resource, ResourceAvailability, ResourceClass, ResourceCounterfactual, ResourceImage, ResourceMorphology, ResourceSubclass, ResourcePriceRecord, ResourceTransportRecord, ResourceStorageRecord, ResourceEndUseRecord, ResourceProductionRecord, UseCase
+from .resource_information import (
+    PrimaryAgProduct,
+    ResidueFactor,
+    Resource,
+    ResourceAvailability,
+    ResourceClass,
+    ResourceCounterfactual,
+    ResourceMorphology,
+    ResourceSubclass,
+    ResourceImage,
+    ResourcePriceRecord,
+    ResourceTransportRecord,
+    ResourceStorageRecord,
+    ResourceEndUseRecord,
+    ResourceProductionRecord,
+    UseCase,
+)
 
 # Sample Preparation
 from .sample_preparation import PreparationMethod, PreparationMethodAbbreviation, PreparedSample

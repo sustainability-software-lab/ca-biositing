@@ -27,3 +27,5 @@ class InfrastructurePetroleumPipelines(SQLModel, table=True):
     geom: Optional[Any] = Field(default=None, sa_column=Column(Geometry("MULTILINESTRING")))
     created_at: Optional[datetime] = Field(default=None)
     updated_at: Optional[datetime] = Field(default=None)
+    etl_run_id: Optional[int] = Field(default=None)
+    lineage_group_id: Optional[int] = Field(default=None)
