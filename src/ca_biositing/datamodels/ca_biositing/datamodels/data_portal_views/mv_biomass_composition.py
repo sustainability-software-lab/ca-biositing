@@ -12,7 +12,8 @@ Required index:
     CREATE UNIQUE INDEX idx_mv_biomass_composition_id ON data_portal.mv_biomass_composition (id)
 """
 
-from sqlalchemy import select, func, union_all, literal, case, and_, or_
+from sqlalchemy import select, func, union_all, literal, case, and_, or_, cast
+from sqlalchemy.types import Integer, Numeric, String
 from ca_biositing.datamodels.data_portal_views.common import (
     get_resource_filter,
     get_ultimate_filter,
@@ -30,6 +31,8 @@ from ca_biositing.datamodels.models.aim1_records.icp_record import IcpRecord
 from ca_biositing.datamodels.models.aim1_records.calorimetry_record import CalorimetryRecord
 from ca_biositing.datamodels.models.aim1_records.xrd_record import XrdRecord
 from ca_biositing.datamodels.models.aim1_records.ftnir_record import FtnirRecord
+from ca_biositing.datamodels.models.aim2_records.fermentation_record import FermentationRecord
+from ca_biositing.datamodels.models.aim2_records.gasification_record import GasificationRecord
 from ca_biositing.datamodels.models.aim2_records.pretreatment_record import PretreatmentRecord
 from ca_biositing.datamodels.models.sample_preparation.prepared_sample import PreparedSample
 from ca_biositing.datamodels.models.field_sampling.field_sample import FieldSample
@@ -42,6 +45,7 @@ def get_composition_query(model, analysis_type):
     QC: filtered to exclude "fail" - only include records that are not marked as failed"""
     return select(
         model.resource_id,
+        model.experiment_id,
         literal(analysis_type).label("analysis_type"),
         case(
             (Parameter.name == "ash", "ash solids"),
@@ -50,7 +54,7 @@ def get_composition_query(model, analysis_type):
         Observation.value.label("value"),
         Unit.name.label("unit"),
         LocationAddress.geography_id.label("geoid")
-    ).join(Observation, Observation.record_id == model.record_id)\
+    ).join(Observation, func.lower(Observation.record_id) == func.lower(model.record_id))\
      .join(Parameter, Observation.parameter_id == Parameter.id)\
      .outerjoin(Unit, Observation.unit_id == Unit.id)\
      .outerjoin(PreparedSample, model.prepared_sample_id == PreparedSample.id)\
@@ -77,13 +81,39 @@ comp_queries = [
     get_composition_query(PretreatmentRecord, "pretreatment")
 ]
 
+# Minimal queries for fermentation and gasification to flag presence in search
+# These don't need full observation data, just detection of record existence
+# Cast NULL values to match types from observation queries
+fermentation_presence = select(
+    FermentationRecord.resource_id,
+    cast(literal(None), Integer).label("experiment_id"),
+    literal("fermentation").label("analysis_type"),
+    literal("fermentation").label("parameter_name"),
+    cast(literal(None), Numeric).label("value"),
+    cast(literal(None), String).label("unit"),
+    cast(literal(None), String).label("geoid")
+).where(FermentationRecord.qc_pass != "fail").distinct()
+
+gasification_presence = select(
+    GasificationRecord.resource_id,
+    cast(literal(None), Integer).label("experiment_id"),
+    literal("gasification").label("analysis_type"),
+    literal("gasification").label("parameter_name"),
+    cast(literal(None), Numeric).label("value"),
+    cast(literal(None), String).label("unit"),
+    cast(literal(None), String).label("geoid")
+).where(GasificationRecord.qc_pass != "fail").distinct()
+
+comp_queries.extend([fermentation_presence, gasification_presence])
+
 all_measurements = union_all(*comp_queries).subquery()
 
-# QC Analysis Filtering: Calculate sums per (resource, geoid, analysis_type)
-# to apply proximate and compositional range constraints.
+# QC Analysis Filtering: Calculate sums per (resource, experiment, analysis_type)
+# Only for analysis types that need filtering (proximate and compositional)
+# Fermentation and gasification are shown in mv_biomass_search but don't use these sums
 qc_analysis_stats = select(
     all_measurements.c.resource_id,
-    all_measurements.c.geoid,
+    all_measurements.c.experiment_id,
     all_measurements.c.analysis_type,
     (
         func.coalesce(func.avg(case((all_measurements.c.parameter_name == "moisture", all_measurements.c.value))), 0) +
@@ -103,7 +133,7 @@ qc_analysis_stats = select(
     ).label("compositional_sum")
 ).group_by(
     all_measurements.c.resource_id,
-    all_measurements.c.geoid,
+    all_measurements.c.experiment_id,
     all_measurements.c.analysis_type
 ).subquery()
 
@@ -128,29 +158,41 @@ mv_biomass_composition = select(
      qc_analysis_stats,
      and_(
          all_measurements.c.resource_id == qc_analysis_stats.c.resource_id,
-         func.coalesce(all_measurements.c.geoid, "") == func.coalesce(qc_analysis_stats.c.geoid, ""),
+         func.coalesce(all_measurements.c.experiment_id, -1) == func.coalesce(qc_analysis_stats.c.experiment_id, -1),
          all_measurements.c.analysis_type == qc_analysis_stats.c.analysis_type
      )
   )\
  .where(
-     and_(
-         get_resource_filter(Resource),
-         or_(
-             all_measurements.c.analysis_type != "proximate",
-             and_(
-                 qc_analysis_stats.c.proximate_sum >= 95,
-                 qc_analysis_stats.c.proximate_sum <= 105
-             )
-         ),
-         or_(
-             all_measurements.c.analysis_type != "compositional",
-             and_(
-                 qc_analysis_stats.c.compositional_sum >= 40,
-                 qc_analysis_stats.c.compositional_sum <= 105
-             )
-         )
-     )
- )\
+      and_(
+          get_resource_filter(Resource),
+          or_(
+              # For proximate: apply sum filter (95-105) or no data
+              and_(
+                  all_measurements.c.analysis_type == "proximate",
+                  or_(
+                      qc_analysis_stats.c.proximate_sum == 0,
+                      and_(
+                          qc_analysis_stats.c.proximate_sum >= 95,
+                          qc_analysis_stats.c.proximate_sum <= 105
+                      )
+                  )
+              ),
+              # For compositional: apply sum filter (40-105) or no data
+              and_(
+                  all_measurements.c.analysis_type == "compositional",
+                  or_(
+                      qc_analysis_stats.c.compositional_sum == 0,
+                      and_(
+                          qc_analysis_stats.c.compositional_sum >= 40,
+                          qc_analysis_stats.c.compositional_sum <= 105
+                      )
+                  )
+              ),
+              # For all other analysis types: no filtering, include all
+              all_measurements.c.analysis_type.notin_(["proximate", "compositional"])
+          )
+      )
+  )\
  .group_by(
      all_measurements.c.resource_id,
      Resource.name,

@@ -209,8 +209,8 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = "0100_mv_view_fixes"
-down_revision: Union[str, Sequence[str], None] = "55f93e3a6237"
+revision: str = "0008_prox_exper_id_filter"
+down_revision: Union[str, Sequence[str], None] = "0007"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -287,7 +287,7 @@ def main():
     """Generate and write the migration file."""
 
     print("=" * 80)
-    print("Generating migration 0100_mv_view_fixes.py")
+    print("Generating migration 0008_prox_exper_id_filter.py (with corrected type casting)")
     print("=" * 80)
     print()
 
@@ -296,21 +296,22 @@ def main():
 
     # Write migration file
     alembic_versions_dir = Path(__file__).parent.parent / "alembic" / "versions"
-    migration_path = alembic_versions_dir / "0100_mv_view_fixes.py"
+    migration_path = alembic_versions_dir / "0008_prox_exper_id_filter.py"
 
     with open(migration_path, "w") as f:
         f.write(migration_content)
 
     print()
     print("=" * 80)
-    print(f"✓ Migration file created: {migration_path.relative_to(Path.cwd())}")
+    print(f"✓ Migration file updated: {migration_path.relative_to(Path.cwd())}")
     print("=" * 80)
     print()
     print("Next steps:")
     print("1. Review the migration file for correctness")
-    print("2. Run: pixi run migrate")
-    print("3. Verify views: pixi run access-db -c 'SELECT COUNT(*) FROM data_portal.mv_biomass_search;'")
-    print("4. Run audit: pixi run audit")
+    print("2. Run: POSTGRES_HOST=localhost pixi run alembic downgrade -1")
+    print("3. Run: POSTGRES_HOST=localhost pixi run migrate")
+    print("4. Verify views: pixi run access-db -c 'SELECT COUNT(*) FROM data_portal.mv_biomass_search;'")
+    print("5. Run audit: pixi run audit")
 
 
 if __name__ == "__main__":
