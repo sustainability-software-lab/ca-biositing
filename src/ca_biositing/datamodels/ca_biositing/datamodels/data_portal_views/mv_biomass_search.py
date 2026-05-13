@@ -183,7 +183,8 @@ agg_vol = select(
      ResourceProductionRecord.resource_id,
      func.sum(production_obs.c.production_value).label("total_annual_volume"),
      func.count(func.distinct(ResourceProductionRecord.geoid)).label("county_count"),
-     func.max(Unit.name).label("volume_unit")
+     func.max(Unit.name).label("volume_unit"),
+     cast(func.extract('year', latest_production_year.c.latest_report_date), Integer).label("total_annual_volume_year")
  ).select_from(ResourceProductionRecord)\
   .join(production_obs, production_obs.c.production_record_id == ResourceProductionRecord.id)\
   .join(latest_production_year, and_(
@@ -192,7 +193,7 @@ agg_vol = select(
   ))\
   .outerjoin(Unit, production_obs.c.unit_id == Unit.id)\
   .where(ResourceProductionRecord.geoid != "NSJV")\
-  .group_by(ResourceProductionRecord.resource_id).subquery()
+  .group_by(ResourceProductionRecord.resource_id, latest_production_year.c.latest_report_date).subquery()
 
 # Biomass availability aggregation
 from .mv_biomass_availability import mv_biomass_availability
@@ -225,8 +226,10 @@ volume_agg = select(
      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_mid).label("calculated_estimate_volume_mid"),
      volume_year_sq.c.volume_estimate_year
   ).select_from(mv_biomass_volume_estimate)\
-   .join(volume_year_sq, mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id)\
-   .where(mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year)\
+   .join(volume_year_sq, and_(
+       mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id,
+       mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year,
+   ))\
    .group_by(mv_biomass_volume_estimate.c.resource_id, volume_year_sq.c.volume_estimate_year).subquery()
 
 mv_biomass_search = select(
@@ -242,6 +245,7 @@ mv_biomass_search = select(
      agg_vol.c.total_annual_volume,
      agg_vol.c.county_count,
      agg_vol.c.volume_unit,
+     agg_vol.c.total_annual_volume_year,
      resource_metrics_v2.c.moisture_percent,
      resource_metrics_v2.c.sugar_content_percent,
      resource_metrics_v2.c.glucan_percent,
