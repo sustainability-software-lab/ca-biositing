@@ -14,6 +14,7 @@ from config import (
     SECRET_DB_PASSWORD,
     SECRET_GSHEETS,
     SECRET_USDA_API_KEY,
+    SECRET_GOOGLE_MAPS_API_KEY,
     SECRET_PREFECT_AUTH,
     SECRET_POSTGRES_PASSWORD,
     SECRET_JWT_KEY,
@@ -32,6 +33,7 @@ class SecretResources:
     db_password_secret: gcp.secretmanager.Secret
     gsheets_secret: gcp.secretmanager.Secret
     usda_api_key_secret: gcp.secretmanager.Secret = None
+    google_maps_api_key_secret: gcp.secretmanager.Secret = None
     prefect_auth_password: random.RandomPassword = None
     prefect_auth_secret: gcp.secretmanager.Secret = None
     readonly_users: dict = field(default_factory=dict)
@@ -102,6 +104,16 @@ def create_secrets(
     usda_api_key_secret = gcp.secretmanager.Secret(
         "usda-api-key-secret",
         secret_id=SECRET_USDA_API_KEY,
+        replication=gcp.secretmanager.SecretReplicationArgs(
+            auto=gcp.secretmanager.SecretReplicationAutoArgs(),
+        ),
+        opts=secret_opts,
+    )
+
+    # Google Maps API key (version added manually post-deploy)
+    google_maps_api_key_secret = gcp.secretmanager.Secret(
+        "google-maps-api-key-secret",
+        secret_id=SECRET_GOOGLE_MAPS_API_KEY,
         replication=gcp.secretmanager.SecretReplicationArgs(
             auto=gcp.secretmanager.SecretReplicationAutoArgs(),
         ),
@@ -289,6 +301,7 @@ def create_secrets(
         db_password_secret=db_password_secret,
         gsheets_secret=gsheets_secret,
         usda_api_key_secret=usda_api_key_secret,
+        google_maps_api_key_secret=google_maps_api_key_secret,
         prefect_auth_password=prefect_auth_password,
         prefect_auth_secret=prefect_auth_secret,
         readonly_users=readonly_users,
