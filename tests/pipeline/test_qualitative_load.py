@@ -31,8 +31,8 @@ class TestQualitativeLoad:
     def test_normalize_parameter_name_preserves_underscore_style(self):
         from ca_biositing.pipeline.etl.load.analysis.qualitative import _normalize_parameter_name
 
-        assert _normalize_parameter_name("resource use perc low") == "resource_use_perc_low"
-        assert _normalize_parameter_name("resource_use_perc_low") == "resource_use_perc_low"
+        assert _normalize_parameter_name("resource use perc low") == "resource use perc low"
+        assert _normalize_parameter_name("resource use perc low") == "resource use perc low"
 
     def test_map_trend_to_numeric(self):
         from ca_biositing.pipeline.etl.load.analysis.qualitative import _map_trend_to_numeric

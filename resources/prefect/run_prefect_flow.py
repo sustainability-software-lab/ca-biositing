@@ -10,6 +10,7 @@ AVAILABLE_FLOWS = {
     "biodiesel_plants": "ca_biositing.pipeline.flows.biodiesel_plants.biodiesel_plants_flow",
     "residue_factors": "ca_biositing.pipeline.flows.residue_factors_flow.residue_factors_etl_flow",
     "resource_information": "ca_biositing.pipeline.flows.resource_information.resource_information_flow",
+    "almond_nsjv": "ca_biositing.pipeline.flows.almond_nsjv_etl.almond_nsjv_etl_flow",
     "qualitative": "ca_biositing.pipeline.flows.qualitative.qualitative_etl_flow",
     "static_resource_info": "ca_biositing.pipeline.flows.static_resource_info.static_resource_info_flow",
     "samples": "ca_biositing.pipeline.flows.samples_etl.samples_etl_flow",
