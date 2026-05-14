@@ -73,6 +73,10 @@ def transform_xrf_record(
         datetime_cols=['created_at', 'updated_at']
     )
 
+    # User request: treat null as 0 for XRF
+    if 'value' in coerced_df.columns:
+        coerced_df['value'] = coerced_df['value'].fillna(0)
+
     # 2. Normalization
     normalize_columns = {
         'resource': (Resource, 'name'),
