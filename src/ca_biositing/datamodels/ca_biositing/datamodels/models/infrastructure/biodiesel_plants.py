@@ -1,4 +1,5 @@
 from decimal import Decimal
+from datetime import datetime
 from sqlmodel import Field, SQLModel
 from typing import Optional
 
@@ -15,8 +16,10 @@ class InfrastructureBiodieselPlants(SQLModel, table=True):
     capacity_mmg_per_y: Optional[int] = Field(default=None)
     feedstock: Optional[str] = Field(default=None)
     status: Optional[str] = Field(default=None)
-    address: Optional[str] = Field(default=None)
+    address: Optional[int] = Field(default=None)
     coordinates: Optional[str] = Field(default=None)
     latitude: Optional[Decimal] = Field(default=None)
     longitude: Optional[Decimal] = Field(default=None)
     source: Optional[str] = Field(default=None)
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)

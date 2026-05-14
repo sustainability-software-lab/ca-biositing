@@ -51,6 +51,7 @@ SECRET_RO_PREFIX = f"biocirv-{STACK_NAME}-ro"
 SECRET_OAUTH2_CLIENT_ID = f"biocirv-{STACK_NAME}-oauth2-client-id"
 SECRET_OAUTH2_CLIENT_SECRET = f"biocirv-{STACK_NAME}-oauth2-client-secret"
 SECRET_OAUTH2_COOKIE_SECRET = f"biocirv-{STACK_NAME}-oauth2-cookie-secret"
+SECRET_GOOGLE_MAPS_API_KEY = f"biocirv-{STACK_NAME}-google-maps-api-key"
 
 # Service account IDs (GCP limit: 30 chars)
 # "production" is abbreviated to "prod" to stay within the limit.

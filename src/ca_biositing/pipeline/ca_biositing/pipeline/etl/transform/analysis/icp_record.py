@@ -22,7 +22,8 @@ def transform_icp_record(
         Resource,
         PreparedSample,
         Dataset,
-        FileObjectMetadata
+        FileObjectMetadata,
+        Experiment
     )
     logger = get_run_logger()
 
@@ -47,7 +48,8 @@ def transform_icp_record(
         'resource': Resource,
         'prepared_sample': PreparedSample,
         'dataset': Dataset,
-        'raw_data_url': (FileObjectMetadata, 'uri')
+        'raw_data_url': (FileObjectMetadata, 'uri'),
+        'exper_abbrev': (Experiment, 'name'),
     }
 
     normalized_dfs = normalize_dataframes(df, normalize_columns)
@@ -72,7 +74,8 @@ def transform_icp_record(
                           'resource_id' if col == 'resource' else \
                           'prepared_sample_id' if col == 'prepared_sample' else \
                           'dataset_id' if col == 'dataset' else \
-                          'raw_data_id' if col == 'raw_data_url' else norm_col
+                          'raw_data_id' if col == 'raw_data_url' else \
+                          'experiment_id' if col == 'exper_abbrev' else norm_col
             rename_map[norm_col] = target_name
 
     available_cols = [c for c in rename_map.keys() if c in normalized_df.columns]
