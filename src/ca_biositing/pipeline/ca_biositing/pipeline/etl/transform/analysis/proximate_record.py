@@ -22,6 +22,7 @@ def transform_proximate_record(
         Provider,
         Dataset,
         FileObjectMetadata,
+        Experiment,
     )
     """
     Transforms raw DataFrame into the ProximateRecord table format.
@@ -60,7 +61,8 @@ def transform_proximate_record(
         'primary_ag_product': (PrimaryAgProduct, 'name'),
         'provider_code': (Provider, 'codename'),
         'dataset': (Dataset, 'name'),
-        'raw_data_url': (FileObjectMetadata, 'uri')
+        'raw_data_url': (FileObjectMetadata, 'uri'),
+        'exper_abbrev': (Experiment, 'name'),
     }
     normalized_dfs = normalize_dataframes(coerced_df, normalize_columns)
     normalized_df = normalized_dfs[0]
@@ -80,7 +82,8 @@ def transform_proximate_record(
         if norm_col in normalized_df.columns:
             target_name = 'analyst_id' if col == 'analyst_email' else \
                           'method_id' if col == 'preparation_method' else \
-                          'raw_data_id' if col == 'raw_data_url' else norm_col
+                          'raw_data_id' if col == 'raw_data_url' else \
+                          'experiment_id' if col == 'exper_abbrev' else norm_col
             rename_map[norm_col] = target_name
 
     available_cols = [c for c in rename_map.keys() if c in normalized_df.columns]
