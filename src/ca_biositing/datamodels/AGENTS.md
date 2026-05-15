@@ -109,18 +109,23 @@ migrations**. There is no code generation step.
 
 ### Materialized Views
 
-Views are defined in `views.py` as SQLAlchemy Core `select()` expressions. They
-are created/modified through **manual** Alembic migrations.
+Views are defined in `data_portal_views/` as SQLAlchemy Core `select()`
+expressions. They are created/modified through **manual** Alembic migrations.
 
 **CRITICAL:** Alembic `autogenerate` does NOT detect changes to materialized
 views. When updating a view:
 
-1. Generate an empty migration:
-   `pixi run migrate-autogenerate -m "Update view X"`
-2. Manually edit the script to use `op.execute()` to `DROP` and `CREATE` the
-   view.
-3. Use `stmt.compile()` with `literal_binds=True` to generate the SQL from the
-   SQLAlchemy expression.
+1. Edit the SQLAlchemy expression in
+   `src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/`.
+2. Use the custom compilation script to generate a manual migration:
+
+   ```bash
+   # Create a new revision
+   pixi run compile-mv-fixes -m "Description of view changes"
+
+   # Or overwrite an existing revision to iterate
+   pixi run compile-mv-fixes --revision 0009 --force
+   ```
 
 Refresh after data loads:
 

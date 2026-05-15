@@ -57,7 +57,7 @@ all_samples = union_all(*sample_queries).subquery()
 mv_biomass_sample_stats = select(
     Resource.id.label("resource_id"),
     Resource.name.label("resource_name"),
-    func.count(func.distinct(all_samples.c.prepared_sample_id)).label("sample_count"),
+    func.count(func.distinct(FieldSample.id)).label("sample_count"),
     func.count(func.distinct(Provider.id)).label("supplier_count"),
     func.count(func.distinct(all_samples.c.dataset_id)).label("dataset_count"),
     func.count().label("total_record_count")
@@ -65,6 +65,6 @@ mv_biomass_sample_stats = select(
  .outerjoin(all_samples, all_samples.c.resource_id == Resource.id)\
  .where(get_resource_filter(Resource))\
  .outerjoin(PreparedSample, cast(all_samples.c.prepared_sample_id, Integer) == PreparedSample.id)\
- .outerjoin(FieldSample, PreparedSample.field_sample_id == FieldSample.id)\
+ .outerjoin(FieldSample, (PreparedSample.field_sample_id == FieldSample.id) | (FieldSample.resource_id == Resource.id))\
  .outerjoin(Provider, FieldSample.provider_id == Provider.id)\
  .group_by(Resource.id, Resource.name)
