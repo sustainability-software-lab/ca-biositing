@@ -15,5 +15,23 @@ To quickly iterate on schema changes without full service rebuilds:
 ### Linear Migration Chain
 It is critical to maintain a **linear migration chain**. Our standard practice is to ensure that all local migrations follow the head of `upstream/main` in a single sequence. This ensures compatibility with the staging and production environments where upstream migrations are already deployed.
 
+### Dual-Track Development Workflow
+We use two distinct tracks for database schema changes:
+
+1. **SQLModel / Table Changes**: These are managed via `pixi run migrate-autogenerate`. Alembic automatically detects changes to your Python models.
+2. **Materialized View Fixes**: Since Alembic does not automatically detect changes to views, we use a custom script to compile Python view definitions (defined using SQLAlchemy Core) into raw SQL within a migration file.
+
+#### Iterating on Materialized Views
+To update or create a view fix migration:
+```bash
+# Create a new migration for view fixes
+pixi run compile-mv-fixes -m "Fix lignin calculation"
+
+# Overwrite an existing migration to iterate on the same revision
+pixi run compile-mv-fixes --revision 0009 --force
+```
+
+After generating or updating the script, follow the standard downgrade/upgrade cycle to apply the changes to your local database.
+
 ### Common Issues
 - **Explicit Foreign Key Nullability**: SQLModel defaults to `Optional` (nullable) unless specified otherwise. Always ensure your model's field nullability matches the database schema. If `alembic check` fails with `modify_nullable`, ensure the model's type hint matches the database's `NOT NULL` constraint.

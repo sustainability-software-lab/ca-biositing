@@ -27,6 +27,21 @@ with Session(engine) as session:
     resources = session.exec(select(Resource)).all()
 ```
 
+## Development Workflow
+
+This project uses a dual-track migration system:
+
+1.  **Table Changes**: Modify SQLModel classes and run
+    `pixi run migrate-autogenerate -m "message"`.
+2.  **Materialized View Fixes**: Modify view expressions in `data_portal_views/`
+    and run `pixi run compile-mv-fixes -m "message"`.
+
+To iterate on a view fix migration without creating new revisions:
+
+```bash
+pixi run compile-mv-fixes --revision 0009 --force
+```
+
 ## Key Dependencies
 
 - [SQLModel](https://sqlmodel.tiangolo.com/) — ORM + Pydantic validation
