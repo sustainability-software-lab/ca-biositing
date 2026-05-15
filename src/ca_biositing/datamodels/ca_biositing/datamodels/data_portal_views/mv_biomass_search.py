@@ -65,12 +65,12 @@ resource_metrics_v2 = select(
     func.avg(case((comp_sq.c.parameter_name == "ash solids", comp_sq.c.avg_value))).label("ash_percent"),
     case(
         (
-            or_(
-                func.avg(case((comp_sq.c.parameter_name == "lignin", comp_sq.c.avg_value))).is_not(None),
-                func.avg(case((comp_sq.c.parameter_name == "lignin+", comp_sq.c.avg_value))).is_not(None)
-            ),
-            func.coalesce(func.avg(case((comp_sq.c.parameter_name == "lignin", comp_sq.c.avg_value))), 0) +
-            func.coalesce(func.avg(case((comp_sq.c.parameter_name == "lignin+", comp_sq.c.avg_value))), 0)
+            func.avg(case((comp_sq.c.parameter_name == "lignin", comp_sq.c.avg_value))).is_not(None),
+            func.avg(case((comp_sq.c.parameter_name == "lignin", comp_sq.c.avg_value)))
+        ),
+        (
+            func.avg(case((comp_sq.c.parameter_name == "lignin+", comp_sq.c.avg_value))).is_not(None),
+            func.avg(case((comp_sq.c.parameter_name == "lignin+", comp_sq.c.avg_value)))
         ),
         else_=None
     ).label("lignin_percent"),

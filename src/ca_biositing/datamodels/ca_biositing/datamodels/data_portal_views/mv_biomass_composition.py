@@ -64,7 +64,11 @@ def get_composition_query(model, analysis_type):
          and_(
              model.qc_pass != "fail",
              get_ultimate_filter(literal(analysis_type), Parameter.name),
-             get_icp_filter(literal(analysis_type), Unit.name)
+             get_icp_filter(literal(analysis_type), Unit.name),
+             or_(
+                 literal(analysis_type) != "ultimate",
+                 Observation.value <= 100
+             )
          )
      )
 

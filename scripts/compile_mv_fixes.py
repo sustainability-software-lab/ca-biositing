@@ -186,21 +186,22 @@ CREATE MATERIALIZED VIEW data_portal.{view_name} AS
     # Build the complete migration file
     migration_content = f'''"""Recreate all 9 materialized views with fixes.
 
-Revision ID: 0100_mv_view_fixes
-Revises: 55f93e3a6237
-Create Date: 2026-05-05
+Revision ID: 0009_mv_fixes
+Revises: 0008
+Create Date: 2026-05-15
 
 This migration:
 1. Drops all indexes on the 9 data portal materialized views
 2. Drops all 9 materialized views in CASCADE mode
-3. Recreates all 9 views with updated SQL (fixes for mv_biomass_search, mv_biomass_pricing, mv_biomass_end_uses)
+3. Recreates all 9 views with updated SQL (fixes for mv_biomass_search, mv_biomass_pricing, mv_biomass_end_uses, mv_biomass_sample_stats, mv_biomass_composition)
 4. Creates all required indexes for concurrent refresh and query performance
 5. Grants schema access to the readonly role
 
 Modified views:
-  - mv_biomass_search: Added volume_estimate_year column, updated sugar calculation to use glucan+xylan
-  - mv_biomass_pricing: Added resource_id and resource_name, replaced commodity mapping
-  - mv_biomass_end_uses: Added value_multiplier_low and value_multiplier_high columns
+
+  - mv_biomass_sample_stats: Updated sample_count to reflect field_samples instead of prepared_samples
+  - mv_biomass_composition: Added quality control filter for ultimate analysis records (value <= 100)
+  - mv_biomass_search: Updated lignin calculation to prefer 'lignin' over 'lignin +' when both are present
 
 """
 from typing import Sequence, Union
@@ -209,8 +210,8 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = "0008_prox_exper_id_filter"
-down_revision: Union[str, Sequence[str], None] = "0007"
+revision: str = "0009"
+down_revision: Union[str, Sequence[str], None] = "0008"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -287,7 +288,7 @@ def main():
     """Generate and write the migration file."""
 
     print("=" * 80)
-    print("Generating migration 0008_prox_exper_id_filter.py (with corrected type casting)")
+    print("Generating migration 0009_mv_fixes.py")
     print("=" * 80)
     print()
 
@@ -296,7 +297,7 @@ def main():
 
     # Write migration file
     alembic_versions_dir = Path(__file__).parent.parent / "alembic" / "versions"
-    migration_path = alembic_versions_dir / "0008_prox_exper_id_filter.py"
+    migration_path = alembic_versions_dir / "0009_mv_fixes.py"
 
     with open(migration_path, "w") as f:
         f.write(migration_content)
