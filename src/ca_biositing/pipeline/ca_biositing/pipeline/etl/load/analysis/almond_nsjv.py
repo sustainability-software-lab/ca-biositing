@@ -325,6 +325,7 @@ def _upsert_parameter(session: Session, row: dict[str, Any], etl_run_id: Any, li
             lineage_group_id=lineage_group_id,
         )
     )
+    session.flush()
     return True
 
 
@@ -373,6 +374,7 @@ def _ensure_weighted_average_parameter(
             lineage_group_id=lineage_group_id,
         )
     )
+    session.flush()
     return True
 
 
@@ -423,6 +425,7 @@ def _ensure_price_received_parameter(
             lineage_group_id=lineage_group_id,
         )
     )
+    session.flush()
     return True
 
 
