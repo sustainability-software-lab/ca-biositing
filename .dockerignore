@@ -38,8 +38,9 @@ frontend/dist/
 Thumbs.db
 
 # Local secrets / env files
-.env
-.env.*
+**/.env
+**/.env.*
+**/.env.example
 *.credentials.json
 
 # Docs build output
