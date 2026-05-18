@@ -9,9 +9,10 @@ from __future__ import annotations
 
 from datetime import date
 import re
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import pandas as pd
+import numpy as np
 from prefect import get_run_logger, task
 from sqlmodel import Session, select
 
@@ -32,10 +33,10 @@ _COUNTY_TO_GEOID = {
 _ALLOWED_COUNTIES = {"merced", "san joaquin", "nsjv", "stanislaus"}
 
 _COUNTY_PREFIXES = [
-    ("san_joaquin_", "san joaquin"),
-    ("stanislaus_", "stanislaus"),
-    ("merced_", "merced"),
-    ("nsjv_", "nsjv"),
+    ("san joaquin ", "san joaquin"),
+    ("stanislaus ", "stanislaus"),
+    ("merced ", "merced"),
+    ("nsjv ", "nsjv"),
 ]
 
 _PRICE_TOKEN = "price"
@@ -65,10 +66,8 @@ def _normalize_parameter_name(value: Any) -> str:
     if value is None or pd.isna(value):
         return ""
     text = str(value).strip().lower().replace("’", "'")
-    # Keep an underscore-normalized form for internal parsing, but
-    # callers that need human-friendly names should use `_normalize_text`.
-    text = re.sub(r"[\s_-]+", "_", text)
-    text = re.sub(r"_+", "_", text)
+    text = re.sub(r"[\s_-]+", " ", text)
+    text = re.sub(r"\s+", " ", text)
     return text
 
 
@@ -87,19 +86,26 @@ def _first_existing_column(df: pd.DataFrame, candidates: list[str]) -> Optional[
 
 
 def _parse_county_header(header: Any) -> tuple[str, str]:
+    """Parse county name and metric name from header string."""
     text = _normalize_text(header)
     if text == "":
         return "", ""
 
-    normalized = _normalize_parameter_name(text)
+    # _normalize_text has already replaced underscores/hyphens with spaces.
+    # Check for direct county name match
+    if text in _ALLOWED_COUNTIES:
+        return text, ""
+
     for prefix, county_key in _COUNTY_PREFIXES:
-        if normalized.startswith(prefix):
-            suffix = normalized[len(prefix):].strip(" _-")
+        if text.startswith(prefix):
+            suffix = text[len(prefix):].strip()
             return county_key, suffix
 
-    parts = normalized.split("_", 1)
-    if len(parts) == 2:
+    # Fallback to splitting by space if no prefix matches
+    parts = text.split(" ", 1)
+    if len(parts) == 2 and parts[0] in _ALLOWED_COUNTIES:
         return parts[0], parts[1]
+
     return text, ""
 
 
@@ -203,7 +209,7 @@ def _clean_sheet(df: pd.DataFrame) -> Optional[pd.DataFrame]:
     cleaned = cleaning_mod.standard_clean(df)
     if cleaned is None:
         return None
-    return cleaned.copy()
+    return cast(pd.DataFrame, cleaned.copy())
 
 
 @task
@@ -229,7 +235,9 @@ def transform_county_ag_parameters(
     if marker_col is None:
         marker_col = cleaned.columns[0]
 
-    cleaned = cleaned[cleaned[marker_col].astype(str).str.contains("price_production_county_ag_reports", case=False, na=False)].copy()
+    # Filter for relevant parameters
+    mask = cleaned[marker_col].astype(str).str.contains("price_production_county_ag_reports", case=False, na=False)
+    cleaned = cast(pd.DataFrame, cleaned[mask].copy())
     if cleaned.empty:
         logger.warning("No almond parameter rows matched the expected marker.")
         return pd.DataFrame()
@@ -251,7 +259,7 @@ def transform_county_ag_parameters(
         return pd.DataFrame()
 
     cleaned["name"] = cleaned["name"].apply(_canonicalize_almond_parameter_name)
-    cleaned = cleaned[cleaned["name"].astype(str).str.strip() != ""].copy()
+    cleaned = cast(pd.DataFrame, cleaned[cleaned["name"].astype(str).str.strip() != ""].copy())
     cleaned["calculated"] = cleaned["name"].str.contains("calculated|estimate", case=False, na=False)
     cleaned["parameter_dedupe_key"] = cleaned["name"].astype(str).str.strip().str.lower()
     cleaned["etl_run_id"] = etl_run_id
@@ -259,7 +267,8 @@ def transform_county_ag_parameters(
 
     from ca_biositing.datamodels.models import Unit
 
-    normalized = normalize_dataframes(cleaned, {"standard_unit": (Unit, "name")})[0]
+    normalized_list = normalize_dataframes(cleaned, {"standard_unit": (Unit, "name")})
+    normalized = normalized_list[0]
     if "standard_unit_id" not in normalized.columns:
         normalized["standard_unit_id"] = pd.NA
 
@@ -273,7 +282,7 @@ def transform_county_ag_parameters(
         "lineage_group_id",
     ]
     logger.info("Prepared %s almond parameters.", len(normalized))
-    return normalized[desired_columns].copy()
+    return cast(pd.DataFrame, normalized[desired_columns].copy())
 
 
 @task
@@ -302,9 +311,12 @@ def transform_county_ag_records(
     }
 
     def build_rows(raw_df: pd.DataFrame) -> None:
-        cleaned = _clean_sheet(raw_df)
-        if cleaned is None or cleaned.empty:
+        cleaned_orig = _clean_sheet(raw_df)
+        if cleaned_orig is None or cleaned_orig.empty:
+            logger.warning("Cleaned almond sheet is empty or None")
             return
+
+        cleaned = cleaned_orig.copy()
 
         if "resource" not in cleaned.columns:
             resource_col = _first_existing_column(cleaned, ["resource_name", "primary_ag_product", "primary_product"])
@@ -312,37 +324,43 @@ def transform_county_ag_records(
                 cleaned = cleaned.rename(columns={resource_col: "resource"})
 
         if "resource" in cleaned.columns:
-            cleaned = cleaned[cleaned["resource"].notna() & (cleaned["resource"].astype(str).str.strip() != "")].copy()
+            mask = cleaned["resource"].notna() & (cleaned["resource"].astype(str).str.strip() != "")
+            cleaned = cast(pd.DataFrame, cleaned[mask].copy())
+
         if cleaned.empty:
+            logger.warning("Almond sheet has no resource values.")
             return
 
         year_col = _first_existing_column(cleaned, ["year", "data_year", "report_year"])
         resource_col = _first_existing_column(cleaned, ["resource", "resource_name"])
         primary_product_col = _first_existing_column(cleaned, ["primary_ag_product", "primary_product"])
+
         if year_col is None or resource_col is None:
             logger.warning("Could not identify year/resource columns in almond sheet: columns=%s", cleaned.columns.tolist())
             return
 
         metric_columns = [col for col in cleaned.columns if col not in {year_col, resource_col, primary_product_col, "note", "description"}]
+        logger.info("Found %s potential metric columns in almond sheet.", len(metric_columns))
+
         for _, row in cleaned.iterrows():
             resource_value = row.get(resource_col)
             if pd.isna(resource_value) or str(resource_value).strip() == "":
-                # Keep the current filter: skip rows with no resource even if they only contain
-                # primary agricultural product information. This can be expanded later if needed.
                 continue
 
-            report_year = row.get(year_col)
-            if pd.isna(report_year) or str(report_year).strip() == "":
+            report_year_raw = row.get(year_col)
+            if pd.isna(report_year_raw) or str(report_year_raw).strip() == "":
                 continue
 
-            county_name = None
-            geoid = None
+            try:
+                report_year = int(float(str(report_year_raw)))
+            except (ValueError, TypeError):
+                continue
 
             base_payload = {
-                "geoid": geoid,
+                "geoid": None,
                 "resource": resource_value,
                 "primary_ag_product": row.get(primary_product_col) if primary_product_col else None,
-                "report_year": int(float(report_year)),
+                "report_year": report_year,
                 "note": row.get("note") if "note" in row.index else row.get("description"),
                 "etl_run_id": etl_run_id,
                 "lineage_group_id": lineage_group_id,
@@ -364,23 +382,22 @@ def transform_county_ag_records(
                 county_name_normalized, metric_name = _parse_county_header(column)
                 if county_name_normalized not in _ALLOWED_COUNTIES:
                     continue
-                county_name = county_name_normalized or county_name
-                geoid = _resolve_geoid(county_name, place_lookup)
+
+                geoid = _resolve_geoid(county_name_normalized, place_lookup)
                 if not geoid:
-                    logger.error("Skipping almond row with unresolved county/geoid: county=%s column=%s", county_name, column)
+                    logger.error("Skipping almond row with unresolved county/geoid: county=%s column=%s", county_name_normalized, column)
                     continue
 
                 payload = base_payload.copy()
                 freight_terms = None
                 if record_type == "resource_price_record":
-                    # We may want a join table later mapping county x commodity to reported freight term.
                     freight_terms = freight_terms_lookup.get(county_name_normalized) or freight_terms_lookup.get(str(geoid))
+
                 payload.update(
                     {
                         "geoid": geoid,
-                        # store human-friendly parameter names (spaces, no underscores)
-                        "metric_name": metric_name or _normalize_text(_parse_county_header(column)[1] or column),
-                        "county_name": county_name_normalized or _normalize_text(county_name),
+                        "metric_name": metric_name or _normalize_text(column),
+                        "county_name": county_name_normalized,
                         "value": metric_value,
                         "record_type": record_type,
                         "source_sheet": "price_production_county_ag_reports",
@@ -403,7 +420,6 @@ def transform_county_ag_records(
         if not df.empty:
             df["report_start_date"] = pd.to_datetime(df["report_year"].astype(int).astype(str) + "-01-01").dt.date
             df["report_end_date"] = pd.to_datetime(df["report_year"].astype(int).astype(str) + "-12-31").dt.date
-            # production records use a single report_date (Jan 1 of the year)
             if df is production_records:
                 df["report_date"] = pd.to_datetime(df["report_year"].astype(int).astype(str) + "-01-01").dt.date
             df["dataset_dedupe_key"] = df["record_type"].astype(str) + "|" + df["geoid"].astype(str) + "|" + df["report_year"].astype(str)
@@ -439,15 +455,18 @@ def transform_county_ag_observations(
         rows = session.exec(select(Parameter)).all()
         for row in rows:
             name = _normalize_text(getattr(row, "name", None))
-            if name:
-                parameter_lookup[name] = row.id
+            rid = getattr(row, "id", None)
+            if name and rid:
+                parameter_lookup[name] = rid
 
     observation_rows: list[dict[str, Any]] = []
 
     def collect_observations(raw_df: pd.DataFrame) -> None:
-        cleaned = _clean_sheet(raw_df)
-        if cleaned is None or cleaned.empty:
+        cleaned_orig = _clean_sheet(raw_df)
+        if cleaned_orig is None or cleaned_orig.empty:
             return
+
+        cleaned = cleaned_orig.copy()
 
         if "resource" not in cleaned.columns:
             resource_col = _first_existing_column(cleaned, ["resource_name", "primary_ag_product", "primary_product"])
@@ -465,8 +484,13 @@ def transform_county_ag_observations(
             if pd.isna(resource_value) or str(resource_value).strip() == "":
                 continue
 
-            report_year = row.get(year_col)
-            if pd.isna(report_year) or str(report_year).strip() == "":
+            report_year_raw = row.get(year_col)
+            if pd.isna(report_year_raw) or str(report_year_raw).strip() == "":
+                continue
+
+            try:
+                report_year = int(float(str(report_year_raw)))
+            except (ValueError, TypeError):
                 continue
 
             for column in metric_columns:
@@ -501,8 +525,8 @@ def transform_county_ag_observations(
                         "parameter_id": parameter_id,
                         "parameter_name": parameter_name,
                         "value": value,
-                        "year": int(float(report_year)),
-                        "report_date": date(int(float(report_year)), 1, 1),
+                        "year": report_year,
+                        "report_date": date(report_year, 1, 1),
                         "etl_run_id": etl_run_id,
                         "lineage_group_id": lineage_group_id,
                     }
@@ -525,6 +549,9 @@ def transform_county_ag_observations(
             + observations["resource"].astype(str)
         )
 
+    observations = observations.drop_duplicates(subset=["observation_dedupe_key"])
+
+
     logger.info("Prepared %s almond observations.", len(observations))
     return observations
 
@@ -536,6 +563,7 @@ def transform_almond_nsjv_payloads(
     lineage_group_id: str | None = None,
 ) -> Dict[str, Any]:
     """Convenience wrapper that returns all transformed almond payloads."""
+    # Use .fn to call task functions from within another task
     return {
         "parameter": transform_county_ag_parameters.fn(
             data_sources=data_sources,

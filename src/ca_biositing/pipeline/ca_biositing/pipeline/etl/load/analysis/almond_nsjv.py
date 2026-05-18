@@ -11,12 +11,12 @@ from datetime import date, datetime, timezone
 from decimal import Decimal
 import logging
 import re
-from typing import Any, Optional
+from typing import Any, Optional, cast
 
 import numpy as np
 import pandas as pd
 from prefect import get_run_logger, task
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func, or_
 
 from ca_biositing.pipeline.utils.engine import get_engine
 
@@ -54,7 +54,7 @@ def _normalize_parameter_name(value: Any) -> str:
     """Normalize parameter name to lowercase with spaces (not snake_case)."""
     if value is None or pd.isna(value):
         return ""
-    text = str(value).strip().lower().replace("'", "'")
+    text = str(value).strip().lower().replace("’", "'")
     text = re.sub(r"[\s_-]+", " ", text)
     text = re.sub(r"\s+", " ", text)
     return text
@@ -74,9 +74,9 @@ def _to_date(value: Any) -> Optional[date]:
     if isinstance(value, date) and not isinstance(value, datetime):
         return value
     parsed = pd.to_datetime(value, errors="coerce")
-    if pd.isna(parsed):
+    if pd.isna(parsed) or not hasattr(parsed, "date"):
         return None
-    return parsed.date()
+    return cast(date, parsed.date())
 
 
 def _to_decimal(value: Any) -> Optional[Decimal]:
@@ -94,7 +94,7 @@ def _to_decimal(value: Any) -> Optional[Decimal]:
         return None
 
 
-def _get_first_present(row: dict[str, Any], candidates: tuple[str, ...]) -> Any:
+def _get_first_present(row: dict[Any, Any], candidates: tuple[str, ...]) -> Any:
     for candidate in candidates:
         if candidate in row:
             return row[candidate]
@@ -108,12 +108,16 @@ def _upsert_by_name(
     payload: dict[str, Any],
 ) -> tuple[Any, bool]:
     normalized_name = _normalize_text(name)
-    for row in session.exec(select(model)).all():
-        if _normalize_text(getattr(row, "name", None)) == normalized_name:
-            for key, value in payload.items():
-                if key != "id":
-                    setattr(row, key, value)
-            return row, False
+    # Optimized lookup using SQL
+    existing = session.exec(
+        select(model).where(func.lower(model.name) == normalized_name)
+    ).first()
+
+    if existing:
+        for key, value in payload.items():
+            if key != "id":
+                setattr(existing, key, value)
+        return existing, False
 
     instance = model(**payload)
     session.add(instance)
@@ -221,9 +225,14 @@ def _resolve_resource_id(session: Session, resource_value: Any) -> Optional[int]
      if normalized_resource == "":
          return None
 
-     for row in session.exec(select(Resource)).all():
-         if _normalize_text(getattr(row, "name", None)) == normalized_resource:
-             return getattr(row, "id", None)
+     # Optimized Resource lookup
+     existing = session.exec(
+         select(Resource).where(func.lower(Resource.name) == normalized_resource)
+     ).first()
+
+     if existing:
+         return existing.id
+
      # If not found, create a new Resource record using the provided name.
      try:
          now = datetime.now(timezone.utc)
@@ -236,7 +245,7 @@ def _resolve_resource_id(session: Session, resource_value: Any) -> Optional[int]
 
 
 def _ensure_unit(session: Session, unit_value: Any) -> Optional[int]:
-     """Resolve unit by name and create if missing (similar to _resolve_resource_id)."""
+     """Resolve unit by name and create if missing."""
      from ca_biositing.datamodels.models import Unit
 
      if isinstance(unit_value, (int, float)) and not pd.isna(unit_value):
@@ -246,9 +255,14 @@ def _ensure_unit(session: Session, unit_value: Any) -> Optional[int]:
      if normalized_unit == "":
          return None
 
-     for row in session.exec(select(Unit)).all():
-         if _normalize_text(getattr(row, "name", None)) == normalized_unit:
-             return getattr(row, "id", None)
+     # Optimized Unit lookup
+     existing = session.exec(
+         select(Unit).where(func.lower(Unit.name) == normalized_unit)
+     ).first()
+
+     if existing:
+         return existing.id
+
      # If not found, create a new Unit record using the provided name.
      try:
          new = Unit(name=str(unit_value).strip())
@@ -266,10 +280,10 @@ def _find_parameter(session: Session, name: str) -> Any:
     if normalized_name == "":
         return None
 
-    for row in session.exec(select(Parameter)).all():
-        if _normalize_parameter_name(getattr(row, "name", None)) == normalized_name:
-            return row
-    return None
+    # Optimized Parameter lookup
+    return session.exec(
+        select(Parameter).where(func.lower(Parameter.name) == normalized_name)
+    ).first()
 
 
 def _resolve_parameter_by_name(session: Session, name: Any) -> Any:
@@ -290,7 +304,7 @@ def _resolve_parameter_by_name(session: Session, name: Any) -> Any:
     return _find_parameter(session, alias_name)
 
 
-def _upsert_parameter(session: Session, row: dict[str, Any], etl_run_id: Any, lineage_group_id: Any) -> bool:
+def _upsert_parameter(session: Session, row: dict[Any, Any], etl_run_id: Any, lineage_group_id: Any) -> bool:
     from ca_biositing.datamodels.models import Parameter
 
     name = _normalize_parameter_name(_clean_value(row.get("name")))
@@ -302,16 +316,20 @@ def _upsert_parameter(session: Session, row: dict[str, Any], etl_run_id: Any, li
     calculated = row.get("calculated")
     description = _clean_value(row.get("description"))
 
-    for existing in session.exec(select(Parameter)).all():
-        if _normalize_parameter_name(getattr(existing, "name", None)) == name:
-            existing.name = name
-            existing.description = description
-            existing.standard_unit_id = standard_unit_id
-            existing.calculated = calculated
-            existing.updated_at = now
-            existing.etl_run_id = etl_run_id
-            existing.lineage_group_id = lineage_group_id
-            return False
+    # Optimized Parameter lookup
+    existing = session.exec(
+        select(Parameter).where(func.lower(Parameter.name) == name)
+    ).first()
+
+    if existing:
+        existing.name = name
+        existing.description = description
+        existing.standard_unit_id = standard_unit_id
+        existing.calculated = calculated
+        existing.updated_at = now
+        existing.etl_run_id = etl_run_id
+        existing.lineage_group_id = lineage_group_id
+        return False
 
     session.add(
         Parameter(
@@ -434,7 +452,7 @@ def _upsert_record_table(
     logger: Any,
     *,
     model: Any,
-    payload_row: dict[str, Any],
+    payload_row: dict[Any, Any],
     dataset_id: int,
     source_id: Optional[int],
     method_id: Optional[int],
@@ -460,24 +478,29 @@ def _upsert_record_table(
         report_end_date = _to_date(payload_row.get("report_end_date"))
         freight_terms = _clean_value(payload_row.get("freight_terms"))
         transport_mode = _clean_value(payload_row.get("transport_mode"))
-        for existing in session.exec(select(model)).all():
-            if (
-                getattr(existing, "dataset_id", None) == dataset_id
-                and getattr(existing, "source_id", None) == source_id
-                and getattr(existing, "geoid", None) == geoid
-                and getattr(existing, "resource_id", None) == resource_id
-                and getattr(existing, "report_start_date", None) == report_start_date
-                and getattr(existing, "report_end_date", None) == report_end_date
-                and getattr(existing, "primary_ag_product_id", None) == primary_ag_product_id
-                and getattr(existing, "freight_terms", None) == freight_terms
-                and getattr(existing, "transport_mode", None) == transport_mode
-            ):
-                existing.method_id = method_id
-                existing.note = note
-                existing.updated_at = now
-                existing.etl_run_id = etl_run_id
-                existing.lineage_group_id = lineage_group_id
-                return False, resource_id, dataset_id, report_start_date, getattr(existing, "id", None)
+
+        # Optimized record lookup for ResourcePriceRecord
+        existing = session.exec(
+            select(model).where(
+                model.dataset_id == dataset_id,
+                model.source_id == source_id,
+                model.geoid == geoid,
+                model.resource_id == resource_id,
+                model.report_start_date == report_start_date,
+                model.report_end_date == report_end_date,
+                model.primary_ag_product_id == primary_ag_product_id,
+                model.freight_terms == freight_terms,
+                model.transport_mode == transport_mode,
+            )
+        ).first()
+
+        if existing:
+            existing.method_id = method_id
+            existing.note = note
+            existing.updated_at = now
+            existing.etl_run_id = etl_run_id
+            existing.lineage_group_id = lineage_group_id
+            return False, resource_id, dataset_id, report_start_date, existing.id
 
         instance = model(
             dataset_id=dataset_id,
@@ -502,21 +525,26 @@ def _upsert_record_table(
 
     report_date = _to_date(payload_row.get("report_date"))
     scenario = _clean_value(payload_row.get("scenario"))
-    for existing in session.exec(select(model)).all():
-        if (
-            getattr(existing, "dataset_id", None) == dataset_id
-            and getattr(existing, "geoid", None) == geoid
-            and getattr(existing, "resource_id", None) == resource_id
-            and getattr(existing, "report_date", None) == report_date
-            and getattr(existing, "primary_ag_product_id", None) == primary_ag_product_id
-            and getattr(existing, "scenario", None) == scenario
-        ):
-            existing.method_id = method_id
-            existing.note = note
-            existing.updated_at = now
-            existing.etl_run_id = etl_run_id
-            existing.lineage_group_id = lineage_group_id
-            return False, resource_id, dataset_id, report_date, getattr(existing, "id", None)
+
+    # Optimized record lookup for ResourceProductionRecord
+    existing = session.exec(
+        select(model).where(
+            model.dataset_id == dataset_id,
+            model.geoid == geoid,
+            model.resource_id == resource_id,
+            model.report_date == report_date,
+            model.primary_ag_product_id == primary_ag_product_id,
+            model.scenario == scenario,
+        )
+    ).first()
+
+    if existing:
+        existing.method_id = method_id
+        existing.note = note
+        existing.updated_at = now
+        existing.etl_run_id = etl_run_id
+        existing.lineage_group_id = lineage_group_id
+        return False, resource_id, dataset_id, report_date, existing.id
 
     instance = model(
         dataset_id=dataset_id,
@@ -539,7 +567,7 @@ def _upsert_record_table(
 
 def _upsert_observation(
     session: Session,
-    row: dict[str, Any],
+    row: dict[Any, Any],
     *,
     dataset_id: int,
     record_id: int,
@@ -554,29 +582,29 @@ def _upsert_observation(
     if geoid is None or parameter_id is None or unit_id is None:
         return False
 
-    resource_id = _resolve_resource_id(session, _get_first_present(row, ("resource_id", "resource")))
-    if resource_id is None:
-        return False
-
     record_type = _clean_value(row.get("record_type"))
     value = _to_decimal(row.get("value"))
     note = _clean_value(row.get("note"))
     now = datetime.now(timezone.utc)
 
-    for existing in session.exec(select(Observation)).all():
-        if (
-            str(getattr(existing, "record_id", None)) == str(record_id)
-            and getattr(existing, "record_type", None) == record_type
-            and getattr(existing, "parameter_id", None) == parameter_id
-            and getattr(existing, "unit_id", None) == unit_id
-        ):
-            existing.dataset_id = dataset_id
-            existing.value = value
-            existing.note = note
-            existing.updated_at = now
-            existing.etl_run_id = etl_run_id
-            existing.lineage_group_id = lineage_group_id
-            return False
+    # Optimized lookup
+    existing = session.exec(
+        select(Observation).where(
+            Observation.record_id == str(record_id),
+            Observation.record_type == record_type,
+            Observation.parameter_id == parameter_id,
+            Observation.unit_id == unit_id
+        )
+    ).first()
+
+    if existing:
+        existing.dataset_id = dataset_id
+        existing.value = value
+        existing.note = note
+        existing.updated_at = now
+        existing.etl_run_id = etl_run_id
+        existing.lineage_group_id = lineage_group_id
+        return False
 
     session.add(
         Observation(
@@ -628,25 +656,23 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
             try:
                 data_source, created = _ensure_data_source(session)
                 counts["data_source"] += int(created)
-                # Determine provenance IDs from payloads (prefer parameter payload if present)
+
+                # Determine provenance IDs from payloads
                 provenance_etl_run_id = None
                 provenance_lineage_group_id = None
-                try:
-                    if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty:
-                        provenance_etl_run_id = _clean_value(parameter_df.iloc[0].get("etl_run_id"))
-                        provenance_lineage_group_id = _clean_value(parameter_df.iloc[0].get("lineage_group_id"))
-                    else:
-                        # fallback to records payloads
-                        if isinstance(record_payloads, dict):
-                            for key in ("resource_price_record", "resource_production_record"):
-                                df = record_payloads.get(key)
-                                if isinstance(df, pd.DataFrame) and not df.empty:
-                                    provenance_etl_run_id = provenance_etl_run_id or _clean_value(df.iloc[0].get("etl_run_id"))
-                                    provenance_lineage_group_id = provenance_lineage_group_id or _clean_value(df.iloc[0].get("lineage_group_id"))
-                                    if provenance_etl_run_id and provenance_lineage_group_id:
-                                        break
-                except Exception:
-                    provenance_etl_run_id = provenance_etl_run_id
+                if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty:
+                    provenance_etl_run_id = _clean_value(parameter_df.iloc[0].get("etl_run_id"))
+                    provenance_lineage_group_id = _clean_value(parameter_df.iloc[0].get("lineage_group_id"))
+
+                if not (provenance_etl_run_id and provenance_lineage_group_id):
+                    if isinstance(record_payloads, dict):
+                        for key in ("resource_price_record", "resource_production_record"):
+                            df = record_payloads.get(key)
+                            if isinstance(df, pd.DataFrame) and not df.empty:
+                                provenance_etl_run_id = provenance_etl_run_id or _clean_value(df.iloc[0].get("etl_run_id"))
+                                provenance_lineage_group_id = provenance_lineage_group_id or _clean_value(df.iloc[0].get("lineage_group_id"))
+                                if provenance_etl_run_id and provenance_lineage_group_id:
+                                    break
 
                 method_category, created = _ensure_method_category(session)
                 counts["method_category"] += int(created)
@@ -688,7 +714,7 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                     for _, row in parameter_df.iterrows():
                         if _upsert_parameter(
                             session,
-                            row.to_dict(),
+                            dict(row),
                             _clean_value(row.get("etl_run_id")),
                             _clean_value(row.get("lineage_group_id")),
                         ):
@@ -696,21 +722,19 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                 else:
                     logger.info("No parameter payload found for almond load.")
 
-                if _ensure_price_received_parameter(
+                # Fallback for core parameters
+                _ensure_price_received_parameter(
                     session,
                     parameter_df=parameter_df,
-                    etl_run_id=(_clean_value(parameter_df.iloc[0]["etl_run_id"]) if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty and "etl_run_id" in parameter_df.columns else None),
-                    lineage_group_id=(_clean_value(parameter_df.iloc[0]["lineage_group_id"]) if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty and "lineage_group_id" in parameter_df.columns else None),
-                ):
-                    counts["parameter"] += 1
-
-                if _ensure_weighted_average_parameter(
+                    etl_run_id=provenance_etl_run_id,
+                    lineage_group_id=provenance_lineage_group_id,
+                )
+                _ensure_weighted_average_parameter(
                     session,
                     parameter_df=parameter_df,
-                    etl_run_id=(_clean_value(parameter_df.iloc[0]["etl_run_id"]) if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty and "etl_run_id" in parameter_df.columns else None),
-                    lineage_group_id=(_clean_value(parameter_df.iloc[0]["lineage_group_id"]) if isinstance(parameter_df, pd.DataFrame) and not parameter_df.empty and "lineage_group_id" in parameter_df.columns else None),
-                ):
-                    counts["parameter"] += 1
+                    etl_run_id=provenance_etl_run_id,
+                    lineage_group_id=provenance_lineage_group_id,
+                )
 
                 if isinstance(record_payloads, dict):
                     price_records = record_payloads.get("resource_price_record")
@@ -722,7 +746,7 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                                 session,
                                 logger,
                                 model=ResourcePriceRecord,
-                                payload_row=row.to_dict(),
+                                payload_row=dict(row),
                                 dataset_id=price_dataset.id,
                                 source_id=data_source.id,
                                 method_id=method.id,
@@ -731,7 +755,6 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                             )
                             if record_db_id is not None and resource_id is not None and report_start_date is not None:
                                 key = ("resource_price_record", str(_clean_value(row.get("geoid"))), int(resource_id), int(report_start_date.year))
-                                logger.info("Adding record to lookup: key=%s, record_db_id=%s", key, record_db_id)
                                 record_id_lookup[key] = int(record_db_id)
                             if inserted:
                                 counts["resource_price_record"] += 1
@@ -742,7 +765,7 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                                 session,
                                 logger,
                                 model=ResourceProductionRecord,
-                                payload_row=row.to_dict(),
+                                payload_row=dict(row),
                                 dataset_id=production_dataset.id,
                                 source_id=None,
                                 method_id=method.id,
@@ -751,7 +774,6 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                             )
                             if record_db_id is not None and resource_id is not None and report_date is not None:
                                 key = ("resource_production_record", str(_clean_value(row.get("geoid"))), int(resource_id), int(report_date.year))
-                                logger.info("Adding record to lookup: key=%s, record_db_id=%s", key, record_db_id)
                                 record_id_lookup[key] = int(record_db_id)
                             if inserted:
                                 counts["resource_production_record"] += 1
@@ -762,8 +784,9 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
 
                     unit_lookup: dict[str, int] = {}
                     for u in session.exec(select(Unit)).all():
-                        if getattr(u, "name", None):
-                            unit_lookup[_normalize_text(getattr(u, "name"))] = getattr(u, "id")
+                        name = getattr(u, "name", None)
+                        if name:
+                            unit_lookup[_normalize_text(name)] = getattr(u, "id")
 
                     for _, row in observation_df.iterrows():
                         record_type = _clean_value(row.get("record_type"))
@@ -771,15 +794,18 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                         if dataset_id is None:
                             logger.error("Skipping observation with unsupported record_type=%s", record_type)
                             continue
-                        if _clean_value(row.get("geoid")) is None:
+
+                        geoid_val = _clean_value(row.get("geoid"))
+                        if geoid_val is None:
                             logger.error("Skipping observation with missing geoid.")
                             continue
 
-                        observation_resource_id = _resolve_resource_id(session, _get_first_present(row, ("resource_id", "resource")))
+                        row_dict = dict(row)
+                        observation_resource_id = _resolve_resource_id(session, _get_first_present(row_dict, ("resource_id", "resource")))
                         if observation_resource_id is None:
                             logger.error(
                                 "Skipping observation with unresolved resource: resource_name=%s, geoid=%s, year=%s",
-                                _get_first_present(row, ("resource_id", "resource")),
+                                _get_first_present(row_dict, ("resource_id", "resource")),
                                 row.get("geoid"),
                                 row.get("year"),
                             )
@@ -794,7 +820,7 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                             )
                             continue
 
-                        lookup_key = (record_type, str(_clean_value(row.get("geoid"))), int(observation_resource_id), int(observation_year))
+                        lookup_key = (record_type, str(geoid_val), int(observation_resource_id), int(observation_year))
                         record_db_id = record_id_lookup.get(lookup_key)
                         if record_db_id is None:
                             logger.error(
@@ -810,24 +836,39 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                         resolved_parameter_row = None
 
                         if resolved_parameter is None:
-                            resolved_parameter_row = _resolve_parameter_by_name(session, row.get("parameter_name"))
-                            if resolved_parameter_row is not None:
-                                resolved_parameter = getattr(resolved_parameter_row, "id", None)
+                            parameter_name = row.get("parameter_name")
+                            if parameter_name:
+                                resolved_parameter_row = _resolve_parameter_by_name(session, parameter_name)
+                                if resolved_parameter_row is not None:
+                                    resolved_parameter = getattr(resolved_parameter_row, "id", None)
+                                else:
+                                    # Create missing parameter on the fly to ensure one-run success
+                                    from ca_biositing.datamodels.models import Parameter
+                                    now = datetime.now(timezone.utc)
+                                    new_p = Parameter(
+                                        name=_normalize_parameter_name(parameter_name),
+                                        description=f"Auto-created during almond load for {parameter_name}",
+                                        created_at=now,
+                                        updated_at=now,
+                                        etl_run_id=provenance_etl_run_id,
+                                        lineage_group_id=provenance_lineage_group_id
+                                    )
+                                    session.add(new_p)
+                                    session.flush()
+                                    resolved_parameter = new_p.id
+                                    resolved_parameter_row = new_p
 
-                        # Unit resolution fallback (runs if unit_id is missing, regardless of how parameter was resolved)
-                        if resolved_parameter is not None and _clean_value(row.get("unit_id")) is None:
-                            row = row.copy()
+                        # Unit resolution fallback
+                        current_unit_id = _clean_value(row.get("unit_id"))
+                        if resolved_parameter is not None and current_unit_id is None:
                             unit_id = None
-
-                            # 1. Try to get standard unit from the parameter if we have the row
                             if resolved_parameter_row is None:
-                                from ca_biositing.datamodels.models import Parameter
-                                resolved_parameter_row = session.get(Parameter, resolved_parameter)
+                                from ca_biositing.datamodels.models import Parameter as ParamModel
+                                resolved_parameter_row = session.get(ParamModel, resolved_parameter)
 
                             if resolved_parameter_row is not None:
                                 unit_id = getattr(resolved_parameter_row, "standard_unit_id", None)
 
-                            # 2. Fallback by record_type if unit still missing
                             if unit_id is None:
                                 if record_type == "resource_production_record":
                                     unit_id = unit_lookup.get(_normalize_text("tons")) or unit_lookup.get(_normalize_text("ton"))
@@ -838,20 +879,22 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                                     if unit_id is None:
                                         unit_id = _ensure_unit(session, "dollars per ton")
 
-                            row["unit_id"] = unit_id
+                            row_dict["unit_id"] = unit_id
+                            current_unit_id = unit_id
+
                         if resolved_parameter is None:
                             logger.error(
                                 "Skipping observation with unresolved parameter: name=%s, geoid=%s, resource_id=%s, year=%s",
                                 row.get("parameter_name") or row.get("parameter_id"),
                                 row.get("geoid"),
-                                _get_first_present(row, ("resource_id", "resource")),
+                                _get_first_present(row_dict, ("resource_id", "resource")),
                                 row.get("year"),
                             )
                             continue
 
-                        if _clean_value(row.get("unit_id")) is None:
+                        if current_unit_id is None:
                             logger.error(
-                                "Skipping observation with missing unit_id after parameter resolution: parameter=%s, geoid=%s, resource=%s, year=%s",
+                                "Skipping observation with missing unit_id: parameter=%s, geoid=%s, resource=%s, year=%s",
                                 row.get("parameter_name") or resolved_parameter,
                                 row.get("geoid"),
                                 row.get("resource") or observation_resource_id,
@@ -859,17 +902,12 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                             )
                             continue
 
-                        if _clean_value(row.get("parameter_id")) is None:
-                            row = row.copy()
-                            row["parameter_id"] = resolved_parameter
-
-                        # Use the actual record ID from the lookup instead of a composite string
-                        row = row.copy()
-                        row["record_id"] = record_db_id
+                        row_dict["parameter_id"] = resolved_parameter
+                        row_dict["record_id"] = record_db_id
 
                         if _upsert_observation(
                             session,
-                            row.to_dict(),
+                            row_dict,
                             dataset_id=dataset_id,
                             record_id=record_db_id,
                             etl_run_id=_clean_value(row.get("etl_run_id")),
@@ -880,7 +918,15 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                 session.commit()
 
                 if counts["observation"] > 0:
-                    sample = session.exec(select(Observation).where(Observation.dataset_id.in_([price_dataset.id, production_dataset.id])).limit(1)).first()
+                    # Spot check using dataset_ids
+                    # We use InstrumentAttribute on class to avoid Pylance confusion
+                    query = select(Observation).where(
+                        or_(
+                            Observation.dataset_id == price_dataset.id,
+                            Observation.dataset_id == production_dataset.id
+                        )
+                    ).limit(1)
+                    sample = session.exec(query).first()
                     if sample is not None:
                         logger.info(
                             "Spot check observation: record_id=%s, record_type=%s, value=%s",

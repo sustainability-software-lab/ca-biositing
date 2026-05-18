@@ -176,7 +176,7 @@ latest_production_year = select(
     func.max(ResourceProductionRecord.report_date).label("latest_report_date"),
 ).select_from(ResourceProductionRecord)\
  .join(production_obs, production_obs.c.production_record_id == ResourceProductionRecord.id)\
- .where(ResourceProductionRecord.geoid != "NSJV")\
+ \
  .group_by(ResourceProductionRecord.resource_id).subquery()
 
 agg_vol = select(
@@ -192,7 +192,7 @@ agg_vol = select(
       latest_production_year.c.latest_report_date == ResourceProductionRecord.report_date,
   ))\
   .outerjoin(Unit, production_obs.c.unit_id == Unit.id)\
-  .where(ResourceProductionRecord.geoid != "NSJV")\
+  \
   .group_by(ResourceProductionRecord.resource_id, latest_production_year.c.latest_report_date).subquery()
 
 # Biomass availability aggregation
