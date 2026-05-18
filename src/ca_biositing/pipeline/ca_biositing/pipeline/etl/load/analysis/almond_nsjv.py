@@ -723,18 +723,21 @@ def load_county_ag_reports(payloads: dict[str, Any]) -> dict[str, int]:
                     logger.info("No parameter payload found for almond load.")
 
                 # Fallback for core parameters
-                _ensure_price_received_parameter(
+                if _ensure_price_received_parameter(
                     session,
                     parameter_df=parameter_df,
                     etl_run_id=provenance_etl_run_id,
                     lineage_group_id=provenance_lineage_group_id,
-                )
-                _ensure_weighted_average_parameter(
+                ):
+                    counts["parameter"] += 1
+
+                if _ensure_weighted_average_parameter(
                     session,
                     parameter_df=parameter_df,
                     etl_run_id=provenance_etl_run_id,
                     lineage_group_id=provenance_lineage_group_id,
-                )
+                ):
+                    counts["parameter"] += 1
 
                 if isinstance(record_payloads, dict):
                     price_records = record_payloads.get("resource_price_record")
