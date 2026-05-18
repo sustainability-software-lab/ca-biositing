@@ -54,6 +54,14 @@ def transform_observation(
         # Basic coercion for Observation fields
         if 'value' in df.columns:
             df = coercion_mod.coerce_columns(df, float_cols=['value'])
+            # User request: treat null as 0 for XRF and ICP if record_id is present
+            if 'analysis_type' in df.columns and 'record_id' in df.columns:
+                mask = df['analysis_type'].isin(['xrf analysis', 'icp analysis']) & df['record_id'].notna()
+                # Exception for ICP: do not convert nulls to 0 for "y-axial" and "y-radial" parameters
+                if 'parameter' in df.columns:
+                    icp_exception_mask = (df['analysis_type'] == 'icp analysis') & df['parameter'].isin(['y-axial', 'y-radial'])
+                    mask = mask & ~icp_exception_mask
+                df.loc[mask, 'value'] = df.loc[mask, 'value'].fillna(0)
 
         # Add lineage tracking if available
         df['etl_run_id'] = etl_run_id
