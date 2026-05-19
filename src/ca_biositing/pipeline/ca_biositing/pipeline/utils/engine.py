@@ -13,13 +13,15 @@ def _get_database_url() -> str:
     """Return the database URL for the current environment.
 
     In local dev (outside Docker and Cloud Run), replace the Docker Compose
-    service name 'db' with 'localhost' so the URL resolves from the host machine.
+    service name 'db' with 'localhost' and use the host-mapped PostgreSQL port
+    so the URL resolves from the host machine.
     """
     from ca_biositing.datamodels.config import settings
     db_url = settings.database_url
     # Only substitute when running outside Docker and outside Cloud Run
     if not os.path.exists("/.dockerenv") and not os.getenv("INSTANCE_CONNECTION_NAME"):
-        db_url = db_url.replace("@db:", "@localhost:")
+        db_url = db_url.replace("@db:5432", f"@localhost:{settings.POSTGRES_PORT}")
+        db_url = db_url.replace("@db:", f"@localhost:{settings.POSTGRES_PORT}")
     return db_url
 
 

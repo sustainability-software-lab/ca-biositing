@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Compile materialized view definitions to raw SQL for migration 0100_mv_view_fixes.
+Compile materialized view definitions to raw SQL for migration 0009_almond_etl_mv_edits.
 
 This script compiles the 9 SQLAlchemy view definitions to PostgreSQL SQL
 and embeds them in the Alembic migration file.
@@ -184,23 +184,23 @@ CREATE MATERIALIZED VIEW data_portal.{view_name} AS
 """''')
 
     # Build the complete migration file
-    migration_content = f'''"""Recreate all 9 materialized views with fixes.
+    migration_content = f'''"""Almond ETL materialized view edits.
 
-Revision ID: 0100_mv_view_fixes
-Revises: 55f93e3a6237
-Create Date: 2026-05-05
+Revision ID: 0009_almond_etl_mv_edits
+Revises: 0008_prox_exper_id_filter
+Create Date: 2026-05-14
 
 This migration:
 1. Drops all indexes on the 9 data portal materialized views
 2. Drops all 9 materialized views in CASCADE mode
-3. Recreates all 9 views with updated SQL (fixes for mv_biomass_search, mv_biomass_pricing, mv_biomass_end_uses)
+3. Recreates all 9 views with updated SQL (merged logic from almond-etl and upstream)
 4. Creates all required indexes for concurrent refresh and query performance
 5. Grants schema access to the readonly role
 
 Modified views:
-  - mv_biomass_search: Added volume_estimate_year column, updated sugar calculation to use glucan+xylan
-  - mv_biomass_pricing: Added resource_id and resource_name, replaced commodity mapping
-  - mv_biomass_end_uses: Added value_multiplier_low and value_multiplier_high columns
+  - mv_biomass_search: Fixed JOIN logic to use OUTER JOIN for volume_agg, ensuring all resources are included
+  - mv_biomass_composition: Verified proximate sum filter (95-105%) is correctly applied
+  - mv_biomass_volume_estimate: Unified volume source from ResourceProductionRecord
 
 """
 from typing import Sequence, Union
@@ -209,8 +209,8 @@ from alembic import op
 
 
 # revision identifiers, used by Alembic.
-revision: str = "0008_prox_exper_id_filter"
-down_revision: Union[str, Sequence[str], None] = "0007"
+revision: str = "0009_almond_etl_mv_edits"
+down_revision: Union[str, Sequence[str], None] = "0008_prox_exper_id_filter"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -287,7 +287,7 @@ def main():
     """Generate and write the migration file."""
 
     print("=" * 80)
-    print("Generating migration 0008_prox_exper_id_filter.py (with corrected type casting)")
+    print("Generating migration 0009_almond_etl_mv_edits.py")
     print("=" * 80)
     print()
 
@@ -296,7 +296,7 @@ def main():
 
     # Write migration file
     alembic_versions_dir = Path(__file__).parent.parent / "alembic" / "versions"
-    migration_path = alembic_versions_dir / "0008_prox_exper_id_filter.py"
+    migration_path = alembic_versions_dir / "0009_almond_etl_mv_edits.py"
 
     with open(migration_path, "w") as f:
         f.write(migration_content)

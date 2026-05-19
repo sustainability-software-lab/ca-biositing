@@ -215,7 +215,7 @@ schema-analytics-plan = { cmd = "pgschema plan --host localhost --port 5432 --us
 
 # Materialized View Utilities
 schema-analytics-list = { cmd = "pixi run access-db -c \"SELECT schemaname, matviewname, ispopulated FROM pg_matviews\"", description = "List all materialized views in the database." }
-refresh-views = { cmd = "python -c \"import os; os.environ.setdefault('DATABASE_URL', 'postgresql://biocirv_user:biocirv_dev_password@localhost:5432/biocirv_db'); from ca_biositing.datamodels.views import refresh_all_views; from ca_biositing.datamodels.database import get_engine; refresh_all_views(get_engine())\"", description = "Refresh all materialized views using SQLAlchemy." }
+refresh-views = { cmd = "python -c \"from ca_biositing.datamodels.views import refresh_all_views; from ca_biositing.datamodels.database import get_engine; refresh_all_views(get_engine())\"", description = "Refresh all materialized views using SQLAlchemy." }
 
 [tasks.qgis]
 depends-on = [{ task = "run-qgis", environment = "gis" }]
@@ -319,7 +319,6 @@ description = "Generate static OpenAPI spec to docs/api/openapi.json."
 [feature.webservice.tasks.create-admin]
 cmd = "python scripts/create_admin.py"
 description = "Create an admin user for API authentication"
-env = { DATABASE_URL = "postgresql://biocirv_user:biocirv_dev_password@localhost:5432/biocirv_db" }
 
 [feature.docs.dependencies]
 python = ">=3.11,<3.14"
