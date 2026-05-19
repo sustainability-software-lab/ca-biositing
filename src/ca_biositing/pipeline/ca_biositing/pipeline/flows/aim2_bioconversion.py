@@ -9,12 +9,23 @@ def aim2_bioconversion_flow(*args, **kwargs):
     including Bioconversion Methods, Strains, and Fermentation Records.
     """
     from prefect import get_run_logger
-    from ca_biositing.pipeline.etl.extract import pretreatment_data, bioconversion_data, bioconversion_setup, bioconversion_methods
+    from ca_biositing.pipeline.etl.extract import (
+        pretreatment_data,
+        bioconversion_data,
+        bioconversion_setup,
+        bioconversion_methods,
+        pretreatment_setup,
+        enz_hydr_methods
+    )
     from ca_biositing.pipeline.etl.transform.analysis.pretreatment_record import transform_pretreatment_record
+    from ca_biositing.pipeline.etl.transform.analysis.pretreatment_setup import transform_pretreatment_setup
+    from ca_biositing.pipeline.etl.transform.analysis.enz_hydr_method import transform_enz_hydr_method
     from ca_biositing.pipeline.etl.transform.analysis.bioconversion_method import transform_bioconversion_method
     from ca_biositing.pipeline.etl.transform.analysis.fermentation_record import transform_fermentation_record
     from ca_biositing.pipeline.etl.transform.analysis.observation import transform_observation
     from ca_biositing.pipeline.etl.load.analysis.pretreatment_record import load_pretreatment_record
+    from ca_biositing.pipeline.etl.load.analysis.pretreatment_setup import load_pretreatment_setup
+    from ca_biositing.pipeline.etl.load.analysis.enz_hydr_method import load_enz_hydr_method
     from ca_biositing.pipeline.etl.load.analysis.bioconversion_method import load_bioconversion_method
     from ca_biositing.pipeline.etl.load.analysis.fermentation_record import load_fermentation_record
     from ca_biositing.pipeline.etl.load.analysis.method import load_method
@@ -30,12 +41,25 @@ def aim2_bioconversion_flow(*args, **kwargs):
     analysis_type_flow()
     etl_run_id = create_etl_run_record(pipeline_name="Aim 2 Bioconversion ETL")
 
-    # --- PART 1: Pretreatment ---
+    # --- PART 1: Pretreatment Setup & Records ---
     lineage_group_pre = create_lineage_group(
         etl_run_id=etl_run_id,
-        note="Aim 2 Bioconversion - Pretreatment Records"
+        note="Aim 2 Bioconversion - Pretreatment Setup and Records"
     )
 
+    # 1.1 Pretreatment Setup
+    logger.info("Extracting Pretreatment Setup data...")
+    pre_setup_raw = pretreatment_setup.extract()
+    if pre_setup_raw is not None and not pre_setup_raw.empty:
+        pre_setup_df = transform_pretreatment_setup(
+            pre_setup_raw,
+            etl_run_id=etl_run_id,
+            lineage_group_id=lineage_group_pre
+        )
+        if not pre_setup_df.empty:
+            load_pretreatment_setup(pre_setup_df)
+
+    # 1.2 Pretreatment Records
     logger.info("Extracting Pretreatment data...")
     pretreatment_raw = pretreatment_data.extract()
 
@@ -73,6 +97,18 @@ def aim2_bioconversion_flow(*args, **kwargs):
     methods_raw = bioconversion_methods.extract()
 
     if methods_raw is not None and not methods_raw.empty:
+        # 0. Load Enz Hydr Methods
+        logger.info("Extracting Enz Hydr Methods data...")
+        eh_methods_raw = enz_hydr_methods.extract()
+        if eh_methods_raw is not None and not eh_methods_raw.empty:
+            eh_methods_df = transform_enz_hydr_method(
+                eh_methods_raw,
+                etl_run_id=etl_run_id,
+                lineage_group_id=lineage_group_methods
+            )
+            if not eh_methods_df.empty:
+                load_enz_hydr_method(eh_methods_df)
+
         # 1. Load Strains first (since BioconversionMethod depends on them)
         # Extract name, genus, species, strain, description, note from 03.3
         from ca_biositing.pipeline.utils.cleaning_functions import cleaning as cleaning_mod
