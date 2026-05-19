@@ -26,7 +26,7 @@ end_use_obs = select(
     func.avg(
         case(
             (
-                func.lower(Parameter.name) == "resource_use_perc_low",
+                func.lower(Parameter.name) == "resource use perc low",
                 Observation.value,
             )
         )
@@ -34,7 +34,7 @@ end_use_obs = select(
     func.avg(
         case(
             (
-                func.lower(Parameter.name) == "resource_use_perc_high",
+                func.lower(Parameter.name) == "resource use perc high",
                 Observation.value,
             )
         )
@@ -42,7 +42,7 @@ end_use_obs = select(
     func.avg(
         case(
             (
-                func.lower(Parameter.name) == "resource_value_low",
+                func.lower(Parameter.name) == "resource value low",
                 Observation.value,
             )
         )
@@ -50,7 +50,7 @@ end_use_obs = select(
     func.avg(
         case(
             (
-                func.lower(Parameter.name) == "resource_value_high",
+                func.lower(Parameter.name) == "resource value high",
                 Observation.value,
             )
         )
@@ -58,7 +58,7 @@ end_use_obs = select(
     func.avg(
         case(
             (
-                func.lower(Parameter.name) == "resource_value_multiplier_low",
+                func.lower(Parameter.name) == "resource value multiplier low",
                 Observation.value,
             )
         )
@@ -66,7 +66,7 @@ end_use_obs = select(
     func.avg(
         case(
             (
-                func.lower(Parameter.name) == "resource_value_multiplier_high",
+                func.lower(Parameter.name) == "resource value multiplier high",
                 Observation.value,
             )
         )
@@ -74,7 +74,7 @@ end_use_obs = select(
     func.max(
         case(
             (
-                func.lower(Parameter.name) == "resource_use_perc_low",
+                func.lower(Parameter.name) == "resource use perc low",
                 Unit.name,
             )
         )
@@ -82,7 +82,7 @@ end_use_obs = select(
     func.max(
         case(
             (
-                func.lower(Parameter.name) == "resource_use_trend",
+                func.lower(Parameter.name) == "resource use trend",
                 cast(Observation.note, String),
             )
         )
@@ -90,7 +90,7 @@ end_use_obs = select(
     func.max(
         case(
             (
-                func.lower(Parameter.name).in_(["resource_value_low", "resource_value_high"]),
+                func.lower(Parameter.name).in_(["resource value low", "resource value high"]),
                 Unit.name,
             )
         )
