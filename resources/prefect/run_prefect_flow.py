@@ -4,19 +4,21 @@ from prefect import flow, get_run_logger, task
 from prefect.utilities.importtools import import_object
 
 # A dictionary mapping flow names to their import paths
+# THE ORDER MATTERS HERE: foundational flows should run before specialized ones.
 AVAILABLE_FLOWS = {
     #"primary_ag_product": "ca_biositing.pipeline.flows.primary_ag_product.primary_ag_product_flow",
     #"analysis_type": "ca_biositing.pipeline.flows.analysis_type.analysis_type_flow",
     "biodiesel_plants": "ca_biositing.pipeline.flows.biodiesel_plants.biodiesel_plants_flow",
     "residue_factors": "ca_biositing.pipeline.flows.residue_factors_flow.residue_factors_etl_flow",
     "resource_information": "ca_biositing.pipeline.flows.resource_information.resource_information_flow",
-    "qualitative": "ca_biositing.pipeline.flows.qualitative.qualitative_etl_flow",
+    "county_ag_report": "ca_biositing.pipeline.flows.county_ag_report_etl.county_ag_report_flow",
     "static_resource_info": "ca_biositing.pipeline.flows.static_resource_info.static_resource_info_flow",
     "samples": "ca_biositing.pipeline.flows.samples_etl.samples_etl_flow",
+    "usda_etl": "ca_biositing.pipeline.flows.usda_etl.usda_etl_flow",
+    "almond_nsjv": "ca_biositing.pipeline.flows.almond_nsjv_etl.almond_nsjv_etl_flow",
+    "qualitative": "ca_biositing.pipeline.flows.qualitative.qualitative_etl_flow",
     "analysis_records": "ca_biositing.pipeline.flows.analysis_records.analysis_records_flow",
     "aim2_bioconversion": "ca_biositing.pipeline.flows.aim2_bioconversion.aim2_bioconversion_flow",
-    "county_ag_report": "ca_biositing.pipeline.flows.county_ag_report_etl.county_ag_report_flow",
-    "usda_etl": "ca_biositing.pipeline.flows.usda_etl.usda_etl_flow",
     "landiq": "ca_biositing.pipeline.flows.landiq_etl.landiq_etl_flow",
     "billion_ton": "ca_biositing.pipeline.flows.billion_ton_etl.billion_ton_etl_flow",
     #"field_sample": "ca_biositing.pipeline.flows.field_sample_etl.field_sample_etl_flow",

@@ -14,7 +14,7 @@ Required indexes:
     CREATE INDEX idx_mv_biomass_volume_estimate_resource_year ON data_portal.mv_biomass_volume_estimate (resource_id, dataset_year)
 """
 
-from sqlalchemy import select, func, union_all, literal, case, cast, String, and_, or_
+from sqlalchemy import select, func, union_all, literal, case, cast, String, Integer, and_, or_, text
 from sqlalchemy.orm import aliased
 
 from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
@@ -135,13 +135,18 @@ census_based_volumes = select(
 
 # Combined volume estimation view
 # Uses UNION ALL to combine both paths, with precedence logic for selection
+# Use row_number with stable ordering on business key to ensure deterministic IDs
+# Use an offset for census-based IDs to ensure global uniqueness across branches
 mv_biomass_volume_estimate = select(
     func.row_number().over(
         order_by=(
             production_based_volumes.c.resource_id,
             production_based_volumes.c.geoid,
             production_based_volumes.c.dataset_year,
-            production_based_volumes.c.volume_source
+            production_based_volumes.c.volume_source,
+            production_based_volumes.c.resource_name,
+            production_based_volumes.c.county,
+            production_based_volumes.c.state
         )
     ).label("id"),
     production_based_volumes.c.resource_id,
@@ -163,14 +168,17 @@ mv_biomass_volume_estimate = select(
     production_based_volumes.c.biomass_unit
 ).select_from(production_based_volumes).union_all(
     select(
-        func.row_number().over(
+        (func.row_number().over(
             order_by=(
                 census_based_volumes.c.resource_id,
                 census_based_volumes.c.geoid,
                 census_based_volumes.c.dataset_year,
-                census_based_volumes.c.volume_source
+                census_based_volumes.c.volume_source,
+                census_based_volumes.c.resource_name,
+                census_based_volumes.c.county,
+                census_based_volumes.c.state
             )
-        ).label("id"),
+        ) + 10000000).label("id"),
         census_based_volumes.c.resource_id,
         census_based_volumes.c.resource_name,
         census_based_volumes.c.geoid,

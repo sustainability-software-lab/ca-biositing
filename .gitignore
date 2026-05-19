@@ -26,6 +26,7 @@ __pycache__/
 # Environment variables
 **/.env
 **/.env.*
+resources/docker/docker-compose.override.yml
 !**/.env.example
 
 # Python virtual environments
