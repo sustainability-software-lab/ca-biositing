@@ -51,13 +51,13 @@ def transform_fermentation_record(
         lc = str(c).lower().strip()
         if 'bioconv' in lc or 'bioconversion' in lc or lc in ('bio_conv_method', 'bioconv_method'):
             col_map[c] = 'bioconversion_method'
-        if lc in ('pretreatment_exper_id', 'pretreatment_exper'):
+        if lc in ('pretreatment_exper_id', 'pretreatment_exper', 'pretreatment_experiment'):
             col_map[c] = 'pretreatment_exper_id'
         elif 'pretreatment' in lc or 'decon' in lc:
             col_map[c] = 'decon_method'
-        if lc in ('eh_id', 'eh-id', 'enz_hydr_id'):
+        if lc in ('eh_id', 'eh-id', 'enz_hydr_id', 'eh_method', 'enzyme_method'):
             col_map[c] = 'eh_id'
-        elif 'enzyme' in lc or lc in ('eh_method', 'enzyme_method'):
+        elif 'enzyme' in lc:
             col_map[c] = 'eh_method'
 
     if col_map:
@@ -97,7 +97,7 @@ def transform_fermentation_record(
         'decon_method': (Method, 'name'),
         'eh_method': (Method, 'name'),
         'pretreatment_exper_id': (PretreatmentSetup, 'pretreatment_exper_id'),
-        'eh_id': (EnzymaticHydrolysisMethod, 'eh_id'),
+        'eh_id': (EnzymaticHydrolysisMethod, 'method_id'),
         'exp_id': (Experiment, 'name'),
         'analyst_email': (Contact, 'email'),
         'dataset': (Dataset, 'name'),

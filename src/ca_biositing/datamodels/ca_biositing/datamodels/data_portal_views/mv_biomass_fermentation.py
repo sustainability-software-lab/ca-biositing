@@ -33,8 +33,22 @@ PM = aliased(Method, name="pm")
 EM = aliased(Method, name="em")
 BCM = aliased(BioconversionMethod, name="bcm")
 PS = aliased(PretreatmentSetup, name="ps")
+PSDM = aliased(Method, name="psdm")
 EHM = aliased(EnzymaticHydrolysisMethod, name="ehm")
 ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BCM.time_h, EHM.time_h)
+
+# Updated labels based on user feedback
+# Primary mapping is now raw Decon_method (via pretreatment_method_id mapping to Method.name)
+_raw_pretreatment = func.coalesce(PM.name, PS.pretreatment_exper_name)
+PRETREATMENT_LABEL = case(
+    (func.lower(_raw_pretreatment) == "cho10pc", "Cholinium Lysinate 140°C"),
+    (func.lower(_raw_pretreatment) == "h2o140c", "Water 140°C"),
+    (func.lower(_raw_pretreatment) == "none20c", "No Pretreatment"),
+    (func.lower(_raw_pretreatment) == "butknt140c", "Butylamine 140°C"),
+    else_=_raw_pretreatment,
+)
+# Display enzyme_formulation, keyed by method_id if formulation is null
+ENZYME_LABEL = func.coalesce(EHM.enzyme_formulation, EHM.method_id)
 
 SPECIES_DISPLAY_NAME = func.concat(
     func.upper(func.left(Strain.genus, 1)),
@@ -48,8 +62,8 @@ fermentation_qc_stats = select(
     FermentationRecord.resource_id,
     LocationAddress.geography_id.label("geoid"),
     Strain.name.label("strain_name"),
-    func.coalesce(PS.pretreatment_exper_name, PM.name).label("pretreatment_method"),
-    func.coalesce(EHM.name, EM.name).label("enzyme_name"),
+    PRETREATMENT_LABEL.label("pretreatment_method"),
+    ENZYME_LABEL.label("enzyme_name"),
     BCM.name.label("bioconversion_method"),
     ELAPSED_TIME.label("elapsed_time"),
     func.avg(case((func.lower(Parameter.name) == "sugar_cons", Observation.value))).label("avg_sugar_cons"),
@@ -64,6 +78,7 @@ fermentation_qc_stats = select(
  .outerjoin(Strain, FermentationRecord.strain_id == Strain.id)\
  .outerjoin(PM, FermentationRecord.pretreatment_method_id == PM.id)\
  .outerjoin(PS, FermentationRecord.pretreatment_setup_id == PS.id)\
+ .outerjoin(PSDM, PS.decon_method_id == PSDM.id)\
  .outerjoin(EM, FermentationRecord.eh_method_id == EM.id)\
  .outerjoin(EHM, FermentationRecord.eh_method_id_new == EHM.id)\
  .outerjoin(BCM, FermentationRecord.bioconversion_method_id == BCM.id)\
@@ -72,21 +87,21 @@ fermentation_qc_stats = select(
      FermentationRecord.resource_id,
      LocationAddress.geography_id,
      Strain.name,
-     func.coalesce(PS.pretreatment_exper_name, PM.name),
-     func.coalesce(EHM.name, EM.name),
+     PRETREATMENT_LABEL,
+     ENZYME_LABEL,
      BCM.name,
      ELAPSED_TIME
 ).subquery()
 
 mv_biomass_fermentation = select(
-    func.row_number().over(order_by=(FermentationRecord.resource_id, LocationAddress.geography_id, Strain.name, func.coalesce(PS.pretreatment_exper_name, PM.name), func.coalesce(EHM.name, EM.name), BCM.name, Parameter.name, Unit.name)).label("id"),
+    func.row_number().over(order_by=(FermentationRecord.resource_id, LocationAddress.geography_id, Strain.name, PRETREATMENT_LABEL, ENZYME_LABEL, BCM.name, Parameter.name, Unit.name)).label("id"),
     FermentationRecord.resource_id,
     Resource.name.label("resource_name"),
     LocationAddress.geography_id.label("geoid"),
     Place.county_name.label("county"),
     SPECIES_DISPLAY_NAME.label("strain_name"),
-    func.coalesce(PS.pretreatment_exper_name, PM.name).label("pretreatment_method"),
-    func.coalesce(EHM.name, EM.name).label("enzyme_name"),
+    PRETREATMENT_LABEL.label("pretreatment_method"),
+    ENZYME_LABEL.label("enzyme_name"),
     BCM.name.label("bioconversion_method"),
     ELAPSED_TIME.label("elapsed_time"),
     Parameter.name.label("product_name"),
@@ -105,6 +120,7 @@ mv_biomass_fermentation = select(
  .outerjoin(Strain, FermentationRecord.strain_id == Strain.id)\
  .outerjoin(PM, FermentationRecord.pretreatment_method_id == PM.id)\
  .outerjoin(PS, FermentationRecord.pretreatment_setup_id == PS.id)\
+ .outerjoin(PSDM, PS.decon_method_id == PSDM.id)\
  .outerjoin(EM, FermentationRecord.eh_method_id == EM.id)\
  .outerjoin(EHM, FermentationRecord.eh_method_id_new == EHM.id)\
  .outerjoin(BCM, FermentationRecord.bioconversion_method_id == BCM.id)\
@@ -117,8 +133,8 @@ mv_biomass_fermentation = select(
          FermentationRecord.resource_id == fermentation_qc_stats.c.resource_id,
          func.coalesce(LocationAddress.geography_id, "") == func.coalesce(fermentation_qc_stats.c.geoid, ""),
          func.coalesce(Strain.name, "") == func.coalesce(fermentation_qc_stats.c.strain_name, ""),
-         func.coalesce(func.coalesce(PS.pretreatment_exper_name, PM.name), "") == func.coalesce(fermentation_qc_stats.c.pretreatment_method, ""),
-         func.coalesce(func.coalesce(EHM.name, EM.name), "") == func.coalesce(fermentation_qc_stats.c.enzyme_name, ""),
+         func.coalesce(PRETREATMENT_LABEL, "") == func.coalesce(fermentation_qc_stats.c.pretreatment_method, ""),
+         func.coalesce(ENZYME_LABEL, "") == func.coalesce(fermentation_qc_stats.c.enzyme_name, ""),
          func.coalesce(BCM.name, "") == func.coalesce(fermentation_qc_stats.c.bioconversion_method, ""),
          func.coalesce(ELAPSED_TIME, 0) == func.coalesce(fermentation_qc_stats.c.elapsed_time, 0)
      )
@@ -141,7 +157,7 @@ mv_biomass_fermentation = select(
          )
      )
   )\
- .group_by(FermentationRecord.resource_id, Resource.name, LocationAddress.geography_id, Place.county_name, Strain.name, Strain.genus, Strain.species, func.coalesce(PS.pretreatment_exper_name, PM.name), func.coalesce(EHM.name, EM.name), BCM.name, ELAPSED_TIME, Parameter.name, Unit.name)\
+ .group_by(FermentationRecord.resource_id, Resource.name, LocationAddress.geography_id, Place.county_name, Strain.name, Strain.genus, Strain.species, PRETREATMENT_LABEL, ENZYME_LABEL, BCM.name, ELAPSED_TIME, Parameter.name, Unit.name)\
  .having(
      or_(
          func.lower(Parameter.name).not_like('%yield%'),
