@@ -14,10 +14,10 @@ from sqlalchemy.orm import aliased
 
 from ca_biositing.datamodels.models.resource_information.resource import Resource, ResourceClass, ResourceSubclass, ResourceMorphology
 from ca_biositing.datamodels.models.resource_information.primary_ag_product import PrimaryAgProduct
+from ca_biositing.datamodels.models.resource_information.resource_production_record import ResourceProductionRecord
 from ca_biositing.datamodels.models.resource_information.resource_transport_record import ResourceTransportRecord
 from ca_biositing.datamodels.models.resource_information.resource_storage_record import ResourceStorageRecord
 from ca_biositing.datamodels.models.external_data.resource_usda_commodity_map import ResourceUsdaCommodityMap
-from ca_biositing.datamodels.models.external_data.billion_ton import BillionTon2023Record
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
 from ca_biositing.datamodels.models.methods_parameters_units.unit import Unit
@@ -157,14 +157,44 @@ resource_tags_v2 = select(
      ).label("tags")
  ).select_from(resource_metrics_v2).join(thresholds_v2, literal(True)).subquery()
 
-# Aggregated volume from Billion Ton
+# 5. Aggregated volume from internal production records + observations
+# Value is sum cross all NSJV counties for the most recent year of data for each resource
+# (excluding "NSJV" itself which is an outlier and not mappable to a single geoid)
+production_obs = select(
+    cast(Observation.record_id, Integer).label("production_record_id"),
+    Observation.value.label("production_value"),
+    Observation.unit_id.label("unit_id"),
+).select_from(Observation)\
+ .join(Parameter, Observation.parameter_id == Parameter.id)\
+ .where(and_(
+     Observation.record_type == "resource_production_record",
+     Observation.value.is_not(None),
+     func.lower(Parameter.name).like("%production%"),
+ )).subquery()
+
+latest_production_year = select(
+    ResourceProductionRecord.resource_id.label("resource_id"),
+    func.max(ResourceProductionRecord.report_date).label("latest_report_date"),
+).select_from(ResourceProductionRecord)\
+ .join(production_obs, production_obs.c.production_record_id == ResourceProductionRecord.id)\
+ .where(ResourceProductionRecord.geoid != 'NSJV')\
+ .group_by(ResourceProductionRecord.resource_id).subquery()
+
 agg_vol = select(
-     BillionTon2023Record.resource_id,
-     func.sum(BillionTon2023Record.production).label("total_annual_volume"),
-     func.count(func.distinct(BillionTon2023Record.geoid)).label("county_count"),
-     func.max(Unit.name).label("volume_unit")
-  ).join(Unit, BillionTon2023Record.production_unit_id == Unit.id)\
-   .group_by(BillionTon2023Record.resource_id).subquery()
+     ResourceProductionRecord.resource_id,
+     func.sum(production_obs.c.production_value).label("total_annual_volume"),
+     func.count(func.distinct(ResourceProductionRecord.geoid)).label("county_count"),
+     func.max(Unit.name).label("volume_unit"),
+     cast(func.extract('year', latest_production_year.c.latest_report_date), Integer).label("total_annual_volume_year")
+ ).select_from(ResourceProductionRecord)\
+  .join(production_obs, production_obs.c.production_record_id == ResourceProductionRecord.id)\
+  .join(latest_production_year, and_(
+      latest_production_year.c.resource_id == ResourceProductionRecord.resource_id,
+      latest_production_year.c.latest_report_date == ResourceProductionRecord.report_date,
+  ))\
+  .outerjoin(Unit, production_obs.c.unit_id == Unit.id)\
+  .where(ResourceProductionRecord.geoid != 'NSJV')\
+  .group_by(ResourceProductionRecord.resource_id, latest_production_year.c.latest_report_date).subquery()
 
 # Biomass availability aggregation
 from .mv_biomass_availability import mv_biomass_availability
@@ -191,15 +221,17 @@ volume_year_sq = select(
 
 # Then aggregate volumes for the most recent year only
 volume_agg = select(
-     mv_biomass_volume_estimate.c.resource_id,
-     func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_min).label("calculated_estimate_volume_min"),
-     func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_max).label("calculated_estimate_volume_max"),
-     func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_mid).label("calculated_estimate_volume_mid"),
-     volume_year_sq.c.volume_estimate_year
-  ).select_from(mv_biomass_volume_estimate)\
-   .join(volume_year_sq, mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id)\
-   .where(mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year)\
-   .group_by(mv_biomass_volume_estimate.c.resource_id, volume_year_sq.c.volume_estimate_year).subquery()
+      mv_biomass_volume_estimate.c.resource_id,
+      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_min).label("calculated_estimate_volume_min"),
+      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_max).label("calculated_estimate_volume_max"),
+      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_mid).label("calculated_estimate_volume_mid"),
+      volume_year_sq.c.volume_estimate_year
+    ).select_from(mv_biomass_volume_estimate)\
+    .join(volume_year_sq, and_(
+        mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id,
+        mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year,
+    ))\
+    .group_by(mv_biomass_volume_estimate.c.resource_id, volume_year_sq.c.volume_estimate_year).subquery()
 
 mv_biomass_search = select(
      Resource.id,
@@ -214,6 +246,7 @@ mv_biomass_search = select(
      agg_vol.c.total_annual_volume,
      agg_vol.c.county_count,
      agg_vol.c.volume_unit,
+     agg_vol.c.total_annual_volume_year,
      resource_metrics_v2.c.moisture_percent,
      resource_metrics_v2.c.sugar_content_percent,
      resource_metrics_v2.c.glucan_percent,
@@ -241,10 +274,18 @@ mv_biomass_search = select(
      func.coalesce(resource_metrics_v2.c.has_fermentation, False).label("has_fermentation"),
      func.coalesce(resource_metrics_v2.c.has_gasification, False).label("has_gasification"),
      func.coalesce(resource_metrics_v2.c.has_pretreatment, False).label("has_pretreatment"),
-     case((resource_metrics_v2.c.moisture_percent != None, True), else_=False).label("has_moisture_data"),
+     case((resource_metrics_v2.c.moisture_percent.is_not(None), True), else_=False).label("has_moisture_data"),
      case((resource_metrics_v2.c.sugar_content_percent > 0, True), else_=False).label("has_sugar_data"),
-     case((ResourceMorphology.morphology_uri != None, True), else_=False).label("has_image"),
-     case((agg_vol.c.total_annual_volume != None, True), else_=False).label("has_volume_data"),
+     case((ResourceMorphology.morphology_uri.is_not(None), True), else_=False).label("has_image"),
+     case((
+          or_(
+              agg_vol.c.total_annual_volume.is_not(None),
+              volume_agg.c.calculated_estimate_volume_min.is_not(None),
+              volume_agg.c.calculated_estimate_volume_mid.is_not(None),
+              volume_agg.c.calculated_estimate_volume_max.is_not(None),
+          ),
+          True,
+      ), else_=False).label("has_volume_data"),
      # Calculated volume estimates
      volume_agg.c.calculated_estimate_volume_min,
      volume_agg.c.calculated_estimate_volume_max,

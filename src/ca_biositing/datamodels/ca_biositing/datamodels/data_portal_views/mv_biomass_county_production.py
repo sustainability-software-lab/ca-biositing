@@ -2,6 +2,7 @@
 mv_biomass_county_production.py
 
 County-level biomass production data from Billion Ton 2023 dataset.
+This is a LEGACY view and should not be used for new analyses. It is being retained for backward compatibility with existing analyses that reference it, but it may be removed in the future.
 
 Required index:
     CREATE UNIQUE INDEX idx_mv_biomass_county_production_id ON data_portal.mv_biomass_county_production (id)

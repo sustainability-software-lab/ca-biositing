@@ -22,6 +22,8 @@ def _coerce_float(df: pd.DataFrame, cols: Iterable[str], float_dtype=np.float64)
             s = df[c].astype(str)
             # Remove commas
             s = s.str.replace(",", "", regex=False)
+            # Remove currency symbols
+            s = s.str.replace("$", "", regex=False)
             # Remove all whitespace
             s = s.str.replace(r"\s+", "", regex=True)
             # Replace various null-like strings with actual NaN
