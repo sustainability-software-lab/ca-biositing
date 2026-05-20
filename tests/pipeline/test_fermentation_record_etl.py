@@ -200,22 +200,22 @@ class TestMvBiomassFermentationView:
         """Verify that mv_biomass_fermentation.py labels pretreatment_method correctly."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
-        # Should label PM.name as pretreatment_method
-        assert 'PM.name.label("pretreatment_method")' in source
+        # Should label PRETREATMENT_LABEL as pretreatment_method
+        assert 'PRETREATMENT_LABEL.label("pretreatment_method")' in source
 
     def test_view_source_file_labels_enzyme_method(self):
         """Verify that mv_biomass_fermentation.py labels enzyme_name correctly."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
-        # Should label EM.name as enzyme_name
-        assert 'EM.name.label("enzyme_name")' in source
+        # Should label ENZYME_LABEL as enzyme_name
+        assert 'ENZYME_LABEL.label("enzyme_name")' in source
 
     def test_view_source_file_labels_elapsed_time(self):
-        """Verify that mv_biomass_fermentation.py projects elapsed_time from all three method aliases."""
+        """Verify that mv_biomass_fermentation.py projects elapsed_time from all four method aliases."""
         view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
 
-        assert 'ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BCM.time_h)' in source
+        assert 'ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BCM.time_h, EHM.time_h)' in source
         assert 'ELAPSED_TIME.label("elapsed_time")' in source
 
     def test_view_source_file_has_bcm_alias(self):
