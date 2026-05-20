@@ -194,6 +194,7 @@ migrate = { cmd = [
 ], description = "Apply database migrations locally to the Docker database."}
 
 migrate-autogenerate = { cmd = "alembic revision --autogenerate", description = "Auto-generate a new Alembic migration from model changes." }
+compile-mv-fixes = { cmd = "python scripts/compile_mv_fixes.py", description = "Compile SQLAlchemy views to a manual Alembic migration for fixes." }
 
 # Database Auditing
 audit = { cmd = "POSTGRES_HOST=localhost python audit/main.py --env local", description = "Run a comprehensive database audit locally (requires local services)." }
