@@ -128,7 +128,7 @@ class TestResidueFactorsFlowExecution:
                     mock_load.return_value = {"inserted": 1, "updated": 0, "failed": 0}
 
                     # Run the flow
-                    residue_factors_etl_flow()
+                    residue_factors_etl_flow.fn()
 
                     # Verify lineage tracking was called
                     mock_etl_run_record.fn.assert_called_once()
@@ -160,7 +160,7 @@ class TestResidueFactorsFlowExecution:
 
             # Flow should raise the exception
             with pytest.raises(RuntimeError):
-                residue_factors_etl_flow()
+                residue_factors_etl_flow.fn()
 
     @patch(
         "ca_biositing.pipeline.flows.residue_factors_flow.create_etl_run_record"
@@ -187,7 +187,7 @@ class TestResidueFactorsFlowExecution:
             mock_extract.return_value = pd.DataFrame()
 
             # Flow should return gracefully without raising
-            residue_factors_etl_flow()
+            residue_factors_etl_flow.fn()
 
     @patch(
         "ca_biositing.pipeline.flows.residue_factors_flow.create_etl_run_record"
@@ -225,7 +225,7 @@ class TestResidueFactorsFlowExecution:
 
                 # Flow should raise the exception
                 with pytest.raises(ValueError):
-                    residue_factors_etl_flow()
+                    residue_factors_etl_flow.fn()
 
     @patch(
         "ca_biositing.pipeline.flows.residue_factors_flow.create_etl_run_record"
@@ -272,7 +272,7 @@ class TestResidueFactorsFlowExecution:
 
                     # Flow should raise the exception
                     with pytest.raises(RuntimeError):
-                        residue_factors_etl_flow()
+                        residue_factors_etl_flow.fn()
 
     @patch(
         "ca_biositing.pipeline.flows.residue_factors_flow.create_etl_run_record"
@@ -333,7 +333,7 @@ class TestResidueFactorsFlowExecution:
                     mock_load.return_value = {"inserted": 2, "updated": 0, "failed": 0}
 
                     # Run the flow
-                    residue_factors_etl_flow()
+                    residue_factors_etl_flow.fn()
 
                     # Verify all stages were called
                     mock_extract.assert_called_once()
@@ -398,7 +398,7 @@ class TestResidueFactorsFlowExecution:
                         mock_logger_instance = MagicMock()
                         mock_logger.return_value = mock_logger_instance
 
-                        residue_factors_etl_flow()
+                        residue_factors_etl_flow.fn()
 
                         # Verify logging occurred (at least some info logs)
                         # Check that logger.info was called multiple times
@@ -442,7 +442,7 @@ class TestResidueFactorsFlowDataFlow:
                     mock_transform.return_value = extract_df.copy()
                     mock_load.return_value = {"inserted": 1, "updated": 0, "failed": 0}
 
-                    residue_factors_etl_flow()
+                    residue_factors_etl_flow.fn()
 
                     # Verify transform received the extract output
                     assert mock_transform.called
@@ -490,7 +490,7 @@ class TestResidueFactorsFlowDataFlow:
                     mock_transform.return_value = transform_df
                     mock_load.return_value = {"inserted": 1, "updated": 0, "failed": 0}
 
-                    residue_factors_etl_flow()
+                    residue_factors_etl_flow.fn()
 
                     # Verify load received the transform output
                     assert mock_load.called
@@ -528,7 +528,7 @@ class TestResidueFactorsFlowErrorHandling:
                 mock_logger.return_value = mock_logger_instance
 
                 with pytest.raises(RuntimeError):
-                    residue_factors_etl_flow()
+                    residue_factors_etl_flow.fn()
 
                 # Verify error was logged with exc_info
                 error_calls = [
@@ -560,7 +560,7 @@ class TestResidueFactorsFlowErrorHandling:
             mock_extract.return_value = None
 
             # Flow should return gracefully
-            residue_factors_etl_flow()
+            residue_factors_etl_flow.fn()
 
     @patch(
         "ca_biositing.pipeline.flows.residue_factors_flow.create_etl_run_record"
@@ -591,7 +591,7 @@ class TestResidueFactorsFlowErrorHandling:
                 mock_transform.return_value = None
 
                 # Flow should return gracefully
-                residue_factors_etl_flow()
+                residue_factors_etl_flow.fn()
 
 
 class TestDeploymentReadiness:
