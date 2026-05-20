@@ -1,8 +1,7 @@
 from ..base import BaseEntity
 from datetime import date
-from sqlmodel import Field, Column
+from sqlmodel import Field, Column, JSON
 from typing import Optional, List
-from sqlalchemy.dialects.postgresql import JSONB
 
 
 class PretreatmentSetup(BaseEntity, table=True):
@@ -11,8 +10,8 @@ class PretreatmentSetup(BaseEntity, table=True):
     pretreatment_uuid: str = Field(nullable=False)
     pretreatment_exper_id: str = Field(nullable=False, unique=True)
     pretreatment_exper_name: str = Field(nullable=False)
-    resources: List[str] = Field(default_factory=list, sa_column=Column(JSONB))
-    prepared_samples: List[str] = Field(default_factory=list, sa_column=Column(JSONB))
+    resources: List[str] = Field(default_factory=list, sa_column=Column(JSON))
+    prepared_samples: List[str] = Field(default_factory=list, sa_column=Column(JSON))
     decon_method_id: Optional[int] = Field(default=None, foreign_key="method.id")
     decon_vessel_id: Optional[int] = Field(default=None, foreign_key="decon_vessel.id")
     eh_method_id: Optional[int] = Field(default=None, foreign_key="method.id")
