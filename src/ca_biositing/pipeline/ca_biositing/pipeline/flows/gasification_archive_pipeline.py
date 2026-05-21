@@ -123,12 +123,30 @@ def record_metadata_db(
 
         session.commit()
 
+@task
+def check_record_exists(resource_id: Optional[int], experiment_id: Optional[int]) -> bool:
+    from ca_biositing.datamodels.models import GasificationTimeseries
+
+    if resource_id is None or experiment_id is None:
+        return False
+
+    engine = get_engine()
+    with Session(engine) as session:
+        existing = session.execute(
+            select(GasificationTimeseries).where(
+                GasificationTimeseries.resource_id == resource_id,
+                GasificationTimeseries.experiment_id == experiment_id
+            )
+        ).scalar_one_or_none()
+        return existing is not None
+
 @flow(name="Gasification Timeseries Archiver", log_prints=True)
 def gasification_archive_subflow(
     records_to_archive: List[dict],
     etl_run_id: int,
     lineage_group_id: int,
-    bucket_name: str = "biocirv-staging-gasification-data"
+    bucket_name: str = "biocirv-staging-gasification-data",
+    force_refresh: bool = False
 ):
     """
     Sub-flow to archive gasification timeseries data.
@@ -141,11 +159,18 @@ def gasification_archive_subflow(
     - reactor_type_id
     """
     logger = get_run_logger()
-    logger.info(f"Starting archival for {len(records_to_archive)} records")
+    logger.info(f"Starting archival for {len(records_to_archive)} records (force_refresh={force_refresh})")
 
     for record in records_to_archive:
         record_id = record["record_id"]
+        resource_id = record.get("resource_id")
+        experiment_id = record.get("experiment_id")
         gsheet_url = record["gsheet_url"]
+
+        if not force_refresh:
+            if check_record_exists(resource_id, experiment_id):
+                logger.info(f"Record for resource_id={resource_id}, experiment_id={experiment_id} already archived, skipping extraction and upload.")
+                continue
 
         if not gsheet_url:
             logger.warning(f"No GSheet URL for record {record_id}, skipping archival.")

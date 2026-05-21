@@ -2,7 +2,7 @@ from prefect import flow, task
 import pandas as pd
 
 @flow(name="Thermochemical Conversion ETL", log_prints=True)
-def thermochem_etl_flow(*args, **kwargs):
+def thermochem_etl_flow(force_refresh: bool = False, *args, **kwargs):
     """
     Orchestrates the ETL process for Thermochemical Conversion data,
     including Observations and Gasification Records.
@@ -136,6 +136,7 @@ def thermochem_etl_flow(*args, **kwargs):
 
                 logger.info(f"Triggering archival subflow for {len(unique_archive)} unique URLs...")
                 gasification_archive_subflow(
+                    force_refresh=force_refresh,
                     records_to_archive=unique_archive,
                     etl_run_id=int(etl_run_id),
                     lineage_group_id=int(lineage_group)
