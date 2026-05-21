@@ -79,47 +79,64 @@ def replace_name_with_id_df(
 
     # Build a case-insensitive lookup map.
     # We lowercase the keys to ensure matches regardless of DB casing.
-    name_to_id_map = {str(name).lower(): id_ for name, id_ in rows if name is not None}
+    # If the model is FileObjectMetadata, we also strip URL fragments (#gid=...)
+    # to maintain tab-level specificity while ignoring cell-level links.
+    is_file_metadata = ref_model.__name__ == "FileObjectMetadata"
+
+    def normalize_name(n):
+        if n is None or pd.isna(n):
+            return None
+        val = str(n).lower().strip()
+        if is_file_metadata and "#" in val:
+            val = val.split("#")[0]
+        return val
+
+    name_to_id_map = {normalize_name(name): id_ for name, id_ in rows if name is not None}
 
     df_copy = df.copy()
 
     # 2. Determine which names are new
     # Filter out nulls and empty strings
     series = df_copy[df_name_column]
-    unique_names = set(series[series.notna() & (series.astype(str).str.strip() != "")].unique())
+    unique_raw_names = set(series[series.notna() & (series.astype(str).str.strip() != "")].unique())
 
-    # Check against lowercased keys in the map to prevent duplicates
-    new_names = {name for name in unique_names if str(name).lower() not in name_to_id_map}
-    num_new_records = len(new_names)
+    # Check against normalized keys in the map to prevent duplicates.
+    # Multiple unique_raw_names (e.g. URL#gid1, URL#gid2) might map to the same normalized name.
+    new_normalized_names = {
+        normalize_name(name) for name in unique_raw_names
+        if normalize_name(name) not in name_to_id_map
+    }
+    # Filter out None from normalized names set if any
+    new_normalized_names.discard(None)
+    num_new_records = len(new_normalized_names)
 
     # 3. Insert missing reference rows
-    if new_names:
-        for name in new_names:
-            # Enforce lowercase on creation for consistency in reference tables
-            clean_name = str(name).lower().strip()
+    if new_normalized_names:
+        for clean_name in new_normalized_names:
+            if clean_name is None:
+                continue
             new_record = ref_model(**{model_name_attr: clean_name})
             db.add(new_record)
 
         # Flush to get IDs without ending the transaction
         db.flush()
 
-        # Re-query just-created rows using lowercased names to match what we inserted
-        clean_new_names = [str(name).lower().strip() for name in new_names]
+        # Re-query just-created rows using normalized names to match what we inserted
         refreshed = db.execute(
             select(ref_model).where(
-                getattr(ref_model, model_name_attr).in_(clean_new_names)
+                getattr(ref_model, model_name_attr).in_(list(new_normalized_names))
             )
         ).scalars().all()
 
         for record in refreshed:
-            # Use lowercased keys for the map to ensure matches
+            # Use normalized keys for the map to ensure matches
             name_to_id_map[
-                str(getattr(record, model_name_attr)).lower()
+                normalize_name(getattr(record, model_name_attr))
             ] = getattr(record, id_column_name)
 
-    # 4. Replace name column with ID column using case-insensitive mapping
-    # We lowercase the lookup keys from the DataFrame to match our map.
-    df_copy[final_column_name] = df_copy[df_name_column].astype(str).str.lower().map(name_to_id_map)
+    # 4. Replace name column with ID column using normalized mapping
+    # We normalize the lookup keys from the DataFrame to match our map.
+    df_copy[final_column_name] = df_copy[df_name_column].apply(normalize_name).map(name_to_id_map)
 
     # If the final column name matches the original, don't drop it (this happens if col is already raw_data_id)
     if final_column_name != df_name_column:
