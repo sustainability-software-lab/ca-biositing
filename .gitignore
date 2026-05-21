@@ -41,11 +41,13 @@ data/landiq/*.dbf
 data/landiq/*.prj
 data/landiq/*.cpg
 data/landiq/*.xml
+data/landiq/*.sbn
+data/landiq/*.sbx
 *.csv
 *.pdf
 !src/ca_biositing/pipeline/ca_biositing/pipeline/utils/commodity_mappings.csv
 !src/ca_biositing/pipeline/ca_biositing/pipeline/etl/transform/landiq/*.csv
-ull!src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.csv
+!src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.csv
 !src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.zip
 !src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.geojson
 !resources/assets/*.csv

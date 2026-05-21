@@ -48,8 +48,8 @@ def transform_landiq_record(
     df = pd.DataFrame(gdf.copy())
 
     # Set dataset name and version as requested
-    df['dataset'] = 'landiq_2023'
-    df['version'] = 'land use 2023'
+    df['dataset'] = 'landiq_2024'
+    df['version'] = 'land use 2024'
 
     # Map shapefile columns to model fields
     # MAIN_CROP is the main crop for single cropped fields
