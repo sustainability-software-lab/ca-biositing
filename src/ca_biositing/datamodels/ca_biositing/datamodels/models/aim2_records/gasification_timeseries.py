@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlmodel import Field
+from sqlmodel import Field, UniqueConstraint
 
 from ..base import BaseEntity
 
@@ -11,7 +11,11 @@ class GasificationTimeseries(BaseEntity, table=True):
     """
 
     __tablename__ = "gasification_timeseries"
-
+    __table_args__ = (
+        UniqueConstraint(
+            "resource_id", "experiment_id", name="uq_gasification_timeseries_res_exp"
+        ),
+    )
     resource_id: Optional[int] = Field(default=None, foreign_key="resource.id")
     experiment_id: Optional[int] = Field(default=None, foreign_key="experiment.id")
     resource_name: Optional[str] = Field(default=None)
