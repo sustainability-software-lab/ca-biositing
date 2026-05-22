@@ -402,6 +402,10 @@ description = "Show Pulumi stack outputs. Set DEPLOY_ENV for target environment.
 cmd = "bash scripts/pulumi-docker.sh refresh"
 description = "Refresh Pulumi state from live GCP resources. Set DEPLOY_ENV for target environment."
 
+[feature.cloud.tasks.cloud-backup]
+cmd = "bash scripts/cloud-backup.sh"
+description = "Perform a manual SQL export of the cloud database to its backup bucket. Set DEPLOY_ENV for target environment."
+
 # --- CI / Linux-native tasks (no Docker wrapper) ---
 # These tasks run directly on Linux (GitHub Actions or Linux workstations).
 # They read IMAGE_TAG from the environment (default: "latest").
