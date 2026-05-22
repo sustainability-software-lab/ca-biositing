@@ -176,21 +176,21 @@ class TestMvBiomassFermentationView:
 
     def test_view_source_file_references_pretreatment_method_id(self):
         """Verify that mv_biomass_fermentation.py source file contains pretreatment_method_id."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         # The view should join on pretreatment_method_id
         assert 'pretreatment_method_id' in source
 
     def test_view_source_file_references_eh_method_id(self):
         """Verify that mv_biomass_fermentation.py source file contains eh_method_id."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         # The view should join on eh_method_id
         assert 'eh_method_id' in source
 
     def test_view_source_file_has_aliases(self):
         """Verify that mv_biomass_fermentation.py uses PM and EM aliases for Method table."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         # Should have PM (pretreatment method) and EM (enzyme method) aliases
         assert 'PM = aliased(Method' in source
@@ -198,21 +198,21 @@ class TestMvBiomassFermentationView:
 
     def test_view_source_file_labels_pretreatment_method(self):
         """Verify that mv_biomass_fermentation.py labels pretreatment_method correctly."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         # Should label PRETREATMENT_LABEL as pretreatment_method
         assert 'PRETREATMENT_LABEL.label("pretreatment_method")' in source
 
     def test_view_source_file_labels_enzyme_method(self):
         """Verify that mv_biomass_fermentation.py labels enzyme_name correctly."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         # Should label ENZYME_LABEL as enzyme_name
         assert 'ENZYME_LABEL.label("enzyme_name")' in source
 
     def test_view_source_file_labels_elapsed_time(self):
         """Verify that mv_biomass_fermentation.py projects elapsed_time from all four method aliases."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
 
         assert 'ELAPSED_TIME = func.coalesce(PM.duration, EM.duration, BCM.time_h, EHM.time_h)' in source
@@ -220,25 +220,25 @@ class TestMvBiomassFermentationView:
 
     def test_view_source_file_has_bcm_alias(self):
         """Verify that mv_biomass_fermentation.py uses BCM alias for bioconversion method."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         assert 'BCM = aliased(BioconversionMethod' in source
 
     def test_view_source_file_joins_on_bioconversion_method_id(self):
         """Verify that mv_biomass_fermentation.py joins BCM alias on fermentation_record.bioconversion_method_id."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         assert 'FermentationRecord.bioconversion_method_id == BCM.id' in source
 
     def test_view_source_file_labels_bioconversion_method(self):
         """Verify that mv_biomass_fermentation.py labels bioconversion_method correctly."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         assert 'BCM.name.label("bioconversion_method")' in source
 
     def test_view_source_file_labels_strain_name(self):
         """Verify that mv_biomass_fermentation.py projects strain_name from genus and species."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         assert 'SPECIES_DISPLAY_NAME' in source
         assert 'strain_name' in source
@@ -249,7 +249,7 @@ class TestMvBiomassFermentationView:
 
     def test_view_source_file_groups_by_genus_and_species(self):
         """Verify that mv_biomass_fermentation.py includes Strain.genus and Strain.species in group_by."""
-        view_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
+        view_file = pathlib.Path(__file__).parent.parent.parent.parent.parent / "src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_fermentation.py"
         source = view_file.read_text()
         assert 'Strain.genus' in source
         assert 'Strain.species' in source
@@ -259,7 +259,7 @@ class TestAim2BioconversionFlow:
     """Test the Aim 2 flow startup ordering for fermentation extraction."""
 
     def test_methods_extract_runs_before_fermentation_extract(self):
-        flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
+        flow_file = pathlib.Path(__file__).parent.parent / "ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
 
         methods_call = "bioconversion_methods.extract()"
@@ -270,7 +270,7 @@ class TestAim2BioconversionFlow:
         assert source.index(methods_call) < source.index(fermentation_call)
 
     def test_methods_are_loaded_before_fermentation_extract(self):
-        flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
+        flow_file = pathlib.Path(__file__).parent.parent / "ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
 
         load_call = "load_bioconversion_method(bcm_df)"
@@ -294,7 +294,7 @@ class TestAim2BioconversionFlow:
 
     def test_strain_seeding_uses_name_genus_species_strain_columns(self):
         """Verify that strain seeding reads name/genus/species/strain columns from the sheet."""
-        flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
+        flow_file = pathlib.Path(__file__).parent.parent / "ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
         # New seeding logic uses the taxonomy columns sourced from Strain_name
         assert "'strain_name': 'name'" in source
@@ -310,13 +310,13 @@ class TestAim2BioconversionFlow:
 
     def test_strain_seeding_reads_methods_sheet_only(self):
         """Verify that strain seed loop reads methods only (03.3-BioConversionMethods)."""
-        flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
+        flow_file = pathlib.Path(__file__).parent.parent / "ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
         assert "src = methods_raw.copy()" in source
 
     def test_flow_uses_new_transform_and_load_tasks(self):
         """Verify new tasks are called in the flow."""
-        flow_file = pathlib.Path(__file__).parent.parent.parent / "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/aim2_bioconversion.py"
+        flow_file = pathlib.Path(__file__).parent.parent / "ca_biositing/pipeline/flows/aim2_bioconversion.py"
         source = flow_file.read_text()
         assert "transform_bioconversion_method" in source
         assert "load_bioconversion_method" in source
