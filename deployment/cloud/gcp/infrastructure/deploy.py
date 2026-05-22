@@ -66,7 +66,9 @@ def pulumi_program():
 
     # 4.5. Storage: GCS buckets
     storage = create_storage_resources(
-        sql_instance=sql.instance, depends_on=[api_services["storage"]]
+        service_accounts=iam.service_accounts,
+        sql_instance=sql.instance,
+        depends_on=[api_services["storage"]],
     )
 
     # 4.7. Cloud NAT: enables VPC egress for Cloud Run (oauth2-proxy needs
@@ -123,6 +125,7 @@ def pulumi_program():
     # Storage
     pulumi.export("image_bucket_name", storage.bucket.name)
     pulumi.export("backup_bucket_name", storage.backup_bucket.name)
+    pulumi.export("gasification_bucket_name", storage.gasification_bucket.name)
 
 
 def get_stack() -> auto.Stack:
