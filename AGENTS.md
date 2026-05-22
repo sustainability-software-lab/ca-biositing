@@ -36,14 +36,17 @@ prototyping for bioeconomy site selection.
 
 For detailed guidance on shared topics, see the `agent_docs/` directory:
 
-| Topic              | Document                                                                       | Description                        |
-| ------------------ | ------------------------------------------------------------------------------ | ---------------------------------- |
-| Namespace Packages | [agent_docs/namespace_packages.md](agent_docs/namespace_packages.md)           | PEP 420 structure, import patterns |
-| Testing Patterns   | [agent_docs/testing_patterns.md](agent_docs/testing_patterns.md)               | pytest fixtures, test commands     |
-| Code Quality       | [agent_docs/code_quality.md](agent_docs/code_quality.md)                       | Pre-commit, style, imports         |
-| Troubleshooting    | [agent_docs/troubleshooting.md](agent_docs/troubleshooting.md)                 | Common pitfalls and solutions      |
-| Docker Workflow    | [agent_docs/docker_workflow.md](agent_docs/docker_workflow.md)                 | Docker/Pixi service commands       |
-| SQL-First Workflow | [docs/datamodels/SQL_FIRST_WORKFLOW.md](docs/datamodels/SQL_FIRST_WORKFLOW.md) | Rapid schema iteration path        |
+| Topic                    | Document                                                                         | Description                                                                                          |
+| ------------------------ | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| Namespace Packages       | [agent_docs/namespace_packages.md](agent_docs/namespace_packages.md)             | PEP 420 structure, import patterns                                                                   |
+| Testing Patterns         | [agent_docs/testing_patterns.md](agent_docs/testing_patterns.md)                 | pytest fixtures, test commands                                                                       |
+| Code Quality             | [agent_docs/code_quality.md](agent_docs/code_quality.md)                         | Pre-commit, style, imports                                                                           |
+| Troubleshooting          | [agent_docs/troubleshooting.md](agent_docs/troubleshooting.md)                   | Common pitfalls and solutions                                                                        |
+| Docker Workflow          | [agent_docs/docker_workflow.md](agent_docs/docker_workflow.md)                   | Docker/Pixi service commands                                                                         |
+| SQL-First Workflow       | [docs/datamodels/SQL_FIRST_WORKFLOW.md](docs/datamodels/SQL_FIRST_WORKFLOW.md)   | Rapid schema iteration path                                                                          |
+| **ETL Creation Guide**   | [agent_docs/etl_creation_guide.md](agent_docs/etl_creation_guide.md)             | **START HERE for any new ETL** — agent persona, phased workflow, architecture rules, common pitfalls |
+| ETL Provenance Checklist | [agent_docs/etl_provenance_checklist.md](agent_docs/etl_provenance_checklist.md) | Field-by-field reference for every provenance table; use during Column Population Plan               |
+| ETL Kickoff Template     | [agent_docs/etl_kickoff_template.md](agent_docs/etl_kickoff_template.md)         | Structured intake form for humans to fill before starting a new ETL session                          |
 
 ## Build System & Environment Management
 
