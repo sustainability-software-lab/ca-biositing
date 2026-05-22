@@ -8,7 +8,16 @@ from .auth import ApiKey, ApiUser
 from .aim1_records import CalorimetryRecord, CompositionalRecord, FtnirRecord, IcpRecord, ProximateRecord, RgbRecord, UltimateRecord, XrdRecord, XrfRecord
 
 # Aim2 Records
-from .aim2_records import AutoclaveRecord, BioconversionMethod, FermentationRecord, GasificationRecord, PretreatmentRecord, Strain
+from .aim2_records import (
+    AutoclaveRecord,
+    BioconversionMethod,
+    FermentationRecord,
+    GasificationRecord,
+    PretreatmentRecord,
+    Strain,
+    PretreatmentSetup,
+    EnzymaticHydrolysisMethod,
+)
 
 # Core
 from .core import EntityLineage, EtlRun, LineageGroup
