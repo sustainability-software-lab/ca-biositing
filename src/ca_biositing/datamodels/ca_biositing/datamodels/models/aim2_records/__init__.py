@@ -5,3 +5,5 @@ from .gasification_record import GasificationRecord
 from .gasification_timeseries import GasificationTimeseries
 from .pretreatment_record import PretreatmentRecord
 from .strain import Strain
+from .pretreatment_setup import PretreatmentSetup
+from .enz_hydr_method import EnzymaticHydrolysisMethod

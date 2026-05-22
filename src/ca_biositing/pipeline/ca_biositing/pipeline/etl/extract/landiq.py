@@ -18,7 +18,7 @@ from prefect import task, get_run_logger
 # Default path within the repository
 # Note: Users must download the Land IQ shapefile from https://www.landiq.com/land-use-mapping
 # and place it in the data/landiq/ directory.
-DEFAULT_SHAPEFILE_PATH = "data/landiq/i15_Crop_Mapping_2023_Provisional.shp"
+DEFAULT_SHAPEFILE_PATH = "data/landiq/i15_Crop_Mapping_2024_Provisional.shp"
 
 # HTTP URL for downloading the shapefile in Cloud Run.
 # Set to empty string or unset to disable URL download and fall back to local path.

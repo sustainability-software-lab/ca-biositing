@@ -8,7 +8,11 @@ class ResourceImage(BaseEntity, table=True):
     __tablename__ = "resource_image"
     __table_args__ = (
         UniqueConstraint(
-            "resource_name", "image_url", "sort_order", name="resource_image_name_url_sort_key"
+            "resource_name",
+            "image_url",
+            "sort_order",
+            name="resource_image_name_url_sort_key",
+            postgresql_nulls_not_distinct=True,
         ),
     )
 

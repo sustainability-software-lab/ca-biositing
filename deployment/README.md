@@ -345,6 +345,7 @@ The staging environment runs on GCP with the following components:
 | **Prefect Server** (UI + API)     | Cloud Run Service (internal-only ingress, minScale=1)                        |
 | **Prefect Worker** (process type) | Cloud Run Service (internal, VPC egress, polls server, runs subprocesses)    |
 | **Database**                      | Cloud SQL (PostgreSQL + PostGIS)                                             |
+| **Backups**                       | GCS (versioned bucket for SQL exports)                                       |
 | **Secrets**                       | Secret Manager (DB password, GSheets creds, OAuth2 creds, etc.)              |
 | **Artifact Registry**             | Remote repos proxying GHCR and Quay.io for container images                  |
 | **Cloud Router + NAT**            | Internet egress for VPC-routed traffic (OAuth APIs, external data downloads) |
@@ -432,6 +433,22 @@ Refresh the Cloud Run job's image digest and apply Alembic migrations:
 ```bash
 pixi run cloud-migrate
 ```
+
+### Database Backups
+
+While Cloud SQL performs automated daily backups, you can trigger a manual SQL
+export to the environment's versioned backup bucket using:
+
+```bash
+# Staging (default)
+pixi run cloud-backup
+
+# Production
+DEPLOY_ENV=production pixi run cloud-backup
+```
+
+Backups are saved to `gs://biocirv-{env}-backups/` using the naming convention
+`YYYYMMDD-biocirv-{env}-backup-HHMMSS.sql`.
 
 This runs two steps in order:
 

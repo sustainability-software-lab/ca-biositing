@@ -26,7 +26,9 @@ def transform_fermentation_record(
         Experiment,
         Equipment,
         DeconVessel,
-        BioconversionMethod
+        BioconversionMethod,
+        PretreatmentSetup,
+        EnzymaticHydrolysisMethod
     )
     logger = get_run_logger()
     logger.info("Transforming raw data for FermentationRecord table")
@@ -49,9 +51,13 @@ def transform_fermentation_record(
         lc = str(c).lower().strip()
         if 'bioconv' in lc or 'bioconversion' in lc or lc in ('bio_conv_method', 'bioconv_method'):
             col_map[c] = 'bioconversion_method'
-        if 'pretreatment' in lc or 'decon' in lc:
+        if lc in ('pretreatment_exper_id', 'pretreatment_exper', 'pretreatment_experiment'):
+            col_map[c] = 'pretreatment_exper_id'
+        elif 'pretreatment' in lc or 'decon' in lc:
             col_map[c] = 'decon_method'
-        if 'enzyme' in lc or lc in ('eh_method', 'enzyme_method'):
+        if lc in ('eh_id', 'eh-id', 'enz_hydr_id', 'eh_method', 'enzyme_method'):
+            col_map[c] = 'eh_id'
+        elif 'enzyme' in lc:
             col_map[c] = 'eh_method'
 
     if col_map:
@@ -59,8 +65,13 @@ def transform_fermentation_record(
 
     # 1. Cleaning & Coercion
     df_copy = raw_df.copy()
-    df_copy['dataset'] = 'bioconversion'
-    cleaned_df = cleaning_mod.standard_clean(df_copy)
+    df_copy['dataset'] = 'biocirv'
+
+    # Exclude notes and description from lowercasing
+    cleaned_df = cleaning_mod.standard_clean(df_copy, lowercase=False)
+    if cleaned_df is not None:
+        lowercase_cols = [c for c in cleaned_df.columns if 'note' not in c.lower() and 'description' not in c.lower()]
+        cleaned_df = cleaning_mod.to_lowercase_df(cleaned_df, columns=lowercase_cols)
 
     if cleaned_df is None:
         return pd.DataFrame()
@@ -85,6 +96,8 @@ def transform_fermentation_record(
         'bioconversion_method': (BioconversionMethod, 'name'),
         'decon_method': (Method, 'name'),
         'eh_method': (Method, 'name'),
+        'pretreatment_exper_id': (PretreatmentSetup, 'pretreatment_exper_id'),
+        'eh_id': (EnzymaticHydrolysisMethod, 'method_id'),
         'exp_id': (Experiment, 'name'),
         'analyst_email': (Contact, 'email'),
         'dataset': (Dataset, 'name'),
@@ -126,6 +139,8 @@ def transform_fermentation_record(
         'bioconversion_method_id': 'bioconversion_method_id',
         'decon_method_id': 'pretreatment_method_id',
         'eh_method_id': 'eh_method_id',
+        'pretreatment_exper_id_id': 'pretreatment_setup_id',
+        'eh_id_id': 'eh_method_id_new',
         'resource_id': 'resource_id',
         'prepared_sample_id': 'prepared_sample_id',
         'exp_id_id': 'experiment_id',

@@ -46,7 +46,11 @@ def residue_factors_etl_flow():
     from ca_biositing.pipeline.etl.transform.resource_information import residue_factor as transform_mod
     from ca_biositing.pipeline.etl.load.resource_information import residue_factor as load_mod
 
-    logger = get_run_logger()
+    try:
+        logger = get_run_logger()
+    except Exception:
+        import logging
+        logger = logging.getLogger("prefect.flow_runs")
 
     # Force stdout/stderr to flush immediately for Docker logging
     sys.stdout.reconfigure(line_buffering=True)
@@ -82,7 +86,7 @@ def residue_factors_etl_flow():
 
     try:
         logger.info('Extracting from Google Sheet "Residue Factors" (worksheet "Data_Views")...')
-        raw_df = extract_mod.extract_residue_factors()
+        raw_df = extract_mod.extract_residue_factors.fn()
 
         if raw_df is None:
             logger.error("Extraction returned None")
@@ -110,7 +114,7 @@ def residue_factors_etl_flow():
 
     try:
         logger.info(f"Starting transformation of {len(raw_df)} rows...")
-        transformed_df = transform_mod.transform_residue_factor(
+        transformed_df = transform_mod.transform_residue_factor.fn(
             df=raw_df,
             etl_run_id=etl_run_id,
             lineage_group_id=lineage_group_id
@@ -143,7 +147,7 @@ def residue_factors_etl_flow():
 
     try:
         logger.info(f"Loading {len(transformed_df)} residue factor records...")
-        load_result = load_mod.load_residue_factors(df=transformed_df)
+        load_result = load_mod.load_residue_factors.fn(df=transformed_df)
 
         inserted = load_result.get("inserted", 0)
         updated = load_result.get("updated", 0)

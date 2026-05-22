@@ -40,6 +40,7 @@ def create_storage_resources(
         bucket=bucket.name,
         role="roles/storage.objectViewer",
         member="allUsers",
+        opts=opts,
     )
 
     # Create the backup bucket (versioned, not public)
@@ -94,6 +95,7 @@ def create_storage_resources(
             member=sql_instance.service_account_email_address.apply(
                 lambda email: f"serviceAccount:{email}"
             ),
+            opts=opts,
         )
 
     return StorageResources(
