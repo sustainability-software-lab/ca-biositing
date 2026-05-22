@@ -2,9 +2,9 @@
 version: 2
 
 build:
-  os: ubuntu-24.04
+  os: ubuntu-22.04
   tools:
-    python: "3.13"
+    python: "3.12"
 
   commands:
     # Install Pixi using asdf (the same approach as uw-ssec/rse-guidelines)
@@ -13,7 +13,9 @@ build:
     - asdf global pixi latest
 
     # Run the Pixi task defined in pixi.toml that builds docs for RTD
-    - NO_COLOR=1 pixi run rtd-publish
+    # Set HATCH_VCS_VERSION to bypass the VCS version lookup that crashes in this environment
+    - export HATCH_VCS_VERSION=$(grep -m 1 "version =" pixi.toml | cut -d '"' -f
+      2) && NO_COLOR=1 pixi run rtd-publish
 
 # MkDocs configuration file
 mkdocs:
