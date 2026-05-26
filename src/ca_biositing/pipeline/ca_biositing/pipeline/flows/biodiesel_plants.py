@@ -59,4 +59,4 @@ def biodiesel_plants_flow():
     return True
 
 if __name__ == "__main__":
-    biodiesel_plants_flow()
+    print("Biodiesel Plants ETL is disabled; re-enable it in resources/prefect/run_prefect_flow.py before running.")
