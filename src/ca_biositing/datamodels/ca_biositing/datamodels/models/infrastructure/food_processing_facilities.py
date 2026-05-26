@@ -23,3 +23,13 @@ class InfrastructureFoodProcessingFacilities(SQLModel, table=True):
     geom: Optional[str] = Field(default=None)
     latitude: Optional[Decimal] = Field(default=None)
     longitude: Optional[Decimal] = Field(default=None)
+
+# Fields from Kieran's food processor facilities dataset
+    CARB_facility_id: Optional[str] = Field(default=None)
+    name: Optional[str] = Field(default=None)
+    air_district: Optional[str] = Field(default=None)
+    process: Optional[str] = Field(default=None)
+    byproducts: Optional[str] = Field(default=None) #list of byproducts, comma-separated
+    quantities: Optional[str] = Field(default=None) #list of quantities (ton/year) corresponding to byproducts, comma-separated
+
+    
