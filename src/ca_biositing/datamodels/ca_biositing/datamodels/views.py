@@ -13,8 +13,15 @@ This module defines all 7 materialized views for the ca_biositing schema:
 Views are created via Alembic migrations and can be refreshed via refresh_all_views().
 """
 
-from sqlalchemy import cast, func, literal, literal_column, select, text, String, Float
+from sqlalchemy import cast, func, literal, literal_column, select, text, String, Float, and_, or_, case
 from sqlalchemy.orm import aliased
+
+from .data_portal_views.common import (
+    get_sum_constraints_subquery,
+    get_ultimate_filter,
+    get_icp_filter,
+    get_resource_filter,
+)
 
 # Import all models needed for view definitions
 from .models import (
@@ -91,20 +98,62 @@ LANDIQ_TILESET_VIEW = (
 
 # --- 3. analysis_data_view ---
 AnalysisDimensionUnit = aliased(Unit, name="analysis_du")
-ANALYSIS_DATA_VIEW = (
+
+# Base query for analysis data including all potential record columns needed for filtering
+_analysis_base = (
     select(
         Observation.id,
         Observation.record_id,
         Observation.record_type,
         Resource.id.label("resource_id"),
-        func.lower(Resource.name).label("resource"),
+        func.lower(Resource.name).label("resource_name"),
         LocationAddress.geography_id.label("geoid"),
-        func.lower(Parameter.name).label("parameter"),
+        case(
+            (func.lower(Parameter.name) == "ash", "ash solids"),
+            else_=func.lower(Parameter.name)
+        ).label("parameter"),
         Observation.value,
         func.lower(Unit.name).label("unit"),
         func.lower(DimensionType.name).label("dimension"),
         Observation.dimension_value,
         func.lower(AnalysisDimensionUnit.name).label("dimension_unit"),
+        func.coalesce(
+            ProximateRecord.experiment_id,
+            UltimateRecord.experiment_id,
+            CompositionalRecord.experiment_id,
+            IcpRecord.experiment_id,
+            XrfRecord.experiment_id,
+            CalorimetryRecord.experiment_id,
+            XrdRecord.experiment_id,
+            FermentationRecord.experiment_id,
+            PretreatmentRecord.experiment_id,
+        ).label("experiment_id"),
+        # Normalized analysis type for filtering
+        case(
+            (func.lower(Observation.record_type).in_(["proximate analysis", "proximate_analysis"]), "proximate"),
+            (func.lower(Observation.record_type).in_(["ultimate analysis", "ultimate_analysis"]), "ultimate"),
+            (func.lower(Observation.record_type).in_(["compositional analysis", "compositional_analysis"]), "compositional"),
+            (func.lower(Observation.record_type).in_(["icp analysis", "icp_analysis", "icp-oes", "icp-ms"]), "icp"),
+            (func.lower(Observation.record_type).in_(["xrf analysis", "xrf_analysis"]), "xrf"),
+            (func.lower(Observation.record_type).in_(["calorimetry analysis", "calorimetry_analysis"]), "calorimetry"),
+            (func.lower(Observation.record_type).in_(["xrd analysis", "xrd_analysis"]), "xrd"),
+            (func.lower(Observation.record_type) == "fermentation", "fermentation"),
+            (func.lower(Observation.record_type) == "pretreatment", "pretreatment"),
+            else_=func.lower(Observation.record_type)
+        ).label("analysis_type_norm"),
+        # QC flags
+        func.coalesce(
+            ProximateRecord.qc_pass,
+            UltimateRecord.qc_pass,
+            CompositionalRecord.qc_pass,
+            IcpRecord.qc_pass,
+            XrfRecord.qc_pass,
+            CalorimetryRecord.qc_pass,
+            XrdRecord.qc_pass,
+            FermentationRecord.qc_pass,
+            PretreatmentRecord.qc_pass,
+            "pass" # Default to pass if no record found
+        ).label("qc_pass")
     )
     .join(Parameter, Observation.parameter_id == Parameter.id)
     .join(Unit, Observation.unit_id == Unit.id)
@@ -196,6 +245,78 @@ ANALYSIS_DATA_VIEW = (
     .where(
         func.lower(Observation.record_type).notin_(
             ["usda_census_record", "usda_survey_record"]
+        )
+    )
+).subquery()
+
+# Apply QC filtering
+_qc_stats = get_sum_constraints_subquery(
+    select(
+        _analysis_base.c.resource_id,
+        _analysis_base.c.experiment_id,
+        _analysis_base.c.analysis_type_norm.label("analysis_type"),
+        _analysis_base.c.parameter.label("parameter_name"),
+        _analysis_base.c.value
+    ).subquery()
+)
+
+ANALYSIS_DATA_VIEW = (
+    select(
+        _analysis_base.c.id,
+        _analysis_base.c.record_id,
+        _analysis_base.c.record_type,
+        _analysis_base.c.resource_id,
+        _analysis_base.c.resource_name.label("resource"),
+        _analysis_base.c.geoid,
+        _analysis_base.c.parameter,
+        _analysis_base.c.value,
+        _analysis_base.c.unit,
+        _analysis_base.c.dimension,
+        _analysis_base.c.dimension_value,
+        _analysis_base.c.dimension_unit,
+    )
+    .select_from(_analysis_base)
+    .join(Resource, _analysis_base.c.resource_id == Resource.id)
+    .outerjoin(
+        _qc_stats,
+        and_(
+            _analysis_base.c.resource_id == _qc_stats.c.resource_id,
+            func.coalesce(_analysis_base.c.experiment_id, -1) == func.coalesce(_qc_stats.c.experiment_id, -1),
+            _analysis_base.c.analysis_type_norm == _qc_stats.c.analysis_type
+        )
+    )
+    .where(
+        and_(
+            get_resource_filter(Resource),
+            _analysis_base.c.qc_pass != "fail",
+            get_ultimate_filter(_analysis_base.c.analysis_type_norm, _analysis_base.c.parameter, _analysis_base.c.value),
+            get_icp_filter(_analysis_base.c.analysis_type_norm, _analysis_base.c.unit),
+            or_(
+                # For proximate: apply sum filter (95-105) or no data
+                and_(
+                    _analysis_base.c.analysis_type_norm == "proximate",
+                    or_(
+                        _qc_stats.c.proximate_sum == 0,
+                        and_(
+                            _qc_stats.c.proximate_sum >= 95,
+                            _qc_stats.c.proximate_sum <= 105
+                        )
+                    )
+                ),
+                # For compositional: apply sum filter (40-105) or no data
+                and_(
+                    _analysis_base.c.analysis_type_norm == "compositional",
+                    or_(
+                        _qc_stats.c.compositional_sum == 0,
+                        and_(
+                            _qc_stats.c.compositional_sum >= 40,
+                            _qc_stats.c.compositional_sum <= 105
+                        )
+                    )
+                ),
+                # For all other analysis types: no filtering, include all
+                _analysis_base.c.analysis_type_norm.notin_(["proximate", "compositional"])
+            )
         )
     )
 )
@@ -342,7 +463,7 @@ BILLION_TON_TILESET_VIEW = (
         BillionTon2023Record.id,
         Resource.name.label("resource"),
         func.lower(Place.county_name).label("county"),
-        literal("production").label("parameter"),
+        literal("parameter").label("parameter"),
         cast(BillionTon2023Record.production, Float).label("value"),
         func.lower(Unit.name).label("unit"),
         BillionTon2023Record.etl_run_id.label("tileset_id"),
@@ -352,17 +473,26 @@ BILLION_TON_TILESET_VIEW = (
     .join(Unit, BillionTon2023Record.production_unit_id == Unit.id)
 )
 
-# --- 7. analysis_average_view --- (SPECIAL CASE: depends on analysis_data_view)
-# Cannot use Core select() against models because it aggregates another mat view.
-# Use raw SQL string instead:
-ANALYSIS_AVERAGE_VIEW_SQL = """
-    SELECT resource, geoid, parameter,
-           AVG(value) as average_value,
-           STDDEV(value) as standard_deviation,
-           unit, COUNT(*) as observation_count
-    FROM ca_biositing.analysis_data_view
-    GROUP BY resource, geoid, parameter, unit
-"""
+# --- 8. analysis_average_view --- (Refactored to SQLAlchemy select)
+# Previously this was a raw SQL string because it aggregates analysis_data_view.
+# Now we can define it using Core select() over the ANALYSIS_DATA_VIEW expression.
+ANALYSIS_AVERAGE_VIEW = (
+    select(
+        ANALYSIS_DATA_VIEW.c.resource,
+        ANALYSIS_DATA_VIEW.c.geoid,
+        ANALYSIS_DATA_VIEW.c.parameter,
+        func.avg(ANALYSIS_DATA_VIEW.c.value).label("average_value"),
+        func.stddev(ANALYSIS_DATA_VIEW.c.value).label("standard_deviation"),
+        ANALYSIS_DATA_VIEW.c.unit,
+        func.count().label("observation_count"),
+    )
+    .group_by(
+        ANALYSIS_DATA_VIEW.c.resource,
+        ANALYSIS_DATA_VIEW.c.geoid,
+        ANALYSIS_DATA_VIEW.c.parameter,
+        ANALYSIS_DATA_VIEW.c.unit,
+    )
+)
 
 # Ordered list for creation (respects inter-view dependencies).
 # USDA views use the V1 definitions (UsdaCommodity.name) because this list is
@@ -377,6 +507,7 @@ VIEW_DEFINITIONS = [
     ("usda_survey_view", USDA_SURVEY_VIEW_V1),
     ("billion_ton_tileset_view", BILLION_TON_TILESET_VIEW),
     # analysis_average_view is last (depends on analysis_data_view)
+    ("analysis_average_view", ANALYSIS_AVERAGE_VIEW),
 ]
 
 # Views requiring GIST spatial indexes
@@ -404,7 +535,6 @@ def refresh_all_views(engine):
         for view_name, _ in VIEW_DEFINITIONS:
             conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.{view_name}"))
         conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.usda_resource_commodity_view"))
-        conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.analysis_average_view"))
 
         # 2. Refresh all data_portal schema views dynamically so new mat views
         # are automatically picked up without updating this list.
