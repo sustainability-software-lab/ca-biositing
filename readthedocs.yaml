@@ -7,19 +7,15 @@ build:
     python: "3.12"
 
   commands:
-    # Install Pixi using asdf
+    # Install Pixi using asdf (the same approach as uw-ssec/rse-guidelines)
     - asdf plugin add pixi
     - asdf install pixi latest
     - asdf global pixi latest
 
-    # Initialize the docs environment
-    # Use --frozen to ensure we use the lockfile and don't try to solve
-    - pixi install --frozen -e docs
-
-    # Run the documentation build
+    # Run the Pixi task defined in pixi.toml that builds docs for RTD
     # Set HATCH_VCS_VERSION to bypass the VCS version lookup that crashes in this environment
     - export HATCH_VCS_VERSION=$(grep -m 1 "version =" pixi.toml | cut -d '"' -f
-      2) && NO_COLOR=1 pixi run --frozen -e docs rtd-publish
+      2) && NO_COLOR=1 pixi run rtd-publish
 
 # MkDocs configuration file
 mkdocs:
