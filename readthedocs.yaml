@@ -7,14 +7,17 @@ build:
     python: "3.12"
 
   commands:
-    # Install Pixi using asdf (the same approach as uw-ssec/rse-guidelines)
+    # Install Pixi using asdf
     - asdf plugin add pixi
     - asdf install pixi latest
     - asdf global pixi latest
 
-    # Run the Pixi task defined in pixi.toml that builds docs for RTD
+    # Initialize the docs environment
+    # Use --frozen to ensure we use the lockfile and don't try to solve
+    - pixi install --frozen -e docs
+
+    # Run the documentation build
     # Set HATCH_VCS_VERSION to bypass the VCS version lookup that crashes in this environment
-    # Use --frozen to avoid resolving dependencies on every build (uses pixi.lock)
     - export HATCH_VCS_VERSION=$(grep -m 1 "version =" pixi.toml | cut -d '"' -f
       2) && NO_COLOR=1 pixi run --frozen -e docs rtd-publish
 
