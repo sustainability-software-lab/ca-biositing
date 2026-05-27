@@ -15,7 +15,7 @@ build:
     # Run the Pixi task defined in pixi.toml that builds docs for RTD
     # Set HATCH_VCS_VERSION to bypass the VCS version lookup that crashes in this environment
     - export HATCH_VCS_VERSION=$(grep -m 1 "version =" pixi.toml | cut -d '"' -f
-      2) && NO_COLOR=1 pixi run rtd-publish
+      2) && NO_COLOR=1 pixi run -e docs rtd-publish
 
 # MkDocs configuration file
 mkdocs:

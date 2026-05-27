@@ -22,7 +22,7 @@ webservice = { features = [
 frontend = { features = [
     "frontend",
 ], no-default-feature = true, solve-group = "default" }
-docs = { features = ["docs"], no-default-feature = true }
+docs = ["docs", "datamodels", "pipeline", "webservice"]
 deployment = { features = ["cloud"], solve-group = "default" }
 
 [dependencies]
@@ -337,9 +337,7 @@ mkdocstrings = { version = "~=1.0", extras = ["python"] }
 docs-serve = { cmd = "mkdocs serve", description = "Run MkDocs locally for previewing documentation." }
 docs-build = { cmd = "mkdocs build", description = "Build static documentation site." }
 
-[tasks.rtd-publish]
-cmd = "pixi run -e docs python -m mkdocs build --clean --site-dir $READTHEDOCS_OUTPUT/html --config-file mkdocs.yml"
-description = "Build documentation for ReadTheDocs"
+rtd-publish = { cmd = "python -m mkdocs build --clean --site-dir $READTHEDOCS_OUTPUT/html --config-file mkdocs.yml", description = "Build documentation for ReadTheDocs" }
 
 
 # ==== Deployment environment ====
