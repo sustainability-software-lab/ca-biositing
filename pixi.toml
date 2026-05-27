@@ -22,7 +22,7 @@ webservice = { features = [
 frontend = { features = [
     "frontend",
 ], no-default-feature = true, solve-group = "default" }
-docs = ["docs", "datamodels", "pipeline", "webservice"]
+docs = ["docs", "datamodels", "pipeline"]
 deployment = { features = ["cloud"], solve-group = "default" }
 
 [dependencies]
