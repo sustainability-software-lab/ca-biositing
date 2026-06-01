@@ -19,8 +19,8 @@ AVAILABLE_FLOWS = {
     "qualitative": "ca_biositing.pipeline.flows.qualitative.qualitative_etl_flow",
     "analysis_records": "ca_biositing.pipeline.flows.analysis_records.analysis_records_flow",
     "aim2_bioconversion": "ca_biositing.pipeline.flows.aim2_bioconversion.aim2_bioconversion_flow",
-    "landiq": "ca_biositing.pipeline.flows.landiq_etl.landiq_etl_flow",
-    "billion_ton": "ca_biositing.pipeline.flows.billion_ton_etl.billion_ton_etl_flow",
+    #"landiq": "ca_biositing.pipeline.flows.landiq_etl.landiq_etl_flow",
+    #"billion_ton": "ca_biositing.pipeline.flows.billion_ton_etl.billion_ton_etl_flow",
     #"field_sample": "ca_biositing.pipeline.flows.field_sample_etl.field_sample_etl_flow",
     #"prepared_sample": "ca_biositing.pipeline.flows.prepared_sample_etl.prepared_sample_etl_flow",
     "thermochem": "ca_biositing.pipeline.flows.thermochem_etl.thermochem_etl_flow"

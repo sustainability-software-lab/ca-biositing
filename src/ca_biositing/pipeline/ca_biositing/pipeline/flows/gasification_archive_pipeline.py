@@ -1,3 +1,4 @@
+import os
 from prefect import flow, task, get_run_logger
 import pandas as pd
 import io
@@ -11,7 +12,9 @@ from sqlalchemy import select
 import gspread
 
 @task
-def process_gsheet_to_csv(url: str, record_id: str, credentials_path: str = "credentials.json") -> pd.DataFrame:
+def process_gsheet_to_csv(url: str, record_id: str, credentials_path: Optional[str] = None) -> pd.DataFrame:
+    if credentials_path is None:
+        credentials_path = os.getenv("CREDENTIALS_PATH", "credentials.json")
     logger = get_run_logger()
     logger.info(f"Processing GSheet URL: {url} for record {record_id}")
 
@@ -45,7 +48,9 @@ def process_gsheet_to_csv(url: str, record_id: str, credentials_path: str = "cre
     return processed_df
 
 @task
-def archive_to_gcs(df: pd.DataFrame, filename: str, bucket_name: str) -> dict:
+def archive_to_gcs(df: pd.DataFrame, filename: str, bucket_name: str, credentials_path: Optional[str] = None) -> dict:
+    if credentials_path is None:
+        credentials_path = os.getenv("CREDENTIALS_PATH", "credentials.json")
     logger = get_run_logger()
     logger.info(f"Archiving to GCS: {bucket_name}/{filename}")
 
@@ -61,7 +66,8 @@ def archive_to_gcs(df: pd.DataFrame, filename: str, bucket_name: str) -> dict:
     gcs_path = upload_to_gcs(
         bucket_name=bucket_name,
         destination_blob_name=filename,
-        data=df
+        data=df,
+        credentials_path=credentials_path
     )
 
     return {
