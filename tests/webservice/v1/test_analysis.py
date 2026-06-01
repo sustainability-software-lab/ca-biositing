@@ -12,13 +12,13 @@ class TestGetAnalysisByResource:
     def test_get_analysis_success(self, client: TestClient, test_analysis_data):
         """Test successful retrieval of analysis parameter."""
         response = client.get(
-            "/v1/feedstocks/analysis/resources/almond_hulls/geoid/06001/parameters/ash"
+            "/v1/feedstocks/analysis/resources/almond_hulls/geoid/06001/parameters/ash solids"
         )
         assert response.status_code == 200
         data = response.json()
         assert data["resource"] == "almond_hulls"
         assert data["geoid"] == "06001"
-        assert data["parameter"] == "ash"
+        assert data["parameter"] == "ash solids"
         assert data["value"] == 5.2
         assert data["unit"] == "percent"
 
@@ -89,11 +89,11 @@ class TestListAnalysisByResource:
         data = response.json()
         assert data["resource"] == "almond_hulls"
         assert data["geoid"] == "06001"
-        assert len(data["data"]) == 3  # ash, moisture (proximate) + carbon (ultimate)
+        assert len(data["data"]) == 4  # ash solids, moisture, volatile solids (proximate) + carbon (ultimate)
 
         # Check that all parameters are present
         params = [item["parameter"] for item in data["data"]]
-        assert "ash" in params
+        assert "ash solids" in params
         assert "moisture" in params
         assert "carbon" in params
 
@@ -142,7 +142,7 @@ class TestListAnalysisByResource:
         )
         assert response.status_code == 200
         data = response.json()
-        assert len(data["data"]) == 1
+        assert len(data["data"]) == 4
         assert data["data"][0]["parameter"] == "cellulose"
 
 

@@ -27,7 +27,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from sqlalchemy.dialects import postgresql
 
-# Import all views
+# Import data_portal views
 from ca_biositing.datamodels.data_portal_views import (
     mv_biomass_search,
     mv_biomass_pricing,
@@ -40,10 +40,16 @@ from ca_biositing.datamodels.data_portal_views import (
     mv_biomass_gasification,
 )
 
-# Define the 9 views with their metadata and index requirements
+# Import ca_biositing views
+from ca_biositing.datamodels import views as ca_views
+
+# Define views with their metadata and index requirements
+# Schema and name mapping
 VIEWS = [
+    # data_portal schema views
     {
         "name": "mv_biomass_search",
+        "schema": "data_portal",
         "expr": mv_biomass_search,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_search_id ON data_portal.mv_biomass_search (id)",
@@ -55,6 +61,7 @@ VIEWS = [
     },
     {
         "name": "mv_biomass_composition",
+        "schema": "data_portal",
         "expr": mv_biomass_composition,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_composition_id ON data_portal.mv_biomass_composition (id)",
@@ -69,6 +76,7 @@ VIEWS = [
     },
     {
         "name": "mv_biomass_volume_estimate",
+        "schema": "data_portal",
         "expr": mv_biomass_volume_estimate,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_volume_estimate_id ON data_portal.mv_biomass_volume_estimate (id)",
@@ -79,6 +87,7 @@ VIEWS = [
     },
     {
         "name": "mv_biomass_availability",
+        "schema": "data_portal",
         "expr": mv_biomass_availability,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_availability_resource_id ON data_portal.mv_biomass_availability (resource_id)",
@@ -86,6 +95,7 @@ VIEWS = [
     },
     {
         "name": "mv_biomass_sample_stats",
+        "schema": "data_portal",
         "expr": mv_biomass_sample_stats,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_sample_stats_resource_id ON data_portal.mv_biomass_sample_stats (resource_id)",
@@ -93,6 +103,7 @@ VIEWS = [
     },
     {
         "name": "mv_biomass_fermentation",
+        "schema": "data_portal",
         "expr": mv_biomass_fermentation,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_fermentation_id ON data_portal.mv_biomass_fermentation (id)",
@@ -105,6 +116,7 @@ VIEWS = [
     },
     {
         "name": "mv_biomass_gasification",
+        "schema": "data_portal",
         "expr": mv_biomass_gasification,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_gasification_id ON data_portal.mv_biomass_gasification (id)",
@@ -116,6 +128,7 @@ VIEWS = [
     },
     {
         "name": "mv_biomass_pricing",
+        "schema": "data_portal",
         "expr": mv_biomass_pricing,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_pricing_id ON data_portal.mv_biomass_pricing (id)",
@@ -127,10 +140,31 @@ VIEWS = [
     },
     {
         "name": "mv_biomass_end_uses",
+        "schema": "data_portal",
         "expr": mv_biomass_end_uses,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_end_uses_resource_use_case ON data_portal.mv_biomass_end_uses (resource_id, use_case)",
             "CREATE INDEX idx_mv_biomass_end_uses_resource_id ON data_portal.mv_biomass_end_uses (resource_id)",
+        ],
+    },
+    # ca_biositing schema views
+    {
+        "name": "analysis_data_view",
+        "schema": "ca_biositing",
+        "expr": ca_views.ANALYSIS_DATA_VIEW,
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_analysis_data_view_id ON ca_biositing.analysis_data_view (id)",
+            "CREATE INDEX idx_analysis_data_view_resource ON ca_biositing.analysis_data_view (resource)",
+            "CREATE INDEX idx_analysis_data_view_geoid ON ca_biositing.analysis_data_view (geoid)",
+            "CREATE INDEX idx_analysis_data_view_parameter ON ca_biositing.analysis_data_view (parameter)",
+        ],
+    },
+    {
+        "name": "analysis_average_view",
+        "schema": "ca_biositing",
+        "expr": ca_views.ANALYSIS_AVERAGE_VIEW,
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_analysis_average_view_res_geo_param ON ca_biositing.analysis_average_view (resource, geoid, parameter, unit)",
         ],
     },
 ]
@@ -179,32 +213,37 @@ def generate_migration_content(revision_id: str, down_revision: str, message: st
     # Build DROP_INDEX_STATEMENTS
     drop_index_statements = []
     for view_config in VIEWS:
+        schema = view_config["schema"]
         for index in view_config["indexes"]:
             parts = index.split()
             idx_name = parts[3] if "UNIQUE" in index else parts[2]
-            drop_index_statements.append(f'    "DROP INDEX IF EXISTS data_portal.{idx_name}",')
+            drop_index_statements.append(f'    "DROP INDEX IF EXISTS {schema}.{idx_name}",')
 
     # Build DROP_VIEW_STATEMENTS
     drop_view_statements = []
+    # Drop in reverse order to handle dependencies (analysis_average depends on analysis_data)
+    for view_config in reversed(VIEWS):
+        view_name = view_config["name"]
+        schema = view_config["schema"]
+        drop_view_statements.append(f'    "DROP MATERIALIZED VIEW IF EXISTS {schema}.{view_name} CASCADE",')
+
+    # Build view SQL definitions section
+    view_sql_defs = []
+    # Create in original order (respecting dependencies)
     for view_config in VIEWS:
         view_name = view_config["name"]
-        drop_view_statements.append(f'    "DROP MATERIALIZED VIEW IF EXISTS data_portal.{view_name} CASCADE",')
+        schema = view_config["schema"]
+        sql = view_sqls[view_name]
+        view_sql_defs.append(f'''{view_name.upper()}_SQL = """
+CREATE MATERIALIZED VIEW {schema}.{view_name} AS
+{sql}
+"""''')
 
     # Build CREATE_INDEX_STATEMENTS
     create_index_statements = []
     for view_config in VIEWS:
         for index in view_config["indexes"]:
             create_index_statements.append(f'    "{index}",')
-
-    # Build view SQL definitions section
-    view_sql_defs = []
-    for view_config in VIEWS:
-        view_name = view_config["name"]
-        sql = view_sqls[view_name]
-        view_sql_defs.append(f'''{view_name.upper()}_SQL = """
-CREATE MATERIALIZED VIEW data_portal.{view_name} AS
-{sql}
-"""''')
 
     date_str = datetime.date.today().isoformat()
 
@@ -215,10 +254,10 @@ Revises: {down_revision}
 Create Date: {date_str}
 
 This migration (auto-generated by compile_mv_fixes.py):
-1. Drops all indexes on the 9 data portal materialized views
-2. Drops all 9 materialized views in CASCADE mode
-3. Recreates all 9 views with updated SQL compiled from SQLAlchemy expressions
-4. Creates all required indexes for concurrent refresh and query performance
+1. Drops existing indexes on the materialized views
+2. Drops materialized views in CASCADE mode
+3. Recreates views with updated SQL compiled from SQLAlchemy expressions
+4. Creates required indexes for concurrent refresh and query performance
 5. Grants schema access to the readonly role
 
 """
@@ -252,7 +291,7 @@ CREATE_INDEX_STATEMENTS = [
 
 
 def upgrade() -> None:
-    """Recreate all 9 materialized views."""
+    """Recreate materialized views."""
 
     # Drop all existing indexes
     for statement in DROP_INDEX_STATEMENTS:
@@ -262,16 +301,8 @@ def upgrade() -> None:
     for statement in DROP_VIEW_STATEMENTS:
         op.execute(statement)
 
-    # Create all views with new SQL
-    op.execute(MV_BIOMASS_SEARCH_SQL)
-    op.execute(MV_BIOMASS_COMPOSITION_SQL)
-    op.execute(MV_BIOMASS_VOLUME_ESTIMATE_SQL)
-    op.execute(MV_BIOMASS_AVAILABILITY_SQL)
-    op.execute(MV_BIOMASS_SAMPLE_STATS_SQL)
-    op.execute(MV_BIOMASS_FERMENTATION_SQL)
-    op.execute(MV_BIOMASS_GASIFICATION_SQL)
-    op.execute(MV_BIOMASS_PRICING_SQL)
-    op.execute(MV_BIOMASS_END_USES_SQL)
+    # Create all views with new SQL (in order of definition)
+{chr(10).join([f'    op.execute({v["name"].upper()}_SQL)' for v in VIEWS])}
 
     # Create all indexes
     for statement in CREATE_INDEX_STATEMENTS:
@@ -280,10 +311,12 @@ def upgrade() -> None:
     # Grant permissions to readonly role
     op.execute("GRANT USAGE ON SCHEMA data_portal TO biocirv_readonly")
     op.execute("GRANT SELECT ON ALL TABLES IN SCHEMA data_portal TO biocirv_readonly")
+    op.execute("GRANT USAGE ON SCHEMA ca_biositing TO biocirv_readonly")
+    op.execute("GRANT SELECT ON ALL TABLES IN SCHEMA ca_biositing TO biocirv_readonly")
 
 
 def downgrade() -> None:
-    """Drop all 9 materialized views and their indexes."""
+    """Drop materialized views and their indexes."""
 
     # Drop indexes
     for statement in DROP_INDEX_STATEMENTS:

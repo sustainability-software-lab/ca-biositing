@@ -129,17 +129,84 @@ def get_resource_filter(resource_model):
     )
 
 
-def get_ultimate_filter(analysis_type_col, parameter_name_col):
-    """Filter for ultimate analysis parameters."""
-    return or_(
-        analysis_type_col != "ultimate",
-        func.lower(parameter_name_col).in_(ULTIMATE_PARAMETERS)
-    )
+def get_ultimate_filter(analysis_type_col, parameter_name_col, value_col=None):
+    """Filter for ultimate analysis parameters.
+
+    Checks if parameter is in the whitelist and optionally if value <= 100.
+    """
+    filters = [
+        or_(
+            analysis_type_col.notin_(["ultimate", "ultimate analysis", "ultimate_analysis"]),
+            func.lower(parameter_name_col).in_(ULTIMATE_PARAMETERS)
+        )
+    ]
+    if value_col is not None:
+        filters.append(
+            or_(
+                analysis_type_col.notin_(["ultimate", "ultimate analysis", "ultimate_analysis"]),
+                value_col <= 100
+            )
+        )
+    return and_(*filters)
 
 
 def get_icp_filter(analysis_type_col, unit_name_col):
     """Filter for ICP analysis units."""
     return or_(
-        analysis_type_col != "icp",
+        analysis_type_col.notin_(["icp", "icp analysis", "icp_analysis", "icp-oes", "icp-ms"]),
         func.lower(unit_name_col) == "ppm"
     )
+
+
+def get_sum_constraints_subquery(measurements_subquery):
+    """Calculate proximate and compositional sums per experiment for QC filtering.
+
+    Args:
+        measurements_subquery: A subquery containing at least:
+            - resource_id
+            - experiment_id
+            - analysis_type
+            - parameter_name
+            - value
+    """
+    return select(
+        measurements_subquery.c.resource_id,
+        measurements_subquery.c.experiment_id,
+        measurements_subquery.c.analysis_type,
+        (
+            func.coalesce(
+                func.avg(case((measurements_subquery.c.parameter_name == "moisture", measurements_subquery.c.value))), 0
+            )
+            + func.coalesce(
+                func.avg(case((measurements_subquery.c.parameter_name == "ash solids", measurements_subquery.c.value))), 0
+            )
+            + func.coalesce(
+                func.avg(
+                    case((measurements_subquery.c.parameter_name == "volatile solids", measurements_subquery.c.value))
+                ),
+                100
+                - func.coalesce(
+                    func.avg(
+                        case((measurements_subquery.c.parameter_name == "fixed carbon", measurements_subquery.c.value))
+                    ),
+                    0,
+                ),
+            )
+        ).label("proximate_sum"),
+        (
+            func.coalesce(
+                func.avg(case((measurements_subquery.c.parameter_name == "glucan", measurements_subquery.c.value))), 0
+            )
+            + func.coalesce(
+                func.avg(case((measurements_subquery.c.parameter_name == "xylan", measurements_subquery.c.value))), 0
+            )
+            + func.coalesce(
+                func.avg(case((measurements_subquery.c.parameter_name == "lignin", measurements_subquery.c.value))),
+                func.avg(case((measurements_subquery.c.parameter_name == "lignin+", measurements_subquery.c.value))),
+            )
+        ).label("compositional_sum"),
+    ).group_by(
+        measurements_subquery.c.resource_id,
+        measurements_subquery.c.experiment_id,
+        measurements_subquery.c.analysis_type,
+    ).subquery()
