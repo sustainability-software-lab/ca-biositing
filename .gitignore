@@ -78,6 +78,9 @@ draft_additions.py
 # Database Backups
 backups/
 
+# Logs
+logs/
+
 # PR Plans
 docs/pr/
 plans/

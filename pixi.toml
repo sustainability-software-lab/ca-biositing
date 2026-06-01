@@ -52,6 +52,7 @@ jupyterlab = ">=4.5.7,<5"
 pixi-kernel = ">=0.7.1,<0.8"
 shapely = ">=2.0.7,<3"
 geoalchemy2 = ">=0.19.0,<0.20"
+jinja2 = ">=3.1.5,<4"
 
 [tasks]
 pre-commit-all = "pre-commit run --all-files"
@@ -195,6 +196,15 @@ migrate = { cmd = [
 
 migrate-autogenerate = { cmd = "alembic revision --autogenerate", description = "Auto-generate a new Alembic migration from model changes." }
 compile-mv-fixes = { cmd = "python scripts/compile_mv_fixes.py", description = "Compile SQLAlchemy views to a manual Alembic migration for fixes." }
+
+# Database Reset
+db-reset-local = { cmd = "python scripts/db_reset.py --env local", description = "Reset local database (requires Docker services)" }
+db-reset-local-dry-run = { cmd = "python scripts/db_reset.py --env local --dry-run", description = "Preview local database reset without execution" }
+db-reset-staging = { cmd = "python scripts/db_reset.py --env staging", description = "Reset staging database (interactive confirmation required)" }
+db-reset-staging-force = { cmd = "python scripts/db_reset.py --env staging --force", description = "Force reset staging database (non-interactive)" }
+db-reset-prod = { cmd = "python scripts/db_reset.py --env production", description = "Reset production database (interactive confirmation required)" }
+db-reset-prod-force = { cmd = "python scripts/db_reset.py --env production --force", description = "Force reset production database (non-interactive)" }
+
 
 # Database Auditing
 audit = { cmd = "POSTGRES_HOST=localhost python audit/main.py --env local", description = "Run a comprehensive database audit locally (requires local services)." }
