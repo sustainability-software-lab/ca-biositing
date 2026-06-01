@@ -33,9 +33,11 @@ def upgrade() -> None:
         for owner in ["biocirv_user", "postgres"]:
             op.execute(
                 f"DO $$ BEGIN "
-                f"  ALTER DEFAULT PRIVILEGES FOR ROLE {owner} IN SCHEMA {schema} "
-                f"  GRANT SELECT ON TABLES TO biocirv_readonly; "
-                f"EXCEPTION WHEN undefined_object THEN NULL; "
+                f"  EXECUTE format('ALTER DEFAULT PRIVILEGES FOR ROLE %I IN SCHEMA %I GRANT SELECT ON TABLES TO biocirv_readonly', '{owner}', '{schema}'); "
+                f"EXCEPTION "
+                f"  WHEN undefined_object THEN NULL; "
+                f"  WHEN insufficient_privilege THEN "
+                f"    RAISE NOTICE 'Skipping ALTER DEFAULT PRIVILEGES for role % due to insufficient privileges', '{owner}'; "
                 f"END $$"
             )
 
