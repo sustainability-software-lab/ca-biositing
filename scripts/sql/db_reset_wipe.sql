@@ -13,9 +13,10 @@
 DROP SCHEMA IF EXISTS {{ schema }} CASCADE;
 {% endfor %}
 
--- Recreate schemas
+-- Recreate schemas as current user (postgres)
 {% for schema in schemas %}
 CREATE SCHEMA {{ schema }};
+GRANT ALL ON SCHEMA {{ schema }} TO {{ biocirv_user }};
 {% endfor %}
 
 -- Restore basic permissions on public schema

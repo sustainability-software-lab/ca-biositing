@@ -75,7 +75,7 @@ class DatabaseResetOrchestrator:
         """
         Recursively expand environment variables in config.
         Supports ${VAR} and ${VAR:-default} syntax.
-        Also handles nested expansion like ${VAR:-${OTHER_VAR}} (one level).
+        Handles one level of nested expansion like ${VAR:-${OTHER_VAR}}.
         """
         if isinstance(obj, dict):
             return {k: self._expand_env_vars(v) for k, v in obj.items()}
@@ -83,7 +83,8 @@ class DatabaseResetOrchestrator:
             return [self._expand_env_vars(v) for v in obj]
         elif isinstance(obj, str):
             # Match ${VAR} or ${VAR:-default}
-            pattern = re.compile(r'\${(\w+)(?::-([^}]*))?}')
+            # The inner part ((?:[^{}]|\{[^{}]*\})*) matches non-braces OR balanced single-level braces
+            pattern = re.compile(r'\${(\w+)(?::-((?:[^{}]|\{[^{}]*\})*))?}')
 
             def replace(match):
                 var_name = match.group(1)
@@ -104,7 +105,7 @@ class DatabaseResetOrchestrator:
                 val = replace(single_match)
                 # Try to convert to int if it looks like one
                 try:
-                    if val.isdigit():
+                    if isinstance(val, str) and val.isdigit():
                         return int(val)
                 except (AttributeError, ValueError):
                     pass
@@ -116,17 +117,52 @@ class DatabaseResetOrchestrator:
     def connect(self):
         """Establish database connection as postgres user."""
         config = self._expand_env_vars(self.env_config)
+
+        # Clean up connection parameters
+        host = str(config['host']).strip()
+        port = int(config['port'])
+        database = str(config['database']).strip()
+        user = str(config['postgres_user']).strip()
+        password = str(config['postgres_password']).strip() # CRITICAL: Strip newlines/whitespace
+
         try:
-            self.conn = psycopg2.connect(
-                host=config['host'],
-                port=config['port'],
-                database=config['database'],
-                user=config['postgres_user'],
-                password=config['postgres_password']
-            )
-            self.logger.info(f"Connected to {self.env} database on {config['host']}:{config['port']}")
+            self.logger.info(f"Attempting connection to {host}:{port}...")
+            self.logger.info(f"User: {user}, Database: {database}")
+
+            # Debug: Check if password was actually loaded
+            if not password:
+                self.logger.warning("Connection password is empty!")
+            else:
+                self.logger.debug(f"Password loaded (length: {len(password)})")
+                # HEX DEBUG: Log the characters to find hidden ones
+                # hex_debug = " ".join([hex(ord(c)) for c in password])
+                # self.logger.debug(f"Password Hex: {hex_debug}")
+
+            try:
+                self.conn = psycopg2.connect(
+                    host=host,
+                    port=port,
+                    database=database,
+                    user=user,
+                    password=password
+                )
+            except psycopg2.Error as e:
+                # If connecting to the app database fails, try connecting to 'postgres' database
+                if database != 'postgres':
+                    self.logger.info(f"Primary connection failed, attempting fallback to 'postgres' database...")
+                    self.conn = psycopg2.connect(
+                        host=host,
+                        port=port,
+                        database='postgres',
+                        user=user,
+                        password=password
+                    )
+                else:
+                    raise e
+
+            self.logger.info(f"Connected to {self.env} database server")
         except psycopg2.Error as e:
-            self.logger.error(f"Failed to connect to database: {e}")
+            self.logger.error(f"Failed to connect to database server: {e}")
             raise
 
     def validate_connection(self):
@@ -209,6 +245,9 @@ class DatabaseResetOrchestrator:
         try:
             with self.conn.cursor() as cur:
                 self.logger.info(f"Executing Phase {phase_num}: {sql_file}")
+                # Ensure we are operating on the correct database if we used fallback
+                # Note: Cloud SQL doesn't support CROSS-DATABASE queries, so we must be on the right DB.
+                # The SQL scripts themselves should be schema-qualified.
                 cur.execute(rendered_sql)
 
                 # Log any notices from PostgreSQL

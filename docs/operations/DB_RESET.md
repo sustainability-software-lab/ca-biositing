@@ -6,7 +6,7 @@ This guide describes the standardized database reset process for the
 ## Overview
 
 The database reset process is a three-phase operation that wipes application
-schemas, restores core infrastructure (extensions), transfers ownership to the
+schemas, restores core infrastructure (extensions), transfers control to the
 application user, and grants read-only access.
 
 ### Why Reset?
@@ -28,12 +28,44 @@ The reset process is orchestrated by a Python script (`scripts/db_reset.py`)
 that uses Jinja2-templated SQL files.
 
 1.  **Phase 1: Wipe (`db_reset_wipe.sql`)**: Drops `public`, `ca_biositing`, and
-    `data_portal` schemas. Recreates `public` and enables extensions (`postgis`,
-    etc.).
-2.  **Phase 2: Ownership (`db_reset_ownership.sql`)**: Transfers ownership of
-    all objects to `biocirv_user`.
+    `data_portal` schemas. Recreates schemas as the current user and grants
+    `ALL` to `biocirv_user`. Enables extensions (`postgis`, etc.).
+2.  **Phase 2: Control (`db_reset_ownership.sql`)**: Grants `ALL PRIVILEGES` to
+    `biocirv_user` and sets `ALTER DEFAULT PRIVILEGES` for future objects.
 3.  **Phase 3: Read-Only (`db_reset_readonly.sql`)**: Grants `SELECT` access to
     `biocirv_readonly`.
+
+---
+
+## Cloud SQL Permission Model (IMPORTANT)
+
+Due to circular membership restrictions in Google Cloud SQL, we use a
+**Grant-based Control Model** rather than a strict **Ownership Model**.
+
+### Role Hierarchy
+
+To allow the `postgres` user to manage application objects without `SET ROLE`
+errors, the following role membership must be established:
+
+1.  `postgres` must be a member of `biocirv_user`.
+2.  `biocirv_user` must **NOT** be a member of `postgres`.
+
+If you encounter `must be able to SET ROLE "biocirv_user"`, run the following
+SQL as a superuser:
+
+```sql
+REVOKE postgres FROM biocirv_user;
+GRANT biocirv_user TO postgres;
+```
+
+### Ownership vs. Control
+
+- **Owner**: The `postgres` user technically owns the schemas and objects
+  created during migrations.
+- **Control**: The `biocirv_user` is granted `ALL PRIVILEGES` on these objects.
+- **Default Privileges**: `ALTER DEFAULT PRIVILEGES` ensures that any new
+  objects created by `postgres` (e.g. during migrations) automatically grant
+  full control to `biocirv_user`.
 
 ---
 
