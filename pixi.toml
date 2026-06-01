@@ -22,7 +22,7 @@ webservice = { features = [
 frontend = { features = [
     "frontend",
 ], no-default-feature = true, solve-group = "default" }
-docs = { features = ["docs"], no-default-feature = true }
+docs = { features = ["datamodels", "pipeline", "docs"], no-default-feature = true }
 deployment = { features = ["cloud"], solve-group = "default" }
 
 [dependencies]
@@ -302,6 +302,7 @@ ca-biositing-pipeline = { path = "./src/ca_biositing/pipeline", editable = true 
 alembic = ">=1.13.2,<2"
 # Prefect is required for `prefect flow-run execute` inside Cloud Run flow jobs
 prefect = ">=3,<4"
+google-cloud-storage = ">=2.14.0"
 
 [feature.pipeline.tasks.deploy]
 args = [

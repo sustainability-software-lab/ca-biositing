@@ -39,8 +39,10 @@ def transform_gasification_record(
     thermo_experiment_df.columns = [str(c).strip() for c in thermo_experiment_df.columns]
 
     # Use standard_clean for consistent behavior (janitor + lowercase values)
-    data_df = cleaning_mod.standard_clean(thermo_data_df.copy())
-    exp_df = cleaning_mod.standard_clean(thermo_experiment_df.copy())
+    # We exclude raw_data_url and experiment_setup_url from lowercasing because GSheet keys are case-sensitive
+    exclude_cols = ["raw_data_url", "experiment_setup_url"]
+    data_df = cleaning_mod.standard_clean(thermo_data_df.copy(), exclude_lowercase=exclude_cols)
+    exp_df = cleaning_mod.standard_clean(thermo_experiment_df.copy(), exclude_lowercase=exclude_cols)
 
     if data_df is None or exp_df is None:
         logger.error("standard_clean returned None for GasificationRecord")
@@ -79,6 +81,10 @@ def transform_gasification_record(
 
     final_df = merged_df.drop_duplicates(subset=['record_id']).copy()
 
+    # Preserve resource name before normalization
+    if 'resource' in final_df.columns:
+        final_df['resource_name'] = final_df['resource']
+
     # 3. Normalization
     final_df['dataset'] = 'biocirv'
 
@@ -109,7 +115,8 @@ def transform_gasification_record(
         'note': 'note',
         'qc_result': 'qc_pass',
         'etl_run_id': 'etl_run_id',
-        'lineage_group_id': 'lineage_group_id'
+        'lineage_group_id': 'lineage_group_id',
+        'resource_name': 'resource_name'
     }
 
     # Lineage inheritance

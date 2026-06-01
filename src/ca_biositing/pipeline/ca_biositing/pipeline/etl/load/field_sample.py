@@ -75,12 +75,14 @@ def load_field_sample(df: pd.DataFrame):
                 key = (a.geography_id, a.address_line1, a.city, a.zip)
                 addr_map[key] = a.id
 
-            # Fetch all existing FieldSample names to avoid N+1 queries
+            # Fetch all existing FieldSample records to avoid N+1 queries
+            # Use (name, resource_id) as the lookup key for better specificity
             existing_samples = session.execute(select(FieldSample)).scalars().all()
-            samples_map = {s.name: s for s in existing_samples}
+            samples_map = {(s.name, s.resource_id): s for s in existing_samples}
 
             for record in records:
                 name = record.get('name')
+                resource_id = record.get('resource_id')
                 if not name:
                     logger.warning("Skipping record with missing 'name'.")
                     continue
@@ -98,8 +100,9 @@ def load_field_sample(df: pd.DataFrame):
 
                 sampling_location_id = addr_map.get((geoid, addr1, city, zip_code))
 
-                # Check for existing record by name using in-memory map
-                existing_record = samples_map.get(name)
+                # Check for existing record by (name, resource_id) using in-memory map
+                lookup_key = (name, resource_id)
+                existing_record = samples_map.get(lookup_key)
 
                 clean_record = {k: v for k, v in record.items() if k in table_columns}
                 clean_record['sampling_location_id'] = sampling_location_id
@@ -116,6 +119,8 @@ def load_field_sample(df: pd.DataFrame):
                         clean_record['created_at'] = now
                     new_fs = FieldSample(**clean_record)
                     session.add(new_fs)
+                    # Update in-memory map to prevent duplicates within the same batch
+                    samples_map[lookup_key] = new_fs
 
             session.commit()
         logger.info("Successfully upserted FieldSample records.")
