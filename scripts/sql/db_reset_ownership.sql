@@ -10,7 +10,7 @@ DO $$
 DECLARE
     r RECORD;
     s TEXT;
-    schemas TEXT[] := ARRAY['public', 'ca_biositing', 'data_portal'];
+    schemas TEXT[] := ARRAY[{% for schema in schemas %}'{{ schema }}'{% if not loop.last %}, {% endif %}{% endfor %}];
 BEGIN
     -- Transfer schema ownership
     FOREACH s IN ARRAY schemas LOOP

@@ -2,21 +2,23 @@
 -- Database Reset: Phase 3 - Grant Read-Only Access
 -- ============================================================================
 -- This script is executed as the 'postgres' superuser and grants SELECT-only
--- permissions to biocirv_readonly for the ca_biositing and data_portal schemas.
+-- permissions to biocirv_readonly for the application schemas.
 -- ============================================================================
 
 -- Grant schema-level usage
-GRANT USAGE ON SCHEMA ca_biositing TO {{ biocirv_readonly }};
-GRANT USAGE ON SCHEMA data_portal TO {{ biocirv_readonly }};
+{% for schema in schemas if schema != 'public' %}
+GRANT USAGE ON SCHEMA {{ schema }} TO {{ biocirv_readonly }};
+{% endfor %}
 
 -- Grant table-level select
-GRANT SELECT ON ALL TABLES IN SCHEMA ca_biositing TO {{ biocirv_readonly }};
-GRANT SELECT ON ALL TABLES IN SCHEMA data_portal TO {{ biocirv_readonly }};
+{% for schema in schemas if schema != 'public' %}
+GRANT SELECT ON ALL TABLES IN SCHEMA {{ schema }} TO {{ biocirv_readonly }};
+{% endfor %}
 
 -- Set default permissions for future objects
-ALTER DEFAULT PRIVILEGES FOR USER {{ biocirv_user }} IN SCHEMA ca_biositing
+{% for schema in schemas if schema != 'public' %}
+ALTER DEFAULT PRIVILEGES FOR USER {{ biocirv_user }} IN SCHEMA {{ schema }}
   GRANT SELECT ON TABLES TO {{ biocirv_readonly }};
-ALTER DEFAULT PRIVILEGES FOR USER {{ biocirv_user }} IN SCHEMA data_portal
-  GRANT SELECT ON TABLES TO {{ biocirv_readonly }};
+{% endfor %}
 
 SELECT 'Phase 3 Complete: Read-only access granted' AS reset_status;

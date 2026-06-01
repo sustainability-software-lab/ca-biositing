@@ -193,6 +193,10 @@ class DatabaseResetOrchestrator:
         # Expand env vars for the template context
         context = self._expand_env_vars(self.env_config)
 
+        # Add global config to context for list-based operations
+        context['schemas'] = self.config.get('schemas', [])
+        context['extensions'] = self.config.get('extensions', [])
+
         # Template the SQL
         template = Template(sql)
         rendered_sql = template.render(**context)
