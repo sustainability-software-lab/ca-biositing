@@ -514,9 +514,16 @@ def test_analysis_data_fixture(session: Session):
     # Create parameters for analysis
     param_ash = Parameter(id=10, name="ash", standard_unit_id=10)
     param_moisture = Parameter(id=11, name="moisture", standard_unit_id=10)
+    param_volatile_solids = Parameter(id=14, name="volatile solids", standard_unit_id=10)
     param_carbon = Parameter(id=12, name="carbon", standard_unit_id=10)
     param_cellulose = Parameter(id=13, name="cellulose", standard_unit_id=10)
-    session.add_all([param_ash, param_moisture, param_carbon, param_cellulose])
+    param_glucan = Parameter(id=15, name="glucan", standard_unit_id=10)
+    param_xylan = Parameter(id=16, name="xylan", standard_unit_id=10)
+    param_lignin = Parameter(id=17, name="lignin", standard_unit_id=10)
+    session.add_all([
+        param_ash, param_moisture, param_volatile_solids, param_carbon,
+        param_cellulose, param_glucan, param_xylan, param_lignin
+    ])
 
     # Create primary ag products (required for Resource FK)
     primary_ag_almond = PrimaryAgProduct(id=10, name="Almond")
@@ -575,7 +582,17 @@ def test_analysis_data_fixture(session: Session):
         record_id="prox_almond_1_moisture",
         dataset_id=1,
         resource_id=10,
-        prepared_sample_id=1
+        prepared_sample_id=1,
+        experiment_id=1
+    )
+    # Proximate analysis for almond hulls - volatile solids (to satisfy sum filter)
+    proximate_almond_vs = ProximateRecord(
+        id=3,
+        record_id="prox_almond_1_vs",
+        dataset_id=1,
+        resource_id=10,
+        prepared_sample_id=1,
+        experiment_id=1
     )
     # Ultimate analysis for almond hulls - carbon measurement
     ultimate_almond_carbon = UltimateRecord(
@@ -593,11 +610,46 @@ def test_analysis_data_fixture(session: Session):
         resource_id=11,
         prepared_sample_id=2
     )
+    # Add experiment IDs to other records for correct grouping
+    proximate_almond_ash.experiment_id = 1
+    ultimate_almond_carbon.experiment_id = 1
+
+    # Compositional analysis for corn stover - additional params for sum filter
+    compositional_corn_glucan = CompositionalRecord(
+        id=2,
+        record_id="comp_corn_1_glucan",
+        dataset_id=1,
+        resource_id=11,
+        prepared_sample_id=2,
+        experiment_id=2
+    )
+    compositional_corn_xylan = CompositionalRecord(
+        id=3,
+        record_id="comp_corn_1_xylan",
+        dataset_id=1,
+        resource_id=11,
+        prepared_sample_id=2,
+        experiment_id=2
+    )
+    compositional_corn_lignin = CompositionalRecord(
+        id=4,
+        record_id="comp_corn_1_lignin",
+        dataset_id=1,
+        resource_id=11,
+        prepared_sample_id=2,
+        experiment_id=2
+    )
+    compositional_corn_cellulose.experiment_id = 2
+
     session.add_all([
         proximate_almond_ash,
         proximate_almond_moisture,
+        proximate_almond_vs,
         ultimate_almond_carbon,
         compositional_corn_cellulose,
+        compositional_corn_glucan,
+        compositional_corn_xylan,
+        compositional_corn_lignin,
     ])
 
     # Create observations for proximate analysis (almond hulls, geoid 06001)
@@ -643,11 +695,55 @@ def test_analysis_data_fixture(session: Session):
         unit_id=10,
     )
 
+    obs_prox_vs = Observation(
+        id=104,
+        record_id="prox_almond_1_vs",
+        dataset_id=1,
+        record_type="proximate analysis",
+        parameter_id=14,
+        value=86.3, # 5.2 (ash) + 8.5 (moisture) + 86.3 (vs) = 100.0
+        unit_id=10,
+    )
+
+    # Create observations for compositional analysis (corn stover, geoid 06013)
+    obs_comp_glucan = Observation(
+        id=105,
+        record_id="comp_corn_1_glucan",
+        dataset_id=1,
+        record_type="compositional analysis",
+        parameter_id=15,
+        value=35.0,
+        unit_id=10,
+    )
+    obs_comp_xylan = Observation(
+        id=106,
+        record_id="comp_corn_1_xylan",
+        dataset_id=1,
+        record_type="compositional analysis",
+        parameter_id=16,
+        value=20.0,
+        unit_id=10,
+    )
+    obs_comp_lignin = Observation(
+        id=107,
+        record_id="comp_corn_1_lignin",
+        dataset_id=1,
+        record_type="compositional analysis",
+        parameter_id=17,
+        value=25.0,
+        unit_id=10,
+    )
+    # Total compositional sum: glucan (35) + xylan (20) + lignin (25) = 80.0 (satisfies >= 40 filter)
+
     session.add_all([
         obs_prox_ash,
         obs_prox_moisture,
+        obs_prox_vs,
         obs_ult_carbon,
         obs_comp_cellulose,
+        obs_comp_glucan,
+        obs_comp_xylan,
+        obs_comp_lignin,
     ])
     session.commit()
 
