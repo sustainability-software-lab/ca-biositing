@@ -33,6 +33,7 @@ dependencies = [
     "python-dotenv>=1.0.1,<2",
     "geopandas",
     "pyogrio",
+    "google-cloud-storage>=2.14.0",
 ]
 
 [project.urls]

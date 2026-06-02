@@ -1,0 +1,44 @@
+environments:
+  local:
+    host: ${POSTGRES_HOST:-localhost}
+    port: ${POSTGRES_PORT:-5432}
+    database: ${POSTGRES_DB:-biocirv_db}
+    postgres_user: ${POSTGRES_USER:-biocirv_user}
+    postgres_password: ${POSTGRES_PASSWORD:-biocirv_dev_password}
+    admin_role: ${POSTGRES_USER:-biocirv_user}
+    biocirv_user: ${BIOCIRV_USER:-biocirv_user}
+    biocirv_readonly: ${BIOCIRV_READONLY:-biocirv_readonly}
+    prompt_for_confirmation: true
+
+  staging:
+    host: ${DB_HOST_STAGING:-localhost}
+    port: ${DB_PORT_STAGING:-5434}
+    database: ${DB_NAME_STAGING:-biocirv_staging}
+    postgres_user: ${DB_USER_STAGING:-postgres}
+    postgres_password: ${DB_PASSWORD_STAGING:-${BIOCIRV_STAGING_USER_PW}}
+    admin_role: postgres
+    biocirv_user: ${BIOCIRV_USER:-biocirv_user}
+    biocirv_readonly: ${BIOCIRV_READONLY:-biocirv_readonly}
+    prompt_for_confirmation: true
+
+  production:
+    host: ${DB_HOST_PROD:-localhost}
+    port: ${DB_PORT_PROD:-5433}
+    database: ${DB_NAME_PROD:-biocirv_production}
+    postgres_user: ${DB_USER_PROD:-postgres}
+    postgres_password: ${DB_PASSWORD_PROD:-${BIOCIRV_PRODUCTION_USER_PW}}
+    admin_role: postgres
+    biocirv_user: ${BIOCIRV_USER:-biocirv_user}
+    biocirv_readonly: ${BIOCIRV_READONLY:-biocirv_readonly}
+    prompt_for_confirmation: true
+
+schemas:
+  - public
+  - ca_biositing
+  - data_portal
+
+extensions:
+  - postgis
+  - pg_trgm
+  - unaccent
+  - btree_gin
