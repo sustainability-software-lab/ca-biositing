@@ -13,6 +13,9 @@ DECLARE
 BEGIN
     -- Grant schema-level control
     FOREACH s IN ARRAY schemas LOOP
+        -- Transfer schema ownership to biocirv_user
+        EXECUTE format('ALTER SCHEMA %I OWNER TO %I', s, '{{ biocirv_user }}');
+
         EXECUTE format('GRANT ALL ON SCHEMA %I TO %I', s, '{{ biocirv_user }}');
 
         -- Grant permissions on all existing objects (tables, sequences, functions)
@@ -31,6 +34,11 @@ BEGIN
 
         RAISE NOTICE 'Granted full control of schema % and future objects to %', s, '{{ biocirv_user }}';
     END LOOP;
+
+    -- Reassign all objects owned by postgres in this database to biocirv_user
+    -- This handles objects like the alembic_version table or initial views
+    -- created during the reset process before ownership was transferred.
+    EXECUTE format('REASSIGN OWNED BY %I TO %I', 'postgres', '{{ biocirv_user }}');
 
     RAISE NOTICE 'Phase 2 Complete: Control granted to %', '{{ biocirv_user }}';
 END $$;
