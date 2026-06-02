@@ -13,7 +13,7 @@ environments:
   staging:
     host: ${DB_HOST_STAGING:-localhost}
     port: ${DB_PORT_STAGING:-5434}
-    database: ${DB_NAME_STAGING:-biocirv_staging}
+    database: ${DB_NAME_STAGING:-biocirv-staging}
     postgres_user: ${DB_USER_STAGING:-postgres}
     postgres_password: ${DB_PASSWORD_STAGING:-${BIOCIRV_STAGING_USER_PW}}
     admin_role: postgres
