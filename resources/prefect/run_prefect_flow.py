@@ -6,6 +6,7 @@ from prefect.utilities.importtools import import_object
 # A dictionary mapping flow names to their import paths
 # THE ORDER MATTERS HERE: foundational flows should run before specialized ones.
 AVAILABLE_FLOWS = {
+    "geography": "ca_biositing.pipeline.flows.geography.geography_etl_flow",
     #"primary_ag_product": "ca_biositing.pipeline.flows.primary_ag_product.primary_ag_product_flow",
     #"analysis_type": "ca_biositing.pipeline.flows.analysis_type.analysis_type_flow",
     #"biodiesel_plants": "ca_biositing.pipeline.flows.biodiesel_plants.biodiesel_plants_flow",
