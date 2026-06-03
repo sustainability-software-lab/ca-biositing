@@ -1,11 +1,20 @@
+from datetime import datetime
 from decimal import Decimal
+from sqlalchemy import UniqueConstraint
 from sqlmodel import Field, SQLModel
 from typing import Optional
 
 
 class InfrastructureFoodProcessingFacilities(SQLModel, table=True):
     __tablename__ = "infrastructure_food_processing_facilities"
+    __table_args__ = (
+        UniqueConstraint("name", "address", "city", "zip", name="uq_foodproc_name_addr_city_zip"),
+    )
 
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
+    etl_run_id: Optional[int] = Field(default=None)
+    lineage_group_id: Optional[int] = Field(default=None)
 
     processing_facility_id: Optional[int] = Field(default=None, primary_key=True)
     name: Optional[str] = Field(default=None) #company or facility name
@@ -25,8 +34,8 @@ class InfrastructureFoodProcessingFacilities(SQLModel, table=True):
     process_type: Optional[str] = Field(default=None)
     byproducts: Optional[str] = Field(default=None) #list of byproducts, comma-separated
     quantities: Optional[str] = Field(default=None) #list of quantities (ton/year) corresponding to byproducts, comma-separated
-    processing_capacity_products: Optional[Decimal] = Field(default=None) #products produced at the facility corresponding with processing cacpity (ton/hr) values, comma-separated. Ex. "tomato paste, tomato peeled/chopped", etc.
-    processing_capacity_ton_hr: Optional[Decimal] = Field(default=None) #processing capacity of products at the facility, comma-separated (in tons/hr) and corresponding with processing_capacity_products. Ex. "237 ton/hr, 213 ton/hr", etc.
+    processing_capacity_products: Optional[str] = Field(default=None) #products produced at the facility corresponding with processing cacpity (ton/hr) values, comma-separated. Ex. "tomato paste, tomato peeled/chopped", etc.
+    processing_capacity_ton_hr: Optional[str] = Field(default=None) #processing capacity of products at the facility, comma-separated (in tons/hr) and corresponding with processing_capacity_products. Ex. "237 ton/hr, 213 ton/hr", etc.
 
     #sources
     general_source_info: Optional[str] = Field(default=None) #this field may be used for frontend short description of source. Ex. "CARB 2026, EPA 2025, Morningstart report, lastname etl al, 2024, etc."

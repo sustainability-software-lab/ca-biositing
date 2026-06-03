@@ -57,7 +57,8 @@ Food processors identified within CARB air quality districts
 
 **[REQUIRED] Where does the raw data live?**
 
-- [x] Google Sheet — Name: `food_manufacturers_and_processors_carb` / Tab(s): `all facilities`
+- [x] Google Sheet — Name: `food_manufacturers_and_processors_carb` / Tab(s):
+      `all facilities`
 - [ ] Google Drive CSV — File name: `_______________`
 - [ ] Google Drive GeoJSON — File name: `_______________`
 - [ ] Local file — Path: `_______________`
@@ -120,26 +121,26 @@ loading?**
 **[REQUIRED] Dataset name (short, descriptive, will be stored in DB):**
 
 ```
-<e.g. "Kieran Heeley CARB air district crop based food processor lists">
+Kieran Heeley CARB air district crop based food processor lists
 ```
 
 **[REQUIRED] What date range does this dataset cover?**
 
 ```
-Start year/date: _______________
-End year/date:   _______________
+Start year/date: 01/01/2022
+End year/date:   12/31/2024
 ```
 
 **[REQUIRED] Method name (how was the data collected/derived — stored in DB):**
 
 ```
-<e.g. "manual extraction of values from PDF report">
+Data requested from CARB air districts and assembled by Kieran Heeley (kheeley@ucdavis.edu).
 ```
 
 **[REQUIRED] Method category (usually reuse existing — check DB before creating
 new):**
 
-- [ ] `research method` (most common — reuse existing row)
+- [x] `research method` (most common — reuse existing row)
 - [ ] `computational method`
 - [ ] `field measurement`
 - [ ] New category needed: `_______________`
@@ -147,8 +148,15 @@ new):**
 **[OPTIONAL] Are there existing `data_source`, `dataset`, or `method` rows in
 the DB that this ETL should link to (rather than creating new ones)?**
 
+No.
+
 ```
-<describe or leave blank>
+Add this to the method description:
+
+Public information requests from government databases for processors, manual extraction from PDF reports (for throughput), literature analysis (for residue factors).
+
+Throughput of the facilities is obtained from public information requests from individual air districts for all (except for tomatoes) with additional site locations also obtained from CDFA and crop management boards. For tomatoes, where throughput data was not available, capacity data was obtained from the individual crop management board (PTAB), with missing data filled in by estimating capacity based upon emissions data from carb.
+For byproduct flows, the residue factors were taken from literature and interviews with relevant stakeholders, for all crops except tomatoes, which are combined with throughput to give a quantity of byproducts. For tomatoes, as exact throughput is not known, the total byproducts produced (as defined by BPDB) are split based the capacity of each facility.
 ```
 
 ---
@@ -169,7 +177,7 @@ name + lat + long
 this ETL should mirror?**
 
 ```
-None/unsure. 
+None/unsure.
 ```
 
 ---
@@ -191,8 +199,8 @@ Do not write geocoding code currently. Create empty section(s) for drop in code 
 
 data will need to be cleaned extensively in the transform step
 -zip code is sumptimes 5 digits sometimes 10 (ZIP+4). Truncate to 5-digit.
--process tabe capitalization is messy. standardize to Capitized First Letter.
--currently there are separate columns for byproducts 1-5 and in the final DB table we will want byproducts in one field as comma separated list. Same with the quantities in tons/year. These should be ordered so they byproduct 1 and quantity in the following column are correspondingly the first values in the comma separated list, second of each listed second and so on. 
+-process table capitalization is messy. standardize to Capitized First Letter.
+-currently there are separate columns for byproducts 1-5 and in the final DB table we will want byproducts in one field as comma separated list. Same with the quantities in tons/year. These should be ordered so they byproduct 1 and quantity in the following column are correspondingly the first values in the comma separated list, second of each listed second and so on.
 -address whitespace for geocoding: before passing the concatenated address string to the geocoding function, the script must strip leading/trailing whitespace and remove any hidden newline characters (\n), which will cause the Mapbox/Google API calls to fail.
 ```
 
