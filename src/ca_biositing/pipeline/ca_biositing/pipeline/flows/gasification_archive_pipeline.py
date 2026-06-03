@@ -85,6 +85,7 @@ def record_metadata_db(
     resource_id: Optional[int],
     experiment_id: Optional[int],
     resource_name: Optional[str],
+    reactor_name: Optional[str],
     reactor_type_id: Optional[int],
     etl_run_id: int,
     lineage_group_id: int
@@ -109,6 +110,7 @@ def record_metadata_db(
             existing.etl_run_id = etl_run_id
             existing.lineage_group_id = lineage_group_id
             existing.resource_name = resource_name
+            existing.reactor_name = reactor_name
             existing.reactor_type_id = reactor_type_id
             existing.gsheet_url = gsheet_url
         else:
@@ -116,6 +118,7 @@ def record_metadata_db(
                 resource_id=resource_id,
                 experiment_id=experiment_id,
                 resource_name=resource_name,
+                reactor_name=reactor_name,
                 reactor_type_id=reactor_type_id,
                 gsheet_url=gsheet_url,
                 bucket_path=metadata["bucket_path"],
@@ -162,6 +165,7 @@ def gasification_archive_subflow(
     - resource_id
     - experiment_id
     - resource_name
+    - reactor_name
     - reactor_type_id
     """
     logger = get_run_logger()
@@ -206,6 +210,7 @@ def gasification_archive_subflow(
                 resource_id=record.get("resource_id"),
                 experiment_id=exp_id,
                 resource_name=res_name,
+                reactor_name=record.get("reactor_name"),
                 reactor_type_id=record.get("reactor_type_id"),
                 etl_run_id=etl_run_id,
                 lineage_group_id=lineage_group_id

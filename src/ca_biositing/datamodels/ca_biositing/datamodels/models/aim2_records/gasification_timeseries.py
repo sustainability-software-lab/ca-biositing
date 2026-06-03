@@ -20,6 +20,7 @@ class GasificationTimeseries(BaseEntity, table=True):
     experiment_id: Optional[int] = Field(default=None, foreign_key="experiment.id")
     resource_name: Optional[str] = Field(default=None)
     reactor_type_id: Optional[int] = Field(default=None, foreign_key="decon_vessel.id")
+    reactor_name: Optional[str] = Field(default=None)
     gsheet_url: Optional[str] = Field(default=None)
     bucket_path: Optional[str] = Field(default=None)
     file_size: Optional[int] = Field(default=None)
