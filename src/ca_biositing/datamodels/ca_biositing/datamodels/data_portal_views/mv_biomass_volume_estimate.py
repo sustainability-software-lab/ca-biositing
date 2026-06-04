@@ -14,7 +14,7 @@ Required indexes:
     CREATE INDEX idx_mv_biomass_volume_estimate_resource_year ON data_portal.mv_biomass_volume_estimate (resource_id, dataset_year)
 """
 
-from sqlalchemy import select, func, union_all, literal, case, cast, String, Integer, and_, or_, text
+from sqlalchemy import select, func, union_all, literal, case, cast, String, Integer, Numeric, and_, or_, text
 from sqlalchemy.orm import aliased
 
 from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
@@ -133,40 +133,113 @@ census_based_volumes = select(
  ).subquery()
 
 
+# Inline PAP-to-resource mapping for commodity-direct resources
+# Based on names to ensure stability across environments:
+# - 'almond hulls' (PAP 46)  → 'almond hulls' (Resource 19)
+# - 'almond shells' (PAP 74) → 'almond shells' (Resource 5)
+# - 'almond meats' (PAP 47)  → 'almond hulls' (Resource 19)
+# - 'hay - alfalfa' (PAP 3)  → 'alfalfa' (Resource 24)
+# - 'silage - alfalfa' (PAP 28) → 'alfalfa' (Resource 24)
+# - 'alfalfa & mixtures' (PAP 78) → 'alfalfa' (Resource 24)
+commodity_map = union_all(
+    select(literal(46, Integer).label("pap_id"), literal(19, Integer).label("resource_id")),
+    select(literal(74, Integer), literal(5, Integer)),
+    select(literal(47, Integer), literal(19, Integer)),
+    select(literal(3, Integer), literal(24, Integer)),
+    select(literal(28, Integer), literal(24, Integer)),
+    select(literal(78, Integer), literal(24, Integer))
+).subquery("commodity_map")
+
+# Path C: Commodity-direct resource volumes
+# For resources (e.g. almond hulls, almond shells) that are themselves tracked
+# as primary commodities in county_ag_report_record. The production observation
+# value IS the resource volume — no residue factor multiplication needed.
+commodity_direct_volumes = select(
+    Resource.id.label("resource_id"),
+    Resource.name.label("resource_name"),
+    CountyAgReportRecord.geoid,
+    Place.county_name.label("county"),
+    Place.state_name.label("state"),
+    CountyAgReportRecord.data_year.label("dataset_year"),
+    CountyAgReportRecord.record_id,
+    # Aggregate observations for production volume
+    func.avg(case((Parameter.name == "production", Observation.value))).label("primary_product_volume"),
+    cast(literal(None), Numeric).label("county_crop_acres"),
+    # Capture unit from observations
+    func.max(case((Parameter.name == "production", Unit.name))).label("volume_unit"),
+    # Identity factor (direct measurement)
+    cast(literal(None), Numeric).label("factor_min"),
+    cast(literal(1.0), Numeric).label("factor_mid"),
+    cast(literal(None), Numeric).label("factor_max"),
+    # estimated_residue_volume = production value directly (factor = 1)
+    func.avg(case((Parameter.name == "production", Observation.value))).label("estimated_residue_volume_min"),
+    func.avg(case((Parameter.name == "production", Observation.value))).label("estimated_residue_volume_mid"),
+    func.avg(case((Parameter.name == "production", Observation.value))).label("estimated_residue_volume_max"),
+    literal("commodity_direct").label("volume_source"),
+    literal("tons").label("biomass_unit")
+).select_from(CountyAgReportRecord)\
+ .join(commodity_map, commodity_map.c.pap_id == CountyAgReportRecord.primary_ag_product_id)\
+ .join(Resource, Resource.id == commodity_map.c.resource_id)\
+ .join(Place, CountyAgReportRecord.geoid == Place.geoid)\
+ .outerjoin(Observation, and_(
+     Observation.record_id == CountyAgReportRecord.record_id,
+     Observation.record_type == "county_ag_report_record"
+ ))\
+ .outerjoin(Parameter, Observation.parameter_id == Parameter.id)\
+ .outerjoin(Unit, Observation.unit_id == Unit.id)\
+ .where(and_(
+     CountyAgReportRecord.data_year >= 2017,
+     get_resource_filter(Resource)
+ ))\
+ .group_by(
+     Resource.id,
+     Resource.name,
+     CountyAgReportRecord.geoid,
+     Place.county_name,
+     Place.state_name,
+     CountyAgReportRecord.data_year,
+     CountyAgReportRecord.record_id,
+ ).subquery()
+
+
 # Combined volume estimation view
-# Uses UNION ALL to combine both paths, with precedence logic for selection
+# Uses UNION ALL to combine multiple paths (A, B, C), with precedence logic for selection
 # Use row_number with stable ordering on business key to ensure deterministic IDs
-# Use an offset for census-based IDs to ensure global uniqueness across branches
-mv_biomass_volume_estimate = select(
-    func.row_number().over(
-        order_by=(
-            production_based_volumes.c.resource_id,
-            production_based_volumes.c.geoid,
-            production_based_volumes.c.dataset_year,
-            production_based_volumes.c.volume_source,
-            production_based_volumes.c.resource_name,
-            production_based_volumes.c.county,
-            production_based_volumes.c.state
-        )
-    ).label("id"),
-    production_based_volumes.c.resource_id,
-    production_based_volumes.c.resource_name,
-    production_based_volumes.c.geoid,
-    production_based_volumes.c.county,
-    production_based_volumes.c.state,
-    production_based_volumes.c.dataset_year,
-    production_based_volumes.c.primary_product_volume.label("production_volume"),
-    production_based_volumes.c.county_crop_acres,
-    production_based_volumes.c.volume_unit.label("production_unit"),
-    production_based_volumes.c.factor_min,
-    production_based_volumes.c.factor_mid,
-    production_based_volumes.c.factor_max,
-    production_based_volumes.c.estimated_residue_volume_min,
-    production_based_volumes.c.estimated_residue_volume_mid,
-    production_based_volumes.c.estimated_residue_volume_max,
-    production_based_volumes.c.volume_source,
-    production_based_volumes.c.biomass_unit
-).select_from(production_based_volumes).union_all(
+# Use offsets for branch IDs to ensure global uniqueness:
+# - Path A (production_based): 0
+# - Path B (census_based): 10,000,000
+# - Path C (commodity_direct): 20,000,000
+mv_biomass_volume_estimate = union_all(
+    select(
+        func.row_number().over(
+            order_by=(
+                production_based_volumes.c.resource_id,
+                production_based_volumes.c.geoid,
+                production_based_volumes.c.dataset_year,
+                production_based_volumes.c.volume_source,
+                production_based_volumes.c.resource_name,
+                production_based_volumes.c.county,
+                production_based_volumes.c.state
+            )
+        ).label("id"),
+        production_based_volumes.c.resource_id,
+        production_based_volumes.c.resource_name,
+        production_based_volumes.c.geoid,
+        production_based_volumes.c.county,
+        production_based_volumes.c.state,
+        production_based_volumes.c.dataset_year,
+        cast(production_based_volumes.c.primary_product_volume, Numeric).label("production_volume"),
+        cast(production_based_volumes.c.county_crop_acres, Numeric).label("county_crop_acres"),
+        cast(production_based_volumes.c.volume_unit, String).label("production_unit"),
+        cast(production_based_volumes.c.factor_min, Numeric).label("factor_min"),
+        cast(production_based_volumes.c.factor_mid, Numeric).label("factor_mid"),
+        cast(production_based_volumes.c.factor_max, Numeric).label("factor_max"),
+        cast(production_based_volumes.c.estimated_residue_volume_min, Numeric).label("estimated_residue_volume_min"),
+        cast(production_based_volumes.c.estimated_residue_volume_mid, Numeric).label("estimated_residue_volume_mid"),
+        cast(production_based_volumes.c.estimated_residue_volume_max, Numeric).label("estimated_residue_volume_max"),
+        cast(production_based_volumes.c.volume_source, String).label("volume_source"),
+        cast(production_based_volumes.c.biomass_unit, String).label("biomass_unit")
+    ).select_from(production_based_volumes),
     select(
         (func.row_number().over(
             order_by=(
@@ -185,16 +258,46 @@ mv_biomass_volume_estimate = select(
         census_based_volumes.c.county,
         census_based_volumes.c.state,
         census_based_volumes.c.dataset_year,
-        census_based_volumes.c.bearing_acres.label("production_volume"),
-        census_based_volumes.c.county_crop_acres,
-        census_based_volumes.c.volume_unit.label("production_unit"),
-        literal(None).label("factor_min"),
-        literal(None).label("factor_mid"),
-        literal(None).label("factor_max"),
-        census_based_volumes.c.estimated_residue_volume_min,
-        census_based_volumes.c.estimated_residue_volume_mid,
-        census_based_volumes.c.estimated_residue_volume_max,
-        census_based_volumes.c.volume_source,
-        census_based_volumes.c.biomass_unit
-    ).select_from(census_based_volumes)
+        cast(census_based_volumes.c.bearing_acres, Numeric).label("production_volume"),
+        cast(census_based_volumes.c.county_crop_acres, Numeric).label("county_crop_acres"),
+        cast(census_based_volumes.c.volume_unit, String).label("production_unit"),
+        cast(literal(None), Numeric).label("factor_min"),
+        cast(literal(None), Numeric).label("factor_mid"),
+        cast(literal(None), Numeric).label("factor_max"),
+        cast(census_based_volumes.c.estimated_residue_volume_min, Numeric).label("estimated_residue_volume_min"),
+        cast(census_based_volumes.c.estimated_residue_volume_mid, Numeric).label("estimated_residue_volume_mid"),
+        cast(census_based_volumes.c.estimated_residue_volume_max, Numeric).label("estimated_residue_volume_max"),
+        cast(census_based_volumes.c.volume_source, String).label("volume_source"),
+        cast(census_based_volumes.c.biomass_unit, String).label("biomass_unit")
+    ).select_from(census_based_volumes),
+    select(
+        (func.row_number().over(
+            order_by=(
+                commodity_direct_volumes.c.resource_id,
+                commodity_direct_volumes.c.geoid,
+                commodity_direct_volumes.c.dataset_year,
+                commodity_direct_volumes.c.volume_source,
+                commodity_direct_volumes.c.resource_name,
+                commodity_direct_volumes.c.county,
+                commodity_direct_volumes.c.state
+            )
+        ) + 20000000).label("id"),
+        commodity_direct_volumes.c.resource_id,
+        commodity_direct_volumes.c.resource_name,
+        commodity_direct_volumes.c.geoid,
+        commodity_direct_volumes.c.county,
+        commodity_direct_volumes.c.state,
+        commodity_direct_volumes.c.dataset_year,
+        cast(commodity_direct_volumes.c.primary_product_volume, Numeric).label("production_volume"),
+        cast(commodity_direct_volumes.c.county_crop_acres, Numeric).label("county_crop_acres"),
+        cast(commodity_direct_volumes.c.volume_unit, String).label("production_unit"),
+        cast(commodity_direct_volumes.c.factor_min, Numeric).label("factor_min"),
+        cast(commodity_direct_volumes.c.factor_mid, Numeric).label("factor_mid"),
+        cast(commodity_direct_volumes.c.factor_max, Numeric).label("factor_max"),
+        cast(commodity_direct_volumes.c.estimated_residue_volume_min, Numeric).label("estimated_residue_volume_min"),
+        cast(commodity_direct_volumes.c.estimated_residue_volume_mid, Numeric).label("estimated_residue_volume_mid"),
+        cast(commodity_direct_volumes.c.estimated_residue_volume_max, Numeric).label("estimated_residue_volume_max"),
+        cast(commodity_direct_volumes.c.volume_source, String).label("volume_source"),
+        cast(commodity_direct_volumes.c.biomass_unit, String).label("biomass_unit")
+    ).select_from(commodity_direct_volumes)
 )
