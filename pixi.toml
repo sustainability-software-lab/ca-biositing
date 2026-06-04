@@ -292,6 +292,9 @@ ca-biositing-pipeline = { path = "./src/ca_biositing/pipeline", editable = true 
 alembic = ">=1.13.2,<2"
 # Prefect is required for `prefect flow-run execute` inside Cloud Run flow jobs
 prefect = ">=3,<4"
+# Geocoding and FIPS utilities used by geo_utils.py in the ETL pipeline
+geopy = ">=2.4.1,<3"
+addfips = ">=0.4.2,<0.5"
 
 [feature.pipeline.tasks.deploy]
 args = [

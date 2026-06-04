@@ -287,9 +287,63 @@ writing any code.
 
 ## Session Continuation (for new agent sessions mid-ETL)
 
-If you need to start a new agent session partway through an ETL, paste this
-context block at the start of the new session. The agent will re-read the guide
-and resume from the correct phase without re-doing completed work:
+Phase 7 — Handoff Files created/modified
+
+Extract: food_processing_facilities.py — added extract_all_facilities and
+extract_geocoder_test_set Transform: food_processing_facilities.py — cleaning,
+byproduct/quantity combine, geocode delta + circuit breaker Load:
+food_processing_facilities.py — UPSERT on composite key (name,address,city,zip)
+Flow: food_processing_facilities.py — Prefect flow orchestrating extract →
+transform → load with lineage Tests: test_food_processing_facilities_etl.py —
+unit tests for extract/transform/load/flow Before running (manual checks you
+must do locally)
+
+Run tests: Run formatting/lint (project policy): Ensure credentials.json present
+and GOOGLE_MAPS_API_KEY is unset (to avoid accidental geocoding) unless you
+intentionally enable it. Confirm Alembic migrations applied (you said you
+already applied): Confirm DB unique constraint exists on (name, address, city,
+zip). How to run the ETL flow (manual)
+
+To run locally (Prefect): (Prefer running inside pixi environment as usual.)
+
+After running — checks to verify correctness
+
+Verify the record table and lineage fields: Spot-check expected rows (example):
+Verify geocoding behavior (if enabled): only test-tab addresses were geocoded
+and delta logic prevented re-geocoding. Tables & specific checks (derived from
+Column Population Plan)
+
+infrastructure_food_processing_facilities — confirm: etl_run_id and
+lineage_group_id are not NULL for new rows created_at and updated_at populated
+name, address, city, zip, primary_ag_product, byproducts, quantities populated
+per source mapping state set to CA No unintended geometry created (expected geom
+NULL) Fields intentionally left NULL
+
+geom — no geometry generation in this ETL source_url — not provided in sheet
+latitude / longitude for main all facilities rows — geocoding is only run for
+test set for geocoder and only when GOOGLE_MAPS_API_KEY is set and delta passes
+Known limitations / follow-ups
+
+Geocoding: API key must be set only when you are ready. The transform enforces a
+circuit breaker (cap = 50) and delta check; still confirm cloud quota cap in
+console. Conflict key: Load uses UPSERT on (name, address, city, zip) — rely on
+consistent normalization; minor variations in names/addresses could produce
+multiple rows. Consider future fuzzy-matching dedupe.
+processing_capacity_products and processing_capacity_ton_hr stored as
+comma-separated strings (you applied migration); if you later normalize these
+into structured rows, plan a separate ETL. Tests: Unit tests are provided; run
+the pipeline test suite and fix any CI/lint failures before opening a PR.
+Follow-up items (recommended)
+
+Run the ETL on the 20–50 row geocoder test sheet twice: Confirm first run
+geocodes the test rows (when GOOGLE_MAPS_API_KEY set). Confirm second run
+geocodes 0 rows (delta check). Add a small monitoring alert (email/slack) for
+failed ETL runs and for geocoding circuit-breaker triggers. Consider adding a
+short README snippet near the ETL files documenting the geocode safety workflow
+and the required cloud quota cap. Would you like me to:
+
+Run the pipeline tests now and report results? Generate the PR body (uses the PR
+Body Prompt from the guide)?
 
 ```
 You are the CA Biositing ETL agent resuming a mid-session handoff.

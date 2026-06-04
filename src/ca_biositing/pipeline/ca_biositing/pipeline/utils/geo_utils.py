@@ -1,21 +1,25 @@
 import pandas as pd
 import numpy as np
 import os
-from geopy.geocoders import GoogleV3
-from geopy.extra.rate_limiter import RateLimiter
 from prefect import task, get_run_logger
-import addfips
-
-# Initialize FIPS helper at module level (safe, no network/keys required)
-af = addfips.AddFIPS()
 
 address_types = ['street_number', 'route', "intersection", "natural_feature", "airport", "park", "point_of_interest", 'post_box', 'landmark']
+
+
+def _get_fips_helper():
+    """Lazily initialize the AddFIPS helper to avoid import-time failures."""
+    import addfips
+    return addfips.AddFIPS()
+
 
 def get_geocoder():
     """
     Lazily initialize the GoogleV3 geocoder and rate limiter.
     This avoids ConfigurationErrors at import time if the API key is missing.
     """
+    from geopy.geocoders import GoogleV3
+    from geopy.extra.rate_limiter import RateLimiter
+
     api_key = os.getenv("GOOGLE_MAPS_API_KEY")
     if not api_key:
         # During CI test collection, we want to allow import but fail only when used
@@ -101,6 +105,7 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
             address_result = {"closest_address_line_1": address, "closest_address_line_2": None, "closest_city": city, "closest_county": county, "closest_state": state, "closest_postal_code": zip_code + "-" + zip_suffix if (isinstance(zip_code, str) and isinstance(zip_suffix, str)) else zip_code, "closest_latitude": latitude, "closest_longitude": longitude}
 
             # get geoids
+            af = _get_fips_helper()
             geoid = af.get_county_fips(county, state) if (isinstance(county, str) and isinstance(state, str)) else None
             state_fips = geoid[:2] if isinstance(geoid, str) else None
             county_fips = geoid[2:] if isinstance(geoid, str) else None

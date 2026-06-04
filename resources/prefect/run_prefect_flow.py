@@ -21,6 +21,7 @@ AVAILABLE_FLOWS = {
     "aim2_bioconversion": "ca_biositing.pipeline.flows.aim2_bioconversion.aim2_bioconversion_flow",
     "landiq": "ca_biositing.pipeline.flows.landiq_etl.landiq_etl_flow",
     "billion_ton": "ca_biositing.pipeline.flows.billion_ton_etl.billion_ton_etl_flow",
+    "food_processing_facilities": "ca_biositing.pipeline.flows.food_processing_facilities.food_processing_facilities_flow",
     #"field_sample": "ca_biositing.pipeline.flows.field_sample_etl.field_sample_etl_flow",
     #"prepared_sample": "ca_biositing.pipeline.flows.prepared_sample_etl.prepared_sample_etl_flow",
     "thermochem": "ca_biositing.pipeline.flows.thermochem_etl.thermochem_etl_flow"

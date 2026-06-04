@@ -94,6 +94,30 @@ def _assign_general_source_info(associated_food: Optional[str]) -> str:
     return "CARB 2024"
 
 
+# Expected real header names (lowercase, stripped) that should appear in the header row.
+_EXPECTED_HEADERS = {"facility id", "name", "address", "city", "zip", "county"}
+
+
+def _fix_header_row(df: pd.DataFrame) -> pd.DataFrame:
+    """Detect and fix sheets where row 0 is a spurious title row and row 1 contains real headers.
+
+    Some Google Sheets have a frozen/merged title row at the top. When gsheet_to_df reads
+    all_values[0] as the header, it picks up the title row instead of the real column names.
+    This function detects that pattern by checking if the first data row looks like real headers,
+    and if so promotes it to be the column names.
+    """
+    if df.empty or len(df) < 2:
+        return df
+    first_row_values = {str(v).strip().lower() for v in df.iloc[0].values if str(v).strip()}
+    if _EXPECTED_HEADERS.issubset(first_row_values):
+        # First data row contains the real headers — promote it
+        new_df = df.iloc[1:].copy()
+        new_df.columns = [str(v).strip() for v in df.iloc[0].values]
+        new_df = new_df.reset_index(drop=True)
+        return new_df
+    return df
+
+
 @task
 def transform(
     data_sources: Dict[str, pd.DataFrame],
@@ -116,6 +140,12 @@ def transform(
 
     if raw_all.empty:
         logger.error("All facilities sheet is empty.")
+        return None
+
+    # Detect and fix sheets where a spurious title row precedes the real headers.
+    raw_all = _fix_header_row(raw_all)
+    if raw_all.empty:
+        logger.error("All facilities sheet is empty after header-row fix.")
         return None
 
     # Clean column names without lowercasing values.
