@@ -31,7 +31,9 @@ def load(df: pd.DataFrame) -> bool:
 
         now = datetime.now(timezone.utc)
         table_columns = {c.name for c in InfrastructureFoodProcessingFacilities.__table__.columns}
-        records = df.replace({np.nan: None}).to_dict(orient="records")
+        # FIX: replace both NaN *and* empty strings with None so the DB
+        # receives NULL rather than "" for unpopulated text columns.
+        records = df.replace({np.nan: None}).replace({"": None}).to_dict(orient="records")
 
         engine = get_engine()
         with Session(engine) as session:

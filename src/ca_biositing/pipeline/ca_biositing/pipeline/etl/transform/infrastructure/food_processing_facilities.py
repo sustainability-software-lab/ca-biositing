@@ -71,12 +71,14 @@ def _combine_pairs(df: pd.DataFrame, byproduct_cols: List[str], quantity_cols: L
                 continue
 
             bp_values.append(str(bp_val).strip())
-            if pd.isna(qty_val) or str(qty_val).strip() == "":
-                qty_values.append("")
-            else:
+            # FIX: only append quantity when it is non-empty; empty quantities
+            # must be omitted entirely so ", ".join() never produces "100, "
+            # or ", ," artifacts in the DB.
+            if not (pd.isna(qty_val) or str(qty_val).strip() == ""):
                 qty_values.append(str(qty_val).strip())
 
         byproducts.append(", ".join(bp_values) if bp_values else None)
+        # FIX: if every paired quantity was empty, write None (NULL) not ""
         quantities.append(", ".join(qty_values) if qty_values else None)
 
     out = df.copy()

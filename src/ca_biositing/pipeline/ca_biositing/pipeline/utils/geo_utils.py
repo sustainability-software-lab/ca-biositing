@@ -94,10 +94,16 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
             zip_suffix = get_component("short_name", "postal_code_suffix", addy_components)
 
             # get latitude and longitude
-            if isinstance(row[lat], (float, int)) and not np.isnan(row[lat]) and \
-               isinstance(row[long], (float, int)) and not np.isnan(row[long]):
-                latitude = row[lat]
-                longitude = row[long]
+            # FIX: use .get() so that DataFrames without pre-existing lat/lon
+            # columns (e.g. the geocoder test set) don't raise KeyError here,
+            # which was previously caught by the bare except and silently
+            # prevented every geocoding API call from succeeding.
+            existing_lat = row.get(lat) if hasattr(row, "get") else row[lat] if lat in row.index else None
+            existing_lon = row.get(long) if hasattr(row, "get") else row[long] if long in row.index else None
+            if isinstance(existing_lat, (float, int)) and not np.isnan(existing_lat) and \
+               isinstance(existing_lon, (float, int)) and not np.isnan(existing_lon):
+                latitude = existing_lat
+                longitude = existing_lon
             else:
                 latitude = info['geometry']['location']['lat'] if isinstance(info['geometry']['location']['lat'], float) else None
                 longitude = info['geometry']['location']['lng'] if isinstance(info['geometry']['location']['lng'], float) else None
@@ -118,10 +124,14 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
             # handle weird addresses
             unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
 
-            if isinstance(row[lat], (float, int)) and not np.isnan(row[lat]) and \
-               isinstance(row[long], (float, int)) and not np.isnan(row[long]):
-                latitude = row[lat]
-                longitude = row[long]
+            # FIX: use safe column access — the DataFrame may not have lat/lon
+            # columns at all (e.g. geocoder test set has no pre-existing coords).
+            existing_lat = row.get(lat) if hasattr(row, "get") else row[lat] if lat in row.index else None
+            existing_lon = row.get(long) if hasattr(row, "get") else row[long] if long in row.index else None
+            if isinstance(existing_lat, (float, int)) and not np.isnan(existing_lat) and \
+               isinstance(existing_lon, (float, int)) and not np.isnan(existing_lon):
+                latitude = existing_lat
+                longitude = existing_lon
             else:
                 # If geocode failed or wasn't available, we might not have 'info'
                 latitude = None
