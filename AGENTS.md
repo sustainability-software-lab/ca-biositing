@@ -64,6 +64,7 @@ Pixi is used for:
 - Running QGIS for geospatial analysis
 - Deploying and running Prefect workflows
 - Starting the FastAPI web service
+- Managing Agent Skills (installing, syncing, updating)
 
 ### Environment Setup (ALWAYS RUN FIRST)
 
@@ -208,6 +209,30 @@ The API layer.
 - `pixi run pre-commit-all`: Run all checks (MANDATORY before PR).
 - `pixi run test`: Run pytest suite.
 - `pixi run start-webservice`: Launch API locally.
+- `pixi run skills-sync`: Synchronize agent skills from `skills.json`.
+
+## Agent Skills Management
+
+This project uses **Agent Skills** to extend AI agent capabilities (like GitHub
+issue management, UI audits, etc.).
+
+### Manifest & Syncing
+
+- **`skills.json`**: The declarative manifest where all project skills and
+  registries are listed.
+- **`skills.sh`**: The synchronization script that handles installation and
+  updates.
+- **Syncing**: Run `pixi run skills-sync` after adding a new skill to
+  `skills.json` or to update existing ones.
+
+### Available Skills
+
+Installed skills are located in `.agents/skills/`. Agents can use the `skill()`
+tool to load these specialized instructions. Key skills include:
+
+- `github-issues`: Manage repository issues and projects.
+- `web-design-guidelines`: Perform UI and accessibility audits.
+- `find-skills`: Search for and discover new capabilities.
 
 ## Common Pitfalls
 
