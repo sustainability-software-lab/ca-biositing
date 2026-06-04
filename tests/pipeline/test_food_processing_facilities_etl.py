@@ -171,22 +171,39 @@ class TestGsheetToPandasDedup:
 # ---------------------------------------------------------------------------
 
 class TestFoodProcessingFacilitiesTransform:
+    """Tests for the transform task.
 
-    # --- existing test (updated to use real-world column shape) ---
+    NOTE: The transform now routes based on GEOCODE_TARGET:
+      - "geocoder_test_set" (default): geocodes and loads only the test-set rows.
+        If geocoder_test_set is empty, returns an empty DataFrame.
+      - "all_facilities": geocodes and loads all_facilities rows.
+
+    Tests that want to exercise the all_facilities cleaning/column logic must
+    patch GEOCODE_TARGET to "all_facilities" so the transform returns those rows.
+    Tests that want to exercise the geocoder_test_set path pass a non-empty geo df.
+    """
+
+    def _patch_geocode_target(self, target: str):
+        """Return a context manager that patches GEOCODE_TARGET in the transform module."""
+        import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
+        return patch.object(mod, "GEOCODE_TARGET", target)
+
+    # --- all_facilities path tests (GEOCODE_TARGET="all_facilities") ---
 
     def test_transform_returns_dataframe(self):
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
         raw_df = _make_raw_df_real_world()
 
-        result = food_processing_facilities.transform.fn(
-            data_sources={
-                "all_facilities": raw_df,
-                "geocoder_test_set": pd.DataFrame(),
-            },
-            etl_run_id=101,
-            lineage_group_id=202,
-        )
+        with self._patch_geocode_target("all_facilities"):
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": raw_df,
+                    "geocoder_test_set": pd.DataFrame(),
+                },
+                etl_run_id=101,
+                lineage_group_id=202,
+            )
 
         assert result is not None
         assert len(result) == 2
@@ -212,20 +229,19 @@ class TestFoodProcessingFacilitiesTransform:
 
         assert result is None
 
-    # --- NEW: intermediate DataFrame assertion tests ---
-
     def test_transform_output_has_nonzero_rows(self):
-        """Transform must return > 0 rows given valid input."""
+        """Transform must return > 0 rows given valid input (all_facilities mode)."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        result = food_processing_facilities.transform.fn(
-            data_sources={
-                "all_facilities": _make_raw_df_real_world(),
-                "geocoder_test_set": pd.DataFrame(),
-            },
-            etl_run_id=1,
-            lineage_group_id=1,
-        )
+        with self._patch_geocode_target("all_facilities"):
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": _make_raw_df_real_world(),
+                    "geocoder_test_set": pd.DataFrame(),
+                },
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
 
         assert result is not None
         assert len(result) > 0, "Transform must produce at least one row"
@@ -234,14 +250,15 @@ class TestFoodProcessingFacilitiesTransform:
         """Key columns (name, address, city, zip, state) must not be entirely null."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        result = food_processing_facilities.transform.fn(
-            data_sources={
-                "all_facilities": _make_raw_df_real_world(),
-                "geocoder_test_set": pd.DataFrame(),
-            },
-            etl_run_id=1,
-            lineage_group_id=1,
-        )
+        with self._patch_geocode_target("all_facilities"):
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": _make_raw_df_real_world(),
+                    "geocoder_test_set": pd.DataFrame(),
+                },
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
 
         assert result is not None
         for col in ("name", "address", "city", "zip", "state"):
@@ -255,14 +272,15 @@ class TestFoodProcessingFacilitiesTransform:
         """Transform output must contain all columns expected by the DB model."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        result = food_processing_facilities.transform.fn(
-            data_sources={
-                "all_facilities": _make_raw_df_real_world(),
-                "geocoder_test_set": pd.DataFrame(),
-            },
-            etl_run_id=1,
-            lineage_group_id=1,
-        )
+        with self._patch_geocode_target("all_facilities"):
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": _make_raw_df_real_world(),
+                    "geocoder_test_set": pd.DataFrame(),
+                },
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
 
         assert result is not None
         required_cols = [
@@ -277,7 +295,6 @@ class TestFoodProcessingFacilitiesTransform:
         """With the fixed gsheet_to_df output, all 5 byproduct/quantity pairs must be captured."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        # Row with all 5 byproducts filled in
         df = pd.DataFrame(
             [[
                 "ID1", "Acme", "1 Main St", "Fresno", "93721", "Fresno",
@@ -299,11 +316,12 @@ class TestFoodProcessingFacilitiesTransform:
             ],
         )
 
-        result = food_processing_facilities.transform.fn(
-            data_sources={"all_facilities": df, "geocoder_test_set": pd.DataFrame()},
-            etl_run_id=1,
-            lineage_group_id=1,
-        )
+        with self._patch_geocode_target("all_facilities"):
+            result = food_processing_facilities.transform.fn(
+                data_sources={"all_facilities": df, "geocoder_test_set": pd.DataFrame()},
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
 
         assert result is not None
         assert result.loc[0, "byproducts"] == "Pomace, Seeds, Husks, Pulp, Fiber"
@@ -313,10 +331,8 @@ class TestFoodProcessingFacilitiesTransform:
         """If row 0 is a spurious title row and row 1 contains real headers, transform must fix it."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        # Simulate a sheet where row 0 is a title and row 1 is the real header
         df_with_title = pd.DataFrame(
             [
-                # Row 0: spurious title row (all values are the real column names)
                 ["Facility ID", "Name", "Address", "City", "Zip", "County",
                  "Air district", "Process", "Associated food",
                  "Byproduct 1", "Quantity (tons/year)",
@@ -324,7 +340,6 @@ class TestFoodProcessingFacilitiesTransform:
                  "Byproduct 3", "Quantity (tons/year)_3",
                  "Byproduct 4", "Quantity (tons/year)_4",
                  "Byproduct 5", "Quantity (tons/year)_5"],
-                # Row 1: actual data
                 ["ID1", "Acme Foods", "1 Main St", "Fresno", "93721", "Fresno",
                  "Valley Air", "drying", "tomato",
                  "Pomace", "100", "", "", "", "", "", "", "", ""],
@@ -335,11 +350,12 @@ class TestFoodProcessingFacilitiesTransform:
             ],
         )
 
-        result = food_processing_facilities.transform.fn(
-            data_sources={"all_facilities": df_with_title, "geocoder_test_set": pd.DataFrame()},
-            etl_run_id=1,
-            lineage_group_id=1,
-        )
+        with self._patch_geocode_target("all_facilities"):
+            result = food_processing_facilities.transform.fn(
+                data_sources={"all_facilities": df_with_title, "geocoder_test_set": pd.DataFrame()},
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
 
         assert result is not None
         assert len(result) == 1, "Only the data row should remain after header fix"
@@ -354,10 +370,6 @@ class TestFoodProcessingFacilitiesTransform:
             columns=["Address", "City", "Zip"],
         )
 
-        # Mock the DB query to return the same address as already geocoded
-        mock_row = MagicMock()
-        mock_row.__getitem__ = lambda self, i: ["123 Main St", "Fresno", "CA", "93721"][i]
-
         with patch("sqlmodel.Session") as mock_session_cls, \
              patch("ca_biositing.pipeline.utils.engine.get_engine"):
             mock_session = MagicMock()
@@ -366,6 +378,9 @@ class TestFoodProcessingFacilitiesTransform:
                 ("123 Main St", "Fresno", "CA", "93721")
             ]
 
+            # GEOCODE_TARGET="geocoder_test_set" (default) — geo_df is non-empty,
+            # so the geocoding block runs on it. Delta check finds the address
+            # already in DB → to_geocode is empty → no API call.
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": _make_raw_df_real_world(),
@@ -393,6 +408,79 @@ class TestFoodProcessingFacilitiesTransform:
         )
 
         assert result is None
+
+    # --- geocoder_test_set path tests (GEOCODE_TARGET="geocoder_test_set") ---
+
+    def test_transform_geocode_target_test_set_empty_returns_empty_df(self):
+        """When GEOCODE_TARGET=geocoder_test_set and the test set is empty, return empty DataFrame."""
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+
+        # Default GEOCODE_TARGET is "geocoder_test_set"; empty geo df → empty result
+        result = food_processing_facilities.transform.fn(
+            data_sources={
+                "all_facilities": _make_raw_df_real_world(),
+                "geocoder_test_set": pd.DataFrame(),
+            },
+            etl_run_id=1,
+            lineage_group_id=1,
+        )
+
+        # Returns empty DataFrame (not None) — empty geo set is a valid no-op
+        assert result is not None
+        assert len(result) == 0, (
+            "When GEOCODE_TARGET=geocoder_test_set and test set is empty, "
+            "transform must return an empty DataFrame (nothing to geocode or load)"
+        )
+
+    def test_transform_geocode_target_test_set_returns_geo_rows(self):
+        """When GEOCODE_TARGET=geocoder_test_set and test set is non-empty, return geocoded rows."""
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+
+        geo_df = pd.DataFrame(
+            [["123 Main St", "Fresno", "93721", "Fresno County"]],
+            columns=["Address", "City", "Zip", "County"],
+        )
+
+        with patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"), \
+             patch.dict(os.environ, {}, clear=True):  # no API key → geocoding skipped
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []  # empty DB
+
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": _make_raw_df_real_world(),
+                    "geocoder_test_set": geo_df,
+                },
+                etl_run_id=5,
+                lineage_group_id=6,
+            )
+
+        assert result is not None
+        assert len(result) == 1, "Should return the 1 geocoder test set row"
+        assert result.loc[0, "etl_run_id"] == 5
+        assert result.loc[0, "lineage_group_id"] == 6
+        assert "latitude" in result.columns
+        assert "longitude" in result.columns
+        assert "address" in result.columns
+
+    def test_transform_geocode_target_all_facilities_returns_all_rows(self):
+        """When GEOCODE_TARGET=all_facilities, return all_facilities rows (not test set)."""
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+
+        with self._patch_geocode_target("all_facilities"):
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": _make_raw_df_real_world(),
+                    "geocoder_test_set": pd.DataFrame(),
+                },
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
+
+        assert result is not None
+        assert len(result) == 2, "Should return all 2 all_facilities rows"
 
 
 # ---------------------------------------------------------------------------
@@ -508,12 +596,15 @@ class TestGeocodingEnvVar:
     """Verify that GOOGLE_MAPS_API_KEY is read at runtime, not import time."""
 
     def test_geocoding_skipped_when_key_not_set(self):
-        """When GOOGLE_MAPS_API_KEY is absent, transform must still return data."""
+        """When GOOGLE_MAPS_API_KEY is absent, transform must still return data (all_facilities mode)."""
+        import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
         env_without_key = {k: v for k, v in os.environ.items() if k != "GOOGLE_MAPS_API_KEY"}
 
-        with patch.dict(os.environ, env_without_key, clear=True):
+        # Use all_facilities mode so the result contains the all_facilities rows
+        with patch.dict(os.environ, env_without_key, clear=True), \
+             patch.object(mod, "GEOCODE_TARGET", "all_facilities"):
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": _make_raw_df_real_world(),
@@ -610,18 +701,22 @@ class TestCombinePairsNullHandling:
 
     def test_transform_quantities_no_comma_artifact_end_to_end(self):
         """End-to-end: transform output must not contain comma-only quantity strings."""
+        import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        # Row 2 (Brew Co) has only one byproduct with a quantity; byproducts 2-5 are empty
-        result = food_processing_facilities.transform.fn(
-            data_sources={
-                "all_facilities": _make_raw_df_real_world(),
-                "geocoder_test_set": pd.DataFrame(),
-            },
-            etl_run_id=1,
-            lineage_group_id=1,
-        )
+        # Use all_facilities mode so the result contains the all_facilities rows
+        # (Row 2 / Brew Co has only one byproduct with a quantity; byproducts 2-5 are empty)
+        with patch.object(mod, "GEOCODE_TARGET", "all_facilities"):
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": _make_raw_df_real_world(),
+                    "geocoder_test_set": pd.DataFrame(),
+                },
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
         assert result is not None
+        assert len(result) > 0, "Expected rows from all_facilities in all_facilities mode"
         for idx, row in result.iterrows():
             qty = row["quantities"]
             if qty is not None:
