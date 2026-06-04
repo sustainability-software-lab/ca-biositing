@@ -4,6 +4,12 @@ Prefect flow for CARB food processing facilities ETL.
 
 from prefect import flow, get_run_logger
 
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # python-dotenv not installed; rely on environment variables being set externally
+
 from ca_biositing.pipeline.etl.extract.food_processing_facilities import (
     extract_all_facilities,
     extract_geocoder_test_set,

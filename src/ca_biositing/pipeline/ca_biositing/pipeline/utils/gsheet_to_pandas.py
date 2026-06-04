@@ -4,6 +4,26 @@ import gspread
 import pandas as pd
 from gspread.exceptions import SpreadsheetNotFound, WorksheetNotFound, APIError
 
+
+def _dedupe_columns(columns: list) -> list:
+    """Rename duplicate column names by appending _2, _3, … suffixes.
+
+    Unlike pandas' ``df.columns.duplicated()`` which simply drops duplicates,
+    this preserves every column while making names unique.  This is critical
+    for sheets like the food-processing facilities sheet where multiple columns
+    share the same header (e.g. five ``Quantity (tons/year)`` columns).
+    """
+    seen: dict = {}
+    result = []
+    for col in columns:
+        if col not in seen:
+            seen[col] = 1
+            result.append(col)
+        else:
+            seen[col] += 1
+            result.append(f"{col}_{seen[col]}")
+    return result
+
 def gsheet_to_df(gsheet_name: str, worksheet_name: str, credentials_path: str) -> pd.DataFrame:
     """
     Extracts data from a specific tab in a Google Sheet into a pandas DataFrame.
@@ -56,11 +76,13 @@ def gsheet_to_df(gsheet_name: str, worksheet_name: str, credentials_path: str) -
         if not all_values:
             return pd.DataFrame() # Return empty DataFrame if sheet is empty
 
-        # Use the first row as header and the rest as data
-        df = pd.DataFrame(all_values[1:], columns=all_values[0])
-
-        # De-duplicate columns, keeping the first occurrence
-        df = df.loc[:, ~df.columns.duplicated()]
+        # Use the first row as header and the rest as data.
+        # Rename duplicate headers with numeric suffixes (_2, _3, …) so that
+        # every column is preserved.  Dropping duplicates (the old behaviour)
+        # silently discarded data — e.g. the five "Quantity (tons/year)" columns
+        # in the food-processing facilities sheet were reduced to one.
+        deduped_headers = _dedupe_columns(all_values[0])
+        df = pd.DataFrame(all_values[1:], columns=deduped_headers)
 
         return df
 

@@ -34,8 +34,8 @@ def load(df: pd.DataFrame) -> bool:
         records = df.replace({np.nan: None}).to_dict(orient="records")
 
         engine = get_engine()
-        with engine.connect() as conn:
-            with Session(bind=conn) as session:
+        with Session(engine) as session:
+            with session.begin():
                 for i, record in enumerate(records):
                     if i > 0 and i % 500 == 0:
                         logger.info(f"Processed {i} records...")
@@ -60,8 +60,6 @@ def load(df: pd.DataFrame) -> bool:
                     )
 
                     session.execute(upsert_stmt)
-
-                session.commit()
 
         logger.info("Successfully upserted records.")
         return True
