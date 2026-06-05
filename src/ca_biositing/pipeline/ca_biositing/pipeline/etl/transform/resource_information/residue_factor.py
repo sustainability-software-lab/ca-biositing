@@ -154,16 +154,28 @@ def transform_residue_factor(
         if "prune_trim_yield_unit" in df.columns:
             logger.info("Normalizing unit (prune_trim_yield_unit → prune_trim_yield_unit_id)")
             unit_rows = session.execute(select(Unit.id, Unit.name)).all()
-            unit_name_to_id_map = {row[1]: row[0] for row in unit_rows if row[1] is not None}
+            # Create map with lowercase keys for case-insensitive lookup
+            unit_name_to_id_map = {
+                row[1].lower().strip(): row[0] for row in unit_rows if row[1] is not None
+            }
+
+            # Unit synonyms for mapping sheet names to DB names
+            unit_synonyms = {
+                "dt/acre year": "tons / acre",
+                "dt/acre": "tons / acre",
+            }
 
             # Case-insensitive matching for units
-            df["prune_trim_yield_unit_id"] = df["prune_trim_yield_unit"].apply(
-                lambda x: (
-                    unit_name_to_id_map.get(str(x).lower().strip())
-                    if pd.notna(x) and str(x).strip()
-                    else None
-                )
-            )
+            def resolve_unit_id(x):
+                if pd.isna(x) or not str(x).strip():
+                    return None
+                val = str(x).lower().strip()
+                # Check synonyms first
+                if val in unit_synonyms:
+                    val = unit_synonyms[val]
+                return unit_name_to_id_map.get(val)
+
+            df["prune_trim_yield_unit_id"] = df["prune_trim_yield_unit"].apply(resolve_unit_id)
 
             unmatched_units = df[
                 df["prune_trim_yield_unit"].notna() & df["prune_trim_yield_unit_id"].isna()

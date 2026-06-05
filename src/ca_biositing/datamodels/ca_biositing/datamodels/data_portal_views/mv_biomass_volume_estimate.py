@@ -3,9 +3,16 @@ mv_volume_estimation.py
 
 Volume estimation views combining production-based and census-based residue calculations.
 
-This module provides dual-path volume estimation:
-1. Production-based: county_ag_report_record × residue_factors for most agricultural residues
-2. Census-based: USDA census bearing_acres × prune_trim_yield for orchard crops
+This module provides multi-path volume estimation:
+1. Production-based (Path A): county_ag_report_record × residue_factors (weight type) for most agricultural residues
+2. Census-based (Path B): USDA census bearing_acres × prune_trim_yield for orchard crops
+3. Commodity-direct (Path C): county_ag_report_record production value IS the resource volume (e.g. almond hulls)
+4. Acreage-based (Path D): USDA census harvested/bearing acres × area-type residue factors
+
+Path D acreage parameter selection:
+- Orchard crops (almonds, walnuts, grapes): 'area bearing & non-bearing' — pruning applies to all trees
+- Field crops (cotton, wheat): 'area harvested'
+- Implemented via COALESCE(avg(area bearing & non-bearing), avg(area harvested)) per census record
 
 Required indexes:
     CREATE UNIQUE INDEX idx_mv_biomass_volume_estimate_id ON data_portal.mv_biomass_volume_estimate (id)
@@ -28,6 +35,14 @@ from ca_biositing.datamodels.models.places.place import Place
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
 from ca_biositing.datamodels.models.methods_parameters_units.unit import Unit
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
+
+
+# ── Shared observation parameter/unit IDs ──────────────────────────────────
+# These IDs are stable across environments (seeded from migrations).
+_acreage_unit_id = 18    # unit.id for 'acres'
+_param_bearing_id = 5    # parameter.id for 'area bearing'
+_param_bnb_id = 7        # parameter.id for 'area bearing & non-bearing'
+_param_harvested_id = 3  # parameter.id for 'area harvested'
 
 
 # Path A: Production-based volume estimation
@@ -84,7 +99,17 @@ production_based_volumes = select(
 
 
 # Path B: Census-based volume estimation
-# Uses USDA census bearing_acres × prune_trim_yield for orchard crops
+# Uses USDA census 'area bearing' acres × prune_trim_yield for non-area-type resources
+# that have a prune_trim_yield factor (e.g. grape vines, almond woodchips).
+#
+# Restricted to:
+#   - Observations with parameter 'area bearing' (parameter_id=5) and unit 'acres' (unit_id=18)
+#     to avoid averaging across bearing/non-bearing/harvested observation types.
+#   - Resources where factor_type != 'area', since area-type resources are handled by Path D.
+#
+# Resources currently covered:
+#   - grape vines      (resource  8, weight type) → all grapes (usda_commodity 7)
+#   - almond woodchips (resource 34, weight type) → almonds (usda_commodity 2)
 census_based_volumes = select(
     Resource.id.label("resource_id"),
     Resource.name.label("resource_name"),
@@ -93,7 +118,7 @@ census_based_volumes = select(
     Place.state_name.label("state"),
     UsdaCensusRecord.year.label("dataset_year"),
     UsdaCensusRecord.id.label("record_id"),
-    # Bearing acres data
+    # Bearing acres: only 'area bearing' observations (parameter_id=5, unit_id=18)
     func.avg(Observation.value).label("bearing_acres"),
     func.avg(Observation.value).label("county_crop_acres"),
     literal("acres").label("volume_unit"),
@@ -113,10 +138,16 @@ census_based_volumes = select(
  .join(Resource, Resource.id == ResourceUsdaCommodityMap.resource_id)\
  .join(ResidueFactor, ResidueFactor.resource_id == Resource.id)\
  .join(Place, UsdaCensusRecord.geoid == Place.geoid)\
- .outerjoin(Observation, and_(Observation.record_id == cast(UsdaCensusRecord.id, String), Observation.record_type == "usda_census_record"))\
+ .outerjoin(Observation, and_(
+     Observation.record_id == cast(UsdaCensusRecord.id, String),
+     Observation.record_type == "usda_census_record",
+     Observation.parameter_id == _param_bearing_id,
+     Observation.unit_id == _acreage_unit_id
+ ))\
  .outerjoin(Unit, ResidueFactor.prune_trim_yield_unit_id == Unit.id)\
  .where(and_(
      ResidueFactor.prune_trim_yield.isnot(None),
+     ResidueFactor.factor_type != "area",
      UsdaCensusRecord.year >= 2017,
      get_resource_filter(Resource)
  ))\
@@ -199,16 +230,112 @@ commodity_direct_volumes = select(
      Place.state_name,
      CountyAgReportRecord.data_year,
      CountyAgReportRecord.record_id,
- ).subquery()
+).subquery()
+
+
+# Path D: Acreage-based volume estimation
+# Uses USDA census harvested/bearing acres × area-type residue factors.
+# Join path: UsdaCensusRecord -> ResourceUsdaCommodityMap -> Resource -> ResidueFactor (area)
+#
+# Acreage parameter selection (via conditional aggregation + COALESCE):
+#   - Orchard crops (almonds, walnuts, grapes): 'area bearing & non-bearing'
+#     Pruning/trimming waste is generated from all trees regardless of bearing status.
+#   - Field crops (cotton, wheat): 'area harvested'
+#   COALESCE picks whichever is non-NULL for a given census record — each commodity
+#   only has one of these two parameter types, so there is no ambiguity.
+#
+# Resources covered (factor_type='area', with usda_commodity_map entry):
+#   - almond branches  (resource 51) → almonds (usda_commodity 2)
+#   - cotton stem mix  (resource  4) → cotton upland (usda_commodity 5)
+#   - grape stem       (resource 47) → all grapes (usda_commodity 7)
+#   - walnut tree sticks (resource 25) → walnuts english (usda_commodity 20)
+#   - wheat straw      (resource 40) → wheat (usda_commodity 21)
+#   Note: grape vine prunings (resource 32) has no usda_commodity_map entry — excluded.
+acreage_based_volumes = select(
+ Resource.id.label("resource_id"),
+ Resource.name.label("resource_name"),
+ UsdaCensusRecord.geoid,
+ Place.county_name.label("county"),
+ Place.state_name.label("state"),
+ UsdaCensusRecord.year.label("dataset_year"),
+ cast(UsdaCensusRecord.id, String).label("record_id"),
+ # Acreage: COALESCE(area bearing & non-bearing, area harvested)
+ # Each commodity only has one of these two parameters, so COALESCE selects the right one.
+ func.coalesce(
+     func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
+     func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value)))
+ ).label("county_crop_acres"),
+ # Residue factor values (COALESCE with prune_trim_yield for acreage-based estimation)
+ # Most area-type resources use prune_trim_yield as the primary tons/acre factor.
+ # Wheat straw uses factor_min/mid/max (0.6/0.7/0.8).
+ func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_min).label("factor_min"),
+ func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_mid).label("factor_mid"),
+ func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_max).label("factor_max"),
+ # Calculated volumes: acres × factor (NULL when factor is NULL)
+ (
+     func.coalesce(
+         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
+         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value)))
+     ) * func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_min)
+ ).label("estimated_residue_volume_min"),
+ (
+     func.coalesce(
+         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
+         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value)))
+     ) * func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_mid)
+ ).label("estimated_residue_volume_mid"),
+ (
+     func.coalesce(
+         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
+         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value)))
+     ) * func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_max)
+ ).label("estimated_residue_volume_max"),
+ literal("acreage_based").label("volume_source"),
+ literal("dry_tons").label("biomass_unit")
+).select_from(UsdaCensusRecord)\
+.join(ResourceUsdaCommodityMap, ResourceUsdaCommodityMap.usda_commodity_id == UsdaCensusRecord.commodity_code)\
+.join(Resource, Resource.id == ResourceUsdaCommodityMap.resource_id)\
+.join(ResidueFactor, and_(
+  ResidueFactor.resource_id == Resource.id,
+  ResidueFactor.factor_type == "area"
+))\
+.join(Place, UsdaCensusRecord.geoid == Place.geoid)\
+.outerjoin(Observation, and_(
+  Observation.record_id == cast(UsdaCensusRecord.id, String),
+  Observation.record_type == "usda_census_record",
+  Observation.unit_id == _acreage_unit_id,
+  or_(
+      Observation.parameter_id == _param_bnb_id,
+      Observation.parameter_id == _param_harvested_id
+  )
+))\
+.where(and_(
+  UsdaCensusRecord.year >= 2017,
+  get_resource_filter(Resource)
+))\
+.group_by(
+  Resource.id,
+  Resource.name,
+  UsdaCensusRecord.geoid,
+  Place.county_name,
+  Place.state_name,
+  UsdaCensusRecord.year,
+  UsdaCensusRecord.id,
+  ResidueFactor.prune_trim_yield,
+  ResidueFactor.factor_min,
+  ResidueFactor.factor_mid,
+  ResidueFactor.factor_max,
+).subquery()
 
 
 # Combined volume estimation view
-# Uses UNION ALL to combine multiple paths (A, B, C), with precedence logic for selection
+# Uses UNION ALL to combine multiple paths (A, B, C, D), with precedence logic for selection
 # Use row_number with stable ordering on business key to ensure deterministic IDs
 # Use offsets for branch IDs to ensure global uniqueness:
-# - Path A (production_based): 0
-# - Path B (census_based): 10,000,000
-# - Path C (commodity_direct): 20,000,000
+# - Path A (production_based):  0
+# - Path B (census_based):      10,000,000
+# - Path C (commodity_direct):  20,000,000
+# - Path D (acreage_based):     30,000,000
 mv_biomass_volume_estimate = union_all(
     select(
         func.row_number().over(
@@ -299,5 +426,35 @@ mv_biomass_volume_estimate = union_all(
         cast(commodity_direct_volumes.c.estimated_residue_volume_max, Numeric).label("estimated_residue_volume_max"),
         cast(commodity_direct_volumes.c.volume_source, String).label("volume_source"),
         cast(commodity_direct_volumes.c.biomass_unit, String).label("biomass_unit")
-    ).select_from(commodity_direct_volumes)
+    ).select_from(commodity_direct_volumes),
+    select(
+        (func.row_number().over(
+            order_by=(
+                acreage_based_volumes.c.resource_id,
+                acreage_based_volumes.c.geoid,
+                acreage_based_volumes.c.dataset_year,
+                acreage_based_volumes.c.volume_source,
+                acreage_based_volumes.c.resource_name,
+                acreage_based_volumes.c.county,
+                acreage_based_volumes.c.state
+            )
+        ) + 30000000).label("id"),
+        acreage_based_volumes.c.resource_id,
+        acreage_based_volumes.c.resource_name,
+        acreage_based_volumes.c.geoid,
+        acreage_based_volumes.c.county,
+        acreage_based_volumes.c.state,
+        acreage_based_volumes.c.dataset_year,
+        cast(acreage_based_volumes.c.county_crop_acres, Numeric).label("production_volume"),
+        cast(acreage_based_volumes.c.county_crop_acres, Numeric).label("county_crop_acres"),
+        cast(literal("acres"), String).label("production_unit"),
+        cast(acreage_based_volumes.c.factor_min, Numeric).label("factor_min"),
+        cast(acreage_based_volumes.c.factor_mid, Numeric).label("factor_mid"),
+        cast(acreage_based_volumes.c.factor_max, Numeric).label("factor_max"),
+        cast(acreage_based_volumes.c.estimated_residue_volume_min, Numeric).label("estimated_residue_volume_min"),
+        cast(acreage_based_volumes.c.estimated_residue_volume_mid, Numeric).label("estimated_residue_volume_mid"),
+        cast(acreage_based_volumes.c.estimated_residue_volume_max, Numeric).label("estimated_residue_volume_max"),
+        cast(acreage_based_volumes.c.volume_source, String).label("volume_source"),
+        cast(acreage_based_volumes.c.biomass_unit, String).label("biomass_unit")
+    ).select_from(acreage_based_volumes)
 )
