@@ -8,6 +8,8 @@ ulimit -n 65536
 
 sudo chown vscode .pixi
 
-# Install core development and ETL environments
-# Skip resource-heavy environments like 'gis' (QGIS) to save space and time in Codespaces
-pixi install -e default -e etl -e webservice
+# Install the default environment only.
+# GIS environment (QGIS) is intentionally excluded — install manually with:
+#   pixi install -e gis
+# if you need QGIS or heavy raster/vector tools.
+pixi install -e default
