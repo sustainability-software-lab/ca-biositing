@@ -50,6 +50,7 @@ data/landiq/*.sbx
 !src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.csv
 !src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.zip
 !src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.geojson
+!src/ca_biositing/pipeline/ca_biositing/pipeline/etl/transform/infrastructure/food_processing_facilities/*.csv
 !resources/assets/*.csv
 *.pdf
 src/ca_biositing/webservice/ca_biositing/webservice/_version.py

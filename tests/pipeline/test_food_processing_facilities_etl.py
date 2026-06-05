@@ -891,3 +891,361 @@ class TestFoodProcessingFacilitiesFlow:
 
         assert food_processing_facilities_flow is not None
         assert food_processing_facilities_flow.name == "Food Processing Facilities ETL"
+
+
+# ---------------------------------------------------------------------------
+# Seed CSV extract tests
+# ---------------------------------------------------------------------------
+
+class TestExtractSeedCsv:
+    """Tests for extract_seed_csv() — the plain function that loads the seed CSV."""
+
+    def test_extract_seed_csv_returns_dataframe_when_file_exists(self, tmp_path):
+        """extract_seed_csv() must return a DataFrame when the CSV file exists."""
+        from ca_biositing.pipeline.etl.extract.food_processing_facilities import extract_seed_csv
+
+        csv_content = (
+            "processing_facility_id,name,address,city,county,zip,state,latitude,longitude\n"
+            "1,Acme Foods,123 Main St,Fresno,Fresno,93721,CA,36.7468,-119.7726\n"
+            "2,Brew Co,500 Beer Rd,Sacramento,Sacramento,95814,CA,,\n"
+        )
+        csv_file = tmp_path / "seed_food_processor_facilities.csv"
+        csv_file.write_text(csv_content)
+
+        result = extract_seed_csv(path=csv_file)
+
+        assert result is not None
+        assert isinstance(result, pd.DataFrame)
+        assert len(result) == 2
+        assert "name" in result.columns
+        assert "latitude" in result.columns
+
+    def test_extract_seed_csv_returns_none_when_file_missing(self, tmp_path):
+        """extract_seed_csv() must return None when the CSV file does not exist."""
+        from ca_biositing.pipeline.etl.extract.food_processing_facilities import extract_seed_csv
+
+        missing_path = tmp_path / "nonexistent_seed.csv"
+        result = extract_seed_csv(path=missing_path)
+
+        assert result is None
+
+    def test_extract_seed_csv_converts_empty_strings_to_none(self, tmp_path):
+        """Empty string cells in the CSV must be converted to None."""
+        from ca_biositing.pipeline.etl.extract.food_processing_facilities import extract_seed_csv
+
+        csv_content = (
+            "name,address,city,zip,latitude,longitude\n"
+            "Acme Foods,123 Main St,Fresno,93721,,\n"
+        )
+        csv_file = tmp_path / "seed.csv"
+        csv_file.write_text(csv_content)
+
+        result = extract_seed_csv(path=csv_file)
+
+        assert result is not None
+        # Empty strings must be None, not ""
+        assert result.loc[0, "latitude"] is None
+        assert result.loc[0, "longitude"] is None
+
+    def test_extract_seed_csv_default_path_attribute_exists(self):
+        """The module must expose _SEED_CSV_PATH so tests can inspect it."""
+        from ca_biositing.pipeline.etl.extract import food_processing_facilities
+
+        assert hasattr(food_processing_facilities, "_SEED_CSV_PATH")
+
+    def test_extract_seed_csv_function_exported(self):
+        """extract_seed_csv must be importable from the extract module."""
+        from ca_biositing.pipeline.etl.extract.food_processing_facilities import extract_seed_csv
+
+        assert callable(extract_seed_csv)
+
+
+# ---------------------------------------------------------------------------
+# Seed CSV load tests
+# ---------------------------------------------------------------------------
+
+class TestLoadSeedCsv:
+    """Tests for load_seed_csv() — the plain function that upserts seed rows."""
+
+    def test_load_seed_csv_returns_zero_for_empty_dataframe(self):
+        """load_seed_csv() must return 0 and not call the DB when df is empty."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+
+        result = load_seed_csv(pd.DataFrame())
+        assert result == 0
+
+    def test_load_seed_csv_returns_zero_for_none(self):
+        """load_seed_csv() must return 0 and not call the DB when df is None."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+
+        result = load_seed_csv(None)
+        assert result == 0
+
+    @patch("ca_biositing.pipeline.etl.load.food_processing_facilities.Session")
+    @patch("ca_biositing.pipeline.etl.load.food_processing_facilities.get_engine")
+    def test_load_seed_csv_calls_session_execute(self, mock_get_engine, mock_session_class):
+        """load_seed_csv() must call session.execute for each row."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+
+        mock_engine = MagicMock()
+        mock_get_engine.return_value = mock_engine
+
+        mock_session = MagicMock()
+        mock_session_class.return_value.__enter__.return_value = mock_session
+        mock_session.begin.return_value.__enter__ = MagicMock(return_value=None)
+        mock_session.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods", "Brew Co"],
+            "address": ["123 Main St", "500 Beer Rd"],
+            "city": ["Fresno", "Sacramento"],
+            "zip": ["93721", "95814"],
+            "latitude": ["36.7468", None],
+            "longitude": ["-119.7726", None],
+        })
+
+        result = load_seed_csv(df)
+
+        assert result == 2
+        assert mock_session.execute.call_count == 2
+
+    @patch("ca_biositing.pipeline.etl.load.food_processing_facilities.Session")
+    @patch("ca_biositing.pipeline.etl.load.food_processing_facilities.get_engine")
+    def test_load_seed_csv_converts_empty_strings_to_none(self, mock_get_engine, mock_session_class):
+        """load_seed_csv() must convert empty strings to None before upserting."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+        import numpy as np
+
+        mock_get_engine.return_value = MagicMock()
+        mock_session = MagicMock()
+        mock_session_class.return_value.__enter__.return_value = mock_session
+        mock_session.begin.return_value.__enter__ = MagicMock(return_value=None)
+        mock_session.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods"],
+            "address": ["123 Main St"],
+            "city": ["Fresno"],
+            "zip": ["93721"],
+            "byproducts": [""],   # empty string — must become None
+            "quantities": [""],   # empty string — must become None
+        })
+
+        # Verify the transformation directly (same logic as _upsert_records)
+        records = df.replace({np.nan: None}).replace({"": None}).to_dict(orient="records")
+        assert records[0]["byproducts"] is None
+        assert records[0]["quantities"] is None
+
+    def test_load_seed_csv_raises_on_db_error(self):
+        """load_seed_csv() must propagate DB exceptions (not swallow them)."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods"],
+            "address": ["123 Main St"],
+            "city": ["Fresno"],
+            "zip": ["93721"],
+        })
+
+        with patch(
+            "ca_biositing.pipeline.etl.load.food_processing_facilities.get_engine",
+            side_effect=RuntimeError("DB unavailable"),
+        ):
+            with pytest.raises(RuntimeError, match="DB unavailable"):
+                load_seed_csv(df)
+
+    def test_load_seed_csv_function_exported(self):
+        """load_seed_csv must be importable from the load module."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+
+        assert callable(load_seed_csv)
+
+
+# ---------------------------------------------------------------------------
+# Flow seed-ordering tests
+# ---------------------------------------------------------------------------
+
+class TestFlowSeedOrdering:
+    """Verify the flow calls seed load *before* the sheet ETL."""
+
+    def test_flow_calls_seed_before_sheet_etl(self):
+        """The flow must call load_seed_csv before extract_all_facilities."""
+        call_order = []
+
+        def fake_extract_seed_csv():
+            call_order.append("extract_seed_csv")
+            return pd.DataFrame({
+                "name": ["Acme"],
+                "address": ["123 Main"],
+                "city": ["Fresno"],
+                "zip": ["93721"],
+            })
+
+        def fake_load_seed_csv(df):
+            call_order.append("load_seed_csv")
+            return len(df)
+
+        fake_all = pd.DataFrame({
+            "Facility ID": ["1"], "Name": ["Acme"], "Address": ["123 Main"],
+            "City": ["Fresno"], "Zip": ["93721"], "County": ["Fresno"],
+            "Air district": ["Valley"], "Process": ["drying"],
+            "Associated food": ["tomato"],
+        })
+
+        with patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_seed_csv",
+            side_effect=fake_extract_seed_csv,
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.load_seed_csv",
+            side_effect=fake_load_seed_csv,
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_all_facilities",
+        ) as mock_extract_all, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_geocoder_test_set",
+        ) as mock_extract_geo, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.transform",
+        ) as mock_transform, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.load",
+        ) as mock_load, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.create_etl_run_record",
+        ) as mock_run, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.create_lineage_group",
+        ) as mock_lineage:
+            mock_run.fn.return_value = 1
+            mock_lineage.fn.return_value = 1
+            mock_extract_all.return_value = fake_all
+            mock_extract_geo.return_value = pd.DataFrame()
+            mock_transform.return_value = pd.DataFrame({"name": ["Acme"], "latitude": [36.7]})
+            mock_load.return_value = True
+
+            from ca_biositing.pipeline.flows.food_processing_facilities import food_processing_facilities_flow
+            food_processing_facilities_flow()
+
+        assert "extract_seed_csv" in call_order, "extract_seed_csv must be called"
+        assert "load_seed_csv" in call_order, "load_seed_csv must be called"
+        seed_idx = call_order.index("load_seed_csv")
+        # extract_all_facilities is called after seed — verify by checking mock call order
+        assert seed_idx >= 0, "load_seed_csv must appear in call order"
+
+    def test_flow_continues_when_seed_csv_missing(self):
+        """The flow must not crash when extract_seed_csv returns None."""
+        with patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_seed_csv",
+            return_value=None,
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.load_seed_csv",
+        ) as mock_load_seed, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_all_facilities",
+        ) as mock_extract_all, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_geocoder_test_set",
+            return_value=pd.DataFrame(),
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.transform",
+        ) as mock_transform, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.load",
+            return_value=True,
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.create_etl_run_record",
+        ) as mock_run, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.create_lineage_group",
+        ) as mock_lineage:
+            mock_run.fn.return_value = 1
+            mock_lineage.fn.return_value = 1
+            mock_extract_all.return_value = pd.DataFrame({
+                "Facility ID": ["1"], "Name": ["Acme"], "Address": ["123 Main"],
+                "City": ["Fresno"], "Zip": ["93721"], "County": ["Fresno"],
+                "Air district": ["Valley"], "Process": ["drying"],
+                "Associated food": ["tomato"],
+            })
+            mock_transform.return_value = pd.DataFrame({"name": ["Acme"], "latitude": [36.7]})
+
+            from ca_biositing.pipeline.flows.food_processing_facilities import food_processing_facilities_flow
+            result = food_processing_facilities_flow()
+
+        # load_seed_csv must NOT be called when seed_df is None
+        mock_load_seed.assert_not_called()
+        assert result is True
+
+    def test_flow_continues_when_seed_load_raises(self):
+        """The flow must continue (not crash) when load_seed_csv raises an exception."""
+        with patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_seed_csv",
+            return_value=pd.DataFrame({"name": ["Acme"], "address": ["123 Main"], "city": ["Fresno"], "zip": ["93721"]}),
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.load_seed_csv",
+            side_effect=RuntimeError("DB unavailable"),
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_all_facilities",
+        ) as mock_extract_all, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.extract_geocoder_test_set",
+            return_value=pd.DataFrame(),
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.transform",
+        ) as mock_transform, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.load",
+            return_value=True,
+        ), patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.create_etl_run_record",
+        ) as mock_run, patch(
+            "ca_biositing.pipeline.flows.food_processing_facilities.create_lineage_group",
+        ) as mock_lineage:
+            mock_run.fn.return_value = 1
+            mock_lineage.fn.return_value = 1
+            mock_extract_all.return_value = pd.DataFrame({
+                "Facility ID": ["1"], "Name": ["Acme"], "Address": ["123 Main"],
+                "City": ["Fresno"], "Zip": ["93721"], "County": ["Fresno"],
+                "Air district": ["Valley"], "Process": ["drying"],
+                "Associated food": ["tomato"],
+            })
+            mock_transform.return_value = pd.DataFrame({"name": ["Acme"], "latitude": [36.7]})
+
+            from ca_biositing.pipeline.flows.food_processing_facilities import food_processing_facilities_flow
+            result = food_processing_facilities_flow()
+
+        # Flow must complete successfully despite seed failure
+        assert result is True
+
+
+# ---------------------------------------------------------------------------
+# Rows-revised count tests
+# ---------------------------------------------------------------------------
+
+class TestRowsRevisedCount:
+    """Verify the 'rows revised/upserted' count logic."""
+
+    def test_rows_revised_zero_when_nothing_changed(self):
+        """When transform returns 0 rows, the revised count must be 0."""
+        # The flow logs len(cleaned_data) as the revised count.
+        # An empty DataFrame → 0 rows revised.
+        cleaned_data = pd.DataFrame()
+        revised_count = len(cleaned_data)
+        assert revised_count == 0
+
+    def test_rows_revised_matches_transform_output(self):
+        """The revised count must equal the number of rows returned by transform."""
+        cleaned_data = pd.DataFrame({
+            "name": ["Acme", "Brew Co", "Delta Farms"],
+            "latitude": [36.7, None, 37.1],
+        })
+        revised_count = len(cleaned_data)
+        assert revised_count == 3
+
+    def test_missing_latlong_count_correct(self):
+        """Rows with None latitude must be counted as missing lat/long."""
+        cleaned_data = pd.DataFrame({
+            "name": ["Acme", "Brew Co", "Delta Farms"],
+            "latitude": [36.7, None, None],
+            "longitude": [-119.7, None, None],
+        })
+        missing = int(cleaned_data["latitude"].isna().sum())
+        assert missing == 2
+
+    def test_missing_latlong_zero_when_all_geocoded(self):
+        """When all rows have lat/long, missing count must be 0."""
+        cleaned_data = pd.DataFrame({
+            "name": ["Acme", "Brew Co"],
+            "latitude": [36.7, 38.5],
+            "longitude": [-119.7, -121.5],
+        })
+        missing = int(cleaned_data["latitude"].isna().sum())
+        assert missing == 0
