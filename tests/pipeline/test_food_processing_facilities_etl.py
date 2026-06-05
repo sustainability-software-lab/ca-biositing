@@ -195,7 +195,12 @@ class TestFoodProcessingFacilitiesTransform:
 
         raw_df = _make_raw_df_real_world()
 
-        with self._patch_geocode_target("all_facilities"):
+        with self._patch_geocode_target("all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []  # empty DB
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": raw_df,
@@ -233,7 +238,12 @@ class TestFoodProcessingFacilitiesTransform:
         """Transform must return > 0 rows given valid input (all_facilities mode)."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        with self._patch_geocode_target("all_facilities"):
+        with self._patch_geocode_target("all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": _make_raw_df_real_world(),
@@ -250,7 +260,12 @@ class TestFoodProcessingFacilitiesTransform:
         """Key columns (name, address, city, zip, state) must not be entirely null."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        with self._patch_geocode_target("all_facilities"):
+        with self._patch_geocode_target("all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": _make_raw_df_real_world(),
@@ -272,7 +287,12 @@ class TestFoodProcessingFacilitiesTransform:
         """Transform output must contain all columns expected by the DB model."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        with self._patch_geocode_target("all_facilities"):
+        with self._patch_geocode_target("all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": _make_raw_df_real_world(),
@@ -287,6 +307,7 @@ class TestFoodProcessingFacilitiesTransform:
             "name", "address", "city", "zip", "state", "county",
             "process_type", "primary_ag_product", "byproducts", "quantities",
             "general_source_info", "etl_run_id", "lineage_group_id",
+            "geocode_status",
         ]
         for col in required_cols:
             assert col in result.columns, f"Expected column '{col}' missing from transform output"
@@ -316,7 +337,12 @@ class TestFoodProcessingFacilitiesTransform:
             ],
         )
 
-        with self._patch_geocode_target("all_facilities"):
+        with self._patch_geocode_target("all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
             result = food_processing_facilities.transform.fn(
                 data_sources={"all_facilities": df, "geocoder_test_set": pd.DataFrame()},
                 etl_run_id=1,
@@ -350,7 +376,12 @@ class TestFoodProcessingFacilitiesTransform:
             ],
         )
 
-        with self._patch_geocode_target("all_facilities"):
+        with self._patch_geocode_target("all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
             result = food_processing_facilities.transform.fn(
                 data_sources={"all_facilities": df_with_title, "geocoder_test_set": pd.DataFrame()},
                 etl_run_id=1,
@@ -469,7 +500,12 @@ class TestFoodProcessingFacilitiesTransform:
         """When GEOCODE_TARGET=all_facilities, return all_facilities rows (not test set)."""
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
-        with self._patch_geocode_target("all_facilities"):
+        with self._patch_geocode_target("all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": _make_raw_df_real_world(),
@@ -604,7 +640,12 @@ class TestGeocodingEnvVar:
 
         # Use all_facilities mode so the result contains the all_facilities rows
         with patch.dict(os.environ, env_without_key, clear=True), \
-             patch.object(mod, "GEOCODE_TARGET", "all_facilities"):
+             patch.object(mod, "GEOCODE_TARGET", "all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": _make_raw_df_real_world(),
@@ -633,6 +674,172 @@ class TestGeocodingEnvVar:
                 "load_dotenv() must be called at flow module import time "
                 "so GOOGLE_MAPS_API_KEY is loaded from .env into os.environ"
             )
+
+
+# ---------------------------------------------------------------------------
+# Bug-regression tests — Issue 0: City ALL CAPS → Title Case normalization
+# ---------------------------------------------------------------------------
+
+class TestCityTitleCaseNormalization:
+    """Regression tests for city casing normalization.
+
+    The CARB source sheet stores city in ALL CAPS (e.g. "FRESNO").
+    The transform must normalize city to Title Case ("Fresno") before writing
+    to the DB.  The seed CSV path (_clean_seed_df) must do the same so that
+    seed rows and incoming sheet rows always have matching casing.
+    """
+
+    def test_transform_normalizes_city_to_title_case(self):
+        """Transform must convert ALL CAPS city to Title Case."""
+        import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+
+        # Simulate CARB sheet with ALL CAPS city values
+        df = pd.DataFrame(
+            [[
+                "ID1", "Acme Foods", "123 Main St", "FRESNO",
+                "93721", "Fresno", "San Joaquin", "drying", "tomato",
+                "Pomace", "100", "", "", "", "", "", "", "", "",
+            ]],
+            columns=[
+                "Facility ID", "Name", "Address", "City", "Zip", "County",
+                "Air district", "Process", "Associated food",
+                "Byproduct 1", "Quantity (tons/year)",
+                "Byproduct 2", "Quantity (tons/year)_2",
+                "Byproduct 3", "Quantity (tons/year)_3",
+                "Byproduct 4", "Quantity (tons/year)_4",
+                "Byproduct 5", "Quantity (tons/year)_5",
+            ],
+        )
+
+        with patch.object(mod, "GEOCODE_TARGET", "all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
+            result = food_processing_facilities.transform.fn(
+                data_sources={"all_facilities": df, "geocoder_test_set": pd.DataFrame()},
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
+
+        assert result is not None
+        assert result.loc[0, "city"] == "Fresno", (
+            f"Expected 'Fresno' (Title Case), got {result.loc[0, 'city']!r}. "
+            "The transform must normalize ALL CAPS city to Title Case."
+        )
+
+    def test_transform_preserves_already_title_case_city(self):
+        """Transform must not mangle city values that are already Title Case."""
+        import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+
+        df = pd.DataFrame(
+            [[
+                "ID1", "Acme Foods", "123 Main St", "Fresno",
+                "93721", "Fresno", "San Joaquin", "drying", "tomato",
+                "Pomace", "100", "", "", "", "", "", "", "", "",
+            ]],
+            columns=[
+                "Facility ID", "Name", "Address", "City", "Zip", "County",
+                "Air district", "Process", "Associated food",
+                "Byproduct 1", "Quantity (tons/year)",
+                "Byproduct 2", "Quantity (tons/year)_2",
+                "Byproduct 3", "Quantity (tons/year)_3",
+                "Byproduct 4", "Quantity (tons/year)_4",
+                "Byproduct 5", "Quantity (tons/year)_5",
+            ],
+        )
+
+        with patch.object(mod, "GEOCODE_TARGET", "all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
+            result = food_processing_facilities.transform.fn(
+                data_sources={"all_facilities": df, "geocoder_test_set": pd.DataFrame()},
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
+
+        assert result is not None
+        assert result.loc[0, "city"] == "Fresno", (
+            f"Expected 'Fresno' (Title Case preserved), got {result.loc[0, 'city']!r}."
+        )
+
+    def test_clean_seed_df_normalizes_city_to_title_case(self):
+        """_clean_seed_df must convert ALL CAPS city to Title Case."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods", "Brew Co"],
+            "address": ["123 Main St", "500 Beer Rd"],
+            "city": ["FRESNO", "SACRAMENTO"],
+            "zip": ["93721", "95814"],
+        })
+        result = _clean_seed_df(df)
+        assert result.loc[0, "city"] == "Fresno", (
+            f"Expected 'Fresno', got {result.loc[0, 'city']!r}"
+        )
+        assert result.loc[1, "city"] == "Sacramento", (
+            f"Expected 'Sacramento', got {result.loc[1, 'city']!r}"
+        )
+
+    def test_clean_seed_df_preserves_title_case_city(self):
+        """_clean_seed_df must not mangle city values already in Title Case."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods"],
+            "address": ["123 Main St"],
+            "city": ["Fresno"],
+            "zip": ["93721"],
+        })
+        result = _clean_seed_df(df)
+        assert result.loc[0, "city"] == "Fresno", (
+            f"Expected 'Fresno', got {result.loc[0, 'city']!r}"
+        )
+
+    def test_transform_multi_word_city_title_case(self):
+        """Multi-word ALL CAPS cities (e.g. 'SAN JOSE') must become 'San Jose'."""
+        import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+
+        df = pd.DataFrame(
+            [[
+                "ID1", "Acme Foods", "123 Main St", "SAN JOSE",
+                "95101", "Santa Clara", "Bay Area", "drying", "tomato",
+                "Pomace", "100", "", "", "", "", "", "", "", "",
+            ]],
+            columns=[
+                "Facility ID", "Name", "Address", "City", "Zip", "County",
+                "Air district", "Process", "Associated food",
+                "Byproduct 1", "Quantity (tons/year)",
+                "Byproduct 2", "Quantity (tons/year)_2",
+                "Byproduct 3", "Quantity (tons/year)_3",
+                "Byproduct 4", "Quantity (tons/year)_4",
+                "Byproduct 5", "Quantity (tons/year)_5",
+            ],
+        )
+
+        with patch.object(mod, "GEOCODE_TARGET", "all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
+            result = food_processing_facilities.transform.fn(
+                data_sources={"all_facilities": df, "geocoder_test_set": pd.DataFrame()},
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
+
+        assert result is not None
+        assert result.loc[0, "city"] == "San Jose", (
+            f"Expected 'San Jose', got {result.loc[0, 'city']!r}"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -706,7 +913,12 @@ class TestCombinePairsNullHandling:
 
         # Use all_facilities mode so the result contains the all_facilities rows
         # (Row 2 / Brew Co has only one byproduct with a quantity; byproducts 2-5 are empty)
-        with patch.object(mod, "GEOCODE_TARGET", "all_facilities"):
+        with patch.object(mod, "GEOCODE_TARGET", "all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
             result = food_processing_facilities.transform.fn(
                 data_sources={
                     "all_facilities": _make_raw_df_real_world(),
@@ -964,9 +1176,119 @@ class TestExtractSeedCsv:
 # Seed CSV load tests
 # ---------------------------------------------------------------------------
 
+
+class TestCleanSeedDf:
+    """Tests for _clean_seed_df() — datetime sanitization and address cleaning."""
+
+    def test_processing_facility_id_dropped_before_upsert(self):
+        """_clean_seed_df must drop processing_facility_id to avoid PK UniqueViolation.
+
+        The seed CSV exports the DB primary key.  Re-inserting it causes a
+        UniqueViolation when the row already exists because the PK constraint
+        fires before the ON CONFLICT (name, address, city, zip) clause can
+        redirect to an UPDATE.  The column must be absent from the upsert payload.
+        """
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "processing_facility_id": ["99"],   # exported PK — must be dropped
+            "name": ["Acme Foods"],
+            "address": ["123 Main St"],
+            "city": ["Fresno"],
+            "zip": ["93721"],
+        })
+        result = _clean_seed_df(df)
+        assert "processing_facility_id" not in result.columns, (
+            "_clean_seed_df must drop 'processing_facility_id' so the DB "
+            "auto-generates it on INSERT and the ON CONFLICT clause can fire "
+            "correctly without hitting the PK constraint first."
+        )
+
+    def test_malformed_created_at_becomes_none(self):
+        """Malformed created_at values (e.g. '29:13.8') must be coerced to None."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods"],
+            "address": ["123 Main St"],
+            "city": ["Fresno"],
+            "zip": ["93721"],
+            "created_at": ["29:13.8"],   # malformed — Google Sheets export artifact
+            "updated_at": ["29:13.8"],
+        })
+        result = _clean_seed_df(df)
+        assert result.loc[0, "created_at"] is None, (
+            f"Malformed created_at must become None, got {result.loc[0, 'created_at']!r}"
+        )
+        assert result.loc[0, "updated_at"] is None, (
+            f"Malformed updated_at must become None, got {result.loc[0, 'updated_at']!r}"
+        )
+
+    def test_valid_datetime_string_is_preserved(self):
+        """Valid ISO datetime strings must be parsed and preserved."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods"],
+            "address": ["123 Main St"],
+            "city": ["Fresno"],
+            "zip": ["93721"],
+            "created_at": ["2024-01-15T10:30:00Z"],
+            "updated_at": ["2024-01-15T10:30:00Z"],
+        })
+        result = _clean_seed_df(df)
+        assert result.loc[0, "created_at"] is not None, (
+            "Valid ISO datetime must be preserved, got None"
+        )
+
+    def test_none_datetime_stays_none(self):
+        """None/NaN datetime values must remain None after cleaning."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods"],
+            "address": ["123 Main St"],
+            "city": ["Fresno"],
+            "zip": ["93721"],
+            "created_at": [None],
+            "updated_at": [None],
+        })
+        result = _clean_seed_df(df)
+        assert result.loc[0, "created_at"] is None
+
+    def test_seed_load_succeeds_despite_malformed_datetime(self):
+        """load_seed_csv() must succeed even when created_at contains '29:13.8'."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+
+        with patch("ca_biositing.pipeline.etl.load.food_processing_facilities.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.etl.load.food_processing_facilities.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.begin.return_value.__enter__ = MagicMock(return_value=None)
+            mock_session.begin.return_value.__exit__ = MagicMock(return_value=False)
+            mock_session.execute.return_value = MagicMock()
+
+            df = pd.DataFrame({
+                "name": ["4 Corner Growers LLC"],
+                "address": ["9051 AGUAS FRIAS RD"],
+                "city": ["Chico"],
+                "zip": ["95928"],
+                "latitude": ["39.6333364"],
+                "longitude": ["-121.8654062"],
+                "geocode_status": ["success"],
+                "created_at": ["29:13.8"],   # the exact artifact from the real seed CSV
+                "updated_at": ["29:13.8"],
+            })
+
+            # Must not raise — malformed datetime is sanitized to None before insert
+            result = load_seed_csv(df)
+
+        assert result == 1, f"Expected 1 row upserted, got {result}"
+        assert mock_session.execute.call_count == 1
+
+
 class TestLoadSeedCsv:
     """Tests for load_seed_csv() — the plain function that upserts seed rows."""
-
     def test_load_seed_csv_returns_zero_for_empty_dataframe(self):
         """load_seed_csv() must return 0 and not call the DB when df is empty."""
         from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
@@ -1035,6 +1357,54 @@ class TestLoadSeedCsv:
         records = df.replace({np.nan: None}).replace({"": None}).to_dict(orient="records")
         assert records[0]["byproducts"] is None
         assert records[0]["quantities"] is None
+
+    def test_upsert_geocode_status_coalesce_preserves_existing_value(self):
+        """UPSERT must not overwrite an existing geocode_status with NULL.
+
+        When the sheet ETL upserts a row that was skipped by the delta check
+        (geocode_status=None in the DataFrame), the existing DB value ('success'
+        or 'failed') must be preserved via COALESCE in the ON CONFLICT clause.
+        """
+        import numpy as np
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _upsert_records
+        import logging
+
+        logger = logging.getLogger("test")
+
+        captured_stmts = []
+
+        with patch("ca_biositing.pipeline.etl.load.food_processing_facilities.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.etl.load.food_processing_facilities.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.begin.return_value.__enter__ = MagicMock(return_value=None)
+            mock_session.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+            def capture_execute(stmt):
+                captured_stmts.append(stmt)
+                return MagicMock()
+            mock_session.execute.side_effect = capture_execute
+
+            # Row with geocode_status=None (skipped by delta check — not geocoded this run)
+            df = pd.DataFrame({
+                "name": ["Acme Foods"],
+                "address": ["123 Main St"],
+                "city": ["Fresno"],
+                "zip": ["93721"],
+                "geocode_status": [None],
+            })
+
+            _upsert_records(df, logger)
+
+        assert mock_session.execute.called, "session.execute must be called"
+        # Verify the compiled SQL contains COALESCE for geocode_status
+        stmt = captured_stmts[0]
+        compiled = stmt.compile(dialect=__import__("sqlalchemy.dialects.postgresql", fromlist=["dialect"]).dialect())
+        sql_text = str(compiled)
+        assert "coalesce" in sql_text.lower(), (
+            "ON CONFLICT DO UPDATE must use COALESCE for geocode_status to prevent "
+            f"NULL from overwriting existing values. SQL: {sql_text}"
+        )
 
     def test_load_seed_csv_raises_on_db_error(self):
         """load_seed_csv() must propagate DB exceptions (not swallow them)."""
@@ -1249,3 +1619,273 @@ class TestRowsRevisedCount:
         })
         missing = int(cleaned_data["latitude"].isna().sum())
         assert missing == 0
+
+
+# ---------------------------------------------------------------------------
+# geocode_status tests
+# ---------------------------------------------------------------------------
+
+class TestGeocodeStatus:
+    """Tests for the geocode_status field behavior.
+
+    Covers:
+    - Delta check skips rows with geocode_status='failed' even when lat/lon is NULL
+    - After a failed geocode attempt, the row gets geocode_status='failed'
+    - After a successful geocode, the row gets geocode_status='success'
+    - Seed rows without geocode_status column in CSV get geocode_status=None
+    """
+
+    def test_delta_check_skips_failed_rows_even_without_latlon(self):
+        """Delta check must skip rows with geocode_status='failed' even when lat/lon is NULL."""
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+
+        geo_df = pd.DataFrame(
+            [
+                ["5069 W CLAYTON", None, None],   # incomplete address — previously failed
+                ["123 Main St", "Fresno", "93721"],  # good address — not yet in DB
+            ],
+            columns=["Address", "City", "Zip"],
+        )
+
+        with patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"), \
+             patch.dict(os.environ, {}, clear=True):  # no API key → geocoding skipped
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            # DB has "5069 W CLAYTON" with geocode_status='failed' (lat/lon NULL)
+            mock_session.exec.return_value.all.return_value = [
+                ("5069 W CLAYTON", None, None, "failed"),
+            ]
+
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": _make_raw_df_real_world(),
+                    "geocoder_test_set": geo_df,
+                },
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
+
+        assert result is not None
+        # Both rows should be in the output (transform returns all rows, not just geocoded ones)
+        assert len(result) == 2
+        # The failed row must still have geocode_status=None (not attempted this run,
+        # since it was skipped by the delta check — no API key so no geocoding ran)
+        # The good row also has geocode_status=None (no API key, not attempted)
+
+    def test_geocode_status_set_to_failed_when_geocoding_fails(self):
+        """After a failed geocode attempt, the row must get geocode_status='failed'."""
+        from ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities import (
+            _apply_geocoding,
+            _build_address_key,
+            _clean_address,
+        )
+        import logging
+
+        logger = logging.getLogger("test")
+
+        geo_df = pd.DataFrame(
+            [["tes", "Fresno", "93721"]],
+            columns=["address", "city", "zip"],
+        )
+
+        # Mock the DB query to return no existing rows (address not in DB yet)
+        with patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"), \
+             patch.dict(os.environ, {"GOOGLE_MAPS_API_KEY": "fake-key"}), \
+             patch(
+                 "ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities.parse_addresses"
+             ) as mock_parse:
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []  # empty DB
+
+            # Simulate geocoding failure: closest_latitude and closest_longitude are None
+            mock_parse.return_value = (
+                pd.DataFrame(
+                    [{"closest_latitude": None, "closest_longitude": None}]
+                ),
+                pd.DataFrame(),
+            )
+
+            result = _apply_geocoding(geo_df, logger)
+
+        assert result is not None
+        assert result.loc[0, "geocode_status"] == "failed", (
+            f"Expected 'failed', got {result.loc[0, 'geocode_status']!r}"
+        )
+        assert result.loc[0, "latitude"] is None or (
+            isinstance(result.loc[0, "latitude"], float) and pd.isna(result.loc[0, "latitude"])
+        ), "latitude must be None/NaN for a failed geocode"
+
+    def test_geocode_status_set_to_success_when_geocoding_succeeds(self):
+        """After a successful geocode attempt, the row must get geocode_status='success'."""
+        from ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities import (
+            _apply_geocoding,
+        )
+        import logging
+
+        logger = logging.getLogger("test")
+
+        geo_df = pd.DataFrame(
+            [["123 Main St", "Fresno", "93721"]],
+            columns=["address", "city", "zip"],
+        )
+
+        with patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"), \
+             patch.dict(os.environ, {"GOOGLE_MAPS_API_KEY": "fake-key"}), \
+             patch(
+                 "ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities.parse_addresses"
+             ) as mock_parse:
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []  # empty DB
+
+            # Simulate successful geocoding
+            mock_parse.return_value = (
+                pd.DataFrame(
+                    [{"closest_latitude": 36.7468, "closest_longitude": -119.7726}]
+                ),
+                pd.DataFrame(),
+            )
+
+            result = _apply_geocoding(geo_df, logger)
+
+        assert result is not None
+        assert result.loc[0, "geocode_status"] == "success", (
+            f"Expected 'success', got {result.loc[0, 'geocode_status']!r}"
+        )
+        assert result.loc[0, "latitude"] == 36.7468
+        assert result.loc[0, "longitude"] == -119.7726
+
+    def test_geocode_status_none_for_skipped_rows(self):
+        """Rows skipped by the delta check must retain geocode_status=None (not attempted)."""
+        from ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities import (
+            _apply_geocoding,
+        )
+        import logging
+
+        logger = logging.getLogger("test")
+
+        geo_df = pd.DataFrame(
+            [["123 Main St", "Fresno", "93721"]],
+            columns=["address", "city", "zip"],
+        )
+
+        with patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"), \
+             patch.dict(os.environ, {}, clear=True):  # no API key
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            # Row is already in DB with lat/lon (geocode_status='success')
+            mock_session.exec.return_value.all.return_value = [
+                ("123 Main St", "Fresno", "93721", "success"),
+            ]
+
+            result = _apply_geocoding(geo_df, logger)
+
+        assert result is not None
+        # Row was skipped by delta check — geocode_status stays None (not re-attempted)
+        assert result.loc[0, "geocode_status"] is None, (
+            f"Skipped rows must have geocode_status=None, got {result.loc[0, 'geocode_status']!r}"
+        )
+
+    def test_load_seed_csv_adds_geocode_status_none_when_column_missing(self):
+        """load_seed_csv() must add geocode_status=None when the CSV has no such column."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+
+        with patch("ca_biositing.pipeline.etl.load.food_processing_facilities.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.etl.load.food_processing_facilities.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.begin.return_value.__enter__ = MagicMock(return_value=None)
+            mock_session.begin.return_value.__exit__ = MagicMock(return_value=False)
+
+            captured_records = []
+            original_execute = mock_session.execute
+
+            def capture_execute(stmt):
+                # Capture the values passed to insert().values(...)
+                try:
+                    params = stmt.compile().params
+                    captured_records.append(params)
+                except Exception:
+                    pass
+                return MagicMock()
+
+            mock_session.execute.side_effect = capture_execute
+
+            # Seed CSV without geocode_status column
+            df = pd.DataFrame({
+                "name": ["Acme Foods"],
+                "address": ["123 Main St"],
+                "city": ["Fresno"],
+                "zip": ["93721"],
+                "latitude": [36.7468],
+                "longitude": [-119.7726],
+                # No geocode_status column
+            })
+
+            result = load_seed_csv(df)
+
+        assert result == 1
+        assert mock_session.execute.called
+
+    def test_load_seed_csv_preserves_geocode_status_when_column_present(self):
+        """load_seed_csv() must preserve geocode_status values when the CSV has the column."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import load_seed_csv
+
+        with patch("ca_biositing.pipeline.etl.load.food_processing_facilities.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.etl.load.food_processing_facilities.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.begin.return_value.__enter__ = MagicMock(return_value=None)
+            mock_session.begin.return_value.__exit__ = MagicMock(return_value=False)
+            mock_session.execute.return_value = MagicMock()
+
+            # Seed CSV WITH geocode_status column
+            df = pd.DataFrame({
+                "name": ["Acme Foods", "Bad Address"],
+                "address": ["123 Main St", "tes"],
+                "city": ["Fresno", None],
+                "zip": ["93721", None],
+                "latitude": [36.7468, None],
+                "longitude": [-119.7726, None],
+                "geocode_status": ["success", "failed"],
+            })
+
+            result = load_seed_csv(df)
+
+        assert result == 2
+        assert mock_session.execute.call_count == 2
+
+    def test_transform_output_includes_geocode_status_column(self):
+        """Transform output must include geocode_status in the final columns."""
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+        import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
+
+        with patch.object(mod, "GEOCODE_TARGET", "all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"), \
+             patch.dict(os.environ, {}, clear=True):  # no API key → geocoding skipped
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []  # empty DB
+            result = food_processing_facilities.transform.fn(
+                data_sources={
+                    "all_facilities": _make_raw_df_real_world(),
+                    "geocoder_test_set": pd.DataFrame(),
+                },
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
+
+        assert result is not None
+        assert "geocode_status" in result.columns, (
+            "Transform output must include 'geocode_status' column"
+        )
+        # Without API key, geocode_status should be None for all rows (not attempted)
+        assert result["geocode_status"].isna().all(), (
+            "Without GOOGLE_MAPS_API_KEY, geocode_status must be None for all rows"
+        )

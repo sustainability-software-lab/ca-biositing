@@ -108,13 +108,17 @@ def food_processing_facilities_flow():
     sheet_row_count = len(cleaned_data)
     logger.info(f"[etl] Sheet returned {sheet_row_count} rows after transform")
 
-    # Count rows missing lat/long — these were queued for geocoding
+    # Count rows still missing lat/long after the geocoding step.
+    # NOTE: this is NOT the number of rows sent to the geocoder API — the
+    # delta check inside transform() skips rows already resolved in the DB.
+    # Only net-new rows (not in DB) are actually geocoded; this count simply
+    # reflects how many rows in the output still have no coordinates.
     missing_latlong = int(
         cleaned_data["latitude"].isna().sum()
         if "latitude" in cleaned_data.columns
         else 0
     )
-    logger.info(f"[etl] {missing_latlong} addresses missing lat/long — queued for geocoding")
+    logger.info(f"[etl] {missing_latlong} rows still missing lat/long after geocoding step")
 
     # ------------------------------------------------------------------
     # Step 3: Load transformed rows

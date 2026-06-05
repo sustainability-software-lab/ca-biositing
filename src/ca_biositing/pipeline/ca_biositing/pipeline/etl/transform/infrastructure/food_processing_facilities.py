@@ -34,7 +34,7 @@ EXTRACT_SOURCES: List[str] = ["all_facilities", "geocoder_test_set"]
 # Safety cap: maximum number of addresses sent to the geocoding API in one run.
 # Prevents accidental mass-geocoding. Raise or remove this limit deliberately
 # once you have verified the geocoder works correctly on the test set.
-GEOCODE_ROW_LIMIT = 50
+GEOCODE_ROW_LIMIT = 500
 
 # ── GEOCODE_TARGET ────────────────────────────────────────────────────────────
 # Controls which sheet is geocoded and loaded. Edit this line to switch modes
@@ -161,12 +161,31 @@ def _apply_geocoding(
     """
     Apply delta check, circuit breaker, and geocoding to geocode_df.
 
-    Returns geocode_df with latitude/longitude populated for rows that were
-    successfully geocoded. Rows already in the DB (delta check) are skipped.
+    Returns geocode_df with latitude/longitude and geocode_status populated.
+    Rows already in the DB (delta check) are skipped — this includes rows with
+    lat/lon already set AND rows with geocode_status='failed' (permanently skip
+    addresses that have previously failed geocoding).
     Raises RuntimeError if the circuit breaker fires.
+
+    Key-comparison contract
+    -----------------------
+    Both sides of the delta check use the same normalization:
+      - address: _clean_address() (collapse whitespace/newlines) then _normalize_text()
+      - city:    _normalize_text()
+      - state:   hardcoded "CA" on BOTH sides (avoids NULL/missing state mismatch)
+      - zip:     _normalize_text() (5-digit zip already extracted upstream)
+
+    This ensures that seed-CSV rows stored in the DB (which went through
+    load_seed_csv's cleaning) match the cleaned incoming sheet rows.
+
+    geocode_status values
+    ---------------------
+    - 'success': geocoding succeeded (lat/lon populated)
+    - 'failed':  geocoding failed permanently (address is un-geocodable)
+    - None:      row has never been attempted (pending)
     """
     # Lazy imports — never at module level (avoids Docker import hangs)
-    from sqlmodel import Session, select
+    from sqlmodel import Session, select, or_
     from ca_biositing.pipeline.utils.engine import get_engine
     from ca_biositing.datamodels.models import InfrastructureFoodProcessingFacilities
 
@@ -176,25 +195,43 @@ def _apply_geocoding(
             select(
                 InfrastructureFoodProcessingFacilities.address,
                 InfrastructureFoodProcessingFacilities.city,
-                InfrastructureFoodProcessingFacilities.state,
                 InfrastructureFoodProcessingFacilities.zip,
+                InfrastructureFoodProcessingFacilities.geocode_status,
             ).where(
-                InfrastructureFoodProcessingFacilities.latitude.isnot(None),
-                InfrastructureFoodProcessingFacilities.longitude.isnot(None),
+                or_(
+                    InfrastructureFoodProcessingFacilities.latitude.isnot(None),
+                    InfrastructureFoodProcessingFacilities.geocode_status == "failed",
+                )
             )
         ).all()
 
+    # Build existing keys using the same normalization as the incoming rows:
+    # - apply _clean_address to the DB address (collapses any residual whitespace)
+    # - hardcode "CA" for state on BOTH sides so NULL state in DB never causes a mismatch
+    # Rows with geocode_status='failed' OR lat/lon non-null are both skipped.
     existing_keys = {
-        _build_address_key(r[0], r[1], r[2], r[3]) for r in rows
+        _build_address_key(_clean_address(r[0]), r[1], "CA", r[2]) for r in rows
     }
-    logger.info(f"Delta check: {len(existing_keys)} rows already geocoded in DB.")
+    failed_keys = {
+        _build_address_key(_clean_address(r[0]), r[1], "CA", r[2])
+        for r in rows
+        if r[3] == "failed"
+    }
+    logger.info(
+        f"Delta check: {len(existing_keys)} rows already resolved in DB "
+        f"({len(existing_keys) - len(failed_keys)} with lat/lon, "
+        f"{len(failed_keys)} permanently failed)."
+    )
 
-    # Ensure lat/lon columns exist before we try to write into them
+    # Ensure lat/lon and geocode_status columns exist before we try to write into them
     if "latitude" not in geocode_df.columns:
         geocode_df["latitude"] = None
     if "longitude" not in geocode_df.columns:
         geocode_df["longitude"] = None
+    if "geocode_status" not in geocode_df.columns:
+        geocode_df["geocode_status"] = None
 
+    # Build incoming keys using the same normalization (address already cleaned upstream)
     geocode_df["address_key"] = geocode_df.apply(
         lambda r: _build_address_key(r.get("address"), r.get("city"), "CA", r.get("zip")),
         axis=1,
@@ -203,7 +240,11 @@ def _apply_geocoding(
     to_geocode = geocode_df[~geocode_df["address_key"].isin(existing_keys)].copy()
     to_geocode = to_geocode[to_geocode["address"].notna()]
 
-    logger.info(f"Rows queued for geocoding after delta check: {len(to_geocode)}")
+    skipped = len(geocode_df) - len(to_geocode)
+    logger.info(
+        f"Delta check result: {skipped} rows skipped (already resolved in DB), "
+        f"{len(to_geocode)} rows queued for geocoding."
+    )
 
     if len(to_geocode) > GEOCODE_ROW_LIMIT:
         raise RuntimeError(
@@ -233,9 +274,15 @@ def _apply_geocoding(
     to_geocode["latitude"] = to_geocode["closest_latitude"]
     to_geocode["longitude"] = to_geocode["closest_longitude"]
 
-    # Write geocoded lat/lon back into geocode_df by address_key
+    # Set geocode_status based on whether geocoding succeeded or failed
+    to_geocode["geocode_status"] = to_geocode["latitude"].apply(
+        lambda lat: "success" if lat is not None and not (isinstance(lat, float) and np.isnan(lat)) else "failed"
+    )
+
+    # Write geocoded lat/lon and geocode_status back into geocode_df by address_key
     lat_map = to_geocode.set_index("address_key")["latitude"].to_dict()
     lon_map = to_geocode.set_index("address_key")["longitude"].to_dict()
+    status_map = to_geocode.set_index("address_key")["geocode_status"].to_dict()
 
     geocode_df["latitude"] = geocode_df["latitude"].fillna(
         geocode_df["address_key"].map(lat_map)
@@ -243,9 +290,16 @@ def _apply_geocoding(
     geocode_df["longitude"] = geocode_df["longitude"].fillna(
         geocode_df["address_key"].map(lon_map)
     )
+    # Only update geocode_status for rows that were actually attempted (in to_geocode)
+    attempted_mask = geocode_df["address_key"].isin(status_map)
+    geocode_df.loc[attempted_mask, "geocode_status"] = geocode_df.loc[attempted_mask, "address_key"].map(status_map)
 
     geocoded_count = geocode_df["latitude"].notna().sum()
-    logger.info(f"Geocoding complete: {geocoded_count} rows now have coordinates.")
+    failed_count = (geocode_df["geocode_status"] == "failed").sum()
+    logger.info(
+        f"Geocoding complete: {geocoded_count} rows now have coordinates, "
+        f"{failed_count} rows marked as permanently failed."
+    )
 
     return geocode_df
 
@@ -304,6 +358,12 @@ def transform(
         cleaned_all["zip"] = cleaned_all["zip"].astype(str).str.extract(r"(\d{5})")[0]
     if not cleaned_geo.empty and "zip" in cleaned_geo.columns:
         cleaned_geo["zip"] = cleaned_geo["zip"].astype(str).str.extract(r"(\d{5})")[0]
+
+    # City Title Case normalization — CARB source data stores city in ALL CAPS (e.g. "FRESNO").
+    # Normalize to Title Case ("Fresno") for both sheets so the DB always stores clean values.
+    for _df in [cleaned_all] + ([cleaned_geo] if not cleaned_geo.empty else []):
+        if "city" in _df.columns:
+            _df["city"] = _df["city"].astype("string").str.title()
 
     # Process type capitalization (all_facilities only — test set may not have this column)
     if "process" in cleaned_all.columns:
@@ -409,6 +469,7 @@ def transform(
         "latitude",
         "longitude",
         "geom",
+        "geocode_status",
         "EPA_facility_id",
         "NAICS_code",
         "NAICS_code_description",

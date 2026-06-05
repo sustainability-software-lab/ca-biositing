@@ -1,6 +1,6 @@
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy import UniqueConstraint
+from sqlalchemy import Column, String, UniqueConstraint
 from sqlmodel import Field, SQLModel
 from typing import Optional
 
@@ -28,6 +28,10 @@ class InfrastructureFoodProcessingFacilities(SQLModel, table=True):
     latitude: Optional[Decimal] = Field(default=None)
     longitude: Optional[Decimal] = Field(default=None)
     geom: Optional[str] = Field(default=None)
+    geocode_status: str | None = Field(
+        default=None,
+        sa_column=Column(String, nullable=True, comment="Geocoding status: 'success', 'failed', or None (pending)")
+    )
 
     #processing activities
     primary_ag_product: Optional[str] = Field(default=None) #primary agricultural product processed at the facility, comma separated if multiple

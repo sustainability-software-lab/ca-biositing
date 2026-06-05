@@ -70,6 +70,7 @@ EXPORT_COLUMNS = [
     "lineage_group_id",
     "created_at",
     "updated_at",
+    "geocode_status"
 ]
 
 
