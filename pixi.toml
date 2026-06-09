@@ -140,6 +140,10 @@ run-etl = { cmd = [
 ], description = "Trigger the master ETL flow deployment.", depends-on = [
     "start-services",
 ] }
+run-single-flow = { cmd = "python scripts/run_flow.py run", description = "Trigger a specific ETL flow by module name. Usage: pixi run run-single-flow landiq_etl", depends-on = [
+    "start-services",
+] }
+list-flows = { cmd = "python scripts/run_flow.py list", description = "List all available ETL flows in the project." }
 check-db-health = { cmd = [
     "docker-compose",
     "-f",
