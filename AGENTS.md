@@ -220,8 +220,8 @@ issue management, UI audits, etc.).
 
 - **`skills.json`**: The declarative manifest where all project skills and
   registries are listed.
-- **`skills.sh`**: The synchronization script that handles installation and
-  updates.
+- **`skills.py`**: The synchronization script that handles installation and
+  updates. (Cross-platform Python replacement for the original `skills.sh`.)
 - **Syncing**: Run `pixi run skills-sync` after adding a new skill to
   `skills.json` or to update existing ones.
 

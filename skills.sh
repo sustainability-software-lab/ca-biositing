@@ -1,7 +1,7 @@
-#!/bin/bash
+﻿#!/bin/bash
 
 # Ensure we are in the project root
-cd "$(dirname "$0")"
+cd "$(dirname "$0")" || exit 1
 
 if [ ! -f "skills.json" ]; then
     echo "Error: skills.json not found."
@@ -9,28 +9,35 @@ if [ ! -f "skills.json" ]; then
 fi
 
 # Parse skills.json and install each source
-# Use a separate file descriptor to prevent stdin consumption by sub-commands
-while read -r source <&3; do
+# Use a temp file instead of process substitution for portability (no bash 4+ required)
+tmp_sources=$(mktemp)
+jq -c '.sources[]' skills.json > "$tmp_sources"
+
+while IFS= read -r source; do
     registry=$(echo "$source" | jq -r '.registry')
 
     # Check if there are specific skills listed
     has_skills=$(echo "$source" | jq -r 'has("skills")')
 
-    if [ "$has_skills" == "true" ]; then
+    if [ "$has_skills" = "true" ]; then
         # Install specific skills
-        echo "$source" | jq -r '.skills[]' | while read -r skill; do
+        tmp_skills=$(mktemp)
+        echo "$source" | jq -r '.skills[]' > "$tmp_skills"
+        while IFS= read -r skill; do
             echo "--- Installing specific skill: $skill from $registry ---"
-            # Redirect stdin from /dev/null to ensure the loop continues
-            pixi run npx skills add "$registry" --skill "$skill" -y < /dev/null
-        done
+            npx skills add "$registry" --skill "$skill" -y < /dev/null
+        done < "$tmp_skills"
+        rm -f "$tmp_skills"
     else
         # Install all skills from registry
         echo "--- Installing all skills from registry: $registry ---"
-        pixi run npx skills add "$registry" -y < /dev/null
+        npx skills add "$registry" -y < /dev/null
     fi
-done 3< <(jq -c '.sources[]' skills.json)
+done < "$tmp_sources"
+
+rm -f "$tmp_sources"
 
 echo "--- Updating all installed skills to latest versions ---"
-pixi run npx skills update < /dev/null
+npx skills update < /dev/null
 
 echo "--- Skill synchronization complete ---"
