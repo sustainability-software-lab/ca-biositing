@@ -191,19 +191,19 @@ census_based_volumes = select(
 
 # Inline PAP-to-resource mapping for commodity-direct resources
 # Based on names to ensure stability across environments:
-# - 'almond hulls' (PAP 46)  → 'almond hulls' (Resource 19)
-# - 'almond shells' (PAP 74) → 'almond shells' (Resource 5)
-# - 'almond meats' (PAP 47)  → 'almond hulls' (Resource 19)
-# - 'hay - alfalfa' (PAP 3)  → 'alfalfa' (Resource 24)
-# - 'silage - alfalfa' (PAP 28) → 'alfalfa' (Resource 24)
-# - 'alfalfa & mixtures' (PAP 78) → 'alfalfa' (Resource 24)
+# - 'almond hulls' (PAP 38)  → 'almond hulls' (Resource 8)
+# - 'almond shells' (PAP 29) → 'almond shells' (Resource 2)
+# - 'almond meats' (PAP 54)  → 'almond hulls' (Resource 8)
+# - 'hay - alfalfa' (PAP 19)  → 'alfalfa' (Resource 37)
+# - 'silage - alfalfa' (PAP 57) → 'alfalfa' (Resource 37)
+# - 'alfalfa & mixtures' (PAP 82) → 'alfalfa' (Resource 37)
 commodity_map = union_all(
-    select(literal(46, Integer).label("pap_id"), literal(19, Integer).label("resource_id")),
-    select(literal(74, Integer), literal(5, Integer)),
-    select(literal(47, Integer), literal(19, Integer)),
-    select(literal(3, Integer), literal(24, Integer)),
-    select(literal(28, Integer), literal(24, Integer)),
-    select(literal(78, Integer), literal(24, Integer))
+    select(literal(38, Integer).label("pap_id"), literal(8, Integer).label("resource_id")),
+    select(literal(29, Integer), literal(2, Integer)),
+    select(literal(54, Integer), literal(8, Integer)),
+    select(literal(19, Integer), literal(37, Integer)),
+    select(literal(57, Integer), literal(37, Integer)),
+    select(literal(82, Integer), literal(37, Integer))
 ).subquery("commodity_map")
 
 # Path C: Commodity-direct resource volumes
