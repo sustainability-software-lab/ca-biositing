@@ -1,0 +1,15 @@
+{
+  "sources": [
+    {
+      "registry": "vercel-labs/agent-skills"
+    },
+    {
+      "registry": "https://github.com/github/awesome-copilot.git",
+      "skills": ["github-issues"]
+    },
+    {
+      "registry": "https://github.com/vercel-labs/skills",
+      "skills": ["find-skills"]
+    }
+  ]
+}

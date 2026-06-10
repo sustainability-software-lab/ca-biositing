@@ -1,0 +1,59 @@
+geoid,state_name,state_fips,county_name,county_fips,agg_level_desc,region_name
+06001,california,06,alameda,001,county,bay area
+06003,california,06,alpine,003,county,sierra nevada
+06005,california,06,amador,005,county,sierra nevada
+06007,california,06,butte,007,county,sacramento valley
+06009,california,06,calaveras,009,county,sierra nevada
+06011,california,06,colusa,011,county,sacramento valley
+06013,california,06,contra costa,013,county,bay area
+06015,california,06,del norte,015,county,north coast
+06017,california,06,el dorado,017,county,sierra nevada
+06019,california,06,fresno,019,county,south san joaquin valley
+06021,california,06,glenn,021,county,sacramento valley
+06023,california,06,humboldt,023,county,north coast
+06025,california,06,imperial,025,county,inland empire
+06027,california,06,inyo,027,county,sierra nevada
+06029,california,06,kern,029,county,south san joaquin valley
+06031,california,06,kings,031,county,south san joaquin valley
+06033,california,06,lake,033,county,north coast
+06035,california,06,lassen,035,county,modoc plateau
+06037,california,06,los angeles,037,county,los angeles
+06039,california,06,madera,039,county,south san joaquin valley
+06041,california,06,marin,041,county,bay area
+06043,california,06,mariposa,043,county,sierra nevada
+06045,california,06,mendocino,045,county,north coast
+06047,california,06,merced,047,county,north san joaquin valley
+06049,california,06,modoc,049,county,modoc plateau
+06051,california,06,mono,051,county,sierra nevada
+06053,california,06,monterey,053,county,central coast
+06055,california,06,napa,055,county,bay area
+06057,california,06,nevada,057,county,sierra nevada
+06059,california,06,orange,059,county,orange county
+06061,california,06,placer,061,county,sierra nevada
+06063,california,06,plumas,063,county,sierra nevada
+06065,california,06,riverside,065,county,inland empire
+06067,california,06,sacramento,067,county,sacramento valley
+06069,california,06,san benito,069,county,central coast
+06071,california,06,san bernardino,071,county,inland empire
+06073,california,06,san diego,073,county,san diego
+06075,california,06,san francisco,075,county,bay area
+06077,california,06,san joaquin,077,county,north san joaquin valley
+06079,california,06,san luis obispo,079,county,central coast
+06081,california,06,san mateo,081,county,bay area
+06083,california,06,santa barbara,083,county,central coast
+06085,california,06,santa clara,085,county,bay area
+06087,california,06,santa cruz,087,county,central coast
+06089,california,06,shasta,089,county,sacramento valley
+06091,california,06,sierra,091,county,sierra nevada
+06093,california,06,siskiyou,093,county,sacramento valley
+06095,california,06,solano,095,county,bay area
+06097,california,06,sonoma,097,county,bay area
+06099,california,06,stanislaus,099,county,north san joaquin valley
+06101,california,06,sutter,101,county,sacramento valley
+06103,california,06,tehama,103,county,sacramento valley
+06105,california,06,trinity,105,county,north coast
+06107,california,06,tulare,107,county,south san joaquin valley
+06109,california,06,tuolumne,109,county,sierra nevada
+06111,california,06,ventura,111,county,central coast
+06113,california,06,yolo,113,county,sacramento valley
+06115,california,06,yuba,115,county,sacramento valley

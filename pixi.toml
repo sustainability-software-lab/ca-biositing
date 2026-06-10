@@ -27,6 +27,7 @@ deployment = { features = ["cloud"], solve-group = "default" }
 
 [dependencies]
 python = "~=3.12"
+nodejs = ">=18"
 pre-commit = ">=4.2.0,<5"
 pytest = ">=8.4.2,<9"
 pytest-cov = ">=7.0.0,<8"
@@ -55,6 +56,7 @@ geoalchemy2 = ">=0.19.0,<0.20"
 jinja2 = ">=3.1.5,<4"
 
 [tasks]
+skills-sync = "bash skills.sh"
 pre-commit-all = "pre-commit run --all-files"
 pre-commit-install = "pre-commit install"
 initial-migration = { cmd = [
