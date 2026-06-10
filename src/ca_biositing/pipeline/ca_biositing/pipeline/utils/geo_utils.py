@@ -48,6 +48,31 @@ def get_component(name_length, comp_type, addy_components):
 
 # main function; need to define names of columns where address and latlong are stored
 def parse_addresses(df, address_column="address", merge_columns=[], lat="latitude", long="longitude"):
+    """Geocode addresses in a DataFrame using the Google Maps API.
+
+    For each row the function attempts to geocode the address string.  The
+    result is stored in two output DataFrames:
+
+    * ``address_df`` — closest address components + lat/lon.
+    * ``geoid_df``   — FIPS geoid components.
+
+    A row is considered a **geocoding failure** (``closest_latitude=None``) when:
+      - The row's address column is null/empty (``is_na`` flag).
+      - The geocoder is not configured (``GOOGLE_MAPS_API_KEY`` not set).
+      - The geocoder API returns ``None`` (address not found).
+      - The geocoder API raises any exception (network error, quota, etc.).
+      - The API response is missing expected fields (``address_components``,
+        ``geometry``, etc.).
+
+    In all failure cases ``closest_latitude`` and ``closest_longitude`` are
+    set to ``None`` so the caller (the transform's ``_apply_geocoding()``) can
+    unambiguously detect failure via ``lat is None`` and set
+    ``geocode_status='failed'``.
+
+    The geoid lookup failure (``geoid is None``) is logged as a warning but
+    does NOT cause the row to be treated as a geocoding failure — lat/lon may
+    still be valid even when the county FIPS lookup fails.
+    """
     try:
         logger = get_run_logger()
     except Exception:
@@ -70,12 +95,39 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
     # put weird addresses in an array for displaying in a warning
     unparsable = []
     for index, row in df.iterrows():
+        # Default failure result — overwritten on success below.
+        # Setting these here (not inside the except block) ensures they are
+        # always defined even if an unexpected exception escapes the try block.
+        address_result = {
+            "closest_address_line_1": None,
+            "closest_address_line_2": None,
+            "closest_city": None,
+            "closest_county": None,
+            "closest_state": None,
+            "closest_postal_code": None,
+            "closest_latitude": None,
+            "closest_longitude": None,
+        }
+        geoid_result = {
+            "closest_geoid": "00000",
+            "closest_state_name": None,
+            "closest_state_fips": None,
+            "closest_county_name": None,
+            "closest_county_fips": None,
+        }
+
         try:
             if row['is_na'] or geocode is None:
-                # categorize as unparsable
-                raise Exception
+                # Address is null or geocoder not configured — treat as failure.
+                raise ValueError("Address is null or geocoder not configured")
 
-            info = geocode(row[address_column]).raw
+            # Call the geocoder.  Returns None when the address is not found.
+            geocode_result = geocode(row[address_column])
+            if geocode_result is None:
+                # Address not found by the geocoder — treat as failure.
+                raise ValueError(f"Geocoder returned no result for: {row[address_column]!r}")
+
+            info = geocode_result.raw
             addy_components = info['address_components']
 
             # get address components
@@ -108,37 +160,59 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
                 latitude = info['geometry']['location']['lat'] if isinstance(info['geometry']['location']['lat'], float) else None
                 longitude = info['geometry']['location']['lng'] if isinstance(info['geometry']['location']['lng'], float) else None
 
-            address_result = {"closest_address_line_1": address, "closest_address_line_2": None, "closest_city": city, "closest_county": county, "closest_state": state, "closest_postal_code": zip_code + "-" + zip_suffix if (isinstance(zip_code, str) and isinstance(zip_suffix, str)) else zip_code, "closest_latitude": latitude, "closest_longitude": longitude}
+            address_result = {
+                "closest_address_line_1": address,
+                "closest_address_line_2": None,
+                "closest_city": city,
+                "closest_county": county,
+                "closest_state": state,
+                "closest_postal_code": zip_code + "-" + zip_suffix if (isinstance(zip_code, str) and isinstance(zip_suffix, str)) else zip_code,
+                "closest_latitude": latitude,
+                "closest_longitude": longitude,
+            }
 
-            # get geoids
-            af = _get_fips_helper()
-            geoid = af.get_county_fips(county, state) if (isinstance(county, str) and isinstance(state, str)) else None
-            state_fips = geoid[:2] if isinstance(geoid, str) else None
-            county_fips = geoid[2:] if isinstance(geoid, str) else None
-            geoid_result = {'closest_geoid': geoid, "closest_state_name": state, "closest_state_fips": state_fips, "closest_county_name": county, "closest_county_fips": county_fips}
+            # get geoids — failure here does NOT invalidate lat/lon
+            try:
+                af = _get_fips_helper()
+                geoid = af.get_county_fips(county, state) if (isinstance(county, str) and isinstance(state, str)) else None
+                state_fips = geoid[:2] if isinstance(geoid, str) else None
+                county_fips = geoid[2:] if isinstance(geoid, str) else None
+                geoid_result = {
+                    "closest_geoid": geoid,
+                    "closest_state_name": state,
+                    "closest_state_fips": state_fips,
+                    "closest_county_name": county,
+                    "closest_county_fips": county_fips,
+                }
+                if geoid is None:
+                    unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
+            except Exception as geoid_exc:
+                logger.warning(
+                    "FIPS geoid lookup failed for index %s (%r): %s — lat/lon still valid.",
+                    index, row[address_column], geoid_exc,
+                )
+                # geoid_result stays as the default failure dict; lat/lon is still valid.
 
-            if geoid is None:
-                unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
-
-        except Exception:
-            # handle weird addresses
+        except Exception as exc:
+            # Geocoding failed — log and mark as unparsable.
             unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
+            logger.debug("Geocoding failed for index %s (%r): %s", index, row[address_column], exc)
 
-            # FIX: use safe column access — the DataFrame may not have lat/lon
-            # columns at all (e.g. geocoder test set has no pre-existing coords).
+            # If the row already has valid lat/lon (e.g. pre-geocoded rows passed
+            # through parse_addresses for address-component enrichment only),
+            # preserve those coordinates even though the geocoder call failed.
+            # This is safe: the transform's geocode_status logic only sets
+            # geocode_status='failed' for rows that were actually attempted
+            # (in to_geocode), not for rows that already had coordinates and
+            # were skipped by the delta check.
             existing_lat = row.get(lat) if hasattr(row, "get") else row[lat] if lat in row.index else None
             existing_lon = row.get(long) if hasattr(row, "get") else row[long] if long in row.index else None
-            if isinstance(existing_lat, (float, int)) and not np.isnan(existing_lat) and \
-               isinstance(existing_lon, (float, int)) and not np.isnan(existing_lon):
-                latitude = existing_lat
-                longitude = existing_lon
-            else:
-                # If geocode failed or wasn't available, we might not have 'info'
-                latitude = None
-                longitude = None
-
-            address_result = {"closest_address_line_1": None, "closest_address_line_2": None, "closest_city": None, "closest_county": None, "closest_state": None, "closest_postal_code": None, "closest_latitude": latitude, "closest_longitude": longitude}
-            geoid_result = {'closest_geoid': "00000", "closest_state_name": None, "closest_state_fips": None, "closest_county_name": None, "closest_county_fips": None}
+            if isinstance(existing_lat, (float, int)) and not pd.isna(existing_lat) and \
+               isinstance(existing_lon, (float, int)) and not pd.isna(existing_lon):
+                address_result["closest_latitude"] = existing_lat
+                address_result["closest_longitude"] = existing_lon
+            # Otherwise closest_latitude stays None (failure default set above),
+            # which signals failure to the transform's geocode_status logic.
 
         address_df.loc[index] = address_result
         geoid_df.loc[index] = geoid_result

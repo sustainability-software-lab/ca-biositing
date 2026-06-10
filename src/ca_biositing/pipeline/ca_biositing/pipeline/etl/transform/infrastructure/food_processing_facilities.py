@@ -15,6 +15,24 @@ constant between runs:
             The circuit breaker (GEOCODE_ROW_LIMIT) caps net-new geocoding per run.
 
 To switch modes: edit the GEOCODE_TARGET line below. No env var needed.
+
+Text-field normalization
+------------------------
+All free-text identity columns (name, address, city, state) are stored in
+ALL CAPS.  This is intentional:
+
+  * The CARB source sheet already uses ALL CAPS for most fields.
+  * ALL CAPS is deterministic — no edge-case ambiguity (McFarland, O'Brien,
+    I-5, etc.) that title-case libraries handle inconsistently.
+  * The UPSERT conflict key (name, address, city, zip) is case-sensitive in
+    Postgres; storing ALL CAPS on both the sheet path and the seed-CSV path
+    guarantees exact key matches and prevents spurious duplicate inserts.
+  * The delta-check already lowercases both sides via _normalize_text(), so
+    geocoder deduplication is unaffected by casing.
+
+The shared helper ``normalize_facility_text_fields()`` is the single source of
+truth for this normalization.  It is called by both the transform pipeline and
+``_clean_seed_df()`` in the load module so the two paths are always in sync.
 """
 
 from __future__ import annotations
@@ -34,7 +52,7 @@ EXTRACT_SOURCES: List[str] = ["all_facilities", "geocoder_test_set"]
 # Safety cap: maximum number of addresses sent to the geocoding API in one run.
 # Prevents accidental mass-geocoding. Raise or remove this limit deliberately
 # once you have verified the geocoder works correctly on the test set.
-GEOCODE_ROW_LIMIT = 500
+GEOCODE_ROW_LIMIT = 7000
 
 # ── GEOCODE_TARGET ────────────────────────────────────────────────────────────
 # Controls which sheet is geocoded and loaded. Edit this line to switch modes
@@ -42,7 +60,7 @@ GEOCODE_ROW_LIMIT = 500
 #   "geocoder_test_set"  → geocode ~12 test rows, load only those rows (SAFE DEFAULT)
 #   "all_facilities"     → geocode the full sheet, load all rows (run after verifying test set)
 # ─────────────────────────────────────────────────────────────────────────────
-GEOCODE_TARGET: str = "geocoder_test_set"
+GEOCODE_TARGET: str = "all_facilities"
 
 
 def _dedupe_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -62,11 +80,62 @@ def _dedupe_columns(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _clean_address(text: Optional[str]) -> Optional[str]:
+    """Collapse newlines and extra whitespace in an address string.
+
+    Does NOT change casing — casing is handled by normalize_facility_text_fields().
+    """
     if text is None or pd.isna(text):
         return None
     cleaned = str(text).replace("\n", " ").replace("\r", " ")
     cleaned = " ".join(cleaned.split())
     return cleaned.strip() if cleaned.strip() else None
+
+
+def normalize_facility_text_fields(df: pd.DataFrame) -> pd.DataFrame:
+    """Normalize free-text identity columns to ALL CAPS.
+
+    This is the **single source of truth** for text normalization in the food
+    processing facilities pipeline.  It is called by:
+
+      * The transform pipeline (both ``cleaned_all`` and ``cleaned_geo``).
+      * ``_clean_seed_df()`` in the load module (imported from here).
+
+    Keeping both paths in sync prevents the delta-check key mismatches that
+    caused spurious geocoder API calls in earlier versions.
+
+    Columns normalized (uppercased):
+      - ``name``    -- facility name
+      - ``address`` -- street address (after whitespace collapse by _clean_address)
+      - ``city``    -- city name
+      - ``state``   -- state abbreviation (already hardcoded "CA", but normalized
+                       for safety)
+
+    ``zip`` is NOT uppercased here -- it is already a 5-digit numeric string.
+    ``process_type`` / ``process`` are NOT uppercased -- they use Title Case
+    intentionally for display purposes.
+
+    Parameters
+    ----------
+    df:
+        DataFrame to normalize.
+
+    Returns
+    -------
+    pd.DataFrame
+        New DataFrame with the normalized columns.
+    """
+    df = df.copy()
+    for col in ("name", "address", "city", "state"):
+        if col in df.columns:
+            # Convert to string, strip whitespace, uppercase.
+            # Then restore None for blank / sentinel values so the DB receives
+            # NULL rather than the string "NAN" or "NONE".
+            normalized = df[col].astype("string").str.strip().str.upper()
+            df[col] = normalized.where(
+                normalized.notna() & (normalized != "") & (normalized != "NAN") & (normalized != "NONE"),
+                other=None,
+            )
+    return df
 
 
 def _normalize_text(text: Optional[str]) -> str:
@@ -342,7 +411,8 @@ def transform(
     cleaned_all["etl_run_id"] = etl_run_id
     cleaned_all["lineage_group_id"] = lineage_group_id
 
-    # Normalize address whitespace
+    # Normalize address whitespace (collapse newlines/extra spaces — no casing change here;
+    # casing is handled by normalize_facility_text_fields() below).
     if "address" in cleaned_all.columns:
         cleaned_all["address"] = cleaned_all["address"].apply(_clean_address)
     if not cleaned_geo.empty and "address" in cleaned_geo.columns:
@@ -359,13 +429,15 @@ def transform(
     if not cleaned_geo.empty and "zip" in cleaned_geo.columns:
         cleaned_geo["zip"] = cleaned_geo["zip"].astype(str).str.extract(r"(\d{5})")[0]
 
-    # City Title Case normalization — CARB source data stores city in ALL CAPS (e.g. "FRESNO").
-    # Normalize to Title Case ("Fresno") for both sheets so the DB always stores clean values.
-    for _df in [cleaned_all] + ([cleaned_geo] if not cleaned_geo.empty else []):
-        if "city" in _df.columns:
-            _df["city"] = _df["city"].astype("string").str.title()
+    # ALL CAPS normalization for identity columns (name, address, city, state).
+    # Uses the shared helper so the transform path and the seed-CSV path are
+    # always in sync — preventing delta-check key mismatches that cause
+    # spurious geocoder API calls.
+    cleaned_all = normalize_facility_text_fields(cleaned_all)
+    if not cleaned_geo.empty:
+        cleaned_geo = normalize_facility_text_fields(cleaned_geo)
 
-    # Process type capitalization (all_facilities only — test set may not have this column)
+    # Process type: Title Case for display (intentionally NOT uppercased)
     if "process" in cleaned_all.columns:
         cleaned_all["process"] = cleaned_all["process"].astype("string").str.title()
 
@@ -488,6 +560,22 @@ def transform(
             target_df[col] = None
 
     final_df = target_df[final_columns].copy()
+
+    # Drop rows where ALL FOUR conflict-key columns (name, address, city, zip) are
+    # blank/None.  These are phantom rows from blank rows in the Google Sheet that
+    # would be upserted as a single NULL-key row and pollute the DB.
+    conflict_key_cols = [c for c in ["name", "address", "city", "zip"] if c in final_df.columns]
+    if conflict_key_cols:
+        all_blank_mask = final_df[conflict_key_cols].apply(
+            lambda col: col.isna() | (col.astype(str).str.strip() == "")
+        ).all(axis=1)
+        n_dropped = int(all_blank_mask.sum())
+        if n_dropped > 0:
+            logger.warning(
+                f"Dropping {n_dropped} blank-key rows from transform output "
+                f"(all of name/address/city/zip are empty — phantom rows from the Google Sheet)."
+            )
+        final_df = final_df[~all_blank_mask].copy()
 
     logger.info(f"Successfully transformed {len(final_df)} records (GEOCODE_TARGET={GEOCODE_TARGET!r}).")
     return final_df

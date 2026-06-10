@@ -214,7 +214,7 @@ class TestFoodProcessingFacilitiesTransform:
         assert len(result) == 2
         assert result.loc[0, "state"] == "CA"
         assert result.loc[0, "zip"] == "93721"
-        assert result.loc[0, "address"] == "123 Main St Suite 5"
+        assert result.loc[0, "address"] == "123 MAIN ST SUITE 5"
         assert result.loc[0, "process_type"] == "Drying"
         assert result.loc[0, "general_source_info"] == "Processing Tomato Advisory Board 2022"
         assert result.loc[1, "general_source_info"] == "California Department of Alcoholic Beverage Control 2024"
@@ -390,7 +390,7 @@ class TestFoodProcessingFacilitiesTransform:
 
         assert result is not None
         assert len(result) == 1, "Only the data row should remain after header fix"
-        assert result.loc[0, "name"] == "Acme Foods"
+        assert result.loc[0, "name"] == "ACME FOODS"
 
     def test_transform_geocoder_delta_skips_already_geocoded(self):
         """Geocoder delta check must not re-geocode rows already in the DB."""
@@ -677,20 +677,27 @@ class TestGeocodingEnvVar:
 
 
 # ---------------------------------------------------------------------------
-# Bug-regression tests — Issue 0: City ALL CAPS → Title Case normalization
+# Bug-regression tests — Issue 0: ALL CAPS normalization for identity columns
 # ---------------------------------------------------------------------------
 
-class TestCityTitleCaseNormalization:
-    """Regression tests for city casing normalization.
+class TestAllCapsNormalization:
+    """Regression tests for ALL CAPS normalization of identity columns.
 
-    The CARB source sheet stores city in ALL CAPS (e.g. "FRESNO").
-    The transform must normalize city to Title Case ("Fresno") before writing
-    to the DB.  The seed CSV path (_clean_seed_df) must do the same so that
-    seed rows and incoming sheet rows always have matching casing.
+    The CARB source sheet stores city in ALL CAPS (e.g. "FRESNO") and address
+    in ALL CAPS (e.g. "123 MAIN ST").  The pipeline standardizes ALL identity
+    columns (name, address, city, state) to ALL CAPS so that:
+
+      * The UPSERT conflict key (name, address, city, zip) always matches
+        exactly in Postgres (case-sensitive comparison).
+      * The seed-CSV path and the sheet-ETL path produce identical keys,
+        preventing spurious geocoder API calls from delta-check mismatches.
+
+    Both the transform pipeline and _clean_seed_df() use the shared
+    normalize_facility_text_fields() helper as the single source of truth.
     """
 
-    def test_transform_normalizes_city_to_title_case(self):
-        """Transform must convert ALL CAPS city to Title Case."""
+    def test_transform_normalizes_city_to_upper(self):
+        """Transform must convert any-case city to ALL CAPS."""
         import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
@@ -725,13 +732,13 @@ class TestCityTitleCaseNormalization:
             )
 
         assert result is not None
-        assert result.loc[0, "city"] == "Fresno", (
-            f"Expected 'Fresno' (Title Case), got {result.loc[0, 'city']!r}. "
-            "The transform must normalize ALL CAPS city to Title Case."
+        assert result.loc[0, "city"] == "FRESNO", (
+            f"Expected 'FRESNO' (ALL CAPS), got {result.loc[0, 'city']!r}. "
+            "The transform must normalize city to ALL CAPS."
         )
 
-    def test_transform_preserves_already_title_case_city(self):
-        """Transform must not mangle city values that are already Title Case."""
+    def test_transform_normalizes_mixed_case_city_to_upper(self):
+        """Transform must also uppercase city values that arrive in Title Case."""
         import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
@@ -765,30 +772,69 @@ class TestCityTitleCaseNormalization:
             )
 
         assert result is not None
-        assert result.loc[0, "city"] == "Fresno", (
-            f"Expected 'Fresno' (Title Case preserved), got {result.loc[0, 'city']!r}."
+        assert result.loc[0, "city"] == "FRESNO", (
+            f"Expected 'FRESNO' (ALL CAPS), got {result.loc[0, 'city']!r}."
         )
 
-    def test_clean_seed_df_normalizes_city_to_title_case(self):
-        """_clean_seed_df must convert ALL CAPS city to Title Case."""
+    def test_transform_normalizes_address_to_upper(self):
+        """Transform must uppercase address (e.g. '123 Main St' → '123 MAIN ST')."""
+        import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
+        from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
+
+        df = pd.DataFrame(
+            [[
+                "ID1", "Acme Foods", "123 Main St", "FRESNO",
+                "93721", "Fresno", "San Joaquin", "drying", "tomato",
+                "Pomace", "100", "", "", "", "", "", "", "", "",
+            ]],
+            columns=[
+                "Facility ID", "Name", "Address", "City", "Zip", "County",
+                "Air district", "Process", "Associated food",
+                "Byproduct 1", "Quantity (tons/year)",
+                "Byproduct 2", "Quantity (tons/year)_2",
+                "Byproduct 3", "Quantity (tons/year)_3",
+                "Byproduct 4", "Quantity (tons/year)_4",
+                "Byproduct 5", "Quantity (tons/year)_5",
+            ],
+        )
+
+        with patch.object(mod, "GEOCODE_TARGET", "all_facilities"), \
+             patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"):
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []
+            result = food_processing_facilities.transform.fn(
+                data_sources={"all_facilities": df, "geocoder_test_set": pd.DataFrame()},
+                etl_run_id=1,
+                lineage_group_id=1,
+            )
+
+        assert result is not None
+        assert result.loc[0, "address"] == "123 MAIN ST", (
+            f"Expected '123 MAIN ST' (ALL CAPS), got {result.loc[0, 'address']!r}."
+        )
+
+    def test_clean_seed_df_normalizes_city_to_upper(self):
+        """_clean_seed_df must convert any-case city to ALL CAPS."""
         from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
 
         df = pd.DataFrame({
             "name": ["Acme Foods", "Brew Co"],
             "address": ["123 Main St", "500 Beer Rd"],
-            "city": ["FRESNO", "SACRAMENTO"],
+            "city": ["FRESNO", "Sacramento"],
             "zip": ["93721", "95814"],
         })
         result = _clean_seed_df(df)
-        assert result.loc[0, "city"] == "Fresno", (
-            f"Expected 'Fresno', got {result.loc[0, 'city']!r}"
+        assert result.loc[0, "city"] == "FRESNO", (
+            f"Expected 'FRESNO', got {result.loc[0, 'city']!r}"
         )
-        assert result.loc[1, "city"] == "Sacramento", (
-            f"Expected 'Sacramento', got {result.loc[1, 'city']!r}"
+        assert result.loc[1, "city"] == "SACRAMENTO", (
+            f"Expected 'SACRAMENTO', got {result.loc[1, 'city']!r}"
         )
 
-    def test_clean_seed_df_preserves_title_case_city(self):
-        """_clean_seed_df must not mangle city values already in Title Case."""
+    def test_clean_seed_df_normalizes_address_to_upper(self):
+        """_clean_seed_df must uppercase address values."""
         from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
 
         df = pd.DataFrame({
@@ -798,12 +844,12 @@ class TestCityTitleCaseNormalization:
             "zip": ["93721"],
         })
         result = _clean_seed_df(df)
-        assert result.loc[0, "city"] == "Fresno", (
-            f"Expected 'Fresno', got {result.loc[0, 'city']!r}"
+        assert result.loc[0, "address"] == "123 MAIN ST", (
+            f"Expected '123 MAIN ST', got {result.loc[0, 'address']!r}"
         )
 
-    def test_transform_multi_word_city_title_case(self):
-        """Multi-word ALL CAPS cities (e.g. 'SAN JOSE') must become 'San Jose'."""
+    def test_transform_multi_word_city_upper(self):
+        """Multi-word cities (e.g. 'SAN JOSE', 'San Jose') must both become 'SAN JOSE'."""
         import ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities as mod
         from ca_biositing.pipeline.etl.transform.infrastructure import food_processing_facilities
 
@@ -837,9 +883,47 @@ class TestCityTitleCaseNormalization:
             )
 
         assert result is not None
-        assert result.loc[0, "city"] == "San Jose", (
-            f"Expected 'San Jose', got {result.loc[0, 'city']!r}"
+        assert result.loc[0, "city"] == "SAN JOSE", (
+            f"Expected 'SAN JOSE', got {result.loc[0, 'city']!r}"
         )
+
+    def test_normalize_facility_text_fields_shared_function(self):
+        """normalize_facility_text_fields() must uppercase name/address/city/state."""
+        from ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities import (
+            normalize_facility_text_fields,
+        )
+
+        df = pd.DataFrame({
+            "name": ["Acme Foods"],
+            "address": ["123 Main St"],
+            "city": ["Fresno"],
+            "state": ["ca"],
+            "zip": ["93721"],
+        })
+        result = normalize_facility_text_fields(df)
+        assert result.loc[0, "name"] == "ACME FOODS"
+        assert result.loc[0, "address"] == "123 MAIN ST"
+        assert result.loc[0, "city"] == "FRESNO"
+        assert result.loc[0, "state"] == "CA"
+        assert result.loc[0, "zip"] == "93721", "zip must not be uppercased"
+
+    def test_normalize_facility_text_fields_none_passthrough(self):
+        """normalize_facility_text_fields() must preserve None/NaN as None."""
+        from ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities import (
+            normalize_facility_text_fields,
+        )
+        import numpy as np
+
+        df = pd.DataFrame({
+            "name": [None],
+            "address": [np.nan],
+            "city": [""],
+            "state": ["CA"],
+        })
+        result = normalize_facility_text_fields(df)
+        assert result.loc[0, "name"] is None or pd.isna(result.loc[0, "name"])
+        assert result.loc[0, "address"] is None or pd.isna(result.loc[0, "address"])
+        assert result.loc[0, "city"] is None or pd.isna(result.loc[0, "city"])
 
 
 # ---------------------------------------------------------------------------
@@ -1888,4 +1972,231 @@ class TestGeocodeStatus:
         # Without API key, geocode_status should be None for all rows (not attempted)
         assert result["geocode_status"].isna().all(), (
             "Without GOOGLE_MAPS_API_KEY, geocode_status must be None for all rows"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Bug-regression tests — Issue 2: Seed CSV blank-row filtering
+# ---------------------------------------------------------------------------
+
+class TestSeedCsvBlankRowFiltering:
+    """Regression tests for blank-row filtering in _clean_seed_df().
+
+    The seed CSV was found to contain 381 blank rows (all four conflict-key
+    columns — name, address, city, zip — are empty) appended after the real
+    data rows.  These phantom rows must be dropped before upserting so they
+    do not pollute the DB with a single NULL-key row.
+    """
+
+    def test_clean_seed_df_drops_all_blank_key_rows(self):
+        """_clean_seed_df must drop rows where name/address/city/zip are all blank."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name":    ["Acme Foods", "",    None,  "Brew Co"],
+            "address": ["123 Main",   "",    None,  "500 Beer Rd"],
+            "city":    ["Fresno",     "",    None,  "Sacramento"],
+            "zip":     ["93721",      "",    None,  "95814"],
+        })
+        result = _clean_seed_df(df)
+        # Rows 1 and 2 (all-blank key) must be dropped; rows 0 and 3 must survive
+        assert len(result) == 2, (
+            f"Expected 2 rows after blank-key filtering, got {len(result)}"
+        )
+        # Remaining rows must be the real facilities (uppercased)
+        assert "ACME FOODS" in result["name"].values
+        assert "BREW CO" in result["name"].values
+
+    def test_clean_seed_df_keeps_rows_with_partial_blank_key(self):
+        """Rows where only SOME key columns are blank must NOT be dropped."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name":    ["Acme Foods"],
+            "address": [None],          # address blank but name/city/zip present
+            "city":    ["Fresno"],
+            "zip":     ["93721"],
+        })
+        result = _clean_seed_df(df)
+        # Row has name+city+zip — not all-blank — must survive
+        assert len(result) == 1, (
+            f"Row with partial key must not be dropped, got {len(result)} rows"
+        )
+
+    def test_clean_seed_df_empty_df_returns_empty(self):
+        """_clean_seed_df on an all-blank DataFrame must return an empty DataFrame."""
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name":    ["", None],
+            "address": ["", None],
+            "city":    ["", None],
+            "zip":     ["", None],
+        })
+        result = _clean_seed_df(df)
+        assert len(result) == 0, (
+            f"All-blank DataFrame must produce 0 rows after filtering, got {len(result)}"
+        )
+
+    def test_clean_seed_df_normalizes_geocode_status_empty_string_to_none(self):
+        """_clean_seed_df must convert geocode_status='' to None (NULL in DB).
+
+        The delta check queries for geocode_status == 'failed'.  Rows with
+        geocode_status='' (empty string) would be missed by that query and
+        re-queued for geocoding on every run, incurring unnecessary API costs.
+        """
+        from ca_biositing.pipeline.etl.load.food_processing_facilities import _clean_seed_df
+
+        df = pd.DataFrame({
+            "name":           ["Acme Foods", "Brew Co", "Delta Farms"],
+            "address":        ["123 Main",   "500 Beer", "789 Farm Rd"],
+            "city":           ["Fresno",     "Sacramento", "Fresno"],
+            "zip":            ["93721",      "95814",    "93722"],
+            "geocode_status": ["success",    "",         None],
+        })
+        result = _clean_seed_df(df)
+        assert result.loc[result["name"] == "ACME FOODS", "geocode_status"].iloc[0] == "success", (
+            "geocode_status='success' must be preserved"
+        )
+        brew_status = result.loc[result["name"] == "BREW CO", "geocode_status"].iloc[0]
+        assert brew_status is None or pd.isna(brew_status), (
+            f"geocode_status='' must become None, got {brew_status!r}"
+        )
+        delta_status = result.loc[result["name"] == "DELTA FARMS", "geocode_status"].iloc[0]
+        assert delta_status is None or pd.isna(delta_status), (
+            f"geocode_status=None must stay None, got {delta_status!r}"
+        )
+
+
+# ---------------------------------------------------------------------------
+# Bug-regression tests — Issue 3: parse_addresses geocode failure handling
+# ---------------------------------------------------------------------------
+
+class TestParseAddressesFailureHandling:
+    """Regression tests for unambiguous geocoding failure signalling in parse_addresses().
+
+    Before the fix, parse_addresses() could partially succeed (setting lat/lon
+    from the geocoder response) but then fail in the FIPS geoid lookup, causing
+    the bare except to overwrite latitude with None.  This made the failure
+    signal ambiguous.
+
+    After the fix:
+      * geocode() returning None raises ValueError immediately → except block
+        sets closest_latitude=None unambiguously.
+      * FIPS lookup failure is isolated in its own try/except and does NOT
+        affect closest_latitude.
+      * The caller (_apply_geocoding) sets geocode_status='failed' whenever
+        closest_latitude is None.
+    """
+
+    def test_parse_addresses_returns_none_lat_when_geocoder_returns_none(self):
+        """When geocode() returns None (address not found), closest_latitude must be None."""
+        from ca_biositing.pipeline.utils.geo_utils import parse_addresses
+        import logging
+
+        df = pd.DataFrame([{"address": "NONEXISTENT ADDRESS XYZ 99999", "is_na": False}])
+
+        with patch("ca_biositing.pipeline.utils.geo_utils.get_geocoder") as mock_get_geocoder:
+            mock_geocode = MagicMock(return_value=None)  # geocoder returns None
+            mock_get_geocoder.return_value = mock_geocode
+
+            address_df, _ = parse_addresses(df, address_column="address")
+
+        assert address_df.loc[0, "closest_latitude"] is None or pd.isna(
+            address_df.loc[0, "closest_latitude"]
+        ), (
+            "closest_latitude must be None when geocoder returns None (address not found)"
+        )
+
+    def test_parse_addresses_returns_none_lat_when_geocoder_raises(self):
+        """When geocode() raises an exception, closest_latitude must be None."""
+        from ca_biositing.pipeline.utils.geo_utils import parse_addresses
+
+        df = pd.DataFrame([{"address": "123 Main St", "is_na": False}])
+
+        with patch("ca_biositing.pipeline.utils.geo_utils.get_geocoder") as mock_get_geocoder:
+            mock_geocode = MagicMock(side_effect=Exception("Network error"))
+            mock_get_geocoder.return_value = mock_geocode
+
+            address_df, _ = parse_addresses(df, address_column="address")
+
+        assert address_df.loc[0, "closest_latitude"] is None or pd.isna(
+            address_df.loc[0, "closest_latitude"]
+        ), "closest_latitude must be None when geocoder raises"
+
+    def test_parse_addresses_fips_failure_does_not_clear_lat_lon(self):
+        """FIPS geoid lookup failure must NOT set closest_latitude to None.
+
+        lat/lon from the geocoder API is valid even when the county FIPS lookup
+        fails.  The two concerns must be isolated.
+        """
+        from ca_biositing.pipeline.utils.geo_utils import parse_addresses
+
+        df = pd.DataFrame([{"address": "123 Main St, Fresno, CA 93721", "is_na": False}])
+
+        mock_location = MagicMock()
+        mock_location.raw = {
+            "address_components": [
+                {"long_name": "123", "short_name": "123", "types": ["street_number"]},
+                {"long_name": "Main St", "short_name": "Main St", "types": ["route"]},
+                {"long_name": "Fresno", "short_name": "Fresno", "types": ["locality"]},
+                {"long_name": "Fresno County", "short_name": "Fresno County",
+                 "types": ["administrative_area_level_2"]},
+                {"long_name": "California", "short_name": "CA",
+                 "types": ["administrative_area_level_1"]},
+                {"long_name": "93721", "short_name": "93721", "types": ["postal_code"]},
+            ],
+            "geometry": {"location": {"lat": 36.7468, "lng": -119.7726}},
+        }
+
+        with patch("ca_biositing.pipeline.utils.geo_utils.get_geocoder") as mock_get_geocoder, \
+             patch("ca_biositing.pipeline.utils.geo_utils._get_fips_helper") as mock_fips:
+            mock_get_geocoder.return_value = MagicMock(return_value=mock_location)
+            # FIPS lookup raises — simulates addfips failure
+            mock_fips.return_value.get_county_fips.side_effect = Exception("FIPS lookup failed")
+
+            address_df, _ = parse_addresses(df, address_column="address")
+
+        # lat/lon must still be populated despite FIPS failure
+        assert address_df.loc[0, "closest_latitude"] == 36.7468, (
+            f"FIPS failure must not clear closest_latitude; got {address_df.loc[0, 'closest_latitude']!r}"
+        )
+        assert address_df.loc[0, "closest_longitude"] == -119.7726
+
+    def test_apply_geocoding_marks_failed_when_parse_addresses_returns_none_lat(self):
+        """_apply_geocoding must set geocode_status='failed' when parse_addresses returns None lat."""
+        from ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities import (
+            _apply_geocoding,
+        )
+        import logging
+
+        logger = logging.getLogger("test")
+
+        geo_df = pd.DataFrame(
+            [["NONEXISTENT ADDRESS", "FRESNO", "93721"]],
+            columns=["address", "city", "zip"],
+        )
+
+        with patch("sqlmodel.Session") as mock_session_cls, \
+             patch("ca_biositing.pipeline.utils.engine.get_engine"), \
+             patch.dict(os.environ, {"GOOGLE_MAPS_API_KEY": "fake-key"}), \
+             patch(
+                 "ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities.parse_addresses"
+             ) as mock_parse:
+            mock_session = MagicMock()
+            mock_session_cls.return_value.__enter__.return_value = mock_session
+            mock_session.exec.return_value.all.return_value = []  # empty DB
+
+            # parse_addresses returns None for closest_latitude → geocoding failed
+            mock_parse.return_value = (
+                pd.DataFrame([{"closest_latitude": None, "closest_longitude": None}]),
+                pd.DataFrame(),
+            )
+
+            result = _apply_geocoding(geo_df, logger)
+
+        assert result is not None
+        assert result.loc[0, "geocode_status"] == "failed", (
+            f"Expected 'failed' when parse_addresses returns None lat, "
+            f"got {result.loc[0, 'geocode_status']!r}"
         )

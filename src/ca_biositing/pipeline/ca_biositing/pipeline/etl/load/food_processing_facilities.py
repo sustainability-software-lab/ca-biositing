@@ -106,30 +106,50 @@ def _clean_seed_df(df: pd.DataFrame) -> pd.DataFrame:
     applies to incoming sheet rows, so the DB always stores clean values that
     will match the delta-check address keys.
 
-    Cleaning steps (must mirror the transform pipeline):
+    Uses ``normalize_facility_text_fields()`` from the transform module as the
+    **single source of truth** for text normalization — this guarantees that
+    seed rows and sheet rows are always normalized identically, preventing
+    delta-check key mismatches that cause spurious geocoder API calls.
+
+    Cleaning steps:
     1. Drop ``processing_facility_id`` — the seed CSV exports the DB primary
        key, but re-inserting it causes a UniqueViolation when the row already
        exists (the PK constraint fires before the ON CONFLICT clause can
        redirect to an UPDATE).  The DB auto-generates the ID on INSERT and
        the ON CONFLICT key is ``(name, address, city, zip)``, so the PK
        column must be absent from the seed upsert payload.
-    2. Collapse newlines/extra whitespace in address (``_clean_address``).
+    2. Collapse newlines/extra whitespace in address (mirrors _clean_address).
     3. Extract 5-digit ZIP (strip ZIP+4 and float artifacts like "93721.0").
     4. Hardcode state = "CA" (all facilities are in California).
-    5. Normalize city to Title Case (CARB source data is ALL CAPS; mirrors
-       the transform's city normalization so seed rows match incoming rows).
-    6. Coerce created_at/updated_at to proper datetimes or None (guards
+    5. ALL CAPS normalization for name, address, city, state — via the shared
+       ``normalize_facility_text_fields()`` helper imported from the transform
+       module.  This replaces the old Title Case city normalization and extends
+       it to name and address as well.
+    6. Drop rows where ALL FOUR conflict-key columns (name, address, city, zip)
+       are blank/None — these are phantom rows (e.g. blank rows appended to the
+       DB by a bad ETL run) that would be upserted as a single NULL-key row and
+       pollute the table.
+    7. Normalize geocode_status: convert empty string '' to None so the DB
+       stores NULL (pending) rather than '' — the delta check queries for
+       geocode_status == 'failed', so '' rows would be incorrectly re-queued
+       for geocoding on every run.
+    8. Coerce created_at/updated_at to proper datetimes or None (guards
        against malformed values like "29:13.8" from Google Sheets exports).
     """
+    # Lazy import — avoids circular import at module level; the transform module
+    # is only needed here at call time, not at import time.
+    from ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities import (
+        normalize_facility_text_fields,
+    )
+
     df = df.copy()
 
     # 1. Drop processing_facility_id so the DB auto-generates it on INSERT.
-    #    Re-inserting the exported PK causes a UniqueViolation when the row
-    #    already exists because the PK constraint fires before ON CONFLICT.
     if "processing_facility_id" in df.columns:
         df = df.drop(columns=["processing_facility_id"])
 
-    # 2. Normalize address whitespace (same as transform's _clean_address)
+    # 2. Collapse newlines/extra whitespace in address (mirrors _clean_address).
+    #    Casing is handled by normalize_facility_text_fields() in step 5.
     if "address" in df.columns:
         df["address"] = df["address"].apply(
             lambda v: (
@@ -146,13 +166,58 @@ def _clean_seed_df(df: pd.DataFrame) -> pd.DataFrame:
     # 4. Hardcode state so the delta-check key always uses "CA" on both sides
     df["state"] = "CA"
 
-    # 5. Normalize city to Title Case — mirrors the transform pipeline so that
-    #    seed rows loaded from the CSV always match the casing of incoming sheet
-    #    rows (both go through Title Case normalization before hitting the DB).
-    if "city" in df.columns:
-        df["city"] = df["city"].astype("string").str.title()
+    # 5. ALL CAPS normalization for name, address, city, state.
+    #    Single source of truth — same function used by the transform pipeline.
+    df = normalize_facility_text_fields(df)
 
-    # 6. Sanitize datetime columns — unparseable values (e.g. "29:13.8") become
+    # 6. Drop rows where ALL FOUR conflict-key columns are blank/None.
+    #    These are phantom rows (e.g. blank rows from a bad ETL run) that would
+    #    be upserted as a single NULL-key row and pollute the table.
+    conflict_key_cols = ["name", "address", "city", "zip"]
+    present_key_cols = [c for c in conflict_key_cols if c in df.columns]
+    if present_key_cols:
+        all_blank_mask = df[present_key_cols].apply(
+            lambda col: col.isna() | (col.astype(str).str.strip() == "")
+        ).all(axis=1)
+        n_dropped = all_blank_mask.sum()
+        if n_dropped > 0:
+            _module_logger.info(
+                "[seed] Dropping %d blank-key rows (all of name/address/city/zip are empty) "
+                "before upsert — these are phantom rows from a previous bad ETL run.",
+                n_dropped,
+            )
+        df = df[~all_blank_mask].copy()
+
+    # 7. Normalize geocode_status: '' (empty string) → None so the DB stores
+    #    NULL (pending) rather than ''.  The delta check queries for
+    #    geocode_status == 'failed'; '' rows would be incorrectly re-queued.
+    if "geocode_status" in df.columns:
+        df["geocode_status"] = df["geocode_status"].apply(
+            lambda v: None if (v is None or str(v).strip() == "") else v
+        )
+
+    # 7b. Correct geocode_status='success' rows that have no latitude.
+    #     These are rows where a previous ETL run wrote geocode_status='success'
+    #     but failed to store lat/lon (e.g. due to the old FIPS-failure bug that
+    #     cleared latitude in the except block).  The UPSERT COALESCE preserved
+    #     'success' on subsequent runs even though lat/lon was null.
+    #     Reset these to None (pending) so the delta check re-queues them for
+    #     geocoding — a row cannot be 'success' without coordinates.
+    if "geocode_status" in df.columns and "latitude" in df.columns:
+        bad_success_mask = (
+            (df["geocode_status"] == "success")
+            & (df["latitude"].isna() | (df["latitude"].astype(str).str.strip() == ""))
+        )
+        n_corrected = int(bad_success_mask.sum())
+        if n_corrected > 0:
+            _module_logger.info(
+                "[seed] Correcting %d rows with geocode_status='success' but null latitude "
+                "→ resetting to None (pending) so they are re-queued for geocoding.",
+                n_corrected,
+            )
+            df.loc[bad_success_mask, "geocode_status"] = None
+
+    # 8. Sanitize datetime columns — unparsable values (e.g. "29:13.8") become
     #    None so _upsert_records() falls back to setting them to `now`.
     for col in ("created_at", "updated_at"):
         if col in df.columns:
