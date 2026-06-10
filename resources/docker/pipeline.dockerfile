@@ -33,6 +33,8 @@ COPY --from=build /app/alembic /app/alembic
 # copy Prefect flow entrypoint and deployment config
 COPY --from=build /app/resources/prefect/run_prefect_flow.py /app/run_prefect_flow.py
 COPY --from=build /app/resources/prefect/prefect.yaml /app/prefect.yaml
+# Copy static data needed for ETL
+COPY --from=build /app/data/static /app/data/static
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
