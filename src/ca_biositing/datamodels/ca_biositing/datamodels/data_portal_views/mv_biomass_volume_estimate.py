@@ -193,8 +193,6 @@ census_based_volumes = select(
  ).subquery()
 
 
-# Inline PAP-to-resource mapping for commodity-direct resources
-# Based on names to ensure stability across environments:
 # Matches CountyAgReportRecord.primary_ag_product_id (via name) to Resource.id (via name).
 mapping_names = union_all(
     select(literal("almond hulls").label("pap_name"), literal("almond hulls").label("res_name")),
