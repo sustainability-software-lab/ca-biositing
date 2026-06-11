@@ -80,7 +80,7 @@ def load_county_ag_report_records(df: pd.DataFrame):
                                 "geoid": geoid,
                                 "state_fips": geoid[:2] if len(geoid) >= 2 else None,
                                 "county_fips": geoid[2:] if len(geoid) >= 5 else None,
-                                "state_name": "CALIFORNIA" if geoid.startswith("06") else None,
+                                "state_name": "california" if geoid.startswith("06") else None,
                             }
                             session.add(Place(**place_data))
                         session.flush()

@@ -11,7 +11,7 @@ from ca_biositing.pipeline.utils.engine import get_engine
 _KNOWN_PLACES = {
     "06000": {
         "geoid": "06000",
-        "state_name": "CALIFORNIA",
+        "state_name": "california",
         "state_fips": "06",
         "county_name": None,
         "county_fips": "000",
