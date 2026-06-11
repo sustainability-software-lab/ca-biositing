@@ -58,19 +58,19 @@ production_based_volumes = select(
     CountyAgReportRecord.data_year.label("dataset_year"),
     CountyAgReportRecord.record_id,
     # Aggregate observations for production volume
-    func.avg(case((Parameter.name == "production", Observation.value))).label("primary_product_volume"),
+    func.avg(case((Parameter.name == "production", Observation.value), else_=None)).label("primary_product_volume"),
     # Harvested acres for the crop
-    func.avg(case((Parameter.name == "harvested acres", Observation.value))).label("county_crop_acres"),
+    func.avg(case((Parameter.name == "harvested acres", Observation.value), else_=None)).label("county_crop_acres"),
     # Capture unit from observations
-    func.max(case((Parameter.name == "production", Unit.name))).label("volume_unit"),
+    func.max(case((Parameter.name == "production", Unit.name), else_=None)).label("volume_unit"),
     # Residue factor values
     ResidueFactor.factor_min,
     ResidueFactor.factor_mid,
     ResidueFactor.factor_max,
     # Calculated volumes (min, mid, max)
-    (func.avg(case((Parameter.name == "production", Observation.value))) * ResidueFactor.factor_min).label("estimated_residue_volume_min"),
-    (func.avg(case((Parameter.name == "production", Observation.value))) * ResidueFactor.factor_mid).label("estimated_residue_volume_mid"),
-    (func.avg(case((Parameter.name == "production", Observation.value))) * ResidueFactor.factor_max).label("estimated_residue_volume_max"),
+    (func.avg(case((Parameter.name == "production", Observation.value), else_=None)) * ResidueFactor.factor_min).label("estimated_residue_volume_min"),
+    (func.avg(case((Parameter.name == "production", Observation.value), else_=None)) * ResidueFactor.factor_mid).label("estimated_residue_volume_mid"),
+    (func.avg(case((Parameter.name == "production", Observation.value), else_=None)) * ResidueFactor.factor_max).label("estimated_residue_volume_max"),
     literal("production_based").label("volume_source"),
     literal("dry_tons").label("biomass_unit")
 ).select_from(CountyAgReportRecord)\
@@ -124,12 +124,12 @@ census_based_volumes = select(
     # Acreage: COALESCE(area bearing & non-bearing, area bearing)
     # Prefer bearing & non-bearing to capture total managed footprint for pruning.
     func.coalesce(
-        func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-        func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value)))
+        func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+        func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value), else_=None))
     ).label("bearing_acres"),
     func.coalesce(
-        func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-        func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value)))
+        func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+        func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value), else_=None))
     ).label("county_crop_acres"),
     literal("acres").label("volume_unit"),
     # Residue factor yield values
@@ -139,23 +139,23 @@ census_based_volumes = select(
     # Calculated volumes (acres × prune_trim_yield)
     (
         func.coalesce(
-            func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-            func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value)))
+            func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+            func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value), else_=None))
         ) * ResidueFactor.prune_trim_yield
     ).label("estimated_residue_volume_min"),
     (
         func.coalesce(
-            func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-            func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value)))
+            func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+            func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value), else_=None))
         ) * ResidueFactor.prune_trim_yield
     ).label("estimated_residue_volume_mid"),
     (
         func.coalesce(
-            func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-            func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value)))
+            func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+            func.avg(case((Observation.parameter_id == _param_bearing_id, Observation.value), else_=None))
         ) * ResidueFactor.prune_trim_yield
     ).label("estimated_residue_volume_max"),
-    literal("census_acres").label("volume_source"),
+    literal("prune_acres").label("volume_source"),
     literal("dry_tons").label("biomass_unit")
 ).select_from(UsdaCensusRecord)\
  .join(UsdaCommodity, UsdaCensusRecord.commodity_code == UsdaCommodity.id)\
@@ -193,22 +193,24 @@ census_based_volumes = select(
  ).subquery()
 
 
-# Inline PAP-to-resource mapping for commodity-direct resources
-# Based on names to ensure stability across environments:
-# - 'almond hulls' (PAP 38)  → 'almond hulls' (Resource 8)
-# - 'almond shells' (PAP 29) → 'almond shells' (Resource 2)
-# - 'almond meats' (PAP 54)  → 'almond hulls' (Resource 8)
-# - 'hay - alfalfa' (PAP 19)  → 'alfalfa' (Resource 37)
-# - 'silage - alfalfa' (PAP 57) → 'alfalfa' (Resource 37)
-# - 'alfalfa & mixtures' (PAP 82) → 'alfalfa' (Resource 37)
-commodity_map = union_all(
-    select(literal(38, Integer).label("pap_id"), literal(8, Integer).label("resource_id")),
-    select(literal(29, Integer), literal(2, Integer)),
-    select(literal(54, Integer), literal(8, Integer)),
-    select(literal(19, Integer), literal(37, Integer)),
-    select(literal(57, Integer), literal(37, Integer)),
-    select(literal(82, Integer), literal(37, Integer))
-).subquery("commodity_map")
+# Matches CountyAgReportRecord.primary_ag_product_id (via name) to Resource.id (via name).
+mapping_names = union_all(
+    select(literal("almond hulls").label("pap_name"), literal("almond hulls").label("res_name")),
+    select(literal("almond shells"), literal("almond shells")),
+    select(literal("almond meats"), literal("almond hulls")),
+    select(literal("hay - alfalfa"), literal("alfalfa")),
+    select(literal("silage - alfalfa"), literal("alfalfa")),
+    select(literal("alfalfa & mixtures"), literal("alfalfa")),
+    select(literal("alfalfa & alfalfa mixtures"), literal("alfalfa"))
+).subquery("mapping_names")
+
+commodity_map = select(
+    PrimaryAgProduct.id.label("pap_id"),
+    Resource.id.label("resource_id")
+).select_from(mapping_names)\
+ .join(PrimaryAgProduct, func.lower(PrimaryAgProduct.name) == mapping_names.c.pap_name)\
+ .join(Resource, func.lower(Resource.name) == mapping_names.c.res_name)\
+ .subquery("commodity_map")
 
 # Path C: Commodity-direct resource volumes
 # For resources (e.g. almond hulls, almond shells) that are themselves tracked
@@ -224,18 +226,18 @@ commodity_direct_volumes = select(
     CountyAgReportRecord.data_year.label("dataset_year"),
     CountyAgReportRecord.record_id,
     # Aggregate observations for production volume
-    func.avg(case((Parameter.name == "production", Observation.value))).label("primary_product_volume"),
+    func.avg(case((Parameter.name == "production", Observation.value), else_=None)).label("primary_product_volume"),
     cast(literal(None), Numeric).label("county_crop_acres"),
     # Capture unit from observations
-    func.max(case((Parameter.name == "production", Unit.name))).label("volume_unit"),
+    func.max(case((Parameter.name == "production", Unit.name), else_=None)).label("volume_unit"),
     # Identity factor (direct measurement)
     cast(literal(None), Numeric).label("factor_min"),
     cast(literal(1.0), Numeric).label("factor_mid"),
     cast(literal(None), Numeric).label("factor_max"),
     # estimated_residue_volume = production value directly (factor = 1)
-    func.avg(case((Parameter.name == "production", Observation.value))).label("estimated_residue_volume_min"),
-    func.avg(case((Parameter.name == "production", Observation.value))).label("estimated_residue_volume_mid"),
-    func.avg(case((Parameter.name == "production", Observation.value))).label("estimated_residue_volume_max"),
+    func.avg(case((Parameter.name == "production", Observation.value), else_=None)).label("estimated_residue_volume_min"),
+    func.avg(case((Parameter.name == "production", Observation.value), else_=None)).label("estimated_residue_volume_mid"),
+    func.avg(case((Parameter.name == "production", Observation.value), else_=None)).label("estimated_residue_volume_max"),
     literal("commodity_direct").label("volume_source"),
     literal("tons").label("biomass_unit")
 ).select_from(CountyAgReportRecord)\
@@ -261,7 +263,7 @@ commodity_direct_volumes = select(
      Place.state_name,
      CountyAgReportRecord.data_year,
      CountyAgReportRecord.record_id,
-).subquery()
+ ).subquery()
 
 
 # Path D: Acreage-based volume estimation
@@ -294,8 +296,8 @@ acreage_based_volumes = select(
  # Acreage: COALESCE(area bearing & non-bearing, area harvested)
  # Each commodity only has one of these two parameters, so COALESCE selects the right one.
  func.coalesce(
-     func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-     func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value)))
+     func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+     func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value), else_=None))
  ).label("county_crop_acres"),
  # Residue factor values (COALESCE with prune_trim_yield for acreage-based estimation)
  # Most area-type resources use prune_trim_yield as the primary tons/acre factor.
@@ -306,20 +308,20 @@ acreage_based_volumes = select(
  # Calculated volumes: acres × factor (NULL when factor is NULL)
  (
      func.coalesce(
-         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value)))
+         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value), else_=None))
      ) * func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_min)
  ).label("estimated_residue_volume_min"),
  (
      func.coalesce(
-         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value)))
+         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value), else_=None))
      ) * func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_mid)
  ).label("estimated_residue_volume_mid"),
  (
      func.coalesce(
-         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value))),
-         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value)))
+         func.avg(case((Observation.parameter_id == _param_bnb_id, Observation.value), else_=None)),
+         func.avg(case((Observation.parameter_id == _param_harvested_id, Observation.value), else_=None))
      ) * func.coalesce(ResidueFactor.prune_trim_yield, ResidueFactor.factor_max)
  ).label("estimated_residue_volume_max"),
  literal("acreage_based").label("volume_source"),

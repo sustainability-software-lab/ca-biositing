@@ -81,9 +81,11 @@ def transform_gasification_record(
 
     final_df = merged_df.drop_duplicates(subset=['record_id']).copy()
 
-    # Preserve resource name before normalization
+    # Preserve resource and reactor names before normalization
     if 'resource' in final_df.columns:
         final_df['resource_name'] = final_df['resource']
+    if 'reactor_id' in final_df.columns:
+        final_df['reactor_name'] = final_df['reactor_id']
 
     # 3. Normalization
     final_df['dataset'] = 'biocirv'
@@ -116,7 +118,8 @@ def transform_gasification_record(
         'qc_result': 'qc_pass',
         'etl_run_id': 'etl_run_id',
         'lineage_group_id': 'lineage_group_id',
-        'resource_name': 'resource_name'
+        'resource_name': 'resource_name',
+        'reactor_name': 'reactor_name'
     }
 
     # Lineage inheritance

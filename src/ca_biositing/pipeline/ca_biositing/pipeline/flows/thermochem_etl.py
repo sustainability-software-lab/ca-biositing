@@ -122,6 +122,7 @@ def thermochem_etl_flow(force_refresh: bool = False, *args, **kwargs):
                             "resource_id": row.get('resource_id'),
                             "experiment_id": row.get('experiment_id'),
                             "resource_name": row.get('resource_name'),
+                            "reactor_name": row.get('reactor_name'),
                             "reactor_type_id": row.get('reactor_type_id')
                         })
 
