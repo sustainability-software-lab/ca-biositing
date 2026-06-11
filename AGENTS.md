@@ -211,6 +211,12 @@ The API layer.
 - `pixi run start-webservice`: Launch API locally.
 - `pixi run skills-sync`: Synchronize agent skills from `skills.json`.
 
+### ETL Flow Management
+
+- `pixi run list-flows`: List all available Prefect flows in the project.
+- `pixi run run-single-flow <module_name>`: Run a specific flow by its module
+  name (e.g., `pixi run run-single-flow landiq_etl`).
+
 ## Agent Skills Management
 
 This project uses **Agent Skills** to extend AI agent capabilities (like GitHub

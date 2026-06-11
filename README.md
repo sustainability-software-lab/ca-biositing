@@ -167,8 +167,14 @@ pixi run deploy
 # files without restarting services.
 pixi run migrate
 
-# 4. Run the ETL pipeline
+# 4. Run the Master ETL pipeline
 pixi run run-etl
+
+# 5. List available individual flows
+pixi run list-flows
+
+# 6. Run a specific flow
+pixi run run-single-flow landiq_etl
 
 # Monitor via Prefect UI: http://localhost:4200
 
