@@ -65,7 +65,8 @@ def transform(
             continue
 
         # Standardize column names (snake_case) and basic string cleaning
-        cleaned_df = cleaning_mod.standard_clean(df)
+        # Exclude description and note from lowercasing to preserve case
+        cleaned_df = cleaning_mod.standard_clean(df, exclude_lowercase=['description', 'note'])
 
         # Add lineage tracking metadata
         cleaned_df['etl_run_id'] = etl_run_id
