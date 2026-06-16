@@ -24,7 +24,14 @@ from ca_biositing.datamodels.models.aim2_records.gasification_record import Gasi
 from ca_biositing.datamodels.models.aim2_records.pretreatment_record import PretreatmentRecord
 
 # Global resource filters to exclude problematic records
-EXCLUDED_RESOURCES = ["sargassum", "#n/a", "lab media"]
+EXCLUDED_RESOURCES = [
+    "sargassum",
+    "#n/a",
+    "lab media",
+    "alfalfa",
+    "almond hulls and shells mix",
+    "almond woodchips",
+]
 
 # Allowed parameters for Ultimate Analysis
 ULTIMATE_PARAMETERS = ["carbon", "nitrogen", "oxygen", "sulfur", "hydrogen"]
