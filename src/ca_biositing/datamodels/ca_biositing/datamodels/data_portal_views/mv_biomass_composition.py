@@ -134,7 +134,13 @@ qc_analysis_stats = select(
             func.avg(case((all_measurements.c.parameter_name == "lignin", all_measurements.c.value))),
             func.avg(case((all_measurements.c.parameter_name == "lignin+", all_measurements.c.value)))
         )
-    ).label("compositional_sum")
+    ).label("compositional_sum"),
+    func.max(
+        case(
+            (and_(all_measurements.c.analysis_type == "icp", all_measurements.c.unit == "ppm"), all_measurements.c.value),
+            else_=0
+        )
+    ).label("max_icp_ppm")
 ).group_by(
     all_measurements.c.resource_id,
     all_measurements.c.experiment_id,
@@ -192,8 +198,16 @@ mv_biomass_composition = select(
                       )
                   )
               ),
+              # For ICP: filter out experiments with any value > 500,000 ppm
+              and_(
+                  all_measurements.c.analysis_type == "icp",
+                  or_(
+                      qc_analysis_stats.c.max_icp_ppm == None,
+                      qc_analysis_stats.c.max_icp_ppm <= 500000
+                  )
+              ),
               # For all other analysis types: no filtering, include all
-              all_measurements.c.analysis_type.notin_(["proximate", "compositional"])
+              all_measurements.c.analysis_type.notin_(["proximate", "compositional", "icp"])
           )
       )
   )\
