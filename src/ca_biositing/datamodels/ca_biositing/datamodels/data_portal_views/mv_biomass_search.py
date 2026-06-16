@@ -121,6 +121,30 @@ resource_metrics_v2 = select(
     func.bool_or(comp_sq.c.analysis_type == "pretreatment").label("has_pretreatment")
 ).group_by(comp_sq.c.resource_id).subquery()
 
+# First, get the most recent year per resource
+volume_year_sq = select(
+     mv_biomass_volume_estimate.c.resource_id,
+     func.max(mv_biomass_volume_estimate.c.dataset_year).label("volume_estimate_year")
+  ).select_from(mv_biomass_volume_estimate)\
+   .group_by(mv_biomass_volume_estimate.c.resource_id).subquery()
+
+# Volume estimation aggregation (state-wide sum for latest data year)
+
+
+# Then aggregate volumes for the most recent year only
+volume_agg = select(
+      mv_biomass_volume_estimate.c.resource_id,
+      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_min).label("calculated_estimate_volume_min"),
+      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_max).label("calculated_estimate_volume_max"),
+      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_mid).label("calculated_estimate_volume_mid"),
+      volume_year_sq.c.volume_estimate_year
+    ).select_from(mv_biomass_volume_estimate)\
+    .join(volume_year_sq, and_(
+        mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id,
+        mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year,
+    ))\
+    .group_by(mv_biomass_volume_estimate.c.resource_id, volume_year_sq.c.volume_estimate_year).subquery()
+
 # 3. Tag thresholds calculated from the QC-filtered metrics
 thresholds_v2 = select(
     func.percentile_cont(0.1).within_group(resource_metrics_v2.c.moisture_percent).label("moisture_low"),
@@ -137,6 +161,12 @@ thresholds_v2 = select(
     func.percentile_cont(0.9).within_group(resource_metrics_v2.c.xylan_percent).label("xylan_high")
 ).subquery()
 
+# Volume thresholds
+volume_thresholds = select(
+    func.percentile_cont(0.1).within_group(volume_agg.c.calculated_estimate_volume_mid).label("volume_low"),
+    func.percentile_cont(0.9).within_group(volume_agg.c.calculated_estimate_volume_mid).label("volume_high")
+).select_from(volume_agg).subquery()
+
 # 4. Resource tags generation joining on true
 resource_tags_v2 = select(
      resource_metrics_v2.c.resource_id,
@@ -151,11 +181,13 @@ resource_tags_v2 = select(
              case((resource_metrics_v2.c.glucan_percent <= thresholds_v2.c.glucan_low, "low glucan"), else_=None),
              case((resource_metrics_v2.c.glucan_percent >= thresholds_v2.c.glucan_high, "high glucan"), else_=None),
              case((resource_metrics_v2.c.xylan_percent <= thresholds_v2.c.xylan_low, "low xylan"), else_=None),
-             case((resource_metrics_v2.c.xylan_percent >= thresholds_v2.c.xylan_high, "high xylan"), else_=None)
+             case((resource_metrics_v2.c.xylan_percent >= thresholds_v2.c.xylan_high, "high xylan"), else_=None),
+             case((volume_agg.c.calculated_estimate_volume_mid <= volume_thresholds.c.volume_low, "low volume"), else_=None),
+             case((volume_agg.c.calculated_estimate_volume_mid >= volume_thresholds.c.volume_high, "high volume"), else_=None)
          ]),
          None
      ).label("tags")
- ).select_from(resource_metrics_v2).join(thresholds_v2, literal(True)).subquery()
+ ).select_from(resource_metrics_v2).join(thresholds_v2, literal(True)).outerjoin(volume_agg, volume_agg.c.resource_id == resource_metrics_v2.c.resource_id).join(volume_thresholds, literal(True)).subquery()
 
 # 5. Aggregated volume from internal production records + observations
 # Value is sum cross all NSJV counties for the most recent year of data for each resource
@@ -211,27 +243,7 @@ storage_notes_sq = select(
     func.max(ResourceStorageRecord.storage_description).label("storage_notes")
 ).group_by(ResourceStorageRecord.resource_id).subquery()
 
-# Volume estimation aggregation (state-wide sum for latest data year)
-# First, get the most recent year per resource
-volume_year_sq = select(
-     mv_biomass_volume_estimate.c.resource_id,
-     func.max(mv_biomass_volume_estimate.c.dataset_year).label("volume_estimate_year")
-  ).select_from(mv_biomass_volume_estimate)\
-   .group_by(mv_biomass_volume_estimate.c.resource_id).subquery()
 
-# Then aggregate volumes for the most recent year only
-volume_agg = select(
-      mv_biomass_volume_estimate.c.resource_id,
-      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_min).label("calculated_estimate_volume_min"),
-      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_max).label("calculated_estimate_volume_max"),
-      func.sum(mv_biomass_volume_estimate.c.estimated_residue_volume_mid).label("calculated_estimate_volume_mid"),
-      volume_year_sq.c.volume_estimate_year
-    ).select_from(mv_biomass_volume_estimate)\
-    .join(volume_year_sq, and_(
-        mv_biomass_volume_estimate.c.resource_id == volume_year_sq.c.resource_id,
-        mv_biomass_volume_estimate.c.dataset_year == volume_year_sq.c.volume_estimate_year,
-    ))\
-    .group_by(mv_biomass_volume_estimate.c.resource_id, volume_year_sq.c.volume_estimate_year).subquery()
 
 mv_biomass_search = select(
      Resource.id,
