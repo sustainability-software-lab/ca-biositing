@@ -30,6 +30,7 @@ EXCLUDED_RESOURCES = [
     "lab media",
     "alfalfa",
     "almond hulls and shells mix",
+    "almond shells and hulls mix",
     "almond woodchips",
 ]
 
