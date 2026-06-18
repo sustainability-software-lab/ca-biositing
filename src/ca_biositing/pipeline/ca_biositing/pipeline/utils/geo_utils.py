@@ -1,9 +1,31 @@
 import pandas as pd
 import numpy as np
 import os
+from functools import partial
 from prefect import task, get_run_logger
 
 address_types = ['street_number', 'route', "intersection", "natural_feature", "airport", "park", "point_of_interest", 'post_box', 'landmark']
+
+# ---------------------------------------------------------------------------
+# California bounding box — used to reject geocoder results outside the state.
+# All facilities in this project are in California; any result outside these
+# bounds is treated as a geocoding failure.
+# Generous margins to include all CA territory (Channel Islands, etc.).
+# ---------------------------------------------------------------------------
+_CA_LAT_MIN = 32.5
+_CA_LAT_MAX = 42.0
+_CA_LON_MIN = -124.5
+_CA_LON_MAX = -114.1
+
+
+def _is_in_california(lat, lon) -> bool:
+    """Return True if the coordinate falls within California's bounding box."""
+    if lat is None or lon is None:
+        return False
+    try:
+        return _CA_LAT_MIN <= float(lat) <= _CA_LAT_MAX and _CA_LON_MIN <= float(lon) <= _CA_LON_MAX
+    except (TypeError, ValueError):
+        return False
 
 
 def _get_fips_helper():
@@ -16,6 +38,15 @@ def get_geocoder():
     """
     Lazily initialize the GoogleV3 geocoder and rate limiter.
     This avoids ConfigurationErrors at import time if the API key is missing.
+
+    The geocoder is constrained to California (US) via the Google Maps
+    ``components`` filter.  This is a hard API-level constraint that prevents
+    ambiguous street names from being resolved to locations outside California
+    (e.g. a short address like "5069 W CLAYTON" being geocoded to Asia).
+
+    Both current callers of this function (food processing facilities and
+    biodiesel plants) are California-only datasets, so this constraint is
+    always correct.
     """
     from geopy.geocoders import GoogleV3
     from geopy.extra.rate_limiter import RateLimiter
@@ -27,7 +58,13 @@ def get_geocoder():
         return None
 
     geolocator = GoogleV3(api_key=api_key)
-    return RateLimiter(geolocator.geocode, min_delay_seconds=0.1)
+    # Wrap geocode with a CA/US components filter so every call is constrained
+    # to California regardless of what the address string contains.
+    geocode_ca = partial(
+        geolocator.geocode,
+        components={"country": "US", "administrative_area": "CA"},
+    )
+    return RateLimiter(geocode_ca, min_delay_seconds=0.1)
 
 def get_geoid(val, county_to_geoid):
     """
@@ -159,6 +196,23 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
             else:
                 latitude = info['geometry']['location']['lat'] if isinstance(info['geometry']['location']['lat'], float) else None
                 longitude = info['geometry']['location']['lng'] if isinstance(info['geometry']['location']['lng'], float) else None
+
+            # CA bounds validation — reject any geocoder result that falls
+            # outside California's bounding box.  The components filter on
+            # get_geocoder() is the primary constraint; this is a safety net
+            # that catches any edge case where the API ignores the filter.
+            # Treat out-of-CA results as a geocoding failure so the row gets
+            # geocode_status='failed' and is not stored with wrong coordinates.
+            if latitude is not None and longitude is not None and not _is_in_california(latitude, longitude):
+                logger.warning(
+                    "Geocoder returned out-of-CA coordinates (lat=%.4f, lon=%.4f) for %r "
+                    "— rejecting result and treating as geocoding failure.",
+                    latitude, longitude, row[address_column],
+                )
+                raise ValueError(
+                    f"Out-of-CA geocoder result: lat={latitude}, lon={longitude} "
+                    f"for address {row[address_column]!r}"
+                )
 
             address_result = {
                 "closest_address_line_1": address,

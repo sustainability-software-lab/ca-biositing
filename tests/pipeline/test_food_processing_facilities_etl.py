@@ -1091,6 +1091,65 @@ class TestParseAddressesNoLatLonColumns:
         assert address_df.loc[0, "closest_latitude"] == 36.7468
         assert address_df.loc[0, "closest_longitude"] == -119.7726
 
+    def test_parse_addresses_rejects_out_of_ca_lat_lon(self):
+        """Geocoder results outside California's bounding box must be treated as failures.
+
+        Regression guard for the bug where ambiguous street names (e.g. "5069 W CLAYTON")
+        were geocoded to Asia/Europe because no state constraint was sent to Google Maps.
+        The CA bounds check in parse_addresses() must reject such results and set
+        closest_latitude=None so the row gets geocode_status='failed'.
+        """
+        from ca_biositing.pipeline.utils.geo_utils import parse_addresses
+        from unittest.mock import MagicMock
+
+        df = pd.DataFrame([{"address": "5069 W CLAYTON, FRESNO, 93706, CA"}])
+
+        # Mock geocoder returning a London coordinate (outside CA)
+        mock_location = MagicMock()
+        mock_location.raw = {
+            "address_components": [
+                {"long_name": "London", "short_name": "London", "types": ["locality"]},
+                {"long_name": "England", "short_name": "ENG", "types": ["administrative_area_level_1"]},
+                {"long_name": "United Kingdom", "short_name": "GB", "types": ["country"]},
+            ],
+            "geometry": {"location": {"lat": 51.5074, "lng": -0.1278}},
+        }
+        mock_geocode = MagicMock(return_value=mock_location)
+
+        with patch("ca_biositing.pipeline.utils.geo_utils.get_geocoder", return_value=mock_geocode):
+            address_df, _ = parse_addresses(df, address_column="address", lat="latitude", long="longitude")
+
+        assert address_df.loc[0, "closest_latitude"] is None, (
+            "Out-of-CA geocoder result (London) must be rejected — closest_latitude must be None"
+        )
+        assert address_df.loc[0, "closest_longitude"] is None, (
+            "Out-of-CA geocoder result (London) must be rejected — closest_longitude must be None"
+        )
+
+    def test_build_geocode_query_appends_ca(self):
+        """_build_geocode_query must always append CA and include address/city/zip parts."""
+        from ca_biositing.pipeline.etl.transform.infrastructure.food_processing_facilities import (
+            _build_geocode_query,
+        )
+
+        # Full row — all parts present
+        row_full = {"address": "9051 AGUAS FRIAS RD", "city": "CHICO", "zip": "95928"}
+        result_full = _build_geocode_query(row_full)
+        assert result_full == "9051 AGUAS FRIAS RD, CHICO, 95928, CA", (
+            f"Expected full address with CA, got {result_full!r}"
+        )
+
+        # Missing city — should still include address, zip, CA
+        row_no_city = {"address": "5069 W CLAYTON", "city": None, "zip": "93706"}
+        result_no_city = _build_geocode_query(row_no_city)
+        assert result_no_city == "5069 W CLAYTON, 93706, CA", (
+            f"Expected address+zip+CA when city is None, got {result_no_city!r}"
+        )
+
+        # CA must always be the last part
+        assert result_full.endswith(", CA"), "geocode query must always end with ', CA'"
+        assert result_no_city.endswith(", CA"), "geocode query must always end with ', CA'"
+
 
 # ---------------------------------------------------------------------------
 # Bug-regression tests — Issue 2b: load() empty string → NULL

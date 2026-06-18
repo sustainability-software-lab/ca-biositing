@@ -52,7 +52,7 @@ EXTRACT_SOURCES: List[str] = ["all_facilities", "geocoder_test_set"]
 # Safety cap: maximum number of addresses sent to the geocoding API in one run.
 # Prevents accidental mass-geocoding. Raise or remove this limit deliberately
 # once you have verified the geocoder works correctly on the test set.
-GEOCODE_ROW_LIMIT = 7000
+GEOCODE_ROW_LIMIT = 500
 
 # ── GEOCODE_TARGET ────────────────────────────────────────────────────────────
 # Controls which sheet is geocoded and loaded. Edit this line to switch modes
@@ -60,7 +60,7 @@ GEOCODE_ROW_LIMIT = 7000
 #   "geocoder_test_set"  → geocode ~12 test rows, load only those rows (SAFE DEFAULT)
 #   "all_facilities"     → geocode the full sheet, load all rows (run after verifying test set)
 # ─────────────────────────────────────────────────────────────────────────────
-GEOCODE_TARGET: str = "all_facilities"
+GEOCODE_TARGET: str = "geocoder_test_set"
 
 
 def _dedupe_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -189,6 +189,37 @@ def _assign_general_source_info(associated_food: Optional[str]) -> str:
     if "grape" in food_norm or "wine" in food_norm or "beer" in food_norm:
         return "California Department of Alcoholic Beverage Control 2024"
     return "CARB 2024"
+
+
+def _build_geocode_query(row) -> str:
+    """Build a full CA-qualified address string for the geocoder.
+
+    Concatenates the available address parts into a single string that the
+    Google Maps API can resolve unambiguously to a California location.
+    Always appends "CA" so the geocoder has a state hint even when the
+    components filter is the primary constraint.
+
+    Parts included (in order, skipping None/blank values):
+      address, city, zip, CA
+
+    Examples
+    --------
+    address="9051 AGUAS FRIAS RD", city="CHICO", zip="95928"
+      → "9051 AGUAS FRIAS RD, CHICO, 95928, CA"
+
+    address="5069 W CLAYTON", city=None, zip="93706"
+      → "5069 W CLAYTON, 93706, CA"
+
+    address="123 MAIN ST", city="FRESNO", zip=None
+      → "123 MAIN ST, FRESNO, CA"
+    """
+    _BLANK = {"", "none", "nan"}
+    parts = []
+    for val in (row.get("address"), row.get("city"), row.get("zip")):
+        if val is not None and str(val).strip().lower() not in _BLANK:
+            parts.append(str(val).strip())
+    parts.append("CA")
+    return ", ".join(parts)
 
 
 # Expected real header names (lowercase, stripped) that should appear in the header row.
@@ -329,9 +360,21 @@ def _apply_geocoding(
         logger.info("No new rows to geocode (all already in DB).")
         return geocode_df
 
+    # Build a full CA-qualified address string for each row before sending to
+    # the geocoder.  This combines address + city + zip + "CA" so Google Maps
+    # has enough context to resolve ambiguous street names to California rather
+    # than a similarly-named location in another country.
+    # The "address" column (used for DB storage) is left unchanged.
+    to_geocode["geocode_address"] = to_geocode.apply(_build_geocode_query, axis=1)
+    logger.info(
+        "Built geocode_address column for %d rows (e.g. %r).",
+        len(to_geocode),
+        to_geocode["geocode_address"].iloc[0] if not to_geocode.empty else "",
+    )
+
     address_df, _ = parse_addresses(
         to_geocode,
-        address_column="address",
+        address_column="geocode_address",
         lat="latitude",
         long="longitude",
     )

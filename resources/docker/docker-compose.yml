@@ -84,19 +84,20 @@ services:
       - ../../src/ca_biositing/datamodels/ca_biositing/datamodels:/app/.pixi/envs/etl/lib/python3.12/site-packages/ca_biositing/datamodels
       - ../../src/ca_biositing/pipeline/ca_biositing:/app/.pixi/envs/etl/lib/python3.13/site-packages/ca_biositing
       - ../../src/ca_biositing/datamodels/ca_biositing/datamodels:/app/.pixi/envs/etl/lib/python3.13/site-packages/ca_biositing/datamodels
-      # Mount the seed CSV to a stable, Python-version-independent path so
-      # SEED_CSV_PATH can point here regardless of which python3.x is active.
-      - ../../src/ca_biositing/pipeline/ca_biositing/pipeline/utils/seed_food_processor_facilities.csv:/app/seed_food_processor_facilities.csv:ro
+      # NOTE: seed CSV mount removed — seed_food_processor_facilities.csv was deleted
+      # because it contained incorrect lat/lons from a previous geocoding run.
+      # The flow skips the seed step gracefully when the file is absent.
+      # Restore this mount (and re-add the SEED_CSV_PATH env var below) once a
+      # new clean seed CSV has been generated after the full re-geocoding run.
     depends_on:
       prefect-server:
         condition: service_healthy
     environment:
       - PREFECT_API_URL=http://prefect-server:4200/api
       - TZ=UTC
-      # Stable path to the seed CSV inside the container — avoids __file__-relative
-      # path resolution breaking when the Python minor version in site-packages
-      # differs from the volume-mount path (python3.12 vs python3.13).
-      - SEED_CSV_PATH=/app/seed_food_processor_facilities.csv
+      # NOTE: SEED_CSV_PATH removed — seed CSV mount was removed above.
+      # Restore both the volume mount and this env var once a new clean seed CSV
+      # has been generated after the full re-geocoding run.
     command: prefect worker start --type process --pool biocirv_dev_work_pool
     # healthcheck:
     #   test: ["CMD-SHELL", "prefect work-pool inspect $WORK_POOL"]
