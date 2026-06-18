@@ -30,7 +30,7 @@ mv_biomass_gasification = select(
     GasificationRecord.resource_id,
     Resource.name.label("resource_name"),
     DeconVessel.name.label("reactor_type"),
-    Parameter.name.label("parameter_name"),
+    func.replace(Parameter.name, "unc-bio", "unconverted biomass").label("parameter_name"),
     LocationAddress.geography_id.label("geoid"),
     func.avg(Observation.value).label("avg_value"),
     func.min(Observation.value).label("min_value"),

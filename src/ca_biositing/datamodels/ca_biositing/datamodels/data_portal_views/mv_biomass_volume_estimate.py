@@ -363,6 +363,63 @@ acreage_based_volumes = select(
 ).subquery()
 
 
+
+# Path E: Census Production-based volume estimation
+# Uses USDA census production values × residue_factors (weight type)
+# This is specifically for crops like corn where we have census production data but not county ag report data
+census_production_based_volumes = select(
+    Resource.id.label("resource_id"),
+    Resource.name.label("resource_name"),
+    UsdaCensusRecord.geoid,
+    Place.county_name.label("county"),
+    Place.county_fips,
+    Place.state_name.label("state"),
+    UsdaCensusRecord.year.label("dataset_year"),
+    cast(UsdaCensusRecord.id, String).label("record_id"),
+    # Aggregate observations for production volume (preferring tons)
+    func.avg(case((and_(Parameter.name == "production", Unit.name == "tons"), Observation.value), else_=None)).label("primary_product_volume"),
+    # Harvested acres for the crop
+    func.avg(case((Parameter.name == "harvested acres", Observation.value), else_=None)).label("county_crop_acres"),
+    # Capture unit from observations
+    func.max(case((and_(Parameter.name == "production", Unit.name == "tons"), Unit.name), else_=None)).label("volume_unit"),
+    # Residue factor values
+    ResidueFactor.factor_min,
+    ResidueFactor.factor_mid,
+    ResidueFactor.factor_max,
+    # Calculated volumes (min, mid, max)
+    (func.avg(case((and_(Parameter.name == "production", Unit.name == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_min).label("estimated_residue_volume_min"),
+    (func.avg(case((and_(Parameter.name == "production", Unit.name == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_mid).label("estimated_residue_volume_mid"),
+    (func.avg(case((and_(Parameter.name == "production", Unit.name == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_max).label("estimated_residue_volume_max"),
+    literal("census_production_based").label("volume_source"),
+    literal("dry_tons").label("biomass_unit")
+).select_from(UsdaCensusRecord) .join(ResourceUsdaCommodityMap, ResourceUsdaCommodityMap.usda_commodity_id == UsdaCensusRecord.commodity_code) .join(Resource, Resource.id == ResourceUsdaCommodityMap.resource_id) .join(ResidueFactor, ResidueFactor.resource_id == Resource.id) .join(Place, UsdaCensusRecord.geoid == Place.geoid) .outerjoin(Observation, and_(
+     Observation.record_id == cast(UsdaCensusRecord.id, String),
+     Observation.record_type == "usda_census_record"
+ )) .outerjoin(Parameter, Observation.parameter_id == Parameter.id) .outerjoin(Unit, Observation.unit_id == Unit.id) .where(and_(
+     ResidueFactor.factor_type == "weight",
+     UsdaCensusRecord.year >= 2017,
+     get_resource_filter(Resource),
+     # Only include resources that don't have production data in county ag reports
+     # to avoid double counting
+     ~Resource.id.in_(
+         select(Resource.id)
+         .join(PrimaryAgProduct, Resource.primary_ag_product_id == PrimaryAgProduct.id)
+         .join(CountyAgReportRecord, CountyAgReportRecord.primary_ag_product_id == PrimaryAgProduct.id)
+     )
+ )) .group_by(
+     Resource.id,
+     Resource.name,
+     UsdaCensusRecord.geoid,
+     Place.county_name,
+     Place.county_fips,
+     Place.state_name,
+     UsdaCensusRecord.year,
+     UsdaCensusRecord.id,
+     ResidueFactor.factor_min,
+     ResidueFactor.factor_mid,
+     ResidueFactor.factor_max
+ ).subquery()
+
 # Combined volume estimation view
 # Uses UNION ALL to combine multiple paths (A, B, C, D), with precedence logic for selection
 # Use row_number with stable ordering on business key to ensure deterministic IDs
@@ -495,5 +552,36 @@ mv_biomass_volume_estimate = union_all(
         cast(acreage_based_volumes.c.estimated_residue_volume_max, Numeric).label("estimated_residue_volume_max"),
         cast(acreage_based_volumes.c.volume_source, String).label("volume_source"),
         cast(acreage_based_volumes.c.biomass_unit, String).label("biomass_unit")
-    ).select_from(acreage_based_volumes)
+    ).select_from(acreage_based_volumes),
+    select(
+        (func.row_number().over(
+            order_by=(
+                census_production_based_volumes.c.resource_id,
+                census_production_based_volumes.c.geoid,
+                census_production_based_volumes.c.dataset_year,
+                census_production_based_volumes.c.volume_source,
+                census_production_based_volumes.c.resource_name,
+                census_production_based_volumes.c.county,
+                census_production_based_volumes.c.state
+            )
+        ) + 40000000).label("id"),
+        census_production_based_volumes.c.resource_id,
+        census_production_based_volumes.c.resource_name,
+        census_production_based_volumes.c.geoid,
+        census_production_based_volumes.c.county,
+        census_production_based_volumes.c.county_fips,
+        census_production_based_volumes.c.state,
+        census_production_based_volumes.c.dataset_year,
+        cast(census_production_based_volumes.c.primary_product_volume, Numeric).label("production_volume"),
+        cast(census_production_based_volumes.c.county_crop_acres, Numeric).label("county_crop_acres"),
+        cast(census_production_based_volumes.c.volume_unit, String).label("production_unit"),
+        cast(census_production_based_volumes.c.factor_min, Numeric).label("factor_min"),
+        cast(census_production_based_volumes.c.factor_mid, Numeric).label("factor_mid"),
+        cast(census_production_based_volumes.c.factor_max, Numeric).label("factor_max"),
+        cast(census_production_based_volumes.c.estimated_residue_volume_min, Numeric).label("estimated_residue_volume_min"),
+        cast(census_production_based_volumes.c.estimated_residue_volume_mid, Numeric).label("estimated_residue_volume_mid"),
+        cast(census_production_based_volumes.c.estimated_residue_volume_max, Numeric).label("estimated_residue_volume_max"),
+        cast(census_production_based_volumes.c.volume_source, String).label("volume_source"),
+        cast(census_production_based_volumes.c.biomass_unit, String).label("biomass_unit")
+    ).select_from(census_production_based_volumes)
 )
