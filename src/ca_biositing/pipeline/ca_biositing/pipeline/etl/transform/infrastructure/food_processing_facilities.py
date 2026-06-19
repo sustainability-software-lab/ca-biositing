@@ -37,6 +37,7 @@ truth for this normalization.  It is called by both the transform pipeline and
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Dict, Optional, List
 import os
 import pandas as pd
@@ -52,7 +53,7 @@ EXTRACT_SOURCES: List[str] = ["all_facilities", "geocoder_test_set"]
 # Safety cap: maximum number of addresses sent to the geocoding API in one run.
 # Prevents accidental mass-geocoding. Raise or remove this limit deliberately
 # once you have verified the geocoder works correctly on the test set.
-GEOCODE_ROW_LIMIT = 500
+GEOCODE_ROW_LIMIT = 10
 
 # ── GEOCODE_TARGET ────────────────────────────────────────────────────────────
 # Controls which sheet is geocoded and loaded. Edit this line to switch modes
@@ -60,7 +61,7 @@ GEOCODE_ROW_LIMIT = 500
 #   "geocoder_test_set"  → geocode ~12 test rows, load only those rows (SAFE DEFAULT)
 #   "all_facilities"     → geocode the full sheet, load all rows (run after verifying test set)
 # ─────────────────────────────────────────────────────────────────────────────
-GEOCODE_TARGET: str = "geocoder_test_set"
+GEOCODE_TARGET: str = "all_facilities"  # "geocoder_test_set" or "all_facilities"
 
 
 def _dedupe_columns(df: pd.DataFrame) -> pd.DataFrame:
@@ -259,13 +260,28 @@ def _apply_geocoding(
     logger,
 ) -> pd.DataFrame:
     """
-    Apply delta check, circuit breaker, and geocoding to geocode_df.
+    Apply delta check, row-limit cap, and geocoding to geocode_df.
 
     Returns geocode_df with latitude/longitude and geocode_status populated.
     Rows already in the DB (delta check) are skipped — this includes rows with
     lat/lon already set AND rows with geocode_status='failed' (permanently skip
     addresses that have previously failed geocoding).
-    Raises RuntimeError if the circuit breaker fires.
+
+    Batching via GEOCODE_ROW_LIMIT
+    ------------------------------
+    When more rows are queued than GEOCODE_ROW_LIMIT allows, only the first
+    GEOCODE_ROW_LIMIT rows are geocoded in this run.  The rest remain pending
+    (geocode_status=None) and will be picked up on the next run.  This enables
+    safe incremental batching: set GEOCODE_ROW_LIMIT=500, run, verify, then
+    set GEOCODE_ROW_LIMIT=7000 and run again — the delta check skips the rows
+    already geocoded in the first batch.
+
+    Geocoding result backup
+    -----------------------
+    Immediately after parse_addresses() returns, the geocoded rows are written
+    to a timestamped CSV backup in the utils/ directory alongside this module.
+    This ensures geocoded lat/lons are not lost if the subsequent DB load fails.
+    The backup path is logged at INFO level so it can be found easily.
 
     Key-comparison contract
     -----------------------
@@ -341,16 +357,23 @@ def _apply_geocoding(
     to_geocode = to_geocode[to_geocode["address"].notna()]
 
     skipped = len(geocode_df) - len(to_geocode)
+    total_queued = len(to_geocode)
     logger.info(
         f"Delta check result: {skipped} rows skipped (already resolved in DB), "
-        f"{len(to_geocode)} rows queued for geocoding."
+        f"{total_queued} rows queued for geocoding."
     )
 
-    if len(to_geocode) > GEOCODE_ROW_LIMIT:
-        raise RuntimeError(
-            f"Safety limit reached: {len(to_geocode)} rows queued for geocoding "
-            f"(cap {GEOCODE_ROW_LIMIT}). Reduce the batch or raise GEOCODE_ROW_LIMIT."
+    # Batch cap: take only the first GEOCODE_ROW_LIMIT rows instead of raising.
+    # This enables safe incremental batching — run with GEOCODE_ROW_LIMIT=500,
+    # verify, then run again with GEOCODE_ROW_LIMIT=7000.  The delta check skips
+    # rows already geocoded in the previous batch, so runs are always additive.
+    if total_queued > GEOCODE_ROW_LIMIT:
+        logger.warning(
+            f"Batch cap: {total_queued} rows queued but GEOCODE_ROW_LIMIT={GEOCODE_ROW_LIMIT}. "
+            f"Geocoding only the first {GEOCODE_ROW_LIMIT} rows this run. "
+            f"Re-run to geocode the remaining {total_queued - GEOCODE_ROW_LIMIT} rows."
         )
+        to_geocode = to_geocode.iloc[:GEOCODE_ROW_LIMIT].copy()
 
     if not os.getenv("GOOGLE_MAPS_API_KEY"):
         logger.info("GOOGLE_MAPS_API_KEY not set; skipping geocoding.")
@@ -390,6 +413,32 @@ def _apply_geocoding(
     to_geocode["geocode_status"] = to_geocode["latitude"].apply(
         lambda lat: "success" if lat is not None and not (isinstance(lat, float) and np.isnan(lat)) else "failed"
     )
+
+    # ── Geocoding result backup ───────────────────────────────────────────────
+    # Save the geocoded rows to a timestamped CSV immediately after
+    # parse_addresses() returns, BEFORE the DB load.  This ensures lat/lons
+    # are not lost if the subsequent DB upsert fails for any reason.
+    # The backup is written to the utils/ directory alongside this module and
+    # its path is logged at INFO level so it can be found and loaded manually.
+    try:
+        from datetime import datetime as _dt, timezone as _tz
+        _backup_dir = Path(__file__).resolve().parent.parent.parent.parent / "utils"
+        _backup_dir.mkdir(parents=True, exist_ok=True)
+        _ts = _dt.now(_tz.utc).strftime("%Y%m%dT%H%M%SZ")
+        _backup_path = _backup_dir / f"geocode_backup_{_ts}.csv"
+        _backup_cols = [c for c in ["name", "address", "city", "zip", "state",
+                                     "latitude", "longitude", "geocode_status",
+                                     "geocode_address", "address_key"]
+                        if c in to_geocode.columns]
+        to_geocode[_backup_cols].to_csv(_backup_path, index=False)
+        logger.info(
+            "Geocoding result backup saved (%d rows) → %s",
+            len(to_geocode), _backup_path,
+        )
+    except Exception as _backup_exc:
+        # Backup failure must never abort the geocoding run — log and continue.
+        logger.warning("Failed to write geocoding result backup: %s", _backup_exc)
+    # ─────────────────────────────────────────────────────────────────────────
 
     # Write geocoded lat/lon and geocode_status back into geocode_df by address_key
     lat_map = to_geocode.set_index("address_key")["latitude"].to_dict()

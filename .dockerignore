@@ -46,3 +46,10 @@ Thumbs.db
 # Docs build output
 site/
 docs/_build/
+
+# Seed CSVs — these are large data files that must never be baked into the
+# Docker image.  The seed step reads from a volume-mounted path (SEED_CSV_PATH)
+# or the __file__-relative fallback; baking the CSV into the image causes the
+# old (potentially incorrect) data to be re-seeded on every container start.
+**/seed_food_processor_facilities.csv
+**/geocode_backup_*.csv
