@@ -7,6 +7,12 @@
       "skillPath": "skills/deploy-to-vercel/SKILL.md",
       "computedHash": "03e0eaaa9bf13ba1e7ffa387f5893de6f324c0868c627001f179395a8feaa7c9"
     },
+    "documentation-writer": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/documentation-writer/SKILL.md",
+      "computedHash": "ee53d65b163cd7eb953a930c95841cfe398cc2c0bd24c06508bbaa07c432be35"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
@@ -18,6 +24,18 @@
       "sourceType": "github",
       "skillPath": "skills/github-issues/SKILL.md",
       "computedHash": "efa9746a60c4507ad5a7ad60e1e9a704b4eea06c1229befe3c86b3bbcaea67c9"
+    },
+    "skill-create": {
+      "source": "skillscatalog/registry",
+      "sourceType": "github",
+      "skillPath": "skills/skill-create/SKILL.md",
+      "computedHash": "bbb5afb33d0226a5bc8eb6441cb13027adbc6ca52a49a8b35e926c677f43ce99"
+    },
+    "skillify": {
+      "source": "garrytan/gbrain",
+      "sourceType": "github",
+      "skillPath": "skills/skillify/SKILL.md",
+      "computedHash": "ea6fa46fad79b896dc6109def3790fc2afd374806aa423360e0fa05b951929d9"
     },
     "vercel-cli-with-tokens": {
       "source": "vercel-labs/agent-skills",

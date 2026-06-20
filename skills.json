@@ -10,6 +10,14 @@
     {
       "registry": "https://github.com/vercel-labs/skills",
       "skills": ["find-skills"]
+    },
+    {
+      "registry": "https://github.com/skillscatalog/registry.git",
+      "skills": ["skill-create"]
+    },
+    {
+      "registry": "https://github.com/garrytan/gbrain.git",
+      "skills": ["skillify"]
     }
   ]
 }

@@ -14,8 +14,8 @@ deduplication and validation.
 
 - **API Error Handling:** Comprehensive test now gracefully handles empty
   responses and JSON parsing errors
-- **Test Output:** Debug output for TOMATOES (County 077) only shown on error,
-  summary output is regularized
+- **Test Output:** Debug output for TOMATOES only shown on error, summary output
+  is regularized for all 58 California counties
 - **Commodity Coverage:** Confirmed robust handling for all mapped commodities
 
 ### 🔑 **Key Dependencies & Prerequisites**
@@ -71,8 +71,8 @@ USDA ETL Pipeline Components:
 
 ### 🔗 **Data Flow**
 
-1. **Extract**: API → Raw CSV (~10,000+ raw records from 15 commodities across 3
-   counties)
+1. **Extract**: API → Raw CSV (~20,000+ raw records from 15 commodities across
+   all 58 California counties)
 2. **Transform**: Raw CSV → Cleaned CSV (filtered and deduplicated for database
    insertion)
 3. **Load**: Cleaned CSV → Database (1,048 parent records: 241 census + 807
@@ -123,16 +123,22 @@ maintaining data integrity.
 - **Purpose**: Fetch data from USDA NASS QuickStats API
 - **Output**: Raw CSV with all API fields (timestamped for debugging)
 - **Key Features**:
+  - **All-County Expansion**: Now queries all 58 California counties, driven by
+    `data/static/ca_counties.csv`.
   - Multi-commodity extraction (16 mapped commodities)
   - Multi-year coverage (1924-2024)
+  - **Efficient Batching**: Queries all counties in a single state-level API
+    call per commodity, then filters.
+  - **Performance**: Runtime is approximately `N_commodities × 1 second`.
   - Automatic retry logic and improved error handling for empty responses and
     JSON parsing
 
   ### **Testing & Diagnostics**
   - Comprehensive test script (`test_usda_comprehensive.py`) now:
     - Handles empty API responses and JSON parsing errors gracefully
-    - Only prints debug output for TOMATOES County 077 if an error occurs
-    - Provides regularized summary output for all commodities and counties
+    - Only prints debug output for TOMATOES if an error occurs
+    - Provides regularized summary output for all commodities across all 58
+      counties
     - Confirms robust data coverage for TOMATOES and all mapped commodities
   - Environment variable integration (.env file support)
   - Optional debug CSV generation with timestamps
@@ -244,11 +250,10 @@ Located in `src/ca_biositing/pipeline/tests/USDA/`:
 
 ### **Success Metrics**
 
-- **Extract Success**: 15/15 commodities (100% - all mapped)
-- **Transform Success**: ~55% raw records survive filtering (4,524 observations
-  retained)
-- **Load Success**: 100% of valid transformed records loaded (1,048 parent
-  records + 4,524 observations)
+- **Extract Success**: 15/15 commodities (100% - all mapped) across 58 counties
+- **Transform Success**: ~55% raw records survive filtering (approx. 85,000+
+  observations retained project-wide)
+- **Load Success**: 100% of valid transformed records loaded
 - **Database Seeding**: 15 mapped commodities (all with valid api_name)
 
 ### **Common Issues**
