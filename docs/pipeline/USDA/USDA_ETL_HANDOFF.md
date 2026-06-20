@@ -160,8 +160,8 @@ pixi run rebuild-services
 
 - **Commodity Coverage**: 94% (15/16 commodities)
 - **Data Availability**: Historical data from 1950s-2023 depending on commodity
-- **Geographic Coverage**: North San Joaquin Valley (San Joaquin, Stanislaus,
-  Merced counties)
+- **Geographic Coverage**: All 58 California counties (list driven by
+  `data/static/ca_counties.csv`)
 
 ### Transform Success
 
@@ -239,8 +239,9 @@ pixi run rebuild-services
 
 #### Scaling Considerations
 
-- **Geographic Expansion**: Currently limited to North San Joaquin Valley (3
-  counties)
+- **Geographic Expansion**: Successfully expanded to all 58 California counties.
+  County scope is now managed via `data/static/ca_counties.csv` rather than
+  hardcoded constants.
 - **Temporal Expansion**: Historical data available back to 1950s for some
   commodities
 - **Commodity Expansion**: Additional commodities can be added via resource

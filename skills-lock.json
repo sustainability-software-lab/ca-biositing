@@ -19,6 +19,18 @@
       "skillPath": "skills/github-issues/SKILL.md",
       "computedHash": "efa9746a60c4507ad5a7ad60e1e9a704b4eea06c1229befe3c86b3bbcaea67c9"
     },
+    "skill-create": {
+      "source": "skillscatalog/registry",
+      "sourceType": "github",
+      "skillPath": "skills/skill-create/SKILL.md",
+      "computedHash": "bbb5afb33d0226a5bc8eb6441cb13027adbc6ca52a49a8b35e926c677f43ce99"
+    },
+    "skillify": {
+      "source": "garrytan/gbrain",
+      "sourceType": "github",
+      "skillPath": "skills/skillify/SKILL.md",
+      "computedHash": "ea6fa46fad79b896dc6109def3790fc2afd374806aa423360e0fa05b951929d9"
+    },
     "vercel-cli-with-tokens": {
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
