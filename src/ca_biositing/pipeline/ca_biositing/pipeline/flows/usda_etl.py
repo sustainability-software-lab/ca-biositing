@@ -27,7 +27,7 @@ def usda_etl_flow():
     etl_run_id = create_etl_run_record.fn(pipeline_name="USDA ETL")
     lineage_group_id = create_lineage_group.fn(
         etl_run_id=etl_run_id,
-        note="USDA Census/Survey agricultural data"
+        note="USDA Census/Survey agricultural data - all CA counties"
     )
     logger.info(f"✓ etl_run_id={etl_run_id}, lineage_group_id={lineage_group_id}")
 
