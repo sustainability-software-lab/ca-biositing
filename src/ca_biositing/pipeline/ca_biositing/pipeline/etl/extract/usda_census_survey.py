@@ -56,7 +56,13 @@ def _load_ca_counties() -> list:
     # Try cwd-relative first (works in Docker where WORKDIR=/app)
     cwd_path = Path.cwd() / "data" / "static" / "ca_counties.csv"
     # Fallback: relative to this file (works in local dev)
-    file_path = Path(__file__).parents[9] / "data" / "static" / "ca_counties.csv"
+    # The file is at src/ca_biositing/pipeline/ca_biositing/pipeline/etl/extract/usda_census_survey.py
+    # So parents are: 0:extract, 1:etl, 2:pipeline, 3:ca_biositing, 4:pipeline, 5:ca_biositing, 6:src, 7:root
+    try:
+        file_path = Path(__file__).resolve().parents[7] / "data" / "static" / "ca_counties.csv"
+    except IndexError:
+        # If path is shorter than expected, just use cwd as last resort
+        file_path = cwd_path
 
     csv_path = cwd_path if cwd_path.exists() else file_path
     if not csv_path.exists():

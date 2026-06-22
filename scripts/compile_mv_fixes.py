@@ -167,6 +167,19 @@ VIEWS = [
             "CREATE UNIQUE INDEX idx_analysis_average_view_res_geo_param ON ca_biositing.analysis_average_view (resource, geoid, parameter, unit)",
         ],
     },
+    {
+        "name": "usda_census_view",
+        "schema": "ca_biositing",
+        "expr": ca_views.USDA_CENSUS_VIEW,
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_usda_census_view_id ON ca_biositing.usda_census_view (id)",
+            "CREATE INDEX idx_usda_census_view_commodity_geoid ON ca_biositing.usda_census_view (commodity_id, geoid)",
+            "CREATE INDEX idx_usda_census_view_commodity_geoid_record ON ca_biositing.usda_census_view (commodity_id, geoid, source_record_id)",
+            "CREATE INDEX idx_usda_census_view_commodity_geoid_year ON ca_biositing.usda_census_view (commodity_id, geoid, record_year DESC NULLS LAST, source_record_id DESC)",
+            "CREATE INDEX idx_usda_census_view_usda_crop ON ca_biositing.usda_census_view (usda_crop)",
+            "CREATE INDEX idx_usda_census_view_geoid ON ca_biositing.usda_census_view (geoid)",
+        ],
+    },
 ]
 
 
