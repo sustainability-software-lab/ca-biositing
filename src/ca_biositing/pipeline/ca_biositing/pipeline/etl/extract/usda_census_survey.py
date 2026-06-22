@@ -24,10 +24,16 @@ try:
     # Try absolute import first (works in Docker)
     from ca_biositing.pipeline.utils.usda_nass_to_pandas import usda_nass_to_df
     from ca_biositing.pipeline.utils.fetch_mapped_commodities import get_mapped_commodity_ids
+    from ca_biositing.pipeline.utils.usda_discovery import discover_top_commodities
+    from ca_biositing.pipeline.utils.seed_commodity_mappings import ensure_commodities_exist
+    from ca_biositing.pipeline.utils.engine import get_engine
 except ImportError:
     # Fallback for local testing
     from src.ca_biositing.pipeline.ca_biositing.pipeline.utils.usda_nass_to_pandas import usda_nass_to_df
     from src.ca_biositing.pipeline.ca_biositing.pipeline.utils.fetch_mapped_commodities import get_mapped_commodity_ids
+    from src.ca_biositing.pipeline.ca_biositing.pipeline.utils.usda_discovery import discover_top_commodities
+    from src.ca_biositing.pipeline.ca_biositing.pipeline.utils.seed_commodity_mappings import ensure_commodities_exist
+    from src.ca_biositing.pipeline.ca_biositing.pipeline.utils.engine import get_engine
 
 # --- CONFIGURATION ---
 # USDA API Key - loaded from environment variable
@@ -85,9 +91,23 @@ def extract() -> Optional[pd.DataFrame]:
     logger = get_run_logger()
     logger.info("🔵 [USDA Extract] Starting...")
 
-    # Get commodity names from database
-    commodity_ids = get_mapped_commodity_ids()
-    logger.info(f"🔵 [USDA Extract] Got {len(commodity_ids) if commodity_ids else 0} commodities: {commodity_ids}")
+    # 1. Discover top commodities dynamically
+    logger.info("🔵 [USDA Extract] Discovering top commodities...")
+    top_commodities = discover_top_commodities(api_key=USDA_API_KEY, state=STATE, year=YEAR, top_n=5)
+
+    # 2. Ensure discovered commodities exist in the database
+    if top_commodities:
+        logger.info(f"🔵 [USDA Extract] Ensuring {len(top_commodities)} discovered commodities exist in DB...")
+        engine = get_engine()
+        ensure_commodities_exist(engine, top_commodities)
+
+    # 3. Get user-defined commodity names from database
+    mapped_commodity_ids = get_mapped_commodity_ids()
+
+    # 4. Combine lists
+    commodity_ids = list(set((mapped_commodity_ids or []) + top_commodities))
+
+    logger.info(f"🔵 [USDA Extract] Got {len(commodity_ids) if commodity_ids else 0} total commodities to extract: {commodity_ids}")
 
     if not commodity_ids:
         logger.error(

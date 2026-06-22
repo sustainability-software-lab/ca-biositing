@@ -311,6 +311,61 @@ def backfill_usda_commodity_metadata(engine=None, csv_path: str = None) -> int:
         return 0
 
 
+
+def ensure_commodities_exist(engine, commodity_names: list[str]) -> int:
+    """
+    Ensure that a list of commodity names exists in the usda_commodity table.
+    This is used to dynamically add discovered top commodities so that foreign key
+    constraints are satisfied during the load step.
+
+    Args:
+        engine: SQLAlchemy engine
+        commodity_names: List of commodity names (api_name format)
+
+    Returns:
+        Number of new commodities inserted
+    """
+    if not commodity_names:
+        return 0
+
+    from sqlalchemy import text
+
+    inserted_count = 0
+    NASS_URI = (
+        "https://www.nass.usda.gov/Data_and_Statistics/"
+        "County_Data_Files/Frequently_Asked_Questions/commcodes.php"
+    )
+    NASS_SOURCE = "NASS_WEB"
+
+    with engine.begin() as conn:
+        for name in commodity_names:
+            # Check if it exists (case-insensitive)
+            result = conn.execute(text(
+                "SELECT id FROM usda_commodity WHERE LOWER(name) = LOWER(:name) OR LOWER(api_name) = LOWER(:name)"
+            ), {'name': name})
+
+            if not result.fetchone():
+                # Insert new commodity
+                conn.execute(text("""
+                    INSERT INTO usda_commodity
+                        (name, api_name, usda_source, description, uri, created_at, updated_at)
+                    VALUES
+                        (:name, :api_name, :usda_source, :description, :uri, NOW(), NOW())
+                """), {
+                    'name': name.lower(),
+                    'api_name': name.upper(),
+                    'usda_source': NASS_SOURCE,
+                    'description': f"Dynamically discovered top commodity: {name}",
+                    'uri': NASS_URI
+                })
+                inserted_count += 1
+
+    if inserted_count > 0:
+        print(f"🌱 Dynamically seeded {inserted_count} new top commodities into usda_commodity table")
+
+    return inserted_count
+
+
 def check_seeding_prerequisites(engine=None) -> dict:
     """
     Check if prerequisite tables (resource, primary_ag_product) are populated.
