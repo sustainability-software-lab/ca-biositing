@@ -1213,7 +1213,7 @@
     "Resource": "Wheat straw",
     "Resource Code": "WSt",
     "LandIQ Crop Name": "Wheat",
-    "Include In Totals": true,
+    "Include In Totals": false,
     "Collected?": false,
     "From Month": "6",
     "To Month": "8",
