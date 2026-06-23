@@ -76,6 +76,7 @@ services:
     volumes:
       # Adding the flow code to the worker
       - ../../data:/app/data
+      - ../../resources/assets:/app/resources/assets
       - ../prefect/run_prefect_flow.py:/app/run_prefect_flow.py
       - ../../credentials.json:/app/credentials.json
       - ../../alembic:/app/alembic

@@ -216,6 +216,9 @@ The API layer.
 - `pixi run list-flows`: List all available Prefect flows in the project.
 - `pixi run run-single-flow <module_name>`: Run a specific flow by its module
   name (e.g., `pixi run run-single-flow landiq_etl`).
+- `pixi run update-static-resource-info`: Trigger the `static_resource_info` ETL
+  flow, update local JSON assets, and validate headers. Use this to propagate
+  changes from Google Sheets to the local application assets.
 
 ## Agent Skills Management
 
