@@ -199,7 +199,6 @@ census_based_volumes = select(
 mapping_names = union_all(
     select(literal("almond hulls").label("pap_name"), literal("almond hulls").label("res_name")),
     select(literal("almond shells"), literal("almond shells")),
-    select(literal("almond meats"), literal("almond hulls")),
     select(literal("hay - alfalfa"), literal("alfalfa")),
     select(literal("silage - alfalfa"), literal("alfalfa")),
     select(literal("alfalfa & mixtures"), literal("alfalfa")),
