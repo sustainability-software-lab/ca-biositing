@@ -144,6 +144,10 @@ run-single-flow = { cmd = "python scripts/run_flow.py run", description = "Trigg
     "start-services",
 ] }
 list-flows = { cmd = "python scripts/run_flow.py list", description = "List all available ETL flows in the project." }
+update-static-resource-info = { cmd = "python scripts/run_flow.py run static_resource_info && python scripts/csv_to_json.py && python scripts/validate_headers.py", description = "Propagate changes from Google Sheets to local JSON assets.", depends-on = [
+    "start-services",
+] }
+
 check-db-health = { cmd = [
     "docker-compose",
     "-f",

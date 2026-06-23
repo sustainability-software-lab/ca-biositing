@@ -1,6 +1,6 @@
 Residue Type,Resource,Resource Code,LandIQ Crop Name,Include In Totals,Collected?,From Month,To Month,Residue Yield (Wet Ton/Ac),Moisture Content,Residue Yield (Dry Ton/Ac)
 Ag Residue,Alfalfa,Alf,Alfalfa & Mixtures,TRUE,FALSE,4,10,1,11%,0.9
-Ag Residue,Almond Branches,AlmBr,Almonds,TRUE,FALSE,11,1,2.5,40%,1.5
+Ag Residue,Almond Branches,AlmBr,Almonds,FALSE,FALSE,11,1,2.5,40%,1.5
 Processing Waste,Almond Hulls,AlmHu,Almonds ,TRUE,TRUE,8,11,,,
 Processing Waste,Almond Shells,AlmSh,Almonds,TRUE,TRUE,8,11,,,
 Processing Waste,Almond Shells and Hulls mix,AlMix,Almonds,FALSE,TRUE,8,11,,,
