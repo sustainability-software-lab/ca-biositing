@@ -92,4 +92,4 @@ Processing Waste,Walnut Shells,WaSh,Walnuts,TRUE,TRUE,9,11,,,
 Ag Residue,Walnut tree sticks,WaTrSt,Walnuts,TRUE,FALSE,11,1,1,43%,0.6
 Processing Waste,Walnut waste kernels,WaWk,Walnuts,TRUE,TRUE,9,11,,,
 Ag Residue,Wheat hay,WHy,Wheat,TRUE,FALSE,6,8,1.2,14%,1
-Ag Residue,Wheat straw,WSt,Wheat,TRUE,FALSE,6,8,1.2,14%,1
+Ag Residue,Wheat straw,WSt,Wheat,FALSE,FALSE,6,8,1.2,14%,1
