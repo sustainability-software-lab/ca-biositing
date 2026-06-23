@@ -62,10 +62,12 @@ def transform_static_resource_info(
     # To Month -> to_month
     # Residue Yield (Wet Ton/Ac) -> residue_yield_wet_ton_ac_
     # Residue Yield (Dry Ton/Ac) -> residue_yield_dry_ton_ac_
+    # Include In Totals -> include_in_totals
     coerced_df = coercion_mod.coerce_columns(
         clean_df,
         int_cols=['from_month', 'to_month'],
-        float_cols=['residue_yield_wet_ton_ac_', 'residue_yield_dry_ton_ac_']
+        float_cols=['residue_yield_wet_ton_ac_', 'residue_yield_dry_ton_ac_'],
+        bool_cols=['include_in_totals']
     )
 
     # 3. Normalization (Name-to-ID Swapping)

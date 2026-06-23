@@ -13,11 +13,20 @@ def validate() -> bool:
         csv_headers = set(csv.DictReader(f).fieldnames or [])
 
     with open(ASSETS_DIR / "resource_info_header_mapping.json") as f:
-        mapping_keys = set(json.load(f).keys())
+        mapping = json.load(f)
+        mapping_keys = set(mapping.keys())
+        mapping_values = set(mapping.values())
 
-    missing = csv_headers - mapping_keys
-    extra = mapping_keys - csv_headers
+    # Check if headers match either keys (snake_case) or values (Title Case)
+    # The GSheet/CSV usually has Title Case headers.
+    missing = csv_headers - mapping_values
+    extra = mapping_values - csv_headers
     ok = True
+
+    # If Title Case match fails, try snake_case match (fallback)
+    if missing and not (csv_headers - mapping_keys):
+        missing = set()
+        extra = set()
 
     if missing:
         print(f"Headers in CSV but missing from mapping: {sorted(missing)}")
