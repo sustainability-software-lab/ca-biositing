@@ -8,5 +8,6 @@
   "to_month": "To Month",
   "residue_yield_wet_ton_per_ac": "Residue Yield (Wet Ton/Ac)",
   "moisture_content": "Moisture Content",
-  "residue_yield_dry_ton_per_ac": "Residue Yield (Dry Ton/Ac)"
+  "residue_yield_dry_ton_per_ac": "Residue Yield (Dry Ton/Ac)",
+  "include_in_totals": "Include In Totals"
 }

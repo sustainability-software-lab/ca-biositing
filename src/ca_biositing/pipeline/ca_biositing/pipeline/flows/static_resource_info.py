@@ -10,7 +10,7 @@ def static_resource_info_flow():
     from ca_biositing.pipeline.etl.extract import static_resource_info as extract_mod
     from ca_biositing.pipeline.etl.transform.resource_information import static_resource_info as transform_mod
     from ca_biositing.pipeline.etl.load import static_resource_info as load_mod
-    from prefect import get_run_logger
+    from prefect import get_run_logger, task
 
     logger = get_run_logger()
     logger.info("Starting Static Resource Info ETL flow...")
@@ -25,6 +25,15 @@ def static_resource_info_flow():
     # 1. Extract
     logger.info("Extracting static resource info from Google Sheets...")
     raw_df = extract_mod.extract.fn()
+
+    # Update local CSV asset
+    if raw_df is not None and not raw_df.empty:
+        try:
+            csv_path = "resources/assets/resource_info.csv"
+            raw_df.to_csv(csv_path, index=False)
+            logger.info(f"Updated local asset: {csv_path}")
+        except Exception as e:
+            logger.warning(f"Failed to update local CSV asset: {e}")
 
     if raw_df is None or raw_df.empty:
         logger.error("No data extracted. Aborting flow.")
