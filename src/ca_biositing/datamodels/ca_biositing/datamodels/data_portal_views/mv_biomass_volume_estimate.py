@@ -83,7 +83,8 @@ production_based_volumes = select(
  .where(and_(
      ResidueFactor.factor_type == "weight",
      CountyAgReportRecord.data_year >= 2017,
-     get_resource_filter(Resource)
+     get_resource_filter(Resource),
+     func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"])
  ))\
  .group_by(
      Resource.id,
@@ -177,7 +178,8 @@ census_based_volumes = select(
      ResidueFactor.prune_trim_yield.isnot(None),
      ResidueFactor.factor_type != "area",
      UsdaCensusRecord.year >= 2017,
-     get_resource_filter(Resource)
+     get_resource_filter(Resource),
+     func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"])
  ))\
  .group_by(
      Resource.id,
@@ -252,7 +254,8 @@ commodity_direct_volumes = select(
  .outerjoin(Unit, Observation.unit_id == Unit.id)\
  .where(and_(
      CountyAgReportRecord.data_year >= 2017,
-     get_resource_filter(Resource)
+     get_resource_filter(Resource),
+     func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"])
  ))\
  .group_by(
      Resource.id,
@@ -345,7 +348,8 @@ acreage_based_volumes = select(
 ))\
 .where(and_(
   UsdaCensusRecord.year >= 2017,
-  get_resource_filter(Resource)
+  get_resource_filter(Resource),
+  func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"])
 ))\
 .group_by(
   Resource.id,
@@ -399,6 +403,7 @@ census_production_based_volumes = select(
      ResidueFactor.factor_type == "weight",
      UsdaCensusRecord.year >= 2017,
      get_resource_filter(Resource),
+     func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"]),
      # Only include resources that don't have production data in county ag reports
      # to avoid double counting
      ~Resource.id.in_(
