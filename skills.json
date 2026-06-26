@@ -1,6 +1,10 @@
 {
   "sources": [
     {
+      "registry": "local",
+      "skills": ["database-query", "data-visualization"]
+    },
+    {
       "registry": "vercel-labs/agent-skills"
     },
     {

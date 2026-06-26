@@ -1,2 +1,3 @@
 [codespell]
 ignore-words-list = fallow, bale, BU, BORD, nd, bu
+skip = *.html

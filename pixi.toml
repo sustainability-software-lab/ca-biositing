@@ -24,6 +24,7 @@ frontend = { features = [
 ], no-default-feature = true, solve-group = "default" }
 docs = { features = ["datamodels", "pipeline", "docs"], no-default-feature = true }
 deployment = { features = ["cloud"], solve-group = "default" }
+viz = { features = ["datamodels", "visualization", "kernel"], solve-group = "default" }
 
 [dependencies]
 python = "~=3.12"
@@ -324,6 +325,18 @@ cmd = ["python", "deploy.py", "--env-file", "{{ env_file }}", "{{ deployment_nam
 description = "Deploy the ETL pipeline to Prefect."
 depends-on = [{ task = "start-services" }]
 
+
+# Visualization Dependencies
+[feature.visualization.dependencies]
+matplotlib = ">=3.10.9,<4"
+seaborn = ">=0.13.2,<0.14"
+plotly = ">=6.8.0,<7"
+jupytext = "*"
+folium = "*"
+mapclassify = "*"
+
+[feature.visualization.pypi-dependencies]
+ca-biositing-visualization = { path = "./src/ca_biositing/visualization", editable = true }
 
 # Webservice Dependencies
 [feature.webservice.pypi-dependencies]
