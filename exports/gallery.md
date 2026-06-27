@@ -56,5 +56,45 @@
 ## Aim Record Distribution: Proximate Analysis
 ![Aim Record Distribution Proximate](plots/aim_record_distribution_proximate.png)
 [Interactive Visualization](plots/aim_record_distribution_proximate.html)
-*Multi-dimensional interactive dashboard of individual proximate analysis data points. Features cross-filtering by Resource, Ag Product, Provider, Unit, and QC Status using sidebar selectors.*
-> **Source:** [`analysis/aim_record_distribution_viz.py`](analysis/aim_record_distribution_viz.py) | **Generated:** 2026-06-27 17:01 UTC
+*Multi-dimensional interactive dashboard of individual proximate analysis data points. Features cross-filtering by Resource, Ag Product, Provider, QC Status, and **Data Status** (Raw vs. Portal Compliant) using sidebar selectors.*
+> **Source:** [`analysis/aim_record_distribution_viz.py`](analysis/aim_record_distribution_viz.py) | **Generated:** 2026-06-27 17:20 UTC
+
+## Aim Record Distribution: Compositional Analysis
+[Interactive Visualization](plots/aim_record_distribution_compositional.html)
+*Interactive dashboard for compositional analysis data points, including glucan, xylan, and lignin. Features portal compliance filtering based on 40-105% dry weight sum.*
+> **Source:** [`analysis/aim_record_distribution_compositional_viz.py`](analysis/aim_record_distribution_compositional_viz.py) | **Generated:** 2026-06-27 20:00 UTC
+
+## Aim Record Distribution: Ultimate Analysis
+[Interactive Visualization](plots/aim_record_distribution_ultimate.html)
+*Interactive dashboard for ultimate analysis (C, H, N, O, S). Features whitelist parameter filtering and 100% value constraints.*
+> **Source:** [`analysis/aim_record_distribution_ultimate_viz.py`](analysis/aim_record_distribution_ultimate_viz.py) | **Generated:** 2026-06-27 20:00 UTC
+
+## Aim Record Distribution: ICP Analysis
+[Interactive Visualization](plots/aim_record_distribution_icp.html)
+*Interactive dashboard for ICP-OES elemental analysis. Features unit-based filtering (ppm) and 500,000 ppm threshold for portal compliance.*
+> **Source:** [`analysis/aim_record_distribution_icp_viz.py`](analysis/aim_record_distribution_icp_viz.py) | **Generated:** 2026-06-27 20:00 UTC
+
+## Aim Record Distribution: XRF Analysis
+[Interactive Visualization](plots/aim_record_distribution_xrf.html)
+*Interactive dashboard for XRF analysis data distribution across resources.*
+> **Source:** [`analysis/aim_record_distribution_xrf_viz.py`](analysis/aim_record_distribution_xrf_viz.py) | **Generated:** 2026-06-27 20:00 UTC
+
+## Aim Record Distribution: XRD Analysis
+[Interactive Visualization](plots/aim_record_distribution_xrd.html)
+*Interactive dashboard for XRD analysis data distribution.*
+> **Source:** [`analysis/aim_record_distribution_xrd_viz.py`](analysis/aim_record_distribution_xrd_viz.py) | **Generated:** 2026-06-27 20:00 UTC
+
+## Aim Record Distribution: Fermentation
+[Interactive Visualization](plots/aim_record_distribution_fermentation.html)
+*Interactive dashboard for Aim 2 fermentation data. Features sugar consumption consistency validation and yield percentage constraints.*
+> **Source:** [`analysis/aim_record_distribution_fermentation_viz.py`](analysis/aim_record_distribution_fermentation_viz.py) | **Generated:** 2026-06-27 20:00 UTC
+
+## Aim Record Distribution: Pretreatment
+[Interactive Visualization](plots/aim_record_distribution_pretreatment.html)
+*Interactive dashboard for Aim 2 pretreatment analysis data.*
+> **Source:** [`analysis/aim_record_distribution_pretreatment_viz.py`](analysis/aim_record_distribution_pretreatment_viz.py) | **Generated:** 2026-06-27 20:00 UTC
+
+## Aim Record Distribution: Gasification
+[Interactive Visualization](plots/aim_record_distribution_gasification.html)
+*Interactive dashboard for Aim 2 gasification data distribution across reactor types.*
+> **Source:** [`analysis/aim_record_distribution_gasification_viz.py`](analysis/aim_record_distribution_gasification_viz.py) | **Generated:** 2026-06-27 20:00 UTC

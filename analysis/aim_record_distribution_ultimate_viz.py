@@ -12,13 +12,8 @@
 #     name: python3
 # ---
 
-# # Aim Record Distribution Visualization (Altair Dashboard)
-# This script visualizes the distribution of individual data points for Proximate Analysis.
-#
-# **Multi-Selection Instructions:**
-# - Click bars in sidebars to filter.
-# - Shift-Click to select multiple items in a single sidebar.
-# - Click background of a sidebar to clear that filter.
+# # Aim Record Distribution Visualization - Ultimate Analysis
+# This script visualizes the distribution of individual data points for Ultimate Analysis.
 
 import os
 import pandas as pd
@@ -40,38 +35,11 @@ def main():
         "almond hulls and shells mix", "almond shells and hulls mix", "almond woodchips"
     ]
 
+    ULTIMATE_PARAMETERS = ["carbon", "nitrogen", "oxygen", "sulfur", "hydrogen"]
+
     query = text("""
     WITH all_records AS (
-        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM proximate_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM compositional_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM ultimate_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM icp_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM xrf_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM calorimetry_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM xrd_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM ftnir_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM rgb_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM fermentation_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM pretreatment_record
-        UNION ALL SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM gasification_record
-    ),
-    proximate_sums AS (
-        SELECT
-            r.resource_id,
-            r.experiment_id,
-            (
-                COALESCE(AVG(CASE WHEN p.name = 'moisture' THEN o.value END), 0) +
-                COALESCE(AVG(CASE WHEN p.name = 'ash' OR p.name = 'ash solids' THEN o.value END), 0) +
-                COALESCE(
-                    AVG(CASE WHEN p.name = 'volatile solids' THEN o.value END),
-                    100 - COALESCE(AVG(CASE WHEN p.name = 'fixed carbon' THEN o.value END), 0)
-                )
-            ) as prox_sum
-        FROM observation o
-        JOIN all_records r ON o.record_id = r.record_id
-        JOIN parameter p ON o.parameter_id = p.id
-        WHERE o.record_type = 'proximate analysis'
-        GROUP BY r.resource_id, r.experiment_id
+        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM ultimate_record
     )
     SELECT
         obs.record_id,
@@ -81,12 +49,13 @@ def main():
         prov.codename as provider_code,
         param.name as analysis_param,
         obs.value,
+        u.name as unit,
         rec.qc_pass,
-        ps.prox_sum,
         CASE
             WHEN LOWER(res.name) IN :excluded THEN 'Raw'
             WHEN rec.qc_pass = 'fail' THEN 'Raw'
-            WHEN ps.prox_sum != 0 AND (ps.prox_sum < 95 OR ps.prox_sum > 105) THEN 'Raw'
+            WHEN LOWER(param.name) NOT IN :whitelist THEN 'Raw'
+            WHEN obs.value > 100 THEN 'Raw'
             ELSE 'Portal Compliant'
         END as data_status
     FROM observation obs
@@ -97,15 +66,18 @@ def main():
     LEFT JOIN field_sample fs ON psam.field_sample_id = fs.id
     LEFT JOIN provider prov ON fs.provider_id = prov.id
     LEFT JOIN parameter param ON obs.parameter_id = param.id
-    LEFT JOIN proximate_sums ps ON rec.resource_id = ps.resource_id AND COALESCE(rec.experiment_id, -1) = COALESCE(ps.experiment_id, -1)
-    WHERE obs.record_type = 'proximate analysis'
+    LEFT JOIN unit u ON obs.unit_id = u.id
+    WHERE obs.record_type = 'ultimate analysis'
     """)
 
     with engine.connect() as conn:
-        df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES)})
+        df = pd.read_sql(query, conn, params={
+            "excluded": tuple(EXCLUDED_RESOURCES),
+            "whitelist": tuple(ULTIMATE_PARAMETERS)
+        })
 
     if df.empty:
-        print("No Proximate Analysis data found.")
+        print("No Ultimate Analysis data found.")
         return
 
     # Data Cleaning
@@ -114,24 +86,25 @@ def main():
     df['qc_pass'] = df['qc_pass'].fillna('unknown')
     df['provider_code'] = df['provider_code'].fillna('unknown')
     df['primary_ag_product'] = df['primary_ag_product'].fillna('unknown')
+    df['unit'] = df['unit'].fillna('unknown')
 
     # 2. Build Altair Dashboard
 
     # Selections
     status_sel = alt.selection_point(name='status_selector', fields=['data_status'], toggle=True)
-    res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
+    res_sel = alt.selection_point(name='res_selector', fields=['prepared_sample_name', 'resource_name'], toggle=True)
     prod_sel = alt.selection_point(name='prod_selector', fields=['primary_ag_product'], toggle=True)
     prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
     qc_sel = alt.selection_point(name='qc_selector', fields=['qc_pass'], toggle=True)
+    unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
 
     # Combined filters
-    all_filters = status_sel & res_sel & prod_sel & prov_sel & qc_sel
+    all_filters = status_sel & res_sel & prod_sel & prov_sel & qc_sel & unit_sel
 
     # Base Chart
     base = alt.Chart(df)
 
-    # Main Chart with Layering: Boxplot (Stats) + Circle (Points)
-    # Applying filter at the layer level
+    # Main Chart
     main_base = base.transform_filter(all_filters)
 
     boxplot = main_base.mark_boxplot(extent='min-max', size=30, color='#00313C', opacity=0.3).encode(
@@ -144,15 +117,15 @@ def main():
         y=alt.Y('value:Q'),
         xOffset='jitter:Q',
         color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
-        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'prox_sum']
+        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit']
     ).transform_calculate(
         jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
 
     main_chart = (boxplot + points).properties(
-        width=600,
+        width=800,
         height=600,
-        title='Proximate Analysis Distribution (Individual Points + Summary Stats)'
+        title='Ultimate Analysis Distribution'
     )
 
     # Sidebar Filter Factory
@@ -171,6 +144,7 @@ def main():
     # All requested sidebars
     sidebar = alt.vconcat(
         make_filter_bar('data_status', 'Data Status', status_sel),
+        make_filter_bar('unit', 'Unit', unit_sel),
         make_filter_bar('resource_name', 'Resource Name', res_sel),
         make_filter_bar('primary_ag_product', 'Ag Product', prod_sel),
         make_filter_bar('provider_code', 'Provider Code', prov_sel),
@@ -192,13 +166,8 @@ def main():
 
     # 4. Save
     os.makedirs("exports/plots", exist_ok=True)
-    export_path = "exports/plots/aim_record_distribution_proximate.html"
-
-    # Using the built-in save with default options is most reliable
+    export_path = "exports/plots/aim_record_distribution_ultimate.html"
     dashboard.save(export_path)
-
-    # Also save to the "dashboard" named file for safety
-    dashboard.save("exports/plots/aim_record_distribution_proximate_dashboard.html")
 
     print(f"Dashboard saved to {export_path}")
 
