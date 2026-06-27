@@ -24,3 +24,37 @@
 [Interactive Visualization](plots/xrf_distribution_viz.html)
 *Violin plot showing the distribution and variance of elemental concentrations from XRF analysis across various biomass resources.*
 > **Source:** [`analysis/xrf_distribution_viz.py`](analysis/xrf_distribution_viz.py) | **Generated:** 2026-06-26 20:30 UTC
+
+## Aim 1: XRF Si and K Distribution
+[Interactive Visualization](plots/xrf_si_k_distribution_viz.html)
+*Detailed distribution of Silicon (Si) and Potassium (K) concentrations from XRF analysis. Rice hulls and wheat straw are highlighted in neon green to showcase their significantly higher silica content.*
+> **Source:** [`analysis/xrf_si_k_distribution_viz.py`](analysis/xrf_si_k_distribution_viz.py) | **Generated:** 2026-06-26 20:43 UTC
+
+## Biomass Composition: 3D Representation
+![Biomass Composition 3D](plots/biomass_composition_3d.png)
+[Interactive Visualization](plots/biomass_composition_3d.html)
+*A 3D scatter plot of Glucan vs Xylan vs Lignin content for various biomass resources. Sweet potato culls are highlighted in orange.*
+> **Source:** [`analysis/biomass_composition_3d_viz.py`](analysis/biomass_composition_3d_viz.py) | **Generated:** 2026-06-26 20:51 UTC
+
+## California Strawberry Acreage (2022)
+[Interactive Visualization](plots/strawberry_acreage_heatmap.html)
+*A choropleth heatmap showing strawberry acreage (bearing and non-bearing) by California county, based on USDA Census 2022 data.*
+> **Source:** [`analysis/strawberry_acreage_heatmap.py`](analysis/strawberry_acreage_heatmap.py) | **Generated:** 2026-06-26 21:07 UTC
+
+## Biomass Composition Distribution
+![Biomass Composition Distribution](plots/biomass_composition_distribution.png)
+[Interactive Visualization](plots/biomass_composition_distribution.html)
+*Violin plot showing the distribution of key biomass composition parameters (Xylan, Glucan, Arabinan, Lignin, Moisture, Ash Solids, Volatile Solids) across all resources.*
+> **Source:** [`analysis/biomass_composition_distribution.py`](analysis/biomass_composition_distribution.py) | **Generated:** 2026-06-27 02:46 UTC
+
+## Data Portal: Biomass Composition Distribution
+![Portal Biomass Composition Distribution](plots/portal_biomass_composition_distribution.png)
+[Interactive Visualization](plots/portal_biomass_composition_distribution.html)
+*Violin plot showing the distribution of aggregated biomass composition averages from the `data_portal` schema. Includes Xylan, Glucan, Arabinan, Lignin, Moisture, Ash Solids, and Volatile Solids.*
+> **Source:** [`analysis/portal_biomass_composition_distribution.py`](analysis/portal_biomass_composition_distribution.py) | **Generated:** 2026-06-27 03:28 UTC
+
+## Aim Record Distribution: Proximate Analysis
+![Aim Record Distribution Proximate](plots/aim_record_distribution_proximate.png)
+[Interactive Visualization](plots/aim_record_distribution_proximate.html)
+*Multi-dimensional interactive dashboard of individual proximate analysis data points. Features cross-filtering by Resource, Ag Product, Provider, Unit, and QC Status using sidebar selectors.*
+> **Source:** [`analysis/aim_record_distribution_viz.py`](analysis/aim_record_distribution_viz.py) | **Generated:** 2026-06-27 17:01 UTC

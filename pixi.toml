@@ -331,12 +331,14 @@ depends-on = [{ task = "start-services" }]
 matplotlib = ">=3.10.9,<4"
 seaborn = ">=0.13.2,<0.14"
 plotly = ">=6.8.0,<7"
+altair = ">=5.5.0,<6"
 jupytext = "*"
 folium = "*"
 mapclassify = "*"
 
 [feature.visualization.pypi-dependencies]
 ca-biositing-visualization = { path = "./src/ca_biositing/visualization", editable = true }
+kaleido = "*"
 
 # Webservice Dependencies
 [feature.webservice.pypi-dependencies]

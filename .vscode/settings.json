@@ -17,8 +17,9 @@
   "livePreview.autoRefreshPreview": "On After Delay",
   "livePreview.openPreviewTarget": "Embedded Preview",
   "livePreview.notifyOnServerStop": false,
+  "livePreview.autoOpenPreview": true,
   // Automatically open HTML files in the Live Preview editor
   "workbench.editorAssociations": {
-    "**/*.html": "livePreview.previewEditor"
+    "**/*.html": "ms-vscode.live-preview.previewEditor"
   }
 }
