@@ -103,3 +103,6 @@ analysis/biocirv-ai/
 
 # Visualization Exports
 exports/
+!exports/
+!exports/plots/
+!exports/plots/*.html
