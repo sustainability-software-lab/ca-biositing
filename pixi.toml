@@ -24,6 +24,7 @@ frontend = { features = [
 ], no-default-feature = true, solve-group = "default" }
 docs = { features = ["datamodels", "pipeline", "docs"], no-default-feature = true }
 deployment = { features = ["cloud"], solve-group = "default" }
+viz = { features = ["datamodels", "visualization", "kernel"], solve-group = "default" }
 
 [dependencies]
 python = "~=3.12"
@@ -238,6 +239,10 @@ schema-analytics-plan = { cmd = "pgschema plan --host localhost --port 5432 --us
 schema-analytics-list = { cmd = "pixi run access-db -c \"SELECT schemaname, matviewname, ispopulated FROM pg_matviews\"", description = "List all materialized views in the database." }
 refresh-views = { cmd = "python -c \"from ca_biositing.datamodels.views import refresh_all_views; from ca_biositing.datamodels.database import get_engine; refresh_all_views(get_engine())\"", description = "Refresh all materialized views using SQLAlchemy." }
 
+# Visualization Gallery Tasks
+update-gallery = { cmd = "python scripts/generate_dashboard_gallery.py", description = "Regenerate the static HTML gallery for interactive dashboards." }
+serve-gallery = { cmd = "python -m http.server 8000", cwd = "exports/plots", description = "Serve the dashboard gallery locally at http://localhost:8000." }
+
 [tasks.qgis]
 depends-on = [{ task = "run-qgis", environment = "gis" }]
 
@@ -324,6 +329,21 @@ cmd = ["python", "deploy.py", "--env-file", "{{ env_file }}", "{{ deployment_nam
 description = "Deploy the ETL pipeline to Prefect."
 depends-on = [{ task = "start-services" }]
 
+
+# Visualization Dependencies
+[feature.visualization.dependencies]
+matplotlib = ">=3.10.9,<4"
+seaborn = ">=0.13.2,<0.14"
+plotly = ">=6.8.0,<7"
+altair = ">=5.5.0,<6"
+vl-convert-python = ">=1.7.0,<2"
+jupytext = "*"
+folium = "*"
+mapclassify = "*"
+
+[feature.visualization.pypi-dependencies]
+ca-biositing-visualization = { path = "./src/ca_biositing/visualization", editable = true }
+kaleido = "*"
 
 # Webservice Dependencies
 [feature.webservice.pypi-dependencies]

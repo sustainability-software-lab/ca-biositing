@@ -43,6 +43,10 @@ def main() -> int:
         registry = source["registry"]
         skills = source.get("skills")
 
+        if registry == "local":
+            print(f"--- Skipping installation for local registry: {skills} ---", flush=True)
+            continue
+
         if skills:
             for skill in skills:
                 print(f"--- Installing specific skill: {skill} from {registry} ---", flush=True)

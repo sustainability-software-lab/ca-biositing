@@ -10,5 +10,16 @@
   "python.defaultInterpreterPath": "${workspaceFolder}/.pixi/envs/default/bin/python",
   "python-envs.defaultEnvManager": "ms-python.python:system",
   // Ensure the Jupyter extension starts notebooks with the workspace as root.
-  "jupyter.notebookFileRoot": "${workspaceFolder}"
+  "jupyter.notebookFileRoot": "${workspaceFolder}",
+  // Live Preview extension configuration for HTML files
+  "livePreview.defaultPreviewPath": "",
+  "livePreview.showServerStatusOnStatusbar": true,
+  "livePreview.autoRefreshPreview": "On After Delay",
+  "livePreview.openPreviewTarget": "Embedded Preview",
+  "livePreview.notifyOnServerStop": false,
+  "livePreview.autoOpenPreview": true,
+  // Automatically open HTML files in the Live Preview editor
+  "workbench.editorAssociations": {
+    "**/*.html": "ms-vscode.live-preview.previewEditor"
+  }
 }
