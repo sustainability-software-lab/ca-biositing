@@ -241,7 +241,18 @@ def transform_field_sample_v03(
             normalized_df['sampling_location_id'] = normalized_df['county_id'].map(place_to_address_map)
             logger.info(f"Mapped {len(place_to_address_map)} counties to LocationAddresses")
 
-    # 7. Select and Rename Columns
+    # 7. Coalesce Collection Timestamp
+    # Use fv_date_time (from 01_Sample_IDs) as primary, fallback to sample_ts (from 02_Sample_Desc)
+    if 'fv_date_time' in normalized_df.columns and 'sample_ts' in normalized_df.columns:
+        normalized_df['collection_timestamp_final'] = normalized_df['fv_date_time'].fillna(normalized_df['sample_ts'])
+    elif 'fv_date_time' in normalized_df.columns:
+        normalized_df['collection_timestamp_final'] = normalized_df['fv_date_time']
+    elif 'sample_ts' in normalized_df.columns:
+        normalized_df['collection_timestamp_final'] = normalized_df['sample_ts']
+    else:
+        normalized_df['collection_timestamp_final'] = None
+
+    # 8. Select and Rename Columns
     # Extended mapping to include particle dimensions and new fields
     rename_map = {
         'sample_name': 'name',
@@ -258,7 +269,7 @@ def transform_field_sample_v03(
         'storage_dur_units_id': 'field_storage_duration_unit_id',
         'fieldstorage_location_id': 'field_storage_location_id',  # Collection-site storage
         'prod_location_id': 'field_sample_storage_location_id',  # Lab/facility storage
-        'sample_ts': 'collection_timestamp',
+        'collection_timestamp_final': 'collection_timestamp',
         'sample_notes': 'note',
         'processing_method_id': 'methods_id',  # New methods column
         # Extended fields: particle dimensions
