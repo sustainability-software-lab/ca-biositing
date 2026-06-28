@@ -191,3 +191,21 @@ types._
 > **Source:**
 > [`analysis/aim_record_distribution_gasification_viz.py`](analysis/aim_record_distribution_gasification_viz.py)
 > | **Generated:** 2026-06-27 20:00 UTC
+
+## Database Metadata Dashboard
+
+[Interactive Analysis Distribution](plots/database_analysis_type_dist.html) |
+[Interactive Resource Stats](plots/database_resource_stats.html) |
+[Interactive Resource Hierarchy](plots/database_resource_hierarchy.html) |
+[Interactive Samples Over Time (Resource)](plots/database_samples_over_time.html)
+|
+[Interactive Samples Over Time (Product)](plots/database_samples_over_time_ag.html)
+
+_A cohesive dashboard package outlining database metadata, including
+distribution of observations by analysis type, sample/supplier counts for top
+resources, and a hierarchical breakdown of resource classifications and primary
+products._
+
+> **Source:**
+> [`analysis/database_metadata_dashboard.py`](analysis/database_metadata_dashboard.py)
+> | **Generated:** 2026-06-28 19:27 UTC
