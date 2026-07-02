@@ -167,11 +167,12 @@ dashboard for XRD analysis data distribution._
 
 [Interactive Visualization](plots/aim_record_distribution_fermentation.html)
 _Interactive dashboard for Aim 2 fermentation data. Features sugar consumption
-consistency validation and yield percentage constraints._
+consistency validation, yield percentage constraints, and cross-filtering by Ag
+Product and Provider._
 
 > **Source:**
 > [`analysis/aim_record_distribution_fermentation_viz.py`](analysis/aim_record_distribution_fermentation_viz.py)
-> | **Generated:** 2026-06-27 20:00 UTC
+> | **Generated:** 2026-06-28 20:58 UTC
 
 ## Aim Record Distribution: Pretreatment
 
@@ -186,11 +187,11 @@ _Interactive dashboard for Aim 2 pretreatment analysis data._
 
 [Interactive Visualization](plots/aim_record_distribution_gasification.html)
 _Interactive dashboard for Aim 2 gasification data distribution across reactor
-types._
+types. Now includes filtering by Ag Product and Provider._
 
 > **Source:**
 > [`analysis/aim_record_distribution_gasification_viz.py`](analysis/aim_record_distribution_gasification_viz.py)
-> | **Generated:** 2026-06-27 20:00 UTC
+> | **Generated:** 2026-06-28 20:58 UTC
 
 ## Database Metadata Dashboard
 

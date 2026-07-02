@@ -85,7 +85,7 @@ def main():
 
     # Selections
     status_sel = alt.selection_point(name='status_selector', fields=['data_status'], toggle=True)
-    res_sel = alt.selection_point(name='res_selector', fields=['prepared_sample_name', 'resource_name'], toggle=True)
+    res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
     unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
     param_sel = alt.selection_point(name='param_selector', fields=['analysis_param'], toggle=True)
 

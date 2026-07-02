@@ -100,7 +100,7 @@ def main():
 
     # Selections
     status_sel = alt.selection_point(name='status_selector', fields=['data_status'], toggle=True)
-    res_sel = alt.selection_point(name='res_selector', fields=['prepared_sample_name', 'resource_name'], toggle=True)
+    res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
     prod_sel = alt.selection_point(name='prod_selector', fields=['primary_ag_product'], toggle=True)
     prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
     qc_sel = alt.selection_point(name='qc_selector', fields=['qc_pass'], toggle=True)

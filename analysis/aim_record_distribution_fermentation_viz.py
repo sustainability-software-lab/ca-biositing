@@ -118,13 +118,15 @@ def main():
 
     # Selections
     status_sel = alt.selection_point(name='status_selector', fields=['data_status'], toggle=True)
-    res_sel = alt.selection_point(name='res_selector', fields=['prepared_sample_name', 'resource_name'], toggle=True)
+    res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
+    prod_sel = alt.selection_point(name='prod_selector', fields=['primary_ag_product'], toggle=True)
+    prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
     unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
     strain_sel = alt.selection_point(name='strain_selector', fields=['strain_name'], toggle=True)
     method_sel = alt.selection_point(name='method_selector', fields=['bioconversion_method'], toggle=True)
 
     # Combined filters
-    all_filters = status_sel & res_sel & unit_sel & strain_sel & method_sel
+    all_filters = status_sel & res_sel & prod_sel & prov_sel & unit_sel & strain_sel & method_sel
 
     # Base Chart
     base = alt.Chart(df)
@@ -142,7 +144,7 @@ def main():
         y=alt.Y('value:Q'),
         xOffset='jitter:Q',
         color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
-        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'data_status', 'qc_pass', 'strain_name', 'pretreatment_method', 'enzyme_name', 'bioconversion_method', 'value', 'unit']
+        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'strain_name', 'pretreatment_method', 'enzyme_name', 'bioconversion_method', 'value', 'unit']
     ).transform_calculate(
         jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
@@ -169,10 +171,13 @@ def main():
     # Sidebars
     sidebar = alt.vconcat(
         make_filter_bar('data_status', 'Data Status', status_sel),
+        make_filter_bar('data_status', 'Data Status', status_sel),
+        make_filter_bar('resource_name', 'Resource Name', res_sel),
+        make_filter_bar('primary_ag_product', 'Ag Product', prod_sel),
+        make_filter_bar('provider_code', 'Provider Code', prov_sel),
         make_filter_bar('unit', 'Unit', unit_sel),
         make_filter_bar('strain_name', 'Strain', strain_sel),
-        make_filter_bar('bioconversion_method', 'Method', method_sel),
-        make_filter_bar('resource_name', 'Resource Name', res_sel)
+        make_filter_bar('bioconversion_method', 'Method', method_sel)
     ).resolve_scale(y='independent')
 
     # Final Assembly
