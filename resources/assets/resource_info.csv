@@ -20,11 +20,11 @@ Processing Waste,Corn stover husks,CnSH,"Corn, Sorghum",FALSE,TRUE,9,11,,,
 Ag Residue,Corn stover stalks,CnSS,"Corn, Sorghum",FALSE,FALSE,9,11,2.9,20%,2.3
 Ag Residue,Corn stover whole,CnSW,"Corn, Sorghum",TRUE,FALSE,9,11,2.9,20%,2.3
 Ag Residue,Cotton stem mix,CotSM,Cotton,TRUE,FALSE,10,12,1.5,14%,1.3
-Processing Waste,Cucumber culls,CuCu,Melons/Squash,TRUE,TRUE,6,9,1.2,80%,0.2
+Processing Waste,Cucumber culls,CuCu,Melons/Squash,TRUE,TRUE,8,10,1.2,80%,0.2
 N/A,Dairy manure,DaMa,No Match,TRUE,TRUE,1,12,-,-,-
 Processing Waste,Diatomaceous earth (wine),DiErW,Grapes,FALSE,TRUE,8,10,,,
-Processing Waste,Grape pomace,GpPm,Grapes,TRUE,TRUE,8,10,,,
-Processing Waste,Grape stem,GpSt,Grapes,TRUE,TRUE,8,10,2,45%,1.1
+Processing Waste,Grape pomace,GpPm,Grapes,TRUE,TRUE,8,12,,,
+Processing Waste,Grape stem,GpSt,Grapes,TRUE,TRUE,8,12,2,45%,1.1
 Ag Residue,Grape vines,GpVn,Grapes,TRUE,FALSE,12,2,2,45%,1.1
 Processing Waste,Lees,Lees,Grapes,TRUE,TRUE,8,10,,,
 N/A,Municipal solid waste paper rich,MSWp,No Match,TRUE,TRUE,1,12,,,

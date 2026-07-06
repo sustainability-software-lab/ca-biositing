@@ -100,3 +100,9 @@ _version.py
 
 # analysis environment (only ignore the BioCirv AI submodule workspace)
 analysis/biocirv-ai/
+
+# Visualization Exports
+exports/
+!exports/
+!exports/plots/
+!exports/plots/*.html

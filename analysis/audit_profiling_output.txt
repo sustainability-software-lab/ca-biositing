@@ -1,5 +1,0 @@
-✨ Pixi task (access-db in default): docker-compose -f resources/docker/docker-compose.yml exec db psql -U biocirv_user -d biocirv_db -f ./scripts/audit_profiling.sql: (Access the application database with psql.)
-time="2026-04-30T20:27:28-06:00" level=warning msg="The \"OAUTH2_PROXY_CLIENT_ID\" variable is not set. Defaulting to a blank string."
-time="2026-04-30T20:27:28-06:00" level=warning msg="The \"OAUTH2_PROXY_CLIENT_SECRET\" variable is not set. Defaulting to a blank string."
-time="2026-04-30T20:27:28-06:00" level=warning msg="The \"OAUTH2_PROXY_COOKIE_SECRET\" variable is not set. Defaulting to a blank string."
-psql: error: scripts/audit_profiling.sql: No such file or directory

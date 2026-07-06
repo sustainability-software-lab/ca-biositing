@@ -7,8 +7,10 @@ on:
       - "resources/assets/resource_info.csv"
       - "resources/assets/resource_info_header_mapping.json"
       - "resources/assets/index.html"
+      - "exports/plots/**"
       - "scripts/validate_headers.py"
       - "scripts/csv_to_json.py"
+      - "scripts/generate_dashboard_gallery.py"
       - ".github/workflows/gh-pages.yml"
   push:
     branches:
@@ -54,6 +56,9 @@ jobs:
           cp resources/assets/resource_info.json _site/
           cp resources/assets/resource_info_header_mapping.json _site/
           cp resources/assets/index.html _site/
+          # Deploy dashboard gallery to /gallery subdirectory
+          mkdir -p _site/gallery
+          cp -r exports/plots/* _site/gallery/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
