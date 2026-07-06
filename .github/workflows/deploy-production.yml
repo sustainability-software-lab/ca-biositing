@@ -36,7 +36,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -47,7 +47,7 @@ jobs:
           service_account: ${{ env.DEPLOYER_SA }}
 
       - name: Set up pixi
-        uses: prefix-dev/setup-pixi@v0.9.6
+        uses: prefix-dev/setup-pixi@v0.10.0
         with:
           pixi-version: v0.63.2
           environments: deployment
@@ -103,7 +103,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -114,7 +114,7 @@ jobs:
           service_account: ${{ env.DEPLOYER_SA }}
 
       - name: Set up pixi
-        uses: prefix-dev/setup-pixi@v0.9.6
+        uses: prefix-dev/setup-pixi@v0.10.0
         with:
           pixi-version: v0.63.2
           environments: deployment
@@ -135,7 +135,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
@@ -144,7 +144,7 @@ jobs:
           service_account: ${{ env.DEPLOYER_SA }}
 
       - name: Set up pixi
-        uses: prefix-dev/setup-pixi@v0.9.6
+        uses: prefix-dev/setup-pixi@v0.10.0
         with:
           pixi-version: v0.63.2
           environments: deployment
@@ -163,7 +163,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
@@ -172,7 +172,7 @@ jobs:
           service_account: ${{ env.DEPLOYER_SA }}
 
       - name: Set up pixi
-        uses: prefix-dev/setup-pixi@v0.9.6
+        uses: prefix-dev/setup-pixi@v0.10.0
         with:
           pixi-version: v0.63.2
           environments: deployment
@@ -191,7 +191,7 @@ jobs:
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Authenticate to GCP
         uses: google-github-actions/auth@v3
