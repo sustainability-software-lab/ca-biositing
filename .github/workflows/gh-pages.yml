@@ -31,7 +31,7 @@ jobs:
     name: Validate resource info assets
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Validate header mapping is in sync with CSV
         run: python scripts/validate_headers.py
@@ -45,7 +45,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Convert CSV to JSON
         run: python scripts/csv_to_json.py
