@@ -8,7 +8,7 @@ def generate_gallery():
     output_file = os.path.join(target_dir, "index.html")
 
     # Categories based on subdirectories
-    categories = ["composition", "conversion", "geospatial", "metadata"]
+    categories = ["composition", "conversion", "geospatial", "metadata", "lineage"]
 
     # Build the dashboard sections
     sections_html = []
