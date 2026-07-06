@@ -110,8 +110,8 @@ def main():
     )
 
     # 4. Save Export
-    os.makedirs("exports/plots", exist_ok=True)
-    export_path_html = "exports/plots/biomass_composition_3d.html"
+    os.makedirs("exports/plots/composition", exist_ok=True)
+    export_path_html = "exports/plots/composition/biomass_composition_3d.html"
     fig.write_html(export_path_html)
     print(f"Interactive visualization saved to {export_path_html}")
 

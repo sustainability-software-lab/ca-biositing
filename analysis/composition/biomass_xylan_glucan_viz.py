@@ -102,8 +102,8 @@ def main():
         )
 
     # 4. Save Export
-    os.makedirs("exports/plots", exist_ok=True)
-    export_path = "exports/plots/biomass_xylan_glucan.html"
+    os.makedirs("exports/plots/composition", exist_ok=True)
+    export_path = "exports/plots/composition/biomass_xylan_glucan.html"
     fig.write_html(export_path)
 
     # Also save a static version for the gallery

@@ -19,7 +19,7 @@ set_lbnl_theme_mpl()
 
 def generate_visualizations():
     engine = get_engine()
-    os.makedirs("exports/plots", exist_ok=True)
+    os.makedirs("exports/plots/metadata", exist_ok=True)
 
     # 1. Aim 1 Record Counts
     aim1_data = {
@@ -34,7 +34,7 @@ def generate_visualizations():
     plt.ylabel("Number of Records")
     plt.xlabel("Analysis Type")
     plt.tight_layout()
-    plt.savefig("exports/plots/aim1_record_counts.png", dpi=300)
+    plt.savefig("exports/plots/metadata/aim1_record_counts.png", dpi=300)
     plt.close()
 
     # 2. Aim 2 Record Counts
@@ -50,7 +50,7 @@ def generate_visualizations():
     plt.ylabel("Number of Records")
     plt.xlabel("Analysis Type")
     plt.tight_layout()
-    plt.savefig("exports/plots/aim2_record_counts.png", dpi=300)
+    plt.savefig("exports/plots/metadata/aim2_record_counts.png", dpi=300)
     plt.close()
 
     # 3. Filter Quality Assessment
@@ -67,10 +67,10 @@ def generate_visualizations():
     plt.title("Filter Quality Assessment: Raw vs QC Pass")
     plt.ylabel("Number of Records")
     plt.tight_layout()
-    plt.savefig("exports/plots/filter_quality_assessment.png", dpi=300)
+    plt.savefig("exports/plots/metadata/filter_quality_assessment.png", dpi=300)
     plt.close()
 
-    print("Visualizations generated successfully in exports/plots/")
+    print("Visualizations generated successfully in exports/plots/metadata/")
 
 if __name__ == "__main__":
     generate_visualizations()

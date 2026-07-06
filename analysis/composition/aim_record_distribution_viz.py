@@ -191,14 +191,14 @@ def main():
     )
 
     # 4. Save
-    os.makedirs("exports/plots", exist_ok=True)
-    export_path = "exports/plots/aim_record_distribution_proximate.html"
+    os.makedirs("exports/plots/composition", exist_ok=True)
+    export_path = "exports/plots/composition/aim_record_distribution_proximate.html"
 
     # Using the built-in save with default options is most reliable
     dashboard.save(export_path)
 
     # Also save to the "dashboard" named file for safety
-    dashboard.save("exports/plots/aim_record_distribution_proximate_dashboard.html")
+    dashboard.save("exports/plots/composition/aim_record_distribution_proximate_dashboard.html")
 
     print(f"Dashboard saved to {export_path}")
 

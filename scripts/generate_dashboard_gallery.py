@@ -7,39 +7,61 @@ def generate_gallery():
     target_dir = "exports/plots"
     output_file = os.path.join(target_dir, "index.html")
 
-    # Get all HTML files in the directory
-    html_files = glob.glob(os.path.join(target_dir, "*.html"))
+    # Categories based on subdirectories
+    categories = ["composition", "conversion", "geospatial", "metadata"]
 
-    # Filter out index.html if it already exists
-    html_files = [f for f in html_files if os.path.basename(f) != "index.html"]
+    # Build the dashboard sections
+    sections_html = []
 
-    # Sort files by name
-    html_files.sort()
+    for category in categories:
+        cat_dir = os.path.join(target_dir, category)
+        if not os.path.exists(cat_dir):
+            continue
 
-    # Build the dashboard items
-    dashboard_items = []
-    for file_path in html_files:
-        file_name = os.path.basename(file_path)
-        # Create a readable title from the filename
-        # e.g., aim_record_distribution_proximate.html -> Aim Record Distribution Proximate
-        title = file_name.replace(".html", "").replace("_", " ").title()
+        html_files = glob.glob(os.path.join(cat_dir, "*.html"))
+        if not html_files:
+            continue
 
-        dashboard_items.append(f"""
-            <div class="col">
-                <div class="card h-100 shadow-sm">
-                    <div class="card-body">
-                        <h5 class="card-title">{title}</h5>
-                        <p class="card-text text-muted small">Analysis type visualization.</p>
-                        <a href="{file_name}" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+        html_files.sort()
+
+        category_title = category.replace("_", " ").title()
+
+        dashboard_items = []
+        for file_path in html_files:
+            file_name = os.path.basename(file_path)
+            # Create a relative path for the link
+            rel_path = os.path.join(category, file_name)
+
+            # Create a readable title from the filename
+            title = file_name.replace(".html", "").replace("_", " ").title()
+
+            dashboard_items.append(f"""
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body">
+                            <h5 class="card-title">{title}</h5>
+                            <p class="card-text text-muted small">Analysis type visualization.</p>
+                            <a href="{rel_path}" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small">
+                            Filename: {file_name}
+                        </div>
                     </div>
-                    <div class="card-footer text-muted small">
-                        Filename: {file_name}
-                    </div>
+                </div>
+            """)
+
+        items_html = "\n".join(dashboard_items)
+
+        sections_html.append(f"""
+            <div class="category-section mb-5">
+                <h2 class="border-bottom pb-2 mb-4 text-dark fw-bold">{category_title}</h2>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    {items_html}
                 </div>
             </div>
         """)
 
-    items_html = "\n".join(dashboard_items)
+    all_sections_html = "\n".join(sections_html)
 
     # HTML Template
     html_content = f"""<!DOCTYPE html>
@@ -59,6 +81,10 @@ def generate_gallery():
             color: white;
             padding: 4rem 2rem;
             margin-bottom: 3rem;
+        }}
+        .category-section h2 {{
+            color: #00313C;
+            letter-spacing: -0.025em;
         }}
         .card {{
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
@@ -89,9 +115,7 @@ def generate_gallery():
 </div>
 
 <div class="container mb-5">
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-        {items_html}
-    </div>
+    {all_sections_html}
 </div>
 
 <footer class="py-4 bg-white border-top mt-auto">
@@ -100,7 +124,6 @@ def generate_gallery():
     </div>
 </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
 """
@@ -108,7 +131,7 @@ def generate_gallery():
     with open(output_file, "w") as f:
         f.write(html_content)
 
-    print(f"Gallery generated successfully at {output_file}")
+    print(f"Gallery generated at {output_file}")
 
 if __name__ == "__main__":
     generate_gallery()

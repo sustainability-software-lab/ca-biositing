@@ -92,8 +92,8 @@ def main():
     )
 
     # 3. Save Export
-    os.makedirs("exports/plots", exist_ok=True)
-    export_path_html = "exports/plots/xrf_distribution_viz.html"
+    os.makedirs("exports/plots/composition", exist_ok=True)
+    export_path_html = "exports/plots/composition/xrf_distribution_viz.html"
     fig.write_html(export_path_html)
 
     # Also save a static version for the gallery

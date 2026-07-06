@@ -12,8 +12,8 @@
 #     name: python3
 # ---
 
-# # Aim Record Distribution Visualization - ICP Analysis
-# This script visualizes the distribution of individual data points for ICP-OES / ICP Analysis.
+# # Aim Record Distribution Visualization - Calorimetry Analysis
+# This script visualizes the distribution of individual data points for Calorimetry Analysis.
 
 import os
 import pandas as pd
@@ -37,35 +37,20 @@ def main():
 
     query = text("""
     WITH all_records AS (
-        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM icp_record
-    ),
-    icp_stats AS (
-        SELECT
-            r.resource_id,
-            r.experiment_id,
-            MAX(CASE WHEN u.name = 'ppm' THEN o.value ELSE 0 END) as max_icp_ppm
-        FROM observation o
-        JOIN all_records r ON o.record_id = r.record_id
-        LEFT JOIN unit u ON o.unit_id = u.id
-        WHERE o.record_type = 'icp analysis'
-        GROUP BY r.resource_id, r.experiment_id
+        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM calorimetry_record
     )
     SELECT
         obs.record_id,
         res.name as resource_name,
         pap.name as primary_ag_product,
-        psam.name as prepared_sample_name,
         prov.codename as provider_code,
         param.name as analysis_param,
         obs.value,
         u.name as unit,
         rec.qc_pass,
-        ist.max_icp_ppm,
         CASE
             WHEN LOWER(res.name) IN :excluded THEN 'Raw'
             WHEN rec.qc_pass = 'fail' THEN 'Raw'
-            WHEN LOWER(u.name) != 'ppm' THEN 'Raw'
-            WHEN ist.max_icp_ppm > 500000 THEN 'Raw'
             ELSE 'Portal Compliant'
         END as data_status
     FROM observation obs
@@ -77,15 +62,14 @@ def main():
     LEFT JOIN provider prov ON fs.provider_id = prov.id
     LEFT JOIN parameter param ON obs.parameter_id = param.id
     LEFT JOIN unit u ON obs.unit_id = u.id
-    LEFT JOIN icp_stats ist ON rec.resource_id = ist.resource_id AND COALESCE(rec.experiment_id, -1) = COALESCE(ist.experiment_id, -1)
-    WHERE obs.record_type = 'icp analysis'
+    WHERE obs.record_type = 'calorimetry analysis'
     """)
 
     with engine.connect() as conn:
         df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES)})
 
     if df.empty:
-        print("No ICP Analysis data found.")
+        print("No Calorimetry Analysis data found.")
         return
 
     # Data Cleaning
@@ -116,7 +100,7 @@ def main():
     main_base = base.transform_filter(all_filters)
 
     boxplot = main_base.mark_boxplot(extent='min-max', size=30, color='#00313C', opacity=0.3).encode(
-        x=alt.X('analysis_param:N', title='Analysis Parameter', axis=alt.Axis(labelAngle=45)),
+        x=alt.X('analysis_param:N', title='Analysis Parameter', axis=alt.Axis(labelAngle=0)),
         y=alt.Y('value:Q', title='Measured Value')
     )
 
@@ -125,15 +109,15 @@ def main():
         y=alt.Y('value:Q'),
         xOffset='jitter:Q',
         color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
-        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit', 'max_icp_ppm']
+        tooltip=['record_id', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit']
     ).transform_calculate(
         jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
 
     main_chart = (boxplot + points).properties(
-        width=1000,
+        width=800,
         height=600,
-        title='ICP Analysis Distribution'
+        title='Calorimetry Analysis Distribution'
     )
 
     # Sidebar Filter Factory
@@ -173,8 +157,8 @@ def main():
     )
 
     # 4. Save
-    os.makedirs("exports/plots", exist_ok=True)
-    export_path = "exports/plots/aim_record_distribution_icp.html"
+    os.makedirs("exports/plots/composition", exist_ok=True)
+    export_path = "exports/plots/composition/aim_record_distribution_calorimetry.html"
     dashboard.save(export_path)
 
     print(f"Dashboard saved to {export_path}")

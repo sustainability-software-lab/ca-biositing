@@ -231,14 +231,14 @@ fig_time_ag.update_layout(
 # ## Dashboard Assembly
 
 # Create a combined dashboard view (HTML export)
-os.makedirs("exports/plots", exist_ok=True)
+os.makedirs("exports/plots/metadata", exist_ok=True)
 
 # Export individual plots as interactive HTML
-fig_analysis.write_html("exports/plots/database_analysis_type_dist.html")
-fig_stats.write_html("exports/plots/database_resource_stats.html")
-fig_tree.write_html("exports/plots/database_resource_hierarchy.html")
-fig_time.write_html("exports/plots/database_samples_over_time.html")
-fig_time_ag.write_html("exports/plots/database_samples_over_time_ag.html")
+fig_analysis.write_html("exports/plots/metadata/database_analysis_type_dist.html")
+fig_stats.write_html("exports/plots/metadata/database_resource_stats.html")
+fig_tree.write_html("exports/plots/metadata/database_resource_hierarchy.html")
+fig_time.write_html("exports/plots/metadata/database_samples_over_time.html")
+fig_time_ag.write_html("exports/plots/metadata/database_samples_over_time_ag.html")
 
 # Displaying in notebook
 fig_analysis.show()
@@ -247,4 +247,4 @@ fig_tree.show()
 fig_time.show()
 fig_time_ag.show()
 
-print("Dashboard components generated in exports/plots/")
+print("Dashboard components generated in exports/plots/metadata/")

@@ -12,8 +12,8 @@
 #     name: python3
 # ---
 
-# # Aim Record Distribution Visualization - Pretreatment
-# This script visualizes the distribution of individual data points for Pretreatment.
+# # Aim Record Distribution Visualization - Compositional Analysis
+# This script visualizes the distribution of individual data points for Compositional Analysis.
 
 import os
 import pandas as pd
@@ -37,7 +37,26 @@ def main():
 
     query = text("""
     WITH all_records AS (
-        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM pretreatment_record
+        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM compositional_record
+    ),
+    comp_sums AS (
+        SELECT
+            r.resource_id,
+            r.experiment_id,
+            (
+                COALESCE(AVG(CASE WHEN p.name = 'glucan' THEN o.value END), 0) +
+                COALESCE(AVG(CASE WHEN p.name = 'xylan' THEN o.value END), 0) +
+                COALESCE(
+                    AVG(CASE WHEN p.name = 'lignin' THEN o.value END),
+                    AVG(CASE WHEN p.name = 'lignin+' THEN o.value END),
+                    0
+                )
+            ) as comp_sum
+        FROM observation o
+        JOIN all_records r ON o.record_id = r.record_id
+        JOIN parameter p ON o.parameter_id = p.id
+        WHERE o.record_type = 'compositional analysis'
+        GROUP BY r.resource_id, r.experiment_id
     )
     SELECT
         obs.record_id,
@@ -49,9 +68,11 @@ def main():
         obs.value,
         u.name as unit,
         rec.qc_pass,
+        cs.comp_sum,
         CASE
             WHEN LOWER(res.name) IN :excluded THEN 'Raw'
             WHEN rec.qc_pass = 'fail' THEN 'Raw'
+            WHEN cs.comp_sum != 0 AND (cs.comp_sum < 40 OR cs.comp_sum > 105) THEN 'Raw'
             ELSE 'Portal Compliant'
         END as data_status
     FROM observation obs
@@ -63,14 +84,15 @@ def main():
     LEFT JOIN provider prov ON fs.provider_id = prov.id
     LEFT JOIN parameter param ON obs.parameter_id = param.id
     LEFT JOIN unit u ON obs.unit_id = u.id
-    WHERE obs.record_type = 'pretreatment'
+    LEFT JOIN comp_sums cs ON rec.resource_id = cs.resource_id AND COALESCE(rec.experiment_id, -1) = COALESCE(cs.experiment_id, -1)
+    WHERE obs.record_type = 'compositional analysis'
     """)
 
     with engine.connect() as conn:
         df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES)})
 
     if df.empty:
-        print("No Pretreatment data found.")
+        print("No Compositional Analysis data found.")
         return
 
     # Data Cleaning
@@ -86,11 +108,13 @@ def main():
     # Selections
     status_sel = alt.selection_point(name='status_selector', fields=['data_status'], toggle=True)
     res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
+    prod_sel = alt.selection_point(name='prod_selector', fields=['primary_ag_product'], toggle=True)
+    prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
+    qc_sel = alt.selection_point(name='qc_selector', fields=['qc_pass'], toggle=True)
     unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
-    param_sel = alt.selection_point(name='param_selector', fields=['analysis_param'], toggle=True)
 
     # Combined filters
-    all_filters = status_sel & res_sel & unit_sel & param_sel
+    all_filters = status_sel & res_sel & prod_sel & prov_sel & qc_sel & unit_sel
 
     # Base Chart
     base = alt.Chart(df)
@@ -99,7 +123,7 @@ def main():
     main_base = base.transform_filter(all_filters)
 
     boxplot = main_base.mark_boxplot(extent='min-max', size=30, color='#00313C', opacity=0.3).encode(
-        x=alt.X('analysis_param:N', title='Pretreatment Parameter', axis=alt.Axis(labelAngle=45)),
+        x=alt.X('analysis_param:N', title='Analysis Parameter', axis=alt.Axis(labelAngle=45)),
         y=alt.Y('value:Q', title='Measured Value')
     )
 
@@ -108,7 +132,7 @@ def main():
         y=alt.Y('value:Q'),
         xOffset='jitter:Q',
         color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
-        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'data_status', 'qc_pass', 'value', 'unit']
+        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit', 'comp_sum']
     ).transform_calculate(
         jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
@@ -116,7 +140,7 @@ def main():
     main_chart = (boxplot + points).properties(
         width=800,
         height=600,
-        title='Pretreatment Distribution'
+        title='Compositional Analysis Distribution'
     )
 
     # Sidebar Filter Factory
@@ -132,12 +156,14 @@ def main():
             title=alt.TitleParams(text=title, fontSize=13, anchor='start')
         )
 
-    # Sidebars
+    # All requested sidebars
     sidebar = alt.vconcat(
         make_filter_bar('data_status', 'Data Status', status_sel),
         make_filter_bar('unit', 'Unit', unit_sel),
-        make_filter_bar('analysis_param', 'Parameter', param_sel),
-        make_filter_bar('resource_name', 'Resource Name', res_sel)
+        make_filter_bar('resource_name', 'Resource Name', res_sel),
+        make_filter_bar('primary_ag_product', 'Ag Product', prod_sel),
+        make_filter_bar('provider_code', 'Provider Code', prov_sel),
+        make_filter_bar('qc_pass', 'QC Pass Status', qc_sel)
     ).resolve_scale(y='independent')
 
     # Final Assembly
@@ -154,10 +180,11 @@ def main():
     )
 
     # 4. Save
-    os.makedirs("exports/plots", exist_ok=True)
-    export_path = "exports/plots/aim_record_distribution_pretreatment.html"
+    os.makedirs("exports/plots/composition", exist_ok=True)
+    export_path = "exports/plots/composition/aim_record_distribution_compositional.html"
     dashboard.save(export_path)
 
+    # Save static PNG as well (using pixi run)
     print(f"Dashboard saved to {export_path}")
 
 if __name__ == "__main__":

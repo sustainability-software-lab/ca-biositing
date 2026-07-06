@@ -103,7 +103,7 @@ fig.update_layout(margin={"r":0,"t":40,"l":0,"b":0})
 # %% [markdown]
 # ## 4. Save Plot
 #
-# Save the interactive plot as an HTML file in the `exports/plots/` directory.
+# Save the interactive plot as an HTML file in the `exports/plots/geospatial/` directory.
 
 # %%
 output_dir = Path("exports/plots")
