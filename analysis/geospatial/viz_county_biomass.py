@@ -24,6 +24,10 @@ import plotly.express as px
 import plotly.io as pio
 from sqlalchemy import text
 from pathlib import Path
+import os
+
+# Force localhost for local database access
+os.environ["POSTGRES_HOST"] = "localhost"
 
 from ca_biositing.datamodels.database import get_engine
 from ca_biositing.visualization.theme import get_lbnl_template_plotly, LBNL_COLORS

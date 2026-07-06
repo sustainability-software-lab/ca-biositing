@@ -19,6 +19,10 @@
 # **LBNL BioCirV Project**
 
 import os
+
+# Force localhost for local database access
+os.environ["POSTGRES_HOST"] = "localhost"
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go

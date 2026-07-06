@@ -241,6 +241,7 @@ refresh-views = { cmd = "python -c \"from ca_biositing.datamodels.views import r
 
 # Visualization Gallery Tasks
 update-gallery = { cmd = "python scripts/generate_dashboard_gallery.py", description = "Regenerate the static HTML gallery for interactive dashboards." }
+update-plots = { cmd = "python scripts/regenerate_all_plots.py", description = "Re-run all analysis scripts to regenerate plots with fresh data and update the gallery." }
 serve-gallery = { cmd = "python -m http.server 8000", cwd = "exports/plots", description = "Serve the dashboard gallery locally at http://localhost:8000." }
 
 [tasks.qgis]
