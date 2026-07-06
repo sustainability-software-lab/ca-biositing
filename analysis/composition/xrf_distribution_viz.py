@@ -12,99 +12,157 @@
 #     name: python3
 # ---
 
-# # XRF Analysis Data Distribution
-# This script visualizes the distribution of elemental concentrations from XRF analysis
-# using data from the `ca_biositing.analysis_data_view`.
-# It creates interactive violin plots for each element to show variance and distribution,
-# with tooltips highlighting the specific biomass resource.
+# # Aim Record Distribution Visualization - XRF Analysis
+# This script visualizes the distribution of individual data points for XRF Analysis.
 
 import os
 import pandas as pd
-import plotly.express as px
-import plotly.io as pio
+import altair as alt
 from sqlalchemy import text
 
 # Force localhost for local database access
 os.environ["POSTGRES_HOST"] = "localhost"
 
 from ca_biositing.datamodels.database import get_engine
-from ca_biositing.visualization.theme import get_lbnl_template_plotly, LBNL_COLORS
-
-# Set LBNL Plotly Theme
-pio.templates["lbnl"] = get_lbnl_template_plotly()
-pio.templates.default = "lbnl"
+from ca_biositing.visualization.theme import LBNL_PALETTE
 
 def main():
     # 1. Query Data
     engine = get_engine()
-    # Querying all XRF analysis data
+
+    EXCLUDED_RESOURCES = [
+        "sargassum", "#n/a", "lab media", "alfalfa",
+        "almond hulls and shells mix", "almond shells and hulls mix", "almond woodchips"
+    ]
+
     query = text("""
-        SELECT
-            resource,
-            parameter as element,
-            value,
-            unit
-        FROM ca_biositing.analysis_data_view
-        WHERE record_type ILIKE '%xrf%'
-        AND value IS NOT NULL
+    WITH all_records AS (
+        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM xrf_record
+    )
+    SELECT
+        obs.record_id,
+        res.name as resource_name,
+        pap.name as primary_ag_product,
+        psam.name as prepared_sample_name,
+        prov.codename as provider_code,
+        param.name as analysis_param,
+        obs.value,
+        u.name as unit,
+        rec.qc_pass,
+        CASE
+            WHEN LOWER(res.name) IN :excluded THEN 'Raw'
+            WHEN rec.qc_pass = 'fail' THEN 'Raw'
+            ELSE 'Portal Compliant'
+        END as data_status
+    FROM observation obs
+    JOIN all_records rec ON obs.record_id = rec.record_id
+    LEFT JOIN resource res ON rec.resource_id = res.id
+    LEFT JOIN primary_ag_product pap ON res.primary_ag_product_id = pap.id
+    LEFT JOIN prepared_sample psam ON rec.prepared_sample_id = psam.id
+    LEFT JOIN field_sample fs ON psam.field_sample_id = fs.id
+    LEFT JOIN provider prov ON fs.provider_id = prov.id
+    LEFT JOIN parameter param ON obs.parameter_id = param.id
+    LEFT JOIN unit u ON obs.unit_id = u.id
+    WHERE obs.record_type = 'xrf analysis'
     """)
 
     with engine.connect() as conn:
-        df = pd.read_sql(query, conn)
+        df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES)})
 
     if df.empty:
-        print("No XRF data found in ca_biositing.analysis_data_view.")
+        print("No XRF Analysis data found.")
         return
 
-    # Clean up element names (capitalize only the first letter)
-    df['element'] = df['element'].str.capitalize()
+    # Data Cleaning
+    df['value'] = pd.to_numeric(df['value'], errors='coerce')
+    df = df.dropna(subset=['value']).copy()
+    df['qc_pass'] = df['qc_pass'].fillna('unknown')
+    df['provider_code'] = df['provider_code'].fillna('unknown')
+    df['primary_ag_product'] = df['primary_ag_product'].fillna('unknown')
+    df['unit'] = df['unit'].fillna('unknown')
 
-    # Identify unique unit (assuming consistent for the plot)
-    unit = df['unit'].iloc[0] if not df.empty else "ppm"
+    # 2. Build Altair Dashboard
 
-    # 2. Create Interactive Violin Plot
-    # We'll use a violin plot with points to see the individual distributions
-    fig = px.violin(
-        df,
-        y="value",
-        x="element",
-        color="element",
-        box=True, # Show box plot inside violin
-        points="all", # Show all data points
-        hover_data=["resource", "unit"],
-        labels={
-            "value": f"Concentration ({unit})",
-            "element": "Element",
-            "resource": "Biomass Resource",
-            "unit": "Unit"
-        },
-        title="Distribution of XRF Elemental Analysis Data"
+    # Selections
+    status_sel = alt.selection_point(name='status_selector', fields=['data_status'], toggle=True)
+    res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
+    prod_sel = alt.selection_point(name='prod_selector', fields=['primary_ag_product'], toggle=True)
+    prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
+    qc_sel = alt.selection_point(name='qc_selector', fields=['qc_pass'], toggle=True)
+    unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
+
+    # Combined filters
+    all_filters = status_sel & res_sel & prod_sel & prov_sel & qc_sel & unit_sel
+
+    # Base Chart
+    base = alt.Chart(df)
+
+    # Main Chart
+    main_base = base.transform_filter(all_filters)
+
+    boxplot = main_base.mark_boxplot(extent='min-max', size=30, color='#00313C', opacity=0.3).encode(
+        x=alt.X('analysis_param:N', title='Analysis Parameter', axis=alt.Axis(labelAngle=45)),
+        y=alt.Y('value:Q', title='Measured Value')
     )
 
-    # Update layout for better readability and remove grid lines
-    fig.update_layout(
-        xaxis_title="Element",
-        yaxis_title=f"Measured Value ({unit})",
-        legend_title="Element",
-        showlegend=False,
-        xaxis=dict(showgrid=False),
-        yaxis=dict(showgrid=False)
+    points = main_base.mark_circle(size=60, opacity=0.7).encode(
+        x=alt.X('analysis_param:N'),
+        y=alt.Y('value:Q'),
+        xOffset='jitter:Q',
+        color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
+        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit']
+    ).transform_calculate(
+        jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
 
-    # 3. Save Export
+    main_chart = (boxplot + points).properties(
+        width=800,
+        height=600,
+        title='XRF Analysis Distribution'
+    )
+
+    # Sidebar Filter Factory
+    def make_filter_bar(field, title, selection):
+        return base.mark_bar().encode(
+            y=alt.Y(f'{field}:N', sort='-x', title=None),
+            x=alt.X('count():Q', title=None, axis=alt.Axis(labels=False, ticks=False)),
+            color=alt.condition(selection, alt.value('#00B5E2'), alt.value('lightgray')),
+            tooltip=[alt.Tooltip(field, title=title), alt.Tooltip('count()', title='Count')]
+        ).add_params(selection).properties(
+            width=180,
+            height=alt.Step(20),
+            title=alt.TitleParams(text=title, fontSize=13, anchor='start')
+        )
+
+    # All requested sidebars
+    sidebar = alt.vconcat(
+        make_filter_bar('data_status', 'Data Status', status_sel),
+        make_filter_bar('unit', 'Unit', unit_sel),
+        make_filter_bar('resource_name', 'Resource Name', res_sel),
+        make_filter_bar('primary_ag_product', 'Ag Product', prod_sel),
+        make_filter_bar('provider_code', 'Provider Code', prov_sel),
+        make_filter_bar('qc_pass', 'QC Pass Status', qc_sel)
+    ).resolve_scale(y='independent')
+
+    # Final Assembly
+    dashboard = alt.hconcat(
+        sidebar,
+        main_chart
+    ).resolve_scale(
+        color='independent'
+    ).configure_view(
+        stroke=None
+    ).configure_title(
+        anchor='start',
+        fontSize=18
+    )
+
+    # 4. Save
     os.makedirs("exports/plots/composition", exist_ok=True)
-    export_path_html = "exports/plots/composition/xrf_distribution_viz.html"
-    fig.write_html(export_path_html)
+    export_path = "exports/plots/composition/xrf_distribution.html"
+    dashboard.save(export_path)
 
-    # Also save a static version for the gallery
-    try:
-        export_path_png = "exports/plots/xrf_distribution_viz.png"
-        fig.write_image(export_path_png, scale=2)
-        print(f"Static version saved to {export_path_png}")
-    except Exception as e:
-        print(f"Could not save static image: {e}")
-
-    print(f"Visualization saved to {export_path_html}")
+    print(f"Dashboard saved to {export_path}")
 
 if __name__ == "__main__":
     main()

@@ -245,10 +245,12 @@ fig_time.write_html("exports/plots/metadata/database_samples_over_time.html")
 fig_time_ag.write_html("exports/plots/metadata/database_samples_over_time_ag.html")
 
 # Displaying in notebook
-fig_analysis.show()
-fig_stats.show()
-fig_tree.show()
-fig_time.show()
-fig_time_ag.show()
+# These are commented out to prevent browsers from opening during bulk regeneration.
+# Use them interactively in a notebook or VS Code Interactive window.
+# fig_analysis.show()
+# fig_stats.show()
+# fig_tree.show()
+# fig_time.show()
+# fig_time_ag.show()
 
 print("Dashboard components generated in exports/plots/metadata/")
