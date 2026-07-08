@@ -214,3 +214,13 @@ products._
 > **Source:**
 > [`analysis/metadata/database_metadata_dashboard.py`](analysis/metadata/database_metadata_dashboard.py)
 > | **Generated:** 2026-06-28 19:27 UTC
+
+## Sample Lineage Flow
+
+[Interactive Visualization](plots/lineage/sample_lineage_flow.html) _Sankey
+diagram showing the flow of samples from Resource through Field Sample and
+Prepared Sample to final Analysis records. Flows are color-coded by Primary Ag
+Product._
+
+> **Source:**
+> [`analysis/sample_lineage_flow_viz.py`](analysis/sample_lineage_flow_viz.py) |
