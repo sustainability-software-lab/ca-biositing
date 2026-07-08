@@ -180,11 +180,11 @@ Product and Provider._
 ## Pretreatment Analysis Distribution
 
 [Interactive Visualization](plots/conversion/pretreatment_distribution.html)
-_Interactive dashboard for Aim 2 pretreatment analysis data._
+_Interactive dashboard for Aim 2 pretreatment analysis data. Features multi-dimensional cross-filtering by Resource, Provider, and Pretreatment Method (Experiment)._
 
 > **Source:**
 > [`analysis/conversion/pretreatment_distribution_viz.py`](analysis/conversion/pretreatment_distribution_viz.py)
-> | **Generated:** 2026-06-27 20:00 UTC
+> | **Generated:** 2026-07-08 19:15 UTC
 
 ## Gasification Analysis Distribution
 
