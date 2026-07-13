@@ -33,11 +33,20 @@ def generate_analyst_report(
 ---
 """
 
+    # Group observations by resource_name
+    grouped_obs = {}
     for obs in flagged_observations:
-        severity_emoji = "🔴" if obs.severity == "HIGH" else "🟠" if obs.severity == "MEDIUM" else "🟡"
+        if obs.resource_name not in grouped_obs:
+            grouped_obs[obs.resource_name] = []
+        grouped_obs[obs.resource_name].append(obs)
 
-        md += f"""
-### {severity_emoji} {obs.severity} — {obs.resource_name} / {obs.parameter_name}
+    for resource_name, obs_list in grouped_obs.items():
+        md += f"\n## 🌿 Resource: {resource_name}\n\n"
+        for obs in obs_list:
+            severity_emoji = "🔴" if obs.severity == "HIGH" else "🟠" if obs.severity == "MEDIUM" else "🟡"
+
+            md += f"""
+### {severity_emoji} {obs.severity} — {obs.parameter_name}
 | Field | Value |
 |---|---|
 | Record ID | `{obs.record_id}` |
@@ -49,9 +58,9 @@ def generate_analyst_report(
 | Recorded | {obs.created_at or '—'} |
 | Note | {obs.note or '—'} |
 """
-        if llm_assessments and obs.record_id in llm_assessments:
-            md += f"\n**LLM Assessment:** {llm_assessments[obs.record_id]}\n"
+            if llm_assessments and obs.record_id in llm_assessments:
+                md += f"\n**LLM Assessment:** {llm_assessments[obs.record_id]}\n"
 
-        md += "\n---\n"
+            md += "\n---\n"
 
     return md
