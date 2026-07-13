@@ -180,11 +180,13 @@ Product and Provider._
 ## Pretreatment Analysis Distribution
 
 [Interactive Visualization](plots/conversion/pretreatment_distribution.html)
-_Interactive dashboard for Aim 2 pretreatment analysis data._
+_Interactive dashboard for Aim 2 pretreatment analysis data. Features
+multi-dimensional cross-filtering by Resource, Provider, and Pretreatment Method
+(Experiment)._
 
 > **Source:**
 > [`analysis/conversion/pretreatment_distribution_viz.py`](analysis/conversion/pretreatment_distribution_viz.py)
-> | **Generated:** 2026-06-27 20:00 UTC
+> | **Generated:** 2026-07-08 19:15 UTC
 
 ## Gasification Analysis Distribution
 
@@ -223,4 +225,15 @@ Prepared Sample to final Analysis records. Flows are color-coded by Primary Ag
 Product._
 
 > **Source:**
-> [`analysis/sample_lineage_flow_viz.py`](analysis/sample_lineage_flow_viz.py) |
+> [`analysis/sample_lineage_flow_viz.py`](analysis/sample_lineage_flow_viz.py)
+
+## Biomass Composition: Moisture vs Ash
+
+[Interactive Visualization](plots/composition/moisture_vs_ash.html) _A
+comparison of moisture and ash content across all biomass resources. Almond
+residues are highlighted in yellow to show their specific positioning relative
+to other feedstocks._
+
+> **Source:**
+> [`analysis/composition/moisture_vs_ash_viz.py`](analysis/composition/moisture_vs_ash_viz.py)
+> | **Generated:** 2026-07-08 20:13 UTC
