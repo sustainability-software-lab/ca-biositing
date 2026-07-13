@@ -25,13 +25,13 @@ repos:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always, --ignore-unknown]
-        exclude: ^(docs/api/|readthedocs\.yaml|exports/plots/)
+        exclude: ^(docs/api/|readthedocs\.yaml|exports/plots/|audit/output/)
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.4.2"
     hooks:
       - id: codespell
-        exclude: (\.ipynb$|pixi\.lock|temp_external_datasets/|exports/plots/)
+        exclude: (\.ipynb$|pixi\.lock|temp_external_datasets/|exports/plots/|audit/output/)
 
   - repo: local
     hooks:
