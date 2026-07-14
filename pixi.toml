@@ -501,6 +501,8 @@ scikit-learn = ">=1.4.2,<2"
 numpy = ">=1.24,<2"
 matplotlib = ">=3.5,<3.10"
 setuptools = "<70"
+ydata-profiling = ">=4.16.0,<5"
+gspread = ">=6.2.1,<7"
 
 [feature.auditor.pypi-dependencies]
 ydata-profiling = ">=4.12.0"
