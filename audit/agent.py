@@ -11,15 +11,24 @@ from audit.skills.grouped_outlier_detection import detect_grouped_outliers
 from audit.skills.data_quality_assertions import run_data_quality_assertions
 from audit.skills.semantic_review import semantic_review
 from audit.skills.analyst_report import generate_analyst_report
+from audit.skills.anomaly_tracker import write_anomaly_tracker
 
 # Import the database engine utility from the datamodels package
 from ca_biositing.datamodels.database import get_engine
+from sqlalchemy import create_engine
+from datetime import date
 
 class AuditorAgent:
     def __init__(self, targets: Optional[List[str]] = None):
         self.targets = targets or list(REGISTRY.keys())
-        self.engine = get_engine()
+        self.audit_date = date.today().isoformat()   # "YYYY-MM-DD"
         self.timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+
+        if settings.STAGING_DATABASE_URL:
+            self.engine = create_engine(settings.STAGING_DATABASE_URL, echo=False)
+        else:
+            self.engine = get_engine()
+
         self.output_dir = Path(settings.OUTPUT_ROOT) / self.timestamp
         self.output_dir.mkdir(parents=True, exist_ok=True)
         (self.output_dir / "profiles").mkdir(exist_ok=True)
@@ -28,6 +37,7 @@ class AuditorAgent:
         print(f"🚀 Starting Data Audit: {self.timestamp}")
 
         all_reports = []
+        sheet_url = None
 
         for target_name in self.targets:
             if target_name not in REGISTRY:
@@ -55,6 +65,24 @@ class AuditorAgent:
                 zscore_threshold=settings.ZSCORE_THRESHOLD,
                 min_group_size=settings.MIN_GROUP_SIZE
             )
+
+            # Skill 6: Anomaly Tracker
+            sheet_url = None
+            if settings.ANOMALY_TRACKER_SHEET_KEY and flagged:
+                try:
+                    print("📋 Writing to Anomaly Tracker...")
+                    sheet_url = write_anomaly_tracker(
+                        flagged=flagged,
+                        target_name=target_name,
+                        audit_date=self.audit_date,
+                        audit_run_id=self.timestamp,
+                        sheet_key=settings.ANOMALY_TRACKER_SHEET_KEY,
+                        credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
+                        worksheet_name=settings.ANOMALY_TRACKER_WORKSHEET,
+                    )
+                    print(f"  ✅ Anomaly Tracker updated: {sheet_url}")
+                except Exception as e:
+                    print(f"  ⚠️ Anomaly Tracker write failed: {e}")
 
             # 4. Skill 3: GX Assertions
             gx_result = {}
@@ -101,6 +129,9 @@ class AuditorAgent:
         # Final aggregate report
         final_report_path = self.output_dir / "full_audit_report.html"
         final_report_path.write_text("\n\n".join(all_reports))
+
+        if sheet_url:
+            print(f"📊 Anomaly Tracker: {sheet_url}")
 
         print(f"✅ Audit Complete. Results in: {self.output_dir}")
 
