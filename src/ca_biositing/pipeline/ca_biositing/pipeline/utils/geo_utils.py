@@ -5,6 +5,7 @@ from geopy.geocoders import GoogleV3
 from geopy.extra.rate_limiter import RateLimiter
 from prefect import task, get_run_logger
 import addfips
+from functools import partial
 
 # Initialize FIPS helper at module level (safe, no network/keys required)
 af = addfips.AddFIPS()
@@ -16,7 +17,8 @@ def get_geocoder():
     Lazily initialize the GoogleV3 geocoder and rate limiter.
     This avoids ConfigurationErrors at import time if the API key is missing.
     """
-    api_key = os.getenv("GOOGLE_MAPS_API_KEY")
+    api_key = os.getenv("GOOGLE_MAPS_API_KEY") # CHANGE
+    # if os still can't find an api_key, return None
     if not api_key:
         # During CI test collection, we want to allow import but fail only when used
         # However, to satisfy geopy's requirement without breaking collection:
@@ -24,6 +26,21 @@ def get_geocoder():
 
     geolocator = GoogleV3(api_key=api_key)
     return RateLimiter(geolocator.geocode, min_delay_seconds=0.1)
+
+def get_reverse_geocoder():
+    """
+    Lazily initialize the REVERSE GoogleV3 geocoder and rate limiter.
+    This avoids ConfigurationErrors at import time if the API key is missing.
+    """
+    api_key = os.getenv("GOOGLE_MAPS_API_KEY") # CHANGE
+    # if os still can't find an api_key, return None
+    if not api_key:
+        # During CI test collection, we want to allow import but fail only when used
+        # However, to satisfy geopy's requirement without breaking collection:
+        return None
+
+    geolocator = GoogleV3(api_key=api_key)
+    return RateLimiter(partial(geolocator.reverse, exactly_one=True), min_delay_seconds=0.1)
 
 def get_geoid(val, county_to_geoid):
     """
@@ -59,74 +76,96 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
 
     # Lazily initialize geocoder inside the function
     geocode = get_geocoder()
+    reverse = get_reverse_geocoder()
 
-    address_df = pd.DataFrame(columns=["closest_address_line_1", "closest_address_line_2", "closest_city", "closest_county", "closest_state", "closest_postal_code", "closest_latitude", "closest_longitude"])
+    address_df = pd.DataFrame(columns=["status", "closest_address_line_1", "closest_address_line_2", "closest_city", "closest_county", "closest_state", "closest_postal_code", "closest_latitude", "closest_longitude"])
     geoid_df = pd.DataFrame(columns=["closest_geoid", "closest_state_name", "closest_state_fips", "closest_county_name", "closest_county_fips"])
 
     # put weird addresses in an array for displaying in a warning
     unparsable = []
     for index, row in df.iterrows():
-        try:
-            if row['is_na'] or geocode is None:
-                # categorize as unparsable
-                raise Exception
+      if row['status'] != 'pending':
+        continue
+      try:
+          if row['is_na']:
+              # categorize as unparsable
+              raise Exception("Row does not contain enough information to validate the address.")
+          if geocode is None:
+              raise Exception("Could not set up the geocoder.")
+              break
+          if reverse is None:
+              raise Exception("Could not set up the reverse geocoder.")
+              break
 
-            info = geocode(row[address_column]).raw
-            addy_components = info['address_components']
+          # use address information to geocode. if that isn't available, use the latitude and longitude
+          info = geocode(row[address_column])
+          if info == None:
 
-            # get address components
-            address = ""
-            row_types = np.concatenate([name["types"] for name in addy_components])
-            for possible_type in address_types:
-                if possible_type in row_types and get_component("long_name", possible_type, addy_components) != None:
-                    address = address + get_component("long_name", possible_type, addy_components) + " "
-                    if possible_type != "street_number" and possible_type != "route":
-                        print(get_component("long_name", possible_type, addy_components), possible_type)
+            # if lat and long exist
+            if lat != None and long != None and row[lat] != None and isinstance(row[lat], (float, int)) and \
+              row[long] != None and isinstance(row[long], (float, int)):
 
-            county = get_component("long_name", "administrative_area_level_2", addy_components)
-            city = get_component("short_name", "locality", addy_components)
-            state = get_component("short_name", "administrative_area_level_1", addy_components)
-            zip_code = get_component("short_name", "postal_code", addy_components)
-            zip_suffix = get_component("short_name", "postal_code_suffix", addy_components)
-
-            # get latitude and longitude
-            if isinstance(row[lat], (float, int)) and not np.isnan(row[lat]) and \
-               isinstance(row[long], (float, int)) and not np.isnan(row[long]):
-                latitude = row[lat]
-                longitude = row[long]
+              # use reverse geocoder
+              info = reverse(f"{row[lat]}, {row[long]}")
             else:
-                latitude = info['geometry']['location']['lat'] if isinstance(info['geometry']['location']['lat'], float) else None
-                longitude = info['geometry']['location']['lng'] if isinstance(info['geometry']['location']['lng'], float) else None
+              raise Exception("Could not find the address via the geocoder.")
+          info = info.raw
+          addy_components = info['address_components']
 
-            address_result = {"closest_address_line_1": address, "closest_address_line_2": None, "closest_city": city, "closest_county": county, "closest_state": state, "closest_postal_code": zip_code + "-" + zip_suffix if (isinstance(zip_code, str) and isinstance(zip_suffix, str)) else zip_code, "closest_latitude": latitude, "closest_longitude": longitude}
+          # get address components
+          address = ""
+          row_types = np.concatenate([name["types"] for name in addy_components])
+          for possible_type in address_types:
+              if possible_type in row_types and get_component("long_name", possible_type, addy_components) != None:
+                  address = address + get_component("long_name", possible_type, addy_components) + " "
 
-            # get geoids
-            geoid = af.get_county_fips(county, state) if (isinstance(county, str) and isinstance(state, str)) else None
-            state_fips = geoid[:2] if isinstance(geoid, str) else None
-            county_fips = geoid[2:] if isinstance(geoid, str) else None
-            geoid_result = {'closest_geoid': geoid, "closest_state_name": state, "closest_state_fips": state_fips, "closest_county_name": county, "closest_county_fips": county_fips}
+          county = get_component("long_name", "administrative_area_level_2", addy_components)
+          city = get_component("short_name", "locality", addy_components)
+          state = get_component("short_name", "administrative_area_level_1", addy_components)
+          zip_code = get_component("short_name", "postal_code", addy_components)
+          zip_suffix = get_component("short_name", "postal_code_suffix", addy_components)
 
-            if geoid is None:
-                unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
+          # get latitude and longitude
+          if lat != None and long != None and not row[lat] != None and isinstance(row[lat], (float, int)) and \
+              not row[long] != None and isinstance(row[long], (float, int)):
+              latitude = row[lat]
+              longitude = row[long]
+          else:
+              latitude = info['geometry']['location']['lat'] if isinstance(info['geometry']['location']['lat'], float) else None
+              longitude = info['geometry']['location']['lng'] if isinstance(info['geometry']['location']['lng'], float) else None
 
-        except Exception:
-            # handle weird addresses
-            unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
+          address_result = {"status": "true", "closest_address_line_1": address, "closest_address_line_2": None, "closest_city": city, "closest_county": county, "closest_state": state, "closest_postal_code": zip_code + "-" + zip_suffix if (isinstance(zip_code, str) and isinstance(zip_suffix, str)) else zip_code, "closest_latitude": latitude, "closest_longitude": longitude}
 
-            if isinstance(row[lat], (float, int)) and not np.isnan(row[lat]) and \
-               isinstance(row[long], (float, int)) and not np.isnan(row[long]):
-                latitude = row[lat]
-                longitude = row[long]
-            else:
-                # If geocode failed or wasn't available, we might not have 'info'
-                latitude = None
-                longitude = None
+          # get geoids
+          geoid = af.get_county_fips(county, state) if (isinstance(county, str) and isinstance(state, str)) else None
+          state_fips = geoid[:2] if isinstance(geoid, str) else None
+          county_fips = geoid[2:] if isinstance(geoid, str) else None
+          geoid_result = {'closest_geoid': geoid, "closest_state_name": state, "closest_state_fips": state_fips, "closest_county_name": county, "closest_county_fips": county_fips}
 
-            address_result = {"closest_address_line_1": None, "closest_address_line_2": None, "closest_city": None, "closest_county": None, "closest_state": None, "closest_postal_code": None, "closest_latitude": latitude, "closest_longitude": longitude}
-            geoid_result = {'closest_geoid': "00000", "closest_state_name": None, "closest_state_fips": None, "closest_county_name": None, "closest_county_fips": None}
+          if geoid is None:
+              unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
 
-        address_df.loc[index] = address_result
-        geoid_df.loc[index] = geoid_result
+      except Exception as e:
+          print(f'Warning for address "{str(row[address_column])}":')
+          print(e)
+          print("")
+          # handle weird addresses
+          unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
+
+          if lat != None and long != None and not row[lat] != None and isinstance(row[lat], (float, int)) and \
+              not row[long] != None and isinstance(row[long], (float, int)):
+              latitude = row[lat]
+              longitude = row[long]
+          else:
+              # If geocode failed or wasn't available, we might not have 'info'
+              latitude = 0
+              longitude = 0
+
+          address_result = {"status": "false", "closest_address_line_1": None, "closest_address_line_2": None, "closest_city": None, "closest_county": None, "closest_state": None, "closest_postal_code": None, "closest_latitude": latitude, "closest_longitude": longitude}
+          geoid_result = {'closest_geoid': "00000", "closest_state_name": None, "closest_state_fips": None, "closest_county_name": None, "closest_county_fips": None}
+
+      address_df.loc[index] = address_result
+      geoid_df.loc[index] = geoid_result
 
     # print weird addresses
     if len(unparsable) > 0:
