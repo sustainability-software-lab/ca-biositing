@@ -81,9 +81,52 @@ register(AuditTarget(
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON ur.analyst_id = c.id
         WHERE ur.qc_pass != 'fail'
+        UNION ALL
+
+        SELECT
+            r.name          AS resource_name,
+            'xrf'           AS analysis_type,
+            p.name          AS parameter_name,
+            u.name          AS unit,
+            o.value         AS observed_value,
+            xr.record_id,
+            xr.qc_pass,
+            xr.note,
+            c.name          AS analyst_name,
+            c.email         AS analyst_email,
+            xr.created_at
+        FROM public.xrf_record xr
+        JOIN public.resource r ON xr.resource_id = r.id
+        JOIN public.observation o ON lower(o.record_id) = lower(xr.record_id)
+        JOIN public.parameter p ON o.parameter_id = p.id
+        LEFT JOIN public.unit u ON o.unit_id = u.id
+        LEFT JOIN public.contact c ON xr.analyst_id = c.id
+        WHERE xr.qc_pass != 'fail'
+
+        UNION ALL
+
+        SELECT
+            r.name          AS resource_name,
+            'icp'           AS analysis_type,
+            p.name          AS parameter_name,
+            u.name          AS unit,
+            o.value         AS observed_value,
+            ir.record_id,
+            ir.qc_pass,
+            ir.note,
+            c.name          AS analyst_name,
+            c.email         AS analyst_email,
+            ir.created_at
+        FROM public.icp_record ir
+        JOIN public.resource r ON ir.resource_id = r.id
+        JOIN public.observation o ON lower(o.record_id) = lower(ir.record_id)
+        JOIN public.parameter p ON o.parameter_id = p.id
+        LEFT JOIN public.unit u ON o.unit_id = u.id
+        LEFT JOIN public.contact c ON ir.analyst_id = c.id
+        WHERE ir.qc_pass != 'fail'
     """,
 
-    group_by_cols=["resource_name", "parameter_name", "unit"],
+    group_by_cols=["resource_name", "analysis_type", "parameter_name", "unit"],
     numeric_cols=["observed_value"],
     id_cols=["record_id", "resource_name", "parameter_name"],
     analyst_col="analyst_email",

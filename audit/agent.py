@@ -74,6 +74,12 @@ class AuditorAgent:
             except Exception as e:
                 print(f"⚠️ Semantic review failed for {target_name}: {e}")
 
+            # Save LLM assessments
+            if llm_assessments:
+                llm_path = self.output_dir / f"llm_assessments_{target_name}.json"
+                with open(llm_path, "w") as f:
+                    json.dump(llm_assessments, f, indent=2)
+
             # 6. Skill 5: Generate Report
             print("📝 Generating analyst report...")
             report_md = generate_analyst_report(
@@ -83,7 +89,7 @@ class AuditorAgent:
             )
 
             # Save individual target report
-            target_report_path = self.output_dir / f"report_{target_name}.md"
+            target_report_path = self.output_dir / f"report_{target_name}.html"
             target_report_path.write_text(report_md)
             all_reports.append(report_md)
 
@@ -93,7 +99,7 @@ class AuditorAgent:
                 flagged_df.to_csv(self.output_dir / f"flagged_{target_name}.csv", index=False)
 
         # Final aggregate report
-        final_report_path = self.output_dir / "full_audit_report.md"
+        final_report_path = self.output_dir / "full_audit_report.html"
         final_report_path.write_text("\n\n".join(all_reports))
 
         print(f"✅ Audit Complete. Results in: {self.output_dir}")

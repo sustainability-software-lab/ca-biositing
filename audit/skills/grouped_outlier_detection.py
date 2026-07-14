@@ -14,6 +14,7 @@ class FlaggedObservation:
     record_id: str
     resource_name: str
     parameter_name: str
+    analysis_type: Optional[str]
     unit: Optional[str]
     observed_value: float
     group_mean: float
@@ -63,6 +64,7 @@ def detect_grouped_outliers(
             record_id=row[id_col],
             resource_name=row["resource_name"],
             parameter_name=row["parameter_name"],
+            analysis_type=row.get("analysis_type"),
             unit=row.get("unit"),
             observed_value=float(row[value_col]),
             group_mean=float(row["avg_value"]),
