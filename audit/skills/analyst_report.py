@@ -13,7 +13,7 @@ def generate_analyst_report(
     min_group_size: int = 3,
 ) -> str:
     """
-    Generates a dynamic HTML report for analysts.
+    Generates a Markdown report for analysts.
     """
     date_str = datetime.now().strftime("%Y-%m-%d")
 
@@ -23,206 +23,43 @@ def generate_analyst_report(
         "LOW": len([o for o in flagged_observations if o.severity == "LOW"]),
     }
 
-    # Prepare data for JavaScript
-    obs_data = []
+    md = f"# ⚠️ Anomaly Report — {date_str}\n\n"
+    md += f"**Audit Target:** {target_name}\n\n"
+    md += f"**Flagged Observations:** {len(flagged_observations)} ({severity_counts['HIGH']} HIGH, {severity_counts['MEDIUM']} MEDIUM, {severity_counts['LOW']} LOW)\n\n"
+    md += f"**Z-Score Threshold:** {zscore_threshold} | **Min Group Size:** {min_group_size}\n\n"
+
+    if not flagged_observations:
+        md += "No anomalies detected.\n"
+        return md
+
+    # Group by resource name
+    grouped = {}
     for obs in flagged_observations:
-        obs_dict = vars(obs).copy()
-        obs_dict['llm_assessment'] = llm_assessments.get(obs.record_id, '') if llm_assessments else ''
-        obs_dict['severity_emoji'] = "🔴" if obs.severity == "HIGH" else "🟠" if obs.severity == "MEDIUM" else "🟡"
-        # Handle potential None values for JSON serialization
-        for k, v in obs_dict.items():
-            if pd.isna(v) or v is None:
-                obs_dict[k] = '—'
-        obs_data.append(obs_dict)
+        if obs.resource_name not in grouped:
+            grouped[obs.resource_name] = []
+        grouped[obs.resource_name].append(obs)
 
-    obs_json = json.dumps(obs_data)
+    for resource, obs_list in grouped.items():
+        md += f"## 🌿 Resource: {resource}\n\n"
+        for obs in obs_list:
+            emoji = "🔴" if obs.severity == "HIGH" else "🟠" if obs.severity == "MEDIUM" else "🟡"
+            md += f"### {emoji} {obs.parameter_name} ({obs.severity})\n\n"
 
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Anomaly Report - {target_name}</title>
-    <style>
-        body {{ font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; max-width: 1200px; margin: 0 auto; padding: 20px; }}
-        h1, h2, h3 {{ color: #2c3e50; }}
-        .summary-card {{ background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 20px; margin-bottom: 20px; }}
-        .filters {{ display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; background: #e9ecef; padding: 15px; border-radius: 8px; }}
-        .filter-group {{ display: flex; flex-direction: column; }}
-        .filter-group label {{ font-weight: bold; margin-bottom: 5px; font-size: 0.9em; }}
-        .filter-group select, .filter-group input {{ padding: 8px; border: 1px solid #ccc; border-radius: 4px; min-width: 150px; }}
-        table {{ width: 100%; border-collapse: collapse; margin-bottom: 20px; background: white; }}
-        th, td {{ padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }}
-        th {{ background-color: #f2f2f2; font-weight: bold; }}
-        .observation-card {{ border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; margin-bottom: 15px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }}
-        .observation-header {{ display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }}
-        .observation-header h3 {{ margin: 0; }}
-        .badge {{ padding: 4px 8px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }}
-        .badge-high {{ background: #ffebee; color: #c62828; }}
-        .badge-medium {{ background: #fff3e0; color: #ef6c00; }}
-        .badge-low {{ background: #fff8e1; color: #f9a825; }}
-        .llm-assessment {{ background: #f0f7ff; border-left: 4px solid #0066cc; padding: 10px; margin-top: 10px; font-style: italic; }}
-        .hidden {{ display: none !important; }}
-    </style>
-</head>
-<body>
-    <h1>⚠️ Anomaly Report — {date_str}</h1>
+            md += "| Field | Value |\n"
+            md += "|---|---|\n"
+            md += f"| Record ID | `{obs.record_id}` |\n"
+            md += f"| Analysis Type | {obs.analysis_type} |\n"
+            md += f"| Observed Value | {obs.observed_value} {obs.unit or ''} |\n"
+            md += f"| Group Mean ± Std | {obs.group_mean:.2f} ± {obs.group_std:.2f} (n={obs.group_n}) |\n"
+            md += f"| Z-Score | **{obs.z_score:.2f}** |\n"
+            md += f"| QC Status | {obs.qc_pass} |\n"
+            md += f"| Analyst | {obs.analyst_name} ({obs.analyst_email}) |\n"
+            md += f"| Recorded | {obs.created_at} |\n"
+            md += f"| Note | {obs.note} |\n\n"
 
-    <div class="summary-card">
-        <p><strong>Audit Target:</strong> {target_name}</p>
-        <p><strong>Flagged Observations:</strong> {len(flagged_observations)} ({severity_counts['HIGH']} HIGH, {severity_counts['MEDIUM']} MEDIUM, {severity_counts['LOW']} LOW)</p>
-        <p><strong>Z-Score Threshold:</strong> {zscore_threshold} | <strong>Min Group Size:</strong> {min_group_size}</p>
-    </div>
+            if llm_assessments and obs.record_id in llm_assessments:
+                md += f"> **LLM Assessment:** {llm_assessments[obs.record_id]}\n\n"
 
-    <div class="filters">
-        <div class="filter-group">
-            <label for="analystFilter">Analyst Email</label>
-            <select id="analystFilter" onchange="filterObservations()">
-                <option value="all">All Analysts</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="resourceFilter">Resource Name</label>
-            <select id="resourceFilter" onchange="filterObservations()">
-                <option value="all">All Resources</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="parameterFilter">Parameter Name</label>
-            <select id="parameterFilter" onchange="filterObservations()">
-                <option value="all">All Parameters</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="analysisTypeFilter">Analysis Type</label>
-            <select id="analysisTypeFilter" onchange="filterObservations()">
-                <option value="all">All Analysis Types</option>
-            </select>
-        </div>
-        <div class="filter-group">
-            <label for="severityFilter">Severity</label>
-            <select id="severityFilter" onchange="filterObservations()">
-                <option value="all">All Severities</option>
-                <option value="HIGH">High</option>
-                <option value="MEDIUM">Medium</option>
-                <option value="LOW">Low</option>
-            </select>
-        </div>
-    </div>
+            md += "---\n\n"
 
-    <div id="observationsContainer"></div>
-
-    <script>
-        const observations = {obs_json};
-
-        function populateFilters() {{
-            const analysts = new Set();
-            const resources = new Set();
-            const parameters = new Set();
-            const analysisTypes = new Set();
-
-            observations.forEach(obs => {{
-                if (obs.analyst_email && obs.analyst_email !== '—') analysts.add(obs.analyst_email);
-                if (obs.resource_name && obs.resource_name !== '—') resources.add(obs.resource_name);
-                if (obs.parameter_name && obs.parameter_name !== '—') parameters.add(obs.parameter_name);
-                if (obs.analysis_type && obs.analysis_type !== '—') analysisTypes.add(obs.analysis_type);
-            }});
-
-            const populateSelect = (id, items) => {{
-                const select = document.getElementById(id);
-                Array.from(items).sort().forEach(item => {{
-                    const option = document.createElement('option');
-                    option.value = item;
-                    option.textContent = item;
-                    select.appendChild(option);
-                }});
-            }};
-
-            populateSelect('analystFilter', analysts);
-            populateSelect('resourceFilter', resources);
-            populateSelect('parameterFilter', parameters);
-            populateSelect('analysisTypeFilter', analysisTypes);
-        }}
-
-        function renderObservations(filteredObs) {{
-            const container = document.getElementById('observationsContainer');
-            container.innerHTML = '';
-
-            if (filteredObs.length === 0) {{
-                container.innerHTML = '<p>No observations match the selected filters.</p>';
-                return;
-            }}
-
-            // Group by resource name for display
-            const grouped = {{}};
-            filteredObs.forEach(obs => {{
-                if (!grouped[obs.resource_name]) grouped[obs.resource_name] = [];
-                grouped[obs.resource_name].push(obs);
-            }});
-
-            for (const [resource, obsList] of Object.entries(grouped)) {{
-                const resourceHeader = document.createElement('h2');
-                resourceHeader.textContent = `🌿 Resource: ${{resource}}`;
-                container.appendChild(resourceHeader);
-
-                obsList.forEach(obs => {{
-                    const card = document.createElement('div');
-                    card.className = 'observation-card';
-
-                    const badgeClass = obs.severity === 'HIGH' ? 'badge-high' : (obs.severity === 'MEDIUM' ? 'badge-medium' : 'badge-low');
-
-                    let llmHtml = '';
-                    if (obs.llm_assessment && obs.llm_assessment !== '—') {{
-                        llmHtml = `<div class="llm-assessment"><strong>LLM Assessment:</strong> ${{obs.llm_assessment}}</div>`;
-                    }}
-
-                    card.innerHTML = `
-                        <div class="observation-header">
-                            <h3>${{obs.severity_emoji}} ${{obs.parameter_name}}</h3>
-                            <span class="badge ${{badgeClass}}">${{obs.severity}}</span>
-                        </div>
-                        <table>
-                            <tr><th>Field</th><th>Value</th></tr>
-                            <tr><td>Record ID</td><td><code>${{obs.record_id}}</code></td></tr>
-                            <tr><td>Analysis Type</td><td>${{obs.analysis_type}}</td></tr>
-                            <tr><td>Observed Value</td><td>${{obs.observed_value}} ${{obs.unit || ''}}</td></tr>
-                            <tr><td>Group Mean ± Std</td><td>${{Number(obs.group_mean).toFixed(2)}} ± ${{Number(obs.group_std).toFixed(2)}} (n=${{obs.group_n}})</td></tr>
-                            <tr><td>Z-Score</td><td><strong>${{Number(obs.z_score).toFixed(2)}}</strong></td></tr>
-                            <tr><td>QC Status</td><td>${{obs.qc_pass}}</td></tr>
-                            <tr><td>Analyst</td><td>${{obs.analyst_name}} (${{obs.analyst_email}})</td></tr>
-                            <tr><td>Recorded</td><td>${{obs.created_at}}</td></tr>
-                            <tr><td>Note</td><td>${{obs.note}}</td></tr>
-                        </table>
-                        ${{llmHtml}}
-                    `;
-                    container.appendChild(card);
-                }});
-            }}
-        }}
-
-        function filterObservations() {{
-            const analyst = document.getElementById('analystFilter').value;
-            const resource = document.getElementById('resourceFilter').value;
-            const parameter = document.getElementById('parameterFilter').value;
-            const analysisType = document.getElementById('analysisTypeFilter').value;
-            const severity = document.getElementById('severityFilter').value;
-
-            const filtered = observations.filter(obs => {{
-                return (analyst === 'all' || obs.analyst_email === analyst) &&
-                       (resource === 'all' || obs.resource_name === resource) &&
-                       (parameter === 'all' || obs.parameter_name === parameter) &&
-                       (analysisType === 'all' || obs.analysis_type === analysisType) &&
-                       (severity === 'all' || obs.severity === severity);
-            }});
-
-            renderObservations(filtered);
-        }}
-
-        // Initialize
-        populateFilters();
-        renderObservations(observations);
-    </script>
-</body>
-</html>
-"""
-    return html
+    return md

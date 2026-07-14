@@ -117,7 +117,7 @@ class AuditorAgent:
             )
 
             # Save individual target report
-            target_report_path = self.output_dir / f"report_{target_name}.html"
+            target_report_path = self.output_dir / f"report_{target_name}.md"
             target_report_path.write_text(report_md)
             all_reports.append(report_md)
 
@@ -127,7 +127,7 @@ class AuditorAgent:
                 flagged_df.to_csv(self.output_dir / f"flagged_{target_name}.csv", index=False)
 
         # Final aggregate report
-        final_report_path = self.output_dir / "full_audit_report.html"
+        final_report_path = self.output_dir / "full_audit_report.md"
         final_report_path.write_text("\n\n".join(all_reports))
 
         if sheet_url:

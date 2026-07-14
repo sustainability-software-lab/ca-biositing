@@ -1,10 +1,11 @@
 # audit/skills/semantic_review.py
 import litellm
 import json
+import os
 from pathlib import Path
 from typing import List, Dict
-from typing import List, Dict
 from audit.skills.grouped_outlier_detection import FlaggedObservation
+from audit.config import settings
 
 # Reuse existing rubric
 SYSTEM_PROMPT_PATH = Path("audit/REPORT_PROMPT.md")
@@ -57,6 +58,8 @@ Return the result as a JSON object: {{"record_id": "assessment"}}
 
     response = litellm.completion(
         model=model,
+        api_key=os.environ.get("CBORG_API_KEY") or os.environ.get("OPENAI_API_KEY"),
+        api_base=settings.LLM_BASE_URL,
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_message},

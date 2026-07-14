@@ -3,11 +3,12 @@ from typing import Optional
 
 class AuditorSettings(BaseSettings):
     # litellm reads ANTHROPIC_BASE_URL and ANTHROPIC_AUTH_TOKEN from env automatically
-    LLM_MODEL: str = "gemini/gemini-3-flash-high"
-    LLM_MAX_TOKENS: int = 4096
+    LLM_MODEL: str = "openai/gemini-3.1-pro"
+    LLM_MAX_TOKENS: int = 8192
+    LLM_BASE_URL: str = "https://api.cborg.lbl.gov"
 
     # Audit Thresholds
-    ZSCORE_THRESHOLD: float = 3.0
+    ZSCORE_THRESHOLD: float = 1.0
     MIN_GROUP_SIZE: int = 3
 
     # Paths
