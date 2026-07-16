@@ -12,7 +12,7 @@ from audit.skills.data_quality_assertions import run_data_quality_assertions
 from audit.skills.llm_synthesis import run_llm_synthesis
 from audit.skills.analyst_report import generate_analyst_report
 from audit.skills.executive_summary import generate_executive_summary
-from audit.skills.anomaly_tracker import write_anomaly_tracker
+from audit.skills.anomaly_tracker import write_anomaly_tracker, write_raw_anomaly_tracker
 
 # Import the database engine utility from the datamodels package
 from ca_biositing.datamodels.database import get_engine
@@ -77,25 +77,6 @@ class AuditorAgent:
                 group_cols=target.group_by_cols
             )
 
-            # Skill 6: Anomaly Tracker
-            sheet_url = ""
-            if settings.ANOMALY_TRACKER_SHEET_KEY and flagged:
-                try:
-                    print("📋 Writing to Anomaly Tracker...")
-                    sheet_url = write_anomaly_tracker(
-                        flagged=flagged,
-                        target_name=target_name,
-                        audit_date=self.audit_date,
-                        audit_run_id=self.timestamp,
-                        sheet_key=settings.ANOMALY_TRACKER_SHEET_KEY,
-                        credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
-                        worksheet_name=settings.ANOMALY_TRACKER_WORKSHEET,
-                    )
-                    global_sheet_url = sheet_url
-                    print(f"  ✅ Anomaly Tracker updated: {sheet_url}")
-                except Exception as e:
-                    print(f"  ⚠️ Anomaly Tracker write failed: {e}")
-
             # 4. Skill 3: GX Assertions
             gx_result = {}
             if target.gx_suite_path and Path(target.gx_suite_path).exists():
@@ -121,6 +102,49 @@ class AuditorAgent:
                 with open(llm_path, "w") as f:
                     f.write(synthesis.model_dump_json(indent=2))
 
+            # Save flagged observations as CSV (Backend data)
+            raw_csv_path = ""
+            if flagged:
+                flagged_df = pd.DataFrame([vars(f) for f in flagged])
+                csv_file = self.output_dir / f"flagged_{target_name}.csv"
+                flagged_df.to_csv(csv_file, index=False)
+                raw_csv_path = str(csv_file)
+
+            # Skill 6: Anomaly Tracker (Grouped & Raw)
+            sheet_url = ""
+            if settings.ANOMALY_TRACKER_SHEET_KEY and flagged:
+                try:
+                    print("📋 Writing to Anomaly Tracker...")
+                    # 1. Write Grouped Issues
+                    grouped_issues = synthesis.grouped_issues if synthesis else []
+                    sheet_url = write_anomaly_tracker(
+                        grouped_issues=grouped_issues,
+                        target_name=target_name,
+                        audit_date=self.audit_date,
+                        audit_run_id=self.timestamp,
+                        sheet_key=settings.ANOMALY_TRACKER_SHEET_KEY,
+                        credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
+                        evidently_report_url=f"evidently/{target_name}.html",
+                        raw_csv_path=raw_csv_path,
+                        worksheet_name=settings.ANOMALY_TRACKER_WORKSHEET,
+                    )
+                    
+                    # 2. Write Raw Anomalies
+                    write_raw_anomaly_tracker(
+                        flagged=flagged,
+                        target_name=target_name,
+                        audit_date=self.audit_date,
+                        audit_run_id=self.timestamp,
+                        sheet_key=settings.ANOMALY_TRACKER_SHEET_KEY,
+                        credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
+                        worksheet_name="Raw Anomalies"
+                    )
+
+                    global_sheet_url = sheet_url
+                    print(f"  ✅ Anomaly Tracker updated: {sheet_url}")
+                except Exception as e:
+                    print(f"  ⚠️ Anomaly Tracker write failed: {e}")
+
             # 6. Store results for Executive Summary
             evidently_html_rel_path = f"evidently/{target_name}.html"
             target_results.append({
@@ -144,11 +168,6 @@ class AuditorAgent:
                 )
                 target_report_path = self.output_dir / f"report_{target_name}.md"
                 target_report_path.write_text(report_md)
-
-            # Save flagged observations as CSV (Backend data)
-            if flagged:
-                flagged_df = pd.DataFrame([vars(f) for f in flagged])
-                flagged_df.to_csv(self.output_dir / f"flagged_{target_name}.csv", index=False)
 
         # Final Skill: Executive Summary
         print("🏛️ Generating Executive Audit Summary...")
