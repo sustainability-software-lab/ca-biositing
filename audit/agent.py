@@ -2,12 +2,12 @@ import pandas as pd
 from pathlib import Path
 from datetime import datetime
 import json
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 from audit.config import settings, load_yaml_config
 from audit.targets.registry import REGISTRY, AuditTarget
 from audit.skills.statistical_profiling import run_statistical_profiling
-from audit.skills.grouped_outlier_detection import detect_grouped_outliers
+from audit.skills.evidently_engine import run_evidently_profile
 from audit.skills.data_quality_assertions import run_data_quality_assertions
 from audit.skills.semantic_review import semantic_review
 from audit.skills.analyst_report import generate_analyst_report
@@ -19,7 +19,8 @@ from sqlalchemy import create_engine
 from datetime import date
 
 class AuditorAgent:
-    def __init__(self, targets: Optional[List[str]] = None, config_path: Optional[str] = None):
+    def __init__(self, targets: Optional[List[str]] = None, config_path: Optional[str] = None, profile: bool = False):
+        self.profile = profile
         if config_path:
             global settings
             settings = load_yaml_config(config_path)
@@ -36,6 +37,7 @@ class AuditorAgent:
         self.output_dir = Path(settings.OUTPUT_ROOT) / self.timestamp
         self.output_dir.mkdir(parents=True, exist_ok=True)
         (self.output_dir / "profiles").mkdir(exist_ok=True)
+        (self.output_dir / "evidently").mkdir(exist_ok=True)
 
     def run(self):
         print(f"🚀 Starting Data Audit: {self.timestamp}")
@@ -55,19 +57,22 @@ class AuditorAgent:
             pop_df = pd.read_sql(target.population_sql, self.engine)
             obs_df = pd.read_sql(target.observation_sql, self.engine)
 
-            # 2. Skill 1: Statistical Profiling
-            print("📊 Running statistical profiling...")
-            profile_summary = run_statistical_profiling(
-                obs_df, target_name, self.output_dir / "profiles"
-            )
+            # 2. Skill 1: Statistical Profiling (Gated by --profile)
+            profile_summary = {}
+            if self.profile:
+                print("📊 Running statistical profiling...")
+                profile_summary = run_statistical_profiling(
+                    obs_df, target_name, self.output_dir / "profiles"
+                )
 
-            # 3. Skill 2: Outlier Detection
-            print("📍 Detecting outliers...")
-            flagged = detect_grouped_outliers(
-                pop_df, obs_df,
-                group_cols=target.group_by_cols,
-                zscore_threshold=settings.ZSCORE_THRESHOLD,
-                min_group_size=settings.MIN_GROUP_SIZE
+            # 3. Skill 2: Outlier Detection (Evidently AI)
+            print("📍 Detecting outliers with Evidently AI...")
+            report_json, flagged = run_evidently_profile(
+                population_df=pop_df,
+                observation_df=obs_df,
+                target_name=target_name,
+                output_dir=self.output_dir / "evidently",
+                group_cols=target.group_by_cols
             )
 
             # Skill 6: Anomaly Tracker
@@ -102,6 +107,7 @@ class AuditorAgent:
                     target_name=target_name,
                     flagged_observations=flagged,
                     population_df=pop_df,
+                    evidently_report=report_json,
                     model=settings.LLM_MODEL,
                     max_tokens=settings.LLM_MAX_TOKENS
                 )
@@ -145,6 +151,13 @@ class AuditorAgent:
         print(f"✅ Audit Complete. Results in: {self.output_dir}")
 
 if __name__ == "__main__":
+    import argparse
     import audit.targets.views  # Trigger registration
-    agent = AuditorAgent()
+
+    parser = argparse.ArgumentParser(description="CA Biositing Auditor Agent")
+    parser.add_argument("--profile", action="store_true", help="Run full statistical profiling (ydata-profiling)")
+    parser.add_argument("--targets", nargs="+", help="Specific targets to audit")
+    args = parser.parse_args()
+
+    agent = AuditorAgent(targets=args.targets, profile=args.profile)
     agent.run()

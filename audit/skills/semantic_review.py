@@ -3,7 +3,7 @@ import litellm
 import json
 import os
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 from audit.skills.grouped_outlier_detection import FlaggedObservation
 from audit.config import settings
 
@@ -16,6 +16,7 @@ def semantic_review(
     target_name: str,
     flagged_observations: List[FlaggedObservation],
     population_df: pd.DataFrame,
+    evidently_report: Optional[Dict] = None,
     model: str = settings.LLM_MODEL,
     max_tokens: int = settings.LLM_MAX_TOKENS,
 ) -> str:
@@ -63,8 +64,13 @@ def semantic_review(
         anomalies_per_param = "N/A"
         anomalies_per_resource = "N/A"
 
+    evidently_summary = ""
+    if evidently_report:
+        evidently_summary = f"\n## Evidently AI Data Quality Report\n```json\n{json.dumps(evidently_report, indent=2)[:2000]}...\n```\n"
+
     user_message = f"""
 Audit Target: {target_name}
+{evidently_summary}
 
 ## Population Distribution Summary
 {pop_summary}
