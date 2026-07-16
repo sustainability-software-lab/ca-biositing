@@ -1,4 +1,5 @@
 # audit/skills/semantic_review.py
+# DEPRECATED: This module is legacy. Use audit/skills/llm_synthesis.py for structured output.
 import litellm
 import json
 import os

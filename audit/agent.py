@@ -9,7 +9,7 @@ from audit.targets.registry import REGISTRY, AuditTarget
 from audit.skills.statistical_profiling import run_statistical_profiling
 from audit.skills.evidently_engine import run_evidently_profile
 from audit.skills.data_quality_assertions import run_data_quality_assertions
-from audit.skills.semantic_review import semantic_review
+from audit.skills.llm_synthesis import run_llm_synthesis
 from audit.skills.analyst_report import generate_analyst_report
 from audit.skills.anomaly_tracker import write_anomaly_tracker
 
@@ -80,6 +80,8 @@ class AuditorAgent:
             if settings.ANOMALY_TRACKER_SHEET_KEY and flagged:
                 try:
                     print("📋 Writing to Anomaly Tracker...")
+                    # Note: write_anomaly_tracker update will be handled in Task 4/5,
+                    # but we keep it here as per Task 3 instructions to pass synthesis results if available.
                     sheet_url = write_anomaly_tracker(
                         flagged=flagged,
                         target_name=target_name,
@@ -99,33 +101,32 @@ class AuditorAgent:
                 print("✅ Running DQ assertions...")
                 gx_result = run_data_quality_assertions(obs_df, target.gx_suite_path)
 
-            # 5. Skill 4: Semantic Review (LLM)
-            llm_synthesis = ""
+            # 5. Skill 4: LLM Synthesis (Structured Output)
+            synthesis = None
             try:
-                print("🧠 Running semantic review...")
-                llm_synthesis = semantic_review(
+                print("🧠 Running LLM synthesis...")
+                synthesis = run_llm_synthesis(
                     target_name=target_name,
-                    flagged_observations=flagged,
-                    population_df=pop_df,
-                    evidently_report=report_json,
-                    model=settings.LLM_MODEL,
-                    max_tokens=settings.LLM_MAX_TOKENS
+                    flagged=flagged,
+                    evidently_json=report_json,
+                    model=settings.LLM_MODEL
                 )
             except Exception as e:
-                print(f"⚠️ Semantic review failed for {target_name}: {e}")
+                print(f"⚠️ LLM synthesis failed for {target_name}: {e}")
 
-            # Save LLM synthesis
-            if llm_synthesis:
-                llm_path = self.output_dir / f"llm_synthesis_{target_name}.md"
+            # Save LLM synthesis as JSON
+            if synthesis:
+                llm_path = self.output_dir / f"llm_synthesis_{target_name}.json"
                 with open(llm_path, "w") as f:
-                    f.write(llm_synthesis)
+                    f.write(synthesis.model_dump_json(indent=2))
 
             # 6. Skill 5: Generate Report
             print("📝 Generating analyst report...")
+            llm_executive_summary = synthesis.executive_summary if synthesis else ""
             report_md = generate_analyst_report(
                 target_name=target_name,
                 flagged_observations=flagged,
-                llm_synthesis=llm_synthesis,
+                llm_synthesis=llm_executive_summary,
                 sheet_url=sheet_url,
                 zscore_threshold=settings.ZSCORE_THRESHOLD,
                 min_group_size=settings.MIN_GROUP_SIZE

@@ -11,7 +11,7 @@ parameter_whitelists:
   ultimate: []
 
 llm:
-  model: "gemini-3-flash-high"
+  model: "openai/gemini-3-flash-high"
   max_tokens: 8192
   base_url: "https://api.cborg.lbl.gov"
 
