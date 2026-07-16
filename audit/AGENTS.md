@@ -7,56 +7,32 @@ with raw data from the `audit` system of the `ca-biositing` repository.
 
 If you are asked to "run the audit" yourself as an agent:
 
-1. Ensure the database is accessible.
-2. For **local** checks, use: `pixi run audit`.
-3. For **staging** checks, ensure the tunnel is up and use:
-   `pixi run audit-staging`.
-4. After execution, read the results from `audit/output/audit_summary.md`.
+1. Ensure the database is accessible (either local Docker services or staging
+   via Cloud SQL Auth Proxy).
+2. Ensure the `.env` file is properly configured with `CBORG_API_KEY`,
+   `AUDITOR_STAGING_DATABASE_URL`, and `AUDITOR_ANOMALY_TRACKER_SHEET_KEY`.
+3. Run the audit using:
+   `POSTGRES_HOST=localhost pixi run -e auditor run-auditor`.
+4. After execution, read the results from the latest timestamped directory in
+   `audit/output/` (e.g.,
+   `audit/output/YYYY-MM-DD_HH-MM-SS/full_audit_report.md`).
 
 ## Goal
 
-Interpret the raw SQL query results and compile them into a comprehensive,
-insight-driven audit report using the provided `REPORT_PROMPT.md` template.
+The Skill-Based Data Auditor is an automated pipeline. Your goal as an agent is
+typically to **maintain, extend, or troubleshoot** this pipeline, rather than
+manually interpreting raw SQL results. The pipeline itself handles outlier
+detection, data quality assertions, and LLM-powered semantic review.
 
-## Interpretation Rules
+## Extending the Auditor
 
-### 1. QC Filtering & Record Counts
+If asked to add new checks or targets:
 
-- **Total Records**: Total volume in the table.
-- **QC Pass Rate**: Percentage where `qc_pass = 'pass'`.
-- **Metrics/Averages**: Only include records where `qc_pass != 'fail'` in
-  statistical metrics.
-
-### 2. Lineage Integrity
-
-- **Connectivity**: Verify the % of Prepared Samples that can be traced all the
-  way back to a Primary Agricultural Product.
-- **Resources**: Report the number of unique resources and field samples
-  accounted for in each analysis type. High fragmentation (many records, few
-  linked resources) is a finding.
-
-### 3. Placeholder Values
-
-- Flag "nd", "ND", "blank", "BLANK", or empty strings in `observation.value`.
-- These are data gaps, even if stored as strings.
-
-### 4. Metadata Completeness
-
-- Critical fields: `analyst_id`, `method_id`, `experiment_id`, `dataset_id`.
-- Processing-specific fields (AIM2): `strain_id`, `vessel_id`, `eh_method_id`,
-  `pretreatment_method_id`.
-- 0% coverage on these is a **Severity 1: Critical** issue.
-
-### 5. Domain Performance Matrix
-
-Use the summarized results to populate the performance matrix in the final
-report.
-
-## Reporting Severity Levels
-
-- **CRITICAL (Severity 1)**: Blocks data usage (e.g., 0% method tracking, broken
-  lineage, 100% QC fail).
-- **HIGH (Severity 2)**: Significant quality issues (e.g., negative physical
-  values, mixed units, missing monomer measurements).
-- **MEDIUM (Severity 3)**: Metadata gaps or fragmentation.
-- **LOW (Severity 4)**: Minor inconsistencies.
+1. **New Targets**: Define a new `AuditTarget` in `audit/targets/views/` or
+   `audit/targets/tables/` and register it in the corresponding `__init__.py`.
+2. **New Skills**: Create a new Python module in `audit/skills/` and integrate
+   it into the `run()` loop in `audit/agent.py`.
+3. **Great Expectations**: To add hard data quality rules, create a new JSON
+   expectation suite in `audit/expectations/` and link it to the target via the
+   `gx_suite_path` attribute. See `agent_docs/gx_alignment_strategy.md` for the
+   strategy on aligning GX with SQL view filters.
