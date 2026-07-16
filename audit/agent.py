@@ -128,7 +128,7 @@ class AuditorAgent:
                         raw_csv_path=raw_csv_path,
                         worksheet_name=settings.ANOMALY_TRACKER_WORKSHEET,
                     )
-                    
+
                     # 2. Write Raw Anomalies
                     write_raw_anomaly_tracker(
                         flagged=flagged,
