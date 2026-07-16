@@ -124,6 +124,94 @@ register(AuditTarget(
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON ir.analyst_id = c.id
         WHERE ir.qc_pass != 'fail'
+
+        UNION ALL
+
+        SELECT
+            r.name          AS resource_name,
+            'calorimetry'   AS analysis_type,
+            p.name          AS parameter_name,
+            u.name          AS unit,
+            o.value         AS observed_value,
+            cr.record_id,
+            cr.qc_pass,
+            cr.note,
+            c.name          AS analyst_name,
+            c.email         AS analyst_email,
+            cr.created_at
+        FROM public.calorimetry_record cr
+        JOIN public.resource r ON cr.resource_id = r.id
+        JOIN public.observation o ON lower(o.record_id) = lower(cr.record_id)
+        JOIN public.parameter p ON o.parameter_id = p.id
+        LEFT JOIN public.unit u ON o.unit_id = u.id
+        LEFT JOIN public.contact c ON cr.analyst_id = c.id
+        WHERE cr.qc_pass != 'fail'
+
+        UNION ALL
+
+        SELECT
+            r.name          AS resource_name,
+            'xrd'           AS analysis_type,
+            p.name          AS parameter_name,
+            u.name          AS unit,
+            o.value         AS observed_value,
+            xr.record_id,
+            xr.qc_pass,
+            xr.note,
+            c.name          AS analyst_name,
+            c.email         AS analyst_email,
+            xr.created_at
+        FROM public.xrd_record xr
+        JOIN public.resource r ON xr.resource_id = r.id
+        JOIN public.observation o ON lower(o.record_id) = lower(xr.record_id)
+        JOIN public.parameter p ON o.parameter_id = p.id
+        LEFT JOIN public.unit u ON o.unit_id = u.id
+        LEFT JOIN public.contact c ON xr.analyst_id = c.id
+        WHERE xr.qc_pass != 'fail'
+
+        UNION ALL
+
+        SELECT
+            r.name          AS resource_name,
+            'ftnir'         AS analysis_type,
+            p.name          AS parameter_name,
+            u.name          AS unit,
+            o.value         AS observed_value,
+            fr.record_id,
+            fr.qc_pass,
+            fr.note,
+            c.name          AS analyst_name,
+            c.email         AS analyst_email,
+            fr.created_at
+        FROM public.ftnir_record fr
+        JOIN public.resource r ON fr.resource_id = r.id
+        JOIN public.observation o ON lower(o.record_id) = lower(fr.record_id)
+        JOIN public.parameter p ON o.parameter_id = p.id
+        LEFT JOIN public.unit u ON o.unit_id = u.id
+        LEFT JOIN public.contact c ON fr.analyst_id = c.id
+        WHERE fr.qc_pass != 'fail'
+
+        UNION ALL
+
+        SELECT
+            r.name          AS resource_name,
+            'pretreatment'  AS analysis_type,
+            p.name          AS parameter_name,
+            u.name          AS unit,
+            o.value         AS observed_value,
+            pr.record_id,
+            pr.qc_pass,
+            pr.note,
+            c.name          AS analyst_name,
+            c.email         AS analyst_email,
+            pr.created_at
+        FROM public.pretreatment_record pr
+        JOIN public.resource r ON pr.resource_id = r.id
+        JOIN public.observation o ON lower(o.record_id) = lower(pr.record_id)
+        JOIN public.parameter p ON o.parameter_id = p.id
+        LEFT JOIN public.unit u ON o.unit_id = u.id
+        LEFT JOIN public.contact c ON pr.analyst_id = c.id
+        WHERE pr.qc_pass != 'fail'
     """,
 
     group_by_cols=["resource_name", "analysis_type", "parameter_name", "unit"],

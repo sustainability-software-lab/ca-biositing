@@ -91,27 +91,32 @@ class AuditorAgent:
                 gx_result = run_data_quality_assertions(obs_df, target.gx_suite_path)
 
             # 5. Skill 4: Semantic Review (LLM)
-            llm_assessments = {}
+            llm_synthesis = ""
             try:
                 print("🧠 Running semantic review...")
-                llm_assessments = semantic_review(
-                    target_name, flagged, profile_summary, gx_result,
+                llm_synthesis = semantic_review(
+                    target_name=target_name,
+                    flagged_observations=flagged,
+                    population_df=pop_df,
                     model=settings.LLM_MODEL,
                     max_tokens=settings.LLM_MAX_TOKENS
                 )
             except Exception as e:
                 print(f"⚠️ Semantic review failed for {target_name}: {e}")
 
-            # Save LLM assessments
-            if llm_assessments:
-                llm_path = self.output_dir / f"llm_assessments_{target_name}.json"
+            # Save LLM synthesis
+            if llm_synthesis:
+                llm_path = self.output_dir / f"llm_synthesis_{target_name}.md"
                 with open(llm_path, "w") as f:
-                    json.dump(llm_assessments, f, indent=2)
+                    f.write(llm_synthesis)
 
             # 6. Skill 5: Generate Report
             print("📝 Generating analyst report...")
             report_md = generate_analyst_report(
-                target_name, flagged, llm_assessments,
+                target_name=target_name,
+                flagged_observations=flagged,
+                llm_synthesis=llm_synthesis,
+                sheet_url=sheet_url,
                 zscore_threshold=settings.ZSCORE_THRESHOLD,
                 min_group_size=settings.MIN_GROUP_SIZE
             )

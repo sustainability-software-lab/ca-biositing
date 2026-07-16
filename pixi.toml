@@ -510,6 +510,7 @@ great-expectations = ">=0.18.12,<1"
 litellm = ">=1.35.0,<2"
 pydantic-settings = ">=2.2.1,<3"
 setuptools = "*"
+tabulate = "*"
 
 [feature.auditor.tasks]
 run-auditor = { cmd = "python audit/agent.py", description = "Run the skill-based data auditor.", env = { PYTHONPATH = "." } }

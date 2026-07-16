@@ -3,7 +3,7 @@ from typing import Optional
 
 class AuditorSettings(BaseSettings):
     # litellm reads ANTHROPIC_BASE_URL and ANTHROPIC_AUTH_TOKEN from env automatically
-    LLM_MODEL: str = "openai/gemini-3.1-pro"
+    LLM_MODEL: str = "openai/gemini-2.5-flash"
     LLM_MAX_TOKENS: int = 8192
     LLM_BASE_URL: str = "https://api.cborg.lbl.gov"
 
@@ -27,5 +27,7 @@ class AuditorSettings(BaseSettings):
     class Config:
         env_prefix = "AUDITOR_"
         case_sensitive = True
+        env_file = ".env"
+        extra = "ignore"
 
 settings = AuditorSettings()
