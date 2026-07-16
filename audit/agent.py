@@ -11,6 +11,7 @@ from audit.skills.evidently_engine import run_evidently_profile
 from audit.skills.data_quality_assertions import run_data_quality_assertions
 from audit.skills.llm_synthesis import run_llm_synthesis
 from audit.skills.analyst_report import generate_analyst_report
+from audit.skills.executive_summary import generate_executive_summary
 from audit.skills.anomaly_tracker import write_anomaly_tracker
 
 # Import the database engine utility from the datamodels package
@@ -19,8 +20,9 @@ from sqlalchemy import create_engine
 from datetime import date
 
 class AuditorAgent:
-    def __init__(self, targets: Optional[List[str]] = None, config_path: Optional[str] = None, profile: bool = False):
+    def __init__(self, targets: Optional[List[str]] = None, config_path: Optional[str] = None, profile: bool = False, verbose: bool = False):
         self.profile = profile
+        self.verbose = verbose
         if config_path:
             global settings
             settings = load_yaml_config(config_path)
@@ -42,8 +44,8 @@ class AuditorAgent:
     def run(self):
         print(f"🚀 Starting Data Audit: {self.timestamp}")
 
-        all_reports = []
-        sheet_url = None
+        target_results = []
+        global_sheet_url = ""
 
         for target_name in self.targets:
             if target_name not in REGISTRY:
@@ -76,12 +78,10 @@ class AuditorAgent:
             )
 
             # Skill 6: Anomaly Tracker
-            sheet_url = None
+            sheet_url = ""
             if settings.ANOMALY_TRACKER_SHEET_KEY and flagged:
                 try:
                     print("📋 Writing to Anomaly Tracker...")
-                    # Note: write_anomaly_tracker update will be handled in Task 4/5,
-                    # but we keep it here as per Task 3 instructions to pass synthesis results if available.
                     sheet_url = write_anomaly_tracker(
                         flagged=flagged,
                         target_name=target_name,
@@ -91,6 +91,7 @@ class AuditorAgent:
                         credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
                         worksheet_name=settings.ANOMALY_TRACKER_WORKSHEET,
                     )
+                    global_sheet_url = sheet_url
                     print(f"  ✅ Anomaly Tracker updated: {sheet_url}")
                 except Exception as e:
                     print(f"  ⚠️ Anomaly Tracker write failed: {e}")
@@ -120,34 +121,45 @@ class AuditorAgent:
                 with open(llm_path, "w") as f:
                     f.write(synthesis.model_dump_json(indent=2))
 
-            # 6. Skill 5: Generate Report
-            print("📝 Generating analyst report...")
-            llm_executive_summary = synthesis.executive_summary if synthesis else ""
-            report_md = generate_analyst_report(
-                target_name=target_name,
-                flagged_observations=flagged,
-                llm_synthesis=llm_executive_summary,
-                sheet_url=sheet_url,
-                zscore_threshold=settings.ZSCORE_THRESHOLD,
-                min_group_size=settings.MIN_GROUP_SIZE
-            )
+            # 6. Store results for Executive Summary
+            evidently_html_rel_path = f"evidently/{target_name}.html"
+            target_results.append({
+                "target_name": target_name,
+                "synthesis": synthesis,
+                "flagged_count": len(flagged) if flagged else 0,
+                "evidently_html_path": evidently_html_rel_path
+            })
 
-            # Save individual target report
-            target_report_path = self.output_dir / f"report_{target_name}.md"
-            target_report_path.write_text(report_md)
-            all_reports.append(report_md)
+            # Skill 5: Generate Detailed Report (only if --verbose)
+            if self.verbose:
+                print(f"📝 Generating detailed analyst report for {target_name}...")
+                llm_exec = synthesis.executive_summary if synthesis else ""
+                report_md = generate_analyst_report(
+                    target_name=target_name,
+                    flagged_observations=flagged,
+                    llm_synthesis=llm_exec,
+                    sheet_url=sheet_url,
+                    zscore_threshold=settings.ZSCORE_THRESHOLD,
+                    min_group_size=settings.MIN_GROUP_SIZE
+                )
+                target_report_path = self.output_dir / f"report_{target_name}.md"
+                target_report_path.write_text(report_md)
 
-            # Save flagged observations as CSV
+            # Save flagged observations as CSV (Backend data)
             if flagged:
                 flagged_df = pd.DataFrame([vars(f) for f in flagged])
                 flagged_df.to_csv(self.output_dir / f"flagged_{target_name}.csv", index=False)
 
-        # Final aggregate report
-        final_report_path = self.output_dir / "full_audit_report.md"
-        final_report_path.write_text("\n\n".join(all_reports))
+        # Final Skill: Executive Summary
+        print("🏛️ Generating Executive Audit Summary...")
+        summary_path = generate_executive_summary(
+            target_results=target_results,
+            output_dir=self.output_dir,
+            sheet_url=global_sheet_url
+        )
 
-        if sheet_url:
-            print(f"📊 Anomaly Tracker: {sheet_url}")
+        if global_sheet_url:
+            print(f"📊 Anomaly Tracker: {global_sheet_url}")
 
         print(f"✅ Audit Complete. Results in: {self.output_dir}")
 
@@ -157,8 +169,9 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="CA Biositing Auditor Agent")
     parser.add_argument("--profile", action="store_true", help="Run full statistical profiling (ydata-profiling)")
+    parser.add_argument("--verbose", action="store_true", help="Generate detailed per-target Markdown reports")
     parser.add_argument("--targets", nargs="+", help="Specific targets to audit")
     args = parser.parse_args()
 
-    agent = AuditorAgent(targets=args.targets, profile=args.profile)
+    agent = AuditorAgent(targets=args.targets, profile=args.profile, verbose=args.verbose)
     agent.run()

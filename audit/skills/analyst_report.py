@@ -25,8 +25,7 @@ def generate_analyst_report(
         "LOW": len([o for o in flagged_observations if o.severity == "LOW"]),
     }
 
-    md = f"# ⚠️ Anomaly Report — {date_str}\n\n"
-    md += f"**Audit Target:** {target_name}\n\n"
+    md = f"# 🔍 Detailed Target Audit: `{target_name}` — {date_str}\n\n"
     md += f"**Flagged Observations:** {len(flagged_observations)} ({severity_counts['HIGH']} HIGH, {severity_counts['MEDIUM']} MEDIUM, {severity_counts['LOW']} LOW)\n\n"
     md += f"**Z-Score Threshold:** {zscore_threshold} | **Min Group Size:** {min_group_size}\n\n"
 
@@ -36,5 +35,15 @@ def generate_analyst_report(
     md += "---\n\n"
     md += "## 🧠 LLM Synthesis\n\n"
     md += llm_synthesis + "\n\n"
+
+    if flagged_observations:
+        md += "## 🚩 Flagged Observations (Top 100)\n\n"
+        md += "| Record ID | Parameter | Value | Z-Score | Severity |\n"
+        md += "|-----------|-----------|-------|---------|----------|\n"
+        for obs in flagged_observations[:100]:
+            md += f"| {obs.record_id} | {obs.parameter_name} | {obs.observed_value:.4f} | {obs.z_score:.2f} | {obs.severity} |\n"
+
+        if len(flagged_observations) > 100:
+            md += f"\n*...and {len(flagged_observations) - 100} more observations. See `flagged_{target_name}.csv` for full data.*\n"
 
     return md
