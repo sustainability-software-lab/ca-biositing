@@ -22,5 +22,6 @@ register(AuditTarget(
     group_by_cols=["resource_name", "use_case"],
     numeric_cols=["observed_value"],
     id_cols=["record_id"],
+    gx_suite_path="audit/expectations/mv_biomass_end_uses.json",
     use_isolation_forest=False,
 ))

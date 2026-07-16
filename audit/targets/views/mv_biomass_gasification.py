@@ -34,5 +34,6 @@ register(AuditTarget(
     group_by_cols=["resource_name", "reactor_type", "parameter_name", "unit"],
     numeric_cols=["observed_value"],
     id_cols=["record_id"],
+    gx_suite_path="audit/expectations/mv_biomass_gasification.json",
     use_isolation_forest=True,
 ))

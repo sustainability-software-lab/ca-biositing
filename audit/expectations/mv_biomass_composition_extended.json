@@ -1,6 +1,6 @@
 {
   "data_asset_type": null,
-  "expectation_suite_name": "mv_biomass_composition",
+  "expectation_suite_name": "mv_biomass_composition_extended",
   "expectations": [
     {
       "expectation_type": "expect_column_values_to_not_be_null",
@@ -34,12 +34,14 @@
       }
     },
     {
-      "expectation_type": "expect_compound_columns_to_be_unique",
+      "expectation_type": "expect_column_pair_values_A_to_be_greater_than_B",
       "kwargs": {
-        "column_list": ["record_id", "parameter_name"]
+        "column_A": "collection_timestamp",
+        "column_B": "harvest_date",
+        "or_equal": true
       },
       "meta": {
-        "notes": "Level 2: Each record should have at most one observation per parameter."
+        "notes": "Collection must occur at or after harvest."
       }
     }
   ],
@@ -47,8 +49,8 @@
   "meta": {
     "citations": [
       {
-        "citation_date": "2026-07-13T20:19:00Z",
-        "comment": "Initial baseline suite",
+        "citation_date": "2026-07-16T22:15:00Z",
+        "comment": "Initial suite for extended composition data",
         "batch_request": null
       }
     ],

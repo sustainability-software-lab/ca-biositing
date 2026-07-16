@@ -8,7 +8,7 @@ from typing import List, Dict
 from audit.skills.llm_synthesis import SynthesisResult
 
 def generate_executive_summary(
-    target_results: List[Dict],  # [{target_name, synthesis, flagged_count, evidently_html_path}]
+    target_results: List[Dict],  # [{target_name, synthesis, flagged_count, evidently_html_path, gx_pass_count, gx_fail_count}]
     output_dir: Path,
     sheet_url: str = "",
 ) -> Path:
@@ -43,7 +43,11 @@ def generate_executive_summary(
         evidently_path = result.get("evidently_html_path", "")
 
         lines.append(f"## Target: `{target_name}`\n")
-        lines.append(f"**Flagged observations:** {flagged_count}\n\n")
+        lines.append(f"**Flagged observations:** {flagged_count}\n")
+
+        gx_pass = result.get("gx_pass_count", 0)
+        gx_fail = result.get("gx_fail_count", 0)
+        lines.append(f"**GX Assertions:** {gx_pass} Passed, {gx_fail} Failed\n\n")
 
         if evidently_path:
             lines.append(f"**[📈 Evidently Profile]({evidently_path})**\n\n")

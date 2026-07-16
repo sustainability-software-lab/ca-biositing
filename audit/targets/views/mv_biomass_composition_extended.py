@@ -57,6 +57,6 @@ register(AuditTarget(
     numeric_cols=["observed_value"],
     id_cols=["record_id", "resource_name", "parameter_name"],
     analyst_col=None,
-    gx_suite_path=None,
+    gx_suite_path="audit/expectations/mv_biomass_composition_extended.json",
     use_isolation_forest=False,
 ))

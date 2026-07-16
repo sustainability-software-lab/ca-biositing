@@ -151,7 +151,9 @@ class AuditorAgent:
                 "target_name": target_name,
                 "synthesis": synthesis,
                 "flagged_count": len(flagged) if flagged else 0,
-                "evidently_html_path": evidently_html_rel_path
+                "evidently_html_path": evidently_html_rel_path,
+                "gx_pass_count": gx_result.get("statistics", {}).get("successful_expectations", 0),
+                "gx_fail_count": gx_result.get("statistics", {}).get("unsuccessful_expectations", 0)
             })
 
             # Skill 5: Generate Detailed Report (only if --verbose)

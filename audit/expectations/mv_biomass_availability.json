@@ -1,6 +1,6 @@
 {
   "data_asset_type": null,
-  "expectation_suite_name": "mv_biomass_composition",
+  "expectation_suite_name": "mv_biomass_availability",
   "expectations": [
     {
       "expectation_type": "expect_column_values_to_not_be_null",
@@ -17,29 +17,13 @@
       "meta": {}
     },
     {
-      "expectation_type": "expect_column_values_to_not_be_null",
-      "kwargs": {
-        "column": "parameter_name"
-      },
-      "meta": {}
-    },
-    {
       "expectation_type": "expect_column_values_to_be_between",
       "kwargs": {
         "column": "observed_value",
         "min_value": 0
       },
       "meta": {
-        "notes": "Values should generally be positive."
-      }
-    },
-    {
-      "expectation_type": "expect_compound_columns_to_be_unique",
-      "kwargs": {
-        "column_list": ["record_id", "parameter_name"]
-      },
-      "meta": {
-        "notes": "Level 2: Each record should have at most one observation per parameter."
+        "notes": "Availability values should be non-negative."
       }
     }
   ],
@@ -47,8 +31,8 @@
   "meta": {
     "citations": [
       {
-        "citation_date": "2026-07-13T20:19:00Z",
-        "comment": "Initial baseline suite",
+        "citation_date": "2026-07-16T22:15:00Z",
+        "comment": "Initial suite for biomass availability",
         "batch_request": null
       }
     ],
