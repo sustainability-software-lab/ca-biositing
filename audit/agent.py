@@ -4,7 +4,7 @@ from datetime import datetime
 import json
 from typing import List, Dict, Optional
 
-from audit.config import settings
+from audit.config import settings, load_yaml_config
 from audit.targets.registry import REGISTRY, AuditTarget
 from audit.skills.statistical_profiling import run_statistical_profiling
 from audit.skills.grouped_outlier_detection import detect_grouped_outliers
@@ -19,7 +19,11 @@ from sqlalchemy import create_engine
 from datetime import date
 
 class AuditorAgent:
-    def __init__(self, targets: Optional[List[str]] = None):
+    def __init__(self, targets: Optional[List[str]] = None, config_path: Optional[str] = None):
+        if config_path:
+            global settings
+            settings = load_yaml_config(config_path)
+
         self.targets = targets or list(REGISTRY.keys())
         self.audit_date = date.today().isoformat()   # "YYYY-MM-DD"
         self.timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
