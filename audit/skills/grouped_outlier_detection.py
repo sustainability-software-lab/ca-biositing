@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from typing import Optional, List
 import pandas as pd
 import numpy as np
+from audit.config import settings
 
 @dataclass
 class FlaggedObservation:
@@ -34,8 +35,8 @@ def detect_grouped_outliers(
     group_cols: List[str],          # ["resource_name", "parameter_name", "unit"]
     value_col: str = "observed_value",
     id_col: str = "record_id",
-    zscore_threshold: float = 3.0,
-    min_group_size: int = 3,
+    zscore_threshold: float = settings.ZSCORE_THRESHOLD,
+    min_group_size: int = settings.MIN_GROUP_SIZE,
 ) -> List[FlaggedObservation]:
     """
     Merge population stats into individual observations, compute within-group

@@ -4,14 +4,15 @@ import json
 from typing import List, Dict, Optional
 from datetime import datetime
 from audit.skills.grouped_outlier_detection import FlaggedObservation
+from audit.config import settings
 
 def generate_analyst_report(
     target_name: str,
     flagged_observations: List[FlaggedObservation],
     llm_synthesis: str,
     sheet_url: Optional[str] = None,
-    zscore_threshold: float = 3.0,
-    min_group_size: int = 3,
+    zscore_threshold: float = settings.ZSCORE_THRESHOLD,
+    min_group_size: int = settings.MIN_GROUP_SIZE,
 ) -> str:
     """
     Generates a Markdown report for analysts.
