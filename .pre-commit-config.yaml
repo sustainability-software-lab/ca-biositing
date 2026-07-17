@@ -18,6 +18,7 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
+        exclude: ^audit/portal/evidently/
 
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v4.0.0-alpha.8"
@@ -25,13 +26,13 @@ repos:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always, --ignore-unknown]
-        exclude: ^(docs/api/|readthedocs\.yaml|exports/plots/|audit/output/)
+        exclude: ^(docs/api/|readthedocs\.yaml|exports/plots/|audit/output/|audit/portal/evidently/)
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.4.2"
     hooks:
       - id: codespell
-        exclude: (\.ipynb$|pixi\.lock|temp_external_datasets/|exports/plots/|audit/output/)
+        exclude: (\.ipynb$|pixi\.lock|temp_external_datasets/|exports/plots/|audit/output/|audit/portal/)
 
   - repo: local
     hooks:

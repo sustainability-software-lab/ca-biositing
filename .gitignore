@@ -106,3 +106,6 @@ exports/
 !exports/
 !exports/plots/
 !exports/plots/*.html
+
+# Quarto Audit Portal
+audit/portal/_site/

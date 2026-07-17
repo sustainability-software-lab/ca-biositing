@@ -26,6 +26,7 @@ docs = { features = ["datamodels", "pipeline", "docs"], no-default-feature = tru
 deployment = { features = ["cloud"], solve-group = "default" }
 viz = { features = ["datamodels", "visualization", "kernel"], solve-group = "default" }
 auditor = { features = ["datamodels", "auditor"] }
+portal = { features = ["datamodels", "portal"] }
 
 [dependencies]
 python = "~=3.12"
@@ -519,6 +520,23 @@ tabulate = "*"
 
 [feature.auditor.tasks]
 run-auditor = { cmd = "python audit/agent.py", description = "Run the skill-based data auditor.", env = { PYTHONPATH = "." } }
+
+[feature.portal.target.osx-arm64.dependencies]
+quarto = "*"
+
+[feature.portal.target.osx-64.dependencies]
+quarto = "*"
+
+[feature.portal.target.linux-64.dependencies]
+quarto = "*"
+
+[feature.portal.target.win-64.dependencies]
+quarto = "*"
+
+[feature.portal.tasks]
+generate-portal = { cmd = "python audit/portal/generate_portal.py", description = "Generate Quarto portal from latest audit run.", env = { PYTHONPATH = "." } }
+serve-portal = { cmd = "quarto preview audit/portal", description = "Preview the Data Quality Portal locally." }
+build-portal = { cmd = "quarto render audit/portal --output-dir _site", description = "Build the static portal site." }
 
 [pypi-dependencies]
 sqlalchemy = ">=2.0.44, <3"

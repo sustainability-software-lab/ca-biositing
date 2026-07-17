@@ -1,0 +1,27 @@
+---
+title: "Audit Target: mv_biomass_composition_extended"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the `mv_biomass_composition_extended` dataset reveals a robust but statistically noisy collection of 813 biomass composition records. While no "High" severity data corruption was detected, approximately 32% of the records (261 observations) were flagged with "Low" severity anomalies. These anomalies are primarily concentrated in structural carbohydrate measurements (glucan, xylan) and their corresponding monomers (glucose, xylose), particularly within almond-derived biomass (hulls and shells). The statistical deviations (Z-scores ranging from 1.0 to 1.4) suggest these are not erroneous entries but rather represent the natural upper and lower bounds of biomass variability or specific batch-processing effects.
+
+A significant metadata deficiency was identified: the `harvest_date` field is 100% null across the entire dataset. In agricultural research, the composition of lignocellulosic biomass—especially almond hulls and straws—is highly sensitive to harvest timing and crop maturity. The absence of this temporal context severely limits the utility of the data for predictive modeling. Furthermore, the dataset contains several constant or near-constant columns (e.g., `qc_pass`, `unit`, `created_at`), suggesting a need for schema optimization to reduce redundant architectural overhead. Priority should be given to backfilling harvest metadata and investigating the high variance observed in the almond byproduct streams.
+
+## Evidently Profile
+
+<iframe src="../evidently/mv_biomass_composition_extended.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Custom Visuals
+
+Links to specific analysis plots:
+
+- [Biomass Composition Plots](../../../analysis/composition/)
+- [Conversion Distribution Plots](../../../analysis/conversion/)
+
+:::
