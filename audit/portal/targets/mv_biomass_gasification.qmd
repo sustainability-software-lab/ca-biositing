@@ -1,0 +1,30 @@
+---
+title: "Audit Target: mv_biomass_gasification"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the `mv_biomass_gasification` dataset reveals a collection of 521 records across seven distinct biomass resources and four reactor types. While the dataset maintains basic structural integrity, there are significant metadata gaps and temporal anomalies that could hinder its utility for rigorous stoichiometric or thermodynamic modeling. Most notably, the dataset exhibits a total lack of temporal variation, with all records sharing a single 'sample_date' and 'created_at' timestamp. This suggests either a bulk data ingestion event where original metadata was lost or a systemic failure in the logging system to capture the actual sampling chronology.
+
+Furthermore, critical attributes such as 'unit' (21 missing) and 'provider_codename' (41 missing) are incomplete. In the context of gasification research, the absence of units for observed values—which range across 27 different parameters—introduces substantial risk for error in cross-study comparisons or energy balance calculations. The presence of duplicated and almost-duplicated columns also indicates a need for database normalization and cleanup of ETL artifacts to ensure a 'single source of truth' for the gasification metrics.
+
+## Evidently Profile
+
+<iframe src="../evidently/mv_biomass_gasification.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+No flagged observations found for this target.
+
+## Custom Visuals
+
+Discovered assets:
+
+- [gasification_distribution.html](../assets/exports/plots/conversion/gasification_distribution.html)
+
+:::

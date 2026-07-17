@@ -1,0 +1,35 @@
+---
+title: "Audit Target: ultimate"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the 'ultimate' dataset reveals a systematic failure in metadata capture, specifically regarding analyst attribution. Both 'analyst_name' and 'analyst_email' columns are 100% null across all 15 records. This lack of accountability and audit trail is a significant procedural gap in agricultural biomass research, where laboratory conditions and operator technique can significantly influence results. While the records are internally marked as having passed quality control, the inability to trace these measurements to specific personnel or lab sessions undermines the long-term reliability of the database.
+
+Regarding the primary chemical parameters, the nitrogen analysis for tomato and grape pomace displays atypical variance. Several records are flagged for low-severity nitrogen anomalies, with values ranging from 0.23 to nearly 3.00. Notes within the dataset indicating 'dup' (duplicate) suggest that some of these entries are replicate measurements rather than independent samples. The absence of a dedicated replication flag or averaging protocol suggests that raw laboratory outputs are being ingested into the primary research database without sufficient post-processing or validation against reference ranges.
+
+## Evidently Profile
+
+<iframe src="../evidently/ultimate.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+| Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |
+|-----------|----------|----------|-------------|-----------|-------|---------|----------|
+| )u73ee73 | tomato pomace | pinecrest | — | nitrogen | 2.2800 | 1.26 | LOW |
+| )u91a791 | tomato pomace | riverstone | — | nitrogen | 2.9800 | 1.01 | LOW |
+| )u87a587 | grape pomace | maplewood | — | nitrogen | 1.9300 | 1.01 | LOW |
+
+
+## Custom Visuals
+
+Discovered assets:
+
+- [ultimate_distribution.html](../assets/exports/plots/composition/ultimate_distribution.html)
+
+:::

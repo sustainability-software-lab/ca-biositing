@@ -1,0 +1,28 @@
+---
+title: "Audit Target: mv_biomass_availability"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The data quality audit of the `mv_biomass_availability` dataset reveals critical deficiencies that significantly impair its utility for agricultural biomass modeling. The most alarming finding is a 85.56% missingness rate in the `observed_value` column, where only 13 out of 90 records contain any measurement data. This level of data sparsity suggests either a systemic failure in the data ingestion pipeline or a significant delay in field observation reporting that leaves the majority of the material inventory without quantified availability.
+
+Furthermore, the dataset exhibits structural issues regarding data types and categorization. The `observed_value` field is being processed as a categorical variable rather than a numeric one, which often indicates the presence of non-numeric characters or improper schema definitions that will prevent statistical aggregation. Additionally, the 100% uniqueness in `resource_name` suggests a lack of standardized nomenclature (e.g., "walnut tree sticks" being treated as a unique entity rather than a subset of walnut residues), which complicates crop-level analysis. Immediate remediation is required to recover missing values and normalize the resource classification.
+
+## Evidently Profile
+
+<iframe src="../evidently/mv_biomass_availability.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+No flagged observations found for this target.
+
+## Custom Visuals
+
+No specific analysis assets discovered for this target.
+
+:::

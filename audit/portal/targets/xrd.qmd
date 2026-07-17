@@ -1,0 +1,30 @@
+---
+title: "Audit Target: xrd"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The data quality audit for the X-Ray Diffraction (XRD) dataset reveals a critical system-level failure: both the current and reference datasets contain zero records. While the data schema is correctly defined with 12 categorical columns (including resource name, parameter name, and analyst metadata), the lack of any observations suggests a complete breakdown in the data ingestion pipeline or an upstream failure in the laboratory information management system (LIMS) specific to XRD reporting.
+
+From a domain perspective, XRD data is essential for characterizing the crystalline structure of biomass, such as determining the cellulose crystallinity index or identifying mineral contaminants in agricultural feedstocks. The absence of this data prevents any downstream analysis of biomass digestibility or structural integrity. Immediate investigation into the XRD data pipeline is required to determine if the issue stems from recent equipment downtime, a failed ETL (Extract, Transform, Load) process, or overly restrictive filtering in the data extraction query.
+
+## Evidently Profile
+
+<iframe src="../evidently/xrd.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+No flagged observations found for this target.
+
+## Custom Visuals
+
+Discovered assets:
+
+- [xrd_distribution.html](../assets/exports/plots/composition/xrd_distribution.html)
+
+:::

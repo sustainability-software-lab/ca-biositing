@@ -1,0 +1,28 @@
+---
+title: "Audit Target: mv_biomass_sample_stats"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the `mv_biomass_sample_stats` dataset reveals significant integrity issues regarding the distribution of observed values and a regression in the dataset's schema. While the dataset successfully covers 119 unique biomass resources, the statistical variance expected in agricultural feedstock characterization is missing. Specifically, over 68% of all records report an identical 'observed_value' of 1, which is highly anomalous for physical biomass properties such as moisture, ash, or energy content.
+
+Furthermore, a comparison between the current dataset and the reference baseline indicates a loss of critical metadata. The reference schema included aggregate statistics such as average values, standard deviations, and observation counts, whereas the current iteration only provides a single observed value and a record ID. This suggests a failure in the materialization logic or an unintended change in the data aggregation pipeline that has reduced the dataset from a statistical summary to a flat list of potentially placeholder values.
+
+## Evidently Profile
+
+<iframe src="../evidently/mv_biomass_sample_stats.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+No flagged observations found for this target.
+
+## Custom Visuals
+
+No specific analysis assets discovered for this target.
+
+:::

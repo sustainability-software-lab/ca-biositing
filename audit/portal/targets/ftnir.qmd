@@ -1,0 +1,28 @@
+---
+title: "Audit Target: ftnir"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The data quality audit for the Fourier Transform Near-Infrared (FT-NIR) spectroscopy dataset reveals a critical systemic failure: the current dataset contains zero records. While the schema is defined with 12 categorical columns—including essential metadata such as `provider_codename`, `analyst_name`, and `sample_date`—there is a complete absence of observed values or associated metadata. In the context of agricultural biomass research, where FT-NIR is vital for rapid characterization of constituents like lignin, cellulose, and moisture, this "data void" represents a total interruption of the analytical pipeline.
+
+Furthermore, a structural discrepancy exists between the current schema (12 columns) and the reference schema (9 columns). This suggests that a recent schema evolution or database migration may have occurred without successful data porting, or that the ingestion filters are improperly configured, causing all incoming records to be dropped. This is a high-priority issue that prevents any statistical validation of biomass quality or calibration model performance. Immediate intervention is required to restore data flow from the providers to the research database.
+
+## Evidently Profile
+
+<iframe src="../evidently/ftnir.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+No flagged observations found for this target.
+
+## Custom Visuals
+
+No specific analysis assets discovered for this target.
+
+:::

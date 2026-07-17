@@ -1,0 +1,264 @@
+---
+title: "Audit Target: pretreatment"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the pretreatment dataset reveals a significant expansion in the statistical variance of sugar yields compared to the reference baseline. While the mean 'observed_value' remains stable (~44.7 vs 44.3), the standard deviation has increased by nearly 50%, with the range widening to include values as low as 3.0 and as high as 118.0. This indicates that the current experimental batch encompasses a broader variety of biomass feedstocks with highly divergent recalcitrance profiles, specifically involving grape pomace, tomato pomace, and various nut-processing byproducts (almond and walnut).
+
+A total of 232 observations were flagged, primarily for glucose and xylose yields (glucose_yld and xylose_yld). The majority of these are categorized as low-severity z-score deviations, likely reflecting the inherent biological variability of the 24 different resources being tested. However, metadata integrity is a concern; while analyst attribution is maintained through email (akrishnamoorthy@lbl.gov), the 'analyst_name' and 'note' fields are entirely unpopulated. Furthermore, the 'sample_date' and 'created_at' fields contain only single unique values, suggesting a batch-upload process that may obscure temporal trends in pretreatment efficiency or equipment calibration.
+
+## Evidently Profile
+
+<iframe src="../evidently/pretreatment.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+| Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |
+|-----------|----------|----------|-------------|-----------|-------|---------|----------|
+| buty007-8d08 | grape pomace | maplewood | — | glucose_yld | 42.7000 | 1.21 | LOW |
+| buty008-128b | grape pomace | maplewood | — | glucose_yld | 40.1000 | 1.37 | LOW |
+| buty009-f6f6 | grape pomace | maplewood | — | glucose_yld | 43.0000 | 1.19 | LOW |
+| buty058-c478 | grape pomace | ebony | — | xylose_yld | 79.7000 | 1.30 | LOW |
+| buty059-af88 | grape pomace | ebony | — | xylose_yld | 76.7000 | 1.14 | LOW |
+| buty060-09f3 | grape pomace | ebony | — | xylose_yld | 83.3000 | 1.48 | LOW |
+| buty106-5d8b | tomato pomace | oakleaf | — | xylose_yld | 86.4000 | 1.40 | LOW |
+| buty107-4b83 | tomato pomace | oakleaf | — | xylose_yld | 81.7000 | 1.21 | LOW |
+| buty272-6b9b | almond hulls | tiny | — | glucose_yld | 11.0000 | 1.52 | LOW |
+| buty346-f978 | walnut tree sticks | energetic | — | xylose_yld | 16.6000 | 1.03 | LOW |
+| buty347-8f10 | walnut tree sticks | energetic | — | xylose_yld | 16.0000 | 1.07 | LOW |
+| buty348-e7b5 | walnut tree sticks | energetic | — | xylose_yld | 16.7000 | 1.02 | LOW |
+| buty367-7ab1 | almond branches | vibrant | — | glucose_yld | 11.8000 | 1.13 | LOW |
+| buty369-947d | almond branches | vibrant | — | glucose_yld | 11.5000 | 1.14 | LOW |
+| buty391-1d2c | walnut shells | energetic | — | glucose_yld | 81.5000 | 1.03 | LOW |
+| buty392-448d | walnut shells | energetic | — | glucose_yld | 83.7000 | 1.11 | LOW |
+| buty393-de8d | walnut shells | energetic | — | glucose_yld | 89.0000 | 1.33 | LOW |
+| buty442-04c1 | corn stover husks | caterpillar | — | xylose_yld | 72.5000 | 1.02 | LOW |
+| buty466-ab89 | corn stover cobs | caterpillar | — | xylose_yld | 68.1000 | 1.14 | LOW |
+| buty468-c171 | corn stover cobs | caterpillar | — | xylose_yld | 69.3000 | 1.18 | LOW |
+| buty533-a4f3 | olive stems / leaves | excellent | — | glucose_yld | 38.0400 | 1.77 | LOW |
+| buty534-a669 | olive stems / leaves | excellent | — | glucose_yld | 33.2800 | 1.24 | LOW |
+| buty843-68cd | olive pomace | jaguar | — | glucose_yld | 64.6400 | 1.74 | LOW |
+| buty844-c581 | olive pomace | jaguar | — | glucose_yld | 63.0600 | 1.63 | LOW |
+| buty845-aae3 | olive pomace | jaguar | — | xylose_yld | 69.7500 | 1.75 | LOW |
+| buty846-ecc5 | olive pomace | jaguar | — | xylose_yld | 70.3500 | 1.77 | LOW |
+| buty849-f303 | olive stems / leaves | jaguar | — | xylose_yld | 41.6400 | 2.15 | LOW |
+| buty850-2987 | olive stems / leaves | jaguar | — | xylose_yld | 38.7100 | 1.90 | LOW |
+| chol002-bfed | grape pomace | maplewood | — | glucose_yld | 77.4000 | 1.01 | LOW |
+| chol003-ed34 | grape pomace | maplewood | — | glucose_yld | 80.3000 | 1.19 | LOW |
+| chol004-671c | grape pomace | maplewood | — | xylose_yld | 34.4000 | 1.02 | LOW |
+| chol025-5b64 | grape stem | maplewood | — | glucose_yld | 26.9000 | 1.27 | LOW |
+| chol026-ad28 | grape stem | maplewood | — | glucose_yld | 25.4000 | 1.36 | LOW |
+| chol027-1686 | grape stem | maplewood | — | glucose_yld | 24.6000 | 1.41 | LOW |
+| chol050-3b04 | grape pomace | ebony | — | glucose_yld | 78.9000 | 1.10 | LOW |
+| chol268-ac25 | almond hulls | tiny | — | xylose_yld | 6.9000 | 1.12 | LOW |
+| chol337-9361 | walnut tree sticks | energetic | — | glucose_yld | 54.5000 | 1.70 | LOW |
+| chol338-f021 | walnut tree sticks | energetic | — | glucose_yld | 52.9000 | 1.59 | LOW |
+| chol339-16ac | walnut tree sticks | energetic | — | glucose_yld | 49.5000 | 1.35 | LOW |
+| chol340-3a85 | walnut tree sticks | energetic | — | xylose_yld | 54.0000 | 1.55 | LOW |
+| chol341-e110 | walnut tree sticks | energetic | — | xylose_yld | 55.8000 | 1.67 | LOW |
+| chol342-e95b | walnut tree sticks | energetic | — | xylose_yld | 50.1000 | 1.28 | LOW |
+| chol409-eccf | sweet potato culls | tackle | — | glucose_yld | 72.0000 | 1.59 | LOW |
+| chol410-cd0d | sweet potato culls | tackle | — | glucose_yld | 75.7000 | 1.76 | LOW |
+| chol411-c3ee | sweet potato culls | tackle | — | glucose_yld | 70.9000 | 1.54 | LOW |
+| chol414-44e5 | sweet potato culls | tackle | — | xylose_yld | 20.7000 | 1.22 | LOW |
+| chol433-db88 | corn stover husks | caterpillar | — | glucose_yld | 104.5000 | 1.43 | LOW |
+| chol434-3bb5 | corn stover husks | caterpillar | — | glucose_yld | 102.6000 | 1.37 | LOW |
+| chol436-27b6 | corn stover husks | caterpillar | — | xylose_yld | 75.2000 | 1.11 | LOW |
+| chol437-f0f1 | corn stover husks | caterpillar | — | xylose_yld | 73.3000 | 1.05 | LOW |
+| chol458-9402 | corn stover cobs | caterpillar | — | glucose_yld | 97.6000 | 1.37 | LOW |
+| chol459-4393 | corn stover cobs | caterpillar | — | glucose_yld | 93.5000 | 1.26 | LOW |
+| chol461-d4dd | corn stover cobs | caterpillar | — | xylose_yld | 70.5000 | 1.22 | LOW |
+| chol462-8e7c | corn stover cobs | caterpillar | — | xylose_yld | 65.7000 | 1.05 | LOW |
+| chol481-bf9a | corn stover stalks | caterpillar | — | glucose_yld | 91.0000 | 1.22 | LOW |
+| chol482-17bb | corn stover stalks | caterpillar | — | glucose_yld | 90.8000 | 1.21 | LOW |
+| chol483-9b58 | corn stover stalks | caterpillar | — | glucose_yld | 89.9000 | 1.19 | LOW |
+| chol484-3dc7 | corn stover stalks | caterpillar | — | xylose_yld | 71.3000 | 1.11 | LOW |
+| chol485-9b7f | corn stover stalks | caterpillar | — | xylose_yld | 70.2000 | 1.06 | LOW |
+| chol517-fce8 | olive stems / leaves | excellent | — | glucose_yld | 36.2400 | 1.57 | LOW |
+| chol518-1f1f | olive stems / leaves | excellent | — | glucose_yld | 35.7700 | 1.52 | LOW |
+| chol594-b244 | wheat straw | possessive | — | glucose_yld | 34.8000 | 1.69 | LOW |
+| chol595-9b05 | wheat straw | possessive | — | glucose_yld | 57.4000 | 1.40 | LOW |
+| chol597-0e21 | wheat straw | possessive | — | xylose_yld | 14.0000 | 1.57 | LOW |
+| chol599-1024 | rice straw | possessive | — | glucose_yld | 39.5000 | 1.48 | LOW |
+| chol600-282f | rice straw | possessive | — | glucose_yld | 43.2000 | 1.27 | LOW |
+| chol602-93bc | rice straw | possessive | — | xylose_yld | 14.7000 | 1.55 | LOW |
+| chol603-78cf | rice straw | possessive | — | xylose_yld | 19.1000 | 1.25 | LOW |
+| chol605-2922 | wheat straw | wardrobe | — | glucose_yld | 56.2000 | 1.24 | LOW |
+| chol606-9627 | wheat straw | wardrobe | — | glucose_yld | 37.1000 | 1.37 | LOW |
+| chol607-358c | wheat straw | wardrobe | — | glucose_yld | 34.8000 | 1.69 | LOW |
+| chol608-7d61 | wheat straw | wardrobe | — | xylose_yld | 33.9000 | 1.43 | LOW |
+| chol610-1cab | wheat straw | wardrobe | — | xylose_yld | 16.5000 | 1.19 | LOW |
+| chol612-ed7c | peach seeds | rushes | — | glucose_yld | 60.3000 | 1.49 | LOW |
+| chol615-2dd1 | peach seeds | rushes | — | xylose_yld | 9.1000 | 1.33 | LOW |
+| chol618-4e26 | tomato pomace | oakleaf | — | glucose_yld | 93.3000 | 1.61 | LOW |
+| chol619-3575 | tomato pomace | oakleaf | — | glucose_yld | 90.6000 | 1.44 | LOW |
+| chol620-06c5 | tomato pomace | oakleaf | — | xylose_yld | 7.7000 | 1.75 | LOW |
+| chol621-cc06 | tomato pomace | oakleaf | — | xylose_yld | 11.5000 | 1.60 | LOW |
+| chol622-38a1 | tomato pomace | oakleaf | — | xylose_yld | 10.4000 | 1.64 | LOW |
+| chol624-5123 | tomato pomace | pinecrest | — | glucose_yld | 96.7000 | 1.82 | LOW |
+| chol625-e307 | tomato pomace | pinecrest | — | glucose_yld | 26.6000 | 2.50 | LOW |
+| chol626-e546 | tomato pomace | pinecrest | — | xylose_yld | 24.7000 | 1.07 | LOW |
+| chol628-c00c | tomato pomace | pinecrest | — | xylose_yld | 12.5000 | 1.56 | LOW |
+| chol629-95b0 | tomato pomace | gossamer | — | glucose_yld | 42.2000 | 1.54 | LOW |
+| chol632-44e2 | tomato pomace | gossamer | — | xylose_yld | 6.2000 | 1.81 | LOW |
+| chol633-6239 | tomato pomace | gossamer | — | xylose_yld | 3.8000 | 1.91 | LOW |
+| chol634-4b8d | tomato pomace | gossamer | — | xylose_yld | 4.0000 | 1.90 | LOW |
+| chol635-f935 | tomato pomace | gainful | — | glucose_yld | 48.0000 | 1.18 | LOW |
+| chol636-885b | tomato pomace | gainful | — | glucose_yld | 45.4000 | 1.34 | LOW |
+| chol637-878c | tomato pomace | gainful | — | glucose_yld | 20.1000 | 2.90 | LOW |
+| chol638-827e | tomato pomace | gainful | — | xylose_yld | 20.1000 | 1.26 | LOW |
+| chol639-6514 | tomato pomace | gainful | — | xylose_yld | 5.4000 | 1.84 | LOW |
+| chol640-e50a | tomato pomace | gainful | — | xylose_yld | 20.7000 | 1.23 | LOW |
+| chol693-2c7c | walnut hulls | energetic | — | xylose_yld | 19.4000 | 1.10 | LOW |
+| chol694-8a88 | walnut hulls | energetic | — | xylose_yld | 28.3000 | 1.14 | LOW |
+| chol698-8304 | unused oak stick | maplewood | — | xylose_yld | 48.2000 | 1.02 | LOW |
+| chol701-a51f | spent oak chips | maplewood | — | glucose_yld | 41.0000 | 1.81 | LOW |
+| chol702-95b4 | spent oak chips | maplewood | — | glucose_yld | 44.7000 | 1.56 | LOW |
+| chol720-3426 | spent oak chips | rigging | — | glucose_yld | 86.4000 | 1.30 | LOW |
+| chol724-5999 | spent oak chips | rigging | — | xylose_yld | 27.8000 | 1.36 | LOW |
+| chol731-9f39 | spent oak chips | rigging | — | glucose_yld | 93.6000 | 1.79 | LOW |
+| chol732-4582 | spent oak chips | rigging | — | glucose_yld | 85.3000 | 1.22 | LOW |
+| chol739-bedf | peach stems / leaves | rushes | — | glucose_yld | 77.6000 | 1.04 | LOW |
+| chol740-0a6b | peach stems / leaves | rushes | — | xylose_yld | 36.1000 | 1.00 | LOW |
+| chol747-6a9b | pistachio stems & leaves | tripod | — | xylose_yld | 50.3000 | 1.07 | LOW |
+| chol751-8ad2 | pistachio hulls | tripod | — | glucose_yld | 38.0000 | 1.62 | LOW |
+| chol754-d591 | pistachio hulls | tripod | — | xylose_yld | 5.0000 | 1.78 | LOW |
+| chol755-d717 | almond shells | humorous | — | glucose_yld | 74.1000 | 1.22 | LOW |
+| chol763-4a3b | almond hulls | humorous | — | glucose_yld | 63.0000 | 1.05 | LOW |
+| chol764-6535 | almond hulls | humorous | — | xylose_yld | 76.5000 | 1.17 | LOW |
+| chol765-cb44 | almond hulls | humorous | — | xylose_yld | 78.4000 | 1.23 | LOW |
+| chol766-44db | almond hulls | humorous | — | xylose_yld | 92.9000 | 1.71 | LOW |
+| chol773-4bac | grape pomace | boatswain | — | glucose_yld | 78.9000 | 1.10 | LOW |
+| chol774-7edc | grape pomace | boatswain | — | glucose_yld | 89.7000 | 1.79 | LOW |
+| chol775-5b00 | grape pomace | boatswain | — | glucose_yld | 83.6000 | 1.40 | LOW |
+| chol776-1ce6 | grape pomace | boatswain | — | xylose_yld | 89.1000 | 1.78 | LOW |
+| chol777-642a | grape pomace | boatswain | — | xylose_yld | 81.9000 | 1.41 | LOW |
+| chol787-9e11 | pistachio hulls | stuntman | — | glucose_yld | 77.1000 | 1.19 | LOW |
+| chol790-a3c9 | pistachio hulls | stuntman | — | xylose_yld | 22.9000 | 1.13 | LOW |
+| chol815-180b | rice straw | possessive | — | glucose_yld | 85.5000 | 1.07 | LOW |
+| chol816-2558 | rice straw | possessive | — | glucose_yld | 86.7000 | 1.13 | LOW |
+| chol817-e2c3 | rice straw | possessive | — | glucose_yld | 88.1000 | 1.21 | LOW |
+| chol818-ccd7 | rice straw | possessive | — | xylose_yld | 53.3000 | 1.11 | LOW |
+| chol819-e33e | rice straw | possessive | — | xylose_yld | 54.5000 | 1.19 | LOW |
+| chol820-fca9 | rice straw | possessive | — | xylose_yld | 53.7000 | 1.13 | LOW |
+| chol827-40a8 | olive pomace | jaguar | — | glucose_yld | 71.7000 | 2.22 | LOW |
+| chol828-4ac7 | olive pomace | jaguar | — | glucose_yld | 73.4500 | 2.34 | LOW |
+| chol829-398f | olive pomace | jaguar | — | xylose_yld | 84.5900 | 2.37 | LOW |
+| chol830-0be3 | olive pomace | jaguar | — | xylose_yld | 85.5000 | 2.41 | LOW |
+| chol862-42b5 | walnut shelling fines | cutaway | — | xylose_yld | 32.9000 | 1.15 | LOW |
+| chol867-f246 | almond hulls | humorous | — | glucose_yld | 78.2000 | 1.80 | LOW |
+| chol868-4f46 | almond hulls | humorous | — | xylose_yld | 82.4000 | 1.36 | LOW |
+| chol871-7de7 | almond shells | humorous | — | glucose_yld | 98.8000 | 2.17 | LOW |
+| chol872-40fd | almond shells | humorous | — | glucose_yld | 92.2000 | 1.92 | LOW |
+| chol874-a9fa | almond shells | humorous | — | xylose_yld | 49.0000 | 1.35 | LOW |
+| chol875-52cf | almond shells | humorous | — | xylose_yld | 58.9000 | 1.96 | LOW |
+| chol878-072c | almond hulls | tiny | — | glucose_yld | 84.6000 | 2.12 | LOW |
+| chol881-3f9e | almond hulls | tiny | — | xylose_yld | 93.0000 | 1.71 | LOW |
+| chol884-e5ea | almond branches | humorous | — | glucose_yld | 83.2000 | 1.32 | LOW |
+| chol885-d8ff | almond branches | humorous | — | glucose_yld | 99.0000 | 1.86 | LOW |
+| chol887-6e6c | almond branches | humorous | — | xylose_yld | 75.9000 | 1.45 | LOW |
+| chol890-e0d9 | almond shells | humorous | — | glucose_yld | 71.6000 | 1.12 | LOW |
+| chol891-e59e | almond shells | humorous | — | glucose_yld | 70.0000 | 1.06 | LOW |
+| chol892-3f6b | almond shells | humorous | — | xylose_yld | 77.3000 | 3.09 | MEDIUM |
+| chol894-c6b0 | almond shells | humorous | — | xylose_yld | 70.3000 | 2.66 | LOW |
+| chol895-5f6b | grape stem | rigging | — | glucose_yld | 88.5000 | 2.44 | LOW |
+| chol897-4e6c | grape stem | rigging | — | glucose_yld | 70.0000 | 1.32 | LOW |
+| chol898-628b | grape stem | rigging | — | xylose_yld | 84.2000 | 1.16 | LOW |
+| chol900-a86b | grape stem | rigging | — | xylose_yld | 80.4000 | 1.01 | LOW |
+| chol901-5c01 | almond shells | capstan | — | glucose_yld | 81.5000 | 1.50 | LOW |
+| chol902-f0ee | almond shells | capstan | — | glucose_yld | 72.7000 | 1.17 | LOW |
+| chol903-ed22 | almond shells | capstan | — | glucose_yld | 87.7000 | 1.74 | LOW |
+| chol906-7f4d | almond shells | capstan | — | xylose_yld | 59.2000 | 1.98 | LOW |
+| hot016-51aa | grape pomace | maplewood | — | xylose_yld | 32.7000 | 1.11 | LOW |
+| hot017-ba80 | grape pomace | maplewood | — | xylose_yld | 34.1000 | 1.04 | LOW |
+| hot018-ca50 | grape pomace | maplewood | — | xylose_yld | 26.6000 | 1.42 | LOW |
+| hot061-9e08 | grape pomace | ebony | — | glucose_yld | 79.7000 | 1.15 | LOW |
+| hot063-1b21 | grape pomace | ebony | — | glucose_yld | 79.3000 | 1.13 | LOW |
+| hot205-f7d1 | almond shells | vibrant | — | glucose_yld | 10.4000 | 1.23 | LOW |
+| hot206-a3c5 | almond shells | vibrant | — | glucose_yld | 6.2000 | 1.39 | LOW |
+| hot208-d500 | almond shells | vibrant | — | xylose_yld | 8.1000 | 1.16 | LOW |
+| hot209-2c74 | almond shells | vibrant | — | xylose_yld | 5.6000 | 1.32 | LOW |
+| hot229-d3e4 | almond hulls | vibrant | — | glucose_yld | 11.3000 | 1.50 | LOW |
+| hot230-f121 | almond hulls | vibrant | — | glucose_yld | 11.4000 | 1.50 | LOW |
+| hot231-9489 | almond hulls | vibrant | — | glucose_yld | 11.6000 | 1.49 | LOW |
+| hot232-7c2b | almond hulls | vibrant | — | xylose_yld | 3.3000 | 1.24 | LOW |
+| hot233-c12f | almond hulls | vibrant | — | xylose_yld | 3.0000 | 1.25 | LOW |
+| hot234-3e53 | almond hulls | vibrant | — | xylose_yld | 7.3000 | 1.11 | LOW |
+| hot277-54f1 | almond hulls | tiny | — | glucose_yld | 14.5000 | 1.34 | LOW |
+| hot278-cf53 | almond hulls | tiny | — | glucose_yld | 13.1000 | 1.41 | LOW |
+| hot279-c1b1 | almond hulls | tiny | — | glucose_yld | 12.5000 | 1.44 | LOW |
+| hot281-6672 | almond hulls | tiny | — | xylose_yld | 5.8000 | 1.16 | LOW |
+| hot282-5b39 | almond hulls | tiny | — | xylose_yld | 3.8000 | 1.22 | LOW |
+| hot397-f767 | walnut shells | energetic | — | glucose_yld | 81.8000 | 1.04 | LOW |
+| hot400-6e39 | walnut shells | energetic | — | xylose_yld | 35.0000 | 2.47 | LOW |
+| hot401-3224 | walnut shells | energetic | — | xylose_yld | 24.0000 | 1.11 | LOW |
+| hot447-0188 | corn stover husks | caterpillar | — | glucose_yld | 22.2000 | 1.07 | LOW |
+| hot448-126d | corn stover husks | caterpillar | — | xylose_yld | 5.7000 | 1.34 | LOW |
+| hot449-244a | corn stover husks | caterpillar | — | xylose_yld | 12.4000 | 1.11 | LOW |
+| hot450-0c3f | corn stover husks | caterpillar | — | xylose_yld | 12.1000 | 1.12 | LOW |
+| hot537-48e1 | olive pomace | excellent | — | glucose_yld | 20.9500 | 1.24 | LOW |
+| hot538-3b8f | olive pomace | excellent | — | glucose_yld | 21.6600 | 1.19 | LOW |
+| hot560-1aab | wheat straw | wardrobe | — | xylose_yld | 37.4000 | 1.96 | LOW |
+| hot567-d009 | peach seeds | rushes | — | xylose_yld | 9.5000 | 1.15 | LOW |
+| hot569-62fc | tomato pomace | oakleaf | — | glucose_yld | 118.0000 | 3.13 | MEDIUM |
+| hot570-4961 | tomato pomace | oakleaf | — | glucose_yld | 93.1000 | 1.60 | LOW |
+| hot574-8d12 | tomato pomace | oakleaf | — | xylose_yld | 78.3000 | 1.07 | LOW |
+| hot576-3e47 | tomato pomace | pinecrest | — | glucose_yld | 95.1000 | 1.72 | LOW |
+| hot577-0726 | tomato pomace | pinecrest | — | glucose_yld | 93.4000 | 1.62 | LOW |
+| hot579-f63a | tomato pomace | pinecrest | — | xylose_yld | 84.3000 | 1.31 | LOW |
+| hot580-dcf4 | tomato pomace | pinecrest | — | xylose_yld | 84.8000 | 1.33 | LOW |
+| hot588-2b48 | tomato pomace | gainful | — | glucose_yld | 47.8000 | 1.19 | LOW |
+| hot642-c1b7 | walnut hulls | energetic | — | glucose_yld | 97.2000 | 1.87 | LOW |
+| hot646-68b6 | walnut hulls | energetic | — | xylose_yld | 18.4000 | 1.35 | LOW |
+| hot648-0b95 | unused oak stick | maplewood | — | glucose_yld | 79.4000 | 1.54 | LOW |
+| hot657-a56b | spent oak chips | maplewood | — | xylose_yld | 82.3000 | 1.51 | LOW |
+| hot660-f5c1 | almond hulls | humorous | — | glucose_yld | 63.7000 | 1.09 | LOW |
+| hot661-8611 | almond hulls | humorous | — | glucose_yld | 72.9000 | 1.54 | LOW |
+| hot665-1959 | almond branches | humorous | — | glucose_yld | 82.3000 | 1.28 | LOW |
+| hot666-cf65 | almond branches | humorous | — | glucose_yld | 79.5000 | 1.19 | LOW |
+| hot668-c320 | almond branches | humorous | — | xylose_yld | 95.5000 | 2.19 | LOW |
+| hot669-2216 | almond branches | humorous | — | xylose_yld | 90.3000 | 1.99 | LOW |
+| hot670-3b55 | almond branches | humorous | — | xylose_yld | 76.6000 | 1.47 | LOW |
+| hot677-fa05 | spent oak chips | rigging | — | glucose_yld | 48.5000 | 1.30 | LOW |
+| hot678-1e9c | spent oak chips | rigging | — | glucose_yld | 52.2000 | 1.04 | LOW |
+| hot680-3570 | spent oak chips | rigging | — | xylose_yld | 75.4000 | 1.15 | LOW |
+| hot681-b31c | spent oak chips | rigging | — | xylose_yld | 78.5000 | 1.31 | LOW |
+| hot682-f727 | spent oak chips | rigging | — | xylose_yld | 88.2000 | 1.82 | LOW |
+| no p019-c887 | grape pomace | maplewood | — | glucose_yld | 42.8000 | 1.20 | LOW |
+| no p020-9594 | grape pomace | maplewood | — | glucose_yld | 40.0000 | 1.38 | LOW |
+| no p021-5497 | grape pomace | maplewood | — | glucose_yld | 42.8000 | 1.20 | LOW |
+| no p070-593f | grape pomace | ebony | — | xylose_yld | 79.7000 | 1.30 | LOW |
+| no p071-668e | grape pomace | ebony | — | xylose_yld | 77.2000 | 1.17 | LOW |
+| no p072-dfa9 | grape pomace | ebony | — | xylose_yld | 83.5000 | 1.49 | LOW |
+| no p118-001f | tomato pomace | oakleaf | — | xylose_yld | 86.7000 | 1.41 | LOW |
+| no p119-1315 | tomato pomace | oakleaf | — | xylose_yld | 81.5000 | 1.20 | LOW |
+| no p238-b067 | almond hulls | vibrant | — | xylose_yld | 82.6000 | 1.37 | LOW |
+| no p239-c7c7 | almond hulls | vibrant | — | xylose_yld | 83.6000 | 1.40 | LOW |
+| no p240-610b | almond hulls | vibrant | — | xylose_yld | 85.6000 | 1.47 | LOW |
+| no p403-2497 | walnut shells | energetic | — | glucose_yld | 16.8000 | 1.56 | LOW |
+| no p404-ac21 | walnut shells | energetic | — | glucose_yld | 13.7000 | 1.69 | LOW |
+| no p405-0848 | walnut shells | energetic | — | glucose_yld | 14.8000 | 1.64 | LOW |
+| no p502-a371 | corn stover stalks | caterpillar | — | xylose_yld | 18.4000 | 1.15 | LOW |
+| no p503-4cda | corn stover stalks | caterpillar | — | xylose_yld | 15.9000 | 1.25 | LOW |
+| no p504-a44d | corn stover stalks | caterpillar | — | xylose_yld | 16.5000 | 1.23 | LOW |
+| no p521-8223 | olive pomace | excellent | — | glucose_yld | 20.7200 | 1.25 | LOW |
+| no p522-cf64 | olive pomace | excellent | — | glucose_yld | 20.7900 | 1.25 | LOW |
+| no p523-da82 | olive pomace | excellent | — | xylose_yld | 3.5800 | 1.05 | LOW |
+| no p524-ec8b | olive pomace | excellent | — | xylose_yld | 3.7600 | 1.04 | LOW |
+| no p525-7473 | olive stems / leaves | excellent | — | glucose_yld | 12.5700 | 1.10 | LOW |
+| no p526-783f | olive stems / leaves | excellent | — | glucose_yld | 13.1200 | 1.04 | LOW |
+
+
+## Custom Visuals
+
+Discovered assets:
+
+- [pretreatment_distribution.html](../assets/exports/plots/conversion/pretreatment_distribution.html)
+
+:::

@@ -1,0 +1,46 @@
+---
+title: "Audit Target: mv_biomass_pricing"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the `mv_biomass_pricing` materialized view reveals significant price volatility across almond-derived biomass residuals. While the dataset maintains 100% completeness regarding missing values, approximately 22% of the records (16 observations) were flagged for statistical anomalies. The most critical findings concern 'Almond Hash,' which exhibits extreme price outliers reaching up to 3,140 units—values that are economically improbable for biomass waste residuals and likely indicate either unit conversion errors or the entry of total contract values instead of per-unit pricing.
+
+A systematic metadata deficiency was identified where the `parameter_name` field is consistently blank across all flagged records. This lack of descriptive metadata makes it difficult to distinguish whether the 'observed_value' represents a spot market price, a freight-inclusive cost, or a secondary nutritional metric. Furthermore, the significant shift in the dataset mean from 787.84 in the reference data to 361.9 in the current data suggests a fundamental change in the data distribution, likely driven by the inclusion of lower-value shell and hull observations that were not as prevalent in the reference period.
+
+## Evidently Profile
+
+<iframe src="../evidently/mv_biomass_pricing.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+| Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |
+|-----------|----------|----------|-------------|-----------|-------|---------|----------|
+| 39 | almond shells | — | — | nan | 39.3000 | 2.07 | LOW |
+| 31 | almond hulls | — | — | nan | 252.2600 | 2.72 | LOW |
+| 34 | almond shells | — | — | nan | 38.3500 | 1.99 | LOW |
+| 10 | almond hulls | — | — | nan | 217.0000 | 2.03 | LOW |
+| 64 | almond hash | — | — | nan | 1614.0000 | 1.11 | LOW |
+| 72 | almond hash | — | — | nan | 3140.0000 | 1.61 | LOW |
+| 73 | almond hash | — | — | nan | 3140.0000 | 1.61 | LOW |
+| 65 | almond hash | — | — | nan | 1614.0000 | 1.11 | LOW |
+| 37 | almond shells | — | — | nan | 34.8800 | 1.72 | LOW |
+| 32 | almond hulls | — | — | nan | 213.0000 | 1.95 | LOW |
+| 38 | almond shells | — | — | nan | 29.6700 | 1.30 | LOW |
+| 8 | almond hulls | — | — | nan | 209.0000 | 1.87 | LOW |
+| 41 | almond shells | — | — | nan | 29.1000 | 1.25 | LOW |
+| 36 | almond shells | — | — | nan | 32.0200 | 1.49 | LOW |
+| 1 | almond hulls | — | — | nan | 194.5500 | 1.59 | LOW |
+| 35 | almond shells | — | — | nan | 37.0000 | 1.89 | LOW |
+
+
+## Custom Visuals
+
+No specific analysis assets discovered for this target.
+
+:::

@@ -1,0 +1,28 @@
+---
+title: "Audit Target: mv_biomass_end_uses"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the `mv_biomass_end_uses` dataset reveals a small but structurally complex table mapping 8 distinct biomass resource types to 15 different end-use pathways. While the dataset is relatively clean, with no duplicate rows detected, there is a notable discrepancy in the quantitative fields. Specifically, the 'observed_value' column—critical for determining the proportion of biomass allocated to specific uses—is missing for 6.67% of the records. Furthermore, the dataset structure shows that each unique resource (identified by 'record_id') is associated with multiple end-use cases, averaging nearly four use cases per resource batch.
+
+The high cardinality of the 'use_case' column relative to the total row count (15 unique cases across 30 rows) suggests a lack of standardized taxonomy in reporting biomass destinations. This fragmentation, combined with missing quantitative metrics, may impede automated mass-balance reconciliations. Efforts should be focused on backfilling the missing observed values and mapping the 'use_case' strings to a unified ontology (e.g., Energy, Soil Amendment, Feedstock) to improve the utility of the data for regional biomass availability modeling.
+
+## Evidently Profile
+
+<iframe src="../evidently/mv_biomass_end_uses.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+No flagged observations found for this target.
+
+## Custom Visuals
+
+No specific analysis assets discovered for this target.
+
+:::

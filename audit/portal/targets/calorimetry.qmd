@@ -1,0 +1,28 @@
+---
+title: "Audit Target: calorimetry"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The data quality audit for the calorimetry dataset reveals a critical system-level failure: the dataset currently contains zero records. The Evidently AI summary confirms that both the current and reference dataframes are empty, with all columns—including vital fields such as observed_value, unit, and resource_name—reporting zero unique values and zero rows. This indicates a complete breakdown in the data ingestion pipeline or a failure in the synchronization between the laboratory instrumentation and the centralized database.
+
+Calorimetry data is fundamental to agricultural biomass research, as it provides the Higher Heating Value (HHV) and Lower Heating Value (LHV) necessary to assess the energy density of various feedstocks. The absence of this data prevents any meaningful statistical analysis, energy balance modeling, or quality control of the biomass samples. Immediate investigation into the upstream ETL (Extract, Transform, Load) processes or the Laboratory Information Management System (LIMS) is required to restore data flow. Until this is resolved, the reliability of downstream bioenergy yield assessments is severely compromised.
+
+## Evidently Profile
+
+<iframe src="../evidently/calorimetry.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+No flagged observations found for this target.
+
+## Custom Visuals
+
+No specific analysis assets discovered for this target.
+
+:::

@@ -9,13 +9,268 @@ format:
 
 ## Executive Summary
 
-The data quality audit of the compositional biomass dataset revealed a significant number of low-severity statistical anomalies (249 flagged observations) across 723 records. The primary focus of these flags is centered on structural carbohydrates (xylan, xylose, glucan, and glucose) and lignin content within specific agricultural residues, most notably almond-derived biomass and fruit pomaces. While the anomalies are classified as low severity based on Z-scores (ranging from 1.0 to 1.7), they indicate a consistent deviation from the reference baseline, suggesting either a shift in the feedstock's chemical profile or a systematic difference in the laboratory's analytical calibration compared to the historical reference data.
+The compositional analysis audit of agricultural biomass residues (primarily almond and walnut byproducts) reveals a dataset with high internal consistency but notable shifts from the reference baseline. Specifically, approximately 34% of the records (249 of 723) have been flagged for low-severity deviations in major structural carbohydrates (xylan, glucan) and lignin. These anomalies are concentrated in almond shells and hulls provided by 'tiny' and 'humorous' sources, often associated with analyst xkang2@lbl.gov. While the Z-scores are relatively low (ranging from 1.0 to 1.6), the high frequency of these flags suggests a systemic shift in the compositional profile—possibly due to crop variety or processing differences—rather than random measurement error.
 
-Beyond statistical deviations, the dataset exhibits substantial structural metadata deficiencies. There is a complete absence of qualitative 'notes' and 'analyst_name' entries, and the 'created_at' field is constant across all records, indicating a batch-upload process that failed to capture temporal or personnel-specific variability. Furthermore, the simultaneous reporting of polymer (e.g., glucan) and monomer (e.g., glucose) values for the same samples shows a high degree of correlation, which, if not properly accounted for with stoichiometric conversion factors, may introduce redundancy in downstream multivariate modeling. Addressing these metadata gaps is essential for ensuring the traceability and reproducibility of the biomass characterization results.
+From a data integrity perspective, there is a significant lack of descriptive metadata. The 'note' and 'analyst_name' fields are entirely unpopulated, and the 'sample_date' is a constant value across the dataset. Furthermore, the simultaneous reporting of monomeric sugars (glucose, xylose) and their anhydrous polymeric counterparts (glucan, xylan) without clear methodological distinction suggests either redundant stoichiometric calculation or potential double-entry. Future data collection should prioritize the inclusion of specific variety information and harvest years to explain the observed shifts in hemicellulose and lignin content.
 
 ## Evidently Profile
 
 <iframe src="../evidently/compositional.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+| Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |
+|-----------|----------|----------|-------------|-----------|-------|---------|----------|
+| (03)1f0b | almond hulls | tiny | — | xylan | 17.4600 | 1.58 | LOW |
+| (03)677d | almond hulls | tiny | — | lignin | 19.4700 | 1.06 | LOW |
+| (03)8660 | almond hulls | tiny | — | xylose | 19.7000 | 1.54 | LOW |
+| (03)ad41 | almond hulls | tiny | — | lignin | 19.1500 | 1.19 | LOW |
+| (03)b32d | almond hulls | tiny | — | xylan | 17.3400 | 1.55 | LOW |
+| (03)d213 | almond hulls | tiny | — | xylose | 19.3100 | 1.46 | LOW |
+| (03)e36d | almond hulls | tiny | — | xylan | 16.9900 | 1.46 | LOW |
+| (03)e546 | almond hulls | tiny | — | xylose | 19.8400 | 1.58 | LOW |
+| (04)68e4 | almond shells | capstan | — | xylan | 15.1700 | 1.14 | LOW |
+| (04)c1d7 | almond shells | capstan | — | xylose | 17.2400 | 1.14 | LOW |
+| (13)29f0 | almond shells | humorous | — | xylan | 15.5200 | 1.03 | LOW |
+| (13)2c76 | almond shells | humorous | — | xylose | 16.4100 | 1.36 | LOW |
+| (13)6f70 | almond shells | humorous | — | xylose | 17.6300 | 1.03 | LOW |
+| (13)8405 | almond shells | humorous | — | glucose | 20.7900 | 1.39 | LOW |
+| (13)aaf9 | almond shells | humorous | — | xylan | 14.4400 | 1.36 | LOW |
+| (13)b6b6 | almond shells | humorous | — | glucan | 18.7100 | 1.39 | LOW |
+| (13)ce37 | almond shells | humorous | — | glucose | 22.2600 | 1.00 | LOW |
+| (15)0b07 | almond hulls | humorous | — | glucose | 23.5600 | 1.03 | LOW |
+| (15)3f87 | almond hulls | humorous | — | glucose | 23.2700 | 1.10 | LOW |
+| (15)797a | walnut shells | cutaway | — | glucan | 11.8400 | 1.12 | LOW |
+| (15)849b | almond hulls | humorous | — | glucan | 20.9400 | 1.10 | LOW |
+| (15)95c9 | walnut shells | cutaway | — | lignin | 50.7300 | 1.26 | LOW |
+| (15)ab15 | walnut shells | cutaway | — | glucose | 13.1600 | 1.12 | LOW |
+| (15)c93b | almond hulls | humorous | — | glucan | 21.2000 | 1.03 | LOW |
+| (15)e1e0 | walnut shells | cutaway | — | xylan | 19.8300 | 1.73 | LOW |
+| (24)0b42 | almond shells | tiny | — | xylose | 25.7300 | 1.13 | LOW |
+| (24)0bc2 | almond shells | tiny | — | xylan | 23.0300 | 1.25 | LOW |
+| (24)1926 | almond shells | tiny | — | xylan | 22.6400 | 1.13 | LOW |
+| (24)42f3 | almond shells | tiny | — | glucan | 26.9800 | 1.05 | LOW |
+| (24)6b86 | almond shells | tiny | — | xylan | 23.1800 | 1.29 | LOW |
+| (24)70e6 | almond shells | tiny | — | glucan | 27.2200 | 1.12 | LOW |
+| (24)773e | almond shells | tiny | — | lignin | 24.5700 | 1.62 | LOW |
+| (24)7d8d | almond shells | tiny | — | xylose | 26.1700 | 1.25 | LOW |
+| (24)a25e | almond shells | tiny | — | lignin | 24.8000 | 1.53 | LOW |
+| (24)ec0a | almond shells | tiny | — | lignin | 24.7500 | 1.55 | LOW |
+| (24)ec7f | almond shells | tiny | — | xylose | 26.3400 | 1.29 | LOW |
+| (24)ec97 | almond shells | tiny | — | glucose | 30.2400 | 1.12 | LOW |
+| (24)fab3 | almond shells | tiny | — | glucose | 29.9700 | 1.05 | LOW |
+| (28)2429 | tomato pomace | riverstone | — | xylose | 12.5600 | 1.49 | LOW |
+| (28)847b | tomato pomace | riverstone | — | xylan | 11.0600 | 1.49 | LOW |
+| (28)8908 | corn stover cobs | caterpillar | — | lignin | 15.9700 | 1.05 | LOW |
+| (28)97be | corn stover cobs | caterpillar | — | glucose | 37.8100 | 1.10 | LOW |
+| (28)9a1d | corn stover cobs | caterpillar | — | glucan | 34.0300 | 1.09 | LOW |
+| (28)a3d2 | tomato pomace | riverstone | — | xylose | 12.8000 | 1.70 | LOW |
+| (28)a602 | tomato pomace | riverstone | — | glucan | 11.7100 | 1.32 | LOW |
+| (28)a764 | corn stover cobs | caterpillar | — | xylose | 28.5200 | 1.13 | LOW |
+| (28)c6e6 | corn stover cobs | caterpillar | — | xylan | 25.0900 | 1.12 | LOW |
+| (28)cfc4 | tomato pomace | riverstone | — | glucose | 13.0100 | 1.32 | LOW |
+| (28)f0fe | tomato pomace | riverstone | — | xylan | 11.2600 | 1.69 | LOW |
+| (31)04ab | almond hulls | vibrant | — | xylan | 16.6300 | 1.37 | LOW |
+| (31)1e1b | almond hulls | vibrant | — | xylose | 18.9000 | 1.37 | LOW |
+| (31)3fdc | almond hulls | vibrant | — | xylan | 16.4200 | 1.31 | LOW |
+| (31)52b7 | almond hulls | vibrant | — | xylose | 18.6600 | 1.31 | LOW |
+| (31)7265 | almond hulls | vibrant | — | glucose | 34.5500 | 1.61 | LOW |
+| (31)749c | almond hulls | vibrant | — | glucan | 30.6300 | 1.49 | LOW |
+| (31)8be1 | almond hulls | vibrant | — | xylan | 16.5300 | 1.34 | LOW |
+| (31)9a9b | almond hulls | vibrant | — | xylose | 18.7900 | 1.34 | LOW |
+| (31)d8e4 | almond hulls | vibrant | — | glucan | 31.0900 | 1.61 | LOW |
+| (31)edc7 | almond hulls | vibrant | — | glucan | 31.0600 | 1.60 | LOW |
+| (31)eec3 | almond hulls | vibrant | — | glucose | 34.0400 | 1.49 | LOW |
+| (31)f0ca | almond hulls | vibrant | — | glucose | 34.5200 | 1.61 | LOW |
+| (37)0930 | almond shells | vibrant | — | xylose | 25.8900 | 1.17 | LOW |
+| (37)2e71 | almond shells | vibrant | — | xylan | 23.5500 | 1.41 | LOW |
+| (37)3b10 | almond shells | vibrant | — | glucan | 28.6700 | 1.55 | LOW |
+| (37)4504 | almond shells | vibrant | — | xylan | 23.3300 | 1.34 | LOW |
+| (37)679f | almond shells | vibrant | — | xylan | 22.7900 | 1.18 | LOW |
+| (37)6df6 | almond shells | vibrant | — | lignin | 26.2300 | 1.03 | LOW |
+| (37)82b5 | almond shells | vibrant | — | xylose | 26.7600 | 1.41 | LOW |
+| (37)8ab5 | almond shells | vibrant | — | glucose | 31.2700 | 1.40 | LOW |
+| (37)99cb | almond shells | vibrant | — | lignin | 25.8000 | 1.18 | LOW |
+| (37)9c26 | almond shells | vibrant | — | xylose | 26.5100 | 1.34 | LOW |
+| (37)c333 | almond shells | vibrant | — | glucan | 28.6000 | 1.53 | LOW |
+| (37)d647 | almond shells | vibrant | — | glucose | 31.8600 | 1.55 | LOW |
+| (37)da91 | almond shells | vibrant | — | glucose | 31.7800 | 1.53 | LOW |
+| (37)fb45 | almond shells | vibrant | — | glucan | 28.1400 | 1.39 | LOW |
+| (42)0211 | rice straw | possessive | — | glucose | 33.4300 | 1.45 | LOW |
+| (42)0654 | rice straw | possessive | — | xylose | 17.7000 | 1.23 | LOW |
+| (42)446d | rice straw | possessive | — | xylan | 15.5800 | 1.22 | LOW |
+| (42)7a67 | rice straw | possessive | — | arabinose | 2.5700 | 1.15 | LOW |
+| (42)8729 | rice straw | possessive | — | glucan | 30.0900 | 1.45 | LOW |
+| (42)cbb9 | rice straw | possessive | — | arabinan | 2.2700 | 1.14 | LOW |
+| (4e)e137 | grape pomace | ebony | — | glucan | 5.5700 | 1.28 | LOW |
+| (4e)e140 | grape pomace | ebony | — | glucose | 6.1900 | 1.29 | LOW |
+| (4e)e143 | grape pomace | ebony | — | xylan | 2.9200 | 1.53 | LOW |
+| (4e)e146 | grape pomace | ebony | — | xylose | 3.3200 | 1.54 | LOW |
+| (4e)e151 | grape pomace | ebony | — | lignin | 47.8400 | 1.50 | LOW |
+| (56)40ab | sweet potato culls | tackle | — | lignin | 8.8500 | 1.02 | LOW |
+| (56)b418 | sweet potato culls | tackle | — | glucose | 59.7200 | 1.04 | LOW |
+| (56)d797 | sweet potato culls | tackle | — | glucan | 53.7500 | 1.04 | LOW |
+| (56)ea26 | sweet potato culls | tackle | — | xylan | 3.1300 | 1.15 | LOW |
+| (56)ea73 | sweet potato culls | tackle | — | xylose | 3.5600 | 1.15 | LOW |
+| (5b)3885 | corn stover stalks | caterpillar | — | lignin | 21.9500 | 1.08 | LOW |
+| (5b)58d8 | corn stover stalks | caterpillar | — | glucose | 45.3300 | 1.15 | LOW |
+| (5b)9d19 | corn stover stalks | caterpillar | — | glucan | 40.8000 | 1.15 | LOW |
+| (5b)cb5c | corn stover stalks | caterpillar | — | xylan | 19.5100 | 1.09 | LOW |
+| (5b)de58 | corn stover stalks | caterpillar | — | xylose | 22.1700 | 1.10 | LOW |
+| (71)0047 | almond shells | humorous | — | lignin | 33.9700 | 1.71 | LOW |
+| (71)0d9d | almond shells | humorous | — | lignin | 32.5700 | 1.21 | LOW |
+| (71)23e9 | almond shells | humorous | — | lignin | 34.3500 | 1.84 | LOW |
+| (71)3ea0 | almond shells | humorous | — | xylose | 13.8700 | 2.04 | LOW |
+| (71)470a | almond shells | humorous | — | glucose | 17.7600 | 2.20 | LOW |
+| (71)5316 | almond shells | humorous | — | xylan | 12.2100 | 2.04 | LOW |
+| (71)b8d9 | almond shells | humorous | — | glucan | 15.9800 | 2.20 | LOW |
+| (72)1255 | corn stover husks | caterpillar | — | glucan | 41.1600 | 1.10 | LOW |
+| (72)3abe | corn stover husks | caterpillar | — | xylan | 21.3300 | 1.00 | LOW |
+| (72)4e20 | corn stover husks | caterpillar | — | xylose | 24.8800 | 1.01 | LOW |
+| (72)5d6f | corn stover husks | caterpillar | — | glucose | 45.7400 | 1.09 | LOW |
+| (72)9e04 | corn stover husks | caterpillar | — | xylan | 21.8900 | 1.00 | LOW |
+| (72)ed34 | corn stover husks | caterpillar | — | lignin | 18.4900 | 1.15 | LOW |
+| (7e)0b62 | almond branches | capstan | — | glucan | 21.7500 | 1.22 | LOW |
+| (7e)48f1 | almond branches | capstan | — | xylan | 12.7500 | 1.13 | LOW |
+| (7e)4e75 | almond branches | capstan | — | glucose | 24.3300 | 1.13 | LOW |
+| (7e)5cea | almond branches | capstan | — | xylose | 14.4900 | 1.12 | LOW |
+| (7e)644f | almond branches | capstan | — | lignin | 43.7200 | 1.44 | LOW |
+| (7e)7d76 | almond branches | capstan | — | xylose | 14.4500 | 1.15 | LOW |
+| (7e)(7e) | almond branches | capstan | — | glucose | 24.1700 | 1.21 | LOW |
+| (7e)9497 | almond branches | capstan | — | xylan | 12.7200 | 1.15 | LOW |
+| (7e)bbb6 | almond branches | capstan | — | lignin | 44.5300 | 1.64 | LOW |
+| (7e)c731 | almond branches | capstan | — | glucan | 21.9000 | 1.13 | LOW |
+| (7e)f033 | almond branches | capstan | — | lignin | 43.8300 | 1.47 | LOW |
+| (82)00ec | walnut shells | energetic | — | glucose | 11.4000 | 1.41 | LOW |
+| (82)60a4 | grape pomace | boatswain | — | glucan | 13.8700 | 1.16 | LOW |
+| (82)6387 | grape pomace | boatswain | — | glucose | 16.2000 | 1.37 | LOW |
+| (82)6771 | walnut shells | energetic | — | xylose | 5.3400 | 2.27 | LOW |
+| (82)6771 | walnut shells | energetic | — | lignin | 48.9100 | 1.44 | LOW |
+| (82)6acd | grape pomace | boatswain | — | glucan | 14.5800 | 1.37 | LOW |
+| (82)7731 | grape pomace | boatswain | — | glucose | 16.0400 | 1.33 | LOW |
+| (82)8468 | grape pomace | boatswain | — | glucose | 15.4100 | 1.16 | LOW |
+| (82)8c1c | walnut shells | energetic | — | glucan | 10.2600 | 1.41 | LOW |
+| (82)bdca | walnut shells | energetic | — | xylan | 20.7000 | 1.02 | LOW |
+| (82)d973 | grape pomace | boatswain | — | lignin | 50.0100 | 1.06 | LOW |
+| (82)db4c | grape pomace | boatswain | — | glucan | 14.4300 | 1.32 | LOW |
+| (86)031e | almond hulls | humorous | — | xylan | 7.2000 | 1.04 | LOW |
+| (86)6013 | almond hulls | humorous | — | xylose | 8.1800 | 1.04 | LOW |
+| (86)7828 | almond hulls | humorous | — | xylan | 7.2300 | 1.03 | LOW |
+| (86)cc31 | almond hulls | humorous | — | xylose | 8.2200 | 1.03 | LOW |
+| (87)49e8 | grape stem | rigging | — | glucose | 12.2200 | 1.79 | LOW |
+| (87)50d0 | grape stem | rigging | — | xylose | 3.6500 | 1.65 | LOW |
+| (87)6f26 | grape stem | rigging | — | lignin | 37.2100 | 1.02 | LOW |
+| (87)8932 | grape stem | rigging | — | xylan | 3.2100 | 1.65 | LOW |
+| (87)a5ef | grape stem | rigging | — | glucan | 11.0000 | 1.79 | LOW |
+| (a0)00b1 | almond branches | humorous | — | glucan | 26.2200 | 1.36 | LOW |
+| (a0)031a | almond branches | humorous | — | xylose | 17.5000 | 1.22 | LOW |
+| (a0)2a3f | almond branches | humorous | — | glucose | 28.9900 | 1.28 | LOW |
+| (a0)2c11 | olive stems / leaves | excellent | — | lignin | 51.4800 | 1.13 | LOW |
+| (a0)47a1 | almond branches | humorous | — | glucan | 26.0900 | 1.28 | LOW |
+| (a0)4e26 | olive stems / leaves | excellent | — | glucan | 14.4500 | 1.05 | LOW |
+| (a0)825d | olive stems / leaves | excellent | — | xylose | 14.0600 | 1.12 | LOW |
+| (a0)8bcb | almond branches | humorous | — | xylan | 15.4000 | 1.22 | LOW |
+| (a0)a67e | almond branches | humorous | — | glucose | 28.4800 | 1.02 | LOW |
+| (a0)ac41 | almond branches | humorous | — | xylan | 15.2100 | 1.06 | LOW |
+| (a0)cda4 | olive stems / leaves | excellent | — | glucose | 16.0500 | 1.05 | LOW |
+| (a0)dd8f | olive stems / leaves | excellent | — | xylan | 12.3700 | 1.12 | LOW |
+| (a0)de11 | almond branches | humorous | — | glucan | 25.6300 | 1.02 | LOW |
+| (a0)e5fa | almond branches | humorous | — | glucose | 29.1300 | 1.36 | LOW |
+| (a0)e973 | almond branches | humorous | — | xylose | 17.2900 | 1.06 | LOW |
+| (a8)29ea | almond hulls | humorous | — | glucose | 17.5000 | 2.48 | LOW |
+| (a8)a893 | almond hulls | humorous | — | glucan | 15.7500 | 2.48 | LOW |
+| (a8)aa72 | almond hulls | humorous | — | xylan | 5.1900 | 1.55 | LOW |
+| (a8)bf74 | almond hulls | humorous | — | xylose | 5.9000 | 1.55 | LOW |
+| (ab)0af2 | grape pomace | maplewood | — | xylose | 9.6900 | 1.21 | LOW |
+| (ab)8cb1 | grape pomace | maplewood | — | xylan | 8.1300 | 1.13 | LOW |
+| (ab)9781 | grape pomace | maplewood | — | xylan | 8.0600 | 1.10 | LOW |
+| (ab)c64d | grape pomace | maplewood | — | lignin+ | 53.9600 | 1.11 | LOW |
+| (ab)e013 | grape pomace | maplewood | — | xylose | 9.2400 | 1.01 | LOW |
+| (ab)e502 | grape pomace | maplewood | — | xylan | 8.5200 | 1.33 | LOW |
+| (b3)1dea | almond hulls | capstan | — | lignin | 26.4400 | 1.90 | LOW |
+| (b3)858a | almond hulls | capstan | — | lignin | 26.1000 | 1.75 | LOW |
+| (b3)883d | almond hulls | capstan | — | lignin | 26.1600 | 1.78 | LOW |
+| (b5)2461 | walnut shelling fines | cutaway | — | glucose | 11.6400 | 1.15 | LOW |
+| (b5)70e4 | walnut shelling fines | cutaway | — | xylan | 9.7700 | 1.15 | LOW |
+| (b5)8e9b | walnut shelling fines | cutaway | — | lignin | 52.7800 | 1.00 | LOW |
+| (b5)987c | walnut shelling fines | cutaway | — | lignin | 52.3000 | 1.00 | LOW |
+| (b5)c9e0 | walnut shelling fines | cutaway | — | xylose | 11.1000 | 1.15 | LOW |
+| (b5)da39 | walnut shelling fines | cutaway | — | glucan | 10.4700 | 1.14 | LOW |
+| (b7)5f3f | almond hulls | capstan | — | lignin | 24.6300 | 1.13 | LOW |
+| (b7)95bc | almond hulls | capstan | — | lignin | 24.5700 | 1.10 | LOW |
+| (ba)10eb | olive pomace | excellent | — | lignin | 46.4200 | 1.11 | LOW |
+| (ba)1c19 | olive pomace | excellent | — | glucose | 12.6700 | 1.13 | LOW |
+| (ba)231c | olive pomace | excellent | — | xylan | 13.9600 | 1.03 | LOW |
+| (ba)4bc0 | olive pomace | excellent | — | glucan | 11.4000 | 1.12 | LOW |
+| (ba)7ab9 | olive pomace | excellent | — | xylose | 15.8700 | 1.03 | LOW |
+| (c0)0f01 | pistachio hulls | stuntman | — | glucose | 12.4600 | 1.02 | LOW |
+| (c0)47ff | pistachio hulls | stuntman | — | xylan | 8.1200 | 1.01 | LOW |
+| (c0)4885 | pistachio hulls | stuntman | — | lignin | 42.3600 | 1.07 | LOW |
+| (c0)b33e | pistachio hulls | stuntman | — | glucan | 11.2200 | 1.01 | LOW |
+| (c0)cdec | pistachio hulls | stuntman | — | xylose | 9.2300 | 1.01 | LOW |
+| (c4)0589 | unused oak stick | maplewood | — | lignin | 36.2200 | 1.15 | LOW |
+| (c4)24f1 | unused oak stick | maplewood | — | xylose | 16.0400 | 1.05 | LOW |
+| (c4)5987 | unused oak stick | maplewood | — | xylan | 14.1100 | 1.06 | LOW |
+| (c4)882a | unused oak stick | maplewood | — | glucan | 38.7800 | 1.08 | LOW |
+| (c4)fccc | unused oak stick | maplewood | — | glucose | 43.0900 | 1.09 | LOW |
+| (c5)0d9b | walnut tree sticks | badger | — | xylose | 17.4600 | 1.14 | LOW |
+| (c5)0ed9 | spent oak chips | maplewood | — | xylan | 6.6700 | 1.15 | LOW |
+| (c5)1f57 | walnut tree sticks | badger | — | xylan | 15.3600 | 1.13 | LOW |
+| (c5)267f | spent oak chips | maplewood | — | xylose | 7.5800 | 1.15 | LOW |
+| (c5)2932 | walnut tree sticks | badger | — | lignin | 28.4900 | 1.11 | LOW |
+| (c5)2d94 | walnut tree sticks | badger | — | xylan | 15.2700 | 1.05 | LOW |
+| (c5)86ca | spent oak chips | maplewood | — | lignin | 44.0900 | 1.15 | LOW |
+| (c5)8f41 | spent oak chips | maplewood | — | glucan | 42.2200 | 1.11 | LOW |
+| (c5)b324 | spent oak chips | maplewood | — | glucose | 46.9100 | 1.11 | LOW |
+| (c5)e06a | walnut tree sticks | badger | — | xylose | 17.3500 | 1.05 | LOW |
+| (c7)548b | almond branches | vibrant | — | xylose | 17.3200 | 1.08 | LOW |
+| (c7)5eb1 | almond branches | vibrant | — | xylan | 15.2500 | 1.09 | LOW |
+| (c7)71f6 | almond branches | vibrant | — | xylose | 17.3300 | 1.09 | LOW |
+| (c7)749c | almond branches | vibrant | — | xylan | 15.2400 | 1.08 | LOW |
+| (c7)8b0b | almond branches | vibrant | — | lignin | 33.5700 | 1.07 | LOW |
+| (c7)f332 | almond branches | vibrant | — | lignin | 33.6200 | 1.06 | LOW |
+| (ca)0336 | rice straw | possessive | — | lignin | 19.1300 | 1.07 | LOW |
+| (ca)1c11 | rice straw | possessive | — | xylan | 16.9700 | 1.05 | LOW |
+| (ca)1ec6 | rice straw | possessive | — | xylan | 17.1500 | 1.35 | LOW |
+| (ca)3a26 | rice straw | possessive | — | glucan | 34.0000 | 1.07 | LOW |
+| (ca)3df0 | rice straw | possessive | — | xylose | 19.4900 | 1.35 | LOW |
+| (ca)9001 | rice straw | possessive | — | glucose | 37.7800 | 1.07 | LOW |
+| (ca)cd2f | rice straw | possessive | — | xylose | 19.2800 | 1.05 | LOW |
+| (d2)0b71 | tomato pomace | pinecrest | — | lignin+ | 31.5700 | 1.27 | LOW |
+| (d2)2fae | tomato pomace | pinecrest | — | lignin+ | 30.5300 | 1.51 | LOW |
+| (d2)4d07 | tomato pomace | pinecrest | — | glucose | 21.0000 | 1.26 | LOW |
+| (d2)62d0 | tomato pomace | pinecrest | — | glucan | 18.9800 | 1.29 | LOW |
+| (d2)a7f3 | tomato pomace | pinecrest | — | glucose | 21.1500 | 1.31 | LOW |
+| (d2)bdb6 | tomato pomace | pinecrest | — | glucan | 18.9000 | 1.26 | LOW |
+| (d2)cadf | tomato pomace | pinecrest | — | glucan | 19.0400 | 1.31 | LOW |
+| (d2)cea7 | tomato pomace | pinecrest | — | xylan | 8.4600 | 1.14 | LOW |
+| (d2)d344 | tomato pomace | pinecrest | — | xylose | 9.6200 | 1.13 | LOW |
+| (d2)d758 | tomato pomace | pinecrest | — | glucose | 21.0800 | 1.28 | LOW |
+| (d2)d96d | tomato pomace | pinecrest | — | lignin+ | 31.9500 | 1.19 | LOW |
+| (da)0242 | wheat straw | wardrobe | — | xylose | 21.6200 | 1.40 | LOW |
+| (da)112e | wheat straw | wardrobe | — | arabinan | 2.3500 | 1.12 | LOW |
+| (da)11ef | pistachio shells | tripod | — | glucan | 22.6000 | 1.15 | LOW |
+| (da)351f | pistachio shells | tripod | — | lignin | 33.6000 | 1.08 | LOW |
+| (da)5f99 | wheat straw | wardrobe | — | xylose | 23.5600 | 1.22 | LOW |
+| (da)65a4 | wheat straw | wardrobe | — | arabinan | 2.4100 | 1.35 | LOW |
+| (da)6f36 | wheat straw | wardrobe | — | xylan | 19.0300 | 1.39 | LOW |
+| (da)85be | wheat straw | wardrobe | — | arabinose | 2.6800 | 1.14 | LOW |
+| (da)8737 | wheat straw | wardrobe | — | lignin | 21.6300 | 1.29 | LOW |
+| (da)9bfc | wheat straw | wardrobe | — | glucose | 35.6800 | 2.36 | LOW |
+| (da)a0f5 | pistachio shells | tripod | — | glucose | 25.1100 | 1.15 | LOW |
+| (da)ab96 | wheat straw | wardrobe | — | xylan | 20.7400 | 1.23 | LOW |
+| (da)aba8 | pistachio shells | tripod | — | xylan | 37.0600 | 1.05 | LOW |
+| (da)b698 | wheat straw | wardrobe | — | lignin | 21.6800 | 1.31 | LOW |
+| (da)cf0e | wheat straw | wardrobe | — | arabinose | 2.7400 | 1.34 | LOW |
+| (da)e334 | pistachio shells | tripod | — | xylose | 42.1100 | 1.05 | LOW |
+| (da)eb21 | wheat straw | wardrobe | — | lignin | 21.8800 | 1.39 | LOW |
+| (da)ec68 | wheat straw | wardrobe | — | glucan | 32.1100 | 2.36 | LOW |
+| (e7)4b15 | walnut hulls | energetic | — | glucan | 12.4500 | 1.13 | LOW |
+| (e7)538c | walnut hulls | energetic | — | xylose | 11.2900 | 1.01 | LOW |
+| (e7)6d58 | walnut hulls | energetic | — | lignin | 36.0000 | 1.15 | LOW |
+| (e7)7925 | walnut hulls | energetic | — | glucose | 13.8300 | 1.13 | LOW |
+| (e7)afea | walnut hulls | energetic | — | xylan | 9.9400 | 1.01 | LOW |
+
 
 ## Custom Visuals
 

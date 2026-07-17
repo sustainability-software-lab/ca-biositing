@@ -1,0 +1,30 @@
+---
+title: "Audit Target: mv_biomass_fermentation"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The data quality audit of the 'mv_biomass_fermentation' dataset reveals several significant structural issues that compromise its utility for quantitative biomass research. The most critical finding is the classification of 'observed_value' as a categorical rather than a numerical data type. With 1,587 unique values across 2,873 records, this suggests the presence of non-numeric characters (e.g., 'ND', '< LOD', or localized decimal commas) within the yield data, preventing immediate statistical modeling of fermentation performance.
+
+Furthermore, there is a notable lack of metadata diversity and traceability. The columns 'qc_pass', 'created_at', and 'sample_date' are entirely constant, indicating that the dataset likely represents a single batch upload or a homogenized snapshot that lacks temporal resolution. Missing values in 'unit' (4.28%) and 'provider_codename' (6.27%) further hinder the ability to normalize yields or account for provider-specific variation in feedstock quality. Addressing the data type of the fermentation results and filling the gaps in provider attribution are high-priority requirements for making this dataset research-ready.
+
+## Evidently Profile
+
+<iframe src="../evidently/mv_biomass_fermentation.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+No flagged observations found for this target.
+
+## Custom Visuals
+
+Discovered assets:
+
+- [fermentation_distribution.html](../assets/exports/plots/conversion/fermentation_distribution.html)
+
+:::

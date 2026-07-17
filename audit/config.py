@@ -94,8 +94,8 @@ def load_yaml_config(yaml_path: str = YAML_CONFIG_PATH) -> AuditorSettings:
         flat_data["ANOMALY_TRACKER_CREDENTIALS"] = g.get("credentials")
         flat_data["ANOMALY_TRACKER_WORKSHEET"] = g.get("worksheet")
 
-    # Filter out None values so Pydantic defaults are used if YAML key is missing
-    flat_data = {k: v for k, v in flat_data.items() if v is not None}
+    # Filter out None and empty strings so Pydantic defaults (and env vars) are used
+    flat_data = {k: v for k, v in flat_data.items() if v is not None and v != ""}
 
     # Initialize settings. Pydantic-settings will automatically
     # override these with environment variables if present.
