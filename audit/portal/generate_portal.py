@@ -112,6 +112,42 @@ format:
             qmd_content += "Evidently report not found.\n"
 
         qmd_content += """
+## Flagged Observations
+
+"""
+        flagged_csv_path = latest_run / f"flagged_{target_name}.csv"
+        if flagged_csv_path.exists():
+            try:
+                flagged_df = pd.read_csv(flagged_csv_path)
+                # Ensure 8 columns as per Req 1: Record ID, Resource, Provider, Sample Date, Parameter, Value, Z-Score, Severity
+                # The CSV written by the pipeline should have these columns now.
+                # Map columns if necessary or just render the whole thing if it matches.
+                # Pipeline uses FlaggedObservation fields.
+
+                md_table = "| Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |\n"
+                md_table += "|-----------|----------|----------|-------------|-----------|-------|---------|----------|\n"
+
+                for _, row in flagged_df.iterrows():
+                    rid = row.get("record_id", "—")
+                    res = row.get("resource_name", "—")
+                    prov = row.get("provider_codename")
+                    if pd.isna(prov) or prov == "": prov = "—"
+                    sdate = row.get("sample_date")
+                    if pd.isna(sdate) or sdate == "": sdate = "—"
+                    param = row.get("parameter_name", "—")
+                    val = row.get("observed_value", 0)
+                    z = row.get("z_score", 0)
+                    sev = row.get("severity", "—")
+
+                    md_table += f"| {rid} | {res} | {prov} | {sdate} | {param} | {val:.4f} | {z:.2f} | {sev} |\n"
+
+                qmd_content += md_table + "\n"
+            except Exception as e:
+                qmd_content += f"Error rendering flagged observations: {str(e)}\n"
+        else:
+            qmd_content += "No flagged observations found for this target.\n"
+
+        qmd_content += """
 ## Custom Visuals
 
 """

@@ -1,0 +1,112 @@
+{
+  "executive_summary": "The data quality audit of the compositional biomass dataset revealed a significant number of low-severity statistical anomalies (249 flagged observations) across 723 records. The primary focus of these flags is centered on structural carbohydrates (xylan, xylose, glucan, and glucose) and lignin content within specific agricultural residues, most notably almond-derived biomass and fruit pomaces. While the anomalies are classified as low severity based on Z-scores (ranging from 1.0 to 1.7), they indicate a consistent deviation from the reference baseline, suggesting either a shift in the feedstock's chemical profile or a systematic difference in the laboratory's analytical calibration compared to the historical reference data.\n\nBeyond statistical deviations, the dataset exhibits substantial structural metadata deficiencies. There is a complete absence of qualitative 'notes' and 'analyst_name' entries, and the 'created_at' field is constant across all records, indicating a batch-upload process that failed to capture temporal or personnel-specific variability. Furthermore, the simultaneous reporting of polymer (e.g., glucan) and monomer (e.g., glucose) values for the same samples shows a high degree of correlation, which, if not properly accounted for with stoichiometric conversion factors, may introduce redundancy in downstream multivariate modeling. Addressing these metadata gaps is essential for ensuring the traceability and reproducibility of the biomass characterization results.",
+  "grouped_issues": [
+    {
+      "group_label": "Tomato Pomace Carbohydrate/Lignin Deviation",
+      "hypothesis": "Tomato pomace samples show higher-than-expected structural carbohydrate and lignin values compared to the reference mean, likely due to higher seed-to-skin ratios in these specific batches which concentrates these components.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(d2)cadf",
+        "(d2)bdb6",
+        "(d2)62d0",
+        "(d2)a7f3",
+        "(d2)4d07",
+        "(d2)d758",
+        "(28)a602",
+        "(28)cfc4"
+      ],
+      "affected_parameters": [
+        "glucan",
+        "glucose",
+        "xylan",
+        "xylose",
+        "lignin+"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric for observed_value (Z-scores > 1.2)",
+      "recommended_action": "Verify the seed-to-pulp ratio of the tomato pomace samples. Recalculate stoichiometric conversions between glucan/glucose to ensure consistent reporting."
+    },
+    {
+      "group_label": "Grape Pomace Hemicellulose Variance",
+      "hypothesis": "Xylan and xylose values in grape pomace are consistently flagged, suggesting the reference dataset may be based on different grape varieties or processing methods (e.g., red vs. white pomace) that significantly impact hemicellulose content.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(ab)e502",
+        "(ab)8cb1",
+        "(ab)9781"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose"
+      ],
+      "affected_resources": [
+        "grape pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric for observed_value (Z-scores > 1.0)",
+      "recommended_action": "Annotate grape pomace records with variety and processing method (winery waste type) to better contextualize the hemicellulose variance."
+    },
+    {
+      "group_label": "Almond Biomass Baseline Shift",
+      "hypothesis": "High frequency of flags in almond co-products suggests the reference distribution is too narrow or outdated for current almond biomass varieties, or there is a moisture-basis correction error (dry vs. as-is) during sample preparation.",
+      "priority": "Medium",
+      "affected_record_ids": [],
+      "affected_parameters": [
+        "xylan",
+        "xylose",
+        "glucan",
+        "glucose",
+        "lignin"
+      ],
+      "affected_resources": [
+        "almond shells",
+        "almond hulls",
+        "almond branches"
+      ],
+      "evidently_finding": "DatasetSummaryMetric (249 flagged observations, top resources: almond)",
+      "recommended_action": "Review the moisture-basis calculation for all almond-derived samples. If data is verified, update the reference baseline to include the wider variance observed in contemporary almond orchard residues."
+    },
+    {
+      "group_label": "Systemic Metadata Depletion",
+      "hypothesis": "The complete absence of analyst names and notes, combined with a constant timestamp, indicates a batch-processing failure or a data migration error where laboratory notebook metadata was not mapped to the final database.",
+      "priority": "High",
+      "affected_record_ids": [],
+      "affected_parameters": [
+        "note",
+        "analyst_name",
+        "analyst_email",
+        "created_at"
+      ],
+      "affected_resources": [
+        "All Resources"
+      ],
+      "evidently_finding": "DatasetSummaryMetric (1823 missing values; constant created_at)",
+      "recommended_action": "Restore missing metadata from original lab notebooks or LIMS exports. Investigate the database ingestion script to ensure timestamps and analyst identifiers are captured per-record."
+    },
+    {
+      "group_label": "Redundant Carbohydrate Reporting",
+      "hypothesis": "The dataset reports both anhydrous polymers (glucan/xylan) and hydrated monomers (glucose/xylose), which are mathematically dependent. The flags likely trigger because the reference data expects only one form.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(d2)cadf",
+        "(d2)a7f3",
+        "(28)f0fe",
+        "(28)a3d2"
+      ],
+      "affected_parameters": [
+        "glucan",
+        "glucose",
+        "xylan",
+        "xylose"
+      ],
+      "affected_resources": [
+        "tomato pomace",
+        "grape pomace"
+      ],
+      "evidently_finding": "High number of duplicated columns/almost duplicated columns in DatasetSummaryMetric",
+      "recommended_action": "Standardize reporting to either the polymer or monomer form using NREL standard biomass conversion factors (0.90 for C6, 0.88 for C5) to reduce data redundancy."
+    }
+  ],
+  "flagged_count": 249
+}

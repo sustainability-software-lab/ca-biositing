@@ -65,7 +65,9 @@ register(AuditTarget(
             ur.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            ur.created_at
+            ur.created_at,
+            prov.codename    AS provider_codename,
+            ur.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.ultimate_record ur
         JOIN public.resource r ON ur.resource_id = r.id
         JOIN public.observation o
@@ -74,6 +76,9 @@ register(AuditTarget(
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON ur.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON ur.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE
             ur.qc_pass != 'fail'
             AND LOWER(p.name) IN ('carbon', 'nitrogen', 'oxygen', 'sulfur', 'hydrogen')

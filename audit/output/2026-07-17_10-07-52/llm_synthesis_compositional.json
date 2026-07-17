@@ -1,0 +1,114 @@
+{
+  "executive_summary": "The compositional analysis audit for the 723-record dataset reveals a significant deficit in metadata and laboratory traceability. Specifically, the 'note' and 'analyst_name' columns are entirely empty, and the 'analyst_email' is missing for over half of the records. This lack of provenance complicates the interpretation of the 249 'LOW' severity flags identified across major carbohydrate and lignin parameters. While the data shows internal stoichiometric consistency—indicated by the parallel flagging of monomer/polymer pairs like glucose/glucan—the lack of qualitative notes makes it impossible to determine if deviations are due to experimental conditions or genuine biological variance.\n\nThe statistical flags are heavily concentrated in almond-derived biomass (shells, hulls, and branches) and pomace (tomato and grape). Tomato pomace, in particular, shows elevated glucan and lignin levels (approx. 19% and 31% respectively) compared to the reference baseline. These shifts suggest either a difference in the seed-to-skin ratio of the sampled pomace or a change in the extraction protocol that hasn't been documented. Given that all records are marked as 'qc_pass', the primary concern is not catastrophic failure but a systematic drift in compositional profiles for specific agricultural residues that requires updated reference baselines.",
+  "grouped_issues": [
+    {
+      "group_label": "Systemic Metadata Depletion",
+      "hypothesis": "A failure in the laboratory information management system (LIMS) export or data entry protocol resulted in the total loss of qualitative notes and analyst attribution.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(d2)cadf",
+        "(d2)bdb6",
+        "(d2)a7f3",
+        "(28)a602",
+        "(ab)e502"
+      ],
+      "affected_parameters": [
+        "note",
+        "analyst_name",
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "All Resources"
+      ],
+      "evidently_finding": "number_of_empty_columns: 2; number_of_missing_values: 1823",
+      "recommended_action": "Investigate the data pipeline from the lab bench to the database to restore 'note' and 'analyst' fields; perform a retrospective update of these records to ensure traceability."
+    },
+    {
+      "group_label": "Tomato Pomace Carbohydrate Shift",
+      "hypothesis": "Higher-than-expected glucan/glucose levels in tomato pomace suggest an increased proportion of seeds or residual sugars compared to the reference population.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(d2)cadf",
+        "(d2)bdb6",
+        "(d2)62d0",
+        "(d2)a7f3",
+        "(d2)4d07",
+        "(d2)d758",
+        "(28)a602",
+        "(28)cfc4"
+      ],
+      "affected_parameters": [
+        "glucan",
+        "glucose"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric for observed_value: current mean (22.11) vs reference mean (23.03) with 45+ flags for glucose/glucan.",
+      "recommended_action": "Verify the physical composition (seed vs. skin ratio) of the tomato pomace samples and check if pre-wash steps were omitted."
+    },
+    {
+      "group_label": "Elevated Lignin+ in Pomace Residue",
+      "hypothesis": "The high lignin+ values (approx 30-32%) may indicate incomplete protein removal or a high degree of condensation during the acid-insoluble lignin procedure.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(d2)2fae",
+        "(d2)0b71",
+        "(d2)d96d"
+      ],
+      "affected_parameters": [
+        "lignin+"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "4 anomalous 'lignin+' records with z-scores up to 1.51.",
+      "recommended_action": "Run an ash and protein correction on the lignin+ values to determine if the elevation is due to non-lignin components."
+    },
+    {
+      "group_label": "Hemicellulose Variance in Fruit Residues",
+      "hypothesis": "Systematic deviation in xylan/xylose values suggests a variation in the hemicellulose profile, possibly linked to the specific cultivars or maturity levels of the fruit at the time of processing.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(28)f0fe",
+        "(28)847b",
+        "(28)a3d2",
+        "(28)2429",
+        "(ab)e502",
+        "(ab)8cb1",
+        "(ab)9781"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose"
+      ],
+      "affected_resources": [
+        "tomato pomace",
+        "grape pomace"
+      ],
+      "evidently_finding": "55 flags for xylan and 52 for xylose; high z-scores (1.70) in pomace resources.",
+      "recommended_action": "Cross-reference these records with harvest date and cultivar metadata (if available) to adjust expectation ranges for seasonal pomace."
+    },
+    {
+      "group_label": "Almond Biomass Variability Clumping",
+      "hypothesis": "The high volume of flags in almond products suggests that the reference baseline for 'woody' residues is too narrow to capture the natural variance in hulling and shelling efficiency.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(28)a602",
+        "(28)cfc4",
+        "(28)f0fe",
+        "(28)847b"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "almond shells",
+        "almond hulls",
+        "almond branches"
+      ],
+      "evidently_finding": "107 total flags across almond-derived resources.",
+      "recommended_action": "Update the reference distribution for almond resources to reflect current commercial processing standards."
+    }
+  ]
+}

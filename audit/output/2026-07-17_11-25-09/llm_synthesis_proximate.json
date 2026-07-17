@@ -1,0 +1,121 @@
+{
+  "executive_summary": "The data quality audit of the 'proximate' dataset, comprising 912 records of agricultural biomass analysis, reveals a dataset that is mathematically consistent but significantly lacking in traceability metadata. While the core analytical values for moisture, solids, and ash appear to follow expected stoichiometric relationships (e.g., Moisture + Total Solids = 100%), the dataset suffers from a total absence of analyst identification. The 'analyst_name' field is 100% vacant, and 'analyst_email' is missing for over 51% of the records. Furthermore, the 'created_at' field contains only a single unique timestamp, indicating a bulk migration of legacy data that has stripped the temporal context of the original laboratory sessions.\n\nStatistically, 271 records (approximately 30% of the dataset) were flagged, primarily for low-severity Z-score deviations. These anomalies are heavily concentrated in 'wet' biomass categories such as tomato pomace, grape pomace, and spent yeast. Because proximate analysis values for these high-moisture residues differ drastically from drier lignocellulosic materials like almond shells or wood chips, they frequently trigger outlier detections. However, manual inspection of the samples suggests these are biologically plausible values rather than measurement errors. The primary risk to this dataset is not the accuracy of the values themselves, but the inability to audit the provenance or the specific laboratory personnel responsible for the measurements.",
+  "grouped_issues": [
+    {
+      "group_label": "Complete Loss of Analyst Identity Metadata",
+      "hypothesis": "A system-wide failure in the data ingestion pipeline or an incomplete migration from a legacy LIMS has resulted in the total loss of primary analyst names for all 912 records.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(73)9335",
+        "(55)a0cd",
+        "(55)c24c",
+        "(55)8c83",
+        "(55)afbf",
+        "(55)1963",
+        "(55)1e0d",
+        "(55)edd2",
+        "(55)9fb3",
+        "(55)ac67"
+      ],
+      "affected_parameters": [
+        "analyst_name"
+      ],
+      "affected_resources": [
+        "All resources"
+      ],
+      "evidently_finding": "number_of_empty_columns: 1 (analyst_name)",
+      "recommended_action": "Cross-reference record_ids with original laboratory notebooks or raw PDF exports to recover analyst identities and update the database."
+    },
+    {
+      "group_label": "Partial Missing Contact Metadata",
+      "hypothesis": "Approximately half of the records lack contact information, likely corresponding to specific batches or time periods where data entry protocols were not enforced.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(73)9335",
+        "(55)a0cd",
+        "(55)c24c",
+        "(55)8c83",
+        "(55)afbf",
+        "(55)1963",
+        "(55)1e0d",
+        "(55)edd2",
+        "(55)9fb3",
+        "(55)ac67"
+      ],
+      "affected_parameters": [
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "Various (468 records affected)"
+      ],
+      "evidently_finding": "nans_by_columns: {'analyst_email': 468}",
+      "recommended_action": "Investigate the 468 records missing emails; if they correspond to a specific timeframe, verify if those analysts are still active in the organization."
+    },
+    {
+      "group_label": "High-Moisture Outliers in Tomato Pomace",
+      "hypothesis": "Tomato pomace naturally contains ~80% moisture, which is an extreme outlier compared to the drier woody biomass (shells/stems) that dominate the dataset mean. These are likely valid biological data points.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(55)a0cd",
+        "(55)c24c",
+        "(55)8c83",
+        "(55)1e0d",
+        "(55)edd2",
+        "(55)9fb3",
+        "(55)ac67",
+        "(55)d348",
+        "(55)bfa7"
+      ],
+      "affected_parameters": [
+        "moisture",
+        "total solids",
+        "volatile solids",
+        "ash solids"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "Top anomalous resources: {'tomato pomace': 33}",
+      "recommended_action": "Accept these records as valid, but consider segmenting the proximate analysis database by 'Biomass Type' (Wet vs. Dry) to prevent statistical skew in future audits."
+    },
+    {
+      "group_label": "Statistical Variance in Grape Residues",
+      "hypothesis": "Grape stems show high moisture (70%+) and associated solids variance, typical of fresh vineyard waste but statistically distinct from processed or dried biomass.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(31)2091",
+        "(31)0a4b",
+        "(31)ae33",
+        "(31)9831"
+      ],
+      "affected_parameters": [
+        "moisture",
+        "ash solids",
+        "total solids",
+        "volatile solids"
+      ],
+      "affected_resources": [
+        "grape stem"
+      ],
+      "evidently_finding": "Z-score flagged moisture (70.37) and solids.",
+      "recommended_action": "Validate that 'grape stem' samples were tested 'as-received' rather than 'air-dried'; no correction needed if 'as-received' was the intent."
+    },
+    {
+      "group_label": "Single-Timestamp Bulk Upload Discovery",
+      "hypothesis": "The presence of only one 'created_at' timestamp for 912 records indicates a batch upload, effectively masking the actual historical timeline of the laboratory experiments.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "All 912 records"
+      ],
+      "affected_parameters": [
+        "created_at"
+      ],
+      "affected_resources": [
+        "All resources"
+      ],
+      "evidently_finding": "number_uniques_by_columns: {'created_at': 1}",
+      "recommended_action": "Retrieve actual 'Date of Analysis' from raw lab data and populate a 'sample_date' column to restore temporal trends."
+    }
+  ],
+  "flagged_count": 271
+}

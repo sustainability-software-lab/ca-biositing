@@ -1,0 +1,27 @@
+---
+title: "Audit Target: proximate"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The data quality audit of the 'proximate' dataset, comprising 912 records of agricultural biomass analysis, reveals a dataset that is mathematically consistent but significantly lacking in traceability metadata. While the core analytical values for moisture, solids, and ash appear to follow expected stoichiometric relationships (e.g., Moisture + Total Solids = 100%), the dataset suffers from a total absence of analyst identification. The 'analyst_name' field is 100% vacant, and 'analyst_email' is missing for over 51% of the records. Furthermore, the 'created_at' field contains only a single unique timestamp, indicating a bulk migration of legacy data that has stripped the temporal context of the original laboratory sessions.
+
+Statistically, 271 records (approximately 30% of the dataset) were flagged, primarily for low-severity Z-score deviations. These anomalies are heavily concentrated in 'wet' biomass categories such as tomato pomace, grape pomace, and spent yeast. Because proximate analysis values for these high-moisture residues differ drastically from drier lignocellulosic materials like almond shells or wood chips, they frequently trigger outlier detections. However, manual inspection of the samples suggests these are biologically plausible values rather than measurement errors. The primary risk to this dataset is not the accuracy of the values themselves, but the inability to audit the provenance or the specific laboratory personnel responsible for the measurements.
+
+## Evidently Profile
+
+<iframe src="../evidently/proximate.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Custom Visuals
+
+Discovered assets:
+
+- [proximate_distribution.html](../assets/exports/plots/composition/proximate_distribution.html)
+- [proximate_distribution_dashboard.html](../assets/exports/plots/composition/proximate_distribution_dashboard.html)
+
+:::

@@ -22,13 +22,18 @@ register(AuditTarget(
             fr.qc_pass,
             fr.created_at,
             p.name AS product_name,
-            u.name AS unit
+            u.name AS unit,
+            prov.codename    AS provider_codename,
+            fr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.fermentation_record fr
         JOIN public.resource r ON fr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(fr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.strain s ON fr.strain_id = s.id
+        LEFT JOIN public.prepared_sample ps ON fr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE fr.qc_pass != 'fail'
     """,
     group_by_cols=["resource_name", "strain_name", "product_name", "unit"],

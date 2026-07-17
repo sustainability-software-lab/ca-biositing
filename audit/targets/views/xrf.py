@@ -61,7 +61,9 @@ register(AuditTarget(
             xr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            xr.created_at
+            xr.created_at,
+            prov.codename    AS provider_codename,
+            xr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.xrf_record xr
         JOIN public.resource r ON xr.resource_id = r.id
         JOIN public.observation o
@@ -70,6 +72,9 @@ register(AuditTarget(
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON xr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON xr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE
             xr.qc_pass != 'fail'
             AND LOWER(r.name) NOT IN (

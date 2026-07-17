@@ -1,0 +1,26 @@
+---
+title: "Audit Target: icp"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the ICP (Inductively Coupled Plasma) elemental analysis dataset reveals a dataset that is generally consistent with legacy agricultural research standards, though it exhibits several systemic data entry gaps and physical impossibilities. A total of 147 observations were flagged, all categorized as 'LOW' severity, primarily involving expected variance in mineral concentrations for processing residues such as tomato pomace and almond hulls. The most significant technical concern is the presence of negative 'observed_value' readings (minimum -244.0 mg/kg), which, while common in raw ICP-OES outputs due to background subtraction, should be corrected to zero or a 'Below Detection Limit' (BDL) threshold for research publication.
+
+From a metadata perspective, the dataset suffers from a complete absence of 'analyst_name' records and a high rate of missing 'analyst_email' entries. While the 'qc_pass' column indicates all records met internal standards, the lack of traceability to specific lab personnel limits auditability. Furthermore, the variance observed in Silicon (Si) and alkali metals (Na, K) in residues like tomato pomace likely reflects environmental factors such as soil contamination or wash-water chemistry rather than analytical error, aligning with the provided domain context. Recommended actions focus on data normalization for BDL values and improving metadata capture for future laboratory sessions.
+
+## Evidently Profile
+
+<iframe src="../evidently/icp.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Custom Visuals
+
+Discovered assets:
+
+- [icp_distribution.html](../assets/exports/plots/composition/icp_distribution.html)
+
+:::

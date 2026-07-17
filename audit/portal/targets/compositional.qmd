@@ -1,0 +1,29 @@
+---
+title: "Audit Target: compositional"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The data quality audit of the compositional biomass dataset revealed a significant number of low-severity statistical anomalies (249 flagged observations) across 723 records. The primary focus of these flags is centered on structural carbohydrates (xylan, xylose, glucan, and glucose) and lignin content within specific agricultural residues, most notably almond-derived biomass and fruit pomaces. While the anomalies are classified as low severity based on Z-scores (ranging from 1.0 to 1.7), they indicate a consistent deviation from the reference baseline, suggesting either a shift in the feedstock's chemical profile or a systematic difference in the laboratory's analytical calibration compared to the historical reference data.
+
+Beyond statistical deviations, the dataset exhibits substantial structural metadata deficiencies. There is a complete absence of qualitative 'notes' and 'analyst_name' entries, and the 'created_at' field is constant across all records, indicating a batch-upload process that failed to capture temporal or personnel-specific variability. Furthermore, the simultaneous reporting of polymer (e.g., glucan) and monomer (e.g., glucose) values for the same samples shows a high degree of correlation, which, if not properly accounted for with stoichiometric conversion factors, may introduce redundancy in downstream multivariate modeling. Addressing these metadata gaps is essential for ensuring the traceability and reproducibility of the biomass characterization results.
+
+## Evidently Profile
+
+<iframe src="../evidently/compositional.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Custom Visuals
+
+Discovered assets:
+
+- [biomass_composition_3d.png](../assets/exports/plots/biomass_composition_3d.png)
+- [biomass_composition_distribution.png](../assets/exports/plots/biomass_composition_distribution.png)
+- [compositional_distribution.html](../assets/exports/plots/composition/compositional_distribution.html)
+- [portal_biomass_composition_distribution.html](../assets/exports/plots/composition/portal_biomass_composition_distribution.html)
+
+:::

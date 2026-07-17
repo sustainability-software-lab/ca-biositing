@@ -29,13 +29,18 @@ register(AuditTarget(
             cr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            cr.created_at
+            cr.created_at,
+            prov.codename    AS provider_codename,
+            cr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.compositional_record cr
         JOIN public.resource r ON cr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(cr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON cr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON cr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE cr.qc_pass != 'fail'
 
         UNION ALL
@@ -51,13 +56,18 @@ register(AuditTarget(
             pr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            pr.created_at
+            pr.created_at,
+            prov.codename    AS provider_codename,
+            pr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.proximate_record pr
         JOIN public.resource r ON pr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(pr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON pr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON pr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE pr.qc_pass != 'fail'
 
         UNION ALL
@@ -73,13 +83,18 @@ register(AuditTarget(
             ur.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            ur.created_at
+            ur.created_at,
+            prov.codename    AS provider_codename,
+            ur.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.ultimate_record ur
         JOIN public.resource r ON ur.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(ur.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON ur.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON ur.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE ur.qc_pass != 'fail'
         UNION ALL
 
@@ -94,13 +109,18 @@ register(AuditTarget(
             xr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            xr.created_at
+            xr.created_at,
+            prov.codename    AS provider_codename,
+            xr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.xrf_record xr
         JOIN public.resource r ON xr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(xr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON xr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON xr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE xr.qc_pass != 'fail'
 
         UNION ALL
@@ -116,13 +136,18 @@ register(AuditTarget(
             ir.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            ir.created_at
+            ir.created_at,
+            prov.codename    AS provider_codename,
+            ir.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.icp_record ir
         JOIN public.resource r ON ir.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(ir.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON ir.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON ir.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE ir.qc_pass != 'fail'
 
         UNION ALL
@@ -138,13 +163,18 @@ register(AuditTarget(
             cr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            cr.created_at
+            cr.created_at,
+            prov.codename    AS provider_codename,
+            cr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.calorimetry_record cr
         JOIN public.resource r ON cr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(cr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON cr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON cr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE cr.qc_pass != 'fail'
 
         UNION ALL
@@ -160,13 +190,18 @@ register(AuditTarget(
             xr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            xr.created_at
+            xr.created_at,
+            prov.codename    AS provider_codename,
+            xr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.xrd_record xr
         JOIN public.resource r ON xr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(xr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON xr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON xr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE xr.qc_pass != 'fail'
 
         UNION ALL
@@ -182,13 +217,18 @@ register(AuditTarget(
             fr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            fr.created_at
+            fr.created_at,
+            prov.codename    AS provider_codename,
+            fr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.ftnir_record fr
         JOIN public.resource r ON fr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(fr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON fr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON fr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE fr.qc_pass != 'fail'
 
         UNION ALL
@@ -204,13 +244,18 @@ register(AuditTarget(
             pr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            pr.created_at
+            pr.created_at,
+            prov.codename    AS provider_codename,
+            pr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.pretreatment_record pr
         JOIN public.resource r ON pr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(pr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON pr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON pr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE pr.qc_pass != 'fail'
     """,
 

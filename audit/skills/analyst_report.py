@@ -38,10 +38,12 @@ def generate_analyst_report(
 
     if flagged_observations:
         md += "## 🚩 Flagged Observations (Top 100)\n\n"
-        md += "| Record ID | Parameter | Value | Z-Score | Severity |\n"
-        md += "|-----------|-----------|-------|---------|----------|\n"
+        md += "| Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |\n"
+        md += "|-----------|----------|----------|-------------|-----------|-------|---------|----------|\n"
         for obs in flagged_observations[:100]:
-            md += f"| {obs.record_id} | {obs.parameter_name} | {obs.observed_value:.4f} | {obs.z_score:.2f} | {obs.severity} |\n"
+            provider = obs.provider_codename or "—"
+            sample_date = obs.sample_date or "—"
+            md += f"| {obs.record_id} | {obs.resource_name} | {provider} | {sample_date} | {obs.parameter_name} | {obs.observed_value:.4f} | {obs.z_score:.2f} | {obs.severity} |\n"
 
         if len(flagged_observations) > 100:
             md += f"\n*...and {len(flagged_observations) - 100} more observations. See `flagged_{target_name}.csv` for full data.*\n"

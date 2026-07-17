@@ -1,0 +1,122 @@
+{
+  "executive_summary": "The data quality audit for the `mv_biomass_composition` dataset reveals significant systemic issues that compromise the reliability of the compositional profiles. While the dataset has expanded from 760 to 6,366 records, this growth is accompanied by a severe lack of metadata traceability—specifically, a 100% missing rate for analyst names and high attrition in analyst emails. The most critical technical findings include physically impossible negative values (min: -244.0) and extreme outliers (max: 161,000) that suggest severe unit conversion errors or uncorrected instrumental drift in the measurement of glucose/xylose yields and solids.\n\nAnomalies are concentrated in grape pomace and almond processing byproducts (hulls and shells). The high frequency of 'LOW' severity flags for structural carbohydrates (xylan, lignin) in almond hulls suggests a systematic shift in either the sample population or the analytical protocol (e.g., NREL LAP deviations) compared to the reference set. Furthermore, the presence of negative values for 'observed_value' indicates a failure in blanking or baseline subtraction processes during HPLC or ICP-OES analysis, necessitating a full review of the laboratory's QC procedures for those batches.",
+  "grouped_issues": [
+    {
+      "group_label": "Physically Impossible Negative Values",
+      "hypothesis": "Automated blank subtraction or baseline correction logic in the instrumental software (likely HPLC for sugars or ICP for metals) is over-correcting, or the zero-point calibration has drifted significantly.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(03)677d",
+        "(03)8660",
+        "(03)ad41",
+        "(03)b32d",
+        "(03)d213",
+        "(03)e36d",
+        "(03)e546"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells",
+        "grape pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric (min: -244.0)",
+      "recommended_action": "Identify all records with negative observed_values and cross-reference them with raw chromatograms/spectral data to correct baseline subtraction logic."
+    },
+    {
+      "group_label": "Unit Scaling Mismatch (mg/kg vs %)",
+      "hypothesis": "Data for yields and solids are being reported in inconsistent units (e.g., mg/kg instead of wt% or g/100g), resulting in values exceeding the logical 100% (or 1000 mg/g) limit.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(13)8405",
+        "(13)b6b6",
+        "(13)ce37",
+        "(15)0b07",
+        "(15)3f87"
+      ],
+      "affected_parameters": [
+        "glucose_yld",
+        "xylose_yld",
+        "total solids",
+        "volatile solids"
+      ],
+      "affected_resources": [
+        "grape pomace",
+        "almond hulls",
+        "almond shells"
+      ],
+      "evidently_finding": "ColumnSummaryMetric (max: 161000.0)",
+      "recommended_action": "Standardize all yield and solid measurements to wt% or g/kg and apply a capping filter at 100% (1,000,000 ppm) for mass balance verification."
+    },
+    {
+      "group_label": "Metadata Attrition and Traceability Failure",
+      "hypothesis": "The ETL pipeline from the Laboratory Information Management System (LIMS) is failing to map analyst metadata fields, rendering 100% of new records untraceable to specific researchers.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(04)68e4",
+        "(13)29f0",
+        "(15)797a"
+      ],
+      "affected_parameters": [
+        "analyst_name",
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "All Resources"
+      ],
+      "evidently_finding": "DatasetSummaryMetric (number_of_empty_columns: 1, nans_by_columns)",
+      "recommended_action": "Repair the database join or API call responsible for analyst metadata and backfill the missing analyst identifiers from lab logbooks."
+    },
+    {
+      "group_label": "Systematic Structural Carbohydrate Deviation",
+      "hypothesis": "Consistent low-severity deviations in almond and walnut byproducts suggest a change in sample processing (e.g., drying temperature or milling fineness) that affects acid hydrolysis efficiency.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(03)8660",
+        "(03)b32d",
+        "(03)d213",
+        "(04)68e4",
+        "(04)c1d7",
+        "(13)aaf9",
+        "(15)797a"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose",
+        "lignin",
+        "glucan"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells",
+        "walnut shells"
+      ],
+      "evidently_finding": "Flagged Observation Summary (LOW severity clustering)",
+      "recommended_action": "Audit the sample preparation protocol for the 03, 04, and 13 batches to ensure compliance with NREL/standard biomass characterization protocols."
+    },
+    {
+      "group_label": "Elemental Analysis Concentration Spikes",
+      "hypothesis": "High anomaly counts in transition metals and sulfur suggest possible contamination during the grinding process (wear on stainless steel components) or soil contamination in field-collected grape pomace.",
+      "priority": "Medium",
+      "affected_record_ids": [],
+      "affected_parameters": [
+        "cu",
+        "fe",
+        "mn",
+        "k",
+        "s"
+      ],
+      "affected_resources": [
+        "grape pomace",
+        "spent oak chips"
+      ],
+      "evidently_finding": "Top anomalous parameters (cu, fe, mn, k, s)",
+      "recommended_action": "Perform ash-content correlation tests; if high metal levels correlate with high ash/acid-insoluble residue, the cause is likely soil silica/mineral contamination."
+    }
+  ]
+}

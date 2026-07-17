@@ -1,0 +1,102 @@
+{
+  "executive_summary": "The proximate analysis dataset for agricultural biomass shows significant metadata deficiencies alongside statistical outliers that appear to be resource-specific rather than indicative of measurement error. The most critical finding is the complete absence of analyst names and a 51% missing rate for analyst emails, which severely compromises the traceability and accountability of the laboratory results. Furthermore, the 'created_at' timestamp column contains only a single unique value, suggesting a batch-processing export that has stripped the original temporal resolution of the samples.\n\nFrom a compositional standpoint, the flagged anomalies primarily highlight the physiological diversity of the biomass types included. High-moisture residues like tomato pomace (approx. 80-81% moisture) and grape stems (approx. 70% moisture) were flagged as anomalies against a dataset likely dominated by drier woody residues such as almond shells and branches. While these records are statistically distinct (z-scores > 1.0), they represent plausible biological values for these specific agricultural wastes. The tight inverse relationship between moisture and total solids across these samples indicates internal consistency in the laboratory drying protocols.",
+  "grouped_issues": [
+    {
+      "group_label": "Critical Metadata Nulls",
+      "hypothesis": "Systemic failure in data entry or an export script error that failed to map user identity fields from the LIMS to the research dataset.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(73)9335",
+        "(55)a0cd",
+        "(55)c24c",
+        "(55)8c83",
+        "(55)afbf",
+        "(55)1963",
+        "(31)2091"
+      ],
+      "affected_parameters": [
+        "analyst_name",
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "All Resources"
+      ],
+      "evidently_finding": "100% missing values for analyst_name; 468 missing for analyst_email",
+      "recommended_action": "Investigate LIMS export logs to recover analyst identity; implement mandatory field constraints for future data uploads."
+    },
+    {
+      "group_label": "Tomato Pomace Compositional Variance",
+      "hypothesis": "These records are likely biologically accurate for wet pomace; they are flagged as anomalies only because the global mean is skewed by drier woody biomass (e.g., almond hulls/shells).",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(55)a0cd",
+        "(55)c24c",
+        "(55)8c83",
+        "(55)1e0d",
+        "(55)edd2",
+        "(55)9fb3",
+        "(55)ac67",
+        "(55)d348",
+        "(55)bfa7"
+      ],
+      "affected_parameters": [
+        "moisture",
+        "total solids",
+        "volatile solids",
+        "ash solids"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "Z-scores between 1.0 and 2.0 for multiple proximate parameters",
+      "recommended_action": "Transition from global Z-score flagging to resource-specific Z-scores to account for inherent physiological differences between succulent and woody biomass."
+    },
+    {
+      "group_label": "High-Moisture/High-Ash Residue Profile",
+      "hypothesis": "Residual juice and inorganic soil/processing contaminants in stems and yeast lead to higher moisture and ash content than standard lignocellulosic feedstocks.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(31)2091",
+        "(31)0a4b",
+        "(31)ae33",
+        "(31)9831",
+        "(d2)dc17",
+        "(d2)7df7",
+        "(d2)8f44",
+        "(d2)0e21"
+      ],
+      "affected_parameters": [
+        "moisture",
+        "total solids",
+        "ash solids",
+        "volatile solids"
+      ],
+      "affected_resources": [
+        "grape stem",
+        "spent yeast"
+      ],
+      "evidently_finding": "Elevated moisture and ash levels relative to dataset mean",
+      "recommended_action": "Cross-reference these results with 'ash solids' protocols to ensure sample washing or preparation didn't introduce bias, though values appear plausible."
+    },
+    {
+      "group_label": "Loss of Temporal Resolution",
+      "hypothesis": "The dataset was likely exported as a single batch, and the 'created_at' field reflects the export time rather than the sample analysis time.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(73)9335",
+        "(55)a0cd",
+        "(55)c24c",
+        "(31)2091",
+        "(d2)dc17"
+      ],
+      "affected_parameters": [
+        "created_at"
+      ],
+      "affected_resources": [
+        "All Resources"
+      ],
+      "evidently_finding": "1 unique value in created_at for 912 records",
+      "recommended_action": "Re-export data ensuring that the actual 'Analysis Date' or 'Sample Collection Date' is preserved to allow for longitudinal quality tracking."
+    }
+  ]
+}

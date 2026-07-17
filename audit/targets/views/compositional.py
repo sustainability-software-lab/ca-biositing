@@ -105,7 +105,9 @@ register(AuditTarget(
             cr.note,
             c.name          AS analyst_name,
             c.email         AS analyst_email,
-            cr.created_at
+            cr.created_at,
+            prov.codename    AS provider_codename,
+            cr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.compositional_record cr
         JOIN public.resource r ON cr.resource_id = r.id
         JOIN public.observation o
@@ -114,6 +116,9 @@ register(AuditTarget(
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.contact c ON cr.analyst_id = c.id
+        LEFT JOIN public.prepared_sample ps ON cr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         JOIN qc_sums qs
             ON qs.resource_id = cr.resource_id
             AND COALESCE(qs.experiment_id, -1) = COALESCE(cr.experiment_id, -1)

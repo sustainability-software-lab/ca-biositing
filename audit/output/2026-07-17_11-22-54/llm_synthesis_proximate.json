@@ -1,0 +1,92 @@
+{
+  "executive_summary": "The proximate analysis dataset, comprising 912 records of agricultural biomass residues, shows a high degree of internal physical consistency but suffers from significant metadata gaps and distributional shifts. A primary concern is the total absence of data in the 'analyst_name' field and a 51% missing rate in 'analyst_email'. This lack of attribution poses a risk to the traceability and auditability of the laboratory results, especially since 'qc_pass' flags are present but not tied to a specific technician.\n\nStatistical anomalies are predominantly concentrated in high-moisture resources such as tomato pomace, grape pomace, and spent yeast. The flags (mostly 'LOW' severity) appear to be driven by a global Z-score calculation that does not account for the natural biological variance between different biomass types. While the mass balances (Moisture + Total Solids ≈ 100%) for these resources are physically sound, their deviation from the mean of woodier biomass (like almond shells or walnut sticks) triggers frequent statistical warnings. Future audits should employ resource-specific thresholds to reduce false-positive flags in high-moisture residues.",
+  "grouped_issues": [
+    {
+      "group_label": "Missing Laboratory Attribution",
+      "hypothesis": "Failure in the data ingestion pipeline or LIMS export process resulted in the loss of analyst identity and partial loss of contact metadata.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(73)9335",
+        "(55)a0cd",
+        "(55)c24c",
+        "(55)8c83"
+      ],
+      "affected_parameters": [
+        "analyst_name",
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "All"
+      ],
+      "evidently_finding": "DatasetSummaryMetric: 'analyst_name' has 912 missing values (100%)",
+      "recommended_action": "Investigate the LIMS export script to ensure the 'analyst_name' field is correctly mapped and re-import the missing attribution data to maintain ISO/IEC 17025 compliance."
+    },
+    {
+      "group_label": "High-Moisture Residue Statistical Deviation",
+      "hypothesis": "The global statistical model is biased toward dry biomass (shells/wood). High-moisture pomace and stems are correctly measured but appear as outliers relative to the mean.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(55)a0cd",
+        "(55)c24c",
+        "(55)8c83",
+        "(55)1e0d",
+        "(55)edd2",
+        "(55)9fb3",
+        "(55)ac67",
+        "(55)d348",
+        "(55)bfa7",
+        "(55)afbf"
+      ],
+      "affected_parameters": [
+        "moisture",
+        "total solids",
+        "volatile solids",
+        "ash solids"
+      ],
+      "affected_resources": [
+        "tomato pomace",
+        "grape stem"
+      ],
+      "evidently_finding": "High Z-scores for moisture (80.74%) and total solids (19.26%) relative to global dataset mean.",
+      "recommended_action": "Recalibrate anomaly detection to use resource-specific medians. The current mass-balance (Moisture + TS = 100) confirms these values are likely accurate despite their deviation from the global mean."
+    },
+    {
+      "group_label": "Elevated Mineral Content in Microbial Biomass",
+      "hypothesis": "Spent yeast naturally contains higher mineral/ash content compared to lignocellulosic biomass due to growth media residuals and cellular composition.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(d2)7df7",
+        "(d2)8f44",
+        "(d2)0e21"
+      ],
+      "affected_parameters": [
+        "ash solids",
+        "volatile solids"
+      ],
+      "affected_resources": [
+        "spent yeast"
+      ],
+      "evidently_finding": "Z-score flags for elevated ash solids (10.37%) in spent yeast samples.",
+      "recommended_action": "Verify if the yeast was washed prior to analysis. If this is 'spent' brewery/distillery yeast, the ash content is expected to be higher than raw plant matter; document this in the 'note' field."
+    },
+    {
+      "group_label": "Metadata Stagnation / Batch Processing Artifacts",
+      "hypothesis": "All 912 records were likely uploaded in a single batch or the 'created_at' field reflects the database migration time rather than the actual sample analysis time.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(73)9335",
+        "(55)a0cd",
+        "(31)2091"
+      ],
+      "affected_parameters": [
+        "created_at",
+        "unit"
+      ],
+      "affected_resources": [
+        "All"
+      ],
+      "evidently_finding": "number_uniques_by_columns: 'created_at' = 1, 'unit' = 1",
+      "recommended_action": "Update the data schema to include a 'test_date' or 'analysis_timestamp' distinct from the database 'created_at' field to allow for longitudinal quality monitoring."
+    }
+  ]
+}

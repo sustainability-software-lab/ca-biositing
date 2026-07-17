@@ -41,7 +41,8 @@ register(AuditTarget(
             prov.codename   AS provider_codename,
             fs.collection_timestamp,
             fs.harvest_date,
-            cr.created_at
+            cr.created_at,
+            cr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.compositional_record cr
         JOIN public.resource r ON cr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(cr.record_id)

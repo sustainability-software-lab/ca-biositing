@@ -22,13 +22,18 @@ register(AuditTarget(
             gr.qc_pass,
             gr.created_at,
             p.name AS parameter_name,
-            u.name AS unit
+            u.name AS unit,
+            prov.codename    AS provider_codename,
+            gr.created_at    AS sample_date  -- fallback: no dedicated sample_date column on this record type
         FROM public.gasification_record gr
         JOIN public.resource r ON gr.resource_id = r.id
         JOIN public.observation o ON lower(o.record_id) = lower(gr.record_id)
         JOIN public.parameter p ON o.parameter_id = p.id
         LEFT JOIN public.unit u ON o.unit_id = u.id
         LEFT JOIN public.decon_vessel dv ON gr.reactor_type_id = dv.id
+        LEFT JOIN public.prepared_sample ps ON gr.prepared_sample_id = ps.id
+        LEFT JOIN public.field_sample fs    ON ps.field_sample_id = fs.id
+        LEFT JOIN public.provider prov      ON fs.provider_id = prov.id
         WHERE gr.qc_pass != 'fail'
     """,
     group_by_cols=["resource_name", "reactor_type", "parameter_name", "unit"],

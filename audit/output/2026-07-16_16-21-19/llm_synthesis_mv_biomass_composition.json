@@ -1,0 +1,126 @@
+{
+  "executive_summary": "The audit of the `mv_biomass_composition` dataset, comprising 6,366 records, reveals significant data quality concerns, primarily centered on extreme statistical outliers and a total lack of analyst metadata. While the dataset maintains structural integrity regarding unique record IDs, the observed values for biomass components show a massive range (from -244 to 161,000), which is physically impossible for composition percentages or yields. The presence of negative values suggests systemic errors in baseline subtraction or calibration in the analytical software, while the extremely high maximums likely indicate unit conversion failures (e.g., reporting mg/kg values in columns expected to be percentages).\n\nFurthermore, the dataset suffers from a complete absence of analyst names and a high degree of missingness in the 'note' and 'analyst_email' fields. This metadata gap severely limits the ability to perform root-cause investigations for the 132 high-severity anomalies identified, particularly within the 'glucose_yld' and 'volatile solids' parameters. Resource-specific analysis indicates that grape pomace and almond-derived biomass represent the bulk of the flagged records, suggesting that the analytical protocols for these specific high-sugar and high-fiber materials may require tighter standardization or specialized reference ranges.",
+  "grouped_issues": [
+    {
+      "group_label": "Impossible Negative Composition Values",
+      "hypothesis": "Baseline subtraction errors in HPLC or GC-FID software, or incorrect blank corrections in spectrophotometry, resulting in negative concentration estimates for trace components.",
+      "priority": "High",
+      "affected_record_ids": [
+        "current_min_value_record"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "Various"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: min value of -244.0",
+      "recommended_action": "Audit the raw integration files for all records with negative 'observed_value' and implement a zero-floor constraint for composition parameters."
+    },
+    {
+      "group_label": "Unit Scale Mismatch in Yield Reporting",
+      "hypothesis": "Data likely reported in mg/kg or ppm instead of standardized dry-weight percentage (%), causing values to exceed the logical 0-100 range by several orders of magnitude.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(13)8405",
+        "(15)0b07",
+        "(15)3f87"
+      ],
+      "affected_parameters": [
+        "glucose_yld",
+        "xylose_yld",
+        "observed_value"
+      ],
+      "affected_resources": [
+        "grape pomace",
+        "tomato pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: max value of 161000.0 vs mean 1514.54",
+      "recommended_action": "Standardize all yield parameters to dry-weight percentage and apply a scale transformation (x/10000) to records exceeding 1000."
+    },
+    {
+      "group_label": "Almond Biomass Sugar Profile Variance",
+      "hypothesis": "High Z-scores in almond sugar components (14-23%) may reflect natural varietal differences or seasonal harvest moisture fluctuations not captured in the reference statistics.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(03)8660",
+        "(03)e546",
+        "(04)c1d7",
+        "(13)2c76",
+        "(13)6f70",
+        "(15)0b07"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose",
+        "glucan",
+        "glucose"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells"
+      ],
+      "evidently_finding": "Flagged Observation: High frequency of sugar-related anomalies in almond biomass",
+      "recommended_action": "Review harvest date metadata to determine if 'High' values correlate with specific seasonal windows; update reference ranges for almond-specific cultivars."
+    },
+    {
+      "group_label": "Proximate Analysis Sum-of-Fractions Inconsistency",
+      "hypothesis": "Potential failure in the 'Total Solids = 100 - Moisture' calculation or overlap between volatile solids and ash content reporting.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "Top anomalous parameters: volatile solids (117)"
+      ],
+      "affected_parameters": [
+        "volatile solids",
+        "total solids",
+        "moisture"
+      ],
+      "affected_resources": [
+        "grape pomace",
+        "cotton stem mix"
+      ],
+      "evidently_finding": "Flagged Observation: 117 anomalies in volatile solids",
+      "recommended_action": "Perform a cross-column validation to ensure (Moisture + Total Solids) = 100% and (Volatile Solids + Ash) <= Total Solids."
+    },
+    {
+      "group_label": "Elemental Micronutrient Spikes",
+      "hypothesis": "High elemental readings in straws and chips often result from soil contamination during harvest or metal leaching from processing equipment (grinders/mills).",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "Top anomalous parameters: s (77), cu (75)"
+      ],
+      "affected_parameters": [
+        "s",
+        "cu",
+        "fe",
+        "mn",
+        "k"
+      ],
+      "affected_resources": [
+        "spent oak chips",
+        "wheat straw"
+      ],
+      "evidently_finding": "Flagged Observation: High counts for elemental parameters (S, Cu, Fe, Mn, K)",
+      "recommended_action": "Investigate preparation protocols for spent oak chips; check if samples were washed prior to ICP-OES/MS analysis."
+    },
+    {
+      "group_label": "Missing Analytical Traceability Metadata",
+      "hypothesis": "Integration failure between the laboratory LIMS and the central data repository, or omission of analyst identification during manual bulk uploads.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "all_records"
+      ],
+      "affected_parameters": [
+        "analyst_name",
+        "analyst_email",
+        "note"
+      ],
+      "affected_resources": [
+        "All Resources"
+      ],
+      "evidently_finding": "DatasetSummaryMetric: 6366 missing values in analyst_name (100% missingness)",
+      "recommended_action": "Re-sync the 'mv_biomass_composition' view with the source LIMS to recover analyst identities and investigation notes."
+    }
+  ]
+}

@@ -1,0 +1,114 @@
+{
+  "executive_summary": "The audit of the ICP (Inductively Coupled Plasma) elemental analysis dataset reveals a dataset that is generally consistent with legacy agricultural research standards, though it exhibits several systemic data entry gaps and physical impossibilities. A total of 147 observations were flagged, all categorized as 'LOW' severity, primarily involving expected variance in mineral concentrations for processing residues such as tomato pomace and almond hulls. The most significant technical concern is the presence of negative 'observed_value' readings (minimum -244.0 mg/kg), which, while common in raw ICP-OES outputs due to background subtraction, should be corrected to zero or a 'Below Detection Limit' (BDL) threshold for research publication.\n\nFrom a metadata perspective, the dataset suffers from a complete absence of 'analyst_name' records and a high rate of missing 'analyst_email' entries. While the 'qc_pass' column indicates all records met internal standards, the lack of traceability to specific lab personnel limits auditability. Furthermore, the variance observed in Silicon (Si) and alkali metals (Na, K) in residues like tomato pomace likely reflects environmental factors such as soil contamination or wash-water chemistry rather than analytical error, aligning with the provided domain context. Recommended actions focus on data normalization for BDL values and improving metadata capture for future laboratory sessions.",
+  "grouped_issues": [
+    {
+      "group_label": "Negative Concentration Values (BDL Noise)",
+      "hypothesis": "Small negative values in ICP datasets typically result from instrument noise or background subtraction of a blank that was higher than the sample concentration. These represent values below the limit of detection.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "Reference Min: -189.25",
+        "Current Min: -244.00"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "Multiple Resources"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: observed_value minimum is negative",
+      "recommended_action": "Apply a floor function to the dataset to convert all negative values to 0.0 or the specific instrument Detection Limit (DL) to ensure physical validity."
+    },
+    {
+      "group_label": "Systematic Metadata Omission (Traceability)",
+      "hypothesis": "The 100% omission of 'analyst_name' suggests a failure in the data ingestion pipeline or a legacy migration where personnel data was decoupled from the analytical results.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "All 668 records (analyst_name)"
+      ],
+      "affected_parameters": [
+        "analyst_name",
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "All resources"
+      ],
+      "evidently_finding": "DatasetSummaryMetric: number_of_missing_values (1418)",
+      "recommended_action": "Cross-reference record_ids with original laboratory notebooks or LIMS export logs to restore analyst identity for traceability compliance."
+    },
+    {
+      "group_label": "Tomato Pomace Mineral Variance",
+      "hypothesis": "Variations in Sulfur, Sodium, and Potassium in tomato pomace are frequently linked to specific processing conditions, including the use of lye or salt in skin removal and differences in wash-water source.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(26)0be0",
+        "(69)66e5",
+        "(69)fb3a",
+        "(69)7ba0",
+        "(69)eb00",
+        "(6d)a6af",
+        "(6d)c741"
+      ],
+      "affected_parameters": [
+        "s",
+        "na",
+        "k",
+        "mg",
+        "ca"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: parameter_name distribution (s, na, k)",
+      "recommended_action": "None required; treat as natural process variation. Monitor 'na' levels if these samples are intended for soil amendment studies to ensure they meet salinity guidelines."
+    },
+    {
+      "group_label": "Soil Incursion Indicators (Si/Al/Fe)",
+      "hypothesis": "Elevated Silicon, Aluminum, and Iron in agricultural residues typically indicate soil contamination (grit or dust) adhering to the biomass during harvest or outdoor storage.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(69)c905",
+        "(69)3b52",
+        "(26)7272"
+      ],
+      "affected_parameters": [
+        "si",
+        "al",
+        "fe",
+        "ti"
+      ],
+      "affected_resources": [
+        "tomato pomace",
+        "almond hulls",
+        "almond shells"
+      ],
+      "evidently_finding": "Flagged Observation Summary: Top anomalous parameters (fe, si)",
+      "recommended_action": "Treat Si z-scores between 3-5 as expected environmental noise. If Si/Al ratios are consistent with local soil profiles, no data correction is necessary."
+    },
+    {
+      "group_label": "Micronutrient and Trace Element Flux",
+      "hypothesis": "Variance in trace elements like Manganese, Copper, and Zinc is driven by soil composition and fertilization history. The low severity z-scores (1.0-2.4) indicate these are within the expected biological range for these biomass types.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(26)a23d",
+        "(69)1bde",
+        "(69)8315",
+        "(69)dd28",
+        "(69)0335",
+        "(69)aa3d"
+      ],
+      "affected_parameters": [
+        "mn",
+        "cu",
+        "zn",
+        "nd"
+      ],
+      "affected_resources": [
+        "tomato pomace",
+        "almond hulls"
+      ],
+      "evidently_finding": "Flagged Observation Summary: Top anomalous parameters (mn, cu, zn, nd)",
+      "recommended_action": "None. These values are statistically significant deviations from the mean but biologically plausible."
+    }
+  ],
+  "flagged_count": 147
+}
