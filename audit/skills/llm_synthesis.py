@@ -53,7 +53,8 @@ def run_llm_synthesis(
         top_resources = obs_df['resource_name'].value_counts().head(10).to_dict()
         severity_counts = obs_df['severity'].value_counts().to_dict()
         sample_records = obs_df.head(20)[
-            ['record_id','resource_name','parameter_name','observed_value','z_score','severity','note']
+            ['record_id','resource_name','parameter_name','observed_value','z_score','severity',
+             'analyst_name','analyst_email','provider_codename','sample_date','note']
         ].to_markdown(index=False)
     else:
         top_params = {}
@@ -84,6 +85,11 @@ Your task:
    "Below-detection-limit zeros in XRF analysis").
 3. For each group, assign a priority (High/Medium/Low), list affected record IDs
    (up to 10), and recommend a specific action.
+4. When analyst_name or analyst_email is present, reference the analyst in your hypothesis.
+   Do NOT flag "missing analyst attribution" for records where analyst_email is populated.
+5. When provider_codename is present, group anomalies by provider where relevant and note
+   cross-provider patterns.
+6. When sample_date is present, note temporal clustering of anomalies where relevant.
 """
 
     result = client.chat.completions.create(
