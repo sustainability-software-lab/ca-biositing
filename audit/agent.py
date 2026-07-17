@@ -218,6 +218,8 @@ class AuditorAgent:
 if __name__ == "__main__":
     import argparse
     import audit.targets.views  # Trigger registration
+    from audit.targets.registry import load_adhoc_targets
+    load_adhoc_targets()        # Load dynamic ad-hoc targets
 
     parser = argparse.ArgumentParser(description="CA Biositing Auditor Agent")
     parser.add_argument("--profile", action="store_true", help="Run full statistical profiling (ydata-profiling)")

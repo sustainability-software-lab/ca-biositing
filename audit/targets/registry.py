@@ -1,4 +1,7 @@
+import importlib
+import pkgutil
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Optional, Dict, List
 
 @dataclass
@@ -20,3 +23,21 @@ REGISTRY: Dict[str, AuditTarget] = {}
 
 def register(target: AuditTarget) -> None:
     REGISTRY[target.name] = target
+
+def load_adhoc_targets():
+    """
+    Dynamically discover and register audit targets in the adhoc directory.
+    """
+    adhoc_dir = Path(__file__).parent / "adhoc"
+    if not adhoc_dir.exists():
+        return
+
+    for _, name, is_pkg in pkgutil.iter_modules([str(adhoc_dir)]):
+        if is_pkg or name == "__init__":
+            continue
+
+        module_name = f"audit.targets.adhoc.{name}"
+        try:
+            importlib.import_module(module_name)
+        except Exception as e:
+            print(f"⚠️ Failed to load adhoc target module {module_name}: {e}")
