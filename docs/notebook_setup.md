@@ -11,7 +11,8 @@ namespace packages used in this repository.
 | ------------------------------------------ | --------------------------- | ----------------------------- |
 | **Pixi** (v0.55+)                          | `pixi --version`            | Must be on `$PATH`.           |
 | **Project dependencies**                   | `pixi install`              | Run from the repository root. |
-| **VS Code** with the **Jupyter** extension | Install via the Marketplace | Optional but recommended.     |
+| **VS Code** with the **Python** and **Jupyter** extensions | Install via the Marketplace | Optional but recommended.     |
+| **Pixi Code** VS Code extension | Install from the recommended extensions prompt | Helps VS Code discover Pixi environments. |
 
 ---
 
@@ -33,16 +34,27 @@ three namespace packages (`ca-biositing-datamodels`, `ca-biositing-pipeline`,
    pixi install
    ```
 
-2. Open a notebook in VS Code or launch JupyterLab:
+2. Register a stable Jupyter kernel for this workspace:
 
    ```bash
-   pixi run jupyter lab
+   pixi run register-jupyter-kernel
    ```
 
-3. Select the **Pixi** kernel for your notebook. In VS Code, click the kernel
-   picker in the notebook toolbar and choose the Pixi kernel.
+   This creates a kernel named **ca-biositing (Pixi)** that launches the Python
+   executable from the active Pixi environment directly. It avoids relying on a
+   global `python` command or VS Code's Pixi discovery cache.
 
-4. Imports work directly:
+3. Open a notebook in VS Code or launch JupyterLab:
+
+   ```bash
+   pixi run jupyter-lab
+   ```
+
+4. Select the **ca-biositing (Pixi)** or **Pixi** kernel for your notebook. In
+   VS Code, click the kernel picker in the notebook toolbar, choose **Select
+   Another Kernel**, then look under **Jupyter Kernels** first.
+
+5. Imports work directly:
 
    ```python
    from ca_biositing.pipeline.utils.lookup_utils import replace_name_with_id_df
@@ -75,6 +87,16 @@ the Python language server can resolve imports across the namespace packages for
 code completion and linting. These are IDE-only settings and do not affect
 runtime behavior.
 
+On Windows, this repository uses Pixi's workspace Python at:
+
+```text
+.pixi\envs\default\python.exe
+```
+
+You do not need a separate system Python install for notebooks in this project.
+If the plain `python` command opens the Microsoft Store or fails, that is okay as
+long as `pixi run python --version` works.
+
 ---
 
 ## Verify the import works
@@ -103,5 +125,27 @@ Import succeeded
 | Step                | Command / Action                                       |
 | ------------------- | ------------------------------------------------------ |
 | Install environment | `pixi install`                                         |
-| Select kernel       | Choose **Pixi** kernel in VS Code or JupyterLab        |
+| Register kernel     | `pixi run register-jupyter-kernel`                     |
+| Select kernel       | Choose **ca-biositing (Pixi)** in VS Code or JupyterLab |
 | Import packages     | Use standard imports (`from ca_biositing.pipeline...`) |
+
+## Troubleshooting VS Code Kernel Discovery
+
+Recent VS Code versions separate notebook kernel options into **Jupyter
+Kernels**, **Python Environments**, and **Existing Jupyter Server**. If VS Code
+asks for a URL, you are in **Existing Jupyter Server**; paste only an
+`http://localhost:...` Jupyter URL there, not a Python executable path.
+
+If **ca-biositing (Pixi)** does not appear after registering the kernel:
+
+1. Run `Developer: Reload Window` in VS Code.
+2. Open the kernel picker and choose **Select Another Kernel**.
+3. Check **Jupyter Kernels** for **ca-biositing (Pixi)**.
+4. If kernel discovery is still stale, start JupyterLab from Pixi:
+
+   ```bash
+   pixi run jupyter-lab
+   ```
+
+   Copy the printed `http://localhost:...token=...` URL into VS Code's
+   **Existing Jupyter Server** URL box.
