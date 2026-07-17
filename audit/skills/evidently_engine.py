@@ -13,6 +13,15 @@ from evidently.legacy.metrics import (
     ColumnDistributionMetric,
     ColumnSummaryMetric,
 )
+from evidently.legacy.test_suite import TestSuite
+from evidently.legacy.tests import (
+    TestColumnsType,
+    TestNumberOfColumns,
+    TestColumnValueMin,
+    TestColumnValueMax,
+    TestNumberOfMissingValues,
+    TestShareOfMissingValues,
+)
 import pandas as pd
 from pathlib import Path
 from typing import List, Dict, Tuple
@@ -26,6 +35,7 @@ def run_evidently_profile(
     group_cols: List[str],
     value_col: str = "observed_value",
     id_col: str = "record_id",
+    is_golden_reference: bool = False,
 ) -> Tuple[Dict, List[FlaggedObservation]]:
     """
     Run Evidently data quality report and return:
@@ -46,6 +56,22 @@ def run_evidently_profile(
         pop_df_prepared[value_col] = pop_df_prepared["avg_value"]
 
     report.run(reference_data=pop_df_prepared, current_data=observation_df)
+
+    # 2. Build and run TestSuite for Schema Guard (Golden References only)
+    # This specifically checks for Column names, types, and completeness
+    test_suite = None
+    if is_golden_reference:
+        test_suite = TestSuite(tests=[
+            TestNumberOfColumns(),
+            TestColumnsType(),
+            TestNumberOfMissingValues(),
+            TestShareOfMissingValues(),
+        ])
+        test_suite.run(reference_data=pop_df_prepared, current_data=observation_df)
+        
+        # Save TestSuite HTML
+        test_html_path = output_dir / f"{target_name}_schema_guard.html"
+        test_suite.save_html(str(test_html_path))
 
     # Save HTML
     html_path = output_dir / f"{target_name}.html"
@@ -70,8 +96,19 @@ def _evidently_to_flagged(
     Falls back to Z-score if Evidently bounds unavailable.
     """
     import numpy as np
+    
+    # If pop_df is raw records (e.g. from Golden Reference), compute summary stats
+    if "avg_value" not in pop_df.columns:
+        pop_stats = pop_df.groupby(group_cols)[value_col].agg(
+            avg_value="mean",
+            std_dev="std",
+            observation_count="count"
+        ).reset_index()
+    else:
+        pop_stats = pop_df[group_cols + ["avg_value", "std_dev", "observation_count"]]
+
     merged = obs_df.merge(
-        pop_df[group_cols + ["avg_value", "std_dev", "observation_count"]],
+        pop_stats,
         on=group_cols, how="left"
     )
     merged = merged[merged["observation_count"] >= 3]

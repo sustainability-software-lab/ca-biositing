@@ -28,6 +28,7 @@ from datetime import date
 class AuditorAgent:
     def __init__(self, targets: Optional[List[str]] = None, config_path: Optional[str] = None, profile: bool = False, verbose: bool = False):
         self.profile = profile
+        self.reference_root = Path("audit/references")
         self.verbose = verbose
         if config_path:
             global settings
@@ -62,7 +63,16 @@ class AuditorAgent:
             print(f"🔍 Auditing Target: {target_name}")
 
             # 1. Fetch Data
-            pop_df = pd.read_sql(target.population_sql, self.engine)
+            # Check for Golden Reference
+            ref_path = self.reference_root / f"{target_name}.csv"
+            is_golden = False
+            if ref_path.exists():
+                print(f"  🏆 Using Golden Reference: {ref_path}")
+                pop_df = pd.read_csv(ref_path)
+                is_golden = True
+            else:
+                pop_df = pd.read_sql(target.population_sql, self.engine)
+            
             obs_df = pd.read_sql(target.observation_sql, self.engine)
 
             # 2. Skill 1: Statistical Profiling (Gated by --profile)
@@ -80,7 +90,8 @@ class AuditorAgent:
                 observation_df=obs_df,
                 target_name=target_name,
                 output_dir=self.output_dir / "evidently",
-                group_cols=target.group_by_cols
+                group_cols=target.group_by_cols,
+                is_golden_reference=is_golden
             )
 
             # 4. Skill 3: GX Assertions
@@ -190,6 +201,20 @@ class AuditorAgent:
 
         print(f"✅ Audit Complete. Results in: {self.output_dir}")
 
+    def freeze_references(self):
+        print(f"❄️ Freezing Golden References to {self.reference_root}")
+        self.reference_root.mkdir(parents=True, exist_ok=True)
+
+        for target_name in self.targets:
+            if target_name not in REGISTRY:
+                continue
+            target = REGISTRY[target_name]
+            print(f"  📦 Freezing {target_name}...")
+            # We use observation_sql as the "golden" snapshot of compliant data
+            df = pd.read_sql(target.observation_sql, self.engine)
+            df.to_csv(self.reference_root / f"{target_name}.csv", index=False)
+        print("✅ Golden References frozen successfully.")
+
 if __name__ == "__main__":
     import argparse
     import audit.targets.views  # Trigger registration
@@ -202,9 +227,13 @@ if __name__ == "__main__":
     parser.add_argument("--value", help="Value for deep-dive (provider codename, resource name, or analysis type)")
     parser.add_argument("--target", help="Target name for temporal deep-dive")
     parser.add_argument("--run-dir", help="Path to a previous audit run directory (optional, defaults to latest)")
+    parser.add_argument("--freeze-reference", action="store_true", help="Freeze current data as golden reference CSVs")
     args = parser.parse_args()
 
-    if args.deep_dive:
+    if args.freeze_reference:
+        agent = AuditorAgent(targets=args.targets)
+        agent.freeze_references()
+    elif args.deep_dive:
         # Determine run_dir if not provided
         if not args.run_dir:
             output_root = Path(settings.OUTPUT_ROOT)

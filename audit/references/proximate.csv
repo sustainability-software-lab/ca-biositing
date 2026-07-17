@@ -1,0 +1,913 @@
+resource_name,parameter_name,unit,observed_value,record_id,qc_pass,note,analyst_name,analyst_email,created_at
+tomato pomace,moisture,% total weight,61.85,(73)b7b7,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,63.21,(73)9ba8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,63.27,(73)957d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,0.69,(73)9335,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,0.89,(73)415f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.0,(73)560c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,38.15,(73)dd5f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,36.79,(73)ef72,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,36.73,(73)015e,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,37.46,(73)6b2c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,35.91,(73)8267,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,35.73,(73)3621,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,80.74,(55)a0cd,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,80.93,(55)c24c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,80.75,(55)8c83,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,0.96,(55)1bf6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,0.76,(55)afbf,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,0.85,(55)1963,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,19.26,(55)1e0d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,19.07,(55)edd2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,19.25,(55)9fb3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,18.3,(55)ac67,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,18.31,(55)d348,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,18.4,(55)bfa7,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,65.79,(b6)fd74,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,66.98,(b6)e6b5,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,65.97,(b6)8362,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,0.99,(b6)ef37,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,0.94,(b6)90d0,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,0.98,(b6)d6bd,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,34.21,(b6)9e89,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,33.02,(b6)f28f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,34.03,(b6)423c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,33.22,(b6)30c2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,32.08,(b6)e484,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,33.05,(b6)7969,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,54.82,(67)ae03,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,55.23,(67)aad9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,54.09,(67)307a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.4,(67)9fc6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.14,(67)04af,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.18,(67)2228,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,45.18,(67)ca08,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,44.77,(67)a1ce,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,45.91,(67)a8bf,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,41.78,(67)f964,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,41.64,(67)ab89,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,42.72,(67)80f3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,moisture,% total weight,68.16,(31)f992,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,moisture,% total weight,70.37,(31)2091,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,moisture,% total weight,69.62,(31)2dab,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,ash solids,% total weight,3.18,(31)0a4b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,ash solids,% total weight,2.92,(31)bb96,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,ash solids,% total weight,2.68,(31)3601,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,total solids,% total weight,31.84,(31)883a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,total solids,% total weight,29.63,(31)ae33,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,total solids,% total weight,30.38,(31)8db9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,volatile solids,% total weight,28.65,(31)3091,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,volatile solids,% total weight,26.71,(31)9831,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape stem,volatile solids,% total weight,27.71,(31)992b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,moisture,% total weight,59.19,(d2)dc17,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,moisture,% total weight,58.87,(d2)032d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,moisture,% total weight,59.0,(d2)5b08,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,ash solids,% total weight,10.37,(d2)7df7,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,ash solids,% total weight,9.73,(d2)bfe9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,ash solids,% total weight,9.81,(d2)a988,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,total solids,% total weight,40.81,(d2)8f44,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,total solids,% total weight,41.13,(d2)80fc,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,total solids,% total weight,41.0,(d2)3cb3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,volatile solids,% total weight,30.44,(d2)0e21,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,volatile solids,% total weight,31.4,(d2)ea45,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent yeast,volatile solids,% total weight,31.2,(d2)b4e2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,moisture,% total weight,7.19,(04)4ab5,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,moisture,% total weight,7.5,(04)3980,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,moisture,% total weight,7.43,(04)5356,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,ash solids,% total weight,0.66,(04)986f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,ash solids,% total weight,0.54,(04)1e98,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,ash solids,% total weight,0.52,(04)3ab3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,total solids,% total weight,92.81,(04)93fb,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,total solids,% total weight,92.5,(04)05aa,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,total solids,% total weight,92.57,(04)1e5f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,volatile solids,% total weight,92.15,(04)3910,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,volatile solids,% total weight,91.96,(04)ed81,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,volatile solids,% total weight,92.05,(04)0237,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,moisture,% total weight,9.88,(c5)f394,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,moisture,% total weight,10.79,(c5)1f33,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,moisture,% total weight,10.4,(c5)03cc,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,ash solids,% total weight,0.6,(c5)e0f8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,ash solids,% total weight,0.59,(c5)2aba,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,ash solids,% total weight,0.6,(c5)4f3a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,total solids,% total weight,90.12,(c5)8d66,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,total solids,% total weight,89.21,(c5)24ec,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,total solids,% total weight,89.6,(c5)cff6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,volatile solids,% total weight,89.52,(c5)d04b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,volatile solids,% total weight,88.62,(c5)38cf,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+spent oak chips,volatile solids,% total weight,89.0,(c5)954b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,moisture,% total weight,1.43,(c4)7906,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,moisture,% total weight,1.44,(c4)654a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,moisture,% total weight,1.35,(c4)370c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,ash solids,% total weight,0.03,(c4)f2e8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,ash solids,% total weight,0.17,(c4)2c69,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,ash solids,% total weight,0.03,(c4)fce1,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,total solids,% total weight,98.57,(c4)db74,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,total solids,% total weight,98.56,(c4)bed1,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,total solids,% total weight,98.65,(c4)95d4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,volatile solids,% total weight,98.54,(c4)eab8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,volatile solids,% total weight,98.39,(c4)c0c2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+unused oak stick,volatile solids,% total weight,98.62,(c4)8229,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,moisture,% total weight,88.23,(63)f7da,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,moisture,% total weight,88.3,(63)59f8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,moisture,% total weight,88.32,(63)e362,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,ash solids,% total weight,3.52,(63)074e,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,ash solids,% total weight,3.74,(63)4ae3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,ash solids,% total weight,3.72,(63)6908,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,total solids,% total weight,11.77,(63)20ff,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,total solids,% total weight,11.7,(63)f431,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,total solids,% total weight,11.68,(63)f954,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,volatile solids,% total weight,8.24,(63)5e8c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,volatile solids,% total weight,7.97,(63)8d56,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+lees,volatile solids,% total weight,7.96,(63)35f9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,63.07,(13)a902,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,62.07,(13)67a7,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,64.98,(13)0c41,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.84,(13)ade3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,4.13,(13)81e1,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,4.13,(13)4f76,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,36.93,(13)a107,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,37.93,(13)8f5d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,35.02,(13)61f0,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,33.1,(13)9fd0,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,33.8,(13)e2ec,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,30.89,(13)df67,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,11.66,(37)203d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,11.73,(37)6e14,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,11.58,(37)3fcc,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.37,(37)f659,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.51,(37)94ef,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.37,(37)ec36,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,88.34,(37)c6ee,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,88.27,(37)0a72,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,88.42,(37)3454,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,83.97,(37)3422,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,83.76,(37)9116,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,84.05,(37)1ad1,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,13.53,(31)d666,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,13.65,(31)d4cc,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,13.74,(31)7f43,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.23,(31)58c7,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,5.43,(31)d70c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,5.6,(31)52a8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,86.47,(31)728e,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,86.35,(31)abf9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,86.26,(31)f2e1,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,80.25,(31)587e,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,80.91,(31)797b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,80.66,(31)c865,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,8.61,(24)033b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,8.83,(24)c0c3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,8.77,(24)1fd9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,6.83,(24)bbda,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,7.32,(24)ea69,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,6.81,(24)7d51,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,91.39,(24)31a4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,91.17,(24)8d62,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,91.23,(24)5785,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,84.56,(24)7cb6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,83.85,(24)48e4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,84.42,(24)57ea,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.13,(03)c010,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.21,(03)1dc8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.44,(03)b1b0,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.98,(03)8454,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,7.51,(03)f701,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.49,(03)6464,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.87,(03)93b6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.79,(03)f35c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.56,(03)ca72,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,77.89,(03)00da,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,77.28,(03)d76c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,78.07,(03)c17e,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,moisture,% total weight,8.79,(29)bb18,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,moisture,% total weight,8.8,(29)a631,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,moisture,% total weight,8.81,(29)6761,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,ash solids,% total weight,1.21,(29)f43d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,ash solids,% total weight,1.25,(29)1b5a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,ash solids,% total weight,1.26,(29)f78f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,total solids,% total weight,91.21,(29)1497,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,total solids,% total weight,91.2,(29)877a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,total solids,% total weight,91.19,(29)262a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,volatile solids,% total weight,90.0,(29)eff5,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,volatile solids,% total weight,89.95,(29)ff20,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+walnut shells,volatile solids,% total weight,89.93,(29)2773,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,9.22,(b5)2bd9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,9.14,(b5)0e47,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,9.18,(b5)6a31,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,3.25,(b5)0633,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,3.22,(b5)c7ac,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,3.01,(b5)d48f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,90.78,(b5)2b8d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,90.86,(b5)62c5,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,90.82,(b5)52ea,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,87.53,(b5)dc2a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,87.64,(b5)ff81,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,87.81,(b5)4ddb,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,moisture,% total weight,18.27,(72)4254,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,moisture,% total weight,18.41,(72)a9ae,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,moisture,% total weight,18.39,(72)b6c5,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,ash solids,% total weight,4.81,(72)4d45,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,ash solids,% total weight,4.88,(72)d853,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,ash solids,% total weight,4.61,(72)d7d8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,total solids,% total weight,81.73,(72)32e2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,total solids,% total weight,81.59,(72)5b2f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,total solids,% total weight,81.61,(72)1f3f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,volatile solids,% total weight,76.92,(72)5327,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,volatile solids,% total weight,76.71,(72)111d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover husks,volatile solids,% total weight,76.99,(72)cd32,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,moisture,% total weight,4.92,(28)45b4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,moisture,% total weight,4.89,(28)1cdc,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,moisture,% total weight,4.95,(28)37a3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,ash solids,% total weight,9.83,(28)6ebd,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,ash solids,% total weight,10.92,(28)ec2a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,ash solids,% total weight,9.4,(28)2b5c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,total solids,% total weight,95.08,(28)9043,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,total solids,% total weight,95.11,(28)7463,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,total solids,% total weight,95.05,(28)5dec,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,volatile solids,% total weight,85.25,(28)0e4d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,volatile solids,% total weight,84.19,(28)17f4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover cobs,volatile solids,% total weight,85.65,(28)5a04,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,moisture,% total weight,12.87,(5b)93d2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,moisture,% total weight,12.7,(5b)4d95,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,moisture,% total weight,12.85,(5b)6993,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,ash solids,% total weight,4.66,(5b)9a70,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,ash solids,% total weight,4.83,(5b)8cb4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,ash solids,% total weight,5.06,(5b)5997,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,total solids,% total weight,87.13,(5b)05d1,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,total solids,% total weight,87.3,(5b)35b8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,total solids,% total weight,87.15,(5b)8a35,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,volatile solids,% total weight,82.46,(5b)8df9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,volatile solids,% total weight,82.46,(5b)8c21,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+corn stover stalks,volatile solids,% total weight,82.09,(5b)ace1,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,19.05,(13)2169,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,19.0,(13)1b04,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,19.06,(13)12b9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,3.64,(13)124d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,3.71,(13)6c40,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,3.77,(13)2dd8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,80.95,(13)bae5,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,81.0,(13)dda4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,80.94,(13)7fbd,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,77.31,(13)710c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,77.29,(13)f8f6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,77.18,(13)1443,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.49,(15)efa4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.44,(15)9e63,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.3,(15)5a1e,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.96,(15)c5df,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.89,(15)d7bb,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.5,(15)9365,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.51,(15)9a81,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.56,(15)19f2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.7,(15)f648,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,77.55,(15)b8d3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,77.67,(15)8749,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,78.2,(15)04c6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,18.13,(a0)e490,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,18.25,(a0)5eca,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,18.21,(a0)76dd,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,2.58,(a0)fa1a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,2.47,(a0)a8a6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,2.31,(a0)c2b6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,81.87,(a0)8a8a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,81.75,(a0)3630,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,81.79,(a0)0798,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,79.3,(a0)e8de,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,79.28,(a0)31cc,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,79.48,(a0)165b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,moisture,% total weight,6.64,(62)fe0d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,moisture,% total weight,6.6,(62)0d6c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,moisture,% total weight,6.64,(62)c19e,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,ash solids,% total weight,12.99,(62)0822,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,ash solids,% total weight,12.94,(62)912d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,ash solids,% total weight,13.27,(62)d03c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,total solids,% total weight,93.36,(62)82b8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,total solids,% total weight,93.4,(62)0751,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,total solids,% total weight,93.36,(62)d792,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,volatile solids,% total weight,80.37,(62)16a8,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,volatile solids,% total weight,80.46,(62)1984,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,volatile solids,% total weight,80.09,(62)6539,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,moisture,% total weight,7.11,(42)2cda,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,moisture,% total weight,6.88,(42)6ac9,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,moisture,% total weight,6.75,(42)729d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,ash solids,% total weight,11.97,(42)a6fe,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,ash solids,% total weight,11.87,(42)a5e2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,ash solids,% total weight,12.52,(42)8ed2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,total solids,% total weight,92.89,(42)0969,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,total solids,% total weight,93.12,(42)d993,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,total solids,% total weight,93.25,(42)c366,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,volatile solids,% total weight,80.92,(42)9f6d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,volatile solids,% total weight,81.24,(42)c1de,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+rice straw,volatile solids,% total weight,80.74,(42)fdff,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,moisture,% total weight,5.88,(da)ec02,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,moisture,% total weight,5.31,(da)66a0,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,moisture,% total weight,5.68,(da)0ac2,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,ash solids,% total weight,11.27,(da)74a7,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,ash solids,% total weight,8.72,(da)fa91,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,ash solids,% total weight,11.31,(da)49d3,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,total solids,% total weight,94.12,(da)62b6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,total solids,% total weight,94.69,(da)f61e,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,total solids,% total weight,94.32,(da)798b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,volatile solids,% total weight,82.85,(da)5b54,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,volatile solids,% total weight,85.97,(da)b8d0,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+wheat straw,volatile solids,% total weight,83.02,(da)1ee5,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,moisture,% total weight,97.08,(14)ff20,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,moisture,% total weight,97.15,(14)1a55,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,moisture,% total weight,97.18,(14)c28a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,ash solids,% total weight,0.31,(14)76bd,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,ash solids,% total weight,0.33,(14)bd40,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,ash solids,% total weight,0.31,(14)6c7f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,total solids,% total weight,2.92,(14)e88d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,total solids,% total weight,2.85,(14)d4a4,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,total solids,% total weight,2.82,(14)e13b,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,volatile solids,% total weight,2.61,(14)eb17,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,volatile solids,% total weight,2.52,(14)f092,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach pomace,volatile solids,% total weight,2.51,(14)0aa6,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,moisture,% total weight,97.56,(23)564c,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,moisture,% total weight,97.32,(23)8788,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,moisture,% total weight,97.06,(23)6951,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,ash solids,% total weight,0.22,(23)ac37,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,ash solids,% total weight,0.22,(23)d546,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,ash solids,% total weight,0.26,(23)5b30,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,total solids,% total weight,2.44,(23)8d59,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,total solids,% total weight,2.68,(23)a636,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,total solids,% total weight,2.94,(23)77d7,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,volatile solids,% total weight,2.22,(23)3d5d,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,volatile solids,% total weight,2.46,(23)502a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach screening waste,volatile solids,% total weight,2.68,(23)f85f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,moisture,% total weight,69.59,(f6)e58a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,moisture,% total weight,68.99,(f6)eefe,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,moisture,% total weight,69.38,(f6)1bbf,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,ash solids,% total weight,5.45,(f6)2613,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,ash solids,% total weight,5.28,(f6)7c56,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,ash solids,% total weight,5.24,(f6)8d8f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,total solids,% total weight,30.41,(f6)d2f7,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,total solids,% total weight,31.01,(f6)d062,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,total solids,% total weight,30.62,(f6)2c6f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,volatile solids,% total weight,24.97,(f6)0d8f,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,volatile solids,% total weight,25.73,(f6)dace,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+peach stems / leaves,volatile solids,% total weight,25.37,(f6)c49a,pass,,,xkang2@lbl.gov,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,71.79,(f1)9ab9,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,71.42,(f1)c1f4,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,70.81,(f1)1171,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.12,(f1)ccea,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.12,(f1)281c,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.14,(f1)cd95,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,28.21,(f1)e36a,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,28.58,(f1)73d7,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,29.19,(f1)c7dc,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,27.1,(f1)b3e8,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,27.46,(f1)e662,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,28.05,(f1)894e,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,79.63,(c1)f2e1,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,80.22,(c1)a373,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,80.01,(c1)0fbc,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.07,(c1)bf44,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.04,(c1)c692,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.08,(c1)0f89,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,20.37,(c1)1c94,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,19.78,(c1)bc11,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,19.99,(c1)0355,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,19.29,(c1)6548,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,18.73,(c1)d3f4,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,18.92,(c1)5a94,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,50.48,(d2)2413,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,50.83,(d2)ec13,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,50.78,(d2)272c,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.35,(d2)6530,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.37,(d2)e469,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.38,(d2)96cd,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,49.52,(d2)d40c,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,49.17,(d2)7baf,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,49.22,(d2)0450,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,48.17,(d2)bd25,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,47.79,(d2)225e,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,47.85,(d2)16b1,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,68.76,(bd)0b70,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,68.93,(bd)0da9,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,moisture,% total weight,68.44,(bd)d518,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.05,(bd)ad61,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.06,(bd)6585,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,ash solids,% total weight,1.09,(bd)a328,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,31.24,(bd)37c2,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,31.07,(bd)88c2,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,total solids,% total weight,31.56,(bd)4a81,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,30.19,(bd)0153,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,30.01,(bd)d85b,pass,,,,2026-07-08 04:06:43.204819
+tomato pomace,volatile solids,% total weight,30.47,(bd)06b4,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,66.99,(7a)b0b5,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,65.92,(7a)16ee,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,62.66,(7a)4002,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,1.52,(7a)98cc,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,1.4,(7a)20c9,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,1.77,(7a)85c3,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,33.01,(7a)11b9,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,34.08,(7a)fba4,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,37.34,(7a)c576,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,31.5,(7a)8042,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,32.69,(7a)f6b3,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,35.57,(7a)81fd,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,61.52,(f6)1245,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,63.14,(f6)dcf1,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,62.36,(f6)1591,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,2.76,(f6)b538,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.19,(f6)03ae,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.52,(f6)7a8f,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,38.48,(f6)97a5,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,36.86,(f6)edc1,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,37.64,(f6)9e2b,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,35.71,(f6)8443,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,33.67,(f6)a52c,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,34.11,(f6)8a55,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,51.4,(d0)95a6,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,47.95,(d0)afc7,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,51.86,(d0)93ea,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,1.85,(d0)6928,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,2.78,(d0)618a,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,1.52,(d0)c43e,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,48.6,(d0)b82a,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,52.05,(d0)eae5,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,48.14,(d0)2b08,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,46.75,(d0)58a2,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,49.27,(d0)cf11,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,46.62,(d0)84cc,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,53.19,(ec)bb5f,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,55.09,(ec)c401,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,54.1,(ec)c8dc,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,2.83,(ec)6752,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.39,(ec)3778,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.46,(ec)306a,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,46.81,(ec)9c57,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,44.91,(ec)2264,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,45.9,(ec)9166,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,43.98,(ec)5fe0,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,41.52,(ec)2807,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,42.45,(ec)6581,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,58.06,(3a)135e,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,61.15,(3a)b992,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,61.36,(3a)7389,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,2.86,(3a)931b,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,3.21,(3a)b9a7,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,2.62,(3a)4c61,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,41.94,(3a)8415,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,38.85,(3a)b28e,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,38.64,(3a)7725,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,39.08,(3a)e457,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,35.63,(3a)ad47,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,36.02,(3a)b7c5,pass,,,,2026-07-08 04:06:43.204819
+grape stem,moisture,% total weight,68.17,(e0)0a0c,pass,,,,2026-07-08 04:06:43.204819
+grape stem,moisture,% total weight,66.7,(e0)de95,pass,,,,2026-07-08 04:06:43.204819
+grape stem,moisture,% total weight,67.92,(e0)587b,pass,,,,2026-07-08 04:06:43.204819
+grape stem,ash solids,% total weight,1.87,(e0)4395,pass,,,,2026-07-08 04:06:43.204819
+grape stem,ash solids,% total weight,2.41,(e0)a10d,pass,,,,2026-07-08 04:06:43.204819
+grape stem,ash solids,% total weight,2.51,(e0)5f5a,pass,,,,2026-07-08 04:06:43.204819
+grape stem,total solids,% total weight,31.83,(e0)27b3,pass,,,,2026-07-08 04:06:43.204819
+grape stem,total solids,% total weight,33.3,(e0)06aa,pass,,,,2026-07-08 04:06:43.204819
+grape stem,total solids,% total weight,32.08,(e0)0642,pass,,,,2026-07-08 04:06:43.204819
+grape stem,volatile solids,% total weight,29.96,(e0)7904,pass,,,,2026-07-08 04:06:43.204819
+grape stem,volatile solids,% total weight,30.9,(e0)5baa,pass,,,,2026-07-08 04:06:43.204819
+grape stem,volatile solids,% total weight,29.57,(e0)39a1,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,moisture,% total weight,59.35,(56)e360,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,moisture,% total weight,62.45,(56)a00d,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,moisture,% total weight,62.31,(56)b725,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,ash solids,% total weight,7.22,(56)b037,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,ash solids,% total weight,5.39,(56)b3fe,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,ash solids,% total weight,6.37,(56)0954,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,total solids,% total weight,40.65,(56)a5bd,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,total solids,% total weight,37.55,(56)7287,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,total solids,% total weight,37.69,(56)e37f,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,volatile solids,% total weight,33.43,(56)f5d2,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,volatile solids,% total weight,32.16,(56)3941,pass,,,,2026-07-08 04:06:43.204819
+pistachio stems & leaves,volatile solids,% total weight,31.32,(56)76fd,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,moisture,% total weight,80.34,(11)a4db,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,moisture,% total weight,81.92,(11)ffa7,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,moisture,% total weight,82.83,(11)539d,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,ash solids,% total weight,4.69,(11)ac5a,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,ash solids,% total weight,4.89,(11)2800,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,ash solids,% total weight,4.96,(11)472b,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,total solids,% total weight,19.66,(11)2322,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,total solids,% total weight,18.08,(11)132e,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,total solids,% total weight,17.17,(11)713f,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,volatile solids,% total weight,14.97,(11)f212,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,volatile solids,% total weight,13.19,(11)c9c5,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,volatile solids,% total weight,12.22,(11)bf57,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,moisture,% total weight,87.73,(53)fc52,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,moisture,% total weight,85.77,(53)e9ff,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,moisture,% total weight,86.84,(53)d0dd,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,ash solids,% total weight,1.12,(53)d2ff,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,ash solids,% total weight,1.13,(53)59db,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,ash solids,% total weight,1.1,(53)6488,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,total solids,% total weight,12.27,(53)b829,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,total solids,% total weight,14.23,(53)49b8,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,total solids,% total weight,13.16,(53)3b53,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,volatile solids,% total weight,11.15,(53)9e2f,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,volatile solids,% total weight,13.1,(53)88c6,pass,,,,2026-07-08 04:06:43.204819
+pistachio hulls,volatile solids,% total weight,12.05,(53)6b37,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,moisture,% total weight,15.55,(aa)1d11,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,moisture,% total weight,15.98,(aa)f2a6,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,moisture,% total weight,15.88,(aa)a789,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,ash solids,% total weight,2.25,(aa)4721,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,ash solids,% total weight,1.69,(aa)f74a,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,ash solids,% total weight,1.85,(aa)d3c0,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,total solids,% total weight,84.45,(aa)843f,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,total solids,% total weight,84.02,(aa)be82,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,total solids,% total weight,84.12,(aa)956d,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,volatile solids,% total weight,82.2,(aa)73c7,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,volatile solids,% total weight,82.32,(aa)4ea9,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,volatile solids,% total weight,82.26,(aa)1e46,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,53.23,(75)455c,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,54.27,(75)b333,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,moisture,% total weight,53.75,(75)6b19,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,5.26,(75)8f14,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,5.43,(75)62db,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,ash solids,% total weight,4.72,(75)205b,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,46.77,(75)a028,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,45.73,(75)5e86,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,total solids,% total weight,46.25,(75)511e,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,41.51,(75)52b4,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,40.3,(75)b527,pass,,,,2026-07-08 04:06:43.204819
+grape pomace,volatile solids,% total weight,41.53,(75)a2a2,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,moisture,% total weight,72.12,(be)be17,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,moisture,% total weight,72.05,(be)dadf,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,moisture,% total weight,72.36,(be)deb0,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,ash solids,% total weight,2.09,(be)91d3,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,ash solids,% total weight,2.08,(be)91a5,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,ash solids,% total weight,2.15,(be)0c30,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,total solids,% total weight,27.88,(be)c432,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,total solids,% total weight,27.95,(be)09db,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,total solids,% total weight,27.64,(be)ff01,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,volatile solids,% total weight,25.79,(be)5a90,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,volatile solids,% total weight,25.87,(be)72fa,pass,,,,2026-07-08 04:06:43.204819
+olive pomace,volatile solids,% total weight,25.49,(be)e5fc,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,moisture,% total weight,51.88,(15)9253,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,moisture,% total weight,51.44,(15)a12f,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,moisture,% total weight,46.17,(15)9820,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,ash solids,% total weight,2.85,(15)cfe9,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,ash solids,% total weight,2.15,(15)f3b8,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,ash solids,% total weight,2.51,(15)0931,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,total solids,% total weight,48.12,(15)9329,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,total solids,% total weight,48.56,(15)282d,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,total solids,% total weight,53.83,(15)e432,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,volatile solids,% total weight,45.27,(15)1e0f,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,volatile solids,% total weight,46.42,(15)4136,pass,,,,2026-07-08 04:06:43.204819
+olive stems / leaves,volatile solids,% total weight,51.32,(15)dec9,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,11.15,(a2)4a98,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,11.33,(a2)e9ba,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,11.33,(a2)2ca5,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.19,(27)bf60,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.23,(27)9c73,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,15.1,(27)7a5d,pass,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,10.2,(4c)7e41,pass,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,10.19,(4c)d694,pass,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,10.1,(4c)bfe6,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,12.44,(86)7800,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,12.27,(86)4c9a,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,12.38,(86)8657,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,7.69,(71)7354,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,7.7,(71)0984,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,7.67,(71)052f,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,8.16,(04)4e50,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,8.2,(04)d532,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,8.1,(04)be9a,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,14.24,(b3)26d3,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,14.24,(b3)3c83,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,14.19,(b3)fc9e,pass,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,10.88,(7e)33e8,pass,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,10.99,(7e)1c60,pass,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,10.88,(7e)3990,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,11.26,(b7)022b,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,11.24,(b7)336b,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,11.24,(b7)dfa9,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,14.23,(a8)a93a,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,14.24,(a8)28fb,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,moisture,% total weight,14.31,(a8)011a,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,9.19,(a5)14af,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,9.07,(a5)0f27,pass,,,,2026-07-08 04:06:43.204819
+almond shells,moisture,% total weight,9.04,(a5)d80a,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,5.08,(a2)83ca,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.33,(a2)4d15,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.31,(a2)67e3,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,13.37,(27)13cb,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,7.46,(27)fa51,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,8.42,(27)23cd,pass,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,4.15,(4c)e625,pass,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,4.23,(4c)27f2,pass,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,4.16,(4c)ece7,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,8.54,(86)e114,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,8.71,(86)c450,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,8.0,(86)318b,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.08,(71)0acc,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.49,(71)569c,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.33,(71)da38,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,3.98,(04)394f,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.3,(04)a428,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,4.62,(04)a405,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,7.74,(b3)a724,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.73,(b3)8e32,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,9.09,(b3)7030,pass,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,3.14,(7e)938f,pass,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,3.11,(7e)800f,pass,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,3.09,(7e)103a,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.0,(b7)4f88,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,6.3,(b7)3f0a,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,7.64,(b7)922e,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,10.03,(a8)1b90,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,9.19,(a8)bae7,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,ash solids,% total weight,9.12,(a8)ad0d,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,7.62,(a5)69b3,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,6.33,(a5)c3d4,pass,,,,2026-07-08 04:06:43.204819
+almond shells,ash solids,% total weight,6.69,(a5)8dfa,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,88.85,(a2)1666,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,88.67,(a2)acce,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,88.67,(a2)0fb0,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.81,(27)de83,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.77,(27)83ce,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,84.9,(27)baf0,pass,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,89.8,(4c)e4aa,pass,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,89.81,(4c)8fc4,pass,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,89.9,(4c)73de,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,87.56,(86)e04f,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,87.73,(86)5338,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,87.62,(86)521a,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,92.31,(71)393e,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,92.3,(71)cdac,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,92.33,(71)f312,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,91.84,(04)bee6,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,91.8,(04)c11a,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,91.9,(04)044e,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,85.76,(b3)ffc6,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,85.76,(b3)40aa,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,85.81,(b3)71d8,pass,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,89.12,(7e)e64d,pass,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,89.01,(7e)e58c,pass,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,89.12,(7e)7774,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,88.74,(b7)d205,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,88.76,(b7)1b12,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,88.76,(b7)ee55,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,85.77,(a8)c977,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,85.76,(a8)a78c,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,total solids,% total weight,85.69,(a8)f819,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,90.81,(a5)bf23,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,90.93,(a5)cff8,pass,,,,2026-07-08 04:06:43.204819
+almond shells,total solids,% total weight,90.96,(a5)3f2a,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,83.78,(a2)9df4,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,84.34,(a2)5599,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,84.36,(a2)506b,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,71.44,(27)8c1d,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,77.31,(27)7991,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,76.48,(27)35cd,pass,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,85.65,(4c)71d5,pass,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,85.58,(4c)d019,pass,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,85.74,(4c)d9b9,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,79.02,(86)785f,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,79.02,(86)de75,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,79.63,(86)7b7d,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,88.23,(71)48d6,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,87.81,(71)68c8,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,88.0,(71)81a2,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,87.86,(04)f5c2,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,87.5,(04)5af5,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,87.28,(04)63f0,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,78.02,(b3)91ee,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,79.03,(b3)fe33,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,76.71,(b3)a008,pass,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,85.98,(7e)a6ff,pass,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,85.9,(7e)978b,pass,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,86.04,(7e)54d9,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,82.74,(b7)6a6a,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,82.45,(b7)be6f,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,81.12,(b7)1ef0,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,75.74,(a8)5bb6,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,76.57,(a8)19a3,pass,,,,2026-07-08 04:06:43.204819
+almond hulls,volatile solids,% total weight,76.57,(a8)4564,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,83.19,(a5)c7b6,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,84.6,(a5)6033,pass,,,,2026-07-08 04:06:43.204819
+almond shells,volatile solids,% total weight,84.27,(a5)9969,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,moisture,% total weight,8.98,(96)4c68,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,moisture,% total weight,8.91,(96)0ed8,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,moisture,% total weight,8.92,(96)4217,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,12.52,(62)c3e2,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,12.4,(62)eb64,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,12.5,(62)e4e1,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,moisture,% total weight,8.76,(da)6c4d,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,moisture,% total weight,8.74,(da)55c3,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,moisture,% total weight,8.77,(da)5933,pass,,,,2026-07-08 04:06:43.204819
+rice straw,moisture,% total weight,8.14,(ca)15f5,pass,,,,2026-07-08 04:06:43.204819
+rice straw,moisture,% total weight,8.05,(ca)defa,pass,,,,2026-07-08 04:06:43.204819
+rice straw,moisture,% total weight,7.85,(ca)fd00,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,moisture,% total weight,7.93,(be)d5ca,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,moisture,% total weight,8.02,(be)b18d,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,moisture,% total weight,7.93,(be)4edd,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,4.86,(ce)7d13,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,4.97,(ce)b1b4,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,4.95,(ce)e2ab,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,15.19,(91)8117,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,15.2,(91)a354,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,15.08,(91)643b,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,6.02,(a4)1e14,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,5.88,(a4)1475,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,moisture,% total weight,5.8,(a4)be52,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,moisture,% total weight,9.86,(15)53d1,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,moisture,% total weight,9.88,(15)6ecb,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,moisture,% total weight,9.86,(15)14f9,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,ash solids,% total weight,19.24,(96)cb75,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,ash solids,% total weight,19.23,(96)80be,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,ash solids,% total weight,19.48,(96)10cd,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,7.28,(62)89ab,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,7.98,(62)8acf,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,8.25,(62)4208,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,ash solids,% total weight,0.76,(da)8a0c,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,ash solids,% total weight,0.66,(da)2c9e,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,ash solids,% total weight,0.66,(da)a93d,pass,,,,2026-07-08 04:06:43.204819
+rice straw,ash solids,% total weight,12.86,(ca)44a4,pass,,,,2026-07-08 04:06:43.204819
+rice straw,ash solids,% total weight,13.07,(ca)71a9,pass,,,,2026-07-08 04:06:43.204819
+rice straw,ash solids,% total weight,12.9,(ca)7d3d,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,ash solids,% total weight,9.81,(be)30c5,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,ash solids,% total weight,8.07,(be)fcd7,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,ash solids,% total weight,11.01,(be)1570,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,7.82,(ce)5cd7,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,7.74,(ce)6f27,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,7.82,(ce)b9eb,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,8.15,(91)2d91,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,7.28,(91)656a,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,7.86,(91)82c3,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,12.49,(a4)8c15,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,12.39,(a4)ce9f,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,ash solids,% total weight,14.85,(a4)2aac,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,ash solids,% total weight,1.07,(15)bdac,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,ash solids,% total weight,1.06,(15)2ca0,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,ash solids,% total weight,1.24,(15)c9c6,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,total solids,% total weight,91.02,(96)9557,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,total solids,% total weight,91.09,(96)0f07,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,total solids,% total weight,91.08,(96)1858,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,87.48,(62)ab4a,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,87.6,(62)88b7,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,87.5,(62)a2a5,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,total solids,% total weight,91.24,(da)0c37,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,total solids,% total weight,91.26,(da)8740,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,total solids,% total weight,91.23,(da)026e,pass,,,,2026-07-08 04:06:43.204819
+rice straw,total solids,% total weight,91.86,(ca)e6df,pass,,,,2026-07-08 04:06:43.204819
+rice straw,total solids,% total weight,91.95,(ca)1450,pass,,,,2026-07-08 04:06:43.204819
+rice straw,total solids,% total weight,92.15,(ca)c48a,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,total solids,% total weight,92.07,(be)e487,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,total solids,% total weight,91.98,(be)28ae,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,total solids,% total weight,92.07,(be)5cf6,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,95.14,(ce)1611,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,95.03,(ce)99bc,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,95.05,(ce)f609,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,84.81,(91)f62b,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,84.8,(91)d241,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,84.92,(91)c400,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,93.98,(a4)7680,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,94.12,(a4)b94a,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,total solids,% total weight,94.2,(a4)d8c4,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,total solids,% total weight,90.14,(15)2551,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,total solids,% total weight,90.12,(15)ea15,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,total solids,% total weight,90.14,(15)80f1,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,volatile solids,% total weight,71.78,(96)367a,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,volatile solids,% total weight,71.86,(96)f2b9,pass,,,,2026-07-08 04:06:43.204819
+rice hulls,volatile solids,% total weight,71.61,(96)7e58,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,80.21,(62)e32f,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,79.62,(62)b7b9,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,79.25,(62)c1a3,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,volatile solids,% total weight,90.48,(da)a9c1,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,volatile solids,% total weight,90.6,(da)9dea,pass,,,,2026-07-08 04:06:43.204819
+pistachio shells,volatile solids,% total weight,90.57,(da)98c5,pass,,,,2026-07-08 04:06:43.204819
+rice straw,volatile solids,% total weight,78.99,(ca)3f5f,pass,,,,2026-07-08 04:06:43.204819
+rice straw,volatile solids,% total weight,78.88,(ca)3d4f,pass,,,,2026-07-08 04:06:43.204819
+rice straw,volatile solids,% total weight,79.25,(ca)e58e,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,volatile solids,% total weight,82.26,(be)848b,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,volatile solids,% total weight,83.91,(be)e2ee,pass,,,,2026-07-08 04:06:43.204819
+corn stover whole,volatile solids,% total weight,81.06,(be)5c5d,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,87.31,(ce)c5f7,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,87.28,(ce)119d,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,87.23,(ce)c910,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,76.66,(91)8ac1,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,77.52,(91)c59b,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,77.06,(91)ed6c,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,81.48,(a4)ea8e,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,81.73,(a4)0127,pass,,,,2026-07-08 04:06:43.204819
+cotton stem mix,volatile solids,% total weight,79.35,(a4)faf6,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,volatile solids,% total weight,89.06,(15)e5c4,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,volatile solids,% total weight,89.06,(15)dcc2,pass,,,,2026-07-08 04:06:43.204819
+walnut shells,volatile solids,% total weight,88.91,(15)77aa,pass,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,17.54,(f3)f33d,provisional,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,11.58,(f3)3c7d,pass,,,,2026-07-08 04:06:43.204819
+almond branches,moisture,% total weight,13.2,(f3)1ee7,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,moisture,% total weight,11.17,(b5)2804,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,moisture,% total weight,11.2,(b5)1375,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,moisture,% total weight,11.16,(b5)3236,pass,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,57.52,(f3)889a,provisional,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,72.31,(f3)96d0,pass,,,,2026-07-08 04:06:43.204819
+almond branches,ash solids,% total weight,67.45,(f3)b348,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,ash solids,% total weight,3.19,(b5)ba9a,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,ash solids,% total weight,3.13,(b5)4181,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,ash solids,% total weight,3.01,(b5)cf5f,pass,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,82.46,(f3)161b,provisional,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,88.42,(f3)8392,pass,,,,2026-07-08 04:06:43.204819
+almond branches,total solids,% total weight,86.8,(f3)8ccd,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,total solids,% total weight,88.83,(b5)17da,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,total solids,% total weight,88.8,(b5)92df,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,total solids,% total weight,88.84,(b5)7900,pass,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,24.94,(f3)e4ed,provisional,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,16.1,(f3)c096,pass,,,,2026-07-08 04:06:43.204819
+almond branches,volatile solids,% total weight,19.35,(f3)4605,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,volatile solids,% total weight,85.64,(b5)c2b4,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,volatile solids,% total weight,85.67,(b5)889c,pass,,,,2026-07-08 04:06:43.204819
+walnut shelling fines,volatile solids,% total weight,85.83,(b5)132e,pass,,,,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,32.25,(6b)43a2,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354422,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,33.22,(6b)f818,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354423,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,33.53,(6b)dcb2,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354424,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,40.32,(d0)f364,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354425,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,37.38,(d0)9372,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354426,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,37.62,(d0)fe39,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354427,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,moisture,% total weight,36.16,(35)4da8,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354428,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,moisture,% total weight,35.19,(35)9cd2,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354429,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,moisture,% total weight,34.89,(35)7671,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354430,,pass,2026-07-08 04:06:43.204819
+grape vines,moisture,% total weight,47.52,(eb)34ec,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354431,,pass,2026-07-08 04:06:43.204819
+grape vines,moisture,% total weight,49.83,(eb)f65a,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354432,,pass,2026-07-08 04:06:43.204819
+grape vines,moisture,% total weight,46.27,(eb)29ca,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354433,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,2.82,(6b)b11b,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354434,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,2.82,(6b)c254,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354435,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,2.6,(6b)3fbc,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354436,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,2.61,(d0)6f72,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354437,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,2.75,(d0)4f8b,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354438,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,2.7,(d0)074b,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354439,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,ash solids,% total weight,2.73,(35)8876,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354440,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,ash solids,% total weight,2.76,(35)1074,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354441,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,ash solids,% total weight,2.61,(35)7a98,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354442,,pass,2026-07-08 04:06:43.204819
+grape vines,ash solids,% total weight,2.43,(eb)1bdd,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354443,,pass,2026-07-08 04:06:43.204819
+grape vines,ash solids,% total weight,2.33,(eb)419c,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354444,,pass,2026-07-08 04:06:43.204819
+grape vines,ash solids,% total weight,2.44,(eb)3b38,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354445,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,67.75,(6b)a75e,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354446,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,66.78,(6b)e390,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354447,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,66.47,(6b)0caf,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354448,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,59.68,(d0)ccf4,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354449,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,62.62,(d0)d325,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354450,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,62.38,(d0)9423,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354451,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,total solids,% total weight,63.84,(35)f6cd,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354452,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,total solids,% total weight,64.81,(35)96f8,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354453,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,total solids,% total weight,65.11,(35)fa9d,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354454,,pass,2026-07-08 04:06:43.204819
+grape vines,total solids,% total weight,52.48,(eb)b8a2,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354455,,pass,2026-07-08 04:06:43.204819
+grape vines,total solids,% total weight,50.17,(eb)3e95,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354456,,pass,2026-07-08 04:06:43.204819
+grape vines,total solids,% total weight,53.73,(eb)6e5e,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354457,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,64.93,(6b)4a5c,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354458,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,63.96,(6b)a9b2,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354459,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,63.87,(6b)8b47,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354460,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,57.07,(d0)e8f8,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354461,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,59.87,(d0)78a2,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354462,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,59.68,(d0)eb1f,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354463,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,volatile solids,% total weight,61.11,(35)0520,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354464,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,volatile solids,% total weight,62.04,(35)3782,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354465,,pass,2026-07-08 04:06:43.204819
+grape vine prunings,volatile solids,% total weight,62.5,(35)b851,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354466,,pass,2026-07-08 04:06:43.204819
+grape vines,volatile solids,% total weight,50.05,(eb)deb0,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354467,,pass,2026-07-08 04:06:43.204819
+grape vines,volatile solids,% total weight,47.85,(eb)bef9,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354468,,pass,2026-07-08 04:06:43.204819
+grape vines,volatile solids,% total weight,51.29,(eb)8d0e,pass,https://docs.google.com/spreadsheets/d/1elqjbsy8pjasg8mwkhlqgbdzldr34wem/edit?gid=396354422#gid=396354469,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,moisture,% total weight,25.69,(b3)aa7d,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385619,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,moisture,% total weight,24.01,(b3)1211,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385620,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,moisture,% total weight,24.12,(b3)ca3d,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385621,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,ash solids,% total weight,2.4,(b3)a081,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385622,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,ash solids,% total weight,2.21,(b3)b37d,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385623,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,ash solids,% total weight,1.99,(b3)df00,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385624,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,total solids,% total weight,74.31,(b3)4e73,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385625,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,total solids,% total weight,75.99,(b3)cd95,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385626,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,total solids,% total weight,75.88,(b3)4af1,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385627,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,volatile solids,% total weight,71.91,(b3)3d8e,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385628,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,volatile solids,% total weight,73.78,(b3)c446,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385629,,pass,2026-07-08 04:06:43.204819
+peach tree prunings,volatile solids,% total weight,73.89,(b3)a4cb,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385630,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,37.4,(aa)fbcb,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385631,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,39.45,(aa)f1e8,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385632,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,moisture,% total weight,38.91,(aa)00dd,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385633,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,2.01,(aa)7741,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385634,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,1.9,(aa)697a,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385635,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,ash solids,% total weight,1.58,(aa)9cf5,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385636,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,62.6,(aa)1828,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385637,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,60.55,(aa)f885,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385638,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,total solids,% total weight,61.09,(aa)503d,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385639,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,60.59,(aa)565e,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385640,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,58.65,(aa)9822,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385641,,pass,2026-07-08 04:06:43.204819
+walnut tree sticks,volatile solids,% total weight,59.52,(aa)4e50,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385642,,pass,2026-07-08 04:06:43.204819
+olive prunings,moisture,% total weight,20.79,(ab)251b,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385643,,pass,2026-07-08 04:06:43.204819
+olive prunings,moisture,% total weight,20.78,(ab)7ab6,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385644,,pass,2026-07-08 04:06:43.204819
+olive prunings,moisture,% total weight,20.3,(ab)938c,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385645,,pass,2026-07-08 04:06:43.204819
+olive prunings,ash solids,% total weight,2.4,(ab)64ab,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385646,,pass,2026-07-08 04:06:43.204819
+olive prunings,ash solids,% total weight,2.84,(ab)d0a1,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385647,,pass,2026-07-08 04:06:43.204819
+olive prunings,ash solids,% total weight,2.67,(ab)35cd,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385648,,pass,2026-07-08 04:06:43.204819
+olive prunings,total solids,% total weight,79.21,(ab)f3e6,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385649,,pass,2026-07-08 04:06:43.204819
+olive prunings,total solids,% total weight,79.22,(ab)bb2b,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385650,,pass,2026-07-08 04:06:43.204819
+olive prunings,total solids,% total weight,79.7,(ab)e228,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385651,,pass,2026-07-08 04:06:43.204819
+olive prunings,volatile solids,% total weight,76.81,(ab)aec5,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385652,,pass,2026-07-08 04:06:43.204819
+olive prunings,volatile solids,% total weight,76.38,(ab)5767,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385653,,pass,2026-07-08 04:06:43.204819
+olive prunings,volatile solids,% total weight,77.03,(ab)260d,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385654,,pass,2026-07-08 04:06:43.204819
+olive prunings,moisture,% total weight,17.42,(85)a7d3,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385655,,pass,2026-07-08 04:06:43.204819
+olive prunings,moisture,% total weight,16.55,(85)c5a9,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385656,,pass,2026-07-08 04:06:43.204819
+olive prunings,moisture,% total weight,15.32,(85)6ad0,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385657,,pass,2026-07-08 04:06:43.204819
+olive prunings,ash solids,% total weight,3.04,(85)b143,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385658,,pass,2026-07-08 04:06:43.204819
+olive prunings,ash solids,% total weight,3.21,(85)b1ce,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385659,,pass,2026-07-08 04:06:43.204819
+olive prunings,ash solids,% total weight,3.23,(85)fc38,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385660,,pass,2026-07-08 04:06:43.204819
+olive prunings,total solids,% total weight,82.58,(85)3181,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385661,,pass,2026-07-08 04:06:43.204819
+olive prunings,total solids,% total weight,83.45,(85)bc99,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385662,,pass,2026-07-08 04:06:43.204819
+olive prunings,total solids,% total weight,84.68,(85)b606,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385663,,pass,2026-07-08 04:06:43.204819
+olive prunings,volatile solids,% total weight,79.54,(85)4f9f,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385664,,pass,2026-07-08 04:06:43.204819
+olive prunings,volatile solids,% total weight,80.23,(85)db24,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385665,,pass,2026-07-08 04:06:43.204819
+olive prunings,volatile solids,% total weight,81.44,(85)7c9d,pass,https://docs.google.com/spreadsheets/d/1ykp27j5lk8jvpdiqe22cwh0q96yxoli8/edit?gid=1790385619#gid=1790385666,,pass,2026-07-08 04:06:43.204819
