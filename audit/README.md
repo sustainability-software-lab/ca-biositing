@@ -1,115 +1,119 @@
-# Skill-Based Data Auditor
+# Skill-Based Data Auditor (The "Bad Data Hunter")
 
 The Skill-Based Data Auditor is a modular, extensible system for performing data
 quality analysis and observability on the `ca-biositing` dataset. It utilizes a
 "Two-Layer Audit Model" to compare individual observations against population
-statistics.
+statistics, leveraging **Evidently AI** for drift detection, **Great
+Expectations** for hard assertions, and **LLM Synthesis** for human-readable
+narratives.
 
-## Overview
+## Architecture: The Bad Data Hunter
 
-- **Layer 1: Population Statistics**: Group-level stats (mean, std dev, count)
-  typically sourced from materialized views.
-- **Layer 2: Individual Observation Audit**: Raw records queried from public
-  schema tables to identify specific anomalies.
+The auditor operates by combining three distinct methodologies:
 
-The system is organized into **Skills** (modular analysis logic) and **Targets**
-(declarative data definitions).
-
----
-
-## The 5 Core Skills
-
-1.  **📊 Statistical Profiling**: Generates comprehensive dataset summaries and
-    HTML reports using `ydata-profiling`.
-2.  **📍 Grouped Outlier Detection**: Identifies anomalous individual
-    observations using within-group Z-scores (e.g., comparing almond hull
-    moisture only against other almond hull samples).
-3.  **✅ Data Quality Assertions**: Executes hard validation rules (non-null,
-    value ranges) using Great Expectations (GX).
-4.  **🧠 Semantic Review**: Leverages LLMs (Gemini/Claude) via `litellm` to
-    provide natural language assessments and possible causes for detected
-    anomalies.
-5.  **📝 Analyst Reporting**: Consolidates all findings into a structured,
-    human-readable Markdown narrative.
+- **Evidently AI**: Detects statistical drift and data quality issues across
+  population snapshots.
+- **Great Expectations (GX)**: Enforces strict data quality assertions
+  (non-nulls, range checks, schema validation).
+- **LLM Synthesis (Gemini/Claude)**: Aggregates technical findings into a
+  cohesive "Semantic Review" and "Analyst Report".
 
 ---
 
-## How-to Guides
+## Prerequisites
 
-### Run the Auditor
+### Local Setup
 
-**Prerequisites:**
+- **Pixi**: This project uses Pixi for environment management.
+- **Docker**: Local database services must be running
+  (`pixi run start-services`).
 
-- Local Docker database services must be running (`pixi run start-services`) or
-  you must be connected to the staging database via the Cloud SQL Auth Proxy.
-- The following environment variables must be set in your `.env` file:
-  - `CBORG_API_KEY`: Your API key for the CBORG proxy (used by `litellm`).
-  - `AUDITOR_STAGING_DATABASE_URL`: The connection string for the staging
-    database (e.g., `postgresql://user:pass@localhost:5434/biocirv-staging`).
-  - `AUDITOR_ANOMALY_TRACKER_SHEET_KEY`: The Google Sheet ID for the Anomaly
-    Tracker.
+### Environment Variables
+
+The following environment variables must be set in your `.env` file:
+
+- `CBORG_API_KEY`: Your API key for the CBORG proxy (used by `litellm` for LLM
+  synthesis).
+- `AUDITOR_STAGING_DATABASE_URL`: The connection string for the staging database
+  (e.g., `postgresql://user:pass@localhost:5434/biocirv-staging`).
+- `AUDITOR_ANOMALY_TRACKER_SHEET_KEY`: The Google Sheet ID for the Anomaly
+  Tracker where flagged records are logged.
+
+### Authentication
+
 - A valid `credentials.json` file for a Google Service Account must be present
   in the project root to write to the Anomaly Tracker.
 
-**Via Pixi:**
+---
+
+## How to Run the Auditor
+
+### Standard Audit
+
+Run the full suite of registered audit targets:
 
 ```bash
-# Run all registered audit targets
-POSTGRES_HOST=localhost pixi run -e auditor run-auditor
+pixi run -e auditor run-auditor
 ```
 
-**Via Prefect:** The auditor is available as a Prefect flow for automated
-scheduling:
+### New Features & Advanced Usage
 
-```python
-from ca_biositing.pipeline.flows.nightly_data_audit_flow import nightly_data_audit_flow
-nightly_data_audit_flow()
+#### Deep Dives
+
+Perform a targeted investigation into a specific provider or resource:
+
+```bash
+pixi run -e auditor audit-deep-dive provider uc_davis
 ```
 
-### Expand with New Targets
+#### Investigator Skill
 
-To audit a new view or table, create a new registration file in
-`audit/targets/views/` (or `tables/`):
+Access interactive query helpers for exploring flagged data:
 
-1.  **Define the AuditTarget**:
+```bash
+pixi run -e auditor audit-investigate
+```
 
-    ```python
-    from audit.targets.registry import AuditTarget, register
+#### Ad-Hoc Targets
 
-    register(AuditTarget(
-        name="my_new_view",
-        source_type="view",
-        description="Description of the target",
-        population_sql="SELECT ...", # Layer 1 stats
-        observation_sql="SELECT ...", # Layer 2 records
-        group_by_cols=["resource_name", "parameter_name"],
-        numeric_cols=["observed_value"],
-        id_cols=["record_id"]
-    ))
-    ```
+Generate temporary audit targets on the fly using the Ad-Hoc Target Factory in
+`audit/targets/adhoc/`.
 
-2.  **Register the Module**: Add `from . import my_new_view` to
-    [`audit/targets/views/__init__.py`](audit/targets/views/__init__.py).
+#### Golden References
 
-### Expand with New Skills
+"Freeze" a population snapshot to use as a permanent reference for drift
+detection:
 
-1.  Create a new Python module in `audit/skills/`.
-2.  Implement your analysis logic (taking a DataFrame and returning a result
-    object).
-3.  Integrate the skill into the `run()` loop in
-    [`audit/agent.py`](audit/agent.py).
+```bash
+pixi run -e auditor run-auditor --freeze-reference
+```
+
+---
+
+## Data Quality Portal
+
+The Data Quality Portal provides a centralized visualization of all audit
+results.
+
+### Generate the Portal
+
+Process the latest audit outputs into a Quarto-based website:
+
+```bash
+pixi run -e portal generate-portal
+```
+
+### View the Portal
+
+Preview the portal locally:
+
+```bash
+pixi run -e portal serve-portal
+```
 
 ---
 
 ## Reference
-
-### Key Audit Targets
-
-- **`mv_biomass_composition`**: The standard baseline audit for all AIM1
-  compositional data.
-- **`mv_biomass_composition_extended`**: An extended audit that groups data by
-  `provider_codename` and includes `collection_timestamp` and `harvest_date`.
-  Use this to find provider-specific drift or temporal anomalies.
 
 ### Outputs
 
@@ -124,5 +128,4 @@ Every run creates a timestamped directory in
 | `report_<target>.md`            | Individual target summary.                                                  |
 | `llm_assessments_<target>.json` | The raw JSON output from the LLM semantic review.                           |
 
-Additionally, flagged anomalies are appended to the **Google Sheet Anomaly
-Tracker** specified by `AUDITOR_ANOMALY_TRACKER_SHEET_KEY`.
+Flagged anomalies are also appended to the **Google Sheet Anomaly Tracker**.

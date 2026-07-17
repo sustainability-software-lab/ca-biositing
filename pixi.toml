@@ -520,6 +520,10 @@ tabulate = "*"
 
 [feature.auditor.tasks]
 run-auditor = { cmd = "python audit/agent.py", description = "Run the skill-based data auditor.", env = { PYTHONPATH = "." } }
+run-auditor-verbose = { cmd = "python audit/agent.py --verbose", description = "Run auditor with per-target reports.", env = { PYTHONPATH = "." } }
+run-auditor-profile = { cmd = "python audit/agent.py --profile", description = "Run auditor with ydata-profiling (weekly).", env = { PYTHONPATH = "." } }
+audit-deep-dive = { cmd = "python audit/agent.py --deep-dive", description = "Run a targeted deep-dive. Usage: pixi run audit-deep-dive provider uc_davis", env = { PYTHONPATH = "." } }
+audit-investigate = { cmd = "python -c \"from audit.skills.investigator.query_helpers import *; help(query_flagged)\"", description = "Show audit investigator query helpers.", env = { PYTHONPATH = "." } }
 
 [feature.portal.target.osx-arm64.dependencies]
 quarto = "*"
