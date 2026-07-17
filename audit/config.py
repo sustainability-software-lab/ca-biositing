@@ -35,6 +35,9 @@ class AuditorSettings(BaseSettings):
     # Falls back to the datamodels DATABASE_URL if not set
     STAGING_DATABASE_URL: Optional[str] = None
 
+    # Output formatting
+    SUMMARY_MAX_CELL_CHARS: Optional[int] = None
+
     # Google Sheets Anomaly Tracker
     ANOMALY_TRACKER_SHEET_KEY: str = ""          # Spreadsheet key from URL
     ANOMALY_TRACKER_CREDENTIALS: str = "credentials.json"  # Same as ETL pipeline
@@ -83,6 +86,7 @@ def load_yaml_config(yaml_path: str = YAML_CONFIG_PATH) -> AuditorSettings:
         flat_data["EXPECTATIONS_ROOT"] = o.get("expectations_root")
         flat_data["PROFILES_SUBDIR"] = o.get("profiles_subdir")
         flat_data["EVIDENTLY_SUBDIR"] = o.get("evidently_subdir")
+        flat_data["SUMMARY_MAX_CELL_CHARS"] = o.get("summary_max_cell_chars")
 
     if "google_sheets" in yaml_data:
         g = yaml_data["google_sheets"]

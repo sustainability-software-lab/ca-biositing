@@ -6,6 +6,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict
 from audit.skills.llm_synthesis import SynthesisResult
+from audit.config import settings
 
 def generate_executive_summary(
     target_results: List[Dict],  # [{target_name, synthesis, flagged_count, evidently_html_path, gx_pass_count, gx_fail_count}]
@@ -58,10 +59,13 @@ def generate_executive_summary(
             lines.append("### Grouped Issues\n\n")
             lines.append("| Priority | Group | Hypothesis | Action |\n")
             lines.append("|----------|-------|------------|--------|\n")
+            max_chars = settings.SUMMARY_MAX_CELL_CHARS
             for issue in sorted(synthesis.grouped_issues, key=lambda x: ["High","Medium","Low"].index(x.priority)):
+                hyp = issue.hypothesis[:max_chars] + "..." if max_chars and len(issue.hypothesis) > max_chars else issue.hypothesis
+                act = issue.recommended_action[:max_chars] + "..." if max_chars and len(issue.recommended_action) > max_chars else issue.recommended_action
                 lines.append(
                     f"| {issue.priority} | {issue.group_label} | "
-                    f"{issue.hypothesis[:80]}... | {issue.recommended_action[:60]}... |\n"
+                    f"{hyp} | {act} |\n"
                 )
         lines.append("\n---\n")
 
