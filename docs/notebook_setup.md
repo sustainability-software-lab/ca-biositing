@@ -7,12 +7,12 @@ namespace packages used in this repository.
 
 ## Prerequisites
 
-| Requirement                                | Command                     | Note                          |
-| ------------------------------------------ | --------------------------- | ----------------------------- |
-| **Pixi** (v0.55+)                          | `pixi --version`            | Must be on `$PATH`.           |
-| **Project dependencies**                   | `pixi install`              | Run from the repository root. |
-| **VS Code** with the **Python** and **Jupyter** extensions | Install via the Marketplace | Optional but recommended.     |
-| **Pixi Code** VS Code extension | Install from the recommended extensions prompt | Helps VS Code discover Pixi environments. |
+| Requirement                                                | Command                                        | Note                                      |
+| ---------------------------------------------------------- | ---------------------------------------------- | ----------------------------------------- |
+| **Pixi** (v0.55+)                                          | `pixi --version`                               | Must be on `$PATH`.                       |
+| **Project dependencies**                                   | `pixi install`                                 | Run from the repository root.             |
+| **VS Code** with the **Python** and **Jupyter** extensions | Install via the Marketplace                    | Optional but recommended.                 |
+| **Pixi Code** VS Code extension                            | Install from the recommended extensions prompt | Helps VS Code discover Pixi environments. |
 
 ---
 
@@ -94,8 +94,8 @@ On Windows, this repository uses Pixi's workspace Python at:
 ```
 
 You do not need a separate system Python install for notebooks in this project.
-If the plain `python` command opens the Microsoft Store or fails, that is okay as
-long as `pixi run python --version` works.
+If the plain `python` command opens the Microsoft Store or fails, that is okay
+as long as `pixi run python --version` works.
 
 ---
 
@@ -122,12 +122,12 @@ Import succeeded
 
 ## Summary
 
-| Step                | Command / Action                                       |
-| ------------------- | ------------------------------------------------------ |
-| Install environment | `pixi install`                                         |
-| Register kernel     | `pixi run register-jupyter-kernel`                     |
+| Step                | Command / Action                                        |
+| ------------------- | ------------------------------------------------------- |
+| Install environment | `pixi install`                                          |
+| Register kernel     | `pixi run register-jupyter-kernel`                      |
 | Select kernel       | Choose **ca-biositing (Pixi)** in VS Code or JupyterLab |
-| Import packages     | Use standard imports (`from ca_biositing.pipeline...`) |
+| Import packages     | Use standard imports (`from ca_biositing.pipeline...`)  |
 
 ## Troubleshooting VS Code Kernel Discovery
 
