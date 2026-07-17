@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 import pandas as pd
+import yaml
 from audit.config import settings
 
 def generate_portal():
@@ -60,9 +61,34 @@ def generate_portal():
         else:
             evidently_rel_path = ""
 
-        # Check for plots in analysis/ (though they aren't per-run usually)
-        # Instructions say: "Custom Visuals — links to analysis/ directory plots"
-        # We'll just list some generic ones or if they exist.
+        # Dynamic Asset Discovery
+        # Glob for filenames matching target_name in analysis/ and exports/plots/
+        search_roots = [Path("analysis"), Path("exports/plots")]
+        discovered_assets = []
+
+        # Broaden search terms
+        search_terms = {target_name}
+        stripped = target_name.replace("mv_biomass_", "").replace("mv_", "")
+        search_terms.add(stripped)
+        if stripped.endswith("al"):
+            search_terms.add(stripped[:-2])
+        elif stripped == "composition":
+            search_terms.add("compositional")
+
+        for root in search_roots:
+            if root.exists():
+                for term in list(search_terms):
+                    patterns = [f"*{term}*", f"{term}*"]
+                    for pattern in patterns:
+                        for asset in root.rglob(pattern):
+                            # Prefer interactive HTML and static images
+                            if asset.is_file() and asset.suffix in [".png", ".html", ".svg", ".ipynb"]:
+                                # Avoid .pixi or hidden files
+                                if ".pixi" not in str(asset) and not asset.name.startswith("."):
+                                    discovered_assets.append(asset)
+
+        # De-duplicate
+        discovered_assets = sorted(list(set(discovered_assets)))
 
         qmd_content = f"""---
 title: "Audit Target: {target_name}"
@@ -88,18 +114,34 @@ format:
         qmd_content += """
 ## Custom Visuals
 
-Links to specific analysis plots:
+"""
+        if discovered_assets:
+            qmd_content += "Discovered assets:\n\n"
+            for asset in discovered_assets:
+                # Calculate relative path from audit/portal/targets/ to root
+                rel_to_root = "../../../"
 
-- [Biomass Composition Plots](../../../analysis/composition/)
-- [Conversion Distribution Plots](../../../analysis/conversion/)
+                # Copy assets to portal directory so they are bundled with the website
+                # This ensures they are available in the rendered _site
+                asset_dest_dir = portal_dir / "assets" / asset.parent
+                asset_dest_dir.mkdir(parents=True, exist_ok=True)
+                import shutil
+                shutil.copy2(asset, asset_dest_dir / asset.name)
 
+                # Relative path from targets/ to assets/
+                asset_rel_path = f"../assets/{asset}"
+                qmd_content += f"- [{asset.name}]({asset_rel_path})\n"
+        else:
+            qmd_content += "No specific analysis assets discovered for this target.\n"
+
+        qmd_content += """
 :::
 """
         qmd_path.write_text(qmd_content)
 
         target_summaries.append({
             "Target": f"[{target_name}](targets/{target_name}.qmd)",
-            "Flagged": synth_data.get("flagged_count", "N/A"), # Note: AuditorAgent output results has flagged_count, synthesis json might not.
+            "Flagged": synth_data.get("flagged_count", "N/A"),
             "Status": "✅ Pass" if not synth_data.get("grouped_issues") else "⚠️ Issues"
         })
 
@@ -121,13 +163,46 @@ title: "Data Quality Portal"
 
 # Target Audit Status
 
-| Target | Status |
-|--------|--------|
+| Target | Status | Pass/Fail |
+|--------|--------|-----------|
 """
+    # Sort summaries by target name for consistency
+    target_summaries.sort(key=lambda x: x["Target"])
     for ts in target_summaries:
-        index_qmd += f"| {ts['Target']} | {ts['Status']} |\n"
+        index_qmd += f"| {ts['Target']} | {ts['Flagged']} flagged | {ts['Status']} |\n"
 
     (portal_dir / "index.qmd").write_text(index_qmd)
+
+    # 4. Update _quarto.yml sidebar
+    quarto_yml_path = portal_dir / "_quarto.yml"
+    if quarto_yml_path.exists():
+        with open(quarto_yml_path, "r") as f:
+            quarto_yml = yaml.safe_load(f)
+
+        # Ensure website structure
+        if "website" not in quarto_yml:
+            quarto_yml["website"] = {}
+
+        # Add sidebar
+        sidebar_contents = []
+        # Sort targets for sidebar
+        for ts in sorted(target_summaries, key=lambda x: x["Target"]):
+            # Extract filename from markdown link [name](path)
+            import re
+            match = re.search(r"\((.*?)\)", ts["Target"])
+            if match:
+                sidebar_contents.append(match.group(1))
+
+        quarto_yml["website"]["sidebar"] = {
+            "title": "Audit Targets",
+            "style": "floating",
+            "collapse-level": 2,
+            "contents": sidebar_contents
+        }
+
+        with open(quarto_yml_path, "w") as f:
+            yaml.dump(quarto_yml, f, sort_keys=False)
+
     print("Portal generation complete.")
 
 if __name__ == "__main__":

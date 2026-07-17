@@ -1,14 +1,20 @@
 project:
   type: website
   output-dir: _site
-
 website:
-  title: "BioCirV Data Quality Portal"
+  title: BioCirV Data Quality Portal
   navbar:
     left:
       - href: index.qmd
         text: Home
-
+  sidebar:
+    title: Audit Targets
+    style: floating
+    collapse-level: 2
+    contents:
+      - targets/compositional.qmd
+      - targets/icp.qmd
+      - targets/proximate.qmd
 format:
   html:
     theme: cosmo

@@ -26,6 +26,7 @@ class GroupedIssue(BaseModel):
 class SynthesisResult(BaseModel):
     executive_summary: str = Field(description="2-3 paragraph executive summary for the audit report")
     grouped_issues: List[GroupedIssue] = Field(description="Up to 50 grouped issues")
+    flagged_count: int = Field(default=0, description="Total number of flagged observations")
 
 def run_llm_synthesis(
     target_name: str,
@@ -93,4 +94,5 @@ Your task:
         messages=[{"role": "user", "content": prompt}],
         max_tokens=settings.LLM_MAX_TOKENS,
     )
+    result.flagged_count = len(flagged) if flagged else 0
     return result
