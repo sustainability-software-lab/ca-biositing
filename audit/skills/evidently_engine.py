@@ -102,6 +102,7 @@ def _evidently_to_flagged(
             qc_pass=row.get("qc_pass"),
             note=row.get("note"),
             created_at=str(row.get("created_at", "")),
+            provider_codename=row.get("provider_codename"),
         )
         for _, row in flagged_rows.iterrows()
     ]

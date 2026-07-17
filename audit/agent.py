@@ -13,6 +13,12 @@ from audit.skills.llm_synthesis import run_llm_synthesis
 from audit.skills.analyst_report import generate_analyst_report
 from audit.skills.executive_summary import generate_executive_summary
 from audit.skills.anomaly_tracker import write_anomaly_tracker, write_raw_anomaly_tracker
+from audit.skills.deep_dives import (
+    audit_provider_deep_dive,
+    audit_resource_deep_dive,
+    audit_analysis_type_review,
+    audit_temporal_drift,
+)
 
 # Import the database engine utility from the datamodels package
 from ca_biositing.datamodels.database import get_engine
@@ -192,7 +198,44 @@ if __name__ == "__main__":
     parser.add_argument("--profile", action="store_true", help="Run full statistical profiling (ydata-profiling)")
     parser.add_argument("--verbose", action="store_true", help="Generate detailed per-target Markdown reports")
     parser.add_argument("--targets", nargs="+", help="Specific targets to audit")
+    parser.add_argument("--deep-dive", choices=["provider", "resource", "analysis-type", "temporal"], help="Run a targeted deep-dive")
+    parser.add_argument("--value", help="Value for deep-dive (provider codename, resource name, or analysis type)")
+    parser.add_argument("--target", help="Target name for temporal deep-dive")
+    parser.add_argument("--run-dir", help="Path to a previous audit run directory (optional, defaults to latest)")
     args = parser.parse_args()
 
-    agent = AuditorAgent(targets=args.targets, profile=args.profile, verbose=args.verbose)
-    agent.run()
+    if args.deep_dive:
+        # Determine run_dir if not provided
+        if not args.run_dir:
+            output_root = Path(settings.OUTPUT_ROOT)
+            runs = sorted([d for d in output_root.iterdir() if d.is_dir()], reverse=True)
+            if not runs:
+                print(f"❌ No audit runs found in {settings.OUTPUT_ROOT}")
+                exit(1)
+            run_dir = str(runs[0])
+        else:
+            run_dir = args.run_dir
+
+        if args.deep_dive == "provider":
+            if not args.value:
+                print("❌ --value <provider_codename> is required for provider deep-dive")
+                exit(1)
+            audit_provider_deep_dive(args.value, run_dir)
+        elif args.deep_dive == "resource":
+            if not args.value:
+                print("❌ --value <resource_name> is required for resource deep-dive")
+                exit(1)
+            audit_resource_deep_dive(args.value, run_dir)
+        elif args.deep_dive == "analysis-type":
+            if not args.value:
+                print("❌ --value <analysis_type> is required for analysis-type review")
+                exit(1)
+            audit_analysis_type_review(args.value, run_dir)
+        elif args.deep_dive == "temporal":
+            if not args.target:
+                print("❌ --target <target_name> is required for temporal drift analysis")
+                exit(1)
+            audit_temporal_drift(args.target, run_dir)
+    else:
+        agent = AuditorAgent(targets=args.targets, profile=args.profile, verbose=args.verbose)
+        agent.run()

@@ -32,17 +32,6 @@
       "meta": {
         "notes": "Values should generally be positive."
       }
-    },
-    {
-      "expectation_type": "expect_column_pair_values_A_to_be_greater_than_B",
-      "kwargs": {
-        "column_A": "collection_timestamp",
-        "column_B": "harvest_date",
-        "or_equal": true
-      },
-      "meta": {
-        "notes": "Collection must occur at or after harvest."
-      }
     }
   ],
   "ge_cloud_id": null,

@@ -28,6 +28,7 @@ class FlaggedObservation:
     qc_pass: Optional[str]
     note: Optional[str]
     created_at: Optional[str]
+    provider_codename: Optional[str] = None
 
 def detect_grouped_outliers(
     population_df: pd.DataFrame,   # Layer 1: group-level stats from view
@@ -78,6 +79,7 @@ def detect_grouped_outliers(
             qc_pass=row.get("qc_pass"),
             note=row.get("note"),
             created_at=str(row.get("created_at", "")),
+            provider_codename=row.get("provider_codename"),
         )
         for _, row in flagged.iterrows()
     ]
