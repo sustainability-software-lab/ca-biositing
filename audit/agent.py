@@ -72,7 +72,7 @@ class AuditorAgent:
                 is_golden = True
             else:
                 pop_df = pd.read_sql(target.population_sql, self.engine)
-            
+
             obs_df = pd.read_sql(target.observation_sql, self.engine)
 
             # 2. Skill 1: Statistical Profiling (Gated by --profile)

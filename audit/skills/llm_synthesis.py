@@ -6,6 +6,7 @@ a list of GroupedIssue objects for the Anomaly Tracker.
 import instructor
 import litellm
 import os
+from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Literal, Optional
 from audit.skills.grouped_outlier_detection import FlaggedObservation
@@ -37,6 +38,12 @@ def run_llm_synthesis(
     """
     client = instructor.from_litellm(litellm.completion)
 
+    # Load Domain Context if available
+    context_path = Path("audit/targets/context") / f"{target_name}.md"
+    domain_context = ""
+    if context_path.exists():
+        domain_context = f"\n## Domain Context\n{context_path.read_text()}\n"
+
     # Summarize flagged observations for the prompt
     import pandas as pd
     if flagged:
@@ -57,7 +64,7 @@ def run_llm_synthesis(
 You are a domain-aware data quality statistician for agricultural biomass research.
 
 Audit Target: {target_name}
-
+{domain_context}
 ## Evidently AI Summary
 {str(evidently_json)[:3000]}
 

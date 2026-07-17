@@ -68,7 +68,7 @@ def run_evidently_profile(
             TestShareOfMissingValues(),
         ])
         test_suite.run(reference_data=pop_df_prepared, current_data=observation_df)
-        
+
         # Save TestSuite HTML
         test_html_path = output_dir / f"{target_name}_schema_guard.html"
         test_suite.save_html(str(test_html_path))
@@ -96,7 +96,7 @@ def _evidently_to_flagged(
     Falls back to Z-score if Evidently bounds unavailable.
     """
     import numpy as np
-    
+
     # If pop_df is raw records (e.g. from Golden Reference), compute summary stats
     if "avg_value" not in pop_df.columns:
         pop_stats = pop_df.groupby(group_cols)[value_col].agg(

@@ -1,15 +1,23 @@
 # Audit Pipeline — Feedback & Feature Requests
 
-> **Status:** Active — Post Task 1 (Targeted Analysis Refactoring, Commit: `0fa038d`)
-> **Scope:** Requirements to be incorporated into the next implementation phase of Audit Pipeline refinement.
+> **Status:** Active — Post Task 1 (Targeted Analysis Refactoring, Commit:
+> `0fa038d`) **Scope:** Requirements to be incorporated into the next
+> implementation phase of Audit Pipeline refinement.
 
 ---
 
 ## Background
 
-Task 1 (Targeted Analysis Refactoring) introduced granular, per-analysis-type audit targets (e.g., `proximate`, `compositional`) replacing the legacy materialized-view-based targets. The refactored pipeline now queries individual record tables directly via `observation_sql` and `population_sql` defined in each [`AuditTarget`](targets/registry.py), producing per-target Evidently profiles, LLM synthesis JSON, and Markdown reports assembled into an executive summary.
+Task 1 (Targeted Analysis Refactoring) introduced granular, per-analysis-type
+audit targets (e.g., `proximate`, `compositional`) replacing the legacy
+materialized-view-based targets. The refactored pipeline now queries individual
+record tables directly via `observation_sql` and `population_sql` defined in
+each [`AuditTarget`](targets/registry.py), producing per-target Evidently
+profiles, LLM synthesis JSON, and Markdown reports assembled into an executive
+summary.
 
-Two concrete deficiencies have been identified in the current output that must be addressed in the next implementation phase.
+Two concrete deficiencies have been identified in the current output that must
+be addressed in the next implementation phase.
 
 ---
 
@@ -17,43 +25,64 @@ Two concrete deficiencies have been identified in the current output that must b
 
 ### Problem Statement
 
-Every flagged observation surfaced in audit reports — both the Markdown analyst reports and the Quarto Portal — currently omits critical cross-record context fields. The [`FlaggedObservation`](skills/grouped_outlier_detection.py) dataclass already carries `resource_name` and `provider_codename`, but neither the [`generate_analyst_report()`](skills/analyst_report.py) Markdown table nor the Portal `.qmd` pages render these fields alongside each flagged row.
+Every flagged observation surfaced in audit reports — both the Markdown analyst
+reports and the Quarto Portal — currently omits critical cross-record context
+fields. The [`FlaggedObservation`](skills/grouped_outlier_detection.py)
+dataclass already carries `resource_name` and `provider_codename`, but neither
+the [`generate_analyst_report()`](skills/analyst_report.py) Markdown table nor
+the Portal `.qmd` pages render these fields alongside each flagged row.
 
-**Current flagged observations table** (from [`analyst_report.py`](skills/analyst_report.py:41)):
+**Current flagged observations table** (from
+[`analyst_report.py`](skills/analyst_report.py:41)):
 
 ```
 | Record ID | Parameter | Value | Z-Score | Severity |
 ```
 
-This is insufficient for cross-record reasoning. An analyst reviewing a HIGH-severity flag cannot immediately determine:
+This is insufficient for cross-record reasoning. An analyst reviewing a
+HIGH-severity flag cannot immediately determine:
+
 - Which **resource** (feedstock) the record belongs to.
 - Which **provider** submitted the data.
 - When the **analysis or field sample** was collected.
 
-Without these three fields, triage requires manual cross-referencing against the database, breaking the self-contained audit report workflow.
+Without these three fields, triage requires manual cross-referencing against the
+database, breaking the self-contained audit report workflow.
 
 ### Requirement
 
-Every flagged observation row in **all** audit output surfaces (Markdown reports and Portal pages) **must** include the following three fields alongside the existing columns:
+Every flagged observation row in **all** audit output surfaces (Markdown reports
+and Portal pages) **must** include the following three fields alongside the
+existing columns:
 
-| Field | Source | Notes |
-|-------|--------|-------|
-| `resource_name` | Already on [`FlaggedObservation`](skills/grouped_outlier_detection.py:16) | Display as-is |
-| `provider_codename` | Already on [`FlaggedObservation`](skills/grouped_outlier_detection.py:31) | Display as-is; show `—` when null |
-| Analysis / Field Sample Date | Not yet on `FlaggedObservation`; must be added | Sourced from `created_at` or a dedicated `sample_date` column in the `observation_sql` of each target view |
+| Field                        | Source                                                                    | Notes                                                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `resource_name`              | Already on [`FlaggedObservation`](skills/grouped_outlier_detection.py:16) | Display as-is                                                                                              |
+| `provider_codename`          | Already on [`FlaggedObservation`](skills/grouped_outlier_detection.py:31) | Display as-is; show `—` when null                                                                          |
+| Analysis / Field Sample Date | Not yet on `FlaggedObservation`; must be added                            | Sourced from `created_at` or a dedicated `sample_date` column in the `observation_sql` of each target view |
 
 ### Acceptance Criteria
 
-1. [`FlaggedObservation`](skills/grouped_outlier_detection.py) carries a `sample_date` field (or `created_at` is reliably populated and surfaced).
-2. The flagged observations table in [`generate_analyst_report()`](skills/analyst_report.py) renders at minimum:
+1. [`FlaggedObservation`](skills/grouped_outlier_detection.py) carries a
+   `sample_date` field (or `created_at` is reliably populated and surfaced).
+2. The flagged observations table in
+   [`generate_analyst_report()`](skills/analyst_report.py) renders at minimum:
 
    ```
    | Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |
    ```
 
-3. The Portal `.qmd` target pages (generated by [`generate_portal.py`](portal/generate_portal.py)) render the same expanded columns in their flagged observations section.
-4. The LLM synthesis prompt in [`run_llm_synthesis()`](skills/llm_synthesis.py) includes `provider_codename` and `sample_date` in the `sample_records` DataFrame slice passed to the model, enabling the LLM to reason across providers and time periods.
-5. All existing `observation_sql` queries in [`targets/views/`](targets/views/) must `SELECT` the provider codename and sample date. Where a dedicated `sample_date` column does not exist on the record table, `created_at` is an acceptable fallback, but this must be documented per target.
+3. The Portal `.qmd` target pages (generated by
+   [`generate_portal.py`](portal/generate_portal.py)) render the same expanded
+   columns in their flagged observations section.
+4. The LLM synthesis prompt in [`run_llm_synthesis()`](skills/llm_synthesis.py)
+   includes `provider_codename` and `sample_date` in the `sample_records`
+   DataFrame slice passed to the model, enabling the LLM to reason across
+   providers and time periods.
+5. All existing `observation_sql` queries in [`targets/views/`](targets/views/)
+   must `SELECT` the provider codename and sample date. Where a dedicated
+   `sample_date` column does not exist on the record table, `created_at` is an
+   acceptable fallback, but this must be documented per target.
 
 ---
 
@@ -61,75 +90,134 @@ Every flagged observation row in **all** audit output surfaces (Markdown reports
 
 ### Problem Statement
 
-The executive audit summary and other Markdown tables produced by the pipeline truncate cell content with hard-coded ellipses. This is caused by explicit string slicing in [`generate_executive_summary()`](skills/executive_summary.py:63-64):
+The executive audit summary and other Markdown tables produced by the pipeline
+truncate cell content with hard-coded ellipses. This is caused by explicit
+string slicing in
+[`generate_executive_summary()`](skills/executive_summary.py:63-64):
 
 ```python
 # audit/skills/executive_summary.py  (lines 63–64)
 f"{issue.hypothesis[:80]}... | {issue.recommended_action[:60]}... |\n"
 ```
 
-The result is that the `Hypothesis` column is capped at 80 characters and the `Action` column at 60 characters, regardless of content length. In the current output (e.g., [`output/2026-07-17_10-07-52/executive_audit_summary.md`](output/2026-07-17_10-07-52/executive_audit_summary.md)), this produces truncated rows such as:
+The result is that the `Hypothesis` column is capped at 80 characters and the
+`Action` column at 60 characters, regardless of content length. In the current
+output (e.g.,
+[`output/2026-07-17_10-07-52/executive_audit_summary.md`](output/2026-07-17_10-07-52/executive_audit_summary.md)),
+this produces truncated rows such as:
 
 ```
 | High | Critical Metadata Attrition: Analyst Traceability | A breakdown in the laboratory information management system (LIMS) export or a c... | Mandate analyst identification in the data entry form and pe... |
 ```
 
-The full hypothesis and recommended action are available in the corresponding [`llm_synthesis_*.json`](output/2026-07-17_10-07-52/llm_synthesis_proximate.json) files but are not visible in the primary human-readable summary. This defeats the purpose of the executive summary as a standalone decision-making artifact.
+The full hypothesis and recommended action are available in the corresponding
+[`llm_synthesis_*.json`](output/2026-07-17_10-07-52/llm_synthesis_proximate.json)
+files but are not visible in the primary human-readable summary. This defeats
+the purpose of the executive summary as a standalone decision-making artifact.
 
 ### Requirement
 
-All Markdown tables produced by the audit pipeline must render **full, untruncated text** in every cell. Specifically:
+All Markdown tables produced by the audit pipeline must render **full,
+untruncated text** in every cell. Specifically:
 
-1. **Remove** the `[:80]` and `[:60]` hard-coded slices (and trailing `...`) from the grouped issues table in [`generate_executive_summary()`](skills/executive_summary.py:63-64).
-2. **Audit all other report-generating functions** for similar truncation patterns:
-   - [`generate_analyst_report()`](skills/analyst_report.py) — verify no truncation in the flagged observations table.
-   - [`generate_portal.py`](portal/generate_portal.py) — verify grouped issues rendered in `.qmd` pages are not truncated.
-3. **Markdown table cell wrapping**: Long text in Markdown table cells is valid and renders correctly in all target consumers (GitHub Markdown, Quarto HTML, VS Code preview). No special handling is required beyond removing the slices.
-4. If a future need arises to limit display length for UI reasons, implement a **configurable** truncation setting (e.g., `settings.SUMMARY_MAX_CELL_CHARS = None`) rather than hard-coded constants, defaulting to `None` (no truncation).
+1. **Remove** the `[:80]` and `[:60]` hard-coded slices (and trailing `...`)
+   from the grouped issues table in
+   [`generate_executive_summary()`](skills/executive_summary.py:63-64).
+2. **Audit all other report-generating functions** for similar truncation
+   patterns:
+   - [`generate_analyst_report()`](skills/analyst_report.py) — verify no
+     truncation in the flagged observations table.
+   - [`generate_portal.py`](portal/generate_portal.py) — verify grouped issues
+     rendered in `.qmd` pages are not truncated.
+3. **Markdown table cell wrapping**: Long text in Markdown table cells is valid
+   and renders correctly in all target consumers (GitHub Markdown, Quarto HTML,
+   VS Code preview). No special handling is required beyond removing the slices.
+4. If a future need arises to limit display length for UI reasons, implement a
+   **configurable** truncation setting (e.g.,
+   `settings.SUMMARY_MAX_CELL_CHARS = None`) rather than hard-coded constants,
+   defaulting to `None` (no truncation).
 
 ### Acceptance Criteria
 
-1. [`generate_executive_summary()`](skills/executive_summary.py) produces grouped issue rows where `hypothesis` and `recommended_action` are written in full.
-2. A re-run of the audit pipeline against the same data produces an `executive_audit_summary.md` where no cell ends with `...` due to truncation.
-3. All other Markdown-generating functions in [`audit/skills/`](skills/) are confirmed free of hard-coded string truncation.
+1. [`generate_executive_summary()`](skills/executive_summary.py) produces
+   grouped issue rows where `hypothesis` and `recommended_action` are written in
+   full.
+2. A re-run of the audit pipeline against the same data produces an
+   `executive_audit_summary.md` where no cell ends with `...` due to truncation.
+3. All other Markdown-generating functions in [`audit/skills/`](skills/) are
+   confirmed free of hard-coded string truncation.
 
 ---
 
 ## Implementation Plan
 
-The following steps should be executed in order as part of the next Audit Pipeline refinement task.
+The following steps should be executed in order as part of the next Audit
+Pipeline refinement task.
 
 ### Phase A — Table Truncation Fix (Req. 2)
 
-This is a low-risk, high-impact change with no schema or data dependencies. It should be completed first.
+This is a low-risk, high-impact change with no schema or data dependencies. It
+should be completed first.
 
-- [ ] **A1** — In [`skills/executive_summary.py`](skills/executive_summary.py), remove the `[:80]` slice on `issue.hypothesis` and the `[:60]` slice on `issue.recommended_action` at line 63–64. Remove the trailing `...` string literals.
-- [ ] **A2** — Audit [`skills/analyst_report.py`](skills/analyst_report.py) for any truncation in the flagged observations table. Confirm no slicing is applied to cell values.
-- [ ] **A3** — Audit [`portal/generate_portal.py`](portal/generate_portal.py) for any truncation in grouped issues or flagged observations rendered into `.qmd` files.
-- [ ] **A4** — Add a `SUMMARY_MAX_CELL_CHARS: Optional[int] = None` setting to [`config.py`](config.py) (or `config.yaml`) as a future-proofing hook. Wire it into `generate_executive_summary()` with a guard: only truncate if the setting is not `None`.
-- [ ] **A5** — Re-run the audit pipeline and verify the new `executive_audit_summary.md` contains full hypothesis and action text.
+- [ ] **A1** — In [`skills/executive_summary.py`](skills/executive_summary.py),
+      remove the `[:80]` slice on `issue.hypothesis` and the `[:60]` slice on
+      `issue.recommended_action` at line 63–64. Remove the trailing `...` string
+      literals.
+- [ ] **A2** — Audit [`skills/analyst_report.py`](skills/analyst_report.py) for
+      any truncation in the flagged observations table. Confirm no slicing is
+      applied to cell values.
+- [ ] **A3** — Audit [`portal/generate_portal.py`](portal/generate_portal.py)
+      for any truncation in grouped issues or flagged observations rendered into
+      `.qmd` files.
+- [ ] **A4** — Add a `SUMMARY_MAX_CELL_CHARS: Optional[int] = None` setting to
+      [`config.py`](config.py) (or `config.yaml`) as a future-proofing hook.
+      Wire it into `generate_executive_summary()` with a guard: only truncate if
+      the setting is not `None`.
+- [ ] **A5** — Re-run the audit pipeline and verify the new
+      `executive_audit_summary.md` contains full hypothesis and action text.
 
 ### Phase B — Flagged Observations Metadata (Req. 1)
 
-This phase requires coordinated changes across the SQL layer, the `FlaggedObservation` dataclass, the LLM synthesis prompt, and all report renderers.
+This phase requires coordinated changes across the SQL layer, the
+`FlaggedObservation` dataclass, the LLM synthesis prompt, and all report
+renderers.
 
-- [ ] **B1** — **SQL: Add `provider_codename` and `sample_date` to all `observation_sql` queries.**
-  - For each target view in [`targets/views/`](targets/views/), extend the `SELECT` list to include:
-    - `provider_codename` (join path: `proximate_record` → `experiment` → `provider` → `codename`, or equivalent per analysis type).
-    - `sample_date` (prefer a dedicated column; fall back to `created_at` and document the fallback in a comment).
-  - Start with [`targets/views/proximate.py`](targets/views/proximate.py) and [`targets/views/compositional.py`](targets/views/compositional.py) as the two active targets, then extend to remaining views.
+- [ ] **B1** — **SQL: Add `provider_codename` and `sample_date` to all
+      `observation_sql` queries.**
+  - For each target view in [`targets/views/`](targets/views/), extend the
+    `SELECT` list to include:
+    - `provider_codename` (join path: `proximate_record` → `experiment` →
+      `provider` → `codename`, or equivalent per analysis type).
+    - `sample_date` (prefer a dedicated column; fall back to `created_at` and
+      document the fallback in a comment).
+  - Start with [`targets/views/proximate.py`](targets/views/proximate.py) and
+    [`targets/views/compositional.py`](targets/views/compositional.py) as the
+    two active targets, then extend to remaining views.
 
 - [ ] **B2** — **`FlaggedObservation`: Add `sample_date` field.**
-  - In [`skills/grouped_outlier_detection.py`](skills/grouped_outlier_detection.py), add `sample_date: Optional[str] = None` to the [`FlaggedObservation`](skills/grouped_outlier_detection.py:13) dataclass.
-  - In [`detect_grouped_outliers()`](skills/grouped_outlier_detection.py:33), populate `sample_date` from `row.get("sample_date")` (falling back to `row.get("created_at")`).
-  - `provider_codename` is already a field on `FlaggedObservation`; confirm it is being populated from the SQL result (currently it reads `row.get("provider_codename")` but the SQL does not yet select it — this is fixed by B1).
+  - In
+    [`skills/grouped_outlier_detection.py`](skills/grouped_outlier_detection.py),
+    add `sample_date: Optional[str] = None` to the
+    [`FlaggedObservation`](skills/grouped_outlier_detection.py:13) dataclass.
+  - In [`detect_grouped_outliers()`](skills/grouped_outlier_detection.py:33),
+    populate `sample_date` from `row.get("sample_date")` (falling back to
+    `row.get("created_at")`).
+  - `provider_codename` is already a field on `FlaggedObservation`; confirm it
+    is being populated from the SQL result (currently it reads
+    `row.get("provider_codename")` but the SQL does not yet select it — this is
+    fixed by B1).
 
 - [ ] **B3** — **LLM Synthesis: Include new fields in the prompt context.**
-  - In [`skills/llm_synthesis.py`](skills/llm_synthesis.py), extend the `sample_records` DataFrame slice to include `provider_codename` and `sample_date` columns (line 47–49).
-  - Update the prompt text to instruct the model to reason across providers and time periods when grouping anomalies.
+  - In [`skills/llm_synthesis.py`](skills/llm_synthesis.py), extend the
+    `sample_records` DataFrame slice to include `provider_codename` and
+    `sample_date` columns (line 47–49).
+  - Update the prompt text to instruct the model to reason across providers and
+    time periods when grouping anomalies.
 
 - [ ] **B4** — **Analyst Report: Expand the flagged observations table.**
-  - In [`skills/analyst_report.py`](skills/analyst_report.py), update the Markdown table header and row template to include `Resource`, `Provider`, and `Sample Date` columns:
+  - In [`skills/analyst_report.py`](skills/analyst_report.py), update the
+    Markdown table header and row template to include `Resource`, `Provider`,
+    and `Sample Date` columns:
     ```
     | Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |
     ```
@@ -137,45 +225,92 @@ This phase requires coordinated changes across the SQL layer, the `FlaggedObserv
   - Render `sample_date` as `—` when `None`.
 
 - [ ] **B5** — **Portal: Expand flagged observations in `.qmd` pages.**
-  - In [`portal/generate_portal.py`](portal/generate_portal.py), update the grouped issues and any flagged observations sections in the generated `.qmd` content to include the new fields.
+  - In [`portal/generate_portal.py`](portal/generate_portal.py), update the
+    grouped issues and any flagged observations sections in the generated `.qmd`
+    content to include the new fields.
 
 - [ ] **B6** — **Validation: Re-run pipeline and verify output.**
-  - Confirm `resource_name`, `provider_codename`, and `sample_date` appear in the flagged observations tables of both the Markdown reports and the Portal.
-  - Confirm the LLM synthesis JSON references provider and date context in its grouped issue hypotheses.
+  - Confirm `resource_name`, `provider_codename`, and `sample_date` appear in
+    the flagged observations tables of both the Markdown reports and the Portal.
+  - Confirm the LLM synthesis JSON references provider and date context in its
+    grouped issue hypotheses.
 
 ---
 
 ## File Change Summary
 
-| File | Change | Requirement |
-|------|--------|-------------|
-| [`skills/executive_summary.py`](skills/executive_summary.py) | Remove `[:80]`/`[:60]` truncation; add configurable guard | Req. 2 |
-| [`skills/analyst_report.py`](skills/analyst_report.py) | Expand flagged obs table columns; confirm no truncation | Req. 1 + Req. 2 |
-| [`skills/grouped_outlier_detection.py`](skills/grouped_outlier_detection.py) | Add `sample_date` field to `FlaggedObservation`; populate from SQL | Req. 1 |
-| [`skills/llm_synthesis.py`](skills/llm_synthesis.py) | Include `provider_codename` + `sample_date` in prompt context | Req. 1 |
-| [`portal/generate_portal.py`](portal/generate_portal.py) | Expand flagged obs columns in `.qmd` output; confirm no truncation | Req. 1 + Req. 2 |
-| [`targets/views/proximate.py`](targets/views/proximate.py) | Add `provider_codename`, `sample_date` to `observation_sql` | Req. 1 |
-| [`targets/views/compositional.py`](targets/views/compositional.py) | Add `provider_codename`, `sample_date` to `observation_sql` | Req. 1 |
-| All other files in [`targets/views/`](targets/views/) | Same SQL extension as above | Req. 1 |
-| [`config.py`](config.py) | Add `SUMMARY_MAX_CELL_CHARS: Optional[int] = None` | Req. 2 |
+| File                                                                         | Change                                                             | Requirement     |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------ | --------------- |
+| [`skills/executive_summary.py`](skills/executive_summary.py)                 | Remove `[:80]`/`[:60]` truncation; add configurable guard          | Req. 2          |
+| [`skills/analyst_report.py`](skills/analyst_report.py)                       | Expand flagged obs table columns; confirm no truncation            | Req. 1 + Req. 2 |
+| [`skills/grouped_outlier_detection.py`](skills/grouped_outlier_detection.py) | Add `sample_date` field to `FlaggedObservation`; populate from SQL | Req. 1          |
+| [`skills/llm_synthesis.py`](skills/llm_synthesis.py)                         | Include `provider_codename` + `sample_date` in prompt context      | Req. 1          |
+| [`portal/generate_portal.py`](portal/generate_portal.py)                     | Expand flagged obs columns in `.qmd` output; confirm no truncation | Req. 1 + Req. 2 |
+| [`targets/views/proximate.py`](targets/views/proximate.py)                   | Add `provider_codename`, `sample_date` to `observation_sql`        | Req. 1          |
+| [`targets/views/compositional.py`](targets/views/compositional.py)           | Add `provider_codename`, `sample_date` to `observation_sql`        | Req. 1          |
+| All other files in [`targets/views/`](targets/views/)                        | Same SQL extension as above                                        | Req. 1          |
+| [`config.py`](config.py)                                                     | Add `SUMMARY_MAX_CELL_CHARS: Optional[int] = None`                 | Req. 2          |
 
 ## Requirement 3 — Strict Schema Guard for Materialized Views
 
 ### Problem Statement
 
-The implementation of Golden References in Task 2 uses Evidently's `TestSuite` with `TestNumberOfColumns` and `TestColumnsType`. While this provides some level of schema validation, it is performed on the data payload processed by the auditor, which may involve column renaming or filtering.
+The implementation of Golden References in Task 2 uses Evidently's `TestSuite`
+with `TestNumberOfColumns` and `TestColumnsType`. While this provides some level
+of schema validation, it is performed on the data payload processed by the
+auditor, which may involve column renaming or filtering.
 
-There is a need for a more direct and strict validation that the materialized views in the database (e.g., `mv_biomass_composition` in staging) have the exact same schema as a known good reference (e.g., production). This ensures that any drift in the underlying database views is detected immediately, even if the data itself appears compliant.
+There is a need for a more direct and strict validation that the materialized
+views in the database (e.g., `mv_biomass_composition` in staging) have the exact
+same schema as a known good reference (e.g., production). This ensures that any
+drift in the underlying database views is detected immediately, even if the data
+itself appears compliant.
 
 ### Requirement
 
-Implement a strict schema comparison between registered database views and their golden reference definitions. This should:
+Implement a strict schema comparison between registered database views and their
+golden reference definitions. This should:
+
 1. Compare the exact column names and order.
-2. Ensure no columns have been added, removed, or renamed in the database view compared to the reference.
-3. Be performed directly against the database metadata if possible, or via a strict DataFrame schema check before any auditor-specific transformations.
+2. Ensure no columns have been added, removed, or renamed in the database view
+   compared to the reference.
+3. Be performed directly against the database metadata if possible, or via a
+   strict DataFrame schema check before any auditor-specific transformations.
 
 ### Acceptance Criteria
 
-1. A mechanism exists to verify that the schema of `mv_biomass_composition` (and other views) matches the reference exactly.
-2. High-priority alerts are triggered if any discrepancy is found in column names or order.
+1. A mechanism exists to verify that the schema of `mv_biomass_composition` (and
+   other views) matches the reference exactly.
+2. High-priority alerts are triggered if any discrepancy is found in column
+   names or order.
 3. This is integrated into the `freeze-reference` and audit run workflows.
+
+---
+
+## Requirement 4 — Analyst Attribution & Traceability
+
+### Problem Statement
+
+The LLM synthesis frequently flags "Missing Metadata and Analyst Attribution" as
+a low-priority issue across all targets (e.g., ICP, Proximate). Currently,
+`analyst_name` is 100% missing in the audit datasets. This is because the audit
+queries are not yet pulling analyst information from the database, or the data
+ingestion pipeline is not populating these fields correctly.
+
+### Requirement
+
+Traceability must be established by surfacing analyst identification.
+
+1. **SQL Extension**: Update all `observation_sql` queries in `targets/views/`
+   to include analyst identification.
+2. **Identification Strategy**: If `analyst_name` is unavailable, fall back to
+   `analyst_email` or the `user_id` of the account that uploaded the data.
+3. **LLM Context**: Ensure these fields are passed to the LLM during synthesis
+   to prevent it from flagging "missing attribution" when valid identification
+   exists in a different column.
+
+### Acceptance Criteria
+
+1. `analyst_name` (or fallback) is selected in all audit queries.
+2. The auditor agent no longer reports 100% missing analyst metadata for records
+   where an uploader/analyst email is available in the database.
