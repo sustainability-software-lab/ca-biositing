@@ -222,6 +222,7 @@ db-reset-prod-force = { cmd = "python scripts/db_reset.py --env production --for
 # Database Auditing
 audit = { cmd = "POSTGRES_HOST=localhost python audit/main.py --env local", description = "Run a comprehensive database audit locally (requires local services)." }
 audit-staging = { cmd = "python audit/main.py --env staging", description = "Run a comprehensive database audit against staging (requires auth-proxy tunnel)." }
+audit-freeze = { cmd = "POSTGRES_HOST=localhost python audit/scripts/freeze_reference.py --target", description = "Freeze database state as a Golden Reference. Usage: pixi run audit-freeze <target_name> or pixi run audit-freeze all" }
 
 # pgschema CLI (pre-built binary, not on conda-forge)
 # See https://www.pgschema.com/installation#pre-built-binary

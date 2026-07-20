@@ -63,10 +63,18 @@ class AuditorAgent:
             print(f"🔍 Auditing Target: {target_name}")
 
             # 1. Fetch Data
-            # Check for Golden Reference
-            ref_path = self.reference_root / f"{target_name}.csv"
+            # Check for Golden Reference (latest YYYYMMDD_target.csv or legacy target.csv)
+            ref_files = sorted(list(self.reference_root.glob(f"*_{target_name}.csv")), reverse=True)
+            legacy_ref = self.reference_root / f"{target_name}.csv"
+
+            ref_path = None
+            if ref_files:
+                ref_path = ref_files[0]
+            elif legacy_ref.exists():
+                ref_path = legacy_ref
+
             is_golden = False
-            if ref_path.exists():
+            if ref_path:
                 print(f"  🏆 Using Golden Reference: {ref_path}")
                 pop_df = pd.read_csv(ref_path)
                 is_golden = True

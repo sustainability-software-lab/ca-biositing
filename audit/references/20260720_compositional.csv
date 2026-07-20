@@ -1,0 +1,724 @@
+resource_name,parameter_name,unit,observed_value,record_id,qc_pass,note,analyst_name,analyst_email,created_at,provider_codename,sample_date
+almond hulls,glucose,% dry weight,30.63,(03)1e07,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,17.46,(03)1f0b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,19.47,(03)677d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,19.7,(03)8660,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,31.27,(03)8c53,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,19.86,(03)9a1e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,27.57,(03)9fbf,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,19.15,(03)ad41,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,17.34,(03)b32d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,19.31,(03)d213,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,27.47,(03)d898,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,16.99,(03)e36d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,19.84,(03)e546,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,28.15,(03)f1df,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,30.52,(03)fa75,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,30.02,(04)0340,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,30.99,(04)2869,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,20.18,(04)5f38,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,15.17,(04)68e4,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,17.03,(04)6ff4,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,22.18,(04)8000,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,21.56,(04)8271,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,22.42,(04)a7a4,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,19.35,(04)aa6b,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,17.24,(04)c1d7,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,23.95,(04)c311,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,17.04,(04)d679,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,19.37,(04)e941,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,24.64,(04)ec17,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,30.71,(04)ef2c,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,29.45,(13)0685,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,15.52,(13)29f0,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,16.41,(13)2c76,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,20.04,(13)336e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,28.53,(13)3600,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,22.24,(13)6427,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,17.63,(13)6f70,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,20.79,(13)8405,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,19.57,(13)9bb5,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,14.44,(13)aaf9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,24.17,(13)b5a0,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,18.71,(13)b6b6,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,28.45,(13)c9f5,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,22.26,(13)ce37,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,26.86,(13)f0ed,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,23.56,(15)0b07,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,lignin,% dry weight,50.24,(15)0e88,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shells,glucose,% dry weight,12.81,(15)1b96,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.93,(15)1c41,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,10.23,(15)1ee2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.79,(15)2b3c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,23.27,(15)3f87,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,lignin,% dry weight,50.35,(15)42c9,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,24.78,(15)44b9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,glucan,% dry weight,11.53,(15)50cf,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,10.81,(15)65e3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,glucan,% dry weight,11.84,(15)797a,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shells,xylose,% dry weight,22.96,(15)7ae4,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,20.94,(15)849b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,xylose,% dry weight,23.19,(15)8611,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,22.3,(15)8db8,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,xylose,% dry weight,22.54,(15)93e3,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shells,lignin,% dry weight,50.73,(15)95c9,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,11.63,(15)962e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,12.28,(15)968f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,glucose,% dry weight,12.87,(15)9c77,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shells,glucose,% dry weight,13.16,(15)ab15,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shells,xylan,% dry weight,20.41,(15)b511,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,21.2,(15)c93b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,xylan,% dry weight,20.21,(15)cd40,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,11.67,(15)d283,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.4,(15)d582,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,10.27,(15)d98b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut shells,xylan,% dry weight,19.83,(15)e1e0,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shells,glucan,% dry weight,11.58,(15)fea0,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,25.73,(24)0b42,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,23.03,(24)0bc2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,22.64,(24)1926,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,26.61,(24)2a68,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,26.98,(24)42f3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,23.18,(24)6b86,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,27.22,(24)70e6,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,24.57,(24)773e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,26.17,(24)7d8d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,29.57,(24)8d6f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,24.8,(24)a25e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,24.75,(24)ec0a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,26.34,(24)ec7f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,30.24,(24)ec97,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,29.97,(24)fab3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,40.34,(28)1266,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,12.56,(28)2429,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+corn stover cobs,lignin,% dry weight,15.63,(28)4712,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,glucan,% dry weight,34.12,(28)48e7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,13.84,(28)491e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+corn stover cobs,lignin,% dry weight,15.77,(28)50a7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,xylose,% dry weight,29.05,(28)520d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,15.37,(28)59b5,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,13.66,(28)75a7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,10.64,(28)7919,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,11.06,(28)847b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+corn stover cobs,lignin,% dry weight,15.97,(28)8908,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,9.36,(28)8c33,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+corn stover cobs,glucose,% dry weight,37.81,(28)97be,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,glucan,% dry weight,34.03,(28)9a1d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,12.8,(28)a3d2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,11.71,(28)a602,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+corn stover cobs,xylan,% dry weight,25.71,(28)a625,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,glucose,% dry weight,37.91,(28)a74f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,xylose,% dry weight,28.52,(28)a764,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,glucan,% dry weight,34.09,(28)bca2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,xylose,% dry weight,29.21,(28)c01c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,xylan,% dry weight,25.09,(28)c6e6,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover cobs,xylan,% dry weight,25.56,(28)c7e9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,13.01,(28)cfc4,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,40.12,(28)d0cf,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,39.76,(28)e48e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,11.26,(28)f0fe,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+corn stover cobs,glucose,% dry weight,37.88,(28)f2a0,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,15.17,(28)f6c9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,riverstone,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,16.63,(31)04ab,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,18.9,(31)1e1b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,16.42,(31)3fdc,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.99,(31)504a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,18.66,(31)52b7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.47,(31)6292,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,34.55,(31)7265,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,30.63,(31)749c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,16.53,(31)8be1,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,18.79,(31)9a9b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.48,(31)bcc3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,31.09,(31)d8e4,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,31.06,(31)edc7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,34.04,(31)eec3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,34.52,(31)f0ca,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,25.89,(37)0930,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,23.55,(37)2e71,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,28.67,(37)3b10,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,23.33,(37)4504,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,26.76,(37)4b35,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,22.79,(37)679f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,26.23,(37)6df6,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,26.76,(37)82b5,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,31.27,(37)8ab5,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,25.8,(37)99cb,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,26.51,(37)9c26,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,28.6,(37)c333,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,31.86,(37)d647,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,31.78,(37)da91,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,28.14,(37)fb45,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+rice straw,glucose,% dry weight,33.43,(42)0211,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylose,% dry weight,17.7,(42)0654,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,arabinose,% dry weight,2.64,(42)0843,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucan,% dry weight,31.72,(42)2e48,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylan,% dry weight,15.58,(42)446d,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,lignin,% dry weight,17.05,(42)47a3,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylose,% dry weight,18.43,(42)4816,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylose,% dry weight,18.11,(42)54b7,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,arabinan,% dry weight,2.32,(42)575c,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,arabinan,% dry weight,2.33,(42)672f,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucan,% dry weight,31.32,(42)7180,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,arabinose,% dry weight,2.57,(42)7a67,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucan,% dry weight,30.09,(42)8729,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,arabinose,% dry weight,2.64,(42)9356,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,lignin,% dry weight,16.85,(42)a992,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucose,% dry weight,35.25,(42)b7cc,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,arabinan,% dry weight,2.27,(42)cbb9,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylan,% dry weight,15.94,(42)cdaa,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucose,% dry weight,34.8,(42)d006,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylan,% dry weight,16.22,(42)dee4,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,lignin,% dry weight,16.8,(42)f6e3,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,22.41,(4c)0e12,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,25.22,(4c)1205,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,14.76,(4c)12e4,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,37.74,(4c)1473,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,25.73,(4c)21be,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,22.7,(4c)3b40,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,15.39,(4c)3b8c,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,13.54,(4c)5b6e,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,14.99,(4c)6022,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,38.52,(4c)6cf6,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,38.36,(4c)705c,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,13.19,(4c)9c25,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,23.16,(4c)b5c1,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,24.9,(4c)c715,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,12.99,(4c)ddb6,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+walnut tree sticks,glucan,% dry weight,23.28,(4d)2252,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,xylan,% dry weight,13.16,(4d)2360,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,xylan,% dry weight,13.08,(4d)2619,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,xylose,% dry weight,14.87,(4d)3358,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,xylan,% dry weight,13.19,(4d)3fcf,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,xylose,% dry weight,14.99,(4d)517e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,glucose,% dry weight,26.65,(4d)86ca,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,glucan,% dry weight,23.98,(4d)8f9f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,lignin,% dry weight,31.88,(4d)a3be,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,glucose,% dry weight,25.86,(4d)acb5,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,glucose,% dry weight,26.12,(4d)bbf7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,lignin,% dry weight,32.08,(4d)c206,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,xylose,% dry weight,14.96,(4d)f3b0,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,glucan,% dry weight,23.51,(4d)f49b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut tree sticks,lignin,% dry weight,32.07,(4d)fd25,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,5.57,(4e)e137,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,8.76,(4e)e138,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,8.5,(4e)e139,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,6.19,(4e)e140,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,9.74,(4e)e141,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,9.44,(4e)e142,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,2.92,(4e)e143,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,5.48,(4e)e144,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,6.29,(4e)e145,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,xylose,% dry weight,3.32,(4e)e146,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,xylose,% dry weight,6.23,(4e)e147,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,xylose,% dry weight,7.15,(4e)e148,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,lignin,% dry weight,49.71,(4e)e149,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,lignin,% dry weight,48.47,(4e)e150,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+grape pomace,lignin,% dry weight,47.84,(4e)e151,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,ebony,2026-07-08 03:54:13.565642
+sweet potato culls,xylan,% dry weight,3.2,(56)0a63,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,glucose,% dry weight,60.24,(56)18a9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,lignin,% dry weight,8.57,(56)2b2d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,lignin,% dry weight,8.85,(56)40ab,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,xylose,% dry weight,3.64,(56)6bd3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,lignin,% dry weight,8.7,(56)8d1e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,xylan,% dry weight,3.2,(56)91f5,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,glucan,% dry weight,54.21,(56)9243,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,glucose,% dry weight,59.72,(56)b418,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,glucan,% dry weight,54.57,(56)c0fc,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,xylose,% dry weight,3.63,(56)ce12,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,glucan,% dry weight,53.75,(56)d797,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,xylan,% dry weight,3.13,(56)ea26,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,xylose,% dry weight,3.56,(56)ea73,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+sweet potato culls,glucose,% dry weight,60.64,(56)fe5f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,tackle,2026-07-08 03:54:13.565642
+corn stover stalks,lignin,% dry weight,22.11,(5b)02e9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,glucose,% dry weight,44.96,(5b)21af,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,xylan,% dry weight,19.57,(5b)334a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,lignin,% dry weight,21.95,(5b)3885,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,glucose,% dry weight,45.33,(5b)58d8,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,xylose,% dry weight,22.27,(5b)5a60,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,glucan,% dry weight,40.47,(5b)651e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,xylan,% dry weight,19.6,(5b)7bed,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,lignin,% dry weight,22.2,(5b)8bf7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,glucan,% dry weight,40.8,(5b)9d19,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,glucose,% dry weight,44.99,(5b)a03f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,glucan,% dry weight,40.49,(5b)bad2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,xylan,% dry weight,19.51,(5b)cb5c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,xylose,% dry weight,22.24,(5b)cf6c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover stalks,xylose,% dry weight,22.17,(5b)de58,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+grape stem,xylose,% dry weight,9.18,(5c)335d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,lignin,% dry weight,27.28,(5c)527f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,xylan,% dry weight,7.9,(5c)6000,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,xylose,% dry weight,8.98,(5c)6845,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,lignin,% dry weight,27.2,(5c)6b44,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,glucan,% dry weight,25.16,(5c)6bfe,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,glucose,% dry weight,27.37,(5c)76f6,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,glucan,% dry weight,24.63,(5c)7ce2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,glucan,% dry weight,25.05,(5c)861a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,xylan,% dry weight,8.08,(5c)94a8,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,glucose,% dry weight,27.83,(5c)960b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,lignin,% dry weight,26.82,(5c)ad73,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,xylose,% dry weight,8.95,(5c)bbe3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,xylan,% dry weight,7.87,(5c)c934,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape stem,glucose,% dry weight,27.96,(5c)e78e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+wheat straw,arabinan,% dry weight,1.81,(62)014a,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,21.97,(62)0975,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,37.93,(62)0f95,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,arabinose,% dry weight,2.06,(62)1c36,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,34.14,(62)1d0d,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,21.97,(62)20f9,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,37.89,(62)352d,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,arabinose,% dry weight,2.08,(62)3af6,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,arabinose,% dry weight,2.18,(62)418e,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,arabinan,% dry weight,1.92,(62)50f3,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,19.33,(62)5304,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,22.05,(62)5ab6,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,16.47,(62)79f1,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,16.44,(62)8114,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,19.33,(62)8b4d,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,34.1,(62)99c5,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,34.28,(62)a8c9,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,38.09,(62)b906,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,arabinan,% dry weight,1.83,(62)cb0b,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,16.83,(62)d08a,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,19.41,(62)ed41,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,33.97,(71)0047,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,16.45,(71)0a21,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,32.57,(71)0d9d,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,16.32,(71)12a5,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,18.69,(71)16f9,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,34.35,(71)23e9,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,13.87,(71)3ea0,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,17.76,(71)470a,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,23.74,(71)4e76,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,12.21,(71)5316,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,18.55,(71)5322,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,21.37,(71)929c,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,15.98,(71)b8d9,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,21.39,(71)bfdb,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,23.76,(71)c9c9,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+corn stover husks,glucose,% dry weight,44.68,(72)00aa,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,lignin,% dry weight,18.61,(72)0778,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,glucan,% dry weight,41.16,(72)1255,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,glucan,% dry weight,39.76,(72)2916,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,xylan,% dry weight,21.33,(72)3abe,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,lignin,% dry weight,18.61,(72)4bbe,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,xylose,% dry weight,24.88,(72)4e20,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,glucose,% dry weight,45.74,(72)5d6f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,glucose,% dry weight,44.17,(72)8404,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,xylan,% dry weight,21.89,(72)9e04,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,xylose,% dry weight,24.24,(72)c070,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,xylose,% dry weight,24.55,(72)c130,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,glucan,% dry weight,40.21,(72)e144,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,xylan,% dry weight,21.61,(72)e2a4,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+corn stover husks,lignin,% dry weight,18.49,(72)ed34,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,caterpillar,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,21.75,(7e)0b62,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,12.93,(7e)3d10,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,12.75,(7e)48f1,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,24.33,(7e)4e75,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,14.49,(7e)5cea,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,43.72,(7e)644f,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,22.14,(7e)6de1,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,14.45,(7e)7d76,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,24.17,(7e)(7e),pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,14.69,(7e)7f8b,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,12.72,(7e)9497,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,44.53,(7e)bbb6,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,21.9,(7e)c731,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,24.6,(7e)d304,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,43.83,(7e)f033,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+walnut shells,glucose,% dry weight,11.4,(82)00ec,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut shells,glucose,% dry weight,11.74,(82)06ed,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,4.69,(82)083c,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,glucan,% dry weight,10.56,(82)153e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,4.6,(82)1e9c,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,lignin,% dry weight,49.6,(82)24e6,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut shells,xylose,% dry weight,23.32,(82)2ace,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,13.87,(82)60a4,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,lignin,% dry weight,49.45,(82)6324,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,16.2,(82)6387,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,xylose,% dry weight,23.4,(82)6472,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut shells,xylose,% dry weight,5.34,(82)6771,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut shells,lignin,% dry weight,48.91,(82)6771,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,14.58,(82)6acd,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+grape pomace,lignin,% dry weight,48.91,(82)6f92,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,xylose,% dry weight,23.52,(82)762f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,16.04,(82)7731,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,xylan,% dry weight,20.52,(82)7f9a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,15.41,(82)8468,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,xylan,% dry weight,20.59,(82)8b26,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut shells,glucan,% dry weight,10.26,(82)8c1c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,xylose,% dry weight,5.23,(82)a692,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,glucan,% dry weight,11.07,(82)bb91,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut shells,xylan,% dry weight,20.7,(82)bdca,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,lignin,% dry weight,50.01,(82)d973,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,14.43,(82)db4c,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+grape pomace,lignin,% dry weight,49.72,(82)e1a7,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+walnut shells,glucose,% dry weight,12.3,(82)edaa,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+grape pomace,xylose,% dry weight,5.14,(82)ef99,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,4.52,(82)f64c,pass,,,,2026-07-08 03:54:13.565642,boatswain,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,15.68,(85)07bd,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,14.12,(85)2246,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,39.9,(85)3329,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,14.18,(85)41cb,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,11.22,(85)4630,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,39.54,(85)51c8,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,40.88,(85)5b1b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,15.75,(85)63d7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,10.72,(85)8bd5,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,9.88,(85)8c05,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,15.74,(85)9311,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,9.43,(85)a6d4,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,10.51,(85)b716,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,14.16,(85)e114,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,9.25,(85)f026,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,oakleaf,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,7.2,(86)031e,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,8.47,(86)0932,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,25.14,(86)50f7,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,8.18,(86)6013,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.5,(86)650b,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,25.77,(86)739f,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,7.23,(86)7828,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.03,(86)82c3,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,20.08,(86)98ab,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,7.45,(86)9d47,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,22.65,(86)ab43,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,8.22,(86)cc31,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,22.63,(86)cd16,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,23.19,(86)dc7c,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,25.17,(86)f7f0,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+grape stem,xylan,% dry weight,5.33,(87)1f70,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,glucose,% dry weight,22.58,(87)2652,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,glucose,% dry weight,12.22,(87)49e8,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,xylose,% dry weight,3.65,(87)50d0,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,lignin,% dry weight,35.56,(87)653b,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,lignin,% dry weight,37.21,(87)6f26,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,glucan,% dry weight,18.92,(87)6f75,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,xylose,% dry weight,6.06,(87)7d8b,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,xylan,% dry weight,3.21,(87)8932,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,xylan,% dry weight,5.99,(87)91b5,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,glucan,% dry weight,11.0,(87)a5ef,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,glucose,% dry weight,21.02,(87)a83f,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,glucan,% dry weight,20.33,(87)bfb7,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,lignin,% dry weight,37.11,(87)e6c9,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+grape stem,xylose,% dry weight,6.8,(87)fbd5,pass,,,,2026-07-08 03:54:13.565642,rigging,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,26.22,(a0)00b1,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,17.5,(a0)031a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,34.99,(a0)129b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,28.99,(a0)2a3f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+olive stems / leaves,lignin,% dry weight,51.48,(a0)2c11,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive stems / leaves,xylose,% dry weight,13.54,(a0)2c72,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,26.09,(a0)47a1,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+olive stems / leaves,glucan,% dry weight,14.45,(a0)4e26,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,35.28,(a0)4e42,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+olive stems / leaves,glucose,% dry weight,15.68,(a0)7978,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive stems / leaves,glucan,% dry weight,14.11,(a0)7a8d,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,35.97,(a0)7c3a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,15.11,(a0)7dd8,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+olive stems / leaves,xylose,% dry weight,14.06,(a0)825d,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,15.4,(a0)8bcb,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,17.17,(a0)94e1,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+olive stems / leaves,xylose,% dry weight,13.37,(a0)96b7,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive stems / leaves,xylan,% dry weight,11.92,(a0)975e,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,28.48,(a0)a67e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,15.21,(a0)ac41,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+olive stems / leaves,glucan,% dry weight,13.87,(a0)ad15,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive stems / leaves,lignin,% dry weight,51.18,(a0)b0bd,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive stems / leaves,lignin,% dry weight,51.09,(a0)bd2b,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive stems / leaves,glucose,% dry weight,16.05,(a0)cda4,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive stems / leaves,xylan,% dry weight,12.37,(a0)dd8f,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,25.63,(a0)de11,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,29.13,(a0)e5fa,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,17.29,(a0)e973,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+olive stems / leaves,glucose,% dry weight,15.41,(a0)ee16,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive stems / leaves,xylan,% dry weight,11.76,(a0)fa31,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,25.41,(a2)210f,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,29.99,(a2)27ae,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,25.51,(a2)2e51,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,25.2,(a2)3a00,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,19.02,(a2)6e8b,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,22.87,(a2)7169,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,19.04,(a2)7ab8,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,30.82,(a2)8569,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,21.61,(a2)8f0a,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,21.64,(a2)8f0d,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,30.38,(a2)a00a,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,21.64,(a2)a625,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,19.04,(a2)c18b,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,22.96,(a2)c9b4,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,22.68,(a2)ee26,pass,,,,2026-07-08 03:54:13.565642,tiny,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,23.89,(a5)06fb,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,19.29,(a5)18dd,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,21.93,(a5)2eef,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,29.76,(a5)4534,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,24.06,(a5)4b77,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,19.65,(a5)6e3c,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucan,% dry weight,23.56,(a5)73fb,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,26.54,(a5)807a,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,26.18,(a5)8859,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylan,% dry weight,19.01,(a5)a7dc,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,glucose,% dry weight,26.74,(a5)aa6c,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,22.33,(a5)adde,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,29.38,(a5)b354,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,lignin,% dry weight,29.64,(a5)b49a,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond shells,xylose,% dry weight,21.6,(a5)cc3a,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,7.71,(a8)037f,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,17.5,(a8)29ea,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,21.99,(a8)2cff,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,21.97,(a8)2fbb,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,8.77,(a8)4250,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,26.08,(a8)563e,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,23.51,(a8)851a,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,26.12,(a8)9aca,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,9.1,(a8)9e55,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,15.75,(a8)a893,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,5.19,(a8)aa72,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,5.9,(a8)bf74,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,22.12,(a8)c5e8,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,23.48,(a8)f2e9,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,8.01,(a8)ff0b,pass,,,,2026-07-08 03:54:13.565642,humorous,2026-07-08 03:54:13.565642
+grape pomace,xylose,% dry weight,9.69,(ab)0af2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,xylose,% dry weight,9.16,(ab)106b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,7.77,(ab)1273,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,7.95,(ab)1509,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,8.84,(ab)19cd,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,glucan,% dry weight,7.96,(ab)1fcb,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,lignin+,% dry weight,53.12,(ab)2034,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,8.64,(ab)57f4,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,glucose,% dry weight,8.85,(ab)6d90,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,8.13,(ab)8cb1,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,8.06,(ab)9781,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,lignin+,% dry weight,53.96,(ab)c64d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,xylose,% dry weight,9.24,(ab)e013,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,xylan,% dry weight,8.52,(ab)e502,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+grape pomace,lignin+,% dry weight,53.35,(ab)fbf0,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,24.01,(b3)088a,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,26.44,(b3)1dea,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,9.8,(b3)2504,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,25.35,(b3)256d,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,26.68,(b3)2fe6,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,27.87,(b3)5a29,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,10.27,(b3)7544,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,11.03,(b3)8501,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,26.1,(b3)858a,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,26.16,(b3)883d,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,25.09,(b3)9284,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,9.71,(b3)afda,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,28.17,(b3)b234,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,11.13,(b3)e8a9,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,11.67,(b3)f397,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+walnut shelling fines,glucose,% dry weight,11.64,(b5)2461,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,xylose,% dry weight,12.8,(b5)25fa,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,xylose,% dry weight,13.05,(b5)35b0,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,glucan,% dry weight,10.82,(b5)3bc5,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,xylan,% dry weight,11.48,(b5)41d7,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,glucose,% dry weight,12.02,(b5)4e58,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,xylan,% dry weight,9.77,(b5)70e4,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,lignin,% dry weight,52.78,(b5)8e9b,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,lignin,% dry weight,52.3,(b5)987c,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,xylan,% dry weight,11.26,(b5)b12b,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,lignin,% dry weight,52.54,(b5)b24f,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,xylose,% dry weight,11.1,(b5)c9e0,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,glucan,% dry weight,10.47,(b5)da39,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,glucan,% dry weight,10.77,(b5)e90a,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+walnut shelling fines,glucose,% dry weight,11.97,(b5)f9ad,pass,,,,2026-07-08 03:54:13.565642,cutaway,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,24.09,(b7)18ba,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,10.56,(b7)2999,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,29.9,(b7)34d1,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,11.55,(b7)3dd4,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,10.64,(b7)4b7b,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylan,% dry weight,10.16,(b7)5c80,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,24.63,(b7)5f3f,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,12.09,(b7)63c6,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,29.79,(b7)681d,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucose,% dry weight,29.26,(b7)7817,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,26.81,(b7)8030,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,lignin,% dry weight,24.57,(b7)95bc,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,xylose,% dry weight,12.0,(b7)a8d6,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,26.34,(b7)bc73,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+almond hulls,glucan,% dry weight,26.91,(b7)cc61,pass,,,,2026-07-08 03:54:13.565642,capstan,2026-07-08 03:54:13.565642
+olive pomace,glucan,% dry weight,11.52,(ba)057a,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,lignin,% dry weight,46.42,(ba)10eb,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,glucose,% dry weight,12.67,(ba)1c19,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,xylan,% dry weight,13.96,(ba)231c,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,xylose,% dry weight,16.55,(ba)3435,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,lignin,% dry weight,46.81,(ba)3b31,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,glucan,% dry weight,11.4,(ba)4bc0,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,lignin,% dry weight,46.97,(ba)4f41,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,xylan,% dry weight,14.57,(ba)5ec9,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,glucose,% dry weight,12.8,(ba)79c9,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,xylose,% dry weight,15.87,(ba)7ab9,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,xylose,% dry weight,16.24,(ba)816d,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,glucose,% dry weight,12.77,(ba)9627,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,glucan,% dry weight,11.49,(ba)a296,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+olive pomace,xylan,% dry weight,14.29,(ba)b745,pass,,,,2026-07-08 03:54:13.565642,excellent,2026-07-08 03:54:13.565642
+pistachio hulls,glucose,% dry weight,12.66,(c0)0a41,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,glucose,% dry weight,12.46,(c0)0f01,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,xylan,% dry weight,7.73,(c0)2163,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,glucan,% dry weight,11.55,(c0)21ce,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,lignin,% dry weight,42.92,(c0)2c34,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,xylan,% dry weight,8.12,(c0)47ff,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,lignin,% dry weight,42.36,(c0)4885,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,glucan,% dry weight,11.39,(c0)6e53,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,xylose,% dry weight,8.79,(c0)7c08,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,glucose,% dry weight,12.84,(c0)86e1,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,xylose,% dry weight,9.0,(c0)95c5,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,glucan,% dry weight,11.22,(c0)b33e,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,xylan,% dry weight,7.92,(c0)bbb6,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,lignin,% dry weight,43.26,(c0)c14e,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+pistachio hulls,xylose,% dry weight,9.23,(c0)cdec,pass,,,,2026-07-08 03:54:13.565642,stuntman,2026-07-08 03:54:13.565642
+unused oak stick,lignin,% dry weight,36.22,(c4)0589,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,xylan,% dry weight,13.94,(c4)111c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,glucan,% dry weight,39.39,(c4)126d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,xylose,% dry weight,15.85,(c4)226a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,xylose,% dry weight,16.04,(c4)24f1,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,lignin,% dry weight,35.44,(c4)3676,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,xylose,% dry weight,15.71,(c4)3724,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,glucose,% dry weight,44.13,(c4)4695,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,glucose,% dry weight,43.77,(c4)504e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,xylan,% dry weight,14.11,(c4)5987,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,glucan,% dry weight,39.72,(c4)677c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,lignin,% dry weight,35.37,(c4)68bc,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,glucan,% dry weight,38.78,(c4)882a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,xylan,% dry weight,13.83,(c4)9c93,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+unused oak stick,glucose,% dry weight,43.09,(c4)fccc,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+walnut tree sticks,lignin,% dry weight,29.4,(c5)02f2,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+walnut tree sticks,xylose,% dry weight,17.46,(c5)0d9b,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+spent oak chips,xylan,% dry weight,6.67,(c5)0ed9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+walnut tree sticks,glucan,% dry weight,34.25,(c5)18bf,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+walnut tree sticks,glucan,% dry weight,33.31,(c5)1af8,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+spent oak chips,lignin,% dry weight,44.69,(c5)1d8d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+walnut tree sticks,xylan,% dry weight,15.36,(c5)1f57,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+spent oak chips,glucan,% dry weight,41.28,(c5)24af,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+spent oak chips,xylose,% dry weight,7.58,(c5)267f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+spent oak chips,xylose,% dry weight,7.39,(c5)27e9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+walnut tree sticks,lignin,% dry weight,28.49,(c5)2932,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+walnut tree sticks,xylan,% dry weight,15.27,(c5)2d94,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+spent oak chips,xylose,% dry weight,7.4,(c5)5f9f,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+walnut tree sticks,glucose,% dry weight,38.05,(c5)624f,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+walnut tree sticks,glucan,% dry weight,34.38,(c5)6d4b,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+spent oak chips,glucose,% dry weight,45.86,(c5)6fa0,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+spent oak chips,glucose,% dry weight,46.16,(c5)7034,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+spent oak chips,lignin,% dry weight,44.09,(c5)86ca,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+spent oak chips,glucan,% dry weight,42.22,(c5)8f41,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+spent oak chips,xylan,% dry weight,6.51,(c5)a648,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+spent oak chips,glucose,% dry weight,46.91,(c5)b324,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+walnut tree sticks,glucose,% dry weight,37.01,(c5)bcb2,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+walnut tree sticks,lignin,% dry weight,28.71,(c5)c098,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+spent oak chips,xylan,% dry weight,6.5,(c5)c20a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+walnut tree sticks,glucose,% dry weight,38.2,(c5)c9d1,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+walnut tree sticks,xylan,% dry weight,14.65,(c5)ca15,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+spent oak chips,glucan,% dry weight,41.54,(c5)cc25,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+walnut tree sticks,xylose,% dry weight,16.64,(c5)daf9,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+walnut tree sticks,xylose,% dry weight,17.35,(c5)e06a,pass,,,,2026-07-08 03:54:13.565642,badger,2026-07-08 03:54:13.565642
+spent oak chips,lignin,% dry weight,44.78,(c5)f357,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,maplewood,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,13.9,(c7)0c90,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,28.26,(c7)32d3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,34.64,(c7)4017,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,26.32,(c7)4fab,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,17.32,(c7)548b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,glucose,% dry weight,28.01,(c7)55ad,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,15.25,(c7)5eb1,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,25.21,(c7)70cd,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,17.33,(c7)71f6,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,xylan,% dry weight,15.24,(c7)749c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,33.57,(c7)8b0b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,25.44,(c7)a5f2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,xylose,% dry weight,15.8,(c7)bffa,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,lignin,% dry weight,33.62,(c7)f332,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+almond branches,glucan,% dry weight,23.69,(c7)fb25,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,vibrant,2026-07-08 03:54:13.565642
+rice straw,lignin,% dry weight,19.13,(ca)0336,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,lignin,% dry weight,18.92,(ca)0ac2,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucan,% dry weight,33.1,(ca)143e,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylan,% dry weight,16.97,(ca)1c11,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylan,% dry weight,17.15,(ca)1ec6,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylan,% dry weight,16.1,(ca)23fe,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,lignin,% dry weight,18.8,(ca)2a06,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucan,% dry weight,34.0,(ca)3a26,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylose,% dry weight,19.49,(ca)3df0,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylose,% dry weight,18.3,(ca)53ec,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucose,% dry weight,37.78,(ca)9001,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucose,% dry weight,36.78,(ca)b994,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucose,% dry weight,37.58,(ca)beff,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,xylose,% dry weight,19.28,(ca)cd2f,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+rice straw,glucan,% dry weight,33.82,(ca)cf48,pass,,,,2026-07-08 03:54:13.565642,possessive,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,31.57,(d2)0b71,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,8.84,(d2)12cb,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,8.72,(d2)1e4c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,30.53,(d2)2fae,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,10.04,(d2)42a2,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,21.0,(d2)4d07,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,18.98,(d2)62d0,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,21.15,(d2)a7f3,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,18.9,(d2)bdb6,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,glucan,% dry weight,19.04,(d2)cadf,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,xylan,% dry weight,8.46,(d2)cea7,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,9.62,(d2)d344,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,glucose,% dry weight,21.08,(d2)d758,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,lignin+,% dry weight,31.95,(d2)d96d,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+tomato pomace,xylose,% dry weight,9.91,(d2)da56,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,pinecrest,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,21.62,(da)0242,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,16.97,(da)0c02,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,arabinan,% dry weight,2.01,(da)0dd5,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,20.51,(da)0eb5,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,glucose,% dry weight,23.77,(da)0f5b,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,arabinan,% dry weight,2.35,(da)112e,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,glucan,% dry weight,22.6,(da)11ef,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,34.11,(da)206c,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,37.11,(da)28c3,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,lignin,% dry weight,32.34,(da)3381,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+pistachio shells,lignin,% dry weight,33.6,(da)351f,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+pistachio shells,glucan,% dry weight,21.4,(da)3e27,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,23.3,(da)45fb,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,33.4,(da)5b66,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,glucose,% dry weight,23.78,(da)5c87,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,23.56,(da)5f99,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,xylan,% dry weight,37.19,(da)6158,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+pistachio shells,glucan,% dry weight,21.4,(da)61f1,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,38.08,(da)627d,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,23.31,(da)659e,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,arabinan,% dry weight,2.41,(da)65a4,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,xylose,% dry weight,42.26,(da)6b6b,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,19.03,(da)6f36,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,23.01,(da)793b,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,20.51,(da)8086,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,16.7,(da)83a3,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,xylan,% dry weight,37.28,(da)847a,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,arabinose,% dry weight,2.68,(da)85be,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,21.63,(da)8737,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,35.68,(da)9bfc,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,glucose,% dry weight,25.11,(da)a0f5,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,arabinose,% dry weight,2.29,(da)a2d6,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,20.74,(da)ab96,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,xylan,% dry weight,37.06,(da)aba8,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,34.23,(da)ac37,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,37.9,(da)b0df,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,21.68,(da)b698,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,33.49,(da)b8f9,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,16.75,(da)cc8a,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,arabinose,% dry weight,2.74,(da)cf0e,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,xylose,% dry weight,42.37,(da)dc7a,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+pistachio shells,xylose,% dry weight,42.11,(da)e334,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,lignin,% dry weight,21.88,(da)eb21,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,32.11,(da)ec68,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,38.03,(da)ed48,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,20.25,(da)ef39,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+pistachio shells,lignin,% dry weight,32.79,(da)f1b5,pass,,,,2026-07-08 03:54:13.565642,tripod,2026-07-08 03:54:13.565642
+wheat straw,xylose,% dry weight,23.13,(da)f3ce,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,xylan,% dry weight,20.35,(da)f6bc,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucose,% dry weight,37.21,(da)fbf9,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+wheat straw,glucan,% dry weight,34.27,(da)ff89,pass,,,,2026-07-08 03:54:13.565642,wardrobe,2026-07-08 03:54:13.565642
+walnut hulls,glucan,% dry weight,12.86,(e7)365a,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,xylose,% dry weight,10.57,(e7)47b9,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,glucan,% dry weight,12.45,(e7)4b15,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,glucose,% dry weight,14.29,(e7)4f39,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,xylose,% dry weight,11.29,(e7)538c,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,xylan,% dry weight,9.61,(e7)561b,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,lignin,% dry weight,36.0,(e7)6d58,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,glucose,% dry weight,13.83,(e7)7925,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,xylan,% dry weight,9.3,(e7)795e,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,xylose,% dry weight,10.92,(e7)abfc,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,xylan,% dry weight,9.94,(e7)afea,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,lignin,% dry weight,34.65,(e7)bcb4,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,glucan,% dry weight,12.98,(e7)be54,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,lignin,% dry weight,34.66,(e7)d6bc,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
+walnut hulls,glucose,% dry weight,14.42,(e7)edcc,pass,,,xkang2@lbl.gov,2026-07-08 03:54:13.565642,energetic,2026-07-08 03:54:13.565642
