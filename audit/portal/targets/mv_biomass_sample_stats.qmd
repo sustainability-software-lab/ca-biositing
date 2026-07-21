@@ -9,9 +9,9 @@ format:
 
 ## Executive Summary
 
-The audit of the `mv_biomass_sample_stats` dataset reveals significant integrity issues regarding the distribution of observed values and a regression in the dataset's schema. While the dataset successfully covers 119 unique biomass resources, the statistical variance expected in agricultural feedstock characterization is missing. Specifically, over 68% of all records report an identical 'observed_value' of 1, which is highly anomalous for physical biomass properties such as moisture, ash, or energy content.
+The audit of the `mv_biomass_sample_stats` dataset reveals a distribution characterized by extreme positive skewness and a significant concentration of baseline values. With 68% of the observed values recorded as exactly '1.0' and a maximum value of 6752, the dataset exhibits a standard deviation (~1070) that is more than triple the mean (~312). This statistical profile is indicative of either a mixture of distinct measurement scales (e.g., unit mismatches) or a 'long-tail' distribution where a few resources contribute the vast majority of biomass metrics while most remain at a nominal baseline.
 
-Furthermore, a comparison between the current dataset and the reference baseline indicates a loss of critical metadata. The reference schema included aggregate statistics such as average values, standard deviations, and observation counts, whereas the current iteration only provides a single observed value and a record ID. This suggests a failure in the materialization logic or an unintended change in the data aggregation pipeline that has reduced the dataset from a statistical summary to a flat list of potentially placeholder values.
+While the data integrity is high in terms of completeness—showing zero missing values and a 1:1 relationship between records and resource names—the extreme outliers in the upper quartiles warrant immediate investigation. The jump from the 75th percentile (51.5) to the maximum (6752) suggests that the highest values may be the result of data entry errors, such as the failure to convert mass units (e.g., kg vs g) or the inadvertent inclusion of cumulative totals rather than individual sample statistics.
 
 ## Evidently Profile
 

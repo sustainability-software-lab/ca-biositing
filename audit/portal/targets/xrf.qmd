@@ -9,9 +9,9 @@ format:
 
 ## Executive Summary
 
-The data quality audit of the XRF elemental analysis dataset, comprising 2,431 records across 24 biomass resources, reveals a significant shift in data distribution compared to the reference set. The most prominent issue is the high frequency of zero values (8.1% of the 'observed_value' column), which were virtually absent in the reference data. These zeros likely represent values below the instrument's Limit of Detection (LOD) rather than true absences, particularly for trace elements like Lanthanum (La) and Neodymium (Nd). The dataset is characterized by high variance in macronutrients (K, Ca) and significant outliers in markers for soil contamination (Si, Ti, Fe) and heavy metals (Th, U), especially within almond-derived feedstocks.
+The audit of the XRF (X-Ray Fluorescence) dataset, encompassing 2,431 records across 24 agricultural biomass resources, reveals a significant volume of statistical anomalies, particularly within almond-derived residues. While the data shows 100% completeness for core fields like 'observed_value' and 'analyst_email', the presence of over 600 flagged observations—mostly at 'LOW' severity but including critical 'MEDIUM' flags—suggests systematic variability in elemental concentration reporting. Notably, almond hulls and cotton stem mix exhibit the highest frequency of anomalous readings for both heavy metals (Zn, Th, U) and macronutrients (Si, K, S).
 
-The audit identified two primary providers: 'tiny' and 'capstan'. Data attributed to analyst xkang2@lbl.gov (provider 'tiny') demonstrates higher volatility in trace elements for almond hulls, including unexpected detections of Uranium and Thorium. Conversely, records from jduong@lbl.gov (provider 'capstan') show anomalies in almond shells for elements like Copper (Cu) and Praseodymium (Pr). The total absence of descriptive metadata in the 'note' and 'analyst_name' fields limits the ability to contextualize these outliers, suggesting a need for improved data entry protocols during the XRF measurement and reporting phase.
+Statistically, the dataset is characterized by extreme skewness, with 'observed_value' ranging from 0 to 161,000. The prevalence of 0.0 values (8.1% of the dataset) likely represents 'Below Detection Limit' (BDL) results, though their high z-scores in specific parameters like Manganese (Mn) suggest these zeros are statistically significant departures from the expected mean. Variations in data patterns between providers 'tiny' and 'capstan' indicate potential differences in instrument calibration or sample preparation protocols. The total absence of data in the 'note' and 'analyst_name' fields, while partially mitigated by the presence of 'analyst_email', limits the ability to contextualize these quantitative outliers with qualitative experimental observations.
 
 ## Evidently Profile
 
@@ -640,6 +640,7 @@ The audit identified two primary providers: 'tiny' and 'capstan'. Data attribute
 
 Discovered assets:
 
+- [xrf_distribution.html](../assets/exports/plots/composition/xrf_distribution.html)
 - [xrf_distribution_viz.html](../assets/exports/plots/composition/xrf_distribution_viz.html)
 
 :::

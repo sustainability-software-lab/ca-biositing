@@ -1,0 +1,51 @@
+{
+  "executive_summary": "The audit of the `mv_biomass_sample_stats` dataset reveals a distribution characterized by extreme positive skewness and a significant concentration of baseline values. With 68% of the observed values recorded as exactly '1.0' and a maximum value of 6752, the dataset exhibits a standard deviation (~1070) that is more than triple the mean (~312). This statistical profile is indicative of either a mixture of distinct measurement scales (e.g., unit mismatches) or a 'long-tail' distribution where a few resources contribute the vast majority of biomass metrics while most remain at a nominal baseline.\n\nWhile the data integrity is high in terms of completeness—showing zero missing values and a 1:1 relationship between records and resource names—the extreme outliers in the upper quartiles warrant immediate investigation. The jump from the 75th percentile (51.5) to the maximum (6752) suggests that the highest values may be the result of data entry errors, such as the failure to convert mass units (e.g., kg vs g) or the inadvertent inclusion of cumulative totals rather than individual sample statistics.",
+  "grouped_issues": [
+    {
+      "group_label": "Extreme Statistical Outliers in Observed Values",
+      "hypothesis": "The extreme values in the upper tail likely represent unit conversion errors (e.g., grams instead of kilograms) or the recording of aggregate totals instead of sample means.",
+      "priority": "High",
+      "affected_record_ids": [
+        "106",
+        "124",
+        "120",
+        "115",
+        "110"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "resource_name"
+      ],
+      "evidently_finding": "The maximum value (6752) is more than 20 times the mean (312.29) and significantly higher than the p75 (51.5).",
+      "recommended_action": "Verify the top 5% of records by value against original laboratory bench sheets to confirm units of measure and ensure no aggregation errors occurred during the ETL process."
+    },
+    {
+      "group_label": "High Frequency Baseline Values (1.0)",
+      "hypothesis": "The value '1.0' may be serving as a placeholder for 'Presence', a default multiplier, or a minimum detection limit (MDL) baseline for various biomass metrics.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "10",
+        "25",
+        "33",
+        "48",
+        "55",
+        "64",
+        "72",
+        "89",
+        "91",
+        "100"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "resource_name"
+      ],
+      "evidently_finding": "The most common value is 1.0, appearing in 68.07% of the dataset.",
+      "recommended_action": "Cross-reference the 'resource_name' metadata to determine if '1.0' represents a valid measurement or a categorical flag encoded as a float. If these are counts (n=1), consider renaming the column to improve clarity."
+    }
+  ],
+  "flagged_count": 0
+}

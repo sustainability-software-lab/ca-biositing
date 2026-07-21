@@ -1,0 +1,13 @@
+# 🔍 Detailed Target Audit: `mv_biomass_end_uses` — 2026-07-20
+
+**Flagged Observations:** 0 (0 HIGH, 0 MEDIUM, 0 LOW)
+
+**Z-Score Threshold:** 1.0 | **Min Group Size:** 3
+
+---
+
+## 🧠 LLM Synthesis
+
+The audit of the `mv_biomass_end_uses` dataset reveals a significant degradation in data completeness despite a 30% increase in the total number of records. The dataset, which tracks the allocation of biomass resources to various end-use cases, currently contains 39 records across 10 unique biomass resources. A critical finding is the sharp rise in missing values within the 'observed_value' column, which has increased from a 6.67% missingness rate in the reference period to 28.21% in the current period. This suggests that while more end-use categories are being identified for biomass resources, the quantitative measurement of those uses is not keeping pace with the categorization.
+
+From a statistical perspective, the distribution of the 'observed_value' (likely representing percentages or mass-flow allocations) remains stable with a mean of 31.25 and a range of 1.0 to 100.0. However, the high ratio of rows to unique record IDs (3.9 rows per record) indicates a complex mapping of resources to use cases. The presence of 11 null values in the 'observed_value' field effectively invalidates the mass-balance calculations for several biomass resources, as the total allocation per record ID cannot be accurately summed or verified against a 100% threshold. Priority must be given to reconciling these missing quantitative values to ensure the integrity of the biomass utilization model.

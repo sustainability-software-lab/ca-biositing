@@ -55,146 +55,150 @@ class AuditorAgent:
         global_sheet_url = ""
 
         for target_name in self.targets:
-            if target_name not in REGISTRY:
-                print(f"⚠️ Target {target_name} not found in registry. Skipping.")
-                continue
-
-            target = REGISTRY[target_name]
-            print(f"🔍 Auditing Target: {target_name}")
-
-            # 1. Fetch Data
-            # Check for Golden Reference (latest YYYYMMDD_target.csv or legacy target.csv)
-            ref_files = sorted(list(self.reference_root.glob(f"*_{target_name}.csv")), reverse=True)
-            legacy_ref = self.reference_root / f"{target_name}.csv"
-
-            ref_path = None
-            if ref_files:
-                ref_path = ref_files[0]
-            elif legacy_ref.exists():
-                ref_path = legacy_ref
-
-            is_golden = False
-            if ref_path:
-                print(f"  🏆 Using Golden Reference: {ref_path}")
-                pop_df = pd.read_csv(ref_path)
-                is_golden = True
-            else:
-                pop_df = pd.read_sql(target.population_sql, self.engine)
-
-            obs_df = pd.read_sql(target.observation_sql, self.engine)
-
-            # 2. Skill 1: Statistical Profiling (Gated by --profile)
-            profile_summary = {}
-            if self.profile:
-                print("📊 Running statistical profiling...")
-                profile_summary = run_statistical_profiling(
-                    obs_df, target_name, self.output_dir / "profiles"
-                )
-
-            # 3. Skill 2: Outlier Detection (Evidently AI)
-            print("📍 Detecting outliers with Evidently AI...")
-            report_json, flagged = run_evidently_profile(
-                population_df=pop_df,
-                observation_df=obs_df,
-                target_name=target_name,
-                output_dir=self.output_dir / "evidently",
-                group_cols=target.group_by_cols,
-                is_golden_reference=is_golden
-            )
-
-            # 4. Skill 3: GX Assertions
-            gx_result = {}
-            if target.gx_suite_path and Path(target.gx_suite_path).exists():
-                print("✅ Running DQ assertions...")
-                gx_result = run_data_quality_assertions(obs_df, target.gx_suite_path)
-
-            # 5. Skill 4: LLM Synthesis (Structured Output)
-            synthesis = None
             try:
-                print("🧠 Running LLM synthesis...")
-                synthesis = run_llm_synthesis(
+                if target_name not in REGISTRY:
+                    print(f"⚠️ Target {target_name} not found in registry. Skipping.")
+                    continue
+
+                target = REGISTRY[target_name]
+                print(f"🔍 Auditing Target: {target_name}")
+
+                # 1. Fetch Data
+                # Check for Golden Reference (latest YYYYMMDD_target.csv or legacy target.csv)
+                ref_files = sorted(list(self.reference_root.glob(f"*_{target_name}.csv")), reverse=True)
+                legacy_ref = self.reference_root / f"{target_name}.csv"
+
+                ref_path = None
+                if ref_files:
+                    ref_path = ref_files[0]
+                elif legacy_ref.exists():
+                    ref_path = legacy_ref
+
+                is_golden = False
+                if ref_path:
+                    print(f"  🏆 Using Golden Reference: {ref_path}")
+                    pop_df = pd.read_csv(ref_path)
+                    is_golden = True
+                else:
+                    pop_df = pd.read_sql(target.population_sql, self.engine)
+
+                obs_df = pd.read_sql(target.observation_sql, self.engine)
+
+                # 2. Skill 1: Statistical Profiling (Gated by --profile)
+                profile_summary = {}
+                if self.profile:
+                    print("📊 Running statistical profiling...")
+                    profile_summary = run_statistical_profiling(
+                        obs_df, target_name, self.output_dir / "profiles"
+                    )
+
+                # 3. Skill 2: Outlier Detection (Evidently AI)
+                print("📍 Detecting outliers with Evidently AI...")
+                report_json, flagged = run_evidently_profile(
+                    population_df=pop_df,
+                    observation_df=obs_df,
                     target_name=target_name,
-                    flagged=flagged,
-                    evidently_json=report_json,
-                    model=settings.LLM_MODEL
+                    output_dir=self.output_dir / "evidently",
+                    group_cols=target.group_by_cols,
+                    is_golden_reference=is_golden
                 )
-            except Exception as e:
-                print(f"⚠️ LLM synthesis failed for {target_name}: {e}")
 
-            # Save LLM synthesis as JSON
-            if synthesis:
-                llm_path = self.output_dir / f"llm_synthesis_{target_name}.json"
-                with open(llm_path, "w") as f:
-                    f.write(synthesis.model_dump_json(indent=2))
+                # 4. Skill 3: GX Assertions
+                gx_result = {}
+                if target.gx_suite_path and Path(target.gx_suite_path).exists():
+                    print("✅ Running DQ assertions...")
+                    gx_result = run_data_quality_assertions(obs_df, target.gx_suite_path)
 
-            # Save flagged observations as CSV (Backend data)
-            raw_csv_path = ""
-            if flagged:
-                flagged_df = pd.DataFrame([vars(f) for f in flagged])
-                csv_file = self.output_dir / f"flagged_{target_name}.csv"
-                flagged_df.to_csv(csv_file, index=False)
-                raw_csv_path = str(csv_file)
-
-            # Skill 6: Anomaly Tracker (Grouped & Raw)
-            sheet_url = ""
-            if settings.ANOMALY_TRACKER_SHEET_KEY and flagged:
+                # 5. Skill 4: LLM Synthesis (Structured Output)
+                synthesis = None
                 try:
-                    print("📋 Writing to Anomaly Tracker...")
-                    # 1. Write Grouped Issues
-                    grouped_issues = synthesis.grouped_issues if synthesis else []
-                    sheet_url = write_anomaly_tracker(
-                        grouped_issues=grouped_issues,
+                    print("🧠 Running LLM synthesis...")
+                    synthesis = run_llm_synthesis(
                         target_name=target_name,
-                        audit_date=self.audit_date,
-                        audit_run_id=self.timestamp,
-                        sheet_key=settings.ANOMALY_TRACKER_SHEET_KEY,
-                        credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
-                        evidently_report_url=f"evidently/{target_name}.html",
-                        raw_csv_path=raw_csv_path,
-                        worksheet_name=settings.ANOMALY_TRACKER_WORKSHEET,
-                    )
-
-                    # 2. Write Raw Anomalies
-                    write_raw_anomaly_tracker(
                         flagged=flagged,
-                        target_name=target_name,
-                        audit_date=self.audit_date,
-                        audit_run_id=self.timestamp,
-                        sheet_key=settings.ANOMALY_TRACKER_SHEET_KEY,
-                        credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
-                        worksheet_name="Raw Anomalies"
+                        evidently_json=report_json,
+                        model=settings.LLM_MODEL
                     )
-
-                    global_sheet_url = sheet_url
-                    print(f"  ✅ Anomaly Tracker updated: {sheet_url}")
                 except Exception as e:
-                    print(f"  ⚠️ Anomaly Tracker write failed: {e}")
+                    print(f"⚠️ LLM synthesis failed for {target_name}: {e}")
 
-            # 6. Store results for Executive Summary
-            evidently_html_rel_path = f"evidently/{target_name}.html"
-            target_results.append({
-                "target_name": target_name,
-                "synthesis": synthesis,
-                "flagged_count": len(flagged) if flagged else 0,
-                "evidently_html_path": evidently_html_rel_path,
-                "gx_pass_count": gx_result.get("statistics", {}).get("successful_expectations", 0),
-                "gx_fail_count": gx_result.get("statistics", {}).get("unsuccessful_expectations", 0)
-            })
+                # Save LLM synthesis as JSON
+                if synthesis:
+                    llm_path = self.output_dir / f"llm_synthesis_{target_name}.json"
+                    with open(llm_path, "w") as f:
+                        f.write(synthesis.model_dump_json(indent=2))
 
-            # Skill 5: Generate Detailed Report (only if --verbose)
-            if self.verbose:
-                print(f"📝 Generating detailed analyst report for {target_name}...")
-                llm_exec = synthesis.executive_summary if synthesis else ""
-                report_md = generate_analyst_report(
-                    target_name=target_name,
-                    flagged_observations=flagged,
-                    llm_synthesis=llm_exec,
-                    sheet_url=sheet_url,
-                    zscore_threshold=settings.ZSCORE_THRESHOLD,
-                    min_group_size=settings.MIN_GROUP_SIZE
-                )
-                target_report_path = self.output_dir / f"report_{target_name}.md"
-                target_report_path.write_text(report_md)
+                # Save flagged observations as CSV (Backend data)
+                raw_csv_path = ""
+                if flagged:
+                    flagged_df = pd.DataFrame([vars(f) for f in flagged])
+                    csv_file = self.output_dir / f"flagged_{target_name}.csv"
+                    flagged_df.to_csv(csv_file, index=False)
+                    raw_csv_path = str(csv_file)
+
+                # Skill 6: Anomaly Tracker (Grouped & Raw)
+                sheet_url = ""
+                if settings.ANOMALY_TRACKER_SHEET_KEY and flagged:
+                    try:
+                        print("📋 Writing to Anomaly Tracker...")
+                        # 1. Write Grouped Issues
+                        grouped_issues = synthesis.grouped_issues if synthesis else []
+                        sheet_url = write_anomaly_tracker(
+                            grouped_issues=grouped_issues,
+                            target_name=target_name,
+                            audit_date=self.audit_date,
+                            audit_run_id=self.timestamp,
+                            sheet_key=settings.ANOMALY_TRACKER_SHEET_KEY,
+                            credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
+                            evidently_report_url=f"evidently/{target_name}.html",
+                            raw_csv_path=raw_csv_path,
+                            worksheet_name=settings.ANOMALY_TRACKER_WORKSHEET,
+                        )
+
+                        # 2. Write Raw Anomalies
+                        write_raw_anomaly_tracker(
+                            flagged=flagged,
+                            target_name=target_name,
+                            audit_date=self.audit_date,
+                            audit_run_id=self.timestamp,
+                            sheet_key=settings.ANOMALY_TRACKER_SHEET_KEY,
+                            credentials_path=settings.ANOMALY_TRACKER_CREDENTIALS,
+                            worksheet_name="Raw Anomalies"
+                        )
+
+                        global_sheet_url = sheet_url
+                        print(f"  ✅ Anomaly Tracker updated: {sheet_url}")
+                    except Exception as e:
+                        print(f"  ⚠️ Anomaly Tracker write failed: {e}")
+
+                # 6. Store results for Executive Summary
+                evidently_html_rel_path = f"evidently/{target_name}.html"
+                target_results.append({
+                    "target_name": target_name,
+                    "synthesis": synthesis,
+                    "flagged_count": len(flagged) if flagged else 0,
+                    "evidently_html_path": evidently_html_rel_path,
+                    "gx_pass_count": gx_result.get("statistics", {}).get("successful_expectations", 0),
+                    "gx_fail_count": gx_result.get("statistics", {}).get("unsuccessful_expectations", 0)
+                })
+
+                # Skill 5: Generate Detailed Report (only if --verbose)
+                if self.verbose:
+                    print(f"📝 Generating detailed analyst report for {target_name}...")
+                    llm_exec = synthesis.executive_summary if synthesis else ""
+                    report_md = generate_analyst_report(
+                        target_name=target_name,
+                        flagged_observations=flagged,
+                        llm_synthesis=llm_exec,
+                        sheet_url=sheet_url,
+                        zscore_threshold=settings.ZSCORE_THRESHOLD,
+                        min_group_size=settings.MIN_GROUP_SIZE
+                    )
+                    target_report_path = self.output_dir / f"report_{target_name}.md"
+                    target_report_path.write_text(report_md)
+            except Exception as e:
+                print(f"❌ CRITICAL: Audit failed for {target_name}: {e}")
+                continue
 
         # Final Skill: Executive Summary
         print("🏛️ Generating Executive Audit Summary...")

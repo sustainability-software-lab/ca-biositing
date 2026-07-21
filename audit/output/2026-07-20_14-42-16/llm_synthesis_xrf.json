@@ -1,0 +1,114 @@
+{
+  "executive_summary": "The audit of the XRF (X-Ray Fluorescence) dataset, encompassing 2,431 records across 24 agricultural biomass resources, reveals a significant volume of statistical anomalies, particularly within almond-derived residues. While the data shows 100% completeness for core fields like 'observed_value' and 'analyst_email', the presence of over 600 flagged observations—mostly at 'LOW' severity but including critical 'MEDIUM' flags—suggests systematic variability in elemental concentration reporting. Notably, almond hulls and cotton stem mix exhibit the highest frequency of anomalous readings for both heavy metals (Zn, Th, U) and macronutrients (Si, K, S).\n\nStatistically, the dataset is characterized by extreme skewness, with 'observed_value' ranging from 0 to 161,000. The prevalence of 0.0 values (8.1% of the dataset) likely represents 'Below Detection Limit' (BDL) results, though their high z-scores in specific parameters like Manganese (Mn) suggest these zeros are statistically significant departures from the expected mean. Variations in data patterns between providers 'tiny' and 'capstan' indicate potential differences in instrument calibration or sample preparation protocols. The total absence of data in the 'note' and 'analyst_name' fields, while partially mitigated by the presence of 'analyst_email', limits the ability to contextualize these quantitative outliers with qualitative experimental observations.",
+  "grouped_issues": [
+    {
+      "group_label": "Almond Hulls / Heavy Metal & Rare Earth Enrichment",
+      "hypothesis": "The elevated levels of Zn, Th, and U reported by analyst xkang2@lbl.gov (provider: tiny) suggest either localized soil contamination or a specific physiological affinity for these elements in the almond hull matrix compared to other biomass types.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(03)1c00",
+        "(03)2448",
+        "(03)68d1",
+        "(03)1dc2"
+      ],
+      "affected_parameters": [
+        "zn",
+        "th",
+        "u",
+        "mo"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "High z-score (3.01 - 3.61) for trace heavy metals and radioactive elements.",
+      "recommended_action": "Re-run XRF analysis on archived almond hull samples to confirm if elevated Thorium and Uranium are systemic or sporadic contamination."
+    },
+    {
+      "group_label": "Almond Hulls / Macronutrient Variance",
+      "hypothesis": "Silicon values (17,900) and Potassium (39,100) are exceptionally high. Analyst xkang2@lbl.gov may be reporting samples with high inorganic ash content or external dust/dirt contamination on the hull surfaces.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)663c",
+        "(03)bbdf",
+        "(03)645d",
+        "(03)3e42"
+      ],
+      "affected_parameters": [
+        "si",
+        "k",
+        "ca",
+        "s"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Significant deviations in macronutrient concentrations (Si, K).",
+      "recommended_action": "Perform ash content analysis (ASTM E1755) to correlate mineral concentration with total inorganic residue."
+    },
+    {
+      "group_label": "Almond Hulls / Below Detection Limit Zeros",
+      "hypothesis": "The reporting of 0 for Mn, La, and Nd by xkang2@lbl.gov results in high z-scores because the expected baseline for these biomass types is non-zero. This suggests the 'tiny' provider instrument may have a higher detection threshold than others in the study.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(03)da2a",
+        "(03)0161",
+        "(03)d09a"
+      ],
+      "affected_parameters": [
+        "mn",
+        "la",
+        "nd"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Statistically significant zero values (BDL).",
+      "recommended_action": "Verify instrument LOD (Limit of Detection) for the 'tiny' provider and standardize BDL reporting (e.g., <LOD vs 0)."
+    },
+    {
+      "group_label": "Almond Shells / Trace Element Drift",
+      "hypothesis": "Analyst jduong@lbl.gov (provider: capstan) reports consistent but slightly elevated trace elements (Cu, Ce, Pr) in almond shells. This likely reflects regional soil chemistry variability specific to the 'capstan' supply chain.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(04)0a4a",
+        "(04)0e4d",
+        "(04)661b",
+        "(04)9261"
+      ],
+      "affected_parameters": [
+        "cu",
+        "pr",
+        "mn",
+        "ce"
+      ],
+      "affected_resources": [
+        "almond shells"
+      ],
+      "evidently_finding": "Low-severity anomalies in trace metals and rare earth elements.",
+      "recommended_action": "Cross-reference these results with soil maps from the provider's geographic origin to validate natural occurrence."
+    },
+    {
+      "group_label": "Cross-Parameter Metal Fluctuations (Provider: tiny)",
+      "hypothesis": "The broad range of anomalous metals (Ti, P, Fe, Rb) reported by xkang2@lbl.gov suggests a sample heterogeneity issue, likely due to insufficient milling or homogenization of the almond hulls before XRF pelletizing.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)79f8",
+        "(03)82cf",
+        "(03)6a5b",
+        "(03)0663"
+      ],
+      "affected_parameters": [
+        "ti",
+        "p",
+        "fe",
+        "rb"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Widespread low-severity flags across various metallic parameters.",
+      "recommended_action": "Review sample preparation SOPs for provider 'tiny', specifically the mesh size used during biomass grinding."
+    }
+  ],
+  "flagged_count": 613
+}

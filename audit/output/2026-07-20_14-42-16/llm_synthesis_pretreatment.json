@@ -1,0 +1,119 @@
+{
+  "executive_summary": "The data quality audit for the 'pretreatment' dataset reveals a substantial number of low-severity anomalies, with approximately 31% of the records flagged. The primary parameters of concern are glucose and xylose yields, which exhibit significant variance across different biomass resources. While the majority of anomalies are characterized by low Z-scores (1.0–1.5), the presence of maximum values reaching 118.0 suggests potential calculation errors or calibration shifts, as yields exceeding 100% of the theoretical maximum are physically impossible in standard biomass pretreatment contexts.\n\nA significant structural deficiency in the dataset is the complete absence of qualitative metadata. The 'note' and 'analyst_name' columns are entirely unpopulated across all 741 records. While 'analyst_email' correctly attributes the work to akrishnamoorthy@lbl.gov, the lack of contextual notes makes it difficult to distinguish between legitimate experimental variation (e.g., optimized pretreatment conditions) and measurement error. Furthermore, the dataset shows a strong clustering of anomalies by provider (e.g., 'maplewood', 'energetic', 'caterpillar'), suggesting that specific batches or source locations are driving the observed statistical deviations.\n\nImmediate attention is required to validate yield calculation formulas and calibrate the HPLC or equivalent instruments used for sugar quantification, particularly for records showing yields near or above theoretical limits. The consistency of results within provider groups like 'caterpillar' and 'maplewood' suggests high precision but potentially biased accuracy, which should be investigated through the use of standardized biomass reference materials.",
+  "grouped_issues": [
+    {
+      "group_label": "Grape Pomace Yield Variance (maplewood/ebony)",
+      "hypothesis": "Glucose yields at provider 'maplewood' and xylose yields at 'ebony' for grape pomace are consistently deviating from the mean. Analyst akrishnamoorthy@lbl.gov may be processing these batches under different severity factors or acid concentrations, leading to non-standard yield profiles.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "buty007-8d08",
+        "buty008-128b",
+        "buty009-f6f6",
+        "buty058-c478",
+        "buty059-af88",
+        "buty060-09f3"
+      ],
+      "affected_parameters": [
+        "glucose_yld",
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "grape pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: glucose_yld/xylose_yld variance",
+      "recommended_action": "Review pretreatment severity logs for 'maplewood' and 'ebony' batches to determine if higher temperatures or residence times were employed for grape pomace."
+    },
+    {
+      "group_label": "High Theoretical Yields in Walnut Shells (energetic)",
+      "hypothesis": "Yields in the 80-90% range (and the dataset max of 118%) for walnut shells at provider 'energetic' suggest either highly efficient lignin removal or, more likely, a baseline error in the starch/cellulose content calculation used to determine the theoretical maximum.",
+      "priority": "High",
+      "affected_record_ids": [
+        "buty391-1d2c",
+        "buty392-448d",
+        "buty393-de8d"
+      ],
+      "affected_parameters": [
+        "glucose_yld"
+      ],
+      "affected_resources": [
+        "walnut shells"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: observed_value max 118.0",
+      "recommended_action": "Re-verify the initial composition analysis (glucan/xylan content) for the walnut shells provided by 'energetic'. If the initial sugar content was underestimated, the resulting yield percentages will be artificially inflated."
+    },
+    {
+      "group_label": "Tomato Pomace Xylose Recovery (oakleaf)",
+      "hypothesis": "High xylose recovery (81-86%) for tomato pomace at 'oakleaf' suggests specific optimization for hemicellulose hydrolysis. Analyst akrishnamoorthy@lbl.gov should confirm if a specialized enzyme cocktail or mild acid pretreatment was used.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "buty106-5d8b",
+        "buty107-4b83"
+      ],
+      "affected_parameters": [
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: observed_value Z-score > 1.2",
+      "recommended_action": "Cross-reference these results with 'oakleaf' pretreatment protocols to ensure no carryover from previous high-sugar runs occurred in the reactor."
+    },
+    {
+      "group_label": "Low-Yield Lignocellulosic Anomalies (tiny/vibrant/energetic)",
+      "hypothesis": "Consistently low yields (11-16%) for woody residues (branches, sticks, shells) across providers 'tiny', 'vibrant', and 'energetic' may reflect the high recalcitrance of these materials rather than error, though they fall statistically outside the dataset mean.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "buty272-6b9b",
+        "buty346-f978",
+        "buty347-8f10",
+        "buty348-e7b5",
+        "buty367-7ab1",
+        "buty369-947d"
+      ],
+      "affected_parameters": [
+        "glucose_yld",
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "walnut tree sticks",
+        "almond branches"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: observed_value min 3.0",
+      "recommended_action": "Verify if these samples underwent secondary milling or additional size reduction, as particle size significantly impacts pretreatment accessibility for woody biomass."
+    },
+    {
+      "group_label": "Corn Stover Systematic Deviation (caterpillar)",
+      "hypothesis": "Anomalies for corn stover components at provider 'caterpillar' show tight clustering (68-72%). This suggests a consistent batch effect or a localized calibration setting used by akrishnamoorthy@lbl.gov for this specific provider's material.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "buty442-04c1",
+        "buty466-ab89",
+        "buty468-c171"
+      ],
+      "affected_parameters": [
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "corn stover husks",
+        "corn stover cobs"
+      ],
+      "evidently_finding": "ColumnSummaryMetric: observed_value distribution",
+      "recommended_action": "Compare 'caterpillar' corn stover yields against historical benchmarks for the same provider to ensure seasonal variance isn't being flagged as an anomaly."
+    },
+    {
+      "group_label": "Systemic Metadata Omission",
+      "hypothesis": "The 100% missing rate for 'note' and 'analyst_name' suggests a failure in the data ingestion pipeline or a lack of requirement for qualitative input during the recording phase for akrishnamoorthy@lbl.gov's submissions.",
+      "priority": "Medium",
+      "affected_record_ids": [],
+      "affected_parameters": [
+        "note",
+        "analyst_name"
+      ],
+      "affected_resources": [],
+      "evidently_finding": "DatasetSummaryMetric: number_of_empty_columns 2",
+      "recommended_action": "Update the data entry interface to mandate an 'Analyst Name' and provide a 'Notes' field for flags such as 'foaming in reactor' or 'instrument drift'."
+    }
+  ],
+  "flagged_count": 232
+}

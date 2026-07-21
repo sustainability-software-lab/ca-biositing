@@ -42,6 +42,11 @@ def run_evidently_profile(
       - report_json: structured dict for LLM synthesis
       - flagged: List[FlaggedObservation] for downstream compatibility
     """
+    # Guard against empty current data which causes Evidently to crash in legacy mode
+    if observation_df.empty:
+        print(f"  ⚠️ Skipping Evidently profile for {target_name}: No observations found.")
+        return {}, []
+
     # Build Evidently report
     report = Report(metrics=[
         DataQualityPreset(),

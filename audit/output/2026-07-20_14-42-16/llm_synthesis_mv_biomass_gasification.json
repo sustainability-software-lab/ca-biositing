@@ -1,0 +1,111 @@
+{
+  "executive_summary": "The data quality audit for the `mv_biomass_gasification` dataset reveals a moderate level of concern regarding data integrity and metadata completeness. The most significant finding is the presence of 44 duplicated rows, representing approximately 7.8% of the current dataset. Additionally, a notable discrepancy exists between the current row count (565) and the reference record count (521), suggesting a recent batch upload that may have introduced redundant or un-normalized entries. Statistical anomalies are primarily concentrated in gas composition outputs for 'Spent Oak Chips' and 'Walnut Shells', specifically involving light hydrocarbons (C2-C6) and primary syngas components (CO, H2).\n\nA critical metadata gap was identified, with 42 records missing unit definitions and 43 records missing provider codenames. Furthermore, all records in the flagged sample lack sample dates and analyst attributions, which hinders temporal trend analysis and accountability. The anomalies in gas concentrations (particularly those with Z-scores > 1.0) appear clustered by provider ('rigging' for oak chips and 'energetic' for walnut shells), suggesting either specific gasification performance characteristics or localized sensor calibration variances at those facilities. Priority should be given to deduplication and the population of missing unit/provider fields to ensure the dataset's scientific validity.",
+  "grouped_issues": [
+    {
+      "group_label": "Redundant Record Entry / Duplication",
+      "hypothesis": "Data ingestion pipeline likely processed the same batch multiple times or failed to enforce unique constraints on record_id, as evidenced by spen622-9d86 appearing twice in the flagged sample.",
+      "priority": "High",
+      "affected_record_ids": [
+        "spen622-9d86"
+      ],
+      "affected_parameters": [
+        "observed_value",
+        "record_id"
+      ],
+      "affected_resources": [
+        "spent oak chips"
+      ],
+      "evidently_finding": "44 duplicated rows detected in current dataset.",
+      "recommended_action": "Implement a unique constraint on record_id and run a deduplication script to remove the 44 redundant rows."
+    },
+    {
+      "group_label": "Spent Oak Chips / High-Yield Gas Composition (Provider: Rigging)",
+      "hypothesis": "Provider 'rigging' shows a systematic upward shift in light hydrocarbons and syngas components for oak chips, potentially due to higher gasification temperatures or a specific moisture profile in the feedstock batch.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "spen418-0a28",
+        "spen419-9777",
+        "spen427-b6f6",
+        "spen429-2a58",
+        "spen435-191a",
+        "spen443-3655",
+        "spen610-ea71",
+        "spen614-6ac0",
+        "spen615-f0bf",
+        "spen618-e1ff"
+      ],
+      "affected_parameters": [
+        "ch4",
+        "h2",
+        "co",
+        "c2h6",
+        "c3h8",
+        "c4h10(i)",
+        "c4h10(b)",
+        "c5h12",
+        "c6h14"
+      ],
+      "affected_resources": [
+        "spent oak chips"
+      ],
+      "evidently_finding": "Concentrated LOW severity anomalies in gas composition parameters.",
+      "recommended_action": "Verify gas chromatograph (GC) calibration for provider 'rigging' and correlate these values with reactor temperature logs for the 'spent oak chips' runs."
+    },
+    {
+      "group_label": "Walnut Shells / Syngas Outliers (Provider: Energetic)",
+      "hypothesis": "Provider 'energetic' reports high syngas yields for walnut shells but zero values for heavier hydrocarbons like c6h14, suggesting potential differences in gas cleaning or sampling methods compared to other providers.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "waln265-1532",
+        "waln279-5a49",
+        "walnr54-2c69",
+        "walnr55-f607"
+      ],
+      "affected_parameters": [
+        "h2",
+        "co",
+        "c4h10(i)",
+        "c6h14"
+      ],
+      "affected_resources": [
+        "walnut shells"
+      ],
+      "evidently_finding": "Statistical outliers in syngas (H2, CO) and trace hydrocarbons.",
+      "recommended_action": "Compare 'energetic' sampling protocols for walnut shells against standard reference methods, specifically looking at why C6H14 is reporting as zero while syngas is high."
+    },
+    {
+      "group_label": "Missing Metadata / Units and Providers",
+      "hypothesis": "Incomplete data entry during the manual upload phase or a failure in the ETL mapping for the latest batch of 44 records.",
+      "priority": "High",
+      "affected_record_ids": [],
+      "affected_parameters": [
+        "unit",
+        "provider_codename"
+      ],
+      "affected_resources": [
+        "All resources"
+      ],
+      "evidently_finding": "85 missing values (42 in unit, 43 in provider_codename).",
+      "recommended_action": "Backfill missing units and provider names. Until units are confirmed, the 'observed_value' column cannot be safely compared across different batches."
+    },
+    {
+      "group_label": "Calculated Property Variance / Flammability Limits",
+      "hypothesis": "As UFL and LFL are calculated from the gas composition, the anomalies here are likely downstream effects of the elevated syngas/hydrocarbon concentrations reported by the 'rigging' provider.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "spen431-e0bd",
+        "spen622-9d86"
+      ],
+      "affected_parameters": [
+        "ufl",
+        "lfl"
+      ],
+      "affected_resources": [
+        "spent oak chips"
+      ],
+      "evidently_finding": "Anomalies in Upper and Lower Flammability Limits.",
+      "recommended_action": "Recalculate UFL/LFL using the Le Chatelier's principle based on the raw gas percentages to verify if the reported 'observed_value' matches the composition."
+    }
+  ],
+  "flagged_count": 29
+}

@@ -9,9 +9,9 @@ format:
 
 ## Executive Summary
 
-The compositional analysis audit of agricultural biomass residues (primarily almond and walnut byproducts) reveals a dataset with high internal consistency but notable shifts from the reference baseline. Specifically, approximately 34% of the records (249 of 723) have been flagged for low-severity deviations in major structural carbohydrates (xylan, glucan) and lignin. These anomalies are concentrated in almond shells and hulls provided by 'tiny' and 'humorous' sources, often associated with analyst xkang2@lbl.gov. While the Z-scores are relatively low (ranging from 1.0 to 1.6), the high frequency of these flags suggests a systemic shift in the compositional profile—possibly due to crop variety or processing differences—rather than random measurement error.
+The compositional analysis audit of agricultural biomass revealed a total of 245 low-severity flags out of 723 records. The data is characterized by a significant concentration of anomalies within almond-derived resources, specifically almond shells, hulls, and branches. These anomalies are primarily focused on structural carbohydrates (xylan/xylose and glucan/glucose) and lignin. A notable pattern is the simultaneous flagging of monomeric and polymeric forms (e.g., xylan and xylose), suggesting that the underlying variance stems from the initial hydrolysis stage or the conversion factors used to calculate anhydrous compositions.
 
-From a data integrity perspective, there is a significant lack of descriptive metadata. The 'note' and 'analyst_name' fields are entirely unpopulated, and the 'sample_date' is a constant value across the dataset. Furthermore, the simultaneous reporting of monomeric sugars (glucose, xylose) and their anhydrous polymeric counterparts (glucan, xylan) without clear methodological distinction suggests either redundant stoichiometric calculation or potential double-entry. Future data collection should prioritize the inclusion of specific variety information and harvest years to explain the observed shifts in hemicellulose and lignin content.
+Analyst xkang2@lbl.gov is associated with a large portion of the flagged records across multiple providers, including 'tiny' and 'humorous'. The consistent Z-scores (ranging from 1.0 to 1.6) across these records suggest a systematic laboratory bias or a slight departure from the global mean rather than random measurement errors. Furthermore, the dataset suffers from significant metadata gaps; the 'note' and 'analyst_name' columns are entirely empty, and the 'sample_date' and 'created_at' fields show zero variance, indicating a batch-upload process that may have stripped vital context regarding sample preparation or equipment calibration.
 
 ## Evidently Profile
 
@@ -125,10 +125,8 @@ From a data integrity perspective, there is a significant lack of descriptive me
 | (71)5316 | almond shells | humorous | — | xylan | 12.2100 | 2.04 | LOW |
 | (71)b8d9 | almond shells | humorous | — | glucan | 15.9800 | 2.20 | LOW |
 | (72)1255 | corn stover husks | caterpillar | — | glucan | 41.1600 | 1.10 | LOW |
-| (72)3abe | corn stover husks | caterpillar | — | xylan | 21.3300 | 1.00 | LOW |
 | (72)4e20 | corn stover husks | caterpillar | — | xylose | 24.8800 | 1.01 | LOW |
 | (72)5d6f | corn stover husks | caterpillar | — | glucose | 45.7400 | 1.09 | LOW |
-| (72)9e04 | corn stover husks | caterpillar | — | xylan | 21.8900 | 1.00 | LOW |
 | (72)ed34 | corn stover husks | caterpillar | — | lignin | 18.4900 | 1.15 | LOW |
 | (7e)0b62 | almond branches | capstan | — | glucan | 21.7500 | 1.22 | LOW |
 | (7e)48f1 | almond branches | capstan | — | xylan | 12.7500 | 1.13 | LOW |
@@ -192,8 +190,6 @@ From a data integrity perspective, there is a significant lack of descriptive me
 | (b3)883d | almond hulls | capstan | — | lignin | 26.1600 | 1.78 | LOW |
 | (b5)2461 | walnut shelling fines | cutaway | — | glucose | 11.6400 | 1.15 | LOW |
 | (b5)70e4 | walnut shelling fines | cutaway | — | xylan | 9.7700 | 1.15 | LOW |
-| (b5)8e9b | walnut shelling fines | cutaway | — | lignin | 52.7800 | 1.00 | LOW |
-| (b5)987c | walnut shelling fines | cutaway | — | lignin | 52.3000 | 1.00 | LOW |
 | (b5)c9e0 | walnut shelling fines | cutaway | — | xylose | 11.1000 | 1.15 | LOW |
 | (b5)da39 | walnut shelling fines | cutaway | — | glucan | 10.4700 | 1.14 | LOW |
 | (b7)5f3f | almond hulls | capstan | — | lignin | 24.6300 | 1.13 | LOW |

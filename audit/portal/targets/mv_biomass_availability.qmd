@@ -9,9 +9,9 @@ format:
 
 ## Executive Summary
 
-The data quality audit of the `mv_biomass_availability` dataset reveals critical deficiencies that significantly impair its utility for agricultural biomass modeling. The most alarming finding is a 85.56% missingness rate in the `observed_value` column, where only 13 out of 90 records contain any measurement data. This level of data sparsity suggests either a systemic failure in the data ingestion pipeline or a significant delay in field observation reporting that leaves the majority of the material inventory without quantified availability.
+The audit of the `mv_biomass_availability` dataset reveals a critical deficiency in data completeness, specifically regarding the primary metric of interest. With an 85.56% missingness rate in the `observed_value` column, the dataset currently serves more as a registry of resource names than a functional tool for biomass availability analysis. Out of 90 total records, only 13 contain valid observations, which severely limits any statistical inference or supply chain modeling that relies on these figures.
 
-Furthermore, the dataset exhibits structural issues regarding data types and categorization. The `observed_value` field is being processed as a categorical variable rather than a numeric one, which often indicates the presence of non-numeric characters or improper schema definitions that will prevent statistical aggregation. Additionally, the 100% uniqueness in `resource_name` suggests a lack of standardized nomenclature (e.g., "walnut tree sticks" being treated as a unique entity rather than a subset of walnut residues), which complicates crop-level analysis. Immediate remediation is required to recover missing values and normalize the resource classification.
+Furthermore, while the dataset identifies 90 unique resource names, the distribution of the existing 13 values is highly constrained, showing only 9 unique data points. The record ID sequence also shows gaps, with a maximum ID of 110 despite only 90 rows being present, suggesting potential record deletions or filtering in the view's underlying query. Immediate remediation is required to populate the missing availability data before this dataset is used for any downstream agricultural planning or research.
 
 ## Evidently Profile
 
