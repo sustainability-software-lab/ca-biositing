@@ -103,10 +103,13 @@ _version.py
 analysis/biocirv-ai/
 
 # Visualization Exports
-exports/
-!exports/
-!exports/plots/
-!exports/plots/*.html
+exports/plots/
 
 # Quarto Audit Portal
 audit/portal/_site/
+audit/portal/.quarto/
+
+# Audit Output Artifacts
+audit/output/*/evidently/
+audit/output/*/llm_synthesis_*.json
+audit/output/*/report_*.md

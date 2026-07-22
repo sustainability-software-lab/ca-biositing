@@ -1,5 +1,0 @@
-{
-  "executive_summary": "The comprehensive data quality audit of the calorimetry dataset for agricultural biomass research has been completed. The automated screening via Evidently AI and the anomaly detection algorithms returned no flagged observations across the current record set. This result indicates a high level of procedural precision in the measurement of Higher Heating Values (HHV) and suggests that the energy content values are well within the expected thermochemical bounds for the agricultural residues under study.\n\nThe absence of flagged anomalies points to successful standardization of sample preparation protocols, particularly in moisture management and particle size reduction, which are critical for achieving stable and repeatable combustion in bomb calorimetry. Furthermore, the lack of temporal or provider-specific clusters of errors suggests that the laboratories are adhering to rigorous calibration schedules and utilizing benzoic acid standards effectively. The dataset is considered fit for use in downstream energy density modeling and carbon conversion efficiency calculations.",
-  "grouped_issues": [],
-  "flagged_count": 0
-}
