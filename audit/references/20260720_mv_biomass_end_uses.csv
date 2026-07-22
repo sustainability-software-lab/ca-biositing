@@ -1,0 +1,31 @@
+resource_name,use_case,observed_value,record_id
+olive pomace,animal feed,50.0,5
+olive pomace,compost or anaerobic digestion,40.0,5
+olive pomace,extractives,10.0,5
+olive pomace,secondary oil extraction,10.0,5
+almond hulls,animal feed,97.0,18
+almond hulls,bioenergy / cogeneration,4.0,18
+almond hulls,extractives,1.0,18
+almond hulls,human fiber additive,1.0,18
+almond shells,animal feed,70.0,21
+almond shells,bioenergy / cogeneration,20.0,21
+almond shells,soil amendment,10.0,21
+almond shells,stockpile,20.0,21
+walnut shell,bedding / mulch,15.0,120
+walnut shell,biochar,25.0,120
+walnut shell,bioenergy / cogeneration,30.0,120
+walnut shell,bulk fillers,5.0,120
+walnut shell,industrial uses,45.0,120
+olive pits,bioenergy / cogeneration,100.0,121
+olive pits,landfill,2.0,121
+all / mixed grape pomace,animal feed,30.0,122
+all / mixed grape pomace,compost or anaerobic digestion,25.0,122
+all / mixed grape pomace,land application,45.0,122
+walnut hull,biosolarization,,123
+walnut hull,compost or anaerobic digestion,15.0,123
+walnut hull,extractives,,123
+walnut hull,land application,85.0,123
+white grape pomace,animal feed,50.0,124
+white grape pomace,compost or anaerobic digestion,30.0,124
+white grape pomace,extractives,10.0,124
+white grape pomace,land application,30.0,124

@@ -1,0 +1,742 @@
+resource_name,parameter_name,unit,observed_value,record_id,qc_pass,note,analyst_name,analyst_email,created_at,provider_codename,sample_date
+grape pomace,glucose_yld,% of glucan,42.7,buty007-8d08,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,40.1,buty008-128b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,43.0,buty009-f6f6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,43.5,buty010-561f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,40.8,buty011-c577,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,42.7,buty012-ccdb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,45.4,buty031-1530,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,47.5,buty032-8bc4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,45.8,buty033-a8aa,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,50.8,buty055-d4d0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,50.5,buty056-2bb0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,53.8,buty057-c642,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,79.7,buty058-c478,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,76.7,buty059-af88,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,83.3,buty060-09f3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,65.2,buty079-aeb3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,65.4,buty080-2d78,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,66.3,buty081-f476,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,72.0,buty082-ad24,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,70.8,buty083-30f5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,72.4,buty084-11f3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,72.4,buty103-5e9e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,67.7,buty104-8f3c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,73.2,buty105-8a32,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,86.4,buty106-5d8b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,81.7,buty107-4b83,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,75.1,buty108-4c57,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,67.9,buty127-2bd2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,73.8,buty128-7672,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,70.1,buty130-bbc1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,74.0,buty131-0cfc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,41.2,buty175-4243,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,44.6,buty176-6692,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,44.7,buty177-2177,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,27.4,buty178-1d39,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,42.9,buty179-a65a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,42.8,buty180-7834,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,20.7,buty199-b0d5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,20.8,buty200-bd41,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,21.1,buty201-6894,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,17.1,buty202-0af7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,16.9,buty203-61f6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,17.2,buty204-7eb8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,29.3,buty223-96b2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,31.2,buty224-7b02,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,30.5,buty225-7368,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,28.9,buty226-fabd,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,45.0,buty227-e468,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,35.1,buty228-d7bf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,20.3,buty247-2fed,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,20.1,buty248-817a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,17.0,buty249-c03e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,14.4,buty250-109f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,14.5,buty251-bdc1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,13.3,buty252-decb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,30.9,buty271-7522,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,11.0,buty272-6b9b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,38.5,buty273-f151,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,33.2,buty274-ed9d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,10.9,buty275-e980,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,41.3,buty276-4aa7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,18.7,buty343-3183,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,16.9,buty344-9740,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,16.2,buty345-a5bc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,16.6,buty346-f978,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,16.0,buty347-8f10,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,16.7,buty348-e7b5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,11.8,buty367-7ab1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,11.5,buty369-947d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,13.4,buty370-5f0c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,11.9,buty372-f35e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,81.5,buty391-1d2c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,83.7,buty392-448d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,89.0,buty393-de8d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,21.8,buty394-3c1f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,19.0,buty395-66ec,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,20.5,buty396-d47f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,23.9,buty415-90b5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,27.3,buty416-bf0a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,34.7,buty417-e945,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,82.4,buty439-f17b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,84.1,buty440-c36c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,78.9,buty441-d08d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,72.5,buty442-04c1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,71.5,buty443-ec72,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,67.4,buty444-217a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,84.0,buty463-ccd3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,84.1,buty465-e4d4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,68.1,buty466-ab89,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,69.3,buty468-c171,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,75.4,buty487-790a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,71.8,buty488-f0ed,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,73.2,buty489-e20f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,67.9,buty490-d2b9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,62.5,buty491-0a44,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,62.5,buty492-6317,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,36.32,buty529-d2fe,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,31.57,buty530-10e1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,11.71,buty531-481f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,11.29,buty532-9810,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,38.04,buty533-a4f3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,33.28,buty534-a669,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,19.32,buty535-4714,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,64.64,buty843-68cd,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,63.06,buty844-c581,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,69.75,buty845-aae3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,70.35,buty846-ecc5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,23.6,buty847-3213,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,27.07,buty848-2733,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,41.64,buty849-f303,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,38.71,buty850-2987,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,68.1,chol001-55cb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,77.4,chol002-bfed,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,80.3,chol003-ed34,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,34.4,chol004-671c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,41.0,chol005-e98d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,41.3,chol006-7523,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,26.9,chol025-5b64,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,25.4,chol026-ad28,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,24.6,chol027-1686,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,xylose_yld,% of xylan,37.4,chol028-627e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,xylose_yld,% of xylan,36.6,chol029-a71a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,xylose_yld,% of xylan,28.7,chol030-4633,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,75.5,chol049-f714,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,78.9,chol050-3b04,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,66.4,chol051-b0e3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,46.8,chol052-ef7c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,47.5,chol053-5564,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,41.1,chol054-8edf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,58.6,chol073-0695,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,61.3,chol074-4525,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,56.9,chol075-71e6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,39.9,chol076-a18d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,42.9,chol077-f9c7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,42.7,chol078-08c9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,67.6,chol097-af15,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,65.6,chol098-1b2a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,66.1,chol099-04e8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,56.7,chol100-0d14,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,59.6,chol101-a251,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,53.5,chol102-fc37,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,65.5,chol121-51ca,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,63.1,chol122-e1e0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,60.5,chol123-c79f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,30.6,chol124-d47a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,33.5,chol125-a906,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,31.6,chol126-7721,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,41.5,chol169-c3b3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,44.1,chol170-b338,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,41.3,chol171-13cc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,24.7,chol172-92f4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,25.3,chol173-2ffe,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,24.0,chol174-ffc0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,31.7,chol193-3045,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,25.9,chol194-b381,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,28.1,chol195-b26a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,32.2,chol196-86f4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,22.0,chol197-2a09,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,19.1,chol198-84d1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,46.1,chol217-9521,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,40.8,chol218-b29e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,33.9,chol219-8ed3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,23.6,chol220-d818,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,17.2,chol221-d712,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,19.8,chol222-1b49,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,36.1,chol241-688b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,38.2,chol242-832a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,33.9,chol243-6a72,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,27.1,chol244-f56f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,31.3,chol245-e539,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,19.9,chol246-605b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,34.7,chol265-7c7f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,34.4,chol266-6a85,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,31.2,chol267-76e0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,6.9,chol268-ac25,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,14.9,chol269-e818,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,14.6,chol270-a787,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,54.5,chol337-9361,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,52.9,chol338-f021,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,49.5,chol339-16ac,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,54.0,chol340-3a85,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,55.8,chol341-e110,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,50.1,chol342-e95b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,31.4,chol361-f08d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,32.2,chol362-9499,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,32.7,chol363-0d94,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,27.5,chol364-83b2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,24.1,chol365-ac9c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,30.0,chol366-7248,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,49.3,chol385-e8c2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,49.7,chol386-4955,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,50.0,chol387-9b3c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,8.8,chol388-fb95,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,9.6,chol389-ab01,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,9.6,chol390-5de4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,72.0,chol409-eccf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,75.7,chol410-cd0d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,70.9,chol411-c3ee,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,xylose_yld,% of xylan,31.7,chol412-5fde,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,xylose_yld,% of xylan,83.8,chol413-fda3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,xylose_yld,% of xylan,20.7,chol414-44e5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,104.5,chol433-db88,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,102.6,chol434-3bb5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,75.2,chol436-27b6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,73.3,chol437-f0f1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,97.6,chol458-9402,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,93.5,chol459-4393,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,70.5,chol461-d4dd,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,65.7,chol462-8e7c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,91.0,chol481-bf9a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,90.8,chol482-17bb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,89.9,chol483-9b58,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,71.3,chol484-3dc7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,70.2,chol485-9b7f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,68.0,chol486-d222,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,39.8,chol513-898d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,37.61,chol514-adca,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,21.33,chol515-06ea,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,18.66,chol516-5624,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,36.24,chol517-fce8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,35.77,chol518-1f1f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,20.92,chol519-4967,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,19.71,chol520-2ce8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,52.8,chol593-db29,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,34.8,chol594-b244,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,57.4,chol595-9b05,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,24.1,chol596-4959,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,14.0,chol597-0e21,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,28.9,chol598-4749,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,39.5,chol599-1024,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,43.2,chol600-282f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,70.4,chol601-178c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,14.7,chol602-93bc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,19.1,chol603-78cf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,34.3,chol604-9827,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,56.2,chol605-2922,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,37.1,chol606-9627,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,34.8,chol607-358c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,33.9,chol608-7d61,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,18.0,chol609-6f86,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,16.5,chol610-1cab,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+peach seeds,glucose_yld,% of glucan,82.3,chol611-b4b0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach seeds,glucose_yld,% of glucan,60.3,chol612-ed7c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach seeds,glucose_yld,% of glucan,80.1,chol613-9ada,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach seeds,xylose_yld,% of xylan,13.1,chol614-e5eb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach seeds,xylose_yld,% of xylan,9.1,chol615-2dd1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach seeds,xylose_yld,% of xylan,12.3,chol616-80a2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,68.4,chol617-d051,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,93.3,chol618-4e26,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,90.6,chol619-3575,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,7.7,chol620-06c5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,11.5,chol621-cc06,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,10.4,chol622-38a1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,71.8,chol623-d90c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,96.7,chol624-5123,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,26.6,chol625-e307,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,24.7,chol626-e546,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,38.1,chol627-f31c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,12.5,chol628-c00c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,42.2,chol629-95b0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,58.6,chol630-628a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,61.6,chol631-67b9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,6.2,chol632-44e2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,3.8,chol633-6239,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,4.0,chol634-4b8d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,48.0,chol635-f935,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,45.4,chol636-885b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,20.1,chol637-878c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,20.1,chol638-827e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,5.4,chol639-6514,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,20.7,chol640-e50a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+walnut hulls,glucose_yld,% of glucan,76.6,chol689-355a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,glucose_yld,% of glucan,69.1,chol690-5ea5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,glucose_yld,% of glucan,79.6,chol691-9a8d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,xylose_yld,% of xylan,24.8,chol692-589f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,xylose_yld,% of xylan,19.4,chol693-2c7c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,xylose_yld,% of xylan,28.3,chol694-8a88,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+unused oak stick,glucose_yld,% of glucan,51.6,chol695-4cbf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+unused oak stick,glucose_yld,% of glucan,51.4,chol696-82ef,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+unused oak stick,glucose_yld,% of glucan,45.1,chol697-2ae0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+unused oak stick,xylose_yld,% of xylan,48.2,chol698-8304,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+unused oak stick,xylose_yld,% of xylan,45.6,chol699-20f5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+unused oak stick,xylose_yld,% of xylan,33.6,chol700-f09c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,41.0,chol701-a51f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,44.7,chol702-95b4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,73.1,chol703-e236,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,39.4,chol704-31e9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,64.2,chol705-4e16,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,56.2,chol713-af90,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,57.8,chol714-9913,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,68.7,chol715-ff6b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,25.9,chol716-4395,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,25.1,chol717-1242,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,34.1,chol718-cf60,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,79.4,chol719-f026,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,86.4,chol720-3426,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,72.9,chol721-9322,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,43.4,chol722-c522,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,52.3,chol723-8ed9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,27.8,chol724-5999,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,72.4,chol725-b834,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,75.3,chol726-b4ce,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,74.9,chol727-433c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,39.5,chol728-dbd4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,46.1,chol729-b778,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,38.6,chol730-cb98,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,93.6,chol731-9f39,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,85.3,chol732-4582,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,76.7,chol733-da2c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+peach stems / leaves,glucose_yld,% of glucan,73.5,chol737-4098,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach stems / leaves,glucose_yld,% of glucan,75.3,chol738-5d04,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach stems / leaves,glucose_yld,% of glucan,77.6,chol739-bedf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach stems / leaves,xylose_yld,% of xylan,36.1,chol740-0a6b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach stems / leaves,xylose_yld,% of xylan,23.8,chol741-501a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach stems / leaves,xylose_yld,% of xylan,29.9,chol742-3f88,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+pistachio stems & leaves,glucose_yld,% of glucan,87.3,chol743-2a97,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio stems & leaves,glucose_yld,% of glucan,62.8,chol745-fb70,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio stems & leaves,xylose_yld,% of xylan,29.1,chol746-df67,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio stems & leaves,xylose_yld,% of xylan,50.3,chol747-6a9b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio stems & leaves,xylose_yld,% of xylan,15.6,chol748-4538,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio hulls,glucose_yld,% of glucan,72.5,chol749-1543,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio hulls,glucose_yld,% of glucan,56.7,chol750-2aae,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio hulls,glucose_yld,% of glucan,38.0,chol751-8ad2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio hulls,xylose_yld,% of xylan,14.2,chol752-0681,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio hulls,xylose_yld,% of xylan,15.9,chol753-dcf4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+pistachio hulls,xylose_yld,% of xylan,5.0,chol754-d591,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tripod,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,74.1,chol755-d717,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,63.0,chol756-b7f5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,66.3,chol757-f5a2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,23.5,chol758-9380,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,18.5,chol759-b963,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,21.8,chol760-aa22,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,60.0,chol761-f77c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,50.4,chol762-d684,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,63.0,chol763-4a3b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,76.5,chol764-6535,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,78.4,chol765-cb44,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,92.9,chol766-44db,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,62.9,chol767-c356,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,60.3,chol768-8bb3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,62.1,chol769-0023,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,32.0,chol770-14d1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,28.8,chol771-048c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,32.1,chol772-3b75,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,78.9,chol773-4bac,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,boatswain,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,89.7,chol774-7edc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,boatswain,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,83.6,chol775-5b00,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,boatswain,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,89.1,chol776-1ce6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,boatswain,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,81.9,chol777-642a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,boatswain,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,54.5,chol779-5f10,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,53.3,chol780-5f11,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,59.8,chol781-652e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,11.5,chol782-d642,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,10.5,chol783-9964,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,7.7,chol784-6a69,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+pistachio hulls,glucose_yld,% of glucan,63.3,chol785-ee55,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,stuntman,2026-07-08 03:54:21.165553
+pistachio hulls,glucose_yld,% of glucan,55.7,chol786-39ce,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,stuntman,2026-07-08 03:54:21.165553
+pistachio hulls,glucose_yld,% of glucan,77.1,chol787-9e11,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,stuntman,2026-07-08 03:54:21.165553
+pistachio hulls,xylose_yld,% of xylan,19.6,chol788-acaf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,stuntman,2026-07-08 03:54:21.165553
+pistachio hulls,xylose_yld,% of xylan,18.2,chol789-2c57,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,stuntman,2026-07-08 03:54:21.165553
+pistachio hulls,xylose_yld,% of xylan,22.9,chol790-a3c9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,stuntman,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,48.2,chol809-617c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,42.7,chol810-f0f9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,44.3,chol811-0c6e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,23.9,chol812-416e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,18.7,chol813-649f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,19.5,chol814-d0fd,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,85.5,chol815-180b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,86.7,chol816-2558,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,88.1,chol817-e2c3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,53.3,chol818-ccd7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,54.5,chol819-e33e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,53.7,chol820-fca9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,71.7,chol827-40a8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,73.45,chol828-4ac7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,84.59,chol829-398f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,85.5,chol830-0be3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,18.14,chol831-9f7f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,18.52,chol832-71db,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,24.78,chol833-4667,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,23.54,chol834-b527,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+walnut shelling fines,glucose_yld,% of glucan,78.2,chol859-0e52,pass,,,,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shelling fines,glucose_yld,% of glucan,72.4,chol860-a58b,pass,,,,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shelling fines,xylose_yld,% of xylan,32.9,chol862-42b5,pass,,,,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shelling fines,xylose_yld,% of xylan,52.2,chol863-48bb,pass,,,,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+walnut shelling fines,xylose_yld,% of xylan,53.2,chol864-01eb,pass,,,,2026-07-08 03:54:21.165553,cutaway,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,56.0,chol865-dc99,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,35.2,chol866-1ad9,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,78.2,chol867-f246,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,82.4,chol868-4f46,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,38.5,chol869-098a,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,98.8,chol871-7de7,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,92.2,chol872-40fd,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,68.0,chol873-5479,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,49.0,chol874-a9fa,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,58.9,chol875-52cf,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,24.2,chol876-ed2d,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,54.4,chol877-1d22,pass,,,,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,84.6,chol878-072c,pass,,,,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,27.8,chol879-de43,pass,,,,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,93.0,chol881-3f9e,pass,,,,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,53.3,chol882-91d2,pass,,,,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,73.2,chol883-5583,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,83.2,chol884-e5ea,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,99.0,chol885-d8ff,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,36.9,chol886-e1e5,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,75.9,chol887-6e6c,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,60.8,chol888-baaf,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,71.6,chol890-e0d9,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,70.0,chol891-e59e,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,77.3,chol892-3f6b,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,24.4,chol893-4f00,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,70.3,chol894-c6b0,pass,,,,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,88.5,chol895-5f6b,pass,,,,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,57.8,chol896-53e3,pass,,,,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,70.0,chol897-4e6c,pass,,,,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+grape stem,xylose_yld,% of xylan,84.2,chol898-628b,pass,,,,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+grape stem,xylose_yld,% of xylan,80.4,chol900-a86b,pass,,,,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,81.5,chol901-5c01,pass,,,,2026-07-08 03:54:21.165553,capstan,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,72.7,chol902-f0ee,pass,,,,2026-07-08 03:54:21.165553,capstan,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,87.7,chol903-ed22,pass,,,,2026-07-08 03:54:21.165553,capstan,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,14.4,chol904-40db,pass,,,,2026-07-08 03:54:21.165553,capstan,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,40.1,chol905-faa3,pass,,,,2026-07-08 03:54:21.165553,capstan,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,59.2,chol906-7f4d,pass,,,,2026-07-08 03:54:21.165553,capstan,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,60.7,hot013-bd1d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,61.1,hot014-4f6f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,55.0,hot015-4cd6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,32.7,hot016-51aa,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,34.1,hot017-ba80,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,26.6,hot018-ca50,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,40.8,hot037-4f3b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,53.6,hot038-65e9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,54.5,hot039-4109,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,79.7,hot061-9e08,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,67.1,hot062-7ae5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,79.3,hot063-1b21,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,52.5,hot064-1547,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,53.1,hot065-c8ee,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,58.0,hot066-4fcb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,60.7,hot085-83c6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,61.3,hot086-82e7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,58.0,hot087-8edd,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,52.1,hot088-38c9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,60.7,hot089-66f8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,56.8,hot090-bdbb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,68.4,hot109-e5ce,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,66.3,hot110-f4ff,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,63.5,hot111-19c5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,66.0,hot112-572e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,60.4,hot113-54ae,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,64.7,hot114-5d11,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,67.9,hot133-5a4e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,67.8,hot134-b6e8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,64.9,hot135-9d22,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,64.8,hot136-f052,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,65.0,hot137-3602,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,64.1,hot138-9d87,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,33.4,hot181-8fc5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,31.0,hot182-9751,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,36.5,hot183-b661,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,9.0,hot184-bb99,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,9.8,hot185-d445,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,16.5,hot186-3cc0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,10.4,hot205-f7d1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,6.2,hot206-a3c5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,18.2,hot207-3cac,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,8.1,hot208-d500,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,5.6,hot209-2c74,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,14.4,hot210-aeaf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,11.3,hot229-d3e4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,11.4,hot230-f121,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,11.6,hot231-9489,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,3.3,hot232-7c2b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,3.0,hot233-c12f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,7.3,hot234-3e53,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,18.7,hot253-c419,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,17.5,hot254-3faf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,17.9,hot255-3c6c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,13.6,hot256-b828,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,13.3,hot257-3a7a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,12.2,hot258-3014,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,14.5,hot277-54f1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,13.1,hot278-cf53,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,12.5,hot279-c1b1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,12.9,hot280-3562,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,5.8,hot281-6672,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,3.8,hot282-5b39,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,21.2,hot349-01e7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,24.5,hot350-2a6b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,18.0,hot351-f4a3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,24.7,hot352-4e83,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,27.7,hot353-76d9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,20.0,hot354-3157,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,21.2,hot373-1050,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,17.2,hot374-b6d3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,18.4,hot375-7dee,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,21.7,hot376-b189,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,16.3,hot377-5324,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,18.1,hot378-ff80,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,81.8,hot397-f767,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,66.9,hot398-e157,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,73.0,hot399-6d76,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,35.0,hot400-6e39,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,24.0,hot401-3224,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,20.9,hot402-42a5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,26.0,hot421-015d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,22.9,hot422-d681,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,19.0,hot423-e9db,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,xylose_yld,% of xylan,87.7,hot425-c52c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,xylose_yld,% of xylan,100.9,hot426-b3c6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,24.5,hot445-649e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,24.5,hot446-43e7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,22.2,hot447-0188,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,5.7,hot448-126d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,12.4,hot449-244a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,12.1,hot450-0c3f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,21.0,hot469-5cd0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,19.4,hot470-91c2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,20.9,hot471-7dce,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,8.7,hot472-babc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,8.1,hot473-c2f6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,9.7,hot474-820c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,23.4,hot493-fa54,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,22.9,hot494-c516,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,23.2,hot495-eba8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,29.6,hot496-7613,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,30.6,hot497-d76c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,29.6,hot498-81cf,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,13.68,hot536-225b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,20.95,hot537-48e1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,21.66,hot538-3b8f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,9.02,hot539-743c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,9.32,hot540-cdaa,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,15.68,hot541-9f4d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,15.41,hot542-9f8b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,5.72,hot543-cd35,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,4.85,hot544-b2eb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,51.0,hot545-5042,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,44.8,hot546-75b0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,47.4,hot547-3e73,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,26.0,hot548-deb4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,25.2,hot549-3ff9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,21.1,hot550-0725,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,60.6,hot551-7cf2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,60.5,hot552-d1c0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,glucose_yld,% of glucan,61.4,hot553-aea7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,37.0,hot554-6c67,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,33.1,hot555-3138,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+rice straw,xylose_yld,% of xylan,35.3,hot556-f4c4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,possessive,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,49.9,hot557-1176,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,51.3,hot558-700b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,glucose_yld,% of glucan,54.2,hot559-11c0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,37.4,hot560-1aab,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,29.5,hot561-94c4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+wheat straw,xylose_yld,% of xylan,29.6,hot562-c8d7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,wardrobe,2026-07-08 03:54:21.165553
+peach seeds,glucose_yld,% of glucan,80.5,hot564-44c4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach seeds,xylose_yld,% of xylan,13.9,hot566-4b76,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach seeds,xylose_yld,% of xylan,9.5,hot567-d009,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+peach seeds,xylose_yld,% of xylan,13.9,hot568-fd0e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rushes,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,118.0,hot569-62fc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,93.1,hot570-4961,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,74.2,hot572-15ca,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,54.5,hot573-87dc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,78.3,hot574-8d12,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,95.1,hot576-3e47,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,93.4,hot577-0726,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,84.3,hot579-f63a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,84.8,hot580-dcf4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,80.4,hot583-0d5f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,51.3,hot584-9ead,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,58.5,hot585-5c6b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,40.8,hot586-9d69,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gossamer,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,71.9,hot587-b187,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,47.8,hot588-2b48,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,55.3,hot589-8c7e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,46.0,hot590-f564,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,32.5,hot591-a517,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,33.6,hot592-6f6a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,gainful,2026-07-08 03:54:21.165553
+walnut hulls,glucose_yld,% of glucan,72.0,hot641-a26b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,glucose_yld,% of glucan,97.2,hot642-c1b7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,glucose_yld,% of glucan,68.9,hot643-9c5e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,xylose_yld,% of xylan,26.5,hot644-646a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,xylose_yld,% of xylan,25.2,hot645-5cfb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut hulls,xylose_yld,% of xylan,18.4,hot646-68b6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+unused oak stick,glucose_yld,% of glucan,50.9,hot647-d76e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+unused oak stick,glucose_yld,% of glucan,79.4,hot648-0b95,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+unused oak stick,glucose_yld,% of glucan,71.5,hot649-a531,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+unused oak stick,xylose_yld,% of xylan,32.3,hot650-3237,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,62.7,hot653-5086,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,56.7,hot654-0ee9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,55.4,hot655-e521,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,82.3,hot657-a56b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,57.0,hot659-9e9a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,63.7,hot660-f5c1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,72.9,hot661-8611,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,21.0,hot662-5e32,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,33.6,hot663-94e0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,41.0,hot664-41e4,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,82.3,hot665-1959,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,79.5,hot666-cf65,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,67.8,hot667-8921,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,95.5,hot668-c320,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,90.3,hot669-2216,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,76.6,hot670-3b55,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,humorous,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,54.6,hot671-ec72,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,56.5,hot672-77fe,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,56.4,hot673-3484,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,42.0,hot674-cef3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,44.6,hot675-5666,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,41.1,hot676-a0c6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,48.5,hot677-fa05,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,52.2,hot678-1e9c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,58.3,hot679-a1ec,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,75.4,hot680-3570,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,78.5,hot681-b31c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,xylose_yld,% of xylan,88.2,hot682-f727,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,81.3,hot683-e069,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,82.0,hot684-5dc7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+spent oak chips,glucose_yld,% of glucan,78.7,hot685-27a7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,rigging,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,26.87,hot851-6a59,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,24.84,hot852-9695,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,21.36,hot853-1634,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,20.35,hot854-c423,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,19.01,hot855-4e2d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,18.83,hot856-6664,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,14.32,hot857-133c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,15.71,hot858-7d95,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,42.8,no p019-c887,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,40.0,no p020-9594,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,42.8,no p021-5497,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,43.6,no p022-4954,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,40.7,no p023-b4fc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,42.5,no p024-107f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,45.3,no p043-1a5b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,47.6,no p044-5955,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape stem,glucose_yld,% of glucan,46.0,no p045-1c57,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,maplewood,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,50.8,no p067-e431,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,50.8,no p068-0275,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,glucose_yld,% of glucan,54.0,no p069-9c5d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,79.7,no p070-593f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,77.2,no p071-668e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+grape pomace,xylose_yld,% of xylan,83.5,no p072-dfa9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,ebony,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,65.6,no p091-2c23,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,66.0,no p092-f9e3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,71.0,no p094-acab,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,72.1,no p095-ea4a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,riverstone,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,72.6,no p115-664f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,67.5,no p116-7c05,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,73.2,no p117-f9f5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,86.7,no p118-001f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,81.5,no p119-1315,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,75.1,no p120-54f1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,oakleaf,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,67.9,no p139-fc84,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,glucose_yld,% of glucan,73.5,no p140-fd88,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,70.1,no p142-c30f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+tomato pomace,xylose_yld,% of xylan,73.6,no p143-3d70,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,pinecrest,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,41.4,no p187-28e9,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,44.5,no p188-f8a0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,44.7,no p189-c5b3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,27.5,no p190-5b03,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,42.8,no p191-5397,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,42.8,no p192-e025,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,29.5,no p211-e849,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,31.7,no p212-fcbd,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,30.5,no p213-5627,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,29.4,no p214-5955,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,31.2,no p215-126f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,32.0,no p216-03ba,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,57.3,no p235-87dd,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,58.5,no p236-627e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,56.9,no p237-bd03,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,82.6,no p238-b067,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,83.6,no p239-c7c7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,85.6,no p240-610b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,28.7,no p259-cdc6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,28.1,no p260-a9dd,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,glucose_yld,% of glucan,29.8,no p261-3b25,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,24.9,no p262-c623,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,24.4,no p263-970e,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond shells,xylose_yld,% of xylan,26.4,no p264-1dd8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,53.2,no p283-17af,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,52.5,no p284-0d21,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,glucose_yld,% of glucan,53.0,no p285-31f7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,66.6,no p286-4c22,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,67.9,no p287-1f4f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+almond hulls,xylose_yld,% of xylan,67.8,no p288-d25a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tiny,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,30.4,no p355-3dc3,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,28.9,no p356-ebd0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,glucose_yld,% of glucan,30.1,no p357-76c6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,32.8,no p358-378c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,32.2,no p359-04f0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut tree sticks,xylose_yld,% of xylan,31.8,no p360-5ce7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,17.6,no p379-e6ac,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,18.4,no p380-959f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,glucose_yld,% of glucan,17.1,no p381-73f6,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,22.1,no p382-e1b1,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,21.7,no p383-e3a8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+almond branches,xylose_yld,% of xylan,20.4,no p384-1e32,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,vibrant,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,16.8,no p403-2497,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,13.7,no p404-ac21,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,glucose_yld,% of glucan,14.8,no p405-0848,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,9.8,no p406-ce09,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,7.4,no p407-5429,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+walnut shells,xylose_yld,% of xylan,8.4,no p408-82fb,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,energetic,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,27.9,no p427-8b93,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,26.8,no p428-cc70,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+sweet potato culls,glucose_yld,% of glucan,27.4,no p429-ca6d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,tackle,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,35.8,no p451-8091,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,35.7,no p452-5cc5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,glucose_yld,% of glucan,35.8,no p453-be77,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,29.5,no p454-b8ca,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,30.9,no p455-e41b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover husks,xylose_yld,% of xylan,30.0,no p456-f32a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,18.8,no p475-e75a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,18.1,no p476-50b0,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,glucose_yld,% of glucan,18.9,no p477-2558,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,19.2,no p478-0c99,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,18.5,no p479-16e8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover cobs,xylose_yld,% of xylan,18.8,no p480-64bc,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,21.3,no p499-e87a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,21.2,no p500-f381,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,glucose_yld,% of glucan,22.6,no p501-6d83,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,18.4,no p502-a371,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,15.9,no p503-4cda,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+corn stover stalks,xylose_yld,% of xylan,16.5,no p504-a44d,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,caterpillar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,20.72,no p521-8223,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,20.79,no p522-cf64,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,3.58,no p523-da82,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,3.76,no p524-ec8b,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,12.57,no p525-7473,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,13.12,no p526-783f,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,4.83,no p527-d639,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,5.03,no p528-8d81,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,excellent,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,26.48,no p835-0b5a,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,glucose_yld,% of glucan,25.89,no p836-d9a2,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,9.5,no p837-0b8c,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive pomace,xylose_yld,% of xylan,9.32,no p838-3752,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,15.03,no p839-7ec8,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,glucose_yld,% of glucan,16.57,no p840-1ee5,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,5.05,no p841-aec7,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553
+olive stems / leaves,xylose_yld,% of xylan,5.64,no p842-d541,pass,,,akrishnamoorthy@lbl.gov,2026-07-08 03:54:21.165553,jaguar,2026-07-08 03:54:21.165553

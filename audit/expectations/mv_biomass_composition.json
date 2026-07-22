@@ -1,0 +1,57 @@
+{
+  "data_asset_type": null,
+  "expectation_suite_name": "mv_biomass_composition",
+  "expectations": [
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "record_id"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "resource_name"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "parameter_name"
+      },
+      "meta": {}
+    },
+    {
+      "expectation_type": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "observed_value",
+        "min_value": 0
+      },
+      "meta": {
+        "notes": "Values should generally be positive."
+      }
+    },
+    {
+      "expectation_type": "expect_compound_columns_to_be_unique",
+      "kwargs": {
+        "column_list": ["record_id", "parameter_name"]
+      },
+      "meta": {
+        "notes": "Level 2: Each record should have at most one observation per parameter."
+      }
+    }
+  ],
+  "ge_cloud_id": null,
+  "meta": {
+    "citations": [
+      {
+        "citation_date": "2026-07-13T20:19:00Z",
+        "comment": "Initial baseline suite",
+        "batch_request": null
+      }
+    ],
+    "great_expectations_version": "0.18.12"
+  }
+}

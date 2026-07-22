@@ -1,0 +1,304 @@
+---
+title: "Audit Target: proximate"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The proximate analysis dataset for agricultural biomass (912 records) demonstrates high internal consistency regarding the stoichiometric relationship between moisture and total solids. The majority of flagged observations (270 out of 271) are categorized as low severity, primarily reflecting the natural biological variance inherent in comparing disparate feedstock types—ranging from high-moisture tomato pomace and pistachio hulls to low-moisture woody residues like almond shells and spent oak chips. Z-score anomalies are largely driven by these distinct feedstock profiles rather than analytical failures.
+
+Analytical attribution is partially maintained through the 'analyst_email' field, with xkang2@lbl.gov overseeing a significant portion of the flagged records, particularly for almond hulls and grape pomace. However, the 'analyst_name' field is 100% unpopulated across the dataset, and 'sample_date' values are missing for all records. Provider-specific patterns are evident, notably with provider 'humorous' delivering almond shells with higher-than-average moisture content (approx. 19%), and provider 'tripod' submitting high-moisture pistachio residues. These clusters suggest systematic differences in processing or storage conditions at the provider level.
+
+## Evidently Profile
+
+<iframe src="../evidently/proximate.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+| Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |
+|-----------|----------|----------|-------------|-----------|-------|---------|----------|
+| (03)b1b0 | almond hulls | tiny | — | moisture | 15.4400 | 1.05 | LOW |
+| (03)ca72 | almond hulls | tiny | — | total solids | 84.5600 | 1.05 | LOW |
+| (04)3ab3 | spent oak chips | maplewood | — | ash solids | 0.5200 | 1.31 | LOW |
+| (04)4ab5 | spent oak chips | maplewood | — | moisture | 7.1900 | 1.01 | LOW |
+| (04)93fb | spent oak chips | maplewood | — | total solids | 92.8100 | 1.01 | LOW |
+| (04)986f | spent oak chips | maplewood | — | ash solids | 0.6600 | 1.51 | LOW |
+| (04)f5c2 | almond shells | capstan | — | volatile solids | 87.8600 | 1.10 | LOW |
+| (11)2322 | pistachio hulls | tripod | — | total solids | 19.6600 | 1.32 | LOW |
+| (11)a4db | pistachio hulls | tripod | — | moisture | 80.3400 | 1.32 | LOW |
+| (11)f212 | pistachio hulls | tripod | — | volatile solids | 14.9700 | 1.67 | LOW |
+| (13)0c41 | grape pomace | ebony | — | moisture | 64.9800 | 1.31 | LOW |
+| (13)124d | almond shells | humorous | — | ash solids | 3.6400 | 1.07 | LOW |
+| (13)12b9 | almond shells | humorous | — | moisture | 19.0600 | 2.21 | LOW |
+| (13)1443 | almond shells | humorous | — | volatile solids | 77.1800 | 2.09 | LOW |
+| (13)1b04 | almond shells | humorous | — | moisture | 19.0000 | 2.20 | LOW |
+| (13)2169 | almond shells | humorous | — | moisture | 19.0500 | 2.21 | LOW |
+| (13)61f0 | grape pomace | ebony | — | total solids | 35.0200 | 1.31 | LOW |
+| (13)6c40 | almond shells | humorous | — | ash solids | 3.7100 | 1.01 | LOW |
+| (13)710c | almond shells | humorous | — | volatile solids | 77.3100 | 2.05 | LOW |
+| (13)7fbd | almond shells | humorous | — | total solids | 80.9400 | 2.21 | LOW |
+| (13)9fd0 | grape pomace | ebony | — | volatile solids | 33.1000 | 1.10 | LOW |
+| (13)bae5 | almond shells | humorous | — | total solids | 80.9500 | 2.21 | LOW |
+| (13)dda4 | almond shells | humorous | — | total solids | 81.0000 | 2.20 | LOW |
+| (13)df67 | grape pomace | ebony | — | volatile solids | 30.8900 | 1.52 | LOW |
+| (13)f8f6 | almond shells | humorous | — | volatile solids | 77.2900 | 2.06 | LOW |
+| (14)bd40 | peach pomace | rushes | — | ash solids | 0.3300 | 1.15 | LOW |
+| (14)e88d | peach pomace | rushes | — | total solids | 2.9200 | 1.10 | LOW |
+| (14)eb17 | peach pomace | rushes | — | volatile solids | 2.6100 | 1.15 | LOW |
+| (14)ff20 | peach pomace | rushes | — | moisture | 97.0800 | 1.10 | LOW |
+| (15)19f2 | almond hulls | humorous | — | total solids | 84.5600 | 1.05 | LOW |
+| (15)2ca0 | walnut shells | cutaway | — | ash solids | 1.0600 | 1.32 | LOW |
+| (15)77aa | walnut shells | cutaway | — | volatile solids | 88.9100 | 1.10 | LOW |
+| (15)9820 | olive stems / leaves | excellent | — | moisture | 46.1700 | 1.15 | LOW |
+| (15)9a81 | almond hulls | humorous | — | total solids | 84.5100 | 1.09 | LOW |
+| (15)9e63 | almond hulls | humorous | — | moisture | 15.4400 | 1.05 | LOW |
+| (15)bdac | walnut shells | cutaway | — | ash solids | 1.0700 | 1.21 | LOW |
+| (15)dec9 | olive stems / leaves | excellent | — | volatile solids | 51.3200 | 1.14 | LOW |
+| (15)e432 | olive stems / leaves | excellent | — | total solids | 53.8300 | 1.15 | LOW |
+| (15)efa4 | almond hulls | humorous | — | moisture | 15.4900 | 1.09 | LOW |
+| (15)f3b8 | olive stems / leaves | excellent | — | ash solids | 2.1500 | 1.01 | LOW |
+| (23)3d5d | peach screening waste | rushes | — | volatile solids | 2.2200 | 1.01 | LOW |
+| (23)5b30 | peach screening waste | rushes | — | ash solids | 0.2600 | 1.15 | LOW |
+| (23)6951 | peach screening waste | rushes | — | moisture | 97.0600 | 1.01 | LOW |
+| (23)77d7 | peach screening waste | rushes | — | total solids | 2.9400 | 1.01 | LOW |
+| (24)7d51 | almond shells | tiny | — | ash solids | 6.8100 | 1.38 | LOW |
+| (24)bbda | almond shells | tiny | — | ash solids | 6.8300 | 1.39 | LOW |
+| (24)ea69 | almond shells | tiny | — | ash solids | 7.3200 | 1.77 | LOW |
+| (27)13cb | almond hulls | tiny | — | ash solids | 13.3700 | 3.29 | MEDIUM |
+| (27)8c1d | almond hulls | tiny | — | volatile solids | 71.4400 | 2.87 | LOW |
+| (28)17f4 | corn stover cobs | caterpillar | — | volatile solids | 84.1900 | 1.11 | LOW |
+| (28)ec2a | corn stover cobs | caterpillar | — | ash solids | 10.9200 | 1.11 | LOW |
+| (31)0a4b | grape stem | maplewood | — | ash solids | 3.1800 | 1.29 | LOW |
+| (31)2091 | grape stem | maplewood | — | moisture | 70.3700 | 1.44 | LOW |
+| (31)52a8 | almond hulls | vibrant | — | ash solids | 5.6000 | 1.22 | LOW |
+| (31)797b | almond hulls | vibrant | — | volatile solids | 80.9100 | 1.07 | LOW |
+| (31)9831 | grape stem | maplewood | — | volatile solids | 26.7100 | 1.43 | LOW |
+| (31)ae33 | grape stem | maplewood | — | total solids | 29.6300 | 1.44 | LOW |
+| (31)d70c | almond hulls | vibrant | — | ash solids | 5.4300 | 1.32 | LOW |
+| (35)0520 | grape vine prunings | boatswain | — | volatile solids | 61.1100 | 1.09 | LOW |
+| (35)4da8 | grape vine prunings | boatswain | — | moisture | 36.1600 | 1.12 | LOW |
+| (35)7a98 | grape vine prunings | boatswain | — | ash solids | 2.6100 | 1.13 | LOW |
+| (35)f6cd | grape vine prunings | boatswain | — | total solids | 63.8400 | 1.12 | LOW |
+| (42)729d | rice straw | possessive | — | moisture | 6.7500 | 1.15 | LOW |
+| (42)a5e2 | rice straw | possessive | — | ash solids | 11.8700 | 1.30 | LOW |
+| (42)a6fe | rice straw | possessive | — | ash solids | 11.9700 | 1.11 | LOW |
+| (42)c1de | rice straw | possessive | — | volatile solids | 81.2400 | 1.15 | LOW |
+| (42)c366 | rice straw | possessive | — | total solids | 93.2500 | 1.15 | LOW |
+| (53)9e2f | pistachio hulls | stuntman | — | volatile solids | 11.1500 | 1.25 | LOW |
+| (53)b829 | pistachio hulls | stuntman | — | total solids | 12.2700 | 1.18 | LOW |
+| (53)fc52 | pistachio hulls | stuntman | — | moisture | 87.7300 | 1.18 | LOW |
+| (55)1963 | tomato pomace | pinecrest | — | ash solids | 0.8500 | 1.09 | LOW |
+| (55)1e0d | tomato pomace | pinecrest | — | total solids | 19.2600 | 1.23 | LOW |
+| (55)8c83 | tomato pomace | pinecrest | — | moisture | 80.7500 | 1.23 | LOW |
+| (55)9fb3 | tomato pomace | pinecrest | — | total solids | 19.2500 | 1.23 | LOW |
+| (55)a0cd | tomato pomace | pinecrest | — | moisture | 80.7400 | 1.23 | LOW |
+| (55)ac67 | tomato pomace | pinecrest | — | volatile solids | 18.3000 | 1.23 | LOW |
+| (55)afbf | tomato pomace | pinecrest | — | ash solids | 0.7600 | 1.60 | LOW |
+| (55)bfa7 | tomato pomace | pinecrest | — | volatile solids | 18.4000 | 1.22 | LOW |
+| (55)c24c | tomato pomace | pinecrest | — | moisture | 80.9300 | 1.25 | LOW |
+| (55)d348 | tomato pomace | pinecrest | — | volatile solids | 18.3100 | 1.23 | LOW |
+| (55)edd2 | tomato pomace | pinecrest | — | total solids | 19.0700 | 1.25 | LOW |
+| (56)a5bd | pistachio stems & leaves | tripod | — | total solids | 40.6500 | 1.15 | LOW |
+| (56)b3fe | pistachio stems & leaves | tripod | — | ash solids | 5.3900 | 1.02 | LOW |
+| (56)e360 | pistachio stems & leaves | tripod | — | moisture | 59.3500 | 1.15 | LOW |
+| (56)f5d2 | pistachio stems & leaves | tripod | — | volatile solids | 33.4300 | 1.06 | LOW |
+| (5b)35b8 | corn stover stalks | caterpillar | — | total solids | 87.3000 | 1.15 | LOW |
+| (5b)4d95 | corn stover stalks | caterpillar | — | moisture | 12.7000 | 1.15 | LOW |
+| (5b)5997 | corn stover stalks | caterpillar | — | ash solids | 5.0600 | 1.05 | LOW |
+| (5b)ace1 | corn stover stalks | caterpillar | — | volatile solids | 82.0900 | 1.15 | LOW |
+| (63)074e | lees | maplewood | — | ash solids | 3.5200 | 1.15 | LOW |
+| (63)20ff | lees | maplewood | — | total solids | 11.7700 | 1.13 | LOW |
+| (63)5e8c | lees | maplewood | — | volatile solids | 8.2400 | 1.15 | LOW |
+| (63)f7da | lees | maplewood | — | moisture | 88.2300 | 1.13 | LOW |
+| (6b)0caf | walnut tree sticks | badger | — | total solids | 66.4700 | 1.07 | LOW |
+| (6b)43a2 | walnut tree sticks | badger | — | moisture | 32.2500 | 1.50 | LOW |
+| (6b)4a5c | walnut tree sticks | badger | — | volatile solids | 64.9300 | 1.49 | LOW |
+| (6b)8b47 | walnut tree sticks | badger | — | volatile solids | 63.8700 | 1.09 | LOW |
+| (6b)a75e | walnut tree sticks | badger | — | total solids | 67.7500 | 1.50 | LOW |
+| (6b)a9b2 | walnut tree sticks | badger | — | volatile solids | 63.9600 | 1.13 | LOW |
+| (6b)dcb2 | walnut tree sticks | badger | — | moisture | 33.5300 | 1.07 | LOW |
+| (6b)e390 | walnut tree sticks | badger | — | total solids | 66.7800 | 1.17 | LOW |
+| (6b)f818 | walnut tree sticks | badger | — | moisture | 33.2200 | 1.17 | LOW |
+| (71)48d6 | almond shells | humorous | — | volatile solids | 88.2300 | 1.21 | LOW |
+| (71)68c8 | almond shells | humorous | — | volatile solids | 87.8100 | 1.09 | LOW |
+| (71)81a2 | almond shells | humorous | — | volatile solids | 88.0000 | 1.14 | LOW |
+| (72)111d | corn stover husks | caterpillar | — | volatile solids | 76.7100 | 1.12 | LOW |
+| (72)32e2 | corn stover husks | caterpillar | — | total solids | 81.7300 | 1.14 | LOW |
+| (72)4254 | corn stover husks | caterpillar | — | moisture | 18.2700 | 1.14 | LOW |
+| (72)d7d8 | corn stover husks | caterpillar | — | ash solids | 4.6100 | 1.12 | LOW |
+| (73)9335 | tomato pomace | oakleaf | — | ash solids | 0.6900 | 1.99 | LOW |
+| (75)205b | grape pomace | boatswain | — | ash solids | 4.7200 | 1.42 | LOW |
+| (75)62db | grape pomace | boatswain | — | ash solids | 5.4300 | 2.07 | LOW |
+| (75)8f14 | grape pomace | boatswain | — | ash solids | 5.2600 | 1.91 | LOW |
+| (7a)11b9 | grape pomace | boatswain | — | total solids | 33.0100 | 1.69 | LOW |
+| (7a)16ee | grape pomace | boatswain | — | moisture | 65.9200 | 1.49 | LOW |
+| (7a)20c9 | grape pomace | boatswain | — | ash solids | 1.4000 | 1.61 | LOW |
+| (7a)8042 | grape pomace | boatswain | — | volatile solids | 31.5000 | 1.40 | LOW |
+| (7a)85c3 | grape pomace | boatswain | — | ash solids | 1.7700 | 1.27 | LOW |
+| (7a)98cc | grape pomace | boatswain | — | ash solids | 1.5200 | 1.50 | LOW |
+| (7a)b0b5 | grape pomace | boatswain | — | moisture | 66.9900 | 1.69 | LOW |
+| (7a)f6b3 | grape pomace | boatswain | — | volatile solids | 32.6900 | 1.17 | LOW |
+| (7a)fba4 | grape pomace | boatswain | — | total solids | 34.0800 | 1.49 | LOW |
+| (85)6ad0 | olive prunings | excellent | — | moisture | 15.3200 | 1.34 | LOW |
+| (85)7c9d | olive prunings | excellent | — | volatile solids | 81.4400 | 1.36 | LOW |
+| (85)b606 | olive prunings | excellent | — | total solids | 84.6800 | 1.34 | LOW |
+| (85)fc38 | olive prunings | excellent | — | ash solids | 3.2300 | 1.02 | LOW |
+| (86)4c9a | almond hulls | humorous | — | moisture | 12.2700 | 1.18 | LOW |
+| (86)521a | almond hulls | humorous | — | total solids | 87.6200 | 1.10 | LOW |
+| (86)5338 | almond hulls | humorous | — | total solids | 87.7300 | 1.18 | LOW |
+| (86)7800 | almond hulls | humorous | — | moisture | 12.4400 | 1.06 | LOW |
+| (86)8657 | almond hulls | humorous | — | moisture | 12.3800 | 1.10 | LOW |
+| (86)e04f | almond hulls | humorous | — | total solids | 87.5600 | 1.06 | LOW |
+| (91)643b | cotton stem mix | schooner | — | moisture | 15.0800 | 1.21 | LOW |
+| (91)8117 | cotton stem mix | schooner | — | moisture | 15.1900 | 1.24 | LOW |
+| (91)8ac1 | cotton stem mix | schooner | — | volatile solids | 76.6600 | 1.15 | LOW |
+| (91)a354 | cotton stem mix | schooner | — | moisture | 15.2000 | 1.24 | LOW |
+| (91)c400 | cotton stem mix | schooner | — | total solids | 84.9200 | 1.21 | LOW |
+| (91)d241 | cotton stem mix | schooner | — | total solids | 84.8000 | 1.24 | LOW |
+| (91)ed6c | cotton stem mix | schooner | — | volatile solids | 77.0600 | 1.05 | LOW |
+| (91)f62b | cotton stem mix | schooner | — | total solids | 84.8100 | 1.24 | LOW |
+| (96)10cd | rice hulls | sextant | — | ash solids | 19.4800 | 1.15 | LOW |
+| (96)4c68 | rice hulls | sextant | — | moisture | 8.9800 | 1.14 | LOW |
+| (96)7e58 | rice hulls | sextant | — | volatile solids | 71.6100 | 1.10 | LOW |
+| (96)9557 | rice hulls | sextant | — | total solids | 91.0200 | 1.14 | LOW |
+| (a0)0798 | almond branches | humorous | — | total solids | 81.7900 | 1.58 | LOW |
+| (a0)3630 | almond branches | humorous | — | total solids | 81.7500 | 1.60 | LOW |
+| (a0)5eca | almond branches | humorous | — | moisture | 18.2500 | 1.60 | LOW |
+| (a0)76dd | almond branches | humorous | — | moisture | 18.2100 | 1.58 | LOW |
+| (a0)8a8a | almond branches | humorous | — | total solids | 81.8700 | 1.56 | LOW |
+| (a0)e490 | almond branches | humorous | — | moisture | 18.1300 | 1.56 | LOW |
+| (a4)2aac | cotton stem mix | schooner | — | ash solids | 14.8500 | 2.23 | LOW |
+| (a4)8c15 | cotton stem mix | schooner | — | ash solids | 12.4900 | 1.31 | LOW |
+| (a4)ce9f | cotton stem mix | schooner | — | ash solids | 12.3900 | 1.27 | LOW |
+| (a5)69b3 | almond shells | humorous | — | ash solids | 7.6200 | 2.00 | LOW |
+| (a5)8dfa | almond shells | humorous | — | ash solids | 6.6900 | 1.28 | LOW |
+| (a5)c3d4 | almond shells | humorous | — | ash solids | 6.3300 | 1.01 | LOW |
+| (a8)1b90 | almond hulls | humorous | — | ash solids | 10.0300 | 1.35 | LOW |
+| (a8)5bb6 | almond hulls | humorous | — | volatile solids | 75.7400 | 1.08 | LOW |
+| (aa)4721 | pistachio shells | stuntman | — | ash solids | 2.2500 | 1.34 | LOW |
+| (aa)697a | walnut tree sticks | badger | — | ash solids | 1.9000 | 1.12 | LOW |
+| (aa)9cf5 | walnut tree sticks | badger | — | ash solids | 1.5800 | 1.81 | LOW |
+| (ab)5767 | olive prunings | excellent | — | volatile solids | 76.3800 | 1.04 | LOW |
+| (ab)64ab | olive prunings | excellent | — | ash solids | 2.4000 | 1.53 | LOW |
+| (b3)3d8e | peach tree prunings | thylacine | — | volatile solids | 71.9100 | 1.15 | LOW |
+| (b3)4e73 | peach tree prunings | thylacine | — | total solids | 74.3100 | 1.15 | LOW |
+| (b3)aa7d | peach tree prunings | thylacine | — | moisture | 25.6900 | 1.15 | LOW |
+| (b3)df00 | peach tree prunings | thylacine | — | ash solids | 1.9900 | 1.02 | LOW |
+| (b5)132e | walnut shelling fines | cutaway | — | volatile solids | 85.8300 | 1.14 | LOW |
+| (b5)1375 | walnut shelling fines | cutaway | — | moisture | 11.2000 | 1.12 | LOW |
+| (b5)92df | walnut shelling fines | cutaway | — | total solids | 88.8000 | 1.12 | LOW |
+| (b5)cf5f | walnut shelling fines | cutaway | — | ash solids | 3.0100 | 1.09 | LOW |
+| (b7)022b | almond hulls | capstan | — | moisture | 11.2600 | 1.89 | LOW |
+| (b7)1b12 | almond hulls | capstan | — | total solids | 88.7600 | 1.91 | LOW |
+| (b7)1ef0 | almond hulls | capstan | — | volatile solids | 81.1200 | 1.15 | LOW |
+| (b7)336b | almond hulls | capstan | — | moisture | 11.2400 | 1.91 | LOW |
+| (b7)6a6a | almond hulls | capstan | — | volatile solids | 82.7400 | 1.83 | LOW |
+| (b7)be6f | almond hulls | capstan | — | volatile solids | 82.4500 | 1.71 | LOW |
+| (b7)d205 | almond hulls | capstan | — | total solids | 88.7400 | 1.89 | LOW |
+| (b7)dfa9 | almond hulls | capstan | — | moisture | 11.2400 | 1.91 | LOW |
+| (b7)ee55 | almond hulls | capstan | — | total solids | 88.7600 | 1.91 | LOW |
+| (be)0c30 | olive pomace | excellent | — | ash solids | 2.1500 | 1.14 | LOW |
+| (be)28ae | corn stover whole | possessive | — | total solids | 91.9800 | 1.15 | LOW |
+| (be)b18d | corn stover whole | possessive | — | moisture | 8.0200 | 1.15 | LOW |
+| (be)deb0 | olive pomace | excellent | — | moisture | 72.3600 | 1.13 | LOW |
+| (be)e2ee | corn stover whole | possessive | — | volatile solids | 83.9100 | 1.05 | LOW |
+| (be)e5fc | olive pomace | excellent | — | volatile solids | 25.4900 | 1.13 | LOW |
+| (be)fcd7 | corn stover whole | possessive | — | ash solids | 8.0700 | 1.06 | LOW |
+| (be)ff01 | olive pomace | excellent | — | total solids | 27.6400 | 1.13 | LOW |
+| (c1)0355 | tomato pomace | pinecrest | — | total solids | 19.9900 | 1.15 | LOW |
+| (c1)0fbc | tomato pomace | pinecrest | — | moisture | 80.0100 | 1.15 | LOW |
+| (c1)1c94 | tomato pomace | pinecrest | — | total solids | 20.3700 | 1.12 | LOW |
+| (c1)5a94 | tomato pomace | pinecrest | — | volatile solids | 18.9200 | 1.17 | LOW |
+| (c1)6548 | tomato pomace | pinecrest | — | volatile solids | 19.2900 | 1.13 | LOW |
+| (c1)a373 | tomato pomace | pinecrest | — | moisture | 80.2200 | 1.18 | LOW |
+| (c1)bc11 | tomato pomace | pinecrest | — | total solids | 19.7800 | 1.18 | LOW |
+| (c1)d3f4 | tomato pomace | pinecrest | — | volatile solids | 18.7300 | 1.19 | LOW |
+| (c1)f2e1 | tomato pomace | pinecrest | — | moisture | 79.6300 | 1.12 | LOW |
+| (c4)2c69 | unused oak stick | maplewood | — | ash solids | 0.1700 | 1.15 | LOW |
+| (c4)370c | unused oak stick | maplewood | — | moisture | 1.3500 | 1.15 | LOW |
+| (c4)95d4 | unused oak stick | maplewood | — | total solids | 98.6500 | 1.15 | LOW |
+| (c4)c0c2 | unused oak stick | maplewood | — | volatile solids | 98.3900 | 1.08 | LOW |
+| (c5)1f33 | spent oak chips | maplewood | — | moisture | 10.7900 | 1.16 | LOW |
+| (c5)24ec | spent oak chips | maplewood | — | total solids | 89.2100 | 1.16 | LOW |
+| (c5)38cf | spent oak chips | maplewood | — | volatile solids | 88.6200 | 1.15 | LOW |
+| (ca)15f5 | rice straw | possessive | — | moisture | 8.1400 | 1.09 | LOW |
+| (ca)3d4f | rice straw | possessive | — | volatile solids | 78.8800 | 1.05 | LOW |
+| (ca)71a9 | rice straw | possessive | — | ash solids | 13.0700 | 1.06 | LOW |
+| (ca)e6df | rice straw | possessive | — | total solids | 91.8600 | 1.09 | LOW |
+| (ce)119d | cotton stem mix | schooner | — | volatile solids | 87.2800 | 1.53 | LOW |
+| (ce)1611 | cotton stem mix | schooner | — | total solids | 95.1400 | 1.05 | LOW |
+| (ce)7d13 | cotton stem mix | schooner | — | moisture | 4.8600 | 1.05 | LOW |
+| (ce)99bc | cotton stem mix | schooner | — | total solids | 95.0300 | 1.03 | LOW |
+| (ce)b1b4 | cotton stem mix | schooner | — | moisture | 4.9700 | 1.03 | LOW |
+| (ce)c5f7 | cotton stem mix | schooner | — | volatile solids | 87.3100 | 1.53 | LOW |
+| (ce)c910 | cotton stem mix | schooner | — | volatile solids | 87.2300 | 1.51 | LOW |
+| (ce)e2ab | cotton stem mix | schooner | — | moisture | 4.9500 | 1.03 | LOW |
+| (ce)f609 | cotton stem mix | schooner | — | total solids | 95.0500 | 1.03 | LOW |
+| (d0)2b08 | grape pomace | rigging | — | total solids | 48.1400 | 1.16 | LOW |
+| (d0)58a2 | grape pomace | rigging | — | volatile solids | 46.7500 | 1.52 | LOW |
+| (d0)6928 | grape pomace | rigging | — | ash solids | 1.8500 | 1.20 | LOW |
+| (d0)84cc | grape pomace | rigging | — | volatile solids | 46.6200 | 1.49 | LOW |
+| (d0)93ea | grape pomace | rigging | — | moisture | 51.8600 | 1.16 | LOW |
+| (d0)95a6 | grape pomace | rigging | — | moisture | 51.4000 | 1.24 | LOW |
+| (d0)afc7 | grape pomace | rigging | — | moisture | 47.9500 | 1.89 | LOW |
+| (d0)b82a | grape pomace | rigging | — | total solids | 48.6000 | 1.24 | LOW |
+| (d0)c43e | grape pomace | rigging | — | ash solids | 1.5200 | 1.50 | LOW |
+| (d0)ccf4 | walnut tree sticks | badger | — | total solids | 59.6800 | 1.24 | LOW |
+| (d0)cf11 | grape pomace | rigging | — | volatile solids | 49.2700 | 2.00 | LOW |
+| (d0)e8f8 | walnut tree sticks | badger | — | volatile solids | 57.0700 | 1.42 | LOW |
+| (d0)eae5 | grape pomace | rigging | — | total solids | 52.0500 | 1.89 | LOW |
+| (d0)f364 | walnut tree sticks | badger | — | moisture | 40.3200 | 1.24 | LOW |
+| (d2)0450 | tomato pomace | gossamer | — | total solids | 49.2200 | 1.81 | LOW |
+| (d2)0e21 | spent yeast | maplewood | — | volatile solids | 30.4400 | 1.13 | LOW |
+| (d2)16b1 | tomato pomace | gossamer | — | volatile solids | 47.8500 | 1.80 | LOW |
+| (d2)225e | tomato pomace | gossamer | — | volatile solids | 47.7900 | 1.79 | LOW |
+| (d2)2413 | tomato pomace | gossamer | — | moisture | 50.4800 | 1.84 | LOW |
+| (d2)272c | tomato pomace | gossamer | — | moisture | 50.7800 | 1.81 | LOW |
+| (d2)6530 | tomato pomace | gossamer | — | ash solids | 1.3500 | 1.72 | LOW |
+| (d2)7baf | tomato pomace | gossamer | — | total solids | 49.1700 | 1.81 | LOW |
+| (d2)7df7 | spent yeast | maplewood | — | ash solids | 10.3700 | 1.15 | LOW |
+| (d2)8f44 | spent yeast | maplewood | — | total solids | 40.8100 | 1.06 | LOW |
+| (d2)96cd | tomato pomace | gossamer | — | ash solids | 1.3800 | 1.89 | LOW |
+| (d2)bd25 | tomato pomace | gossamer | — | volatile solids | 48.1700 | 1.83 | LOW |
+| (d2)d40c | tomato pomace | gossamer | — | total solids | 49.5200 | 1.84 | LOW |
+| (d2)dc17 | spent yeast | maplewood | — | moisture | 59.1900 | 1.06 | LOW |
+| (d2)e469 | tomato pomace | gossamer | — | ash solids | 1.3700 | 1.83 | LOW |
+| (d2)ec13 | tomato pomace | gossamer | — | moisture | 50.8300 | 1.81 | LOW |
+| (da)66a0 | wheat straw | wardrobe | — | moisture | 5.3100 | 1.41 | LOW |
+| (da)b8d0 | wheat straw | wardrobe | — | volatile solids | 85.9700 | 1.68 | LOW |
+| (da)f61e | wheat straw | wardrobe | — | total solids | 94.6900 | 1.41 | LOW |
+| (da)fa91 | wheat straw | wardrobe | — | ash solids | 8.7200 | 1.76 | LOW |
+| (e0)06aa | grape stem | rigging | — | total solids | 33.3000 | 1.37 | LOW |
+| (e0)4395 | grape stem | rigging | — | ash solids | 1.8700 | 1.60 | LOW |
+| (e0)5baa | grape stem | rigging | — | volatile solids | 30.9000 | 1.29 | LOW |
+| (e0)de95 | grape stem | rigging | — | moisture | 66.7000 | 1.37 | LOW |
+| (eb)3e95 | grape vines | boatswain | — | total solids | 50.1700 | 1.08 | LOW |
+| (eb)419c | grape vines | boatswain | — | ash solids | 2.3300 | 1.15 | LOW |
+| (eb)bef9 | grape vines | boatswain | — | volatile solids | 47.8500 | 1.08 | LOW |
+| (eb)f65a | grape vines | boatswain | — | moisture | 49.8300 | 1.08 | LOW |
+| (f3)161b | almond branches | tiny | — | total solids | 82.4600 | 1.40 | LOW |
+| (f3)4605 | almond branches | tiny | — | volatile solids | 19.3500 | 1.95 | LOW |
+| (f3)889a | almond branches | tiny | — | ash solids | 57.5200 | 1.60 | LOW |
+| (f3)96d0 | almond branches | tiny | — | ash solids | 72.3100 | 2.17 | LOW |
+| (f3)b348 | almond branches | tiny | — | ash solids | 67.4500 | 1.98 | LOW |
+| (f3)c096 | almond branches | tiny | — | volatile solids | 16.1000 | 2.07 | LOW |
+| (f3)e4ed | almond branches | tiny | — | volatile solids | 24.9400 | 1.74 | LOW |
+| (f3)f33d | almond branches | tiny | — | moisture | 17.5400 | 1.40 | LOW |
+| (f6)0d8f | peach stems / leaves | rushes | — | volatile solids | 24.9700 | 1.02 | LOW |
+| (f6)2613 | peach stems / leaves | rushes | — | ash solids | 5.4500 | 1.14 | LOW |
+| (f6)d062 | peach stems / leaves | rushes | — | total solids | 31.0100 | 1.08 | LOW |
+| (f6)eefe | peach stems / leaves | rushes | — | moisture | 68.9900 | 1.08 | LOW |
+
+
+## Custom Visuals
+
+Discovered assets:
+
+- [proximate_distribution.html](../assets/exports/plots/composition/proximate_distribution.html)
+- [proximate_distribution_dashboard.html](../assets/exports/plots/composition/proximate_distribution_dashboard.html)
+
+:::

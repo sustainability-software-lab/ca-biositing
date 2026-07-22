@@ -1,0 +1,47 @@
+{
+  "executive_summary": "The audit of the `mv_biomass_availability` dataset reveals a critical deficiency in data completeness, specifically regarding the primary metric of interest. With an 85.56% missingness rate in the `observed_value` column, the dataset currently serves more as a registry of resource names than a functional tool for biomass availability analysis. Out of 90 total records, only 13 contain valid observations, which severely limits any statistical inference or supply chain modeling that relies on these figures.\n\nFurthermore, while the dataset identifies 90 unique resource names, the distribution of the existing 13 values is highly constrained, showing only 9 unique data points. The record ID sequence also shows gaps, with a maximum ID of 110 despite only 90 rows being present, suggesting potential record deletions or filtering in the view's underlying query. Immediate remediation is required to populate the missing availability data before this dataset is used for any downstream agricultural planning or research.",
+  "grouped_issues": [
+    {
+      "group_label": "Critical Data Incompleteness in Observed Biomass Values",
+      "hypothesis": "The high rate of missingness likely stems from a multi-stage data ingestion process where resource identities (resource_name) are established in the database before the physical biomass assessments or remote sensing calculations are finalized. This may reflect an ongoing data collection effort that has stalled or is awaiting a batch update from field researchers.",
+      "priority": "High",
+      "affected_record_ids": [
+        "100",
+        "101",
+        "102",
+        "103",
+        "104",
+        "105",
+        "106",
+        "107",
+        "108",
+        "109"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "Unique Resource Names (77 records)"
+      ],
+      "evidently_finding": "number_of_missing_values: 77 (85.56%) in observed_value",
+      "recommended_action": "Synchronize the dataset with the primary laboratory or field reporting system to import missing availability measurements. If these resources are naturally 'zero availability,' they should be explicitly recorded as 0.0 rather than left as Null."
+    },
+    {
+      "group_label": "Non-Sequential Record ID Indexing",
+      "hypothesis": "The discrepancy between the row count (90) and the maximum record ID (110) suggests that roughly 20 records have been purged from the materialized view or were filtered out by the 'availability' criteria, or that the primary key generation is non-sequential. This could indicate data loss if the deletions were unintended.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "110"
+      ],
+      "affected_parameters": [
+        "record_id"
+      ],
+      "affected_resources": [
+        "All resource records"
+      ],
+      "evidently_finding": "max record_id (110) exceeds total row count (90)",
+      "recommended_action": "Audit the upstream table to determine if the 20 'missing' record IDs correspond to archived data or if there is a filtering logic error in the view definition that is excluding valid biomass resources."
+    }
+  ],
+  "flagged_count": 0
+}

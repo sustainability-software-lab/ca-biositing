@@ -25,6 +25,8 @@ frontend = { features = [
 docs = { features = ["datamodels", "pipeline", "docs"], no-default-feature = true }
 deployment = { features = ["cloud"], solve-group = "default" }
 viz = { features = ["datamodels", "visualization", "kernel"], solve-group = "default" }
+auditor = { features = ["datamodels", "auditor"] }
+portal = { features = ["datamodels", "portal"] }
 
 [dependencies]
 python = "~=3.12"
@@ -220,6 +222,7 @@ db-reset-prod-force = { cmd = "python scripts/db_reset.py --env production --for
 # Database Auditing
 audit = { cmd = "POSTGRES_HOST=localhost python audit/main.py --env local", description = "Run a comprehensive database audit locally (requires local services)." }
 audit-staging = { cmd = "python audit/main.py --env staging", description = "Run a comprehensive database audit against staging (requires auth-proxy tunnel)." }
+audit-freeze = { cmd = "POSTGRES_HOST=localhost python audit/scripts/freeze_reference.py --target", description = "Freeze database state as a Golden Reference. Usage: pixi run audit-freeze <target_name> or pixi run audit-freeze all" }
 
 # pgschema CLI (pre-built binary, not on conda-forge)
 # See https://www.pgschema.com/installation#pre-built-binary
@@ -493,6 +496,52 @@ description = "Trigger the Master ETL flow via Prefect API (fire-and-forget). Fo
 [feature.gis.pypi-dependencies]
 geopandas = "*"
 matplotlib = "*"
+
+[feature.auditor.dependencies]
+scipy = ">=1.13.0,<1.14"
+scikit-learn = ">=1.4.2,<2"
+numpy = ">=1.24,<2"
+matplotlib = ">=3.5,<3.10"
+setuptools = "<70"
+ydata-profiling = ">=4.16.0,<5"
+gspread = ">=6.2.1,<7"
+
+[feature.auditor.pypi-dependencies]
+evidently = ">=0.4.0,<1"
+fastapi = "*"
+orjson = "*"
+instructor = ">=1.0.0,<2"
+ydata-profiling = ">=4.12.0"
+great-expectations = ">=0.18.12,<1"
+duckdb = ">=0.10.0,<1"
+litellm = ">=1.35.0,<2"
+pydantic-settings = ">=2.2.1,<3"
+setuptools = "*"
+tabulate = "*"
+
+[feature.auditor.tasks]
+run-auditor = { cmd = "python audit/agent.py", description = "Run the skill-based data auditor.", env = { PYTHONPATH = "." } }
+run-auditor-verbose = { cmd = "python audit/agent.py --verbose", description = "Run auditor with per-target reports.", env = { PYTHONPATH = "." } }
+run-auditor-profile = { cmd = "python audit/agent.py --profile", description = "Run auditor with ydata-profiling (weekly).", env = { PYTHONPATH = "." } }
+audit-deep-dive = { cmd = "python audit/agent.py --deep-dive", description = "Run a targeted deep-dive. Usage: pixi run audit-deep-dive provider uc_davis", env = { PYTHONPATH = "." } }
+audit-investigate = { cmd = "python -c \"from audit.skills.investigator.query_helpers import *; help(query_flagged)\"", description = "Show audit investigator query helpers.", env = { PYTHONPATH = "." } }
+
+[feature.portal.target.osx-arm64.dependencies]
+quarto = "*"
+
+[feature.portal.target.osx-64.dependencies]
+quarto = "*"
+
+[feature.portal.target.linux-64.dependencies]
+quarto = "*"
+
+[feature.portal.target.win-64.dependencies]
+quarto = "*"
+
+[feature.portal.tasks]
+generate-portal = { cmd = "python audit/portal/generate_portal.py", description = "Generate Quarto portal from latest audit run.", env = { PYTHONPATH = "." } }
+serve-portal = { cmd = "quarto preview audit/portal", description = "Preview the Data Quality Portal locally." }
+build-portal = { cmd = "quarto render audit/portal --output-dir _site", description = "Build the static portal site." }
 
 [pypi-dependencies]
 sqlalchemy = ">=2.0.44, <3"

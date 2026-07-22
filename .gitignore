@@ -53,6 +53,7 @@ data/landiq/*.sbx
 !src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.geojson
 !resources/assets/*.csv
 !data/static/*.csv
+!audit/references/*.csv
 *.pdf
 src/ca_biositing/webservice/ca_biositing/webservice/_version.py
 
@@ -102,7 +103,13 @@ _version.py
 analysis/biocirv-ai/
 
 # Visualization Exports
-exports/
-!exports/
-!exports/plots/
-!exports/plots/*.html
+exports/plots/
+
+# Quarto Audit Portal
+audit/portal/_site/
+audit/portal/.quarto/
+
+# Audit Output Artifacts
+audit/output/*/evidently/
+audit/output/*/llm_synthesis_*.json
+audit/output/*/report_*.md
