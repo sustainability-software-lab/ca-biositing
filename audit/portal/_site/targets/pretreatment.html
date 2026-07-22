@@ -1,0 +1,3355 @@
+<!doctype html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="generator" content="quarto-1.9.38" />
+
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=yes"
+    />
+
+    <title>Audit Target: pretreatment – BioCirV Data Quality Portal</title>
+    <style>
+      /* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+      code {
+        white-space: pre-wrap;
+      }
+      span.smallcaps {
+        font-variant: small-caps;
+      }
+      div.columns {
+        display: flex;
+        gap: min(4vw, 1.5em);
+      }
+      div.column {
+        flex: auto;
+        overflow-x: auto;
+      }
+      div.hanging-indent {
+        margin-left: 1.5em;
+        text-indent: -1.5em;
+      }
+      ul.task-list {
+        list-style: none;
+      }
+      ul.task-list li input[type="checkbox"] {
+        width: 0.8em;
+        margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */
+        vertical-align: middle;
+      }
+    </style>
+
+    <script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+    <script src="../site_libs/quarto-nav/headroom.min.js"></script>
+    <script src="../site_libs/clipboard/clipboard.min.js"></script>
+    <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+    <script src="../site_libs/quarto-search/fuse.min.js"></script>
+    <script src="../site_libs/quarto-search/quarto-search.js"></script>
+    <meta name="quarto:offset" content="../" />
+    <script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+    <script
+      src="../site_libs/quarto-html/tabsets/tabsets.js"
+      type="module"
+    ></script>
+    <script src="../site_libs/quarto-html/popper.min.js"></script>
+    <script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+    <script src="../site_libs/quarto-html/anchor.min.js"></script>
+    <link href="../site_libs/quarto-html/tippy.css" rel="stylesheet" />
+    <link
+      href="../site_libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css"
+      rel="stylesheet"
+      id="quarto-text-highlighting-styles"
+    />
+    <script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+    <link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet" />
+    <link
+      href="../site_libs/bootstrap/bootstrap-445b8638c3d06994fee0907d791121c4.min.css"
+      rel="stylesheet"
+      append-hash="true"
+      id="quarto-bootstrap"
+      data-mode="light"
+    />
+    <script id="quarto-search-options" type="application/json">
+      {
+        "location": "navbar",
+        "copy-button": false,
+        "collapse-after": 3,
+        "panel-placement": "end",
+        "type": "overlay",
+        "limit": 50,
+        "keyboard-shortcut": ["f", "/", "s"],
+        "show-item-context": false,
+        "language": {
+          "search-no-results-text": "No results",
+          "search-matching-documents-text": "matching documents",
+          "search-copy-link-title": "Copy link to search",
+          "search-hide-matches-text": "Hide additional matches",
+          "search-more-match-text": "more match in this document",
+          "search-more-matches-text": "more matches in this document",
+          "search-clear-button-title": "Clear",
+          "search-text-placeholder": "",
+          "search-detached-cancel-button-title": "Cancel",
+          "search-submit-button-title": "Submit",
+          "search-label": "Search"
+        }
+      }
+    </script>
+  </head>
+
+  <body class="nav-sidebar floating nav-fixed quarto-light">
+    <div id="quarto-search-results"></div>
+    <header id="quarto-header" class="headroom fixed-top">
+      <nav class="navbar navbar-expand-lg" data-bs-theme="dark">
+        <div class="navbar-container container-fluid">
+          <div class="navbar-brand-container mx-auto">
+            <a class="navbar-brand" href="../index.html">
+              <span class="navbar-title">BioCirV Data Quality Portal</span>
+            </a>
+          </div>
+          <div id="quarto-search" class="" title="Search"></div>
+          <button
+            class="navbar-toggler"
+            type="button"
+            data-bs-toggle="collapse"
+            data-bs-target="#navbarCollapse"
+            aria-controls="navbarCollapse"
+            role="menu"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+            onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }"
+          >
+            <span class="navbar-toggler-icon"></span>
+          </button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll me-auto">
+              <li class="nav-item">
+                <a class="nav-link" href="../index.html">
+                  <span class="menu-text">Home</span></a
+                >
+              </li>
+            </ul>
+          </div>
+          <!-- /navcollapse -->
+          <div class="quarto-navbar-tools"></div>
+        </div>
+        <!-- /container-fluid -->
+      </nav>
+      <nav class="quarto-secondary-nav">
+        <div class="container-fluid d-flex">
+          <button
+            type="button"
+            class="quarto-btn-toggle btn"
+            data-bs-toggle="collapse"
+            role="button"
+            data-bs-target=".quarto-sidebar-collapse-item"
+            aria-controls="quarto-sidebar"
+            aria-expanded="false"
+            aria-label="Toggle sidebar navigation"
+            onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }"
+          >
+            <i class="bi bi-layout-text-sidebar-reverse"></i>
+          </button>
+          <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb">
+            <ol class="breadcrumb">
+              <li class="breadcrumb-item">
+                <a href="../targets/pretreatment.html"
+                  >Audit Target: pretreatment</a
+                >
+              </li>
+            </ol>
+          </nav>
+          <a
+            class="flex-grow-1"
+            role="navigation"
+            data-bs-toggle="collapse"
+            data-bs-target=".quarto-sidebar-collapse-item"
+            aria-controls="quarto-sidebar"
+            aria-expanded="false"
+            aria-label="Toggle sidebar navigation"
+            onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }"
+          >
+          </a>
+        </div>
+      </nav>
+    </header>
+    <!-- content -->
+    <div
+      id="quarto-content"
+      class="quarto-container page-columns page-rows-contents page-layout-full page-navbar"
+    >
+      <!-- sidebar -->
+      <nav
+        id="quarto-sidebar"
+        class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation floating overflow-auto"
+      >
+        <div class="sidebar-menu-container">
+          <ul class="list-unstyled mt-1">
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/calorimetry.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text">Audit Target: calorimetry</span></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/compositional.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text">Audit Target: compositional</span></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/ftnir.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text">Audit Target: ftnir</span></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/icp.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text">Audit Target: icp</span></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/mv_biomass_availability.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text"
+                    >Audit Target: mv_biomass_availability</span
+                  ></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/mv_biomass_composition.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text"
+                    >Audit Target: mv_biomass_composition</span
+                  ></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/mv_biomass_composition_extended.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text"
+                    >Audit Target: mv_biomass_composition_extended</span
+                  ></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/mv_biomass_end_uses.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text"
+                    >Audit Target: mv_biomass_end_uses</span
+                  ></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/mv_biomass_fermentation.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text"
+                    >Audit Target: mv_biomass_fermentation</span
+                  ></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/mv_biomass_gasification.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text"
+                    >Audit Target: mv_biomass_gasification</span
+                  ></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/mv_biomass_pricing.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text"
+                    >Audit Target: mv_biomass_pricing</span
+                  ></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/mv_biomass_sample_stats.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text"
+                    >Audit Target: mv_biomass_sample_stats</span
+                  ></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/pretreatment.html"
+                  class="sidebar-item-text sidebar-link active"
+                >
+                  <span class="menu-text">Audit Target: pretreatment</span></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/proximate.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text">Audit Target: proximate</span></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/ultimate.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text">Audit Target: ultimate</span></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/xrd.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text">Audit Target: xrd</span></a
+                >
+              </div>
+            </li>
+            <li class="sidebar-item">
+              <div class="sidebar-item-container">
+                <a
+                  href="../targets/xrf.html"
+                  class="sidebar-item-text sidebar-link"
+                >
+                  <span class="menu-text">Audit Target: xrf</span></a
+                >
+              </div>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div
+        id="quarto-sidebar-glass"
+        class="quarto-sidebar-collapse-item"
+        data-bs-toggle="collapse"
+        data-bs-target=".quarto-sidebar-collapse-item"
+      ></div>
+      <!-- margin-sidebar -->
+      <div
+        id="quarto-margin-sidebar"
+        class="sidebar margin-sidebar zindex-bottom"
+      ></div>
+      <!-- main -->
+      <main class="content column-page-right" id="quarto-document-content">
+        <header id="title-block-header" class="quarto-title-block default">
+          <div class="quarto-title">
+            <h1 class="title">Audit Target: pretreatment</h1>
+          </div>
+
+          <div class="quarto-title-meta column-page-right"></div>
+        </header>
+
+        <div class="tabset-margin-container"></div>
+        <div class="panel-tabset">
+          <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <a
+                class="nav-link active"
+                id="tabset-1-1-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#tabset-1-1"
+                role="tab"
+                aria-controls="tabset-1-1"
+                aria-selected="true"
+                href=""
+                >Executive Summary</a
+              >
+            </li>
+            <li class="nav-item" role="presentation">
+              <a
+                class="nav-link"
+                id="tabset-1-2-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#tabset-1-2"
+                role="tab"
+                aria-controls="tabset-1-2"
+                aria-selected="false"
+                href=""
+                >Evidently Profile</a
+              >
+            </li>
+            <li class="nav-item" role="presentation">
+              <a
+                class="nav-link"
+                id="tabset-1-3-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#tabset-1-3"
+                role="tab"
+                aria-controls="tabset-1-3"
+                aria-selected="false"
+                href=""
+                >Flagged Observations</a
+              >
+            </li>
+            <li class="nav-item" role="presentation">
+              <a
+                class="nav-link"
+                id="tabset-1-4-tab"
+                data-bs-toggle="tab"
+                data-bs-target="#tabset-1-4"
+                role="tab"
+                aria-controls="tabset-1-4"
+                aria-selected="false"
+                href=""
+                >Custom Visuals</a
+              >
+            </li>
+          </ul>
+          <div class="tab-content">
+            <div
+              id="tabset-1-1"
+              class="tab-pane active"
+              role="tabpanel"
+              aria-labelledby="tabset-1-1-tab"
+            >
+              <p>
+                The data quality audit for the ‘pretreatment’ dataset reveals a
+                substantial number of low-severity anomalies, with approximately
+                31% of the records flagged. The primary parameters of concern
+                are glucose and xylose yields, which exhibit significant
+                variance across different biomass resources. While the majority
+                of anomalies are characterized by low Z-scores (1.0–1.5), the
+                presence of maximum values reaching 118.0 suggests potential
+                calculation errors or calibration shifts, as yields exceeding
+                100% of the theoretical maximum are physically impossible in
+                standard biomass pretreatment contexts.
+              </p>
+              <p>
+                A significant structural deficiency in the dataset is the
+                complete absence of qualitative metadata. The ‘note’ and
+                ‘analyst_name’ columns are entirely unpopulated across all 741
+                records. While ‘analyst_email’ correctly attributes the work to
+                akrishnamoorthy@lbl.gov, the lack of contextual notes makes it
+                difficult to distinguish between legitimate experimental
+                variation (e.g., optimized pretreatment conditions) and
+                measurement error. Furthermore, the dataset shows a strong
+                clustering of anomalies by provider (e.g., ‘maplewood’,
+                ‘energetic’, ‘caterpillar’), suggesting that specific batches or
+                source locations are driving the observed statistical
+                deviations.
+              </p>
+              <p>
+                Immediate attention is required to validate yield calculation
+                formulas and calibrate the HPLC or equivalent instruments used
+                for sugar quantification, particularly for records showing
+                yields near or above theoretical limits. The consistency of
+                results within provider groups like ‘caterpillar’ and
+                ‘maplewood’ suggests high precision but potentially biased
+                accuracy, which should be investigated through the use of
+                standardized biomass reference materials.
+              </p>
+            </div>
+            <div
+              id="tabset-1-2"
+              class="tab-pane"
+              role="tabpanel"
+              aria-labelledby="tabset-1-2-tab"
+            >
+              <iframe
+                src="../evidently/pretreatment.html"
+                width="100%"
+                height="800px"
+                frameborder="0"
+              >
+              </iframe>
+            </div>
+            <div
+              id="tabset-1-3"
+              class="tab-pane"
+              role="tabpanel"
+              aria-labelledby="tabset-1-3-tab"
+            >
+              <table class="caption-top table">
+                <colgroup>
+                  <col style="width: 13%" />
+                  <col style="width: 12%" />
+                  <col style="width: 12%" />
+                  <col style="width: 16%" />
+                  <col style="width: 13%" />
+                  <col style="width: 8%" />
+                  <col style="width: 11%" />
+                  <col style="width: 12%" />
+                </colgroup>
+                <thead>
+                  <tr class="header">
+                    <th>Record ID</th>
+                    <th>Resource</th>
+                    <th>Provider</th>
+                    <th>Sample Date</th>
+                    <th>Parameter</th>
+                    <th>Value</th>
+                    <th>Z-Score</th>
+                    <th>Severity</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr class="odd">
+                    <td>buty007-8d08</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>42.7000</td>
+                    <td>1.21</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty008-128b</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>40.1000</td>
+                    <td>1.37</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty009-f6f6</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>43.0000</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty058-c478</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>79.7000</td>
+                    <td>1.30</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty059-af88</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>76.7000</td>
+                    <td>1.14</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty060-09f3</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>83.3000</td>
+                    <td>1.48</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty106-5d8b</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>86.4000</td>
+                    <td>1.40</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty107-4b83</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>81.7000</td>
+                    <td>1.21</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty272-6b9b</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>11.0000</td>
+                    <td>1.52</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty346-f978</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>16.6000</td>
+                    <td>1.03</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty347-8f10</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>16.0000</td>
+                    <td>1.07</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty348-e7b5</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>16.7000</td>
+                    <td>1.02</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty367-7ab1</td>
+                    <td>almond branches</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>11.8000</td>
+                    <td>1.13</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty369-947d</td>
+                    <td>almond branches</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>11.5000</td>
+                    <td>1.14</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty391-1d2c</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>81.5000</td>
+                    <td>1.03</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty392-448d</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>83.7000</td>
+                    <td>1.11</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty393-de8d</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>89.0000</td>
+                    <td>1.33</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty442-04c1</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>72.5000</td>
+                    <td>1.02</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty466-ab89</td>
+                    <td>corn stover cobs</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>68.1000</td>
+                    <td>1.14</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty468-c171</td>
+                    <td>corn stover cobs</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>69.3000</td>
+                    <td>1.18</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty533-a4f3</td>
+                    <td>olive stems / leaves</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>38.0400</td>
+                    <td>1.77</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty534-a669</td>
+                    <td>olive stems / leaves</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>33.2800</td>
+                    <td>1.24</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty843-68cd</td>
+                    <td>olive pomace</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>64.6400</td>
+                    <td>1.74</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty844-c581</td>
+                    <td>olive pomace</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>63.0600</td>
+                    <td>1.63</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty845-aae3</td>
+                    <td>olive pomace</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>69.7500</td>
+                    <td>1.75</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty846-ecc5</td>
+                    <td>olive pomace</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>70.3500</td>
+                    <td>1.77</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>buty849-f303</td>
+                    <td>olive stems / leaves</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>41.6400</td>
+                    <td>2.15</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>buty850-2987</td>
+                    <td>olive stems / leaves</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>38.7100</td>
+                    <td>1.90</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol002-bfed</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>77.4000</td>
+                    <td>1.01</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol003-ed34</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>80.3000</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol004-671c</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>34.4000</td>
+                    <td>1.02</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol025-5b64</td>
+                    <td>grape stem</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>26.9000</td>
+                    <td>1.27</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol026-ad28</td>
+                    <td>grape stem</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>25.4000</td>
+                    <td>1.36</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol027-1686</td>
+                    <td>grape stem</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>24.6000</td>
+                    <td>1.41</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol050-3b04</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>78.9000</td>
+                    <td>1.10</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol268-ac25</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>6.9000</td>
+                    <td>1.12</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol337-9361</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>54.5000</td>
+                    <td>1.70</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol338-f021</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>52.9000</td>
+                    <td>1.59</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol339-16ac</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>49.5000</td>
+                    <td>1.35</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol340-3a85</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>54.0000</td>
+                    <td>1.55</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol341-e110</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>55.8000</td>
+                    <td>1.67</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol342-e95b</td>
+                    <td>walnut tree sticks</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>50.1000</td>
+                    <td>1.28</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol409-eccf</td>
+                    <td>sweet potato culls</td>
+                    <td>tackle</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>72.0000</td>
+                    <td>1.59</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol410-cd0d</td>
+                    <td>sweet potato culls</td>
+                    <td>tackle</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>75.7000</td>
+                    <td>1.76</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol411-c3ee</td>
+                    <td>sweet potato culls</td>
+                    <td>tackle</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>70.9000</td>
+                    <td>1.54</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol414-44e5</td>
+                    <td>sweet potato culls</td>
+                    <td>tackle</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>20.7000</td>
+                    <td>1.22</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol433-db88</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>104.5000</td>
+                    <td>1.43</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol434-3bb5</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>102.6000</td>
+                    <td>1.37</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol436-27b6</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>75.2000</td>
+                    <td>1.11</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol437-f0f1</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>73.3000</td>
+                    <td>1.05</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol458-9402</td>
+                    <td>corn stover cobs</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>97.6000</td>
+                    <td>1.37</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol459-4393</td>
+                    <td>corn stover cobs</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>93.5000</td>
+                    <td>1.26</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol461-d4dd</td>
+                    <td>corn stover cobs</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>70.5000</td>
+                    <td>1.22</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol462-8e7c</td>
+                    <td>corn stover cobs</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>65.7000</td>
+                    <td>1.05</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol481-bf9a</td>
+                    <td>corn stover stalks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>91.0000</td>
+                    <td>1.22</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol482-17bb</td>
+                    <td>corn stover stalks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>90.8000</td>
+                    <td>1.21</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol483-9b58</td>
+                    <td>corn stover stalks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>89.9000</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol484-3dc7</td>
+                    <td>corn stover stalks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>71.3000</td>
+                    <td>1.11</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol485-9b7f</td>
+                    <td>corn stover stalks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>70.2000</td>
+                    <td>1.06</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol517-fce8</td>
+                    <td>olive stems / leaves</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>36.2400</td>
+                    <td>1.57</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol518-1f1f</td>
+                    <td>olive stems / leaves</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>35.7700</td>
+                    <td>1.52</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol594-b244</td>
+                    <td>wheat straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>34.8000</td>
+                    <td>1.69</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol595-9b05</td>
+                    <td>wheat straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>57.4000</td>
+                    <td>1.40</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol597-0e21</td>
+                    <td>wheat straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>14.0000</td>
+                    <td>1.57</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol599-1024</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>39.5000</td>
+                    <td>1.48</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol600-282f</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>43.2000</td>
+                    <td>1.27</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol602-93bc</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>14.7000</td>
+                    <td>1.55</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol603-78cf</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>19.1000</td>
+                    <td>1.25</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol605-2922</td>
+                    <td>wheat straw</td>
+                    <td>wardrobe</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>56.2000</td>
+                    <td>1.24</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol606-9627</td>
+                    <td>wheat straw</td>
+                    <td>wardrobe</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>37.1000</td>
+                    <td>1.37</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol607-358c</td>
+                    <td>wheat straw</td>
+                    <td>wardrobe</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>34.8000</td>
+                    <td>1.69</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol608-7d61</td>
+                    <td>wheat straw</td>
+                    <td>wardrobe</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>33.9000</td>
+                    <td>1.43</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol610-1cab</td>
+                    <td>wheat straw</td>
+                    <td>wardrobe</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>16.5000</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol612-ed7c</td>
+                    <td>peach seeds</td>
+                    <td>rushes</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>60.3000</td>
+                    <td>1.49</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol615-2dd1</td>
+                    <td>peach seeds</td>
+                    <td>rushes</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>9.1000</td>
+                    <td>1.33</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol618-4e26</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>93.3000</td>
+                    <td>1.61</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol619-3575</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>90.6000</td>
+                    <td>1.44</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol620-06c5</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>7.7000</td>
+                    <td>1.75</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol621-cc06</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>11.5000</td>
+                    <td>1.60</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol622-38a1</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>10.4000</td>
+                    <td>1.64</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol624-5123</td>
+                    <td>tomato pomace</td>
+                    <td>pinecrest</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>96.7000</td>
+                    <td>1.82</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol625-e307</td>
+                    <td>tomato pomace</td>
+                    <td>pinecrest</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>26.6000</td>
+                    <td>2.50</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol626-e546</td>
+                    <td>tomato pomace</td>
+                    <td>pinecrest</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>24.7000</td>
+                    <td>1.07</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol628-c00c</td>
+                    <td>tomato pomace</td>
+                    <td>pinecrest</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>12.5000</td>
+                    <td>1.56</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol629-95b0</td>
+                    <td>tomato pomace</td>
+                    <td>gossamer</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>42.2000</td>
+                    <td>1.54</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol632-44e2</td>
+                    <td>tomato pomace</td>
+                    <td>gossamer</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>6.2000</td>
+                    <td>1.81</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol633-6239</td>
+                    <td>tomato pomace</td>
+                    <td>gossamer</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>3.8000</td>
+                    <td>1.91</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol634-4b8d</td>
+                    <td>tomato pomace</td>
+                    <td>gossamer</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>4.0000</td>
+                    <td>1.90</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol635-f935</td>
+                    <td>tomato pomace</td>
+                    <td>gainful</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>48.0000</td>
+                    <td>1.18</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol636-885b</td>
+                    <td>tomato pomace</td>
+                    <td>gainful</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>45.4000</td>
+                    <td>1.34</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol637-878c</td>
+                    <td>tomato pomace</td>
+                    <td>gainful</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>20.1000</td>
+                    <td>2.90</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol638-827e</td>
+                    <td>tomato pomace</td>
+                    <td>gainful</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>20.1000</td>
+                    <td>1.26</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol639-6514</td>
+                    <td>tomato pomace</td>
+                    <td>gainful</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>5.4000</td>
+                    <td>1.84</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol640-e50a</td>
+                    <td>tomato pomace</td>
+                    <td>gainful</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>20.7000</td>
+                    <td>1.23</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol693-2c7c</td>
+                    <td>walnut hulls</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>19.4000</td>
+                    <td>1.10</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol694-8a88</td>
+                    <td>walnut hulls</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>28.3000</td>
+                    <td>1.14</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol698-8304</td>
+                    <td>unused oak stick</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>48.2000</td>
+                    <td>1.02</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol701-a51f</td>
+                    <td>spent oak chips</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>41.0000</td>
+                    <td>1.81</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol702-95b4</td>
+                    <td>spent oak chips</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>44.7000</td>
+                    <td>1.56</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol720-3426</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>86.4000</td>
+                    <td>1.30</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol724-5999</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>27.8000</td>
+                    <td>1.36</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol731-9f39</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>93.6000</td>
+                    <td>1.79</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol732-4582</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>85.3000</td>
+                    <td>1.22</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol739-bedf</td>
+                    <td>peach stems / leaves</td>
+                    <td>rushes</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>77.6000</td>
+                    <td>1.04</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol740-0a6b</td>
+                    <td>peach stems / leaves</td>
+                    <td>rushes</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>36.1000</td>
+                    <td>1.00</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol747-6a9b</td>
+                    <td>pistachio stems &amp; leaves</td>
+                    <td>tripod</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>50.3000</td>
+                    <td>1.07</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol751-8ad2</td>
+                    <td>pistachio hulls</td>
+                    <td>tripod</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>38.0000</td>
+                    <td>1.62</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol754-d591</td>
+                    <td>pistachio hulls</td>
+                    <td>tripod</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>5.0000</td>
+                    <td>1.78</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol755-d717</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>74.1000</td>
+                    <td>1.22</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol763-4a3b</td>
+                    <td>almond hulls</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>63.0000</td>
+                    <td>1.05</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol764-6535</td>
+                    <td>almond hulls</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>76.5000</td>
+                    <td>1.17</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol765-cb44</td>
+                    <td>almond hulls</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>78.4000</td>
+                    <td>1.23</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol766-44db</td>
+                    <td>almond hulls</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>92.9000</td>
+                    <td>1.71</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol773-4bac</td>
+                    <td>grape pomace</td>
+                    <td>boatswain</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>78.9000</td>
+                    <td>1.10</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol774-7edc</td>
+                    <td>grape pomace</td>
+                    <td>boatswain</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>89.7000</td>
+                    <td>1.79</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol775-5b00</td>
+                    <td>grape pomace</td>
+                    <td>boatswain</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>83.6000</td>
+                    <td>1.40</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol776-1ce6</td>
+                    <td>grape pomace</td>
+                    <td>boatswain</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>89.1000</td>
+                    <td>1.78</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol777-642a</td>
+                    <td>grape pomace</td>
+                    <td>boatswain</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>81.9000</td>
+                    <td>1.41</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol787-9e11</td>
+                    <td>pistachio hulls</td>
+                    <td>stuntman</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>77.1000</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol790-a3c9</td>
+                    <td>pistachio hulls</td>
+                    <td>stuntman</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>22.9000</td>
+                    <td>1.13</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol815-180b</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>85.5000</td>
+                    <td>1.07</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol816-2558</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>86.7000</td>
+                    <td>1.13</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol817-e2c3</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>88.1000</td>
+                    <td>1.21</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol818-ccd7</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>53.3000</td>
+                    <td>1.11</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol819-e33e</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>54.5000</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol820-fca9</td>
+                    <td>rice straw</td>
+                    <td>possessive</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>53.7000</td>
+                    <td>1.13</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol827-40a8</td>
+                    <td>olive pomace</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>71.7000</td>
+                    <td>2.22</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol828-4ac7</td>
+                    <td>olive pomace</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>73.4500</td>
+                    <td>2.34</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol829-398f</td>
+                    <td>olive pomace</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>84.5900</td>
+                    <td>2.37</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol830-0be3</td>
+                    <td>olive pomace</td>
+                    <td>jaguar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>85.5000</td>
+                    <td>2.41</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol862-42b5</td>
+                    <td>walnut shelling fines</td>
+                    <td>cutaway</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>32.9000</td>
+                    <td>1.15</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol867-f246</td>
+                    <td>almond hulls</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>78.2000</td>
+                    <td>1.80</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol868-4f46</td>
+                    <td>almond hulls</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>82.4000</td>
+                    <td>1.36</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol871-7de7</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>98.8000</td>
+                    <td>2.17</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol872-40fd</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>92.2000</td>
+                    <td>1.92</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol874-a9fa</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>49.0000</td>
+                    <td>1.35</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol875-52cf</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>58.9000</td>
+                    <td>1.96</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol878-072c</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>84.6000</td>
+                    <td>2.12</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol881-3f9e</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>93.0000</td>
+                    <td>1.71</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol884-e5ea</td>
+                    <td>almond branches</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>83.2000</td>
+                    <td>1.32</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol885-d8ff</td>
+                    <td>almond branches</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>99.0000</td>
+                    <td>1.86</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol887-6e6c</td>
+                    <td>almond branches</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>75.9000</td>
+                    <td>1.45</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol890-e0d9</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>71.6000</td>
+                    <td>1.12</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol891-e59e</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>70.0000</td>
+                    <td>1.06</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol892-3f6b</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>77.3000</td>
+                    <td>3.09</td>
+                    <td>MEDIUM</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol894-c6b0</td>
+                    <td>almond shells</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>70.3000</td>
+                    <td>2.66</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol895-5f6b</td>
+                    <td>grape stem</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>88.5000</td>
+                    <td>2.44</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol897-4e6c</td>
+                    <td>grape stem</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>70.0000</td>
+                    <td>1.32</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol898-628b</td>
+                    <td>grape stem</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>84.2000</td>
+                    <td>1.16</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol900-a86b</td>
+                    <td>grape stem</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>80.4000</td>
+                    <td>1.01</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol901-5c01</td>
+                    <td>almond shells</td>
+                    <td>capstan</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>81.5000</td>
+                    <td>1.50</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol902-f0ee</td>
+                    <td>almond shells</td>
+                    <td>capstan</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>72.7000</td>
+                    <td>1.17</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>chol903-ed22</td>
+                    <td>almond shells</td>
+                    <td>capstan</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>87.7000</td>
+                    <td>1.74</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>chol906-7f4d</td>
+                    <td>almond shells</td>
+                    <td>capstan</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>59.2000</td>
+                    <td>1.98</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot016-51aa</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>32.7000</td>
+                    <td>1.11</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot017-ba80</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>34.1000</td>
+                    <td>1.04</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot018-ca50</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>26.6000</td>
+                    <td>1.42</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot061-9e08</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>79.7000</td>
+                    <td>1.15</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot063-1b21</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>79.3000</td>
+                    <td>1.13</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot205-f7d1</td>
+                    <td>almond shells</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>10.4000</td>
+                    <td>1.23</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot206-a3c5</td>
+                    <td>almond shells</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>6.2000</td>
+                    <td>1.39</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot208-d500</td>
+                    <td>almond shells</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>8.1000</td>
+                    <td>1.16</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot209-2c74</td>
+                    <td>almond shells</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>5.6000</td>
+                    <td>1.32</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot229-d3e4</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>11.3000</td>
+                    <td>1.50</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot230-f121</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>11.4000</td>
+                    <td>1.50</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot231-9489</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>11.6000</td>
+                    <td>1.49</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot232-7c2b</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>3.3000</td>
+                    <td>1.24</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot233-c12f</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>3.0000</td>
+                    <td>1.25</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot234-3e53</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>7.3000</td>
+                    <td>1.11</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot277-54f1</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>14.5000</td>
+                    <td>1.34</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot278-cf53</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>13.1000</td>
+                    <td>1.41</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot279-c1b1</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>12.5000</td>
+                    <td>1.44</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot281-6672</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>5.8000</td>
+                    <td>1.16</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot282-5b39</td>
+                    <td>almond hulls</td>
+                    <td>tiny</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>3.8000</td>
+                    <td>1.22</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot397-f767</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>81.8000</td>
+                    <td>1.04</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot400-6e39</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>35.0000</td>
+                    <td>2.47</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot401-3224</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>24.0000</td>
+                    <td>1.11</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot447-0188</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>22.2000</td>
+                    <td>1.07</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot448-126d</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>5.7000</td>
+                    <td>1.34</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot449-244a</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>12.4000</td>
+                    <td>1.11</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot450-0c3f</td>
+                    <td>corn stover husks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>12.1000</td>
+                    <td>1.12</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot537-48e1</td>
+                    <td>olive pomace</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>20.9500</td>
+                    <td>1.24</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot538-3b8f</td>
+                    <td>olive pomace</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>21.6600</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot560-1aab</td>
+                    <td>wheat straw</td>
+                    <td>wardrobe</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>37.4000</td>
+                    <td>1.96</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot567-d009</td>
+                    <td>peach seeds</td>
+                    <td>rushes</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>9.5000</td>
+                    <td>1.15</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot569-62fc</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>118.0000</td>
+                    <td>3.13</td>
+                    <td>MEDIUM</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot570-4961</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>93.1000</td>
+                    <td>1.60</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot574-8d12</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>78.3000</td>
+                    <td>1.07</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot576-3e47</td>
+                    <td>tomato pomace</td>
+                    <td>pinecrest</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>95.1000</td>
+                    <td>1.72</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot577-0726</td>
+                    <td>tomato pomace</td>
+                    <td>pinecrest</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>93.4000</td>
+                    <td>1.62</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot579-f63a</td>
+                    <td>tomato pomace</td>
+                    <td>pinecrest</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>84.3000</td>
+                    <td>1.31</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot580-dcf4</td>
+                    <td>tomato pomace</td>
+                    <td>pinecrest</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>84.8000</td>
+                    <td>1.33</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot588-2b48</td>
+                    <td>tomato pomace</td>
+                    <td>gainful</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>47.8000</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot642-c1b7</td>
+                    <td>walnut hulls</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>97.2000</td>
+                    <td>1.87</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot646-68b6</td>
+                    <td>walnut hulls</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>18.4000</td>
+                    <td>1.35</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot648-0b95</td>
+                    <td>unused oak stick</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>79.4000</td>
+                    <td>1.54</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot657-a56b</td>
+                    <td>spent oak chips</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>82.3000</td>
+                    <td>1.51</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot660-f5c1</td>
+                    <td>almond hulls</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>63.7000</td>
+                    <td>1.09</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot661-8611</td>
+                    <td>almond hulls</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>72.9000</td>
+                    <td>1.54</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot665-1959</td>
+                    <td>almond branches</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>82.3000</td>
+                    <td>1.28</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot666-cf65</td>
+                    <td>almond branches</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>79.5000</td>
+                    <td>1.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot668-c320</td>
+                    <td>almond branches</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>95.5000</td>
+                    <td>2.19</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot669-2216</td>
+                    <td>almond branches</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>90.3000</td>
+                    <td>1.99</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot670-3b55</td>
+                    <td>almond branches</td>
+                    <td>humorous</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>76.6000</td>
+                    <td>1.47</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot677-fa05</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>48.5000</td>
+                    <td>1.30</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot678-1e9c</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>52.2000</td>
+                    <td>1.04</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot680-3570</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>75.4000</td>
+                    <td>1.15</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>hot681-b31c</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>78.5000</td>
+                    <td>1.31</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>hot682-f727</td>
+                    <td>spent oak chips</td>
+                    <td>rigging</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>88.2000</td>
+                    <td>1.82</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p019-c887</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>42.8000</td>
+                    <td>1.20</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p020-9594</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>40.0000</td>
+                    <td>1.38</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p021-5497</td>
+                    <td>grape pomace</td>
+                    <td>maplewood</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>42.8000</td>
+                    <td>1.20</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p070-593f</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>79.7000</td>
+                    <td>1.30</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p071-668e</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>77.2000</td>
+                    <td>1.17</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p072-dfa9</td>
+                    <td>grape pomace</td>
+                    <td>ebony</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>83.5000</td>
+                    <td>1.49</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p118-001f</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>86.7000</td>
+                    <td>1.41</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p119-1315</td>
+                    <td>tomato pomace</td>
+                    <td>oakleaf</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>81.5000</td>
+                    <td>1.20</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p238-b067</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>82.6000</td>
+                    <td>1.37</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p239-c7c7</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>83.6000</td>
+                    <td>1.40</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p240-610b</td>
+                    <td>almond hulls</td>
+                    <td>vibrant</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>85.6000</td>
+                    <td>1.47</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p403-2497</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>16.8000</td>
+                    <td>1.56</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p404-ac21</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>13.7000</td>
+                    <td>1.69</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p405-0848</td>
+                    <td>walnut shells</td>
+                    <td>energetic</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>14.8000</td>
+                    <td>1.64</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p502-a371</td>
+                    <td>corn stover stalks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>18.4000</td>
+                    <td>1.15</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p503-4cda</td>
+                    <td>corn stover stalks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>15.9000</td>
+                    <td>1.25</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p504-a44d</td>
+                    <td>corn stover stalks</td>
+                    <td>caterpillar</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>16.5000</td>
+                    <td>1.23</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p521-8223</td>
+                    <td>olive pomace</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>20.7200</td>
+                    <td>1.25</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p522-cf64</td>
+                    <td>olive pomace</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>20.7900</td>
+                    <td>1.25</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p523-da82</td>
+                    <td>olive pomace</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>3.5800</td>
+                    <td>1.05</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p524-ec8b</td>
+                    <td>olive pomace</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>xylose_yld</td>
+                    <td>3.7600</td>
+                    <td>1.04</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="odd">
+                    <td>no p525-7473</td>
+                    <td>olive stems / leaves</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>12.5700</td>
+                    <td>1.10</td>
+                    <td>LOW</td>
+                  </tr>
+                  <tr class="even">
+                    <td>no p526-783f</td>
+                    <td>olive stems / leaves</td>
+                    <td>excellent</td>
+                    <td>—</td>
+                    <td>glucose_yld</td>
+                    <td>13.1200</td>
+                    <td>1.04</td>
+                    <td>LOW</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <div
+              id="tabset-1-4"
+              class="tab-pane"
+              role="tabpanel"
+              aria-labelledby="tabset-1-4-tab"
+            >
+              <p>Discovered assets:</p>
+              <ul>
+                <li>
+                  <a
+                    href="../assets/exports/plots/conversion/pretreatment_distribution.html"
+                    >pretreatment_distribution.html</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+      <!-- /main -->
+      <script id="quarto-html-after-body" type="application/javascript">
+        window.document.addEventListener("DOMContentLoaded", function (event) {
+          const icon = "";
+          const anchorJS = new window.AnchorJS();
+          anchorJS.options = {
+            placement: "right",
+            icon: icon,
+          };
+          anchorJS.add(".anchored");
+          const isCodeAnnotation = (el) => {
+            for (const clz of el.classList) {
+              if (clz.startsWith("code-annotation-")) {
+                return true;
+              }
+            }
+            return false;
+          };
+          const onCopySuccess = function (e) {
+            // button target
+            const button = e.trigger;
+            // don't keep focus
+            button.blur();
+            // flash "checked"
+            button.classList.add("code-copy-button-checked");
+            var currentTitle = button.getAttribute("title");
+            button.setAttribute("title", "Copied!");
+            let tooltip;
+            if (window.bootstrap) {
+              button.setAttribute("data-bs-toggle", "tooltip");
+              button.setAttribute("data-bs-placement", "left");
+              button.setAttribute("data-bs-title", "Copied!");
+              tooltip = new bootstrap.Tooltip(button, {
+                trigger: "manual",
+                customClass: "code-copy-button-tooltip",
+                offset: [0, -8],
+              });
+              tooltip.show();
+            }
+            setTimeout(function () {
+              if (tooltip) {
+                tooltip.hide();
+                button.removeAttribute("data-bs-title");
+                button.removeAttribute("data-bs-toggle");
+                button.removeAttribute("data-bs-placement");
+              }
+              button.setAttribute("title", currentTitle);
+              button.classList.remove("code-copy-button-checked");
+            }, 1000);
+            // clear code selection
+            e.clearSelection();
+          };
+          const getTextToCopy = function (trigger) {
+            const outerScaffold = trigger.parentElement.cloneNode(true);
+            const codeEl = outerScaffold.querySelector("code");
+            for (const childEl of codeEl.children) {
+              if (isCodeAnnotation(childEl)) {
+                childEl.remove();
+              }
+            }
+            return codeEl.innerText;
+          };
+          const clipboard = new window.ClipboardJS(
+            ".code-copy-button:not([data-in-quarto-modal])",
+            {
+              text: getTextToCopy,
+            },
+          );
+          clipboard.on("success", onCopySuccess);
+          if (
+            window.document.getElementById("quarto-embedded-source-code-modal")
+          ) {
+            const clipboardModal = new window.ClipboardJS(
+              ".code-copy-button[data-in-quarto-modal]",
+              {
+                text: getTextToCopy,
+                container: window.document.getElementById(
+                  "quarto-embedded-source-code-modal",
+                ),
+              },
+            );
+            clipboardModal.on("success", onCopySuccess);
+          }
+          var localhostRegex = new RegExp(
+            /^(?:http|https):\/\/localhost\:?[0-9]*\//,
+          );
+          var mailtoRegex = new RegExp(/^mailto:/);
+          var filterRegex = new RegExp("/" + window.location.host + "/");
+          var isInternal = (href) => {
+            return (
+              filterRegex.test(href) ||
+              localhostRegex.test(href) ||
+              mailtoRegex.test(href)
+            );
+          };
+          // Inspect non-navigation links and adorn them if external
+          var links = window.document.querySelectorAll(
+            "a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)",
+          );
+          for (var i = 0; i < links.length; i++) {
+            const link = links[i];
+            if (!isInternal(link.href)) {
+              // undo the damage that might have been done by quarto-nav.js in the case of
+              // links that we want to consider external
+              if (link.dataset.originalHref !== undefined) {
+                link.href = link.dataset.originalHref;
+              }
+            }
+          }
+          function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+            const config = {
+              allowHTML: true,
+              maxWidth: 500,
+              delay: 100,
+              arrow: false,
+              appendTo: function (el) {
+                return el.parentElement;
+              },
+              interactive: true,
+              interactiveBorder: 10,
+              theme: "quarto",
+              placement: "bottom-start",
+            };
+            if (contentFn) {
+              config.content = contentFn;
+            }
+            if (onTriggerFn) {
+              config.onTrigger = onTriggerFn;
+            }
+            if (onUntriggerFn) {
+              config.onUntrigger = onUntriggerFn;
+            }
+            window.tippy(el, config);
+          }
+          const noterefs = window.document.querySelectorAll(
+            'a[role="doc-noteref"]',
+          );
+          for (var i = 0; i < noterefs.length; i++) {
+            const ref = noterefs[i];
+            tippyHover(ref, function () {
+              // use id or data attribute instead here
+              let href =
+                ref.getAttribute("data-footnote-href") ||
+                ref.getAttribute("href");
+              try {
+                href = new URL(href).hash;
+              } catch {}
+              const id = href.replace(/^#\/?/, "");
+              const note = window.document.getElementById(id);
+              if (note) {
+                return note.innerHTML;
+              } else {
+                return "";
+              }
+            });
+          }
+          const xrefs = window.document.querySelectorAll("a.quarto-xref");
+          const processXRef = (id, note) => {
+            // Strip column container classes
+            const stripColumnClz = (el) => {
+              el.classList.remove("page-full", "page-columns");
+              if (el.children) {
+                for (const child of el.children) {
+                  stripColumnClz(child);
+                }
+              }
+            };
+            stripColumnClz(note);
+            if (id === null || id.startsWith("sec-")) {
+              // Special case sections, only their first couple elements
+              const container = document.createElement("div");
+              if (note.children && note.children.length > 2) {
+                container.appendChild(note.children[0].cloneNode(true));
+                for (let i = 1; i < note.children.length; i++) {
+                  const child = note.children[i];
+                  if (child.tagName === "P" && child.innerText === "") {
+                    continue;
+                  } else {
+                    container.appendChild(child.cloneNode(true));
+                    break;
+                  }
+                }
+                if (window.Quarto?.typesetMath) {
+                  window.Quarto.typesetMath(container);
+                }
+                return container.innerHTML;
+              } else {
+                if (window.Quarto?.typesetMath) {
+                  window.Quarto.typesetMath(note);
+                }
+                return note.innerHTML;
+              }
+            } else {
+              // Remove any anchor links if they are present
+              const anchorLink = note.querySelector("a.anchorjs-link");
+              if (anchorLink) {
+                anchorLink.remove();
+              }
+              if (window.Quarto?.typesetMath) {
+                window.Quarto.typesetMath(note);
+              }
+              if (note.classList.contains("callout")) {
+                return note.outerHTML;
+              } else {
+                return note.innerHTML;
+              }
+            }
+          };
+          for (var i = 0; i < xrefs.length; i++) {
+            const xref = xrefs[i];
+            tippyHover(
+              xref,
+              undefined,
+              function (instance) {
+                instance.disable();
+                let url = xref.getAttribute("href");
+                let hash = undefined;
+                if (url.startsWith("#")) {
+                  hash = url;
+                } else {
+                  try {
+                    hash = new URL(url).hash;
+                  } catch {}
+                }
+                if (hash) {
+                  const id = hash.replace(/^#\/?/, "");
+                  const note = window.document.getElementById(id);
+                  if (note !== null) {
+                    try {
+                      const html = processXRef(id, note.cloneNode(true));
+                      instance.setContent(html);
+                    } finally {
+                      instance.enable();
+                      instance.show();
+                    }
+                  } else {
+                    // See if we can fetch this
+                    fetch(url.split("#")[0])
+                      .then((res) => res.text())
+                      .then((html) => {
+                        const parser = new DOMParser();
+                        const htmlDoc = parser.parseFromString(
+                          html,
+                          "text/html",
+                        );
+                        const note = htmlDoc.getElementById(id);
+                        if (note !== null) {
+                          const html = processXRef(id, note);
+                          instance.setContent(html);
+                        }
+                      })
+                      .finally(() => {
+                        instance.enable();
+                        instance.show();
+                      });
+                  }
+                } else {
+                  // See if we can fetch a full url (with no hash to target)
+                  // This is a special case and we should probably do some content thinning / targeting
+                  fetch(url)
+                    .then((res) => res.text())
+                    .then((html) => {
+                      const parser = new DOMParser();
+                      const htmlDoc = parser.parseFromString(html, "text/html");
+                      const note = htmlDoc.querySelector("main.content");
+                      if (note !== null) {
+                        // This should only happen for chapter cross references
+                        // (since there is no id in the URL)
+                        // remove the first header
+                        if (
+                          note.children.length > 0 &&
+                          note.children[0].tagName === "HEADER"
+                        ) {
+                          note.children[0].remove();
+                        }
+                        const html = processXRef(null, note);
+                        instance.setContent(html);
+                      }
+                    })
+                    .finally(() => {
+                      instance.enable();
+                      instance.show();
+                    });
+                }
+              },
+              function (instance) {},
+            );
+          }
+          let selectedAnnoteEl;
+          const selectorForAnnotation = (cell, annotation) => {
+            let cellAttr = 'data-code-cell="' + cell + '"';
+            let lineAttr = 'data-code-annotation="' + annotation + '"';
+            const selector = "span[" + cellAttr + "][" + lineAttr + "]";
+            return selector;
+          };
+          const selectCodeLines = (annoteEl) => {
+            const doc = window.document;
+            const targetCell = annoteEl.getAttribute("data-target-cell");
+            const targetAnnotation = annoteEl.getAttribute(
+              "data-target-annotation",
+            );
+            const annoteSpan = window.document.querySelector(
+              selectorForAnnotation(targetCell, targetAnnotation),
+            );
+            const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+            const lineIds = lines.map((line) => {
+              return targetCell + "-" + line;
+            });
+            let top = null;
+            let height = null;
+            let parent = null;
+            if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+              if (lineIds.length > 1) {
+                const lastEl = window.document.getElementById(
+                  lineIds[lineIds.length - 1],
+                );
+                const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+                height = bottom - top;
+              }
+              if (top !== null && height !== null && parent !== null) {
+                // cook up a div (if necessary) and position it
+                let div = window.document.getElementById(
+                  "code-annotation-line-highlight",
+                );
+                if (div === null) {
+                  div = window.document.createElement("div");
+                  div.setAttribute("id", "code-annotation-line-highlight");
+                  div.style.position = "absolute";
+                  parent.appendChild(div);
+                }
+                div.style.top = top - 2 + "px";
+                div.style.height = height + 4 + "px";
+                div.style.left = 0;
+                let gutterDiv = window.document.getElementById(
+                  "code-annotation-line-highlight-gutter",
+                );
+                if (gutterDiv === null) {
+                  gutterDiv = window.document.createElement("div");
+                  gutterDiv.setAttribute(
+                    "id",
+                    "code-annotation-line-highlight-gutter",
+                  );
+                  gutterDiv.style.position = "absolute";
+                  const codeCell = window.document.getElementById(targetCell);
+                  const gutter = codeCell.querySelector(
+                    ".code-annotation-gutter",
+                  );
+                  gutter.appendChild(gutterDiv);
+                }
+                gutterDiv.style.top = top - 2 + "px";
+                gutterDiv.style.height = height + 4 + "px";
+              }
+              selectedAnnoteEl = annoteEl;
+            }
+          };
+          const unselectCodeLines = () => {
+            const elementsIds = [
+              "code-annotation-line-highlight",
+              "code-annotation-line-highlight-gutter",
+            ];
+            elementsIds.forEach((elId) => {
+              const div = window.document.getElementById(elId);
+              if (div) {
+                div.remove();
+              }
+            });
+            selectedAnnoteEl = undefined;
+          };
+          // Handle positioning of the toggle
+          window.addEventListener(
+            "resize",
+            throttle(() => {
+              elRect = undefined;
+              if (selectedAnnoteEl) {
+                selectCodeLines(selectedAnnoteEl);
+              }
+            }, 10),
+          );
+          function throttle(fn, ms) {
+            let throttle = false;
+            let timer;
+            return (...args) => {
+              if (!throttle) {
+                // first call gets through
+                fn.apply(this, args);
+                throttle = true;
+              } else {
+                // all the others get throttled
+                if (timer) clearTimeout(timer); // cancel #2
+                timer = setTimeout(() => {
+                  fn.apply(this, args);
+                  timer = throttle = false;
+                }, ms);
+              }
+            };
+          }
+          // Attach click handler to the DT
+          const annoteDls = window.document.querySelectorAll(
+            "dt[data-target-cell]",
+          );
+          for (const annoteDlNode of annoteDls) {
+            annoteDlNode.addEventListener("click", (event) => {
+              const clickedEl = event.target;
+              if (clickedEl !== selectedAnnoteEl) {
+                unselectCodeLines();
+                const activeEl = window.document.querySelector(
+                  "dt[data-target-cell].code-annotation-active",
+                );
+                if (activeEl) {
+                  activeEl.classList.remove("code-annotation-active");
+                }
+                selectCodeLines(clickedEl);
+                clickedEl.classList.add("code-annotation-active");
+              } else {
+                // Unselect the line
+                unselectCodeLines();
+                clickedEl.classList.remove("code-annotation-active");
+              }
+            });
+          }
+          const findCites = (el) => {
+            const parentEl = el.parentElement;
+            if (parentEl) {
+              const cites = parentEl.dataset.cites;
+              if (cites) {
+                return {
+                  el,
+                  cites: cites.split(" "),
+                };
+              } else {
+                return findCites(el.parentElement);
+              }
+            } else {
+              return undefined;
+            }
+          };
+          var bibliorefs = window.document.querySelectorAll(
+            'a[role="doc-biblioref"]',
+          );
+          for (var i = 0; i < bibliorefs.length; i++) {
+            const ref = bibliorefs[i];
+            const citeInfo = findCites(ref);
+            if (citeInfo) {
+              tippyHover(citeInfo.el, function () {
+                var popup = window.document.createElement("div");
+                citeInfo.cites.forEach(function (cite) {
+                  var citeDiv = window.document.createElement("div");
+                  citeDiv.classList.add("hanging-indent");
+                  citeDiv.classList.add("csl-entry");
+                  var biblioDiv = window.document.getElementById("ref-" + cite);
+                  if (biblioDiv) {
+                    citeDiv.innerHTML = biblioDiv.innerHTML;
+                  }
+                  popup.appendChild(citeDiv);
+                });
+                return popup.innerHTML;
+              });
+            }
+          }
+        });
+      </script>
+    </div>
+    <!-- /content -->
+  </body>
+</html>
