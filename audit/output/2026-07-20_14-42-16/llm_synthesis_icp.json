@@ -1,0 +1,104 @@
+{
+  "executive_summary": "The audit of the Inductively Coupled Plasma (ICP) dataset, comprising 668 records, reveals a generally stable collection of elemental mass fractions across various agricultural biomass residues, specifically tomato pomace and almond-related byproducts. The majority of flagged observations (147) are categorized as low severity, representing statistical deviations (Z-scores typically between 1.0 and 2.4) rather than catastrophic data failures. These variances are predominantly seen in macronutrients like Potassium (K) and Sodium (Na), as well as trace metals such as Manganese (Mn) and Zinc (Zn).\n\nHowever, a critical concern was identified in the dataset summary: a minimum observed value of -244.0 mg/kg. In ICP analysis, negative values are physically impossible and typically indicate failed background subtraction or severe calibration drift during the laboratory run. While the analyst mduran@lbl.gov is consistently associated with these records, the complete absence of data in the 'analyst_name' field and 'sample_date' column for many records limits the ability to perform a temporal drift analysis. The silicon (Si) outliers observed in tomato pomace remain within the expected range for soil-contact residues and are treated with low priority per domain standards.",
+  "grouped_issues": [
+    {
+      "group_label": "Physically Impossible Negative Concentrations",
+      "hypothesis": "The presence of a negative value (-244.0) suggests an instrument calibration error or an incorrect background correction applied by the lab software during the ICP run. This is a technical anomaly that invalidates the specific measurement.",
+      "priority": "High",
+      "affected_record_ids": [],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "Unknown - Aggregated Metric"
+      ],
+      "evidently_finding": "Minimum observed value of -244.0 in ColumnSummaryMetric",
+      "recommended_action": "Identify the specific record(s) with negative values and flag them for re-analysis or removal. Check the raw intensity data from the ICP-OES/MS to determine if background subtraction was overly aggressive."
+    },
+    {
+      "group_label": "Macronutrient Variance in Tomato Pomace (Pinecrest)",
+      "hypothesis": "A consistent upward shift in macronutrients (K, Ca, Mg) is observed in samples provided by 'pinecrest' and handled by mduran@lbl.gov. This likely reflects natural biological variation or a specific processing batch of tomato pomace rather than an analytical error.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(69)66e5",
+        "(69)fb3a",
+        "(69)7ba0",
+        "(69)eb00",
+        "(69)1a06",
+        "(69)f2b1",
+        "(69)0f35",
+        "(69)5280"
+      ],
+      "affected_parameters": [
+        "k",
+        "ca",
+        "mg",
+        "na",
+        "p"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "Clustering of Z-scores between 1.1 and 1.5 for macronutrients at Pinecrest provider.",
+      "recommended_action": "Accept values as natural variance. Cross-reference with pinecrest processing logs to see if these samples originated from the same harvest batch."
+    },
+    {
+      "group_label": "Trace Metal Fluctuations in Pomace Residues",
+      "hypothesis": "Minor elevations in Mn, Cu, and Zn (Z-scores < 2.5) are common in pomace and often correlate with soil splash or the use of metal processing equipment. Analyst mduran@lbl.gov has recorded these consistently across providers oakleaf and pinecrest.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(26)7272",
+        "(26)a23d",
+        "(69)1bde",
+        "(69)8315",
+        "(69)dd28"
+      ],
+      "affected_parameters": [
+        "mn",
+        "cu",
+        "zn",
+        "ti"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "Repeated low-severity flags for transition metals.",
+      "recommended_action": "Monitor for trends exceeding Z-score 3.0; otherwise, no action required as these are within agricultural norms."
+    },
+    {
+      "group_label": "Silicon Outliers / Potential Soil Contamination",
+      "hypothesis": "The Si value (Z-score 1.7) in tomato pomace is indicative of minor soil contamination. Per the Domain Context, Si outliers in agricultural residues are expected and prioritized lower.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(69)c905"
+      ],
+      "affected_parameters": [
+        "si"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "Low severity flag for Silicon.",
+      "recommended_action": "Retain records. If Si levels correlate strongly with Fe and Al, confirm as soil contamination in the 'note' field."
+    },
+    {
+      "group_label": "Missing Analyst Name Attribute",
+      "hypothesis": "While analyst_email (mduran@lbl.gov) is present for most records, the analyst_name field is 100% null. This is likely a system export omission where only the account ID/email was mapped to the database.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(26)7272",
+        "(69)3b52",
+        "(6d)a6af"
+      ],
+      "affected_parameters": [
+        "analyst_name"
+      ],
+      "affected_resources": [
+        "All Resources"
+      ],
+      "evidently_finding": "number_of_missing_values: 668 for analyst_name column.",
+      "recommended_action": "Update the database to map 'mduran@lbl.gov' to the corresponding full name to improve report readability, but no data correction is needed."
+    }
+  ],
+  "flagged_count": 147
+}

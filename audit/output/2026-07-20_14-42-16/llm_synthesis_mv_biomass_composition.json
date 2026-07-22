@@ -1,0 +1,147 @@
+{
+  "executive_summary": "The audit of the `mv_biomass_composition` dataset, comprising 6,366 records, reveals significant data quality concerns primarily driven by extreme statistical skew and physically impossible values. The dataset exhibits a massive range in the 'observed_value' column, spanning from -244.0 to 161,000.0, with a mean (1,514.54) that is vastly higher than the median (33.15). This suggests a critical lack of unit standardization, likely mixing percentage-based compositional data (0-100%) with parts-per-million (mg/kg) or parts-per-billion measurements without proper normalization.\n\nA notable portion of the anomalies (1,712 flagged records) is clustered around specific agricultural residues—namely almond hulls, shells, and grape/tomato pomace. While 'analyst_name' is entirely unpopulated, 'analyst_email' provides sufficient traceability for approximately 80% of the records. Key providers such as 'tiny', 'humorous', and 'capstan' show consistent patterns of low-severity deviations in structural carbohydrate and lignin measurements, suggesting minor but systematic differences in laboratory hydrolysis protocols or baseline calibration across different research facilities. Immediate attention is required for negative values and high-magnitude outliers that threaten the integrity of downstream biomass conversion models.",
+  "grouped_issues": [
+    {
+      "group_label": "Physically Impossible Negative Values",
+      "hypothesis": "Calibration offsets in analytical instruments (e.g., ICP-OES or HPLC) or incorrect baseline subtraction in spectral data resulted in negative concentrations.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(various)"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "multiple"
+      ],
+      "evidently_finding": "min: -244.0",
+      "recommended_action": "Identify all records with observed_value < 0 and re-verify against raw instrument logs; set to null or zero if below detection limit."
+    },
+    {
+      "group_label": "Potential Unit Mismatch (mg/kg vs %)",
+      "hypothesis": "Extreme outliers reaching 161,000 suggest data was entered in mg/kg (ppm) or g/kg instead of the standard mass percentage (%) used for biomass composition.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(various)"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "multiple"
+      ],
+      "evidently_finding": "max: 161000.0",
+      "recommended_action": "Standardize all composition values to weight percentage (0-100) or ensure the 'unit' column correctly reflects the magnitude for every record."
+    },
+    {
+      "group_label": "Almond Hull Composition Shift (Provider: tiny)",
+      "hypothesis": "Systematic deviation in almond hull analysis by analyst xkang2@lbl.gov at provider 'tiny', possibly due to specific pretreatment or hydrolysis efficiency variations.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(03)8660",
+        "(03)ad41",
+        "(03)b32d",
+        "(03)d213",
+        "(03)e36d",
+        "(03)e546"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose",
+        "lignin"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "z_score > 1.0 (LOW severity)",
+      "recommended_action": "Review the hydrolysis protocol used by xkang2@lbl.gov to ensure consistent conversion factors for xylose-to-xylan are applied."
+    },
+    {
+      "group_label": "Almond Shell Sugar Profile Inconsistency (Provider: humorous)",
+      "hypothesis": "The sugar profiles for almond shells from provider 'humorous' show minor statistical drift, potentially indicating varying moisture content or sample age before analysis.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(13)29f0",
+        "(13)2c76",
+        "(13)6f70",
+        "(13)8405",
+        "(13)aaf9"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose",
+        "glucose"
+      ],
+      "affected_resources": [
+        "almond shells"
+      ],
+      "evidently_finding": "z_score > 1.0 (LOW severity)",
+      "recommended_action": "Compare 'humorous' provider results against 'capstan' results for almond shells to determine if the drift is due to sample provenance or lab bias."
+    },
+    {
+      "group_label": "Sargassum Seaweed Carbohydrate Fractioning",
+      "hypothesis": "Analyst xkang2@lbl.gov records for Sargassum show coupled flags for both monomers and polymers, suggesting the stoichiometric ratio (1.11 for C6, 1.13 for C5) is maintained but the absolute yield is an outlier for this resource type.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(0d)4993",
+        "(0d)4996",
+        "(0d)4999",
+        "(0d)5002",
+        "(0d)5006"
+      ],
+      "affected_parameters": [
+        "glucan",
+        "glucose",
+        "xylan",
+        "xylose",
+        "lignin"
+      ],
+      "affected_resources": [
+        "sargassum"
+      ],
+      "evidently_finding": "z_score > 1.1 (LOW severity)",
+      "recommended_action": "Verify if the Sargassum samples underwent a specific washing or desalting step that would lower the relative sugar yields compared to reference terrestial biomass."
+    },
+    {
+      "group_label": "Pomace Extraction Yield Outliers",
+      "hypothesis": "High variance in sugar yields from grape and tomato pomace may stem from residual sugar content in the pomace, which varies significantly based on the pressing efficiency of the original processing plant.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(various)"
+      ],
+      "affected_parameters": [
+        "glucose_yld",
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "grape pomace",
+        "tomato pomace"
+      ],
+      "evidently_finding": "Top anomalous parameters: glucose_yld, xylose_yld",
+      "recommended_action": "Correlate sugar yields with 'provider_codename' to determine if specific fruit processing facilities are leaving high residual sugar in the pomace."
+    },
+    {
+      "group_label": "Proximate Analysis Sum-of-Parts Inconsistency",
+      "hypothesis": "Frequent flags for ash and moisture in straw and alfalfa suggest the total mass balance (solids + moisture) might not sum to 100% in these records.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(various)"
+      ],
+      "affected_parameters": [
+        "total solids",
+        "volatile solids",
+        "ash",
+        "moisture"
+      ],
+      "affected_resources": [
+        "alfalfa",
+        "wheat straw",
+        "rice straw"
+      ],
+      "evidently_finding": "Top anomalous parameters: ash, moisture, total solids",
+      "recommended_action": "Implement a validation rule requiring (moisture + total solids) to equal 100% and (ash + volatile solids) to equal 100% on a dry basis."
+    }
+  ],
+  "flagged_count": 1712
+}
