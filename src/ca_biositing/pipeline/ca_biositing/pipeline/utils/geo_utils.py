@@ -87,9 +87,14 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
       if row['status'] != 'pending':
         continue
       try:
-          if row['is_na']:
+          # Check if we have coordinates to fallback on if the address is missing
+          has_coords = (lat != None and long != None and row[lat] != None and isinstance(row[lat], (float, int)) and \
+                        row[long] != None and isinstance(row[long], (float, int)))
+
+          if row['is_na'] and not has_coords:
               # categorize as unparsable
-              raise Exception("Row does not contain enough information to validate the address.")
+              raise Exception("Row does not contain enough information (address or coordinates) to validate.")
+
           if geocode is None:
               raise Exception("Could not set up the geocoder.")
               break
