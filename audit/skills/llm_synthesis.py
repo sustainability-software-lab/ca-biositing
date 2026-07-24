@@ -90,6 +90,7 @@ Your task:
 5. When provider_codename is present, group anomalies by provider where relevant and note
    cross-provider patterns.
 6. When sample_date is present, note temporal clustering of anomalies where relevant.
+7. In the executive summary, explicitly summarize the key issue groups you found, explaining the findings and their potential impact.
 """
 
     result = client.chat.completions.create(

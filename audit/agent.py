@@ -197,7 +197,9 @@ class AuditorAgent:
                     target_report_path = self.output_dir / f"report_{target_name}.md"
                     target_report_path.write_text(report_md)
             except Exception as e:
+                import traceback
                 print(f"❌ CRITICAL: Audit failed for {target_name}: {e}")
+                traceback.print_exc()
                 continue
 
         # Final Skill: Executive Summary
