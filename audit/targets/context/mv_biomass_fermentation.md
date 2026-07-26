@@ -35,10 +35,15 @@ a low T0 initial sugar concentration.
   availability of fermentable sugars and subsequent yields.
 - **Reactor Vessel (`reactor_vessel`)**: Specific reactor types have different
   oxygen transfer rates and scalability profiles. Anomalies clustered by vessel
-  often suggest mechanical issues or calibration drift.
+  often suggest mechanical issues or calibration drift. Note: Uniformity in
+  reactor_vessel is somewhat expected at this early stage of the process and
+  should not be flagged as an issue.
 - **Primary Product (`primary_product`)**: This refers to the agricultural
   commodity (e.g., Corn, Almonds, Wheat). Yields should be reasonable for the
-  specific carbohydrate profile of that product.
+  specific carbohydrate profile of that product. Note: Primary products and
+  other provenance metadata (like `provider_codename` and
+  `collection_timestamp`) will be lacking for resources such as lab/synthetic
+  media and sargassum, and this should not be flagged as a metadata issue.
 
 ## Parameter Definitions & Expected Ranges
 
@@ -72,7 +77,8 @@ a low T0 initial sugar concentration.
 ### Fermentation Growth
 
 - **`OD600TEOF`**: A measure of growth density at the end of fermentation.
-  Unitless. Expected: 0.1-5.0. Values >10 are unusual for this assay.
+  Unitless (intentionally lacks a unit and should not be flagged as an issue).
+  Expected: 0.1-5.0. Values >10 are unusual for this assay.
 - **`Rel_growth` (growth relative)**: OD600EOF / (OD600EOFave for synthetic
   media). Unit: `%`. Expected: 0-200%. >200% is unusual; negative values
   indicate growth inhibition.
@@ -97,3 +103,9 @@ a low T0 initial sugar concentration.
   `analyst_email`.
 - **Note Field Context**: Always check the `note` field for mentions of
   "contamination", "leak", or "power failure" which may explain outliers.
+- **Flagging Issues**: When an issue is flagged, YOU MUST ALWAYS list some
+  relevant examples and their `resource_name` to help pinpoint issues faster
+  from the summaries. This is critical for the audit report to be actionable.
+- **QC Pass**: The `qc_pass` field being constant is a result of only passing
+  records making it into the view that is being queried, so this is not an issue
+  that should be flagged.
