@@ -59,6 +59,8 @@ def transform_fermentation_record(
             col_map[c] = 'eh_id'
         elif 'enzyme' in lc:
             col_map[c] = 'eh_method'
+        if lc in ('experiment_id', 'exp_id', 'experiment'):
+            col_map[c] = 'exp_id'
 
     if col_map:
         raw_df = raw_df.rename(columns=col_map)
