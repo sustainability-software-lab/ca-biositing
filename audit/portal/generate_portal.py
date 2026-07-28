@@ -174,10 +174,23 @@ format:
 """
         qmd_path.write_text(qmd_content)
 
+        # Extract grouped issues summary if available
+        grouped_issues = synth_data.get("grouped_issues", [])
+        issues_summary = ""
+        if grouped_issues:
+            # Create a brief summary of the issues
+            issue_descriptions = [f"{issue.get('issue_type', 'Issue')}: {issue.get('description', '')}" for issue in grouped_issues[:2]]
+            issues_summary = "<br>".join(issue_descriptions)
+            if len(grouped_issues) > 2:
+                issues_summary += f"<br>...and {len(grouped_issues) - 2} more"
+        else:
+            issues_summary = "No grouped anomalies detected."
+
         target_summaries.append({
             "Target": f"[{target_name}](targets/{target_name}.qmd)",
             "Flagged": synth_data.get("flagged_count", "N/A"),
-            "Status": "✅ Pass" if not synth_data.get("grouped_issues") else "⚠️ Issues"
+            "Status": "✅ Pass" if not grouped_issues else "⚠️ Issues",
+            "Issues": issues_summary
         })
 
     # 3. Generate index.qmd
@@ -192,19 +205,22 @@ format:
 title: "Data Quality Portal"
 ---
 
-# Executive Summary
-
-{summary_md}
-
 # Target Audit Status
 
-| Target | Status | Pass/Fail |
-|--------|--------|-----------|
+| Target | Status | Pass/Fail | Grouped Anomalies |
+|--------|--------|-----------|-------------------|
 """
     # Sort summaries by target name for consistency
     target_summaries.sort(key=lambda x: x["Target"])
     for ts in target_summaries:
-        index_qmd += f"| {ts['Target']} | {ts['Flagged']} flagged | {ts['Status']} |\n"
+        index_qmd += f"| {ts['Target']} | {ts['Flagged']} flagged | {ts['Status']} | {ts['Issues']} |\n"
+
+    index_qmd += f"""
+
+# Executive Summary
+
+{summary_md}
+"""
 
     (portal_dir / "index.qmd").write_text(index_qmd)
 
