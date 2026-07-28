@@ -520,11 +520,12 @@ setuptools = "*"
 tabulate = "*"
 
 [feature.auditor.tasks]
-run-auditor = { cmd = "python audit/agent.py", description = "Run the skill-based data auditor.", env = { PYTHONPATH = "." } }
-run-auditor-verbose = { cmd = "python audit/agent.py --verbose", description = "Run auditor with per-target reports.", env = { PYTHONPATH = "." } }
-run-auditor-profile = { cmd = "python audit/agent.py --profile", description = "Run auditor with ydata-profiling (weekly).", env = { PYTHONPATH = "." } }
-audit-deep-dive = { cmd = "python audit/agent.py --deep-dive", description = "Run a targeted deep-dive. Usage: pixi run audit-deep-dive provider uc_davis", env = { PYTHONPATH = "." } }
-audit-investigate = { cmd = "python -c \"from audit.skills.investigator.query_helpers import *; help(query_flagged)\"", description = "Show audit investigator query helpers.", env = { PYTHONPATH = "." } }
+run-auditor = { cmd = "python audit/agent.py", description = "Run the skill-based data auditor.", env = { PYTHONPATH = ".", POSTGRES_HOST = "localhost" } }
+run-auditor-target = { cmd = "python audit/agent.py --targets", description = "Run the skill-based data auditor on a specific target. Usage: pixi run run-auditor-target mv_biomass_fermentation", env = { PYTHONPATH = ".", POSTGRES_HOST = "localhost" } }
+run-auditor-verbose = { cmd = "python audit/agent.py --verbose", description = "Run auditor with per-target reports.", env = { PYTHONPATH = ".", POSTGRES_HOST = "localhost" } }
+run-auditor-profile = { cmd = "python audit/agent.py --profile", description = "Run auditor with ydata-profiling (weekly).", env = { PYTHONPATH = ".", POSTGRES_HOST = "localhost" } }
+audit-deep-dive = { cmd = "python audit/agent.py --deep-dive", description = "Run a targeted deep-dive. Usage: pixi run audit-deep-dive provider uc_davis", env = { PYTHONPATH = ".", POSTGRES_HOST = "localhost" } }
+audit-investigate = { cmd = "python -c \"from audit.skills.investigator.query_helpers import *; help(query_flagged)\"", description = "Show audit investigator query helpers.", env = { PYTHONPATH = ".", POSTGRES_HOST = "localhost" } }
 
 [feature.portal.target.osx-arm64.dependencies]
 quarto = "*"
