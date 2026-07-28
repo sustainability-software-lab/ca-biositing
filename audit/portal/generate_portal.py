@@ -42,22 +42,21 @@ def generate_portal():
         qmd_path = targets_dir / f"{target_name}.qmd"
 
         # Evidently HTML path (relative to portal/targets for iframe)
-        # The build-portal task renders to audit/portal/_site
-        # If we put evidently in _site/evidently, we can link it.
-        # But the audit output has it in latest_run/evidently.
-        # We should probably copy the evidently files to the portal dir or reference them.
-        # The instructions say: "<iframe> embedding the Evidently HTML"
-        # Let's assume we copy them to audit/portal/evidently/
+        # We reference the files directly from the latest audit output directory
+        # to avoid duplicating them in the repository.
+
+        # Calculate relative path from audit/portal/targets/ to the latest run's evidently dir
+        # portal/targets/ is 3 levels deep from root (audit/portal/targets)
+        # latest_run is something like audit/output/2026-07-28_13-27-51
 
         evidently_src = latest_run / "evidently" / f"{target_name}.html"
-        evidently_dest_dir = portal_dir / "evidently"
-        evidently_dest_dir.mkdir(exist_ok=True)
-        evidently_dest = evidently_dest_dir / f"{target_name}.html"
 
         if evidently_src.exists():
-            import shutil
-            shutil.copy2(evidently_src, evidently_dest)
-            evidently_rel_path = f"../evidently/{target_name}.html"
+            # Path relative to the portal/targets directory
+            # From audit/portal/targets to root is ../../..
+            # Then down to latest_run/evidently
+            run_dir_name = latest_run.name
+            evidently_rel_path = f"../../output/{run_dir_name}/evidently/{target_name}.html"
         else:
             evidently_rel_path = ""
 

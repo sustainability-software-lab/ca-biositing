@@ -116,3 +116,4 @@ audit/portal/.quarto/
 audit/output/*/evidently/
 audit/output/*/llm_synthesis_*.json
 audit/output/*/report_*.md
+audit/portal/evidently/
