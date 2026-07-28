@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The proximate analysis dataset for agricultural biomass (912 records) demonstrates high internal consistency regarding the stoichiometric relationship between moisture and total solids. The majority of flagged observations (270 out of 271) are categorized as low severity, primarily reflecting the natural biological variance inherent in comparing disparate feedstock types—ranging from high-moisture tomato pomace and pistachio hulls to low-moisture woody residues like almond shells and spent oak chips. Z-score anomalies are largely driven by these distinct feedstock profiles rather than analytical failures.
+The proximate analysis dataset, comprising 912 records of agricultural biomass, exhibits generally stable data quality but is characterized by significant metadata gaps and localized outliers. A total of 271 observations were flagged, primarily of 'LOW' severity, concentrated in moisture and solids parameters for almond, tomato, and grape residues. The most striking systemic issue is the complete absence of data in the 'analyst_name' column and significant missingness in 'analyst_email' (51.3%), which complicates accountability for the 49% of records not attributed to 'xkang2@lbl.gov'.
 
-Analytical attribution is partially maintained through the 'analyst_email' field, with xkang2@lbl.gov overseeing a significant portion of the flagged records, particularly for almond hulls and grape pomace. However, the 'analyst_name' field is 100% unpopulated across the dataset, and 'sample_date' values are missing for all records. Provider-specific patterns are evident, notably with provider 'humorous' delivering almond shells with higher-than-average moisture content (approx. 19%), and provider 'tripod' submitting high-moisture pistachio residues. These clusters suggest systematic differences in processing or storage conditions at the provider level.
+Key anomaly clusters were identified in almond shells from the 'humorous' provider and pistachio hulls from the 'tripod' provider. The almond shells exhibit moisture levels near 19% with $z$-scores exceeding 2.0, which is unusually high for woody biomass and suggests potential storage degradation or insufficient drying. Similarly, pistachio hulls showed moisture content exceeding 80%, indicating the samples were likely measured in a fresh, non-stabilized state. Because proximate analysis values (Moisture/Total Solids and Volatile Solids/Ash) are mathematically linked, anomalies consistently appear in reciprocal pairs, suggesting the underlying laboratory measurements are internally consistent but deviate from the expected biomass benchmarks for these specific resources.
 
 ## Evidently Profile
 
-<iframe src="../evidently/proximate.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/proximate.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 
@@ -296,9 +296,6 @@ Analytical attribution is partially maintained through the 'analyst_email' field
 
 ## Custom Visuals
 
-Discovered assets:
-
-- [proximate_distribution.html](../assets/exports/plots/composition/proximate_distribution.html)
-- [proximate_distribution_dashboard.html](../assets/exports/plots/composition/proximate_distribution_dashboard.html)
+No specific analysis assets discovered for this target.
 
 :::

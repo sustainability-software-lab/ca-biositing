@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The audit of the Inductively Coupled Plasma (ICP) dataset, comprising 668 records, reveals a generally stable collection of elemental mass fractions across various agricultural biomass residues, specifically tomato pomace and almond-related byproducts. The majority of flagged observations (147) are categorized as low severity, representing statistical deviations (Z-scores typically between 1.0 and 2.4) rather than catastrophic data failures. These variances are predominantly seen in macronutrients like Potassium (K) and Sodium (Na), as well as trace metals such as Manganese (Mn) and Zinc (Zn).
+The data quality audit for the ICP (Inductively Coupled Plasma) elemental analysis dataset identifies 147 low-severity anomalies primarily involving macro and micro-elemental concentrations in agricultural residues. The anomalies are heavily concentrated in tomato pomace, almond hulls, and almond shells. Statistical deviations (Z-scores ranging from 1.0 to 2.4) across elements like Potassium (K), Calcium (Ca), Magnesium (Mg), and Sulfur (S) suggest natural biological variance or variations in soil-loading rather than analytical failure. While these values are flagged, they represent plausible ranges for processed biomass byproducts and do not indicate critical data corruption.
 
-However, a critical concern was identified in the dataset summary: a minimum observed value of -244.0 mg/kg. In ICP analysis, negative values are physically impossible and typically indicate failed background subtraction or severe calibration drift during the laboratory run. While the analyst mduran@lbl.gov is consistently associated with these records, the complete absence of data in the 'analyst_name' field and 'sample_date' column for many records limits the ability to perform a temporal drift analysis. The silicon (Si) outliers observed in tomato pomace remain within the expected range for soil-contact residues and are treated with low priority per domain standards.
+A significant metadata deficiency was observed: the 'analyst_name' field is 100% null, representing a systemic omission in the data entry or migration process. However, traceability is maintained via the 'analyst_email' field (mduran@lbl.gov), which is present for a majority of the records. Furthermore, the dataset shows consistent mineral profiles across different providers (Oakleaf, Pinecrest, Riverstone), suggesting that the observed variability is a characteristic of the resource types themselves. Silicon (Si) levels in tomato pomace remain within acceptable bounds for residues prone to soil contact, adhering to domain expectations for agricultural biomass.
 
 ## Evidently Profile
 
-<iframe src="../evidently/icp.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/icp.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 
@@ -172,8 +172,6 @@ However, a critical concern was identified in the dataset summary: a minimum obs
 
 ## Custom Visuals
 
-Discovered assets:
-
-- [icp_distribution.html](../assets/exports/plots/composition/icp_distribution.html)
+No specific analysis assets discovered for this target.
 
 :::

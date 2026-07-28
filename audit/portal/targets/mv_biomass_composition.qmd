@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The audit of the `mv_biomass_composition` dataset, comprising 6,366 records, reveals significant data quality concerns primarily driven by extreme statistical skew and physically impossible values. The dataset exhibits a massive range in the 'observed_value' column, spanning from -244.0 to 161,000.0, with a mean (1,514.54) that is vastly higher than the median (33.15). This suggests a critical lack of unit standardization, likely mixing percentage-based compositional data (0-100%) with parts-per-million (mg/kg) or parts-per-billion measurements without proper normalization.
+The data quality audit of the `mv_biomass_composition` dataset reveals a generally stable system with a high volume of low-severity statistical deviations, primarily centered around sugar yields and structural components (lignin, xylan) in nut-based biomass. A significant portion of these anomalies is associated with analyst xkang2@lbl.gov and specific providers like 'tiny', 'humorous', and 'capstan'. While many of these represent expected biological variance in agricultural residues, the presence of impossible negative values (minimum observed value of -244.0) and high-magnitude outliers (maximum of 161,000.0) indicates localized instrument calibration errors or unit conversion failures.
 
-A notable portion of the anomalies (1,712 flagged records) is clustered around specific agricultural residues—namely almond hulls, shells, and grape/tomato pomace. While 'analyst_name' is entirely unpopulated, 'analyst_email' provides sufficient traceability for approximately 80% of the records. Key providers such as 'tiny', 'humorous', and 'capstan' show consistent patterns of low-severity deviations in structural carbohydrate and lignin measurements, suggesting minor but systematic differences in laboratory hydrolysis protocols or baseline calibration across different research facilities. Immediate attention is required for negative values and high-magnitude outliers that threaten the integrity of downstream biomass conversion models.
+The most critical issues involve systematic deviations in sugar yield parameters (glucose_yld, xylose_yld) and the complete absence of `experiment_date` metadata, which prevents the identification of temporal equipment drift. Furthermore, the high variance in total and volatile solids for pomace-based resources suggests potential sample degradation or inconsistent moisture management during the pretreatment analysis phase. Addressing these calibration and metadata gaps is essential for the reliability of downstream biofuel yield modeling.
 
 ## Evidently Profile
 
-<iframe src="../evidently/mv_biomass_composition.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/mv_biomass_composition.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 
@@ -162,8 +162,8 @@ A notable portion of the anomalies (1,712 flagged records) is clustered around s
 | (82)00ec | walnut shells | energetic | — | glucose | 11.4000 | 1.41 | LOW |
 | (82)60a4 | grape pomace | boatswain | — | glucan | 13.8700 | 1.16 | LOW |
 | (82)6387 | grape pomace | boatswain | — | glucose | 16.2000 | 1.37 | LOW |
-| (82)6771 | walnut shells | energetic | — | xylose | 5.3400 | 2.27 | LOW |
 | (82)6771 | walnut shells | energetic | — | lignin | 48.9100 | 1.44 | LOW |
+| (82)6771 | walnut shells | energetic | — | xylose | 5.3400 | 2.27 | LOW |
 | (82)6acd | grape pomace | boatswain | — | glucan | 14.5800 | 1.37 | LOW |
 | (82)7731 | grape pomace | boatswain | — | glucose | 16.0400 | 1.33 | LOW |
 | (82)8468 | grape pomace | boatswain | — | glucose | 15.4100 | 1.16 | LOW |
@@ -1737,11 +1737,6 @@ A notable portion of the anomalies (1,712 flagged records) is clustered around s
 
 ## Custom Visuals
 
-Discovered assets:
-
-- [biomass_composition_3d.png](../assets/exports/plots/biomass_composition_3d.png)
-- [biomass_composition_distribution.png](../assets/exports/plots/biomass_composition_distribution.png)
-- [compositional_distribution.html](../assets/exports/plots/composition/compositional_distribution.html)
-- [portal_biomass_composition_distribution.html](../assets/exports/plots/composition/portal_biomass_composition_distribution.html)
+No specific analysis assets discovered for this target.
 
 :::

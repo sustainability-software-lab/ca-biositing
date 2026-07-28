@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The audit of the XRF (X-Ray Fluorescence) dataset, encompassing 2,431 records across 24 agricultural biomass resources, reveals a significant volume of statistical anomalies, particularly within almond-derived residues. While the data shows 100% completeness for core fields like 'observed_value' and 'analyst_email', the presence of over 600 flagged observations—mostly at 'LOW' severity but including critical 'MEDIUM' flags—suggests systematic variability in elemental concentration reporting. Notably, almond hulls and cotton stem mix exhibit the highest frequency of anomalous readings for both heavy metals (Zn, Th, U) and macronutrients (Si, K, S).
+The data quality audit of the XRF (X-Ray Fluorescence) elemental analysis dataset, comprising 2,431 records, reveals a concentrated pattern of anomalies primarily involving almond-based biomass and specific mineral tracers. While the majority of the 613 flagged observations are categorized as low severity, several medium-priority outliers in almond hulls—specifically involving Silicon (Si), Zinc (Zn), Thorium (Th), and Uranium (U)—suggest potential environmental contamination or specific mineral uptake issues. Data provenance is clearly split between two primary providers, 'tiny' (associated with xkang2@lbl.gov) and 'capstan' (associated with jduong@lbl.gov), with 'tiny' accounting for the majority of the high-variance trace element readings.
 
-Statistically, the dataset is characterized by extreme skewness, with 'observed_value' ranging from 0 to 161,000. The prevalence of 0.0 values (8.1% of the dataset) likely represents 'Below Detection Limit' (BDL) results, though their high z-scores in specific parameters like Manganese (Mn) suggest these zeros are statistically significant departures from the expected mean. Variations in data patterns between providers 'tiny' and 'capstan' indicate potential differences in instrument calibration or sample preparation protocols. The total absence of data in the 'note' and 'analyst_name' fields, while partially mitigated by the presence of 'analyst_email', limits the ability to contextualize these quantitative outliers with qualitative experimental observations.
+Key issues identified include suspected soil contamination in almond hulls indicated by elevated Silicon and Iron levels, and a systemic occurrence of zero-values for elements like Manganese (Mn) and Lanthanum (La), which likely represent values below the instrument's Limit of Detection (LOD) rather than true absences. Furthermore, the dataset suffers from total omission of analyst names and qualitative notes, although analyst emails provide sufficient accountability for follow-up. The high z-scores for radioactive trace elements (Th, U) in almond hulls processed by provider 'tiny' warrant immediate calibration verification to rule out instrumental drift or spectral interference.
 
 ## Evidently Profile
 
-<iframe src="../evidently/xrf.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/xrf.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 
@@ -641,6 +641,5 @@ Statistically, the dataset is characterized by extreme skewness, with 'observed_
 Discovered assets:
 
 - [xrf_distribution.html](../assets/exports/plots/composition/xrf_distribution.html)
-- [xrf_distribution_viz.html](../assets/exports/plots/composition/xrf_distribution_viz.html)
 
 :::

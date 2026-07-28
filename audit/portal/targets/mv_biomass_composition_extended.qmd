@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The audit of the `mv_biomass_composition_extended` dataset reveals a systematically maintained but metadata-deficient collection of agricultural biomass composition records. While the dataset contains 813 records covering 26 distinct resource types, there is a total absence of 'harvest_date' information, and temporal metadata ('sample_date' and 'created_at') is currently static, which limits the ability to analyze seasonal variations in biomass quality. The 257 flagged observations are exclusively of 'LOW' severity, suggesting they represent statistical outliers or natural biological variance rather than catastrophic data entry errors.
+The data quality audit of the `mv_biomass_composition_extended` dataset reveals a high volume of low-severity anomalies (31% of the records) primarily concentrated in structural carbohydrate and lignin measurements across almond and sargassum biomass. A critical systemic failure was identified regarding metadata completeness: the 'harvest_date' column is 100% null, and 'sample_date' lacks granularity, appearing to represent batch upload timestamps rather than individual collection events. This lack of temporal metadata significantly hinders the ability to account for seasonal variance in biomass composition, which is a key driver in agricultural research.
 
-The primary anomalies are concentrated in structural carbohydrate and lignin profiles for almond-derived biomass (hulls, shells, and branches) and sargassum. Specific providers, such as 'tiny', 'capstan', and 'hairpin', show recurring patterns of elevated glucose and xylan concentrations. The strong correlation between glucan/glucose and xylan/xylose flags across these providers suggests that the anomalies may stem from specific hydrolysis efficiency or analytical calibration differences rather than isolated sample contamination. Recommendation focuses on backfilling harvest metadata and performing a cross-lab calibration check for the identified providers.
+Key issue groups include systematic variance in the glucan/glucose and xylan/xylose pairs, particularly from providers 'tiny' and 'capstan' when processing almond hulls and shells. Furthermore, highly suspicious lignin values were recorded for Sargassum (macroalgae) by provider 'hairpin'; as macroalgae do not typically contain terrestrial lignin, these values likely represent acid-insoluble residue or 'pseudo-lignin' that requires specific analytical clarification. While the z-scores remain relatively low (1.0–1.4), the consistent flagging of nearly all major chemical components for specific providers suggests a need for instrument recalibration or standardization of the NREL biomass analytical procedures (BAPs) across the supply chain.
 
 ## Evidently Profile
 
-<iframe src="../evidently/mv_biomass_composition_extended.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/mv_biomass_composition_extended.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 

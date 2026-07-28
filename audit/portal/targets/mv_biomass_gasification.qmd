@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The data quality audit for the `mv_biomass_gasification` dataset reveals a moderate level of concern regarding data integrity and metadata completeness. The most significant finding is the presence of 44 duplicated rows, representing approximately 7.8% of the current dataset. Additionally, a notable discrepancy exists between the current row count (565) and the reference record count (521), suggesting a recent batch upload that may have introduced redundant or un-normalized entries. Statistical anomalies are primarily concentrated in gas composition outputs for 'Spent Oak Chips' and 'Walnut Shells', specifically involving light hydrocarbons (C2-C6) and primary syngas components (CO, H2).
+The data quality audit of the 'mv_biomass_gasification' dataset reveals significant structural and procedural anomalies that could impact the reliability of syngas composition analyses. The most pressing issue is the presence of raw, un-normalized gas concentration values for 'spent oak chips' provided by 'rigging', as explicitly noted in the records by analyst iteran@ucmerced.edu. Without normalization (xi/sum(xi)), these values represent raw instrument responses or raw mass counts rather than the standard molar concentrations required for stoichiometric gasification modeling. Additionally, there is a recurring issue with 'poor gas samples' for 'walnut shells' provided by 'energetic', where the lower flammability limit (LFL) conditions were not met despite stable reactor temperatures, suggesting a potential leak or bypass in the sampling train.
 
-A critical metadata gap was identified, with 42 records missing unit definitions and 43 records missing provider codenames. Furthermore, all records in the flagged sample lack sample dates and analyst attributions, which hinders temporal trend analysis and accountability. The anomalies in gas concentrations (particularly those with Z-scores > 1.0) appear clustered by provider ('rigging' for oak chips and 'energetic' for walnut shells), suggesting either specific gasification performance characteristics or localized sensor calibration variances at those facilities. Priority should be given to deduplication and the population of missing unit/provider fields to ensure the dataset's scientific validity.
+Furthermore, the dataset suffers from substantial metadata voids and redundancy. Specifically, the 'experiment_date' and 'primary_product' columns are entirely empty, and the 'qc_pass' flag is constant, offering no discriminative power for quality control. The presence of 88 duplicated rows and several triplicated records (e.g., record_id spen622-9d86) suggests errors in the data ingestion or joining process. To ensure the integrity of the gasification research, the raw syngas values must be normalized, and the sampling protocol for the 'energetic' provider's walnut shell trials should be reviewed to address the air infiltration or poor collection efficiency indicated in the notes.
 
 ## Evidently Profile
 
-<iframe src="../evidently/mv_biomass_gasification.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/mv_biomass_gasification.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 
@@ -36,6 +36,7 @@ A critical metadata gap was identified, with 42 records missing unit definitions
 | spen618-e1ff | spent oak chips | rigging | — | c4h10(i) | 1217.5900 | 1.02 | LOW |
 | spen622-9d86 | spent oak chips | rigging | — | ufl | 57.0300 | 1.27 | LOW |
 | spen622-9d86 | spent oak chips | rigging | — | ufl | 57.0300 | 1.27 | LOW |
+| spen622-9d86 | spent oak chips | rigging | — | ufl | 57.0300 | 1.27 | LOW |
 | spen631-33b3 | spent oak chips | rigging | — | c4h10(b) | 424.9100 | 1.45 | LOW |
 | waln265-1532 | walnut shells | energetic | — | c6h14 | 0.0000 | 1.43 | LOW |
 | waln279-5a49 | walnut shells | energetic | — | c4h10(i) | 751.5200 | 1.24 | LOW |
@@ -54,8 +55,6 @@ A critical metadata gap was identified, with 42 records missing unit definitions
 
 ## Custom Visuals
 
-Discovered assets:
-
-- [gasification_distribution.html](../assets/exports/plots/conversion/gasification_distribution.html)
+No specific analysis assets discovered for this target.
 
 :::

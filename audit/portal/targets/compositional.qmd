@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The compositional analysis audit of agricultural biomass revealed a total of 245 low-severity flags out of 723 records. The data is characterized by a significant concentration of anomalies within almond-derived resources, specifically almond shells, hulls, and branches. These anomalies are primarily focused on structural carbohydrates (xylan/xylose and glucan/glucose) and lignin. A notable pattern is the simultaneous flagging of monomeric and polymeric forms (e.g., xylan and xylose), suggesting that the underlying variance stems from the initial hydrolysis stage or the conversion factors used to calculate anhydrous compositions.
+The compositional analysis audit for the 723-record dataset reveals a concentrated cluster of statistical anomalies primarily within almond-derived biomass (shells, hulls, and branches). While the flagged observations are classified as 'LOW' severity, they represent systematic deviations in key structural components—specifically xylan, xylose, glucan, glucose, and lignin. A significant portion of these anomalies is associated with analyst xkang2@lbl.gov and specific providers such as 'tiny' and 'humorous'. The high degree of missingness in metadata—specifically 100% missing values for 'note' and 'analyst_name', and approximately 52% missing for 'analyst_email'—hinders deep contextual root-cause analysis.
 
-Analyst xkang2@lbl.gov is associated with a large portion of the flagged records across multiple providers, including 'tiny' and 'humorous'. The consistent Z-scores (ranging from 1.0 to 1.6) across these records suggest a systematic laboratory bias or a slight departure from the global mean rather than random measurement errors. Furthermore, the dataset suffers from significant metadata gaps; the 'note' and 'analyst_name' columns are entirely empty, and the 'sample_date' and 'created_at' fields show zero variance, indicating a batch-upload process that may have stripped vital context regarding sample preparation or equipment calibration.
+The most critical findings involve the simultaneous elevation of both monomeric sugars (xylose, glucose) and their corresponding structural polymers (xylan, glucan) within the same samples. While the chemical correlation between these parameters is expected, the elevated Z-scores (ranging from 1.0 to 1.6) for both suggest either a concentrated feedstock batch or potential calibration bias during the chromatographic analysis. Furthermore, almond hulls from provider 'tiny' show a concurrent elevation in lignin and hemicellulose components, which warrants a mass closure verification to ensure that total compositional percentages remain within a physically plausible range (near or below 100%).
 
 ## Evidently Profile
 
-<iframe src="../evidently/compositional.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/compositional.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 
@@ -270,11 +270,6 @@ Analyst xkang2@lbl.gov is associated with a large portion of the flagged records
 
 ## Custom Visuals
 
-Discovered assets:
-
-- [biomass_composition_3d.png](../assets/exports/plots/biomass_composition_3d.png)
-- [biomass_composition_distribution.png](../assets/exports/plots/biomass_composition_distribution.png)
-- [compositional_distribution.html](../assets/exports/plots/composition/compositional_distribution.html)
-- [portal_biomass_composition_distribution.html](../assets/exports/plots/composition/portal_biomass_composition_distribution.html)
+No specific analysis assets discovered for this target.
 
 :::

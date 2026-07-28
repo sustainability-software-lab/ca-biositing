@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The audit of the `mv_biomass_end_uses` dataset reveals a significant degradation in data completeness despite a 30% increase in the total number of records. The dataset, which tracks the allocation of biomass resources to various end-use cases, currently contains 39 records across 10 unique biomass resources. A critical finding is the sharp rise in missing values within the 'observed_value' column, which has increased from a 6.67% missingness rate in the reference period to 28.21% in the current period. This suggests that while more end-use categories are being identified for biomass resources, the quantitative measurement of those uses is not keeping pace with the categorization.
+The data quality audit for the `mv_biomass_end_uses` dataset reveals a structurally stable but quantitatively incomplete dataset. The dataset has expanded from 30 to 39 records, reflecting the inclusion of two additional biomass resource types. However, this growth has been accompanied by a doubling of missing data points in the `observed_value` column, which now accounts for over 10% of the current dataset. The relationship between `record_id` and total rows (approximately 4 observations per record) indicates a multi-category distribution model for biomass end-uses, such as partitioning a single feedstock source into fuel, fodder, and industrial applications.
 
-From a statistical perspective, the distribution of the 'observed_value' (likely representing percentages or mass-flow allocations) remains stable with a mean of 31.25 and a range of 1.0 to 100.0. However, the high ratio of rows to unique record IDs (3.9 rows per record) indicates a complex mapping of resources to use cases. The presence of 11 null values in the 'observed_value' field effectively invalidates the mass-balance calculations for several biomass resources, as the total allocation per record ID cannot be accurately summed or verified against a 100% threshold. Priority must be given to reconciling these missing quantitative values to ensure the integrity of the biomass utilization model.
+The primary concern identified is the impact of missing 'observed_value' entries on mass-balance calculations. In agricultural biomass research, the utility of end-use data depends on the ability to account for the total volume of a resource. The current missingness prevents a comprehensive sum-to-one or total-tonnage validation for the affected record IDs. While categorical consistency remains high across 15 distinct use cases, the lack of quantitative data for roughly 10% of the entries limits the dataset's applicability for downstream life cycle assessments (LCA) and economic modeling. Priority should be placed on reconciling these gaps, particularly for newly introduced resource streams.
 
 ## Evidently Profile
 
-<iframe src="../evidently/mv_biomass_end_uses.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/mv_biomass_end_uses.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 

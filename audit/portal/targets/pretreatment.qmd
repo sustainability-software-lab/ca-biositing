@@ -9,15 +9,13 @@ format:
 
 ## Executive Summary
 
-The data quality audit for the 'pretreatment' dataset reveals a substantial number of low-severity anomalies, with approximately 31% of the records flagged. The primary parameters of concern are glucose and xylose yields, which exhibit significant variance across different biomass resources. While the majority of anomalies are characterized by low Z-scores (1.0–1.5), the presence of maximum values reaching 118.0 suggests potential calculation errors or calibration shifts, as yields exceeding 100% of the theoretical maximum are physically impossible in standard biomass pretreatment contexts.
+The data quality audit for the 'pretreatment' dataset examined 741 records focused on glucose and xylose yields across 24 biomass types and 24 provider facilities. The data, primarily processed by analyst akrishnamoorthy@lbl.gov, shows high internal consistency but contains 232 flagged observations, mostly centered on yield deviations in specific biomass categories. Notably, there is a distinct clustering of anomalies by provider, with 'Maplewood', 'Ebony', and 'Oakleaf' showing high-variance yields for pomace-based residues, while 'Energetic' and 'Vibrant' show significant deviations in woody nut-tree residues.
 
-A significant structural deficiency in the dataset is the complete absence of qualitative metadata. The 'note' and 'analyst_name' columns are entirely unpopulated across all 741 records. While 'analyst_email' correctly attributes the work to akrishnamoorthy@lbl.gov, the lack of contextual notes makes it difficult to distinguish between legitimate experimental variation (e.g., optimized pretreatment conditions) and measurement error. Furthermore, the dataset shows a strong clustering of anomalies by provider (e.g., 'maplewood', 'energetic', 'caterpillar'), suggesting that specific batches or source locations are driving the observed statistical deviations.
-
-Immediate attention is required to validate yield calculation formulas and calibrate the HPLC or equivalent instruments used for sugar quantification, particularly for records showing yields near or above theoretical limits. The consistency of results within provider groups like 'caterpillar' and 'maplewood' suggests high precision but potentially biased accuracy, which should be investigated through the use of standardized biomass reference materials.
+Key findings include a high-severity yield discrepancy in walnut-based biomass, where shells exhibit glucose yields exceeding 80%, contrasting sharply with tree sticks and almond branches which fall below 17%. Furthermore, metadata integrity is compromised by the total absence of analyst names and notes across the entire dataset, and a subset of 43 records lacks analyst email attribution entirely. While z-scores for many residues remain in the 'Low' severity range (1.0 - 1.5), the systematic nature of these deviations suggests either provider-specific pretreatment protocols or variations in feedstock recalcitrance that may require recalibration for accurate cross-study comparison.
 
 ## Evidently Profile
 
-<iframe src="../evidently/pretreatment.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/pretreatment.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 
@@ -259,8 +257,6 @@ Immediate attention is required to validate yield calculation formulas and calib
 
 ## Custom Visuals
 
-Discovered assets:
-
-- [pretreatment_distribution.html](../assets/exports/plots/conversion/pretreatment_distribution.html)
+No specific analysis assets discovered for this target.
 
 :::

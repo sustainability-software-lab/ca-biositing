@@ -9,13 +9,13 @@ format:
 
 ## Executive Summary
 
-The audit of the `mv_biomass_pricing` dataset, consisting of 73 records, reveals significant statistical dispersion and metadata deficiencies. The dataset maintains a mean price of 361.9, yet the median sits at a much lower 72.2, with a standard deviation of 779.95. This extreme right-skew is primarily driven by 'almond hash' records, which reach values as high as 3,140, contrasted against 'almond shells' which average near 30. The absence of specific parameter names for all flagged records complicates the distinction between different market grades or processing levels.
+The data quality audit of the 'mv_biomass_pricing' dataset reveals significant statistical variance, primarily driven by extreme price outliers in specific almond byproduct categories. While the dataset maintains structural integrity with no missing values in core columns, the pricing for 'almond hash' (reaching up to 3,140 units) is several orders of magnitude higher than the values recorded for shells and hulls. This suggests either a fundamental unit mismatch—such as total shipment cost being entered as a unit price—or a catastrophic data entry error. Without the 'parameter_name' or 'provider_codename' populated, it is difficult to determine if these values represent processed almond oil extracts rather than raw biomass hash.
 
-The most critical finding is the potential unit or scale mismatch within the 'almond hash' and 'almond hulls' resources. While the 'price_unit' column is constant across the dataset, the observed values suggest that some resources may be priced per truckload or per container rather than the standard ton, or they may reflect currency conversion errors. Furthermore, the total lack of 'parameter_name' metadata across the flagged observations prevents a definitive assessment of whether these values represent spot prices, contract prices, or delivered costs, which significantly hinders the utility of the data for comparative economic analysis.
+Furthermore, the audit identified a systemic lack of metadata. All flagged records are missing analyst attribution, provider codenames, and specific parameter definitions. This absence of context prevents the verification of the high-end pricing observed for almond hulls (ranging from 194.55 to 252.26). While these hull prices are statistically flagged as high, they may represent organic premiums or 'delivered' prices inclusive of freight. The lack of temporal data (sample_date) further complicates the analysis, as we cannot determine if these spikes correlate with seasonal almond harvest shortages. Immediate intervention is required to standardize price units and populate missing metadata fields to ensure the dataset's utility for economic modeling.
 
 ## Evidently Profile
 
-<iframe src="../evidently/mv_biomass_pricing.html" width="100%" height="800px" frameborder="0"></iframe>
+<iframe src="../../output/2026-07-28_13-27-51/evidently/mv_biomass_pricing.html" width="100%" height="800px" frameborder="0"></iframe>
 
 ## Flagged Observations
 
