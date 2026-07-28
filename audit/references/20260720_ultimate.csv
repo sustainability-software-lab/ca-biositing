@@ -1,0 +1,16 @@
+resource_name,parameter_name,unit,observed_value,record_id,qc_pass,note,analyst_name,analyst_email,created_at,provider_codename,sample_date
+almond hulls,nitrogen,pc,0.87,)u021e02,pass,1,,,2026-07-08 03:54:13.451017,humorous,2026-07-08 03:54:13.451017
+almond hulls,nitrogen,pc,0.87,)ub9dab9,pass, 1 dup,,,2026-07-08 03:54:13.451017,humorous,2026-07-08 03:54:13.451017
+almond shells,nitrogen,pc,0.7,)u93e193,pass,2,,,2026-07-08 03:54:13.451017,humorous,2026-07-08 03:54:13.451017
+walnut shells,nitrogen,pc,0.36,)u068606,pass,3,,,2026-07-08 03:54:13.451017,energetic,2026-07-08 03:54:13.451017
+grape pomace,nitrogen,pc,1.68,)uba78ba,pass,4,,,2026-07-08 03:54:13.451017,ebony,2026-07-08 03:54:13.451017
+walnut hulls,nitrogen,pc,1.52,)u645364,pass,5,,,2026-07-08 03:54:13.451017,energetic,2026-07-08 03:54:13.451017
+sweet potato culls,nitrogen,pc,1.57,)u7a3f7a,pass,6,,,2026-07-08 03:54:13.451017,tackle,2026-07-08 03:54:13.451017
+tomato pomace,nitrogen,pc,2.28,)u73ee73,pass,8,,,2026-07-08 03:54:13.451017,pinecrest,2026-07-08 03:54:13.451017
+tomato pomace,nitrogen,pc,2.58,)ud118d1,pass,9,,,2026-07-08 03:54:13.451017,oakleaf,2026-07-08 03:54:13.451017
+tomato pomace,nitrogen,pc,2.84,)u34b134,pass,10,,,2026-07-08 03:54:13.451017,riverstone,2026-07-08 03:54:13.451017
+tomato pomace,nitrogen,pc,2.98,)u91a791,pass, 10 dup,,,2026-07-08 03:54:13.451017,riverstone,2026-07-08 03:54:13.451017
+spent oak chips,nitrogen,pc,0.23,)uf825f8,pass,11,,,2026-07-08 03:54:13.451017,maplewood,2026-07-08 03:54:13.451017
+grape pomace,nitrogen,pc,1.8,)u608260,pass,13,,,2026-07-08 03:54:13.451017,maplewood,2026-07-08 03:54:13.451017
+grape pomace,nitrogen,pc,1.93,)u87a587,pass, 13 dup,,,2026-07-08 03:54:13.451017,maplewood,2026-07-08 03:54:13.451017
+almond shells,nitrogen,pc,0.7,)u336a33,pass,,,,2026-07-08 03:54:13.451017,humorous,2026-07-08 03:54:13.451017

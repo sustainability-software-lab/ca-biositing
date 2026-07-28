@@ -1,0 +1,669 @@
+resource_name,parameter_name,unit,observed_value,record_id,qc_pass,note,analyst_name,analyst_email,created_at,provider_codename,sample_date
+tomato pomace,al,ppm,3.0,(26)4371,pass,internal standards serve as the primary qc check. internal_std_results,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,ca,ppm,1620.0,(26)2416,pass,internal_std_results,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,10.0,(26)e8f5,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,13.9,(26)f95b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,k,ppm,6300.0,(26)34ce,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,mg,ppm,2250.0,(26)02fc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,38.0,(26)f18a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,na,ppm,780.0,(26)8804,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,nd,ppm,3.48,(26)005d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,p,ppm,3650.0,(26)058b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1550.0,(26)dd79,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,si,ppm,10.0,(26)9c15,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,ti,ppm,3.48,(26)7272,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,31.0,(26)6fd6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,al,ppm,3.48,(26)03d6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,ca,ppm,1460.0,(26)de89,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,10.5,(26)4490,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,10.0,(26)e86a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,k,ppm,5820.0,(26)7eeb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,mg,ppm,2180.0,(26)0e8c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,32.0,(26)9bb8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,na,ppm,750.0,(26)c5a6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,nd,ppm,3.55,(26)6b6b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,p,ppm,2960.0,(26)4709,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1530.0,(26)0be0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,si,ppm,7.0,(26)6427,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,ti,ppm,3.55,(26)fa46,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,43.0,(26)a23d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,al,ppm,17.8,(69)3b52,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,ca,ppm,2570.0,(69)66e5,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,14.2,(69)daf6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,7.0,(69)a5f5,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,k,ppm,20300.0,(69)fb3a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,mg,ppm,1550.0,(69)7ba0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,17.8,(69)1bde,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,na,ppm,1440.0,(69)eb00,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,nd,ppm,7.11,(69)0335,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,p,ppm,2540.0,(69)1a06,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1660.0,(69)632c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,si,ppm,15.0,(69)c905,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,ti,ppm,3.65,(69)311c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,22.0,(69)6873,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,al,ppm,14.6,(69)bfca,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,ca,ppm,2730.0,(69)f2b1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,14.6,(69)8315,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,7.0,(69)bf28,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,k,ppm,21000.0,(69)0f35,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,mg,ppm,1730.0,(69)3138,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,18.3,(69)dd28,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,na,ppm,1530.0,(69)5280,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,nd,ppm,7.31,(69)aa3d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,p,ppm,2620.0,(69)2c93,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1690.0,(69)e3ed,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,si,ppm,11.0,(69)dca7,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,ti,ppm,3.65,(69)5cdc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,22.0,(69)270a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,al,ppm,7.31,(6d)d64e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,ca,ppm,1450.0,(6d)0f9b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,11.0,(6d)dc09,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,15.0,(6d)5bbd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,k,ppm,6920.0,(6d)d2e2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,mg,ppm,2560.0,(6d)a6af,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,40.4,(6d)1524,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,na,ppm,232.0,(6d)c741,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,nd,ppm,3.68,(6d)2b35,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,p,ppm,4120.0,(6d)4e82,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1590.0,(6d)3256,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,si,ppm,7.0,(6d)fda3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,ti,ppm,3.68,(6d)d68e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,26.0,(6d)f379,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,al,ppm,7.35,(6d)bf8e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,ca,ppm,1510.0,(6d)f6fd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,11.0,(6d)5e91,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,15.0,(6d)e90a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,k,ppm,6820.0,(6d)a021,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,mg,ppm,2440.0,(6d)db6e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,39.9,(6d)6274,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,na,ppm,232.0,(6d)3e18,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,nd,ppm,0.0,(6d)a2d8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,p,ppm,3830.0,(6d)bf16,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1520.0,(6d)241f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,si,ppm,7.0,(6d)c547,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,ti,ppm,3.63,(6d)b868,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,22.0,(6d)a343,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+grape pomace,al,ppm,18.1,(fe)18a8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,ca,ppm,4430.0,(fe)2866,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,cu,ppm,14.5,(fe)2aa1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,fe,ppm,7.0,(fe)9dcb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,k,ppm,16500.0,(fe)8e22,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,mg,ppm,1040.0,(fe)f915,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,mn,ppm,43.5,(fe)89d6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,na,ppm,-221.0,(fe)813d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,nd,ppm,7.25,(fe)7a3b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,p,ppm,2220.0,(fe)0bb8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,s,ppm,1210.0,(fe)fe17,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,si,ppm,22.0,(fe)28ee,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,ti,ppm,0.0,(fe)6131,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,zn,ppm,11.0,(fe)b73e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,al,ppm,14.8,(fe)64dd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,ca,ppm,4320.0,(fe)55dc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,cu,ppm,11.1,(fe)c230,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,fe,ppm,11.0,(fe)be43,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,k,ppm,16300.0,(fe)e312,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,mg,ppm,995.0,(fe)802b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,mn,ppm,40.7,(fe)cf31,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,na,ppm,-55.0,(fe)8bdb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,nd,ppm,7.4,(fe)9b50,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,p,ppm,2130.0,(fe)7697,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,s,ppm,1310.0,(fe)f958,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,si,ppm,18.0,(fe)3456,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,ti,ppm,3.7,(fe)15d9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,zn,ppm,11.0,(fe)46c4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,al,ppm,7.4,(ad)b7d9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,ca,ppm,6440.0,(ad)5782,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,cu,ppm,7.29,(ad)7270,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,fe,ppm,26.0,(ad)d198,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,k,ppm,30100.0,(ad)ec60,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,mg,ppm,1670.0,(ad)c66a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,mn,ppm,94.8,(ad)1173,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,na,ppm,44.0,(ad)cb5c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,nd,ppm,10.9,(ad)d9e1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,p,ppm,3070.0,(ad)e801,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,s,ppm,696.0,(ad)219a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,si,ppm,36.0,(ad)659a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,ti,ppm,3.65,(ad)935b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,zn,ppm,11.0,(ad)30cd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,al,ppm,10.9,(ad)30cb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,ca,ppm,6610.0,(ad)3f87,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,cu,ppm,7.29,(ad)d3d6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,fe,ppm,36.0,(ad)eaf3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,k,ppm,31500.0,(ad)c0ac,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,mg,ppm,1820.0,(ad)63a0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,mn,ppm,98.4,(ad)b49f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,na,ppm,37.0,(ad)a848,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,nd,ppm,11.0,(ad)8054,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,p,ppm,3200.0,(ad)e440,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,s,ppm,684.0,(ad)9237,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,si,ppm,37.0,(ad)6b2a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,ti,ppm,3.68,(ad)b846,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape stem,zn,ppm,11.0,(ad)8b5a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,al,ppm,84.5,(e8)8e03,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,ca,ppm,5440.0,(e8)a1e2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,cu,ppm,22.1,(e8)fda6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,fe,ppm,140.0,(e8)6bf4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,k,ppm,82300.0,(e8)be6f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,mg,ppm,515.0,(e8)b13a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,mn,ppm,11.0,(e8)c5fd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,na,ppm,-195.0,(e8)2d0d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,nd,ppm,14.7,(e8)7c3a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,p,ppm,2700.0,(e8)5afa,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,s,ppm,1430.0,(e8)7ba2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,si,ppm,11.0,(e8)8e4f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,ti,ppm,0.0,(e8)324f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,zn,ppm,32.0,(e8)8ec2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,al,ppm,86.6,(e8)ea4d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,ca,ppm,5720.0,(e8)8b83,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,cu,ppm,14.4,(e8)f238,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,fe,ppm,126.0,(e8)0f2c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,k,ppm,87500.0,(e8)ad9f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,mg,ppm,483.0,(e8)dc21,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,mn,ppm,10.8,(e8)3033,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,na,ppm,-184.0,(e8)ff82,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,nd,ppm,14.4,(e8)2c90,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,p,ppm,2380.0,(e8)32bb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,s,ppm,1450.0,(e8)189e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,si,ppm,7.0,(e8)3b93,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,ti,ppm,0.0,(e8)a7a0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent yeast,zn,ppm,32.0,(e8)5283,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,al,ppm,10.8,(c5)6b8a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,ca,ppm,393.0,(c5)a0b9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,cu,ppm,3.61,(c5)41af,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,fe,ppm,57.0,(c5)fbec,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,k,ppm,1280.0,(c5)923c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,mg,ppm,72.0,(c5)a714,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,mn,ppm,14.3,(c5)c850,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,na,ppm,-50.0,(c5)550e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,nd,ppm,3.59,(c5)d256,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,p,ppm,140.0,(c5)fc8f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,s,ppm,592.0,(c5)d5a5,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,si,ppm,18.0,(c5)7f8a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,ti,ppm,3.59,(c5)ef81,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,zn,ppm,0.0,(c5)fc8e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,al,ppm,3.59,(c5)3ac3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,ca,ppm,391.0,(c5)2114,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,cu,ppm,3.59,(c5)841d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,fe,ppm,47.0,(c5)a1e2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,k,ppm,1690.0,(c5)fb43,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,mg,ppm,72.0,(c5)3783,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,mn,ppm,14.3,(c5)f4d0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,na,ppm,-233.0,(c5)d66b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,nd,ppm,3.6,(c5)5291,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,p,ppm,166.0,(c5)c0f2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,s,ppm,569.0,(c5)b4b2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,si,ppm,18.0,(c5)ea75,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,ti,ppm,3.6,(c5)156c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+spent oak chips,zn,ppm,0.0,(c5)97d9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,al,ppm,461.0,(c4)d16e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,ca,ppm,12900.0,(c4)5746,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,cu,ppm,18.0,(c4)e1f9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,fe,ppm,2440.0,(c4)44ec,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,k,ppm,17200.0,(c4)d22c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,mg,ppm,1200.0,(c4)eb3d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,mn,ppm,93.7,(c4)8cfc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,na,ppm,40.0,(c4)872f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,nd,ppm,25.2,(c4)6df2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,p,ppm,703.0,(c4)61a1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,s,ppm,1140.0,(c4)4583,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,si,ppm,21.6,(c4)9264,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,ti,ppm,14.0,(c4)50b8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,zn,ppm,21.5,(c4)6bc3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,al,ppm,4.0,(c4)a1e8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,ca,ppm,301.0,(c4)abca,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,cu,ppm,4.0,(c4)39b8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,fe,ppm,14.3,(c4)7fed,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,k,ppm,476.0,(c4)52fc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,mg,ppm,7.16,(c4)5595,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,mn,ppm,21.0,(c4)e785,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,na,ppm,-60.9,(c4)3268,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,nd,ppm,0.0,(c4)63db,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,p,ppm,35.8,(c4)963a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,s,ppm,90.0,(c4)d6f1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,si,ppm,17.9,(c4)883d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,ti,ppm,4.0,(c4)2faf,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+unused oak stick,zn,ppm,0.0,(c4)5b72,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,al,ppm,18.0,(1b)4805,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,ca,ppm,2790.0,(1b)63de,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,cu,ppm,11.0,(1b)dac7,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,fe,ppm,10.7,(1b)67a8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,k,ppm,22000.0,(1b)f250,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,mg,ppm,839.0,(1b)53df,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,mn,ppm,7.0,(1b)7f08,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,na,ppm,-237.0,(1b)ae11,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,nd,ppm,7.0,(1b)75d7,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,p,ppm,1970.0,(1b)4c23,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,s,ppm,1000.0,(1b)c568,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,si,ppm,24.8,(1b)e74e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,ti,ppm,4.0,(1b)1acc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,zn,ppm,14.2,(1b)764e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,al,ppm,18.0,(1b)2a97,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,ca,ppm,2740.0,(1b)9c2d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,cu,ppm,7.0,(1b)82c1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,fe,ppm,14.2,(1b)6ca8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,k,ppm,21600.0,(1b)be05,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,mg,ppm,842.0,(1b)c8e3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,mn,ppm,7.0,(1b)c1da,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,na,ppm,-244.0,(1b)02df,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,nd,ppm,7.0,(1b)debc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,p,ppm,1700.0,(1b)d08e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,s,ppm,921.0,(1b)b586,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,si,ppm,28.5,(1b)21a6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,ti,ppm,4.0,(1b)3a5f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+grape pomace,zn,ppm,10.7,(1b)3c7f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+almond shells,al,ppm,14.0,(37)cb2d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,ca,ppm,1850.0,(37)e3ae,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,cu,ppm,11.0,(37)5308,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,fe,ppm,28.5,(37)f74f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,k,ppm,15800.0,(37)19cb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,mg,ppm,574.0,(37)2251,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,mn,ppm,7.0,(37)b44a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,na,ppm,-211.0,(37)5698,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,nd,ppm,7.0,(37)3d0c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,p,ppm,557.0,(37)d417,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,s,ppm,200.0,(37)0f49,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,si,ppm,14.3,(37)b72c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,ti,ppm,4.0,(37)ebd4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,zn,ppm,7.14,(37)468a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,al,ppm,18.0,(37)3b21,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,ca,ppm,1950.0,(37)76b0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,cu,ppm,11.0,(37)1595,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,fe,ppm,21.5,(37)4398,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,k,ppm,15800.0,(37)8870,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,mg,ppm,577.0,(37)fd13,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,mn,ppm,11.0,(37)2bb7,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,na,ppm,-240.0,(37)7905,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,nd,ppm,7.0,(37)392a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,p,ppm,602.0,(37)db27,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,s,ppm,233.0,(37)461d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,si,ppm,14.3,(37)367a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,ti,ppm,0.0,(37)7d17,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,zn,ppm,7.16,(37)2367,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,al,ppm,11.0,(31)09a4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,ca,ppm,1550.0,(31)ba4f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,cu,ppm,7.0,(31)c6dd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,fe,ppm,10.7,(31)0bc6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,k,ppm,16400.0,(31)2103,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,mg,ppm,1020.0,(31)c567,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,mn,ppm,7.0,(31)4f76,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,na,ppm,-47.6,(31)650f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,nd,ppm,7.0,(31)cdbe,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,p,ppm,468.0,(31)f463,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,s,ppm,172.0,(31)fb32,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,si,ppm,11.0,(31)ff2f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,ti,ppm,0.0,(31)6f58,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,zn,ppm,3.66,(31)131f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,al,ppm,15.0,(31)738d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,ca,ppm,1690.0,(31)e17b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,cu,ppm,7.0,(31)c8c1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,fe,ppm,14.6,(31)b221,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,k,ppm,18800.0,(31)a87c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,mg,ppm,1110.0,(31)cd71,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,mn,ppm,7.0,(31)3a96,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,na,ppm,-220.0,(31)0574,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,nd,ppm,4.0,(31)fdcb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,p,ppm,549.0,(31)9be8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,s,ppm,234.0,(31)3951,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,si,ppm,18.0,(31)53ad,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,ti,ppm,0.0,(31)baff,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond hulls,zn,ppm,3.6,(31)6866,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,al,ppm,18.0,(c7)a9be,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,ca,ppm,9360.0,(c7)d2bb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,cu,ppm,32.0,(c7)3c1c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,fe,ppm,21.6,(c7)1f9a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,k,ppm,2680.0,(c7)af6e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,mg,ppm,998.0,(c7)7096,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,mn,ppm,29.0,(c7)8280,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,na,ppm,82.9,(c7)6772,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,nd,ppm,14.0,(c7)f70e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,p,ppm,418.0,(c7)a77e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,s,ppm,299.0,(c7)ad89,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,si,ppm,10.8,(c7)bc57,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,ti,ppm,0.0,(c7)bfd4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,zn,ppm,28.8,(c7)e208,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,al,ppm,18.0,(c7)2c58,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,ca,ppm,9750.0,(c7)e149,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,cu,ppm,33.0,(c7)d21f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,fe,ppm,21.8,(c7)f305,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,k,ppm,2770.0,(c7)4eeb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,mg,ppm,987.0,(c7)036c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,mn,ppm,33.0,(c7)0f03,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,na,ppm,90.8,(c7)54b0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,nd,ppm,18.0,(c7)15a4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,p,ppm,432.0,(c7)2ad1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,s,ppm,436.0,(c7)a0ff,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,si,ppm,10.9,(c7)8f5a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,ti,ppm,0.0,(c7)f7a2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond branches,zn,ppm,32.7,(c7)1321,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,vibrant,2026-07-08 03:54:14.293858
+almond shells,al,ppm,40.0,(24)046c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,ca,ppm,3460.0,(24)9f55,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,cu,ppm,7.0,(24)a0f9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,fe,ppm,50.8,(24)2a93,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,k,ppm,20700.0,(24)8df9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,mg,ppm,650.0,(24)ab4b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,mn,ppm,14.0,(24)755c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,na,ppm,111.0,(24)95c2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,nd,ppm,11.0,(24)6339,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,p,ppm,872.0,(24)4cc3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,s,ppm,336.0,(24)bad4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,si,ppm,17.9,(24)ef9f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,ti,ppm,0.0,(24)25f6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,zn,ppm,10.7,(24)09a9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,al,ppm,39.0,(24)48aa,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,ca,ppm,3560.0,(24)0a68,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,cu,ppm,11.0,(24)b91f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,fe,ppm,46.5,(24)2598,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,k,ppm,21400.0,(24)264d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,mg,ppm,651.0,(24)b7bb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,mn,ppm,14.0,(24)b999,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,na,ppm,118.0,(24)cf04,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,nd,ppm,11.0,(24)eec2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,p,ppm,847.0,(24)4f15,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,s,ppm,343.0,(24)fade,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,si,ppm,14.2,(24)0fd0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,ti,ppm,0.0,(24)effa,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond shells,zn,ppm,10.7,(24)9d6c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,al,ppm,14.0,(03)8d5f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,ca,ppm,1580.0,(03)8b1e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,cu,ppm,11.0,(03)9388,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,fe,ppm,17.8,(03)22e3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,k,ppm,21400.0,(03)7b1c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,mg,ppm,669.0,(03)4572,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,mn,ppm,14.0,(03)3939,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,na,ppm,-35.6,(03)0e23,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,nd,ppm,7.0,(03)df48,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,p,ppm,669.0,(03)9d86,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,s,ppm,249.0,(03)a5bc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,si,ppm,17.8,(03)663f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,ti,ppm,0.0,(03)5a50,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,zn,ppm,7.11,(03)d962,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,al,ppm,14.0,(03)79be,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,ca,ppm,1620.0,(03)788f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,cu,ppm,11.0,(03)6da0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,fe,ppm,18.3,(03)d3bd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,k,ppm,22100.0,(03)3ba3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,mg,ppm,712.0,(03)66c1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,mn,ppm,15.0,(03)73d1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,na,ppm,-227.0,(03)623d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,nd,ppm,7.0,(03)4fce,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,p,ppm,697.0,(03)6f2d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,s,ppm,260.0,(03)2293,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,si,ppm,18.3,(03)f5d8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,ti,ppm,0.0,(03)a5d0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+almond hulls,zn,ppm,7.34,(03)7d30,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tiny,2026-07-08 03:54:14.293858
+walnut shells,al,ppm,7.12,(82)23ac,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,ca,ppm,1720.0,(82)65b1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,cu,ppm,7.12,(82)79e1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,fe,ppm,11.0,(82)0fde,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,k,ppm,3110.0,(82)88f8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,mg,ppm,224.0,(82)f40b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,mn,ppm,7.12,(82)ef91,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,na,ppm,-75.0,(82)9346,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,nd,ppm,7.12,(82)4c54,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,p,ppm,174.0,(82)cf5e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,s,ppm,157.0,(82)239d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,si,ppm,11.0,(82)e6c1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,ti,ppm,0.0,(82)922e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,zn,ppm,4.0,(82)23f5,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,al,ppm,7.12,(82)3c72,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,ca,ppm,1820.0,(82)495e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,cu,ppm,7.12,(82)3e60,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,fe,ppm,14.0,(82)e62c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,k,ppm,3220.0,(82)a012,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,mg,ppm,246.0,(82)164b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,mn,ppm,7.12,(82)1d32,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,na,ppm,-71.0,(82)076c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,nd,ppm,7.12,(82)68b9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,p,ppm,235.0,(82)9606,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,s,ppm,157.0,(82)ef17,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,si,ppm,11.0,(82)cdf1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,ti,ppm,0.0,(82)decd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut shells,zn,ppm,4.0,(82)afdc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,al,ppm,431.0,(e7)1978,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,ca,ppm,12000.0,(e7)4eba,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,cu,ppm,21.4,(e7)e3cc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,fe,ppm,2280.0,(e7)5138,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,k,ppm,16800.0,(e7)d652,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,mg,ppm,1120.0,(e7)3c51,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,mn,ppm,89.0,(e7)9628,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,na,ppm,36.0,(e7)4c0b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,nd,ppm,25.0,(e7)a6df,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,p,ppm,911.0,(e7)951d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,s,ppm,1060.0,(e7)a716,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,si,ppm,68.0,(e7)95cc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,ti,ppm,14.3,(e7)8cf1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,zn,ppm,21.0,(e7)c3f1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,al,ppm,400.0,(e7)1c75,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,ca,ppm,11500.0,(e7)08bf,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,cu,ppm,21.4,(e7)718e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,fe,ppm,2230.0,(e7)f75e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,k,ppm,17000.0,(e7)4651,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,mg,ppm,1140.0,(e7)df57,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,mn,ppm,82.1,(e7)df42,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,na,ppm,32.0,(e7)6ad4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,nd,ppm,25.0,(e7)71b1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,p,ppm,643.0,(e7)d608,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,s,ppm,1010.0,(e7)d72b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,si,ppm,64.0,(e7)362d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,ti,ppm,14.3,(e7)32db,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut hulls,zn,ppm,22.0,(e7)6c6b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,al,ppm,25.2,(4d)e3d2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,ca,ppm,16800.0,(4d)f632,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,cu,ppm,32.3,(4d)074c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,fe,ppm,29.0,(4d)59ef,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,k,ppm,4220.0,(4d)c6b5,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,mg,ppm,1250.0,(4d)35b1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,mn,ppm,28.7,(4d)4e30,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,na,ppm,7.0,(4d)1916,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,nd,ppm,28.7,(4d)e436,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,p,ppm,374.0,(4d)7deb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,s,ppm,575.0,(4d)ecfd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,si,ppm,14.0,(4d)d24e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,ti,ppm,3.59,(4d)a0e1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,zn,ppm,7.0,(4d)f507,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,al,ppm,28.7,(4d)f005,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,ca,ppm,18100.0,(4d)bf48,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,cu,ppm,35.9,(4d)f8c3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,fe,ppm,25.0,(4d)d27b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,k,ppm,4430.0,(4d)6c47,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,mg,ppm,1330.0,(4d)a55b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,mn,ppm,32.4,(4d)bf78,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,na,ppm,11.0,(4d)b119,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,nd,ppm,28.8,(4d)0fb1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,p,ppm,533.0,(4d)404e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,s,ppm,659.0,(4d)a981,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,si,ppm,7.0,(4d)a81d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,ti,ppm,3.6,(4d)9f8d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+walnut tree sticks,zn,ppm,11.0,(4d)8c1b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+sweet potato culls,al,ppm,14.3,(1a)20a4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,ca,ppm,2590.0,(1a)3e02,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,cu,ppm,10.7,(1a)0653,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,fe,ppm,18.0,(1a)c493,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,k,ppm,15000.0,(1a)cc50,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,mg,ppm,1160.0,(1a)98a1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,mn,ppm,10.7,(1a)05f3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,na,ppm,1140.0,(1a)134c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,nd,ppm,10.7,(1a)746d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,p,ppm,2240.0,(1a)4aab,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,s,ppm,1080.0,(1a)dc80,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,si,ppm,25.0,(1a)5b61,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,ti,ppm,0.0,(1a)58c0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,zn,ppm,14.0,(1a)8da6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,al,ppm,10.7,(1a)ba95,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,ca,ppm,2630.0,(1a)3486,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,cu,ppm,10.7,(1a)9379,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,fe,ppm,18.0,(1a)0b9e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,k,ppm,15200.0,(1a)60e1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,mg,ppm,1190.0,(1a)3c63,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,mn,ppm,10.7,(1a)913a,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,na,ppm,1250.0,(1a)2084,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,nd,ppm,10.7,(1a)4714,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,p,ppm,3230.0,(1a)b722,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,s,ppm,1040.0,(1a)f84c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,si,ppm,25.0,(1a)da9e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,ti,ppm,0.0,(1a)2761,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+sweet potato culls,zn,ppm,14.0,(1a)82b1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+almond shells,al,ppm,21.5,(13)3289,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,ca,ppm,1980.0,(13)d35c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,cu,ppm,10.7,(13)b12f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,fe,ppm,14.0,(13)c159,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,k,ppm,12800.0,(13)9b73,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,mg,ppm,595.0,(13)69ab,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,mn,ppm,10.7,(13)cbe1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,na,ppm,-179.0,(13)8909,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,nd,ppm,7.16,(13)0ae7,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,p,ppm,691.0,(13)2602,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,s,ppm,204.0,(13)0e1f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,si,ppm,18.0,(13)29e3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,ti,ppm,0.0,(13)172d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,zn,ppm,4.0,(13)bd21,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,al,ppm,71.5,(13)c1b2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,ca,ppm,1830.0,(13)dc71,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,cu,ppm,10.7,(13)114d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,fe,ppm,14.0,(13)7dab,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,k,ppm,12300.0,(13)8f20,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,mg,ppm,561.0,(13)7a99,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,mn,ppm,10.7,(13)2172,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,na,ppm,-211.0,(13)0a0b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,nd,ppm,7.15,(13)4fe7,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,p,ppm,447.0,(13)1d63,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,s,ppm,189.0,(13)e7cd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,si,ppm,18.0,(13)cb09,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,ti,ppm,0.0,(13)92d7,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,zn,ppm,4.0,(13)a199,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,al,ppm,18.0,(15)1b12,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,ca,ppm,2100.0,(15)a295,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,cu,ppm,4.0,(15)1cdf,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,fe,ppm,14.4,(15)0d58,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,k,ppm,24100.0,(15)5ad4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,mg,ppm,889.0,(15)3438,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,mn,ppm,11.0,(15)3909,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,na,ppm,36.0,(15)6d1e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,nd,ppm,4.0,(15)1f4f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,p,ppm,1130.0,(15)68af,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,s,ppm,281.0,(15)f921,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,si,ppm,21.6,(15)69a9,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,ti,ppm,0.0,(15)391b,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,zn,ppm,3.6,(15)9ec4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,al,ppm,14.0,(15)c67f,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,ca,ppm,1960.0,(15)eaf2,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,cu,ppm,11.0,(15)b384,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,fe,ppm,14.4,(15)c0c8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,mg,ppm,918.0,(15)143c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,mn,ppm,10.8,(15)62e3,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,nd,ppm,11.0,(15)89d8,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,p,ppm,773.0,(15)9524,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,s,ppm,302.0,(15)97a0,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,si,ppm,21.6,(15)ef17,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,ti,ppm,0.0,(15)47bb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,zn,ppm,3.59,(15)5d69,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,al,ppm,29.0,(a0)9bfb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,ca,ppm,6540.0,(a0)c916,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,cu,ppm,14.0,(a0)7b53,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,fe,ppm,43.1,(a0)2c2d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,k,ppm,2250.0,(a0)9e7e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,mg,ppm,862.0,(a0)1253,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,mn,ppm,25.0,(a0)95fd,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,na,ppm,-212.0,(a0)d8d7,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,nd,ppm,14.0,(a0)5bd4,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,p,ppm,187.0,(a0)2f1d,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,s,ppm,226.0,(a0)badc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,si,ppm,14.4,(a0)37cf,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,ti,ppm,0.0,(a0)0eff,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,zn,ppm,18.2,(a0)bbfb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,al,ppm,22.0,(a0)2550,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,ca,ppm,6210.0,(a0)c48e,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,cu,ppm,18.0,(a0)f31c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,fe,ppm,40.0,(a0)6385,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,mg,ppm,786.0,(a0)96a6,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,mn,ppm,25.5,(a0)bb43,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,nd,ppm,15.0,(a0)98ff,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,p,ppm,182.0,(a0)9046,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,s,ppm,313.0,(a0)02fb,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,si,ppm,14.6,(a0)76a1,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,ti,ppm,4.0,(a0)cf4c,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond branches,zn,ppm,14.6,(a0)0acc,pass,,,mduran@lbl.gov,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,s,ppm,310.0,(15)4ba1,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,s,ppm,300.0,(15)2f25,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,s,ppm,270.0,(13)f8c4,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+walnut shells,s,ppm,160.0,(82)2b22,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+grape pomace,s,ppm,1240.0,(1b)d689,pass,,,,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+walnut hulls,s,ppm,1270.0,(e7)8397,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+sweet potato culls,s,ppm,1260.0,(1a)c1f1,pass,,,,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1610.0,(69)370e,pass,,,,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1710.0,(26)f767,pass,,,,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1840.0,(6d)7f96,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,s,ppm,1870.0,(6d)f755,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+spent oak chips,s,ppm,710.0,(c5)9575,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,s,ppm,1610.0,(fe)8847,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,s,ppm,1550.0,(fe)4edb,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+almond hulls,b,ppm,137.0,(15)a897,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,b,ppm,137.0,(15)ee96,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,b,ppm,57.6,(13)afc2,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+walnut shells,b,ppm,10.1,(82)58d3,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+grape pomace,b,ppm,42.1,(1b)8f5f,pass,,,,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+walnut hulls,b,ppm,39.5,(e7)d3cb,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+sweet potato culls,b,ppm,9.1,(1a)8710,pass,,,,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+tomato pomace,b,ppm,14.6,(69)938e,pass,,,,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,b,ppm,13.5,(26)e3e3,pass,,,,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,b,ppm,13.0,(6d)3de6,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,b,ppm,13.5,(6d)d7af,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+spent oak chips,b,ppm,22.9,(c5)45b4,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,b,ppm,27.5,(fe)9542,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,b,ppm,25.8,(fe)ace1,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+almond hulls,zn,ppm,4.9,(15)3b00,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,zn,ppm,5.1,(15)33ce,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,zn,ppm,7.1,(13)95ce,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+walnut shells,zn,ppm,3.7,(82)695f,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+grape pomace,zn,ppm,11.5,(1b)7bd5,pass,,,,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+walnut hulls,zn,ppm,29.5,(e7)9db6,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+sweet potato culls,zn,ppm,16.4,(1a)bc49,pass,,,,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,27.9,(69)f50e,pass,,,,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,31.9,(26)1f5e,pass,,,,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,24.8,(6d)93ec,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,zn,ppm,25.5,(6d)1b10,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+spent oak chips,zn,ppm,1.4,(c5)27c0,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,zn,ppm,14.5,(fe)5096,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,zn,ppm,13.8,(fe)d578,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+almond hulls,mn,ppm,12.0,(15)1188,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,mn,ppm,12.5,(15)3818,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,mn,ppm,14.7,(13)3b41,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+walnut shells,mn,ppm,5.6,(82)f68d,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+grape pomace,mn,ppm,8.2,(1b)1a06,pass,,,,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+walnut hulls,mn,ppm,121.0,(e7)eeab,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+sweet potato culls,mn,ppm,15.6,(1a)8623,pass,,,,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,19.8,(69)e99c,pass,,,,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,37.4,(26)ebe2,pass,,,,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,41.7,(6d)c20a,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,mn,ppm,42.1,(6d)7264,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+spent oak chips,mn,ppm,16.7,(c5)996f,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,mn,ppm,50.3,(fe)64ff,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,mn,ppm,47.2,(fe)b2d0,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+almond hulls,fe,ppm,137.0,(15)aca2,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,fe,ppm,136.0,(15)caec,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,fe,ppm,350.0,(13)d222,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+walnut shells,fe,ppm,40.3,(82)cb5f,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+grape pomace,fe,ppm,176.0,(1b)42db,pass,,,,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+walnut hulls,fe,ppm,8840.0,(e7)a65d,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+sweet potato culls,fe,ppm,76.5,(1a)52cd,pass,,,,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,61.2,(69)f3fc,pass,,,,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,89.2,(26)d58c,pass,,,,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,82.6,(6d)70ec,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,fe,ppm,82.6,(6d)666a,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+spent oak chips,fe,ppm,82.9,(c5)c527,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,fe,ppm,377.0,(fe)22a4,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,fe,ppm,197.0,(fe)d49a,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+almond hulls,cu,ppm,4.9,(15)a6f9,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond hulls,cu,ppm,4.6,(15)1a20,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+almond shells,cu,ppm,7.8,(13)372c,pass,,,,2026-07-08 03:54:14.293858,humorous,2026-07-08 03:54:14.293858
+walnut shells,cu,ppm,4.4,(82)8270,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+grape pomace,cu,ppm,9.4,(1b)ed0c,pass,,,,2026-07-08 03:54:14.293858,ebony,2026-07-08 03:54:14.293858
+walnut hulls,cu,ppm,19.5,(e7)211f,pass,,,,2026-07-08 03:54:14.293858,energetic,2026-07-08 03:54:14.293858
+sweet potato culls,cu,ppm,7.2,(1a)74ef,pass,,,,2026-07-08 03:54:14.293858,tackle,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,16.8,(69)2eb3,pass,,,,2026-07-08 03:54:14.293858,pinecrest,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,8.1,(26)a2ec,pass,,,,2026-07-08 03:54:14.293858,oakleaf,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,6.7,(6d)d8e9,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+tomato pomace,cu,ppm,6.9,(6d)3a3a,pass,,,,2026-07-08 03:54:14.293858,riverstone,2026-07-08 03:54:14.293858
+spent oak chips,cu,ppm,1.6,(c5)00fd,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,cu,ppm,15.5,(fe)674a,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858
+grape pomace,cu,ppm,14.0,(fe)b7c9,pass,,,,2026-07-08 03:54:14.293858,maplewood,2026-07-08 03:54:14.293858

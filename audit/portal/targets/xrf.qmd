@@ -1,0 +1,646 @@
+---
+title: "Audit Target: xrf"
+format:
+  html:
+    page-layout: full
+---
+
+::: {.panel-tabset}
+
+## Executive Summary
+
+The audit of the XRF (X-Ray Fluorescence) dataset, encompassing 2,431 records across 24 agricultural biomass resources, reveals a significant volume of statistical anomalies, particularly within almond-derived residues. While the data shows 100% completeness for core fields like 'observed_value' and 'analyst_email', the presence of over 600 flagged observations—mostly at 'LOW' severity but including critical 'MEDIUM' flags—suggests systematic variability in elemental concentration reporting. Notably, almond hulls and cotton stem mix exhibit the highest frequency of anomalous readings for both heavy metals (Zn, Th, U) and macronutrients (Si, K, S).
+
+Statistically, the dataset is characterized by extreme skewness, with 'observed_value' ranging from 0 to 161,000. The prevalence of 0.0 values (8.1% of the dataset) likely represents 'Below Detection Limit' (BDL) results, though their high z-scores in specific parameters like Manganese (Mn) suggest these zeros are statistically significant departures from the expected mean. Variations in data patterns between providers 'tiny' and 'capstan' indicate potential differences in instrument calibration or sample preparation protocols. The total absence of data in the 'note' and 'analyst_name' fields, while partially mitigated by the presence of 'analyst_email', limits the ability to contextualize these quantitative outliers with qualitative experimental observations.
+
+## Evidently Profile
+
+<iframe src="../evidently/xrf.html" width="100%" height="800px" frameborder="0"></iframe>
+
+## Flagged Observations
+
+| Record ID | Resource | Provider | Sample Date | Parameter | Value | Z-Score | Severity |
+|-----------|----------|----------|-------------|-----------|-------|---------|----------|
+| (03)0161 | almond hulls | tiny | — | la | 0.0000 | 2.32 | LOW |
+| (03)0663 | almond hulls | tiny | — | rb | 7.0000 | 1.45 | LOW |
+| (03)1c00 | almond hulls | tiny | — | zn | 25.0000 | 3.61 | MEDIUM |
+| (03)1dc2 | almond hulls | tiny | — | mo | 10.0000 | 2.00 | LOW |
+| (03)2448 | almond hulls | tiny | — | th | 76.0000 | 3.40 | MEDIUM |
+| (03)3e42 | almond hulls | tiny | — | s | 359.0000 | 1.17 | LOW |
+| (03)645d | almond hulls | tiny | — | ca | 3850.0000 | 1.24 | LOW |
+| (03)663c | almond hulls | tiny | — | si | 17900.0000 | 3.22 | MEDIUM |
+| (03)68d1 | almond hulls | tiny | — | u | 21.0000 | 3.02 | MEDIUM |
+| (03)6a5b | almond hulls | tiny | — | fe | 527.0000 | 1.76 | LOW |
+| (03)79f8 | almond hulls | tiny | — | ti | 344.0000 | 2.28 | LOW |
+| (03)82cf | almond hulls | tiny | — | p | 529.0000 | 2.06 | LOW |
+| (03)bbdf | almond hulls | tiny | — | k | 39100.0000 | 1.40 | LOW |
+| (03)d09a | almond hulls | tiny | — | nd | 0.0000 | 1.44 | LOW |
+| (03)da2a | almond hulls | tiny | — | mn | 0.0000 | 3.32 | MEDIUM |
+| (03)ea08 | almond hulls | tiny | — | ce | 42.0000 | 1.05 | LOW |
+| (04)0a4a | almond shells | capstan | — | cu | 9.0000 | 1.33 | LOW |
+| (04)0e4d | almond shells | capstan | — | pr | 147.0000 | 1.45 | LOW |
+| (04)661b | almond shells | capstan | — | mn | 31.0000 | 1.18 | LOW |
+| (04)9261 | almond shells | capstan | — | ce | 78.0000 | 1.27 | LOW |
+| (04)c6e9 | almond shells | capstan | — | mn | 51.0000 | 1.67 | LOW |
+| (04)f326 | almond shells | capstan | — | mn | 30.0000 | 1.32 | LOW |
+| (15)0c45 | walnut shells | cutaway | — | sr | 17.0000 | 1.22 | LOW |
+| (15)290b | walnut shells | cutaway | — | cu | 10.0000 | 1.05 | LOW |
+| (15)7432 | walnut shells | cutaway | — | s | 291.0000 | 1.46 | LOW |
+| (15)cc90 | walnut shells | cutaway | — | sr | 19.0000 | 1.22 | LOW |
+| (24)3474 | grape pomace | boatswain | — | la | 3030.0000 | 2.27 | LOW |
+| (24)4337 | grape pomace | boatswain | — | mn | 54.0000 | 1.19 | LOW |
+| (24)55e4 | grape pomace | boatswain | — | u | 12.0000 | 1.22 | LOW |
+| (24)5cba | grape pomace | boatswain | — | zn | 26.0000 | 1.36 | LOW |
+| (24)7190 | grape pomace | boatswain | — | k | 20300.0000 | 1.15 | LOW |
+| (24)80af | grape pomace | boatswain | — | fe | 380.0000 | 1.03 | LOW |
+| (24)95d4 | grape pomace | boatswain | — | th | 36.0000 | 1.23 | LOW |
+| (24)9d04 | grape pomace | boatswain | — | fe | 387.0000 | 1.12 | LOW |
+| (24)b5ac | grape pomace | boatswain | — | si | 3270.0000 | 1.38 | LOW |
+| (24)bc68 | grape pomace | boatswain | — | rb | 3.0000 | 1.07 | LOW |
+| (24)bea0 | grape pomace | boatswain | — | k | 20300.0000 | 1.15 | LOW |
+| (24)c423 | grape pomace | boatswain | — | si | 3220.0000 | 1.32 | LOW |
+| (24)c76f | grape pomace | boatswain | — | ce | 3990.0000 | 2.27 | LOW |
+| (24)c777 | grape pomace | boatswain | — | ba | 2090.0000 | 3.33 | MEDIUM |
+| (24)c93f | grape pomace | boatswain | — | fe | 389.0000 | 1.15 | LOW |
+| (24)e688 | grape pomace | boatswain | — | rb | 3.0000 | 1.07 | LOW |
+| (24)ed40 | grape pomace | boatswain | — | si | 3290.0000 | 1.40 | LOW |
+| (24)f8ff | grape pomace | boatswain | — | rb | 3.0000 | 1.07 | LOW |
+| (27)0312 | almond hulls | tiny | — | fe | 463.0000 | 1.10 | LOW |
+| (27)1859 | almond hulls | tiny | — | fe | 500.0000 | 1.48 | LOW |
+| (27)65d2 | almond hulls | tiny | — | fe | 462.0000 | 1.09 | LOW |
+| (27)8cf6 | almond hulls | tiny | — | ce | 65.0000 | 1.15 | LOW |
+| (27)9af4 | almond hulls | tiny | — | s | 214.0000 | 1.14 | LOW |
+| (27)edc1 | almond hulls | tiny | — | rb | 8.0000 | 1.29 | LOW |
+| (29)0b5a | walnut shells | energetic | — | al | 0.0000 | 1.13 | LOW |
+| (29)1def | walnut shells | energetic | — | fe | 41.0000 | 1.49 | LOW |
+| (29)4607 | walnut shells | energetic | — | ca | 8200.0000 | 1.50 | LOW |
+| (29)4b23 | walnut shells | energetic | — | k | 12700.0000 | 1.48 | LOW |
+| (29)55e0 | walnut shells | energetic | — | ba | 36.0000 | 1.19 | LOW |
+| (29)5c68 | walnut shells | energetic | — | rb | 0.0000 | 1.47 | LOW |
+| (29)6322 | walnut shells | energetic | — | cu | 15.0000 | 1.05 | LOW |
+| (29)7a00 | walnut shells | energetic | — | p | 705.0000 | 1.49 | LOW |
+| (29)aa06 | walnut shells | energetic | — | ce | 0.0000 | 1.48 | LOW |
+| (29)c080 | walnut shells | energetic | — | zn | 21.0000 | 1.48 | LOW |
+| (29)c43e | walnut shells | energetic | — | si | 400.0000 | 1.47 | LOW |
+| (29)e246 | walnut shells | energetic | — | pr | 0.0000 | 1.15 | LOW |
+| (29)fbc4 | walnut shells | energetic | — | u | 22.0000 | 1.45 | LOW |
+| (29)fdf5 | walnut shells | energetic | — | th | 72.0000 | 1.47 | LOW |
+| (29)fe09 | walnut shells | energetic | — | ti | 0.0000 | 1.15 | LOW |
+| (42)00bd | rice straw | possessive | — | th | 63.0000 | 1.46 | LOW |
+| (42)2aba | rice straw | possessive | — | ti | 559.0000 | 1.14 | LOW |
+| (42)2f18 | rice straw | possessive | — | mn | 920.0000 | 1.03 | LOW |
+| (42)33af | rice straw | possessive | — | al | 8930.0000 | 1.05 | LOW |
+| (42)33f4 | rice straw | possessive | — | mg | 9700.0000 | 1.30 | LOW |
+| (42)5074 | rice straw | possessive | — | zn | 66.0000 | 1.07 | LOW |
+| (42)646b | rice straw | possessive | — | si | 91600.0000 | 1.72 | LOW |
+| (42)835a | rice straw | possessive | — | u | 23.0000 | 1.04 | LOW |
+| (42)a467 | rice straw | possessive | — | cu | 24.0000 | 1.22 | LOW |
+| (42)ae01 | rice straw | possessive | — | as | 8.0000 | 1.15 | LOW |
+| (42)b359 | rice straw | possessive | — | ca | 10500.0000 | 1.15 | LOW |
+| (42)d223 | rice straw | possessive | — | cu | 23.0000 | 1.07 | LOW |
+| (42)d6ff | rice straw | possessive | — | p | 2560.0000 | 1.31 | LOW |
+| (42)e4b6 | rice straw | possessive | — | sr | 34.0000 | 1.32 | LOW |
+| (42)f66d | rice straw | possessive | — | th | 72.0000 | 1.26 | LOW |
+| (48)0028 | spent oak chips | rigging | — | mn | 20.0000 | 1.10 | LOW |
+| (48)098e | spent oak chips | rigging | — | ba | 25.0000 | 1.35 | LOW |
+| (48)118d | spent oak chips | rigging | — | k | 32100.0000 | 1.91 | LOW |
+| (48)1a28 | spent oak chips | rigging | — | mo | 4.0000 | 1.50 | LOW |
+| (48)1f4d | spent oak chips | rigging | — | rb | 18.0000 | 1.30 | LOW |
+| (48)435d | spent oak chips | rigging | — | ti | 252.0000 | 1.15 | LOW |
+| (48)5469 | spent oak chips | rigging | — | s | 1660.0000 | 1.67 | LOW |
+| (48)61cf | spent oak chips | rigging | — | k | 32000.0000 | 1.90 | LOW |
+| (48)6513 | spent oak chips | rigging | — | u | 16.0000 | 1.14 | LOW |
+| (48)690f | spent oak chips | rigging | — | th | 50.0000 | 1.87 | LOW |
+| (48)9155 | spent oak chips | rigging | — | u | 15.0000 | 1.55 | LOW |
+| (48)b713 | spent oak chips | rigging | — | s | 1620.0000 | 1.82 | LOW |
+| (48)bd1e | spent oak chips | rigging | — | rb | 20.0000 | 1.73 | LOW |
+| (48)c60a | spent oak chips | rigging | — | ca | 1720.0000 | 1.79 | LOW |
+| (48)d3ca | spent oak chips | rigging | — | ca | 1730.0000 | 1.83 | LOW |
+| (48)de20 | spent oak chips | rigging | — | si | 396.0000 | 1.31 | LOW |
+| (48)e5b8 | spent oak chips | rigging | — | s | 1790.0000 | 1.22 | LOW |
+| (48)e8ea | spent oak chips | rigging | — | ce | 44.0000 | 1.24 | LOW |
+| (48)f8a1 | spent oak chips | rigging | — | rb | 20.0000 | 1.73 | LOW |
+| (4c)0781 | almond branches | humorous | — | s | 798.0000 | 1.02 | LOW |
+| (4c)18d2 | almond branches | humorous | — | ca | 14800.0000 | 1.24 | LOW |
+| (4c)3b8d | almond branches | humorous | — | pr | 90.0000 | 1.22 | LOW |
+| (4c)44cd | almond branches | humorous | — | ba | 44.0000 | 1.01 | LOW |
+| (4c)8d6e | almond branches | humorous | — | p | 1130.0000 | 1.02 | LOW |
+| (4c)8df5 | almond branches | humorous | — | s | 799.0000 | 1.03 | LOW |
+| (4c)9a91 | almond branches | humorous | — | sr | 102.0000 | 1.06 | LOW |
+| (4c)a8c6 | almond branches | humorous | — | ca | 14400.0000 | 1.08 | LOW |
+| (4c)c1f0 | almond branches | humorous | — | sr | 102.0000 | 1.06 | LOW |
+| (60)0836 | almond shells | tiny | — | ba | 0.0000 | 1.75 | LOW |
+| (60)0bbc | almond shells | tiny | — | ce | 0.0000 | 1.82 | LOW |
+| (60)195f | almond shells | tiny | — | si | 13500.0000 | 1.64 | LOW |
+| (60)34dc | almond shells | tiny | — | la | 0.0000 | 1.45 | LOW |
+| (60)472d | almond shells | tiny | — | fe | 941.0000 | 2.25 | LOW |
+| (60)48a6 | almond shells | tiny | — | al | 4760.0000 | 1.06 | LOW |
+| (60)802d | almond shells | tiny | — | ca | 7530.0000 | 3.02 | MEDIUM |
+| (60)8f24 | almond shells | tiny | — | rb | 0.0000 | 2.41 | LOW |
+| (60)baba | almond shells | tiny | — | th | 85.0000 | 2.91 | LOW |
+| (60)be99 | almond shells | tiny | — | p | 339.0000 | 1.66 | LOW |
+| (60)d32a | almond shells | tiny | — | pb | 0.0000 | 1.39 | LOW |
+| (60)d682 | almond shells | tiny | — | ti | 421.0000 | 1.74 | LOW |
+| (60)ec56 | almond shells | tiny | — | mo | 0.0000 | 1.10 | LOW |
+| (60)f45e | almond shells | tiny | — | pr | 0.0000 | 1.78 | LOW |
+| (60)f538 | almond shells | tiny | — | u | 21.0000 | 1.99 | LOW |
+| (60)f714 | almond shells | tiny | — | mn | 47.0000 | 1.10 | LOW |
+| (60)fa52 | almond shells | tiny | — | sr | 48.0000 | 2.12 | LOW |
+| (62)01e1 | wheat straw | possessive | — | p | 3260.0000 | 1.12 | LOW |
+| (62)038f | wheat straw | possessive | — | k | 45000.0000 | 1.09 | LOW |
+| (62)224b | cotton stem mix | schooner | — | mn | 43.0000 | 1.41 | LOW |
+| (62)24d1 | cotton stem mix | schooner | — | mg | 11900.0000 | 1.90 | LOW |
+| (62)2a62 | cotton stem mix | schooner | — | sr | 61.0000 | 1.14 | LOW |
+| (62)2b52 | cotton stem mix | schooner | — | k | 19900.0000 | 1.08 | LOW |
+| (62)3d32 | wheat straw | possessive | — | ba | 20.0000 | 1.63 | LOW |
+| (62)442b | wheat straw | possessive | — | cu | 16.0000 | 1.77 | LOW |
+| (62)4583 | wheat straw | possessive | — | ba | 28.0000 | 1.08 | LOW |
+| (62)4b7e | wheat straw | possessive | — | si | 95500.0000 | 1.09 | LOW |
+| (62)506b | cotton stem mix | schooner | — | sr | 63.0000 | 1.04 | LOW |
+| (62)5479 | wheat straw | possessive | — | mn | 68.0000 | 1.65 | LOW |
+| (62)61ad | wheat straw | possessive | — | mo | 7.0000 | 1.26 | LOW |
+| (62)6a74 | wheat straw | possessive | — | sr | 17.0000 | 1.38 | LOW |
+| (62)6c63 | wheat straw | possessive | — | pb | 4.0000 | 1.57 | LOW |
+| (62)7b09 | wheat straw | possessive | — | s | 2610.0000 | 1.49 | LOW |
+| (62)82c1 | wheat straw | possessive | — | mg | 7570.0000 | 1.15 | LOW |
+| (62)8f0d | cotton stem mix | schooner | — | th | 68.0000 | 1.03 | LOW |
+| (62)a275 | cotton stem mix | schooner | — | k | 20000.0000 | 1.07 | LOW |
+| (62)a901 | wheat straw | possessive | — | ca | 4950.0000 | 1.02 | LOW |
+| (62)abbc | wheat straw | possessive | — | th | 82.0000 | 1.48 | LOW |
+| (62)b4b7 | wheat straw | possessive | — | u | 24.0000 | 1.26 | LOW |
+| (62)b802 | cotton stem mix | schooner | — | k | 19900.0000 | 1.08 | LOW |
+| (62)b86b | cotton stem mix | schooner | — | cu | 13.0000 | 1.02 | LOW |
+| (62)b981 | cotton stem mix | schooner | — | sr | 60.0000 | 1.19 | LOW |
+| (62)bec1 | wheat straw | possessive | — | ca | 4900.0000 | 1.11 | LOW |
+| (62)c0ce | wheat straw | possessive | — | u | 20.0000 | 1.06 | LOW |
+| (62)cd96 | cotton stem mix | schooner | — | mn | 49.0000 | 1.05 | LOW |
+| (62)d2d8 | wheat straw | possessive | — | zn | 16.0000 | 1.45 | LOW |
+| (62)d9c3 | cotton stem mix | schooner | — | ba | 18.0000 | 1.19 | LOW |
+| (62)e4d2 | cotton stem mix | schooner | — | ti | 226.0000 | 1.03 | LOW |
+| (62)fa19 | wheat straw | possessive | — | u | 20.0000 | 1.06 | LOW |
+| (62)fdc0 | cotton stem mix | schooner | — | u | 24.0000 | 1.74 | LOW |
+| (65)0179 | spent oak chips | rigging | — | u | 22.0000 | 1.28 | LOW |
+| (65)0762 | spent oak chips | rigging | — | s | 2420.0000 | 1.01 | LOW |
+| (65)15c5 | spent oak chips | rigging | — | zn | 16.0000 | 1.77 | LOW |
+| (65)1632 | grape pomace | rigging | — | si | 1200.0000 | 1.08 | LOW |
+| (65)31f0 | spent oak chips | rigging | — | la | 44.0000 | 1.22 | LOW |
+| (65)3505 | spent oak chips | rigging | — | cu | 6.0000 | 1.62 | LOW |
+| (65)40f0 | grape pomace | rigging | — | p | 3410.0000 | 1.20 | LOW |
+| (65)4199 | spent oak chips | rigging | — | sr | 13.0000 | 1.58 | LOW |
+| (65)53d6 | grape pomace | rigging | — | mo | 7.0000 | 1.18 | LOW |
+| (65)5c0e | grape pomace | rigging | — | p | 3460.0000 | 1.33 | LOW |
+| (65)5cbf | grape pomace | rigging | — | p | 3420.0000 | 1.23 | LOW |
+| (65)5d26 | spent oak chips | rigging | — | ba | 26.0000 | 1.75 | LOW |
+| (65)6730 | grape pomace | rigging | — | ca | 7320.0000 | 1.14 | LOW |
+| (65)682e | spent oak chips | rigging | — | zn | 15.0000 | 1.42 | LOW |
+| (65)6963 | grape pomace | rigging | — | pr | 123.0000 | 1.28 | LOW |
+| (65)6af2 | spent oak chips | rigging | — | si | 1100.0000 | 1.51 | LOW |
+| (65)70c1 | grape pomace | rigging | — | ca | 7300.0000 | 1.13 | LOW |
+| (65)79e8 | spent oak chips | rigging | — | si | 1040.0000 | 1.27 | LOW |
+| (65)7c35 | spent oak chips | rigging | — | rb | 7.0000 | 1.08 | LOW |
+| (65)8db0 | spent oak chips | rigging | — | fe | 272.0000 | 1.52 | LOW |
+| (65)905d | spent oak chips | rigging | — | fe | 259.0000 | 1.36 | LOW |
+| (65)9b52 | grape pomace | rigging | — | sr | 45.0000 | 1.10 | LOW |
+| (65)a509 | grape pomace | rigging | — | th | 35.0000 | 1.44 | LOW |
+| (65)b1e9 | grape pomace | rigging | — | th | 35.0000 | 1.44 | LOW |
+| (65)b4d1 | spent oak chips | rigging | — | p | 262.0000 | 1.50 | LOW |
+| (65)b906 | grape pomace | rigging | — | sr | 46.0000 | 1.19 | LOW |
+| (65)bbd4 | spent oak chips | rigging | — | sr | 12.0000 | 1.32 | LOW |
+| (65)bd1d | spent oak chips | rigging | — | fe | 296.0000 | 1.81 | LOW |
+| (65)c0c2 | grape pomace | rigging | — | si | 1180.0000 | 1.11 | LOW |
+| (65)cbd6 | grape pomace | rigging | — | zn | 19.0000 | 1.44 | LOW |
+| (65)ce2a | grape pomace | rigging | — | sr | 46.0000 | 1.19 | LOW |
+| (65)d5b4 | spent oak chips | rigging | — | p | 258.0000 | 1.55 | LOW |
+| (65)d89b | grape pomace | rigging | — | mn | 34.0000 | 1.15 | LOW |
+| (65)dbce | spent oak chips | rigging | — | p | 253.0000 | 1.61 | LOW |
+| (65)efe3 | grape pomace | rigging | — | u | 12.0000 | 1.22 | LOW |
+| (65)f13a | grape pomace | rigging | — | si | 1150.0000 | 1.14 | LOW |
+| (65)fb9f | spent oak chips | rigging | — | sr | 14.0000 | 1.84 | LOW |
+| (65)fea4 | spent oak chips | rigging | — | si | 1050.0000 | 1.31 | LOW |
+| (71)1d78 | almond shells | humorous | — | mn | 29.0000 | 1.46 | LOW |
+| (71)1f61 | almond shells | humorous | — | cu | 8.0000 | 1.84 | LOW |
+| (71)461c | almond shells | humorous | — | zn | 10.0000 | 1.12 | LOW |
+| (71)4860 | almond shells | humorous | — | s | 320.0000 | 1.64 | LOW |
+| (71)5730 | almond shells | humorous | — | u | 12.0000 | 1.15 | LOW |
+| (71)6626 | almond shells | humorous | — | zn | 9.0000 | 1.31 | LOW |
+| (71)7f8d | almond shells | humorous | — | s | 335.0000 | 1.49 | LOW |
+| (71)918f | almond shells | humorous | — | fe | 157.0000 | 1.06 | LOW |
+| (71)a1b0 | almond shells | humorous | — | u | 12.0000 | 1.15 | LOW |
+| (71)ac33 | almond shells | humorous | — | sr | 16.0000 | 1.01 | LOW |
+| (71)b8a7 | almond shells | humorous | — | fe | 149.0000 | 1.10 | LOW |
+| (71)bbb1 | almond shells | humorous | — | cu | 9.0000 | 1.33 | LOW |
+| (71)c775 | almond shells | humorous | — | s | 337.0000 | 1.47 | LOW |
+| (71)dd2f | almond shells | humorous | — | u | 11.0000 | 1.49 | LOW |
+| (78)08ef | peach pomace | rushes | — | rb | 41.0000 | 1.15 | LOW |
+| (78)0f6e | peach pomace | rushes | — | u | 11.0000 | 1.15 | LOW |
+| (78)1254 | peach pomace | rushes | — | cu | 23.0000 | 1.15 | LOW |
+| (78)161a | peach pomace | rushes | — | s | 1930.0000 | 1.07 | LOW |
+| (78)16ed | peach pomace | rushes | — | k | 51000.0000 | 1.15 | LOW |
+| (78)2aac | peach pomace | rushes | — | ca | 3350.0000 | 1.15 | LOW |
+| (78)4743 | peach pomace | rushes | — | zn | 44.0000 | 1.13 | LOW |
+| (78)494a | peach pomace | rushes | — | al | 1340.0000 | 1.15 | LOW |
+| (78)5491 | peach pomace | rushes | — | si | 1740.0000 | 1.15 | LOW |
+| (78)5699 | peach pomace | rushes | — | p | 5110.0000 | 1.15 | LOW |
+| (78)7dd7 | peach pomace | rushes | — | mo | 6.0000 | 1.15 | LOW |
+| (78)9049 | peach pomace | rushes | — | sr | 19.0000 | 1.15 | LOW |
+| (78)a804 | peach pomace | rushes | — | fe | 306.0000 | 1.09 | LOW |
+| (78)b9df | peach pomace | rushes | — | th | 44.0000 | 1.03 | LOW |
+| (78)bc48 | peach pomace | rushes | — | mn | 75.0000 | 1.14 | LOW |
+| (7e)12b9 | almond branches | capstan | — | p | 448.0000 | 1.08 | LOW |
+| (7e)39c7 | almond branches | capstan | — | sr | 83.0000 | 1.04 | LOW |
+| (7e)53b3 | almond branches | capstan | — | sr | 83.0000 | 1.04 | LOW |
+| (7e)5fcb | almond branches | capstan | — | zn | 1130.0000 | 1.07 | LOW |
+| (7e)6736 | almond branches | capstan | — | u | 18.0000 | 1.15 | LOW |
+| (7e)71cd | almond branches | capstan | — | zn | 1110.0000 | 1.03 | LOW |
+| (7e)7bd2 | almond branches | capstan | — | s | 620.0000 | 1.26 | LOW |
+| (7e)8e65 | almond branches | capstan | — | k | 3240.0000 | 2.16 | LOW |
+| (7e)9e12 | almond branches | capstan | — | mn | 77.0000 | 1.15 | LOW |
+| (7e)a14d | almond branches | capstan | — | u | 18.0000 | 1.15 | LOW |
+| (7e)d47e | almond branches | capstan | — | zn | 1150.0000 | 1.10 | LOW |
+| (82)0268 | grape pomace | boatswain | — | sr | 14.0000 | 1.87 | LOW |
+| (82)09bb | grape pomace | boatswain | — | ca | 4300.0000 | 1.60 | LOW |
+| (82)0a81 | grape pomace | boatswain | — | zn | 19.0000 | 1.44 | LOW |
+| (82)0fe9 | grape pomace | boatswain | — | p | 2510.0000 | 1.04 | LOW |
+| (82)20ae | grape pomace | boatswain | — | s | 2060.0000 | 1.55 | LOW |
+| (82)2348 | grape pomace | boatswain | — | s | 1910.0000 | 2.09 | LOW |
+| (82)4450 | grape pomace | boatswain | — | th | 47.0000 | 1.10 | LOW |
+| (82)4507 | grape pomace | boatswain | — | th | 47.0000 | 1.10 | LOW |
+| (82)58a1 | grape pomace | boatswain | — | mn | 35.0000 | 1.04 | LOW |
+| (82)68e4 | grape pomace | boatswain | — | zn | 20.0000 | 1.04 | LOW |
+| (82)6a18 | grape pomace | boatswain | — | sr | 15.0000 | 1.77 | LOW |
+| (82)70b4 | grape pomace | boatswain | — | cu | 16.0000 | 1.13 | LOW |
+| (82)8397 | grape pomace | boatswain | — | s | 2120.0000 | 1.34 | LOW |
+| (82)8eb7 | grape pomace | boatswain | — | ca | 4200.0000 | 1.69 | LOW |
+| (82)928f | grape pomace | boatswain | — | mn | 32.0000 | 1.39 | LOW |
+| (82)9420 | grape pomace | boatswain | — | p | 2410.0000 | 1.28 | LOW |
+| (82)953e | grape pomace | boatswain | — | cu | 15.0000 | 1.43 | LOW |
+| (82)bcc5 | grape pomace | boatswain | — | zn | 19.0000 | 1.44 | LOW |
+| (82)c77d | grape pomace | boatswain | — | p | 2420.0000 | 1.26 | LOW |
+| (82)cb28 | grape pomace | boatswain | — | mo | 3.0000 | 1.36 | LOW |
+| (82)de29 | grape pomace | boatswain | — | sr | 17.0000 | 1.58 | LOW |
+| (82)f3b0 | grape pomace | boatswain | — | mn | 35.0000 | 1.04 | LOW |
+| (86)0d90 | almond hulls | humorous | — | k | 37600.0000 | 1.09 | LOW |
+| (86)4418 | almond hulls | humorous | — | u | 10.0000 | 1.16 | LOW |
+| (86)8027 | almond hulls | humorous | — | u | 10.0000 | 1.16 | LOW |
+| (86)d082 | almond hulls | humorous | — | k | 37400.0000 | 1.05 | LOW |
+| (86)ea8b | almond hulls | humorous | — | pr | 173.0000 | 1.72 | LOW |
+| (86)ed15 | almond hulls | humorous | — | k | 37200.0000 | 1.01 | LOW |
+| (87)1c44 | grape stem | rigging | — | u | 10.0000 | 1.09 | LOW |
+| (87)1e71 | grape stem | rigging | — | mg | 6170.0000 | 1.11 | LOW |
+| (87)2fc0 | grape stem | rigging | — | cu | 24.0000 | 1.15 | LOW |
+| (87)3610 | grape stem | rigging | — | si | 1200.0000 | 1.12 | LOW |
+| (87)3bed | grape stem | rigging | — | ba | 48.0000 | 1.12 | LOW |
+| (87)3d63 | grape stem | rigging | — | k | 18500.0000 | 1.15 | LOW |
+| (87)5187 | grape stem | rigging | — | s | 940.0000 | 1.15 | LOW |
+| (87)799b | grape stem | rigging | — | sr | 69.0000 | 1.09 | LOW |
+| (87)a292 | grape stem | rigging | — | mn | 105.0000 | 1.15 | LOW |
+| (87)c584 | grape stem | rigging | — | ca | 7770.0000 | 1.15 | LOW |
+| (87)d7e5 | grape stem | rigging | — | rb | 33.0000 | 1.15 | LOW |
+| (87)db78 | grape stem | rigging | — | fe | 81.0000 | 1.07 | LOW |
+| (87)f6d3 | grape stem | rigging | — | th | 36.0000 | 1.15 | LOW |
+| (8f)08fc | peach screening waste | rushes | — | u | 19.0000 | 1.13 | LOW |
+| (8f)329a | peach screening waste | rushes | — | mo | 5.0000 | 1.09 | LOW |
+| (8f)3ba3 | peach screening waste | rushes | — | ba | 28.0000 | 1.12 | LOW |
+| (8f)49ee | peach screening waste | rushes | — | cu | 50.0000 | 1.15 | LOW |
+| (8f)5993 | peach screening waste | rushes | — | rb | 11.0000 | 1.15 | LOW |
+| (8f)69f7 | peach screening waste | rushes | — | p | 3760.0000 | 1.15 | LOW |
+| (8f)7d32 | peach screening waste | rushes | — | al | 3220.0000 | 1.15 | LOW |
+| (8f)984d | peach screening waste | rushes | — | ca | 5380.0000 | 1.07 | LOW |
+| (8f)9f30 | peach screening waste | rushes | — | mn | 99.0000 | 1.11 | LOW |
+| (8f)a6d1 | peach screening waste | rushes | — | th | 54.0000 | 1.15 | LOW |
+| (8f)d2f3 | peach screening waste | rushes | — | k | 60800.0000 | 1.14 | LOW |
+| (8f)ea5f | peach screening waste | rushes | — | s | 2420.0000 | 1.13 | LOW |
+| (8f)f7a9 | peach screening waste | rushes | — | fe | 2770.0000 | 1.15 | LOW |
+| (8f)fcda | peach screening waste | rushes | — | zn | 62.0000 | 1.09 | LOW |
+| (8f)fdda | peach screening waste | rushes | — | si | 2100.0000 | 1.15 | LOW |
+| (91)0593 | cotton stem mix | schooner | — | al | 1890.0000 | 1.21 | LOW |
+| (91)0d4e | cotton stem mix | schooner | — | p | 2230.0000 | 1.34 | LOW |
+| (91)1941 | cotton stem mix | schooner | — | rb | 15.0000 | 1.44 | LOW |
+| (91)24e4 | cotton stem mix | schooner | — | s | 5620.0000 | 1.90 | LOW |
+| (91)5d86 | cotton stem mix | schooner | — | rb | 16.0000 | 1.12 | LOW |
+| (91)6c24 | cotton stem mix | schooner | — | ca | 24100.0000 | 1.60 | LOW |
+| (91)7a37 | cotton stem mix | schooner | — | fe | 860.0000 | 1.15 | LOW |
+| (91)98bb | cotton stem mix | schooner | — | p | 2190.0000 | 1.24 | LOW |
+| (91)a060 | cotton stem mix | schooner | — | p | 2180.0000 | 1.21 | LOW |
+| (91)a4bb | cotton stem mix | schooner | — | al | 2060.0000 | 1.02 | LOW |
+| (91)b448 | cotton stem mix | schooner | — | s | 5580.0000 | 1.82 | LOW |
+| (91)b73b | cotton stem mix | schooner | — | fe | 867.0000 | 1.14 | LOW |
+| (91)cfd4 | cotton stem mix | schooner | — | rb | 16.0000 | 1.12 | LOW |
+| (91)e8df | cotton stem mix | schooner | — | zn | 22.0000 | 1.07 | LOW |
+| (91)e940 | cotton stem mix | schooner | — | cu | 20.0000 | 2.27 | LOW |
+| (91)e95b | cotton stem mix | schooner | — | fe | 868.0000 | 1.14 | LOW |
+| (91)eb41 | cotton stem mix | schooner | — | u | 17.0000 | 2.01 | LOW |
+| (91)efc0 | cotton stem mix | schooner | — | ca | 24300.0000 | 1.67 | LOW |
+| (91)f07e | cotton stem mix | schooner | — | mg | 6880.0000 | 1.26 | LOW |
+| (96)0792 | rice hulls | sextant | — | sr | 5.0000 | 1.15 | LOW |
+| (96)56ef | rice hulls | sextant | — | fe | 160.0000 | 1.02 | LOW |
+| (96)5f1d | rice hulls | sextant | — | k | 8210.0000 | 1.15 | LOW |
+| (96)8280 | rice hulls | sextant | — | cu | 6.0000 | 1.06 | LOW |
+| (96)98cb | rice hulls | sextant | — | mn | 382.0000 | 1.13 | LOW |
+| (96)bae6 | rice hulls | sextant | — | si | 152000.0000 | 1.15 | LOW |
+| (96)ccf6 | rice hulls | sextant | — | p | 1060.0000 | 1.15 | LOW |
+| (96)e05d | rice hulls | sextant | — | ca | 1210.0000 | 1.14 | LOW |
+| (96)f1e5 | rice hulls | sextant | — | s | 651.0000 | 1.07 | LOW |
+| (99)0a89 | almond shells | vibrant | — | la | 0.0000 | 1.45 | LOW |
+| (99)1c59 | almond shells | vibrant | — | si | 19200.0000 | 2.80 | LOW |
+| (99)419d | almond shells | vibrant | — | ba | 0.0000 | 1.75 | LOW |
+| (99)4e1c | almond shells | vibrant | — | mo | 0.0000 | 1.10 | LOW |
+| (99)5025 | almond shells | vibrant | — | ti | 382.0000 | 1.35 | LOW |
+| (99)7d3d | almond shells | vibrant | — | cu | 14.0000 | 1.19 | LOW |
+| (99)9b2d | almond shells | vibrant | — | zn | 28.0000 | 2.28 | LOW |
+| (99)a550 | almond shells | vibrant | — | al | 6290.0000 | 1.78 | LOW |
+| (99)b2d7 | almond shells | vibrant | — | k | 19500.0000 | 1.07 | LOW |
+| (99)c0f7 | almond shells | vibrant | — | th | 64.0000 | 1.14 | LOW |
+| (99)d794 | almond shells | vibrant | — | fe | 822.0000 | 1.74 | LOW |
+| (99)e65f | almond shells | vibrant | — | u | 20.0000 | 1.64 | LOW |
+| (a0)0699 | olive stems / leaves | excellent | — | k | 13900.0000 | 1.15 | LOW |
+| (a0)30dd | olive stems / leaves | excellent | — | cu | 87.0000 | 1.12 | LOW |
+| (a0)33b6 | olive stems / leaves | excellent | — | p | 1560.0000 | 1.15 | LOW |
+| (a0)5627 | olive stems / leaves | excellent | — | ce | 76.0000 | 1.15 | LOW |
+| (a0)5a5f | olive stems / leaves | excellent | — | fe | 208.0000 | 1.15 | LOW |
+| (a0)6f72 | olive stems / leaves | excellent | — | ca | 6490.0000 | 1.15 | LOW |
+| (a0)7843 | olive stems / leaves | excellent | — | zn | 29.0000 | 1.06 | LOW |
+| (a0)8087 | olive stems / leaves | excellent | — | ti | 162.0000 | 1.09 | LOW |
+| (a0)85c6 | olive stems / leaves | excellent | — | si | 1850.0000 | 1.15 | LOW |
+| (a0)904b | olive stems / leaves | excellent | — | u | 14.0000 | 1.15 | LOW |
+| (a0)a1f6 | olive stems / leaves | excellent | — | th | 39.0000 | 1.15 | LOW |
+| (a0)ad97 | olive stems / leaves | excellent | — | sr | 33.0000 | 1.15 | LOW |
+| (a0)ae85 | olive stems / leaves | excellent | — | s | 1120.0000 | 1.15 | LOW |
+| (a0)c9e0 | olive stems / leaves | excellent | — | mg | 3610.0000 | 1.07 | LOW |
+| (a0)e544 | olive stems / leaves | excellent | — | mn | 21.0000 | 1.13 | LOW |
+| (a2)002d | almond shells | tiny | — | cu | 14.0000 | 1.19 | LOW |
+| (a2)1bf3 | almond shells | tiny | — | k | 40600.0000 | 1.41 | LOW |
+| (a2)1e20 | almond shells | tiny | — | k | 40500.0000 | 1.40 | LOW |
+| (a2)26f5 | almond shells | tiny | — | p | 1320.0000 | 1.60 | LOW |
+| (a2)3726 | almond shells | tiny | — | mn | 48.0000 | 1.24 | LOW |
+| (a2)7349 | almond shells | tiny | — | k | 39400.0000 | 1.27 | LOW |
+| (a2)761b | almond shells | tiny | — | p | 1410.0000 | 1.90 | LOW |
+| (a2)91a0 | almond shells | tiny | — | s | 610.0000 | 1.26 | LOW |
+| (a2)9b59 | almond shells | tiny | — | s | 587.0000 | 1.03 | LOW |
+| (a2)bf24 | almond shells | tiny | — | p | 1330.0000 | 1.63 | LOW |
+| (a2)e84e | almond shells | tiny | — | s | 598.0000 | 1.14 | LOW |
+| (a4)1086 | cotton stem mix | schooner | — | al | 4190.0000 | 1.42 | LOW |
+| (a4)1e79 | cotton stem mix | schooner | — | rb | 23.0000 | 1.12 | LOW |
+| (a4)24cb | cotton stem mix | schooner | — | zn | 28.0000 | 1.68 | LOW |
+| (a4)2a66 | cotton stem mix | schooner | — | k | 36200.0000 | 1.05 | LOW |
+| (a4)3408 | cotton stem mix | schooner | — | mg | 10500.0000 | 1.02 | LOW |
+| (a4)356e | cotton stem mix | schooner | — | si | 12600.0000 | 1.41 | LOW |
+| (a4)4252 | cotton stem mix | schooner | — | k | 36400.0000 | 1.07 | LOW |
+| (a4)4664 | cotton stem mix | schooner | — | rb | 23.0000 | 1.12 | LOW |
+| (a4)5fda | cotton stem mix | schooner | — | mn | 90.0000 | 1.38 | LOW |
+| (a4)6a3b | cotton stem mix | schooner | — | th | 53.0000 | 1.50 | LOW |
+| (a4)6fbc | cotton stem mix | schooner | — | sr | 106.0000 | 1.06 | LOW |
+| (a4)71f8 | cotton stem mix | schooner | — | ce | 41.0000 | 1.25 | LOW |
+| (a4)8afa | cotton stem mix | schooner | — | mn | 89.0000 | 1.32 | LOW |
+| (a4)8be4 | cotton stem mix | schooner | — | sr | 108.0000 | 1.16 | LOW |
+| (a4)92ee | cotton stem mix | schooner | — | fe | 2240.0000 | 1.39 | LOW |
+| (a4)98bd | cotton stem mix | schooner | — | ti | 413.0000 | 2.02 | LOW |
+| (a4)9dea | cotton stem mix | schooner | — | ba | 39.0000 | 1.44 | LOW |
+| (a4)ae74 | cotton stem mix | schooner | — | si | 13700.0000 | 1.79 | LOW |
+| (a4)b186 | cotton stem mix | schooner | — | cu | 13.0000 | 1.02 | LOW |
+| (a4)b44f | cotton stem mix | schooner | — | zn | 21.0000 | 1.52 | LOW |
+| (a4)b5c5 | cotton stem mix | schooner | — | mn | 94.0000 | 1.61 | LOW |
+| (a4)b84a | cotton stem mix | schooner | — | y | 7.0000 | 1.15 | LOW |
+| (a4)be17 | cotton stem mix | schooner | — | al | 3950.0000 | 1.14 | LOW |
+| (a4)be2e | cotton stem mix | schooner | — | fe | 2180.0000 | 1.28 | LOW |
+| (a4)c254 | cotton stem mix | schooner | — | th | 50.0000 | 2.01 | LOW |
+| (a4)ca06 | cotton stem mix | schooner | — | fe | 2230.0000 | 1.37 | LOW |
+| (a4)de19 | cotton stem mix | schooner | — | al | 4570.0000 | 1.85 | LOW |
+| (a4)e3a7 | cotton stem mix | schooner | — | k | 36200.0000 | 1.05 | LOW |
+| (a4)e3ab | cotton stem mix | schooner | — | si | 13400.0000 | 1.69 | LOW |
+| (a5)1efe | almond shells | humorous | — | sr | 40.0000 | 1.34 | LOW |
+| (a5)6f21 | almond shells | humorous | — | sr | 38.0000 | 1.15 | LOW |
+| (a5)757a | almond shells | humorous | — | s | 590.0000 | 1.06 | LOW |
+| (a5)9997 | almond shells | humorous | — | sr | 38.0000 | 1.15 | LOW |
+| (a5)9e3f | almond shells | humorous | — | rb | 27.0000 | 1.19 | LOW |
+| (a5)a87e | almond shells | humorous | — | mn | 47.0000 | 1.10 | LOW |
+| (a5)acb5 | almond shells | humorous | — | rb | 27.0000 | 1.19 | LOW |
+| (a5)c629 | almond shells | humorous | — | rb | 28.0000 | 1.32 | LOW |
+| (a5)cc51 | almond shells | humorous | — | ba | 39.0000 | 1.13 | LOW |
+| (a5)f79c | almond shells | humorous | — | cu | 14.0000 | 1.19 | LOW |
+| (a5)fcd1 | almond shells | humorous | — | co | 11.0000 | 1.15 | LOW |
+| (a8)0739 | almond hulls | humorous | — | ce | 73.0000 | 1.91 | LOW |
+| (a8)0d58 | almond hulls | humorous | — | cu | 8.0000 | 1.16 | LOW |
+| (a8)45bc | almond hulls | humorous | — | s | 217.0000 | 1.09 | LOW |
+| (b3)3a02 | almond hulls | capstan | — | s | 377.0000 | 1.46 | LOW |
+| (b3)5795 | almond hulls | capstan | — | cu | 8.0000 | 1.16 | LOW |
+| (b3)6547 | almond hulls | capstan | — | mn | 53.0000 | 1.54 | LOW |
+| (b3)ff54 | almond hulls | capstan | — | ti | 173.0000 | 1.05 | LOW |
+| (b5)0654 | almond branches | vibrant | — | mn | 130.0000 | 1.83 | LOW |
+| (b5)0aed | almond branches | vibrant | — | ba | 0.0000 | 2.02 | LOW |
+| (b5)15e4 | almond branches | vibrant | — | pb | 0.0000 | 1.15 | LOW |
+| (b5)33d6 | almond branches | vibrant | — | si | 15300.0000 | 2.27 | LOW |
+| (b5)3c39 | almond branches | vibrant | — | ti | 451.0000 | 1.15 | LOW |
+| (b5)5294 | almond branches | vibrant | — | pr | 46.0000 | 1.22 | LOW |
+| (b5)561e | almond branches | vibrant | — | u | 23.0000 | 1.53 | LOW |
+| (b5)72a9 | almond branches | vibrant | — | la | 26.0000 | 1.10 | LOW |
+| (b5)79c1 | almond branches | vibrant | — | fe | 1030.0000 | 2.08 | LOW |
+| (b5)9018 | almond branches | vibrant | — | cu | 65.0000 | 2.12 | LOW |
+| (b5)9dc6 | almond branches | vibrant | — | ce | 0.0000 | 1.14 | LOW |
+| (b5)a05e | almond branches | vibrant | — | al | 5220.0000 | 2.23 | LOW |
+| (b5)dbf8 | almond branches | vibrant | — | th | 66.0000 | 2.12 | LOW |
+| (b7)1333 | almond hulls | capstan | — | fe | 225.0000 | 1.35 | LOW |
+| (b7)1cd7 | almond hulls | capstan | — | cu | 13.0000 | 1.03 | LOW |
+| (b7)479c | almond hulls | capstan | — | fe | 239.0000 | 1.21 | LOW |
+| (b7)4cd4 | almond hulls | capstan | — | rb | 24.0000 | 1.29 | LOW |
+| (b7)6aa0 | almond hulls | capstan | — | sr | 13.0000 | 1.15 | LOW |
+| (b7)86a3 | almond hulls | capstan | — | cu | 16.0000 | 2.34 | LOW |
+| (b7)a876 | almond hulls | capstan | — | sr | 12.0000 | 1.37 | LOW |
+| (b7)bc80 | almond hulls | capstan | — | fe | 228.0000 | 1.32 | LOW |
+| (b7)c595 | almond hulls | capstan | — | rb | 25.0000 | 1.45 | LOW |
+| (b7)c84c | almond hulls | capstan | — | s | 221.0000 | 1.03 | LOW |
+| (b7)ece7 | almond hulls | capstan | — | rb | 24.0000 | 1.29 | LOW |
+| (ba)272e | olive pomace | excellent | — | mn | 29.0000 | 1.03 | LOW |
+| (ba)2d78 | olive pomace | excellent | — | u | 11.0000 | 1.15 | LOW |
+| (ba)2f0b | olive pomace | excellent | — | th | 26.0000 | 1.04 | LOW |
+| (ba)3796 | olive pomace | excellent | — | zn | 33.0000 | 1.09 | LOW |
+| (ba)7eea | olive pomace | excellent | — | fe | 358.0000 | 1.15 | LOW |
+| (ba)8d27 | olive pomace | excellent | — | si | 7140.0000 | 1.15 | LOW |
+| (ba)9088 | olive pomace | excellent | — | p | 3120.0000 | 1.12 | LOW |
+| (ba)9588 | olive pomace | excellent | — | mg | 10800.0000 | 1.05 | LOW |
+| (ba)a279 | olive pomace | excellent | — | rb | 39.0000 | 1.15 | LOW |
+| (ba)b832 | olive pomace | excellent | — | sr | 14.0000 | 1.15 | LOW |
+| (ba)d0cb | olive pomace | excellent | — | cu | 35.0000 | 1.15 | LOW |
+| (ba)d20c | olive pomace | excellent | — | s | 1830.0000 | 1.15 | LOW |
+| (bc)1c20 | spent oak chips | rigging | — | mn | 53.0000 | 2.57 | LOW |
+| (bc)246b | spent oak chips | rigging | — | pb | 3.0000 | 2.47 | LOW |
+| (bc)45a2 | spent oak chips | rigging | — | si | 459.0000 | 1.06 | LOW |
+| (bc)4aba | spent oak chips | rigging | — | th | 72.0000 | 2.14 | LOW |
+| (bc)4fa7 | spent oak chips | rigging | — | ba | 17.0000 | 1.92 | LOW |
+| (bc)614a | spent oak chips | rigging | — | mn | 39.0000 | 1.01 | LOW |
+| (bc)6dfc | spent oak chips | rigging | — | u | 22.0000 | 1.28 | LOW |
+| (bc)7131 | spent oak chips | rigging | — | cu | 12.0000 | 1.37 | LOW |
+| (bc)a7af | spent oak chips | rigging | — | sr | 2.0000 | 1.24 | LOW |
+| (bc)b723 | spent oak chips | rigging | — | zn | 8.0000 | 1.01 | LOW |
+| (bc)f2df | spent oak chips | rigging | — | zn | 7.0000 | 1.36 | LOW |
+| (be)00cc | corn stover whole | possessive | — | zn | 108.0000 | 1.04 | LOW |
+| (be)01e4 | corn stover whole | possessive | — | nd | 120.0000 | 1.01 | LOW |
+| (be)1955 | spent oak chips | rigging | — | cu | 5.0000 | 2.12 | LOW |
+| (be)273f | spent oak chips | rigging | — | pr | 123.0000 | 1.38 | LOW |
+| (be)2e9d | corn stover whole | possessive | — | mg | 13800.0000 | 1.08 | LOW |
+| (be)3d4d | corn stover whole | possessive | — | th | 78.0000 | 1.11 | LOW |
+| (be)52f8 | corn stover whole | possessive | — | u | 27.0000 | 1.09 | LOW |
+| (be)5311 | corn stover whole | possessive | — | pr | 50.0000 | 1.15 | LOW |
+| (be)5373 | corn stover whole | possessive | — | s | 1840.0000 | 1.01 | LOW |
+| (be)608b | spent oak chips | rigging | — | u | 16.0000 | 1.14 | LOW |
+| (be)6ed6 | corn stover whole | possessive | — | ca | 8270.0000 | 1.15 | LOW |
+| (be)7255 | corn stover whole | possessive | — | sr | 36.0000 | 1.15 | LOW |
+| (be)73ee | corn stover whole | possessive | — | ba | 17.0000 | 1.15 | LOW |
+| (be)7a8b | spent oak chips | rigging | — | fe | 56.0000 | 1.06 | LOW |
+| (be)931d | corn stover whole | possessive | — | p | 1600.0000 | 1.10 | LOW |
+| (be)9a38 | corn stover whole | possessive | — | rb | 22.0000 | 1.15 | LOW |
+| (be)9ba2 | corn stover whole | possessive | — | cu | 16.0000 | 1.15 | LOW |
+| (be)a2b0 | corn stover whole | possessive | — | ce | 42.0000 | 1.09 | LOW |
+| (be)ad80 | corn stover whole | possessive | — | al | 10800.0000 | 1.06 | LOW |
+| (be)cd1f | corn stover whole | possessive | — | k | 28500.0000 | 1.15 | LOW |
+| (be)d4cd | corn stover whole | possessive | — | fe | 4380.0000 | 1.09 | LOW |
+| (be)d7b1 | spent oak chips | rigging | — | ce | 87.0000 | 2.06 | LOW |
+| (be)de63 | spent oak chips | rigging | — | fe | 58.0000 | 1.04 | LOW |
+| (be)e509 | corn stover whole | possessive | — | mn | 216.0000 | 1.14 | LOW |
+| (be)f78a | corn stover whole | possessive | — | ti | 699.0000 | 1.02 | LOW |
+| (c0)01f2 | pistachio hulls | stuntman | — | fe | 525.0000 | 1.01 | LOW |
+| (c0)1893 | pistachio hulls | stuntman | — | mn | 55.0000 | 1.74 | LOW |
+| (c0)3368 | pistachio hulls | stuntman | — | ca | 7350.0000 | 1.15 | LOW |
+| (c0)4f88 | pistachio hulls | stuntman | — | si | 1590.0000 | 1.28 | LOW |
+| (c0)65fa | pistachio hulls | stuntman | — | fe | 531.0000 | 1.08 | LOW |
+| (c0)6fcc | pistachio hulls | stuntman | — | th | 52.0000 | 1.14 | LOW |
+| (c0)b16d | pistachio hulls | stuntman | — | cu | 23.0000 | 1.00 | LOW |
+| (c0)dfc4 | pistachio hulls | stuntman | — | u | 16.0000 | 1.03 | LOW |
+| (ca)2363 | rice straw | possessive | — | k | 31500.0000 | 1.92 | LOW |
+| (ca)3684 | rice straw | possessive | — | pb | 5.0000 | 1.10 | LOW |
+| (ca)4de6 | rice straw | possessive | — | pb | 5.0000 | 1.10 | LOW |
+| (ca)4e6a | rice straw | possessive | — | mg | 5900.0000 | 1.33 | LOW |
+| (ca)7d23 | rice straw | possessive | — | sr | 19.0000 | 1.21 | LOW |
+| (ca)81ce | rice straw | possessive | — | zn | 54.0000 | 1.27 | LOW |
+| (ca)862e | rice straw | possessive | — | mo | 33.0000 | 1.02 | LOW |
+| (ca)8bb3 | rice straw | possessive | — | p | 2050.0000 | 1.38 | LOW |
+| (ca)8c5c | rice straw | possessive | — | si | 86700.0000 | 1.24 | LOW |
+| (ca)eb21 | rice straw | possessive | — | u | 16.0000 | 1.54 | LOW |
+| (cd)2109 | almond hulls | vibrant | — | s | 421.0000 | 2.16 | LOW |
+| (cd)3c87 | almond hulls | vibrant | — | p | 388.0000 | 2.59 | LOW |
+| (cd)5fea | almond hulls | vibrant | — | si | 12400.0000 | 1.91 | LOW |
+| (cd)80be | almond hulls | vibrant | — | ba | 39.0000 | 2.33 | LOW |
+| (cd)8987 | almond hulls | vibrant | — | k | 18600.0000 | 2.87 | LOW |
+| (cd)94ad | almond hulls | vibrant | — | ca | 5000.0000 | 3.08 | MEDIUM |
+| (cd)a84c | almond hulls | vibrant | — | cu | 7.0000 | 1.59 | LOW |
+| (cd)aac9 | almond hulls | vibrant | — | pr | 0.0000 | 1.90 | LOW |
+| (cd)e053 | almond hulls | vibrant | — | sr | 30.0000 | 2.62 | LOW |
+| (ce)14cf | cotton stem mix | schooner | — | ba | 18.0000 | 1.19 | LOW |
+| (ce)1a9a | cotton stem mix | schooner | — | s | 4060.0000 | 1.03 | LOW |
+| (ce)2246 | cotton stem mix | schooner | — | pb | 5.0000 | 1.15 | LOW |
+| (ce)283f | cotton stem mix | schooner | — | ba | 42.0000 | 1.82 | LOW |
+| (ce)435b | cotton stem mix | schooner | — | cu | 13.0000 | 1.02 | LOW |
+| (ce)6921 | cotton stem mix | schooner | — | cu | 13.0000 | 1.02 | LOW |
+| (ce)6abf | cotton stem mix | schooner | — | pr | 53.0000 | 1.24 | LOW |
+| (ce)6b10 | cotton stem mix | schooner | — | p | 1320.0000 | 1.09 | LOW |
+| (ce)8e95 | cotton stem mix | schooner | — | p | 1340.0000 | 1.04 | LOW |
+| (ce)b28e | cotton stem mix | schooner | — | p | 1290.0000 | 1.17 | LOW |
+| (ce)c419 | cotton stem mix | schooner | — | zn | 27.0000 | 1.22 | LOW |
+| (ce)c780 | cotton stem mix | schooner | — | s | 3990.0000 | 1.16 | LOW |
+| (ce)cc54 | cotton stem mix | schooner | — | u | 23.0000 | 1.21 | LOW |
+| (ce)d4a4 | cotton stem mix | schooner | — | rb | 23.0000 | 1.12 | LOW |
+| (ce)d9f9 | cotton stem mix | schooner | — | mg | 7090.0000 | 1.13 | LOW |
+| (ce)fbcf | cotton stem mix | schooner | — | th | 69.0000 | 1.19 | LOW |
+| (d4)03db | pistachio stems & leaves | tripod | — | sr | 71.0000 | 1.15 | LOW |
+| (d4)072e | pistachio stems & leaves | tripod | — | rb | 50.0000 | 1.15 | LOW |
+| (d4)2876 | pistachio stems & leaves | tripod | — | ti | 171.0000 | 1.01 | LOW |
+| (d4)2d2f | pistachio stems & leaves | tripod | — | k | 29600.0000 | 1.15 | LOW |
+| (d4)4e1d | pistachio stems & leaves | tripod | — | mg | 6350.0000 | 1.15 | LOW |
+| (d4)64ba | pistachio stems & leaves | tripod | — | si | 2730.0000 | 1.06 | LOW |
+| (d4)7724 | pistachio stems & leaves | tripod | — | u | 14.0000 | 1.09 | LOW |
+| (d4)9b38 | pistachio stems & leaves | tripod | — | la | 42.0000 | 1.06 | LOW |
+| (d4)b9a5 | pistachio stems & leaves | tripod | — | mn | 73.0000 | 1.13 | LOW |
+| (d4)c26b | pistachio stems & leaves | tripod | — | ca | 23100.0000 | 1.15 | LOW |
+| (d4)c69e | pistachio stems & leaves | tripod | — | p | 2660.0000 | 1.09 | LOW |
+| (d4)cafe | pistachio stems & leaves | tripod | — | s | 2410.0000 | 1.10 | LOW |
+| (d4)dbe3 | pistachio stems & leaves | tripod | — | ba | 50.0000 | 1.15 | LOW |
+| (d4)dd86 | pistachio stems & leaves | tripod | — | th | 38.0000 | 1.15 | LOW |
+| (d4)e051 | pistachio stems & leaves | tripod | — | cu | 19.0000 | 1.09 | LOW |
+| (d4)f5aa | pistachio stems & leaves | tripod | — | fe | 486.0000 | 1.09 | LOW |
+| (d4)fecf | pistachio stems & leaves | tripod | — | zn | 36.0000 | 1.15 | LOW |
+| (d6)0264 | grape pomace | rigging | — | u | 17.0000 | 2.17 | LOW |
+| (d6)0612 | grape pomace | rigging | — | rb | 21.0000 | 1.74 | LOW |
+| (d6)2297 | grape pomace | rigging | — | fe | 190.0000 | 1.46 | LOW |
+| (d6)2fcf | grape pomace | rigging | — | fe | 180.0000 | 1.59 | LOW |
+| (d6)3037 | grape pomace | rigging | — | rb | 22.0000 | 1.90 | LOW |
+| (d6)6143 | grape pomace | rigging | — | rb | 21.0000 | 1.74 | LOW |
+| (d6)6855 | grape pomace | rigging | — | th | 51.0000 | 1.95 | LOW |
+| (d6)716e | grape pomace | rigging | — | fe | 195.0000 | 1.39 | LOW |
+| (d6)8555 | grape pomace | rigging | — | k | 9540.0000 | 1.34 | LOW |
+| (d6)8bbf | grape pomace | rigging | — | k | 9290.0000 | 1.39 | LOW |
+| (d6)9c4c | grape pomace | rigging | — | ca | 4910.0000 | 1.05 | LOW |
+| (d6)b6ae | grape pomace | rigging | — | u | 16.0000 | 1.49 | LOW |
+| (d6)cabd | grape pomace | rigging | — | cu | 14.0000 | 1.72 | LOW |
+| (d6)d115 | grape pomace | rigging | — | k | 9650.0000 | 1.31 | LOW |
+| (d6)d6dd | grape pomace | rigging | — | u | 16.0000 | 1.49 | LOW |
+| (d6)dd9f | grape pomace | rigging | — | mn | 59.0000 | 1.77 | LOW |
+| (da)0531 | wheat straw | wardrobe | — | rb | 59.0000 | 1.08 | LOW |
+| (da)39e4 | wheat straw | wardrobe | — | mo | 11.0000 | 1.26 | LOW |
+| (da)3a75 | pistachio shells | tripod | — | cu | 5.0000 | 1.15 | LOW |
+| (da)4458 | wheat straw | wardrobe | — | zn | 30.0000 | 1.26 | LOW |
+| (da)47b8 | wheat straw | wardrobe | — | k | 38800.0000 | 1.00 | LOW |
+| (da)57a9 | pistachio shells | tripod | — | mn | 17.0000 | 1.15 | LOW |
+| (da)59ab | pistachio shells | tripod | — | si | 296.0000 | 1.15 | LOW |
+| (da)606e | pistachio shells | tripod | — | th | 48.0000 | 1.13 | LOW |
+| (da)6931 | pistachio shells | tripod | — | s | 3410.0000 | 1.15 | LOW |
+| (da)766d | pistachio shells | tripod | — | k | 778.0000 | 1.15 | LOW |
+| (da)8e26 | wheat straw | wardrobe | — | k | 38800.0000 | 1.00 | LOW |
+| (da)9161 | wheat straw | wardrobe | — | al | 2160.0000 | 1.14 | LOW |
+| (da)92ec | wheat straw | wardrobe | — | mn | 111.0000 | 1.13 | LOW |
+| (da)99ec | pistachio shells | tripod | — | ca | 174.0000 | 1.15 | LOW |
+| (da)a4aa | wheat straw | wardrobe | — | ca | 6180.0000 | 1.10 | LOW |
+| (da)b707 | pistachio shells | tripod | — | u | 14.0000 | 1.15 | LOW |
+| (da)bdee | pistachio shells | tripod | — | al | 656.0000 | 1.03 | LOW |
+| (da)be82 | wheat straw | wardrobe | — | s | 3110.0000 | 1.13 | LOW |
+| (da)c2cf | wheat straw | wardrobe | — | fe | 938.0000 | 1.08 | LOW |
+| (da)d588 | wheat straw | wardrobe | — | si | 59700.0000 | 1.16 | LOW |
+| (da)d622 | wheat straw | wardrobe | — | ca | 6170.0000 | 1.08 | LOW |
+| (da)d9d7 | pistachio shells | tripod | — | p | 304.0000 | 1.06 | LOW |
+| (ed)1d32 | grape pomace | — | — | mo | 7.0000 | 1.18 | LOW |
+| (ed)3abc | grape pomace | — | — | fe | 387.0000 | 1.12 | LOW |
+| (ed)45e3 | grape pomace | — | — | cu | 24.0000 | 1.26 | LOW |
+| (ed)9b50 | grape pomace | — | — | cu | 24.0000 | 1.26 | LOW |
+| (ed)9ba1 | grape pomace | — | — | zn | 26.0000 | 1.36 | LOW |
+| (ed)a9be | grape pomace | — | — | p | 3410.0000 | 1.20 | LOW |
+| (ed)cb57 | grape pomace | — | — | s | 2880.0000 | 1.39 | LOW |
+| (f2)15c2 | pistachio hulls | tripod | — | u | 5.0000 | 1.03 | LOW |
+| (f2)2038 | pistachio hulls | tripod | — | zn | 22.0000 | 1.18 | LOW |
+| (f2)7fa0 | pistachio hulls | tripod | — | cu | 9.0000 | 1.71 | LOW |
+| (f2)a82f | pistachio hulls | tripod | — | zn | 22.0000 | 1.18 | LOW |
+| (f2)b655 | pistachio hulls | tripod | — | p | 1940.0000 | 1.07 | LOW |
+| (f2)b842 | pistachio hulls | tripod | — | mn | 26.0000 | 1.04 | LOW |
+| (f2)c584 | pistachio hulls | tripod | — | ba | 49.0000 | 1.05 | LOW |
+| (f2)f021 | pistachio hulls | tripod | — | si | 1160.0000 | 1.26 | LOW |
+| (f6)078b | peach seeds | rushes | — | mn | 28.0000 | 1.09 | LOW |
+| (f6)0bd0 | peach seeds | rushes | — | si | 209.0000 | 1.09 | LOW |
+| (f6)2fce | peach seeds | rushes | — | ca | 602.0000 | 1.05 | LOW |
+| (f6)64c0 | peach seeds | rushes | — | s | 693.0000 | 1.04 | LOW |
+| (f6)92de | peach seeds | rushes | — | k | 7480.0000 | 1.14 | LOW |
+| (f6)f3c0 | peach seeds | rushes | — | th | 48.0000 | 1.09 | LOW |
+| (f6)f64f | peach seeds | rushes | — | p | 1730.0000 | 1.03 | LOW |
+| (f6)f791 | peach seeds | rushes | — | cu | 13.0000 | 1.15 | LOW |
+| (f7)1f1a | peach stems / leaves | rushes | — | ca | 36400.0000 | 1.14 | LOW |
+| (f7)2e0e | peach stems / leaves | rushes | — | s | 3200.0000 | 1.03 | LOW |
+| (f7)3e14 | peach stems / leaves | rushes | — | mg | 7710.0000 | 1.05 | LOW |
+| (f7)44ed | peach stems / leaves | rushes | — | k | 39100.0000 | 1.11 | LOW |
+| (f7)5f04 | peach stems / leaves | rushes | — | sr | 222.0000 | 1.15 | LOW |
+| (f7)6772 | peach stems / leaves | rushes | — | fe | 1400.0000 | 1.15 | LOW |
+| (f7)698c | peach stems / leaves | rushes | — | mn | 182.0000 | 1.13 | LOW |
+| (f7)6991 | peach stems / leaves | rushes | — | rb | 12.0000 | 1.09 | LOW |
+| (f7)7693 | peach stems / leaves | rushes | — | p | 2110.0000 | 1.13 | LOW |
+| (f7)796e | peach stems / leaves | rushes | — | zn | 90.0000 | 1.15 | LOW |
+| (f7)8919 | peach stems / leaves | rushes | — | al | 1410.0000 | 1.08 | LOW |
+| (f7)9249 | peach stems / leaves | rushes | — | cu | 72.0000 | 1.14 | LOW |
+| (f7)be18 | peach stems / leaves | rushes | — | th | 41.0000 | 1.06 | LOW |
+| (f7)d34b | peach stems / leaves | rushes | — | ba | 55.0000 | 1.08 | LOW |
+| (f7)ed51 | peach stems / leaves | rushes | — | si | 7870.0000 | 1.14 | LOW |
+
+
+## Custom Visuals
+
+Discovered assets:
+
+- [xrf_distribution.html](../assets/exports/plots/composition/xrf_distribution.html)
+- [xrf_distribution_viz.html](../assets/exports/plots/composition/xrf_distribution_viz.html)
+
+:::

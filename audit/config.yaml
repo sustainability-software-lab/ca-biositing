@@ -1,0 +1,27 @@
+thresholds:
+  zscore_threshold: 1.0
+  min_group_size: 3
+  evidently_drift_threshold: 0.1
+
+excluded_resources: []
+
+parameter_whitelists:
+  compositional: []
+  proximate: []
+  ultimate: []
+
+llm:
+  model: "openai/gemini-3-flash-high"
+  max_tokens: 8192
+  base_url: "https://api.cborg.lbl.gov"
+
+output:
+  root: "audit/output"
+  expectations_root: "audit/expectations"
+  profiles_subdir: "profiles"
+  evidently_subdir: "evidently"
+
+google_sheets:
+  sheet_key: ""
+  credentials: "credentials.json"
+  worksheet: "Anomalies"

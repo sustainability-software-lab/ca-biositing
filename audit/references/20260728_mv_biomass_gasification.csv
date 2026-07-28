@@ -1,0 +1,522 @@
+record_id,experiment_id,experiment_date,prepared_sample_id,field_sample_id,collection_timestamp,provider_codename,resource_name,primary_product,parameter_name,unit,observed_value,repl_no,qc_pass,note,analyst_email,reactor_type
+almo638-d0a0,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,bio,g,450.45,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo639-9491,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,wme,pc,5.1,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo640-8a86,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,ash,g,0.0,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo641-9ce7,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,unc-bio,g,266.81,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo642-1b15,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,time,min,19.0,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo643-7337,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,va,mps,0.2,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo644-6bbb,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,ta,c,19.2,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo645-5fbd,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,pi,psi,30.0,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo646-a41a,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,pv,psi,85.0,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo647-9f90,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,tar,g,0.0,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo648-9a55,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,char,g,24.79,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo649-eda6,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,ch4,ppm,11797.78,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo650-dd76,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,h2,ppm,55904.23,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo651-99d3,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,co,ppm,85710.7,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo652-fecf,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,co2,ppm,104670.3,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo653-bcba,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,n2,ppm,513012.4,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo654-7320,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,o2,ppm,30655.61,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo655-8b73,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c3h8,ppm,1080.13,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo656-9885,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c2h6,ppm,5334.31,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo657-c1e5,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c4h10(b),ppm,247.19,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo658-21ea,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c5h12,ppm,0.0,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo659-8e9d,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c4h10(i),ppm,849.39,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo660-5cff,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c6h14,ppm,0.0,1,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo661-7dfb,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,comb,,15.34,1,pass,,iteran@ucmerced.edu,apex
+almo662-4cdc,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,lfl,pc,6.61,1,pass,,iteran@ucmerced.edu,apex
+almo663-5842,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,ufl,pc,57.09,1,pass,,,apex
+almo664-5f09,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,ch4,ppm,11646.12,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo665-7b77,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,h2,ppm,53231.06,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo666-5efb,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,co,ppm,83540.26,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo667-3c83,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,co2,ppm,112016.7,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo668-7255,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,n2,ppm,510670.9,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo669-0763,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,o2,ppm,29520.05,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo670-e3b0,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c3h8,ppm,1000.58,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo671-bbe2,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c2h6,ppm,4987.69,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo672-f6ef,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c4h10(b),ppm,223.02,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo673-31b5,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c5h12,ppm,0.05,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo674-0296,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c4h10(i),ppm,782.07,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo675-9385,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,c6h14,ppm,0.0,2,pass,"desired test conditions achieved with this biomass, all properties here pass qc. gas composition values should be normalized using xi/sum(xi/xn) for a more accurate representation.",iteran@ucmerced.edu,apex
+almo676-9513,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,comb,,14.84,2,pass,,iteran@ucmerced.edu,apex
+almo677-ddd8,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,lfl,pc,6.65,2,pass,,iteran@ucmerced.edu,apex
+almo678-d2fd,65,,252,19.0,2024-11-21 16:10:00,popular,almond woodchips,,ufl,pc,56.82,2,pass,,,apex
+almor1-0242,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,bio,g,214.4,1,pass,,iteran@ucmerced.edu,megadeath
+almor10-8350,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,tar,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+almor11-2eb9,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,char,g,36.48,1,pass,,iteran@ucmerced.edu,megadeath
+almor12-b8e0,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,ch4,ppm,5456.74,1,pass,,iteran@ucmerced.edu,megadeath
+almor13-5911,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,h2,ppm,106681.8,1,pass,,iteran@ucmerced.edu,megadeath
+almor14-3f11,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,co,ppm,199983.5,1,pass,,iteran@ucmerced.edu,megadeath
+almor15-e088,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,co2,ppm,123979.8,1,pass,,iteran@ucmerced.edu,megadeath
+almor16-662f,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,n2,ppm,524696.1,1,pass,,iteran@ucmerced.edu,megadeath
+almor17-fac1,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,o2,ppm,5122.33,1,pass,,iteran@ucmerced.edu,megadeath
+almor18-fdbd,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c3h8,ppm,2153.35,1,pass,,iteran@ucmerced.edu,megadeath
+almor19-9687,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c2h6,ppm,11569.72,1,pass,,iteran@ucmerced.edu,megadeath
+almor20-ddf0,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c4h10(b),ppm,1.56,1,pass,,iteran@ucmerced.edu,megadeath
+almor21-9044,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c5h12,ppm,0.1,1,pass,,iteran@ucmerced.edu,megadeath
+almor22-7cef,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c4h10(i),ppm,1476.09,1,pass,,iteran@ucmerced.edu,megadeath
+almor23-f65e,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c6h14,ppm,0.03,1,pass,,iteran@ucmerced.edu,megadeath
+almor24-cc42,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,comb,,31.21,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+almor25-3b22,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,lfl,pc,7.13,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+almor26-8e9b,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,ufl,pc,69.65,1,pass,,,megadeath
+almor27-6132,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,ch4,ppm,5700.94,2,pass,,iteran@ucmerced.edu,megadeath
+almor28-70f1,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,h2,ppm,68539.61,2,pass,,iteran@ucmerced.edu,megadeath
+almor2-88ae,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,wme,pc,6.0,1,pass,,iteran@ucmerced.edu,megadeath
+almor29-2660,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,co,ppm,170230.8,2,pass,,iteran@ucmerced.edu,megadeath
+almor30-842b,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,co2,ppm,83240.49,2,pass,,iteran@ucmerced.edu,megadeath
+almor31-2e12,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,n2,ppm,654232.7,2,pass,,iteran@ucmerced.edu,megadeath
+almor32-88cb,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,o2,ppm,55772.8,2,pass,,iteran@ucmerced.edu,megadeath
+almor33-f9d5,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c3h8,ppm,794.32,2,pass,,iteran@ucmerced.edu,megadeath
+almor34-d9fe,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c2h6,ppm,4449.77,2,pass,,iteran@ucmerced.edu,megadeath
+almor35-8fcc,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c4h10(b),ppm,0.53,2,pass,,iteran@ucmerced.edu,megadeath
+almor36-dc21,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c5h12,ppm,0.2,2,pass,,iteran@ucmerced.edu,megadeath
+almor37-2f56,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c4h10(i),ppm,408.98,2,pass,,iteran@ucmerced.edu,megadeath
+almor38-23a1,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,c6h14,ppm,0.0,2,pass,,iteran@ucmerced.edu,megadeath
+almor39-71c1,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,comb,,24.45,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+almor3-a9e7,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+almor40-fbd5,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,lfl,pc,7.67,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+almor41-4bcd,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,ufl,pc,68.13,2,pass,,,megadeath
+almor4-3be5,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,unc-bio,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+almor5-ab1a,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,time,min,38.0,1,pass,,iteran@ucmerced.edu,megadeath
+almor6-d744,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,va,mps,0.8,1,pass,,iteran@ucmerced.edu,megadeath
+almor7-169e,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,ta,c,24.0,1,pass,,iteran@ucmerced.edu,megadeath
+almor8-e22d,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,megadeath
+almor9-d127,49,,201,16.0,2024-11-21 15:10:00,tiny,almond shells,,pv,psi,70.0,1,pass,,iteran@ucmerced.edu,megadeath
+blen720-db21,67,,320,,,,blend,,bio,g,599.76,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen721-0002,67,,320,,,,blend,,wme,pc,7.25,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen722-1ac6,67,,320,,,,blend,,ash,g,0.0,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen723-69b2,67,,320,,,,blend,,unc-bio,g,0.0,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen724-1a91,67,,320,,,,blend,,time,min,49.0,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen725-deea,67,,320,,,,blend,,va,mps,0.8,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen726-9acc,67,,320,,,,blend,,ta,c,23.0,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen727-c0c0,67,,320,,,,blend,,pi,psi,30.0,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen728-f6b2,67,,320,,,,blend,,pv,psi,75.0,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen729-a296,67,,320,,,,blend,,tar,g,0.0,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen730-ce42,67,,320,,,,blend,,char,g,101.56,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen731-0465,67,,320,,,,blend,,ch4,ppm,35866.65,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen732-b0c0,67,,320,,,,blend,,h2,ppm,94096.3,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen733-3fb0,67,,320,,,,blend,,co,ppm,79767.76,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen734-88d2,67,,320,,,,blend,,co2,ppm,157388.8,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen735-9200,67,,320,,,,blend,,n2,ppm,449068.5,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen736-bf10,67,,320,,,,blend,,o2,ppm,30630.19,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen737-23c1,67,,320,,,,blend,,c3h8,ppm,3607.17,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen738-bbe5,67,,320,,,,blend,,c2h6,ppm,14480.27,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen739-5e60,67,,320,,,,blend,,c4h10(b),ppm,29.83,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen740-a5a9,67,,320,,,,blend,,c5h12,ppm,0.17,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen741-d897,67,,320,,,,blend,,c4h10(i),ppm,4106.38,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen742-ebcf,67,,320,,,,blend,,c6h14,ppm,0.04,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen743-10ae,67,,320,,,,blend,,combfrac,pc,24.13,1,pass,,iteran@ucmerced.edu,ferdinand
+blen744-6a01,67,,320,,,,blend,,lfl,pc,5.66,1,pass,,iteran@ucmerced.edu,ferdinand
+blen745-e228,67,,320,,,,blend,,ufl,pc,44.43,1,pass,,,ferdinand
+blen746-93b9,67,,320,,,,blend,,ch4,ppm,25177.8,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen747-6409,67,,320,,,,blend,,h2,ppm,84490.68,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen748-38e1,67,,320,,,,blend,,co,ppm,75124.33,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen749-723f,67,,320,,,,blend,,co2,ppm,112499.5,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen750-78ea,67,,320,,,,blend,,n2,ppm,507581.7,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen751-e83b,67,,320,,,,blend,,o2,ppm,64978.13,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen752-a60d,67,,320,,,,blend,,c3h8,ppm,1749.4,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen753-fdee,67,,320,,,,blend,,c2h6,ppm,6343.89,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen754-11fb,67,,320,,,,blend,,c4h10(b),ppm,293.25,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen755-f722,67,,320,,,,blend,,c5h12,ppm,0.11,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen756-af69,67,,320,,,,blend,,c4h10(i),ppm,2666.88,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen757-bf8d,67,,320,,,,blend,,c6h14,ppm,0.0,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,ferdinand
+blen758-d75c,67,,320,,,,blend,,combfrac,pc,20.98,2,pass,,iteran@ucmerced.edu,ferdinand
+blen759-18b6,67,,320,,,,blend,,lfl,pc,5.74,2,pass,,iteran@ucmerced.edu,ferdinand
+blen760-7359,67,,320,,,,blend,,ufl,pc,48.4,2,pass,,,ferdinand
+peac204-7106,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,bio,g,526.1,1,pass,,iteran@ucmerced.edu,megadeath
+peac205-6185,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,wme,pc,5.0,1,pass,,iteran@ucmerced.edu,megadeath
+peac206-eebd,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+peac207-470b,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,unc-bio,g,95.9,1,pass,,iteran@ucmerced.edu,megadeath
+peac208-3338,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,time,min,28.0,1,pass,,iteran@ucmerced.edu,megadeath
+peac209-5d87,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,va,mps,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+peac210-b008,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ta,c,29.6,1,pass,,iteran@ucmerced.edu,megadeath
+peac211-d2ed,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,tar,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+peac212-c52c,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,char,g,138.5,1,pass,,iteran@ucmerced.edu,megadeath
+peac213-00d8,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ch4,ppm,5779.99,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac214-ad8c,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,h2,ppm,37610.73,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac215-e210,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,co,ppm,123657.5,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac216-76b9,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,co2,ppm,242103.5,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac217-c041,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,n2,ppm,620825.3,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac218-cad8,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,o2,ppm,29023.97,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac219-2ac7,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c3h8,ppm,3450.35,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac220-c78c,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c2h6,ppm,5589.64,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac221-7b76,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c4h10(b),ppm,3.59,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac222-10cb,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c5h12,ppm,0.33,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac223-e22e,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c4h10(i),ppm,2345.37,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac224-c26f,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c6h14,ppm,0.09,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac225-02bd,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,comb,,16.7,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac226-9b12,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,lfl,pc,8.17,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac227-17b2,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ufl,pc,65.42,1,pass,,,megadeath
+peac228-2428,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ch4,ppm,5503.69,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac229-d776,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,h2,ppm,32700.58,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac230-efdb,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,co,ppm,71365.46,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac231-11c1,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,co2,ppm,212648.5,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac232-da4f,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,n2,ppm,632269.9,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac233-6138,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,o2,ppm,45638.41,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac234-cece,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c3h8,ppm,3529.2,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac235-3d38,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c2h6,ppm,11271.34,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac236-edbd,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c4h10(b),ppm,3.64,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac237-571e,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c5h12,ppm,0.07,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac238-8b9d,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c4h10(i),ppm,1411.55,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac239-80df,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c6h14,ppm,0.0,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac240-c610,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,comb,,10.96,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac241-49e2,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,lfl,pc,7.31,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+peac242-46d6,54,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ufl,pc,62.09,2,pass,,,megadeath
+peac571-b8d7,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,bio,g,799.83,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac572-8cc3,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,wme,pc,0.0,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac573-0a49,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ash,g,0.0,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac574-2936,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,unc-bio,g,15.83,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac575-1208,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,time,min,58.0,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac576-64d1,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,va,mps,0.25,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac577-f9c3,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ta,c,24.3,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac578-840b,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,pi,psi,30.0,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac579-a8bd,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,pv,psi,70.0,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac580-3ea4,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,tar,g,0.0,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac581-5c5d,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,char,g,323.74,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac582-2cb7,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ch4,ppm,27914.35,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac583-8973,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,h2,ppm,67268.7,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac584-2e6e,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,co,ppm,75983.7,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac585-c712,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,co2,ppm,127383.3,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac586-b936,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,n2,ppm,581767.8,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac587-b7e1,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,o2,ppm,16291.25,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac588-e962,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c3h8,ppm,2891.48,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac589-9abd,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c2h6,ppm,11450.54,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac590-ab0c,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c4h10(b),ppm,1061.58,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac591-5f90,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c5h12,ppm,0.06,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac592-4119,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c4h10(i),ppm,1954.46,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac593-d143,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,c6h14,ppm,0.0,1,pass,test sustained gasification conditions and gas sample successfully taken. gc results were consistent. this test passes qc.,iteran@ucmerced.edu,apex
+peac594-d295,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,comb,,17.12,1,pass,,iteran@ucmerced.edu,apex
+peac595-5c18,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,lfl,pc,6.01,1,pass,,iteran@ucmerced.edu,apex
+peac596-443b,63,,207,39.0,2025-08-07 11:15:00,rushes,peach seeds,,ufl,pc,45.26,1,pass,,,apex
+pist325-89e4,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,bio,g,650.05,1,pass,,iteran@ucmerced.edu,ferdinand
+pist326-93a4,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,wme,pc,13.9,1,pass,,iteran@ucmerced.edu,ferdinand
+pist327-4f0c,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+pist328-9cae,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,unc-bio,g,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+pist329-fffb,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,time,min,58.0,1,pass,,iteran@ucmerced.edu,ferdinand
+pist330-96d0,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,va,mps,0.1,1,pass,,iteran@ucmerced.edu,ferdinand
+pist331-cb2c,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,ta,c,23.3,1,pass,,iteran@ucmerced.edu,ferdinand
+pist332-2649,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,ferdinand
+pist333-11e1,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,pv,psi,70.0,1,pass,,iteran@ucmerced.edu,ferdinand
+pist334-0c26,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,tar,g,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+pist335-2fd6,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,char,g,42.0,1,pass,,iteran@ucmerced.edu,ferdinand
+pist336-0904,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,ch4,ppm,20761.9,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist337-53cd,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,h2,ppm,68364.81,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist338-0895,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,co,ppm,5546.68,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist339-55c6,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,co2,ppm,96368.69,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist340-ecca,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,n2,ppm,499120.9,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist341-2bd8,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,o2,ppm,18691.28,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist342-c389,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c3h8,ppm,2047.62,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist343-d26e,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c2h6,ppm,7543.49,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist344-25bb,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c4h10(b),ppm,570.66,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist345-30ec,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c5h12,ppm,0.16,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist346-f2ad,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c4h10(i),ppm,1582.59,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist347-b77c,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c6h14,ppm,0.04,1,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist348-ec2e,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,comb,,9.47,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+pist349-113d,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,lfl,pc,4.37,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+pist350-6cb9,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,ufl,pc,39.94,1,pass,,,ferdinand
+pist351-8e8b,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,ch4,ppm,27981.98,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist352-26f4,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,h2,ppm,98931.41,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist353-3ee9,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,co,ppm,5291.59,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist354-27b1,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,co2,ppm,150380.3,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist355-3428,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,n2,ppm,444009.3,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist356-0849,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,o2,ppm,1658.05,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist357-42a5,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c3h8,ppm,2289.66,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist358-30eb,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c2h6,ppm,6132.52,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist359-4290,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c4h10(b),ppm,708.83,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist360-8c61,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c5h12,ppm,0.18,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist361-8140,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c4h10(i),ppm,1519.43,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist362-5b75,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,c6h14,ppm,0.06,2,pass,must be normalized by xi/sum(xi/xn),iteran@ucmerced.edu,ferdinand
+pist363-d72b,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,comb,,13.22,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+pist364-5531,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,lfl,pc,4.3,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+pist365-c035,57,,214,61.0,2025-09-03 08:55:00,stuntman,pistachio shells,,ufl,pc,40.61,2,pass,,,ferdinand
+pist761-0850,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,bio,g,586.38,1,pass,,iteran@ucmerced.edu,orion
+pist762-902d,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,wme,pc,5.07,1,pass,,iteran@ucmerced.edu,orion
+pist763-eeee,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,orion
+pist764-a3f1,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,unc-bio,g,4.92,1,pass,,iteran@ucmerced.edu,orion
+pist765-99ee,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,time,min,52.0,1,pass,,iteran@ucmerced.edu,orion
+pist766-b4d3,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,va,mps,1.8,1,pass,,iteran@ucmerced.edu,orion
+pist767-418f,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,ta,c,25.0,1,pass,,iteran@ucmerced.edu,orion
+pist768-27ea,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,orion
+pist769-facd,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,pv,psi,75.0,1,pass,,iteran@ucmerced.edu,orion
+pist770-d8e6,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,tar,g,0.0,1,pass,,iteran@ucmerced.edu,orion
+pist771-2162,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,char,g,82.99,1,pass,,iteran@ucmerced.edu,orion
+pist772-b355,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,ch4,ppm,17835.65,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist773-e5ef,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,h2,ppm,45160.9,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist774-87c6,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,co,ppm,60221.59,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist775-a0ac,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,co2,ppm,130735.4,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist776-cf1e,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,n2,ppm,656025.2,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist777-0d01,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,o2,ppm,45161.71,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist778-5290,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c3h8,ppm,2224.53,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist779-966b,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c2h6,ppm,12708.38,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist780-7283,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c4h10(b),ppm,574.99,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist781-6305,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c5h12,ppm,0.32,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist782-0ada,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c4h10(i),ppm,1886.83,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist783-cc20,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c6h14,ppm,0.06,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist784-b6f1,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,comb,,12.67,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values. comb = (ch_4+h_2+co)/10000,iteran@ucmerced.edu,orion
+pist785-793d,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,lfl,pc,6.26,1,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values. lfl = ((ch_4/10000)/12.32/5 + (h_2/10000)/12.32/4 + (co/10000)/12.32/12.5)^-1 ,iteran@ucmerced.edu,orion
+pist786-19bf,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,ufl,pc,47.34,1,pass,,,orion
+pist787-7bb2,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,ch4,ppm,13494.95,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist788-55d8,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,h2,ppm,33099.44,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist789-a222,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,co,ppm,50302.5,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist790-1e54,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,co2,ppm,109052.5,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist791-d0d1,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,n2,ppm,703377.7,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist792-4478,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,o2,ppm,83657.28,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist793-3672,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c3h8,ppm,1532.01,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist794-6fcd,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c2h6,ppm,10166.0,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist795-dc1d,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c4h10(b),ppm,347.66,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist796-e24a,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c5h12,ppm,0.24,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist797-f97e,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c4h10(i),ppm,711.44,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist798-8daa,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,c6h14,ppm,0.04,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values.,iteran@ucmerced.edu,orion
+pist799-6962,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,comb,,9.63,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values. comb = (ch_4+h_2+co)/10000,iteran@ucmerced.edu,orion
+pist800-a9c5,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,lfl,pc,6.46,2,pass,combustible gas fraction is greater than lfl. gas is combustible and can retain sustainable flame. normalize gas values. lfl = ((ch_4/10000)/12.32/5 + (h_2/10000)/12.32/4 + (co/10000)/12.32/12.5)^-1 ,iteran@ucmerced.edu,orion
+pist801-d150,68,,173,85.0,2025-10-21 15:10:00,tripod,pistachio shells,,ufl,pc,47.99,2,pass,,,orion
+spen366-a2f6,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,bio,g,600.38,1,pass,,iteran@ucmerced.edu,ferdinand
+spen367-9bc0,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,wme,pc,16.7,1,pass,,iteran@ucmerced.edu,ferdinand
+spen368-c7d7,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+spen369-5e98,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,unc-bio,g,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+spen370-bb1f,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,time,min,0.05,1,pass,,iteran@ucmerced.edu,ferdinand
+spen371-2127,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,va,mps,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+spen372-6740,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,ta,c,19.7,1,pass,,iteran@ucmerced.edu,ferdinand
+spen373-6a67,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,ferdinand
+spen374-be01,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,pv,psi,70.0,1,pass,,iteran@ucmerced.edu,ferdinand
+spen375-a800,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,tar,g,62.11,1,pass,,iteran@ucmerced.edu,ferdinand
+spen376-b749,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,char,g,32.22,1,pass,,iteran@ucmerced.edu,ferdinand
+spen377-76d0,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,ch4,ppm,20152.58,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen378-fda3,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,h2,ppm,107219.1,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen379-3810,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,co,ppm,75863.41,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen380-5339,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,co2,ppm,135770.2,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen381-07ea,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,n2,ppm,523100.3,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen382-ae3b,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,o2,ppm,39079.24,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen383-de64,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c3h8,ppm,1951.22,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen384-7f8b,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c2h6,ppm,8270.5,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen385-d785,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(b),ppm,544.93,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen386-8a8b,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c5h12,ppm,0.28,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen387-5383,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(i),ppm,423.49,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen388-28f3,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c6h14,ppm,0.09,1,pass,can be normalized as xi/sum(xi/xn) but values are around 900000 ppm. ,iteran@ucmerced.edu,ferdinand
+spen389-6eb7,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,comb,,20.32,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+spen390-532b,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,lfl,pc,5.51,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+spen391-1ac6,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,ufl,pc,53.55,1,pass,,,ferdinand
+spen392-d3f8,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,ch4,ppm,11252.6,2,pass,,iteran@ucmerced.edu,ferdinand
+spen393-c986,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,h2,ppm,81336.98,2,pass,,iteran@ucmerced.edu,ferdinand
+spen394-2eda,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,co,ppm,62615.25,2,pass,,iteran@ucmerced.edu,ferdinand
+spen395-ec97,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,co2,ppm,107775.2,2,pass,,iteran@ucmerced.edu,ferdinand
+spen396-e432,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,n2,ppm,598847.3,2,pass,,iteran@ucmerced.edu,ferdinand
+spen397-d528,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,o2,ppm,100200.3,2,pass,,iteran@ucmerced.edu,ferdinand
+spen398-176a,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c3h8,ppm,1855.42,2,pass,,iteran@ucmerced.edu,ferdinand
+spen399-9994,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c2h6,ppm,7640.81,2,pass,,iteran@ucmerced.edu,ferdinand
+spen400-e105,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(b),ppm,506.88,2,pass,,iteran@ucmerced.edu,ferdinand
+spen401-329b,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c5h12,ppm,0.23,2,pass,,iteran@ucmerced.edu,ferdinand
+spen402-61bb,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(i),ppm,278.65,2,pass,,iteran@ucmerced.edu,ferdinand
+spen403-9bb6,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,c6h14,ppm,0.06,2,pass,,iteran@ucmerced.edu,ferdinand
+spen404-3055,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,comb,,15.52,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+spen405-118c,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,lfl,pc,5.62,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+spen406-7a1b,58,,211,59.0,2025-08-27 12:35:00,rigging,spent oak chips,,ufl,pc,57.94,2,pass,,,ferdinand
+spen407-33b9,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,bio,g,488.0,1,pass,,iteran@ucmerced.edu,apex
+spen408-0b8f,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,wme,pc,0.0,1,pass,,iteran@ucmerced.edu,apex
+spen409-8b09,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,apex
+spen410-bf7c,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,unc-bio,g,116.96,1,pass,,iteran@ucmerced.edu,apex
+spen411-89da,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,time,min,39.0,1,pass,,iteran@ucmerced.edu,apex
+spen412-c8e2,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,va,mps,0.7,1,pass,,iteran@ucmerced.edu,apex
+spen413-01b2,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,ta,c,14.6,1,pass,,iteran@ucmerced.edu,apex
+spen414-bf58,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,apex
+spen415-0e44,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,pv,psi,70.0,1,pass,,iteran@ucmerced.edu,apex
+spen416-2e77,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,tar,g,26.64,1,pass,,iteran@ucmerced.edu,apex
+spen417-aae7,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,char,g,36.94,1,pass,,iteran@ucmerced.edu,apex
+spen418-0a28,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,ch4,ppm,17155.43,1,pass,,iteran@ucmerced.edu,apex
+spen419-9777,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,h2,ppm,100931.9,1,pass,,iteran@ucmerced.edu,apex
+spen420-6859,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,co,ppm,96267.0,1,pass,,iteran@ucmerced.edu,apex
+spen421-9599,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,co2,ppm,157319.7,1,pass,,iteran@ucmerced.edu,apex
+spen422-32fb,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,n2,ppm,564467.5,1,pass,,iteran@ucmerced.edu,apex
+spen423-3b23,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,o2,ppm,33873.02,1,pass,,iteran@ucmerced.edu,apex
+spen424-791b,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c3h8,ppm,1349.47,1,pass,,iteran@ucmerced.edu,apex
+spen425-4aa9,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c2h6,ppm,4894.9,1,pass,,iteran@ucmerced.edu,apex
+spen426-7a0d,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(b),ppm,473.59,1,pass,,iteran@ucmerced.edu,apex
+spen427-b6f6,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c5h12,ppm,0.2,1,pass,,iteran@ucmerced.edu,apex
+spen428-7972,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(i),ppm,903.81,1,pass,,iteran@ucmerced.edu,apex
+spen429-2a58,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c6h14,ppm,0.06,1,pass,,iteran@ucmerced.edu,apex
+spen430-a73b,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,comb,,21.44,1,pass,,iteran@ucmerced.edu,apex
+spen431-e0bd,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,lfl,pc,5.89,1,pass,,iteran@ucmerced.edu,apex
+spen432-c752,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,ufl,pc,56.6,1,pass,,,apex
+spen433-df07,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,ch4,ppm,16237.65,2,pass,,iteran@ucmerced.edu,apex
+spen434-1ead,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,h2,ppm,93812.13,2,pass,,iteran@ucmerced.edu,apex
+spen435-191a,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,co,ppm,92531.36,2,pass,,iteran@ucmerced.edu,apex
+spen436-46f4,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,co2,ppm,149648.7,2,pass,,iteran@ucmerced.edu,apex
+spen437-2c7e,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,n2,ppm,576189.3,2,pass,,iteran@ucmerced.edu,apex
+spen438-3f64,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,o2,ppm,43921.04,2,pass,,iteran@ucmerced.edu,apex
+spen439-d0f0,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c3h8,ppm,1317.31,2,pass,,iteran@ucmerced.edu,apex
+spen440-2cc8,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c2h6,ppm,4650.39,2,pass,,iteran@ucmerced.edu,apex
+spen441-6cb1,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(b),ppm,485.91,2,pass,,iteran@ucmerced.edu,apex
+spen442-2821,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c5h12,ppm,0.17,2,pass,,iteran@ucmerced.edu,apex
+spen443-3655,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(i),ppm,806.0,2,pass,,iteran@ucmerced.edu,apex
+spen444-074c,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,c6h14,ppm,0.04,2,pass,,iteran@ucmerced.edu,apex
+spen445-7334,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,comb,,20.26,2,pass,,iteran@ucmerced.edu,apex
+spen446-ee03,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,lfl,pc,5.94,2,pass,,iteran@ucmerced.edu,apex
+spen447-2458,59,,210,60.0,2025-08-27 12:35:00,rigging,spent oak chips,,ufl,pc,56.58,2,pass,,,apex
+spen597-e54a,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,bio,g,448.93,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen598-999e,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,wme,pc,5.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen599-302a,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,ash,g,0.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen600-9804,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,unc-bio,g,0.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen601-6bc7,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,time,min,42.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen602-37d9,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,va,mps,2.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen603-e80c,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,ta,c,22.6,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen604-278b,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,pi,psi,30.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen605-dba3,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,pv,psi,70.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen606-0505,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,tar,g,0.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen607-5038,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,char,g,39.67,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen608-487d,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,ch4,ppm,16325.37,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen609-0d05,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,h2,ppm,95786.94,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen610-ea71,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,co,ppm,98559.97,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen611-6683,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,co2,ppm,85623.31,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen612-f5c3,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,n2,ppm,489540.4,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen613-4e1a,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,o2,ppm,19546.93,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen614-6ac0,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c3h8,ppm,1840.46,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen615-f0bf,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c2h6,ppm,10929.16,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen616-8c01,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(b),ppm,470.49,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen617-a752,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c5h12,ppm,0.03,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen618-e1ff,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(i),ppm,1217.59,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen619-ef9d,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c6h14,ppm,0.0,1,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen620-6927,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,comb,,21.07,1,pass,,iteran@ucmerced.edu,apex
+spen621-bdd3,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,lfl,pc,6.0,1,pass,,iteran@ucmerced.edu,apex
+spen622-9d86,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,ufl,pc,57.03,1,pass,,,apex
+spen623-f63f,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,ch4,ppm,16165.83,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen624-98e1,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,h2,ppm,93651.7,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen625-faee,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,co,ppm,95666.48,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen626-42c5,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,co2,ppm,88704.35,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen627-47da,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,n2,ppm,487423.7,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen628-c180,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,o2,ppm,20138.01,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen629-c994,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c3h8,ppm,1634.45,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen630-ee3c,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c2h6,ppm,7351.67,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen631-33b3,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(b),ppm,424.91,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen632-de68,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c5h12,ppm,0.07,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen633-fb08,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c4h10(i),ppm,1147.36,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen634-7100,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,c6h14,ppm,0.0,2,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",iteran@ucmerced.edu,apex
+spen635-9fdf,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,comb,,20.55,2,pass,,iteran@ucmerced.edu,apex
+spen636-b6d1,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,lfl,pc,5.99,2,pass,,iteran@ucmerced.edu,apex
+spen637-bd00,64,,208,58.0,2025-08-27 12:35:00,rigging,spent oak chips,,ufl,pc,56.83,2,pass,,,apex
+waln122-3924,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,bio,g,763.77,1,pass,,iteran@ucmerced.edu,apex
+waln123-22bf,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,wme,pc,5.5,1,pass,,iteran@ucmerced.edu,apex
+waln124-5e6b,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,apex
+waln125-1163,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,unc-bio,g,133.85,1,pass,,iteran@ucmerced.edu,apex
+waln126-11f7,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,time,min,0.05,1,pass,,iteran@ucmerced.edu,apex
+waln127-7d60,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,va,mps,0.0,1,pass,,iteran@ucmerced.edu,apex
+waln128-cf58,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ta,c,10.9,1,pass,,iteran@ucmerced.edu,apex
+waln129-ef0e,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,apex
+waln130-286f,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,pv,psi,70.0,1,pass,,iteran@ucmerced.edu,apex
+waln131-5910,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,tar,g,0.0,1,pass,,iteran@ucmerced.edu,apex
+waln132-4abf,52,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,char,g,144.15,1,pass,,iteran@ucmerced.edu,apex
+waln243-34ea,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,bio,g,292.7,1,pass,,iteran@ucmerced.edu,megadeath
+waln244-9682,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,wme,pc,5.0,1,pass,,iteran@ucmerced.edu,megadeath
+waln245-4fe7,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+waln246-ad59,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,unc-bio,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+waln247-2906,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,time,min,0.05,1,pass,,iteran@ucmerced.edu,megadeath
+waln248-bfeb,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,va,mps,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+waln249-eaff,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ta,c,30.8,1,pass,,iteran@ucmerced.edu,megadeath
+waln250-8159,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,megadeath
+waln251-3746,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,pv,psi,70.0,1,pass,,iteran@ucmerced.edu,megadeath
+waln252-f72c,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,tar,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+waln253-c7e0,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,char,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+waln254-ec67,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ch4,ppm,6839.57,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln255-b771,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,h2,ppm,16337.74,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln256-44c0,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co,ppm,38363.16,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln257-c056,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co2,ppm,126845.4,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln258-aadb,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,n2,ppm,759626.2,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln259-f7b6,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,o2,ppm,100764.8,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln260-086c,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c3h8,ppm,527.23,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln261-3d71,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c2h6,ppm,3730.54,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln262-ab1f,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(b),ppm,0.16,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln263-cdb4,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c5h12,ppm,0.27,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln264-ed1f,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(i),ppm,1923.97,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln265-1532,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c6h14,ppm,0.0,1,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln269-ac2c,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ch4,ppm,6819.93,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln270-1cca,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,h2,ppm,13616.81,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln271-ce0c,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co,ppm,57139.91,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln272-957e,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co2,ppm,145410.3,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln273-854a,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,n2,ppm,755958.3,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln274-c1a9,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,o2,ppm,98440.74,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln275-fd0f,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c3h8,ppm,667.74,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln276-2c46,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c2h6,ppm,5974.23,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln277-870f,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(b),ppm,0.38,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln278-5323,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c5h12,ppm,0.25,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln279-5a49,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(i),ppm,751.52,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln280-1cfc,55,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c6h14,ppm,0.06,2,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",iteran@ucmerced.edu,megadeath
+waln284-659d,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,bio,g,400.03,1,pass,,iteran@ucmerced.edu,ferdinand
+waln285-2836,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,wme,pc,5.3,1,pass,,iteran@ucmerced.edu,ferdinand
+waln286-acfc,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+waln287-b340,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,unc-bio,g,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+waln288-1c22,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,time,min,59.0,1,pass,,iteran@ucmerced.edu,ferdinand
+waln289-135f,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,va,mps,0.25,1,pass,,iteran@ucmerced.edu,ferdinand
+waln290-adb1,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ta,c,8.0,1,pass,,iteran@ucmerced.edu,ferdinand
+waln291-62d0,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,ferdinand
+waln292-3997,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,pv,psi,70.0,1,pass,,iteran@ucmerced.edu,ferdinand
+waln293-4325,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,tar,g,0.0,1,pass,,iteran@ucmerced.edu,ferdinand
+waln294-3192,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,char,g,50.8,1,pass,,iteran@ucmerced.edu,ferdinand
+waln295-44b2,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ch4,ppm,34071.13,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln296-06bf,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,h2,ppm,129895.6,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln297-b7ee,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co,ppm,88704.61,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln298-e709,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co2,ppm,203045.6,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln299-61ac,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,n2,ppm,389701.3,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln300-f564,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,o2,ppm,2141.22,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln301-bf08,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c3h8,ppm,3699.32,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln302-13a2,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c2h6,ppm,8674.5,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln303-39ea,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(b),ppm,1814.19,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln304-c8d9,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c5h12,ppm,0.36,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln305-e2fb,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(i),ppm,1643.11,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln306-c327,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c6h14,ppm,0.06,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln307-510f,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,comb,,25.27,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln308-1f7d,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,lfl,pc,5.45,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln309-7c80,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ufl,pc,48.6,1,pass,,,ferdinand
+waln310-f9f4,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ch4,ppm,42504.5,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln311-e7b9,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,h2,ppm,119085.4,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln312-c119,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co,ppm,90230.91,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln313-d800,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co2,ppm,201569.1,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln314-ccd6,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,n2,ppm,451384.7,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln315-46e2,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,o2,ppm,2097.24,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln316-3448,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c3h8,ppm,3921.04,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln317-6cd4,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c2h6,ppm,13623.84,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln318-bb98,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(b),ppm,1905.22,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln319-5db9,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c5h12,ppm,0.33,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln320-4518,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(i),ppm,1722.4,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln321-f764,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c6h14,ppm,0.06,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln322-8e54,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,comb,,25.18,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln323-fc50,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,lfl,pc,5.54,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,ferdinand
+waln324-3435,56,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ufl,pc,44.67,2,pass,,,ferdinand
+walnr42-ff10,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,bio,g,305.1,1,pass,,iteran@ucmerced.edu,megadeath
+walnr43-2777,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,wme,pc,5.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr44-419d,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ash,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr45-8e96,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,unc-bio,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr46-0290,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,time,min,0.05,1,pass,,iteran@ucmerced.edu,megadeath
+walnr47-4ba1,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,va,mps,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr48-10ce,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ta,c,19.2,1,pass,,iteran@ucmerced.edu,megadeath
+walnr49-5e5f,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,pi,psi,30.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr50-7fdb,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,pv,psi,70.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr51-362f,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,tar,g,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr52-cd64,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,char,g,55.58,1,pass,,iteran@ucmerced.edu,megadeath
+walnr53-54ff,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ch4,ppm,6748.79,1,pass,,iteran@ucmerced.edu,megadeath
+walnr54-2c69,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,h2,ppm,114123.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr55-f607,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co,ppm,172963.7,1,pass,,iteran@ucmerced.edu,megadeath
+walnr56-5b69,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co2,ppm,158332.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr57-1fbc,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,n2,ppm,472784.1,1,pass,,iteran@ucmerced.edu,megadeath
+walnr58-cef1,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,o2,ppm,0.0,1,pass,,iteran@ucmerced.edu,megadeath
+walnr59-ac4f,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c3h8,ppm,15809.2,1,pass,,iteran@ucmerced.edu,megadeath
+walnr60-dde7,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c2h6,ppm,39372.41,1,pass,,iteran@ucmerced.edu,megadeath
+walnr61-7824,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(b),ppm,17071.3,1,pass,,iteran@ucmerced.edu,megadeath
+walnr62-00fd,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c5h12,ppm,3.87,1,pass,,iteran@ucmerced.edu,megadeath
+walnr63-098e,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(i),ppm,3257.27,1,pass,,iteran@ucmerced.edu,megadeath
+walnr64-1a9b,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c6h14,ppm,0.05,1,pass,,iteran@ucmerced.edu,megadeath
+walnr65-6db7,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,comb,,29.38,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+walnr66-2523,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,lfl,pc,6.72,1,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+walnr67-0667,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ufl,pc,68.29,1,pass,,,megadeath
+walnr68-a94d,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ch4,ppm,8010.37,2,pass,,iteran@ucmerced.edu,megadeath
+walnr69-20b9,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,h2,ppm,51661.39,2,pass,,iteran@ucmerced.edu,megadeath
+walnr70-070c,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co,ppm,117650.2,2,pass,,iteran@ucmerced.edu,megadeath
+walnr71-65e8,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,co2,ppm,110674.7,2,pass,,iteran@ucmerced.edu,megadeath
+walnr72-295c,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,n2,ppm,558836.6,2,pass,,iteran@ucmerced.edu,megadeath
+walnr73-230c,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,o2,ppm,0.0,2,pass,,iteran@ucmerced.edu,megadeath
+walnr74-8c79,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c3h8,ppm,40182.31,2,pass,,iteran@ucmerced.edu,megadeath
+walnr75-c70a,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c2h6,ppm,47784.78,2,pass,,iteran@ucmerced.edu,megadeath
+walnr76-f744,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(b),ppm,4156.37,2,pass,,iteran@ucmerced.edu,megadeath
+walnr77-f5e4,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c5h12,ppm,2.08,2,pass,,iteran@ucmerced.edu,megadeath
+walnr78-b1cd,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c4h10(i),ppm,2179.56,2,pass,,iteran@ucmerced.edu,megadeath
+walnr79-0489,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,c6h14,ppm,0.04,2,pass,,iteran@ucmerced.edu,megadeath
+walnr80-1a01,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,comb,,17.73,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+walnr81-fbdf,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,lfl,pc,7.41,2,pass,"comb > lfl, pass qc",iteran@ucmerced.edu,megadeath
+walnr82-6e08,50,,195,20.0,2024-11-21 18:10:00,energetic,walnut shells,,ufl,pc,63.14,2,pass,,,megadeath

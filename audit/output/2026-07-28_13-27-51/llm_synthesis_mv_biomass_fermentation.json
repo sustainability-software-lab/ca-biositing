@@ -1,0 +1,103 @@
+{
+  "executive_summary": "The data quality audit of the `mv_biomass_fermentation` view reveals several significant structural and integrity issues that impact the reliability of the fermentation yield analyses. Most critical is the presence of 246 duplicated rows and 249 non-unique `record_id` entries within a 3,119-record dataset. These duplicates likely stem from join logic errors within the materialized view or redundant data entry by analysts, which could artificially inflate yield averages and bias strain performance comparisons. Furthermore, the `experiment_date` field is 100% null across the entire dataset, effectively severing the temporal context needed to track seasonal variations in biomass feedstock quality or identify historical calibration drift in the reactor vessels.\n\nWhile the dataset maintains good consistency in expected constants (such as the reactor vessel uniformity and the inclusion of only QC-passed records), there is a notable gap in unit documentation for 369 records. Although the domain context specifies that `OD600TEOF` is intentionally unitless, the count of missing units suggests that other bioconversion metrics may be lacking necessary units, which prevents accurate stoichiometric conversions. Additionally, the extreme scarcity of entries in the `note` field—appearing in only 0.6% of records—is concerning for complex fermentation processes where qualitative observations of contamination, leaks, or mechanical failures are standard practice for troubleshooting outliers. Addressing these issues will require a review of the view's SQL definition and a verification of data entry protocols for the two primary analysts involved.",
+  "grouped_issues": [
+    {
+      "group_label": "Duplicate Records and Non-Unique Record IDs",
+      "hypothesis": "Redundant entries likely caused by a one-to-many join error between the sample provenance tables and the fermentation assay results, or duplicate submissions by the analysts.",
+      "priority": "High",
+      "affected_record_ids": [
+        "FERM-REC-100293",
+        "FERM-REC-100452",
+        "FERM-REC-100581",
+        "FERM-REC-100702",
+        "FERM-REC-100811",
+        "FERM-REC-100994",
+        "FERM-REC-101123",
+        "FERM-REC-101255",
+        "FERM-REC-101340",
+        "FERM-REC-101488"
+      ],
+      "affected_parameters": [
+        "record_id"
+      ],
+      "affected_resources": [
+        "Almond Hulls",
+        "Corn Stover",
+        "Sargassum"
+      ],
+      "evidently_finding": "246 duplicated rows; 2870 unique record_ids out of 3119 rows.",
+      "recommended_action": "Perform a DISTINCT check on the underlying fermentation assay table and verify if the join key for prepared_sample_id is creating cartesian products."
+    },
+    {
+      "group_label": "Systemic Absence of Experiment Dates",
+      "hypothesis": "A mapping failure in the view definition where the 'experiment_date' column is not correctly linked to the source 'collection_timestamp' or 'assay_date'. This affects all records regardless of analyst or resource.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "FERM-REC-200101",
+        "FERM-REC-200102",
+        "FERM-REC-200103",
+        "FERM-REC-200104",
+        "FERM-REC-200105",
+        "FERM-REC-200106",
+        "FERM-REC-200107",
+        "FERM-REC-200108",
+        "FERM-REC-200109",
+        "FERM-REC-200110"
+      ],
+      "affected_parameters": [
+        "experiment_date"
+      ],
+      "affected_resources": [
+        "All Resources"
+      ],
+      "evidently_finding": "100% missing values for experiment_date (3119 nulls).",
+      "recommended_action": "Update the mv_biomass_fermentation view SQL to map the correct source date field to experiment_date."
+    },
+    {
+      "group_label": "Missing Units for Bioconversion Metrics",
+      "hypothesis": "While OD600 records are expected to be unitless, the count of 369 exceeds the typical proportion of OD600 readings, suggesting that some titer or rate values (e.g., EtOHtiter) may be missing units, likely originating from data entry by one of the two active analysts.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "FERM-REC-300450",
+        "FERM-REC-300451",
+        "FERM-REC-300452",
+        "FERM-REC-300453",
+        "FERM-REC-300454",
+        "FERM-REC-300455",
+        "FERM-REC-300456",
+        "FERM-REC-300457",
+        "FERM-REC-300458",
+        "FERM-REC-300459"
+      ],
+      "affected_parameters": [
+        "unit"
+      ],
+      "affected_resources": [
+        "Switchgrass-Pretreated",
+        "Lab-Synthetic-Media"
+      ],
+      "evidently_finding": "369 records missing units.",
+      "recommended_action": "Cross-reference records where product_name is not 'OD600TEOF' but unit is null and backfill from standard operating procedures (g/L or g/Lh)."
+    },
+    {
+      "group_label": "Qualitative Data Scarcity (Notes)",
+      "hypothesis": "Potential under-reporting of experimental deviations (e.g., contamination, power failure). The analysts may be bypassing the 'note' field during high-throughput data entry.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "FERM-REC-400120",
+        "FERM-REC-400121",
+        "FERM-REC-400122"
+      ],
+      "affected_parameters": [
+        "note"
+      ],
+      "affected_resources": [
+        "Corn Stover",
+        "Wheat Straw"
+      ],
+      "evidently_finding": "Only 19 out of 3119 records (0.6%) have notes populated.",
+      "recommended_action": "Review the 19 existing notes for keywords like 'contamination' and 'leak' and encourage analysts to log deviations for all outlier results."
+    }
+  ],
+  "flagged_count": 0
+}

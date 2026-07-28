@@ -1,0 +1,35 @@
+project:
+  type: website
+  output-dir: _site
+website:
+  title: BioCirV Data Quality Portal
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+  sidebar:
+    title: Audit Targets
+    style: floating
+    collapse-level: 2
+    contents:
+      - targets/calorimetry.qmd
+      - targets/compositional.qmd
+      - targets/ftnir.qmd
+      - targets/icp.qmd
+      - targets/mv_biomass_availability.qmd
+      - targets/mv_biomass_composition.qmd
+      - targets/mv_biomass_composition_extended.qmd
+      - targets/mv_biomass_end_uses.qmd
+      - targets/mv_biomass_fermentation.qmd
+      - targets/mv_biomass_gasification.qmd
+      - targets/mv_biomass_pricing.qmd
+      - targets/mv_biomass_sample_stats.qmd
+      - targets/pretreatment.qmd
+      - targets/proximate.qmd
+      - targets/ultimate.qmd
+      - targets/xrd.qmd
+      - targets/xrf.qmd
+format:
+  html:
+    theme: cosmo
+    toc: true

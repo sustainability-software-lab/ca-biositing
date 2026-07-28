@@ -1,0 +1,119 @@
+{
+  "executive_summary": "The data quality audit of the 'mv_biomass_gasification' dataset reveals significant structural and procedural anomalies that could impact the reliability of syngas composition analyses. The most pressing issue is the presence of raw, un-normalized gas concentration values for 'spent oak chips' provided by 'rigging', as explicitly noted in the records by analyst iteran@ucmerced.edu. Without normalization (xi/sum(xi)), these values represent raw instrument responses or raw mass counts rather than the standard molar concentrations required for stoichiometric gasification modeling. Additionally, there is a recurring issue with 'poor gas samples' for 'walnut shells' provided by 'energetic', where the lower flammability limit (LFL) conditions were not met despite stable reactor temperatures, suggesting a potential leak or bypass in the sampling train.\n\nFurthermore, the dataset suffers from substantial metadata voids and redundancy. Specifically, the 'experiment_date' and 'primary_product' columns are entirely empty, and the 'qc_pass' flag is constant, offering no discriminative power for quality control. The presence of 88 duplicated rows and several triplicated records (e.g., record_id spen622-9d86) suggests errors in the data ingestion or joining process. To ensure the integrity of the gasification research, the raw syngas values must be normalized, and the sampling protocol for the 'energetic' provider's walnut shell trials should be reviewed to address the air infiltration or poor collection efficiency indicated in the notes.",
+  "grouped_issues": [
+    {
+      "group_label": "Un-normalized Syngas Concentrations (Spent Oak Chips)",
+      "hypothesis": "Records for spent oak chips processed by analyst iteran@ucmerced.edu (Provider: rigging) contain raw instrument data that has not been normalized to a 100% molar sum, as indicated by internal notes. This results in high-magnitude observed_values that are not comparable to other experiments.",
+      "priority": "High",
+      "affected_record_ids": [
+        "spen610-ea71",
+        "spen614-6ac0",
+        "spen615-f0bf",
+        "spen617-a752",
+        "spen618-e1ff",
+        "spen631-33b3"
+      ],
+      "affected_parameters": [
+        "observed_value",
+        "co",
+        "c3h8",
+        "c2h6",
+        "c5h12",
+        "c4h10(i)",
+        "c4h10(b)"
+      ],
+      "affected_resources": [
+        "spent oak chips"
+      ],
+      "evidently_finding": "DatasetSummaryMetric - number_of_rows and number_uniques_by_columns divergence",
+      "recommended_action": "Apply the normalization formula [xi / sum(xi)] as suggested in the record notes to convert raw values into mole fractions or percentages."
+    },
+    {
+      "group_label": "Poor Gas Sample / LFL Inconsistency (Walnut Shells)",
+      "hypothesis": "Analyst iteran@ucmerced.edu noted that for walnut shells (Provider: energetic), the combustion values were below the Lower Flammability Limit (LFL) despite ideal reactor conditions. This suggests an error in the sampling probe placement or syngas collection bag integrity rather than a reactor failure.",
+      "priority": "High",
+      "affected_record_ids": [
+        "waln265-1532",
+        "waln279-5a49",
+        "walnr54-2c69"
+      ],
+      "affected_parameters": [
+        "c6h14",
+        "c4h10(i)",
+        "h2",
+        "ufl",
+        "lfl"
+      ],
+      "affected_resources": [
+        "walnut shells"
+      ],
+      "evidently_finding": "ColumnSummaryMetric - observed_value p50 shift",
+      "recommended_action": "Flag these records as 'QC Fail' and exclude them from the primary biomass performance baseline until sampling integrity can be verified."
+    },
+    {
+      "group_label": "Data Redundancy and Multi-record Duplication",
+      "hypothesis": "The dataset contains 88 duplicated rows, including specific instances like spen622-9d86 which appears three times. This likely occurred during a join between the gas composition table and the reactor condition table where a many-to-one mapping was not properly handled.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "spen622-9d86"
+      ],
+      "affected_parameters": [
+        "record_id",
+        "ufl"
+      ],
+      "affected_resources": [
+        "spent oak chips"
+      ],
+      "evidently_finding": "DatasetSummaryMetric - number_of_duplicated_rows (88)",
+      "recommended_action": "Deduplicate the dataset based on record_id and parameter_name to prevent artificial weighting of results in statistical summaries."
+    },
+    {
+      "group_label": "Total Metadata Loss (Date/Product)",
+      "hypothesis": "The experiment_date and primary_product columns are 100% null in the current dataset, suggesting a failure in the ETL pipeline to map the upstream 'sample_date' or 'created_at' fields into the unified gasification view.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "spen418-0a28",
+        "spen419-9777",
+        "spen427-b6f6",
+        "spen429-2a58",
+        "spen431-e0bd",
+        "spen435-191a",
+        "spen438-3f64",
+        "spen443-3655"
+      ],
+      "affected_parameters": [
+        "experiment_date",
+        "primary_product"
+      ],
+      "affected_resources": [
+        "spent oak chips",
+        "walnut shells"
+      ],
+      "evidently_finding": "DatasetSummaryMetric - number_of_empty_columns (2)",
+      "recommended_action": "Restore the experiment_date from the raw lab logs (sample_date) to allow for temporal trend analysis and equipment drift detection."
+    },
+    {
+      "group_label": "Extreme Value Syngas Outliers",
+      "hypothesis": "H2 and CO values exceeding 100,000 in 'observed_value' likely indicate a unit mismatch (e.g., reporting in ppm instead of percentage) or the use of an internal standard that was not subtracted, particularly for the 'rigging' and 'energetic' providers.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "spen418-0a28",
+        "spen419-9777",
+        "spen435-191a",
+        "walnr54-2c69"
+      ],
+      "affected_parameters": [
+        "co",
+        "h2",
+        "ch4"
+      ],
+      "affected_resources": [
+        "spent oak chips",
+        "walnut shells"
+      ],
+      "evidently_finding": "ColumnSummaryMetric - observed_value mean and std variance",
+      "recommended_action": "Audit the units for major syngas components; ensure all values are consistently reported as either ppm or molar percentage."
+    }
+  ],
+  "flagged_count": 30
+}

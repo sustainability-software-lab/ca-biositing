@@ -1,0 +1,125 @@
+{
+  "executive_summary": "The data quality audit for the 'pretreatment' dataset examined 741 records focused on glucose and xylose yields across 24 biomass types and 24 provider facilities. The data, primarily processed by analyst akrishnamoorthy@lbl.gov, shows high internal consistency but contains 232 flagged observations, mostly centered on yield deviations in specific biomass categories. Notably, there is a distinct clustering of anomalies by provider, with 'Maplewood', 'Ebony', and 'Oakleaf' showing high-variance yields for pomace-based residues, while 'Energetic' and 'Vibrant' show significant deviations in woody nut-tree residues.\n\nKey findings include a high-severity yield discrepancy in walnut-based biomass, where shells exhibit glucose yields exceeding 80%, contrasting sharply with tree sticks and almond branches which fall below 17%. Furthermore, metadata integrity is compromised by the total absence of analyst names and notes across the entire dataset, and a subset of 43 records lacks analyst email attribution entirely. While z-scores for many residues remain in the 'Low' severity range (1.0 - 1.5), the systematic nature of these deviations suggests either provider-specific pretreatment protocols or variations in feedstock recalcitrance that may require recalibration for accurate cross-study comparison.",
+  "grouped_issues": [
+    {
+      "group_label": "Grape Pomace Saccharification Variance",
+      "hypothesis": "High sugar yields in grape pomace reported by providers 'maplewood' and 'ebony' may reflect high residual soluble sugar content rather than pretreatment efficiency. Analyst akrishnamoorthy@lbl.gov should verify if samples were washed prior to analysis.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "buty007-8d08",
+        "buty008-128b",
+        "buty009-f6f6",
+        "buty058-c478",
+        "buty059-af88",
+        "buty060-09f3"
+      ],
+      "affected_parameters": [
+        "glucose_yld",
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "grape pomace"
+      ],
+      "evidently_finding": "number_of_almost_duplicated_columns: 2",
+      "recommended_action": "Cross-reference yield data with 'extractive-free' biomass baseline to ensure yields are not artificially inflated by non-structural sugars."
+    },
+    {
+      "group_label": "Tomato Pomace Xylose Outliers",
+      "hypothesis": "Provider 'oakleaf' reports xylose yields exceeding 80%, which is atypically high for tomato residues. This may be due to an overestimation of hemicellulose content in the initial feedstock characterization.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "buty106-5d8b",
+        "buty107-4b83"
+      ],
+      "affected_parameters": [
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "number_of_almost_constant_columns: 3",
+      "recommended_action": "Re-validate the structural carbohydrate analysis for tomato pomace batch reported by oakleaf."
+    },
+    {
+      "group_label": "Woody Residue Yield Disparity",
+      "hypothesis": "Providers 'energetic' and 'vibrant' show extreme yield polarization (e.g., walnut shells at >80% vs branches at <12%). This likely reflects anatomical differences in lignin-carbohydrate complexes, but the shell values are statistically suspicious for glucose recovery.",
+      "priority": "High",
+      "affected_record_ids": [
+        "buty346-f978",
+        "buty347-8f10",
+        "buty348-e7b5",
+        "buty367-7ab1",
+        "buty369-947d",
+        "buty391-1d2c",
+        "buty392-448d",
+        "buty393-de8d"
+      ],
+      "affected_parameters": [
+        "glucose_yld",
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "walnut tree sticks",
+        "almond branches",
+        "walnut shells"
+      ],
+      "evidently_finding": "number_of_numeric_columns: 1 (current) vs 3 (reference)",
+      "recommended_action": "Audit the pretreatment severity (Ro) calculations for walnut shells at facility 'energetic' to ensure correct temperature/time integration."
+    },
+    {
+      "group_label": "Corn Residue Yield Drift",
+      "hypothesis": "Systematic low-severity xylose yield deviations at provider 'caterpillar' suggest a potential calibration drift in the HPLC equipment used for sugar quantification.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "buty442-04c1",
+        "buty466-ab89",
+        "buty468-c171"
+      ],
+      "affected_parameters": [
+        "xylose_yld"
+      ],
+      "affected_resources": [
+        "corn stover husks",
+        "corn stover cobs"
+      ],
+      "evidently_finding": "nans_by_columns: {'analyst_email': 43}",
+      "recommended_action": "Review HPLC standard curve logs for the 'caterpillar' facility for the sample period."
+    },
+    {
+      "group_label": "Missing Analyst Attribution",
+      "hypothesis": "43 records, including almond hulls from provider 'tiny', lack analyst email attribution, preventing direct follow-up on specific data flags. This likely occurred during batch upload where the metadata header was malformed.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "buty272-6b9b"
+      ],
+      "affected_parameters": [
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "nans_by_columns: {'analyst_email': 43}",
+      "recommended_action": "Manually update missing analyst_email fields for the affected 43 records to maintain traceability."
+    },
+    {
+      "group_label": "Zero-Information Metadata Columns",
+      "hypothesis": "The columns 'note' and 'analyst_name' are 100% empty across the dataset, indicating a failure in the data collection template or the upstream ETL process.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "buty007-8d08",
+        "buty106-5d8b",
+        "buty391-1d2c"
+      ],
+      "affected_parameters": [
+        "note",
+        "analyst_name"
+      ],
+      "affected_resources": [
+        "all"
+      ],
+      "evidently_finding": "number_of_empty_columns: 2",
+      "recommended_action": "Deprecated empty columns in the production view or update the ingestor to map 'analyst_name' from the email domain."
+    }
+  ],
+  "flagged_count": 232
+}

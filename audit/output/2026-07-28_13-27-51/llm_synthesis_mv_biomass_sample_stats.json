@@ -1,0 +1,49 @@
+{
+  "executive_summary": "The data quality audit of the `mv_biomass_sample_stats` dataset reveals significant distributional anomalies that suggest the presence of default values or placeholder entries. With 68.33% of the 'observed_value' entries being exactly 1.0, the dataset exhibits a heavy modal bias that is statistically improbable for raw biomass measurements. This concentration at unity, combined with a median of 1.0 and a mean of 309.69, indicates that the majority of the 'current' dataset may contain uninitialized records or boolean flags incorrectly stored as continuous measurements.\n\nFurthermore, the dataset displays extreme variance, with a maximum value of 6752.0—over 135 times the 75th percentile (49.75). This massive right-skewed distribution, where the standard deviation (1066.12) is more than triple the mean, suggests either the inclusion of raw counts from a different scale or significant unit conversion errors (e.g., grams vs. milligrams). These anomalies likely compromise the integrity of any downstream statistical aggregates, as the 'observed_value' column currently reflects a mixture of placeholder constants and extreme outliers rather than a coherent measurement set.",
+  "grouped_issues": [
+    {
+      "group_label": "Unitary Placeholder Inflation",
+      "hypothesis": "The high frequency of exactly 1.0 suggests that '1.0' is being used as a system default or a placeholder for 'record created' rather than representing an actual physical measurement. In biomass research, it is rare for ~70% of samples to yield a perfectly identical unitary result.",
+      "priority": "High",
+      "affected_record_ids": [
+        "106.0",
+        "1.0",
+        "2.0",
+        "3.0",
+        "4.0",
+        "5.0",
+        "6.0",
+        "7.0",
+        "8.0",
+        "9.0"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "resource_name_various"
+      ],
+      "evidently_finding": "Most common value 1.0 (68.33% frequency)",
+      "recommended_action": "Cross-reference these records with laboratory bench sheets to determine if 1.0 signifies a valid measurement or a 'below detection limit' / 'not yet processed' flag. Update placeholders to NULL where appropriate."
+    },
+    {
+      "group_label": "Extreme Scale Outliers",
+      "hypothesis": "The values in the upper quartile (max 6752) are orders of magnitude higher than the median (1.0). This likely represents a unit mismatch (e.g., reporting in milligrams while the bulk of the data is in kilograms) or the accidental inclusion of 'total plot' stats into 'sample' stats.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "124.0",
+        "125.0",
+        "126.0"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "resource_name_various"
+      ],
+      "evidently_finding": "Max value 6752.0 vs P75 of 49.75",
+      "recommended_action": "Verify the units of measure for records exceeding 1000. Normalize values to a consistent SI unit (kg or g) across all resource names."
+    }
+  ],
+  "flagged_count": 0
+}

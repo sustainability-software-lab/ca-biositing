@@ -1,0 +1,522 @@
+resource_name,reactor_type,observed_value,record_id,qc_pass,created_at,parameter_name,unit,provider_codename,sample_date
+almond woodchips,apex,450.45,almo638-d0a0,pass,2026-07-08 03:54:37.572587,bio,g,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,5.1,almo639-9491,pass,2026-07-08 03:54:37.572587,wme,pc,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,0.0,almo640-8a86,pass,2026-07-08 03:54:37.572587,ash,g,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,266.81,almo641-9ce7,pass,2026-07-08 03:54:37.572587,unc-bio,g,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,19.0,almo642-1b15,pass,2026-07-08 03:54:37.572587,time,min,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,0.2,almo643-7337,pass,2026-07-08 03:54:37.572587,va,mps,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,19.2,almo644-6bbb,pass,2026-07-08 03:54:37.572587,ta,c,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,30.0,almo645-5fbd,pass,2026-07-08 03:54:37.572587,pi,psi,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,85.0,almo646-a41a,pass,2026-07-08 03:54:37.572587,pv,psi,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,0.0,almo647-9f90,pass,2026-07-08 03:54:37.572587,tar,g,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,24.79,almo648-9a55,pass,2026-07-08 03:54:37.572587,char,g,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,11797.78,almo649-eda6,pass,2026-07-08 03:54:37.572587,ch4,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,55904.23,almo650-dd76,pass,2026-07-08 03:54:37.572587,h2,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,85710.7,almo651-99d3,pass,2026-07-08 03:54:37.572587,co,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,104670.3,almo652-fecf,pass,2026-07-08 03:54:37.572587,co2,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,513012.4,almo653-bcba,pass,2026-07-08 03:54:37.572587,n2,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,30655.61,almo654-7320,pass,2026-07-08 03:54:37.572587,o2,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,1080.13,almo655-8b73,pass,2026-07-08 03:54:37.572587,c3h8,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,5334.31,almo656-9885,pass,2026-07-08 03:54:37.572587,c2h6,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,247.19,almo657-c1e5,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,0.0,almo658-21ea,pass,2026-07-08 03:54:37.572587,c5h12,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,849.39,almo659-8e9d,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,0.0,almo660-5cff,pass,2026-07-08 03:54:37.572587,c6h14,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,15.34,almo661-7dfb,pass,2026-07-08 03:54:37.572587,comb,,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,6.61,almo662-4cdc,pass,2026-07-08 03:54:37.572587,lfl,pc,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,57.09,almo663-5842,pass,2026-07-08 03:54:37.572587,ufl,pc,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,11646.12,almo664-5f09,pass,2026-07-08 03:54:37.572587,ch4,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,53231.06,almo665-7b77,pass,2026-07-08 03:54:37.572587,h2,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,83540.26,almo666-5efb,pass,2026-07-08 03:54:37.572587,co,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,112016.7,almo667-3c83,pass,2026-07-08 03:54:37.572587,co2,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,510670.9,almo668-7255,pass,2026-07-08 03:54:37.572587,n2,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,29520.05,almo669-0763,pass,2026-07-08 03:54:37.572587,o2,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,1000.58,almo670-e3b0,pass,2026-07-08 03:54:37.572587,c3h8,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,4987.69,almo671-bbe2,pass,2026-07-08 03:54:37.572587,c2h6,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,223.02,almo672-f6ef,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,0.05,almo673-31b5,pass,2026-07-08 03:54:37.572587,c5h12,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,782.07,almo674-0296,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,0.0,almo675-9385,pass,2026-07-08 03:54:37.572587,c6h14,ppm,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,14.84,almo676-9513,pass,2026-07-08 03:54:37.572587,comb,,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,6.65,almo677-ddd8,pass,2026-07-08 03:54:37.572587,lfl,pc,popular,2026-07-08 03:54:37.572587
+almond woodchips,apex,56.82,almo678-d2fd,pass,2026-07-08 03:54:37.572587,ufl,pc,popular,2026-07-08 03:54:37.572587
+almond shells,megadeath,214.4,almor1-0242,pass,2026-07-08 03:54:37.572587,bio,g,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.0,almor10-8350,pass,2026-07-08 03:54:37.572587,tar,g,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,36.48,almor11-2eb9,pass,2026-07-08 03:54:37.572587,char,g,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,5456.74,almor12-b8e0,pass,2026-07-08 03:54:37.572587,ch4,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,106681.8,almor13-5911,pass,2026-07-08 03:54:37.572587,h2,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,199983.5,almor14-3f11,pass,2026-07-08 03:54:37.572587,co,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,123979.8,almor15-e088,pass,2026-07-08 03:54:37.572587,co2,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,524696.1,almor16-662f,pass,2026-07-08 03:54:37.572587,n2,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,5122.33,almor17-fac1,pass,2026-07-08 03:54:37.572587,o2,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,2153.35,almor18-fdbd,pass,2026-07-08 03:54:37.572587,c3h8,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,11569.72,almor19-9687,pass,2026-07-08 03:54:37.572587,c2h6,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,1.56,almor20-ddf0,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.1,almor21-9044,pass,2026-07-08 03:54:37.572587,c5h12,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,1476.09,almor22-7cef,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.03,almor23-f65e,pass,2026-07-08 03:54:37.572587,c6h14,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,31.21,almor24-cc42,pass,2026-07-08 03:54:37.572587,comb,,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,7.13,almor25-3b22,pass,2026-07-08 03:54:37.572587,lfl,pc,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,69.65,almor26-8e9b,pass,2026-07-08 03:54:37.572587,ufl,pc,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,5700.94,almor27-6132,pass,2026-07-08 03:54:37.572587,ch4,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,68539.61,almor28-70f1,pass,2026-07-08 03:54:37.572587,h2,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,6.0,almor2-88ae,pass,2026-07-08 03:54:37.572587,wme,pc,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,170230.8,almor29-2660,pass,2026-07-08 03:54:37.572587,co,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,83240.49,almor30-842b,pass,2026-07-08 03:54:37.572587,co2,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,654232.7,almor31-2e12,pass,2026-07-08 03:54:37.572587,n2,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,55772.8,almor32-88cb,pass,2026-07-08 03:54:37.572587,o2,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,794.32,almor33-f9d5,pass,2026-07-08 03:54:37.572587,c3h8,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,4449.77,almor34-d9fe,pass,2026-07-08 03:54:37.572587,c2h6,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.53,almor35-8fcc,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.2,almor36-dc21,pass,2026-07-08 03:54:37.572587,c5h12,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,408.98,almor37-2f56,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.0,almor38-23a1,pass,2026-07-08 03:54:37.572587,c6h14,ppm,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,24.45,almor39-71c1,pass,2026-07-08 03:54:37.572587,comb,,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.0,almor3-a9e7,pass,2026-07-08 03:54:37.572587,ash,g,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,7.67,almor40-fbd5,pass,2026-07-08 03:54:37.572587,lfl,pc,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,68.13,almor41-4bcd,pass,2026-07-08 03:54:37.572587,ufl,pc,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.0,almor4-3be5,pass,2026-07-08 03:54:37.572587,unc-bio,g,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,38.0,almor5-ab1a,pass,2026-07-08 03:54:37.572587,time,min,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,0.8,almor6-d744,pass,2026-07-08 03:54:37.572587,va,mps,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,24.0,almor7-169e,pass,2026-07-08 03:54:37.572587,ta,c,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,30.0,almor8-e22d,pass,2026-07-08 03:54:37.572587,pi,psi,tiny,2026-07-08 03:54:37.572587
+almond shells,megadeath,70.0,almor9-d127,pass,2026-07-08 03:54:37.572587,pv,psi,tiny,2026-07-08 03:54:37.572587
+blend,ferdinand,599.76,blen720-db21,pass,2026-07-08 03:54:37.572587,bio,g,,2026-07-08 03:54:37.572587
+blend,ferdinand,7.25,blen721-0002,pass,2026-07-08 03:54:37.572587,wme,pc,,2026-07-08 03:54:37.572587
+blend,ferdinand,0.0,blen722-1ac6,pass,2026-07-08 03:54:37.572587,ash,g,,2026-07-08 03:54:37.572587
+blend,ferdinand,0.0,blen723-69b2,pass,2026-07-08 03:54:37.572587,unc-bio,g,,2026-07-08 03:54:37.572587
+blend,ferdinand,49.0,blen724-1a91,pass,2026-07-08 03:54:37.572587,time,min,,2026-07-08 03:54:37.572587
+blend,ferdinand,0.8,blen725-deea,pass,2026-07-08 03:54:37.572587,va,mps,,2026-07-08 03:54:37.572587
+blend,ferdinand,23.0,blen726-9acc,pass,2026-07-08 03:54:37.572587,ta,c,,2026-07-08 03:54:37.572587
+blend,ferdinand,30.0,blen727-c0c0,pass,2026-07-08 03:54:37.572587,pi,psi,,2026-07-08 03:54:37.572587
+blend,ferdinand,75.0,blen728-f6b2,pass,2026-07-08 03:54:37.572587,pv,psi,,2026-07-08 03:54:37.572587
+blend,ferdinand,0.0,blen729-a296,pass,2026-07-08 03:54:37.572587,tar,g,,2026-07-08 03:54:37.572587
+blend,ferdinand,101.56,blen730-ce42,pass,2026-07-08 03:54:37.572587,char,g,,2026-07-08 03:54:37.572587
+blend,ferdinand,35866.65,blen731-0465,pass,2026-07-08 03:54:37.572587,ch4,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,94096.3,blen732-b0c0,pass,2026-07-08 03:54:37.572587,h2,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,79767.76,blen733-3fb0,pass,2026-07-08 03:54:37.572587,co,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,157388.8,blen734-88d2,pass,2026-07-08 03:54:37.572587,co2,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,449068.5,blen735-9200,pass,2026-07-08 03:54:37.572587,n2,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,30630.19,blen736-bf10,pass,2026-07-08 03:54:37.572587,o2,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,3607.17,blen737-23c1,pass,2026-07-08 03:54:37.572587,c3h8,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,14480.27,blen738-bbe5,pass,2026-07-08 03:54:37.572587,c2h6,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,29.83,blen739-5e60,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,0.17,blen740-a5a9,pass,2026-07-08 03:54:37.572587,c5h12,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,4106.38,blen741-d897,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,0.04,blen742-ebcf,pass,2026-07-08 03:54:37.572587,c6h14,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,24.13,blen743-10ae,pass,2026-07-08 03:54:37.572587,combfrac,pc,,2026-07-08 03:54:37.572587
+blend,ferdinand,5.66,blen744-6a01,pass,2026-07-08 03:54:37.572587,lfl,pc,,2026-07-08 03:54:37.572587
+blend,ferdinand,44.43,blen745-e228,pass,2026-07-08 03:54:37.572587,ufl,pc,,2026-07-08 03:54:37.572587
+blend,ferdinand,25177.8,blen746-93b9,pass,2026-07-08 03:54:37.572587,ch4,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,84490.68,blen747-6409,pass,2026-07-08 03:54:37.572587,h2,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,75124.33,blen748-38e1,pass,2026-07-08 03:54:37.572587,co,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,112499.5,blen749-723f,pass,2026-07-08 03:54:37.572587,co2,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,507581.7,blen750-78ea,pass,2026-07-08 03:54:37.572587,n2,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,64978.13,blen751-e83b,pass,2026-07-08 03:54:37.572587,o2,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,1749.4,blen752-a60d,pass,2026-07-08 03:54:37.572587,c3h8,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,6343.89,blen753-fdee,pass,2026-07-08 03:54:37.572587,c2h6,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,293.25,blen754-11fb,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,0.11,blen755-f722,pass,2026-07-08 03:54:37.572587,c5h12,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,2666.88,blen756-af69,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,0.0,blen757-bf8d,pass,2026-07-08 03:54:37.572587,c6h14,ppm,,2026-07-08 03:54:37.572587
+blend,ferdinand,20.98,blen758-d75c,pass,2026-07-08 03:54:37.572587,combfrac,pc,,2026-07-08 03:54:37.572587
+blend,ferdinand,5.74,blen759-18b6,pass,2026-07-08 03:54:37.572587,lfl,pc,,2026-07-08 03:54:37.572587
+blend,ferdinand,48.4,blen760-7359,pass,2026-07-08 03:54:37.572587,ufl,pc,,2026-07-08 03:54:37.572587
+peach seeds,megadeath,526.1,peac204-7106,pass,2026-07-08 03:54:37.572587,bio,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,5.0,peac205-6185,pass,2026-07-08 03:54:37.572587,wme,pc,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,0.0,peac206-eebd,pass,2026-07-08 03:54:37.572587,ash,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,95.9,peac207-470b,pass,2026-07-08 03:54:37.572587,unc-bio,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,28.0,peac208-3338,pass,2026-07-08 03:54:37.572587,time,min,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,0.0,peac209-5d87,pass,2026-07-08 03:54:37.572587,va,mps,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,29.6,peac210-b008,pass,2026-07-08 03:54:37.572587,ta,c,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,0.0,peac211-d2ed,pass,2026-07-08 03:54:37.572587,tar,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,138.5,peac212-c52c,pass,2026-07-08 03:54:37.572587,char,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,5779.99,peac213-00d8,pass,2026-07-08 03:54:37.572587,ch4,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,37610.73,peac214-ad8c,pass,2026-07-08 03:54:37.572587,h2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,123657.5,peac215-e210,pass,2026-07-08 03:54:37.572587,co,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,242103.5,peac216-76b9,pass,2026-07-08 03:54:37.572587,co2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,620825.3,peac217-c041,pass,2026-07-08 03:54:37.572587,n2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,29023.97,peac218-cad8,pass,2026-07-08 03:54:37.572587,o2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,3450.35,peac219-2ac7,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,5589.64,peac220-c78c,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,3.59,peac221-7b76,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,0.33,peac222-10cb,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,2345.37,peac223-e22e,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,0.09,peac224-c26f,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,16.7,peac225-02bd,pass,2026-07-08 03:54:37.572587,comb,,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,8.17,peac226-9b12,pass,2026-07-08 03:54:37.572587,lfl,pc,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,65.42,peac227-17b2,pass,2026-07-08 03:54:37.572587,ufl,pc,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,5503.69,peac228-2428,pass,2026-07-08 03:54:37.572587,ch4,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,32700.58,peac229-d776,pass,2026-07-08 03:54:37.572587,h2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,71365.46,peac230-efdb,pass,2026-07-08 03:54:37.572587,co,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,212648.5,peac231-11c1,pass,2026-07-08 03:54:37.572587,co2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,632269.9,peac232-da4f,pass,2026-07-08 03:54:37.572587,n2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,45638.41,peac233-6138,pass,2026-07-08 03:54:37.572587,o2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,3529.2,peac234-cece,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,11271.34,peac235-3d38,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,3.64,peac236-edbd,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,0.07,peac237-571e,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,1411.55,peac238-8b9d,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,0.0,peac239-80df,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,10.96,peac240-c610,pass,2026-07-08 03:54:37.572587,comb,,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,7.31,peac241-49e2,pass,2026-07-08 03:54:37.572587,lfl,pc,rushes,2026-07-08 03:54:37.572587
+peach seeds,megadeath,62.09,peac242-46d6,pass,2026-07-08 03:54:37.572587,ufl,pc,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,799.83,peac571-b8d7,pass,2026-07-08 03:54:37.572587,bio,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,0.0,peac572-8cc3,pass,2026-07-08 03:54:37.572587,wme,pc,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,0.0,peac573-0a49,pass,2026-07-08 03:54:37.572587,ash,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,15.83,peac574-2936,pass,2026-07-08 03:54:37.572587,unc-bio,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,58.0,peac575-1208,pass,2026-07-08 03:54:37.572587,time,min,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,0.25,peac576-64d1,pass,2026-07-08 03:54:37.572587,va,mps,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,24.3,peac577-f9c3,pass,2026-07-08 03:54:37.572587,ta,c,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,30.0,peac578-840b,pass,2026-07-08 03:54:37.572587,pi,psi,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,70.0,peac579-a8bd,pass,2026-07-08 03:54:37.572587,pv,psi,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,0.0,peac580-3ea4,pass,2026-07-08 03:54:37.572587,tar,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,323.74,peac581-5c5d,pass,2026-07-08 03:54:37.572587,char,g,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,27914.35,peac582-2cb7,pass,2026-07-08 03:54:37.572587,ch4,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,67268.7,peac583-8973,pass,2026-07-08 03:54:37.572587,h2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,75983.7,peac584-2e6e,pass,2026-07-08 03:54:37.572587,co,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,127383.3,peac585-c712,pass,2026-07-08 03:54:37.572587,co2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,581767.8,peac586-b936,pass,2026-07-08 03:54:37.572587,n2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,16291.25,peac587-b7e1,pass,2026-07-08 03:54:37.572587,o2,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,2891.48,peac588-e962,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,11450.54,peac589-9abd,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,1061.58,peac590-ab0c,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,0.06,peac591-5f90,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,1954.46,peac592-4119,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,0.0,peac593-d143,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,17.12,peac594-d295,pass,2026-07-08 03:54:37.572587,comb,,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,6.01,peac595-5c18,pass,2026-07-08 03:54:37.572587,lfl,pc,rushes,2026-07-08 03:54:37.572587
+peach seeds,apex,45.26,peac596-443b,pass,2026-07-08 03:54:37.572587,ufl,pc,rushes,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,650.05,pist325-89e4,pass,2026-07-08 03:54:37.572587,bio,g,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,13.9,pist326-93a4,pass,2026-07-08 03:54:37.572587,wme,pc,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,0.0,pist327-4f0c,pass,2026-07-08 03:54:37.572587,ash,g,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,0.0,pist328-9cae,pass,2026-07-08 03:54:37.572587,unc-bio,g,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,58.0,pist329-fffb,pass,2026-07-08 03:54:37.572587,time,min,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,0.1,pist330-96d0,pass,2026-07-08 03:54:37.572587,va,mps,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,23.3,pist331-cb2c,pass,2026-07-08 03:54:37.572587,ta,c,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,30.0,pist332-2649,pass,2026-07-08 03:54:37.572587,pi,psi,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,70.0,pist333-11e1,pass,2026-07-08 03:54:37.572587,pv,psi,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,0.0,pist334-0c26,pass,2026-07-08 03:54:37.572587,tar,g,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,42.0,pist335-2fd6,pass,2026-07-08 03:54:37.572587,char,g,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,20761.9,pist336-0904,pass,2026-07-08 03:54:37.572587,ch4,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,68364.81,pist337-53cd,pass,2026-07-08 03:54:37.572587,h2,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,5546.68,pist338-0895,pass,2026-07-08 03:54:37.572587,co,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,96368.69,pist339-55c6,pass,2026-07-08 03:54:37.572587,co2,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,499120.9,pist340-ecca,pass,2026-07-08 03:54:37.572587,n2,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,18691.28,pist341-2bd8,pass,2026-07-08 03:54:37.572587,o2,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,2047.62,pist342-c389,pass,2026-07-08 03:54:37.572587,c3h8,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,7543.49,pist343-d26e,pass,2026-07-08 03:54:37.572587,c2h6,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,570.66,pist344-25bb,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,0.16,pist345-30ec,pass,2026-07-08 03:54:37.572587,c5h12,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,1582.59,pist346-f2ad,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,0.04,pist347-b77c,pass,2026-07-08 03:54:37.572587,c6h14,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,9.47,pist348-ec2e,pass,2026-07-08 03:54:37.572587,comb,,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,4.37,pist349-113d,pass,2026-07-08 03:54:37.572587,lfl,pc,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,39.94,pist350-6cb9,pass,2026-07-08 03:54:37.572587,ufl,pc,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,27981.98,pist351-8e8b,pass,2026-07-08 03:54:37.572587,ch4,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,98931.41,pist352-26f4,pass,2026-07-08 03:54:37.572587,h2,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,5291.59,pist353-3ee9,pass,2026-07-08 03:54:37.572587,co,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,150380.3,pist354-27b1,pass,2026-07-08 03:54:37.572587,co2,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,444009.3,pist355-3428,pass,2026-07-08 03:54:37.572587,n2,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,1658.05,pist356-0849,pass,2026-07-08 03:54:37.572587,o2,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,2289.66,pist357-42a5,pass,2026-07-08 03:54:37.572587,c3h8,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,6132.52,pist358-30eb,pass,2026-07-08 03:54:37.572587,c2h6,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,708.83,pist359-4290,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,0.18,pist360-8c61,pass,2026-07-08 03:54:37.572587,c5h12,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,1519.43,pist361-8140,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,0.06,pist362-5b75,pass,2026-07-08 03:54:37.572587,c6h14,ppm,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,13.22,pist363-d72b,pass,2026-07-08 03:54:37.572587,comb,,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,4.3,pist364-5531,pass,2026-07-08 03:54:37.572587,lfl,pc,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,ferdinand,40.61,pist365-c035,pass,2026-07-08 03:54:37.572587,ufl,pc,stuntman,2026-07-08 03:54:37.572587
+pistachio shells,orion,586.38,pist761-0850,pass,2026-07-08 03:54:37.572587,bio,g,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,5.07,pist762-902d,pass,2026-07-08 03:54:37.572587,wme,pc,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,0.0,pist763-eeee,pass,2026-07-08 03:54:37.572587,ash,g,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,4.92,pist764-a3f1,pass,2026-07-08 03:54:37.572587,unc-bio,g,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,52.0,pist765-99ee,pass,2026-07-08 03:54:37.572587,time,min,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,1.8,pist766-b4d3,pass,2026-07-08 03:54:37.572587,va,mps,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,25.0,pist767-418f,pass,2026-07-08 03:54:37.572587,ta,c,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,30.0,pist768-27ea,pass,2026-07-08 03:54:37.572587,pi,psi,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,75.0,pist769-facd,pass,2026-07-08 03:54:37.572587,pv,psi,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,0.0,pist770-d8e6,pass,2026-07-08 03:54:37.572587,tar,g,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,82.99,pist771-2162,pass,2026-07-08 03:54:37.572587,char,g,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,17835.65,pist772-b355,pass,2026-07-08 03:54:37.572587,ch4,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,45160.9,pist773-e5ef,pass,2026-07-08 03:54:37.572587,h2,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,60221.59,pist774-87c6,pass,2026-07-08 03:54:37.572587,co,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,130735.4,pist775-a0ac,pass,2026-07-08 03:54:37.572587,co2,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,656025.2,pist776-cf1e,pass,2026-07-08 03:54:37.572587,n2,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,45161.71,pist777-0d01,pass,2026-07-08 03:54:37.572587,o2,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,2224.53,pist778-5290,pass,2026-07-08 03:54:37.572587,c3h8,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,12708.38,pist779-966b,pass,2026-07-08 03:54:37.572587,c2h6,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,574.99,pist780-7283,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,0.32,pist781-6305,pass,2026-07-08 03:54:37.572587,c5h12,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,1886.83,pist782-0ada,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,0.06,pist783-cc20,pass,2026-07-08 03:54:37.572587,c6h14,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,12.67,pist784-b6f1,pass,2026-07-08 03:54:37.572587,comb,,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,6.26,pist785-793d,pass,2026-07-08 03:54:37.572587,lfl,pc,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,47.34,pist786-19bf,pass,2026-07-08 03:54:37.572587,ufl,pc,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,13494.95,pist787-7bb2,pass,2026-07-08 03:54:37.572587,ch4,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,33099.44,pist788-55d8,pass,2026-07-08 03:54:37.572587,h2,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,50302.5,pist789-a222,pass,2026-07-08 03:54:37.572587,co,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,109052.5,pist790-1e54,pass,2026-07-08 03:54:37.572587,co2,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,703377.7,pist791-d0d1,pass,2026-07-08 03:54:37.572587,n2,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,83657.28,pist792-4478,pass,2026-07-08 03:54:37.572587,o2,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,1532.01,pist793-3672,pass,2026-07-08 03:54:37.572587,c3h8,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,10166.0,pist794-6fcd,pass,2026-07-08 03:54:37.572587,c2h6,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,347.66,pist795-dc1d,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,0.24,pist796-e24a,pass,2026-07-08 03:54:37.572587,c5h12,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,711.44,pist797-f97e,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,0.04,pist798-8daa,pass,2026-07-08 03:54:37.572587,c6h14,ppm,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,9.63,pist799-6962,pass,2026-07-08 03:54:37.572587,comb,,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,6.46,pist800-a9c5,pass,2026-07-08 03:54:37.572587,lfl,pc,tripod,2026-07-08 03:54:37.572587
+pistachio shells,orion,47.99,pist801-d150,pass,2026-07-08 03:54:37.572587,ufl,pc,tripod,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,600.38,spen366-a2f6,pass,2026-07-08 03:54:37.572587,bio,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,16.7,spen367-9bc0,pass,2026-07-08 03:54:37.572587,wme,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,0.0,spen368-c7d7,pass,2026-07-08 03:54:37.572587,ash,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,0.0,spen369-5e98,pass,2026-07-08 03:54:37.572587,unc-bio,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,0.05,spen370-bb1f,pass,2026-07-08 03:54:37.572587,time,min,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,0.0,spen371-2127,pass,2026-07-08 03:54:37.572587,va,mps,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,19.7,spen372-6740,pass,2026-07-08 03:54:37.572587,ta,c,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,30.0,spen373-6a67,pass,2026-07-08 03:54:37.572587,pi,psi,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,70.0,spen374-be01,pass,2026-07-08 03:54:37.572587,pv,psi,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,62.11,spen375-a800,pass,2026-07-08 03:54:37.572587,tar,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,32.22,spen376-b749,pass,2026-07-08 03:54:37.572587,char,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,20152.58,spen377-76d0,pass,2026-07-08 03:54:37.572587,ch4,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,107219.1,spen378-fda3,pass,2026-07-08 03:54:37.572587,h2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,75863.41,spen379-3810,pass,2026-07-08 03:54:37.572587,co,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,135770.2,spen380-5339,pass,2026-07-08 03:54:37.572587,co2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,523100.3,spen381-07ea,pass,2026-07-08 03:54:37.572587,n2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,39079.24,spen382-ae3b,pass,2026-07-08 03:54:37.572587,o2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,1951.22,spen383-de64,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,8270.5,spen384-7f8b,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,544.93,spen385-d785,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,0.28,spen386-8a8b,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,423.49,spen387-5383,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,0.09,spen388-28f3,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,20.32,spen389-6eb7,pass,2026-07-08 03:54:37.572587,comb,,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,5.51,spen390-532b,pass,2026-07-08 03:54:37.572587,lfl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,53.55,spen391-1ac6,pass,2026-07-08 03:54:37.572587,ufl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,11252.6,spen392-d3f8,pass,2026-07-08 03:54:37.572587,ch4,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,81336.98,spen393-c986,pass,2026-07-08 03:54:37.572587,h2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,62615.25,spen394-2eda,pass,2026-07-08 03:54:37.572587,co,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,107775.2,spen395-ec97,pass,2026-07-08 03:54:37.572587,co2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,598847.3,spen396-e432,pass,2026-07-08 03:54:37.572587,n2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,100200.3,spen397-d528,pass,2026-07-08 03:54:37.572587,o2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,1855.42,spen398-176a,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,7640.81,spen399-9994,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,506.88,spen400-e105,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,0.23,spen401-329b,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,278.65,spen402-61bb,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,0.06,spen403-9bb6,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,15.52,spen404-3055,pass,2026-07-08 03:54:37.572587,comb,,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,5.62,spen405-118c,pass,2026-07-08 03:54:37.572587,lfl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,ferdinand,57.94,spen406-7a1b,pass,2026-07-08 03:54:37.572587,ufl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,488.0,spen407-33b9,pass,2026-07-08 03:54:37.572587,bio,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.0,spen408-0b8f,pass,2026-07-08 03:54:37.572587,wme,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.0,spen409-8b09,pass,2026-07-08 03:54:37.572587,ash,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,116.96,spen410-bf7c,pass,2026-07-08 03:54:37.572587,unc-bio,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,39.0,spen411-89da,pass,2026-07-08 03:54:37.572587,time,min,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.7,spen412-c8e2,pass,2026-07-08 03:54:37.572587,va,mps,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,14.6,spen413-01b2,pass,2026-07-08 03:54:37.572587,ta,c,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,30.0,spen414-bf58,pass,2026-07-08 03:54:37.572587,pi,psi,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,70.0,spen415-0e44,pass,2026-07-08 03:54:37.572587,pv,psi,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,26.64,spen416-2e77,pass,2026-07-08 03:54:37.572587,tar,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,36.94,spen417-aae7,pass,2026-07-08 03:54:37.572587,char,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,17155.43,spen418-0a28,pass,2026-07-08 03:54:37.572587,ch4,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,100931.9,spen419-9777,pass,2026-07-08 03:54:37.572587,h2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,96267.0,spen420-6859,pass,2026-07-08 03:54:37.572587,co,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,157319.7,spen421-9599,pass,2026-07-08 03:54:37.572587,co2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,564467.5,spen422-32fb,pass,2026-07-08 03:54:37.572587,n2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,33873.02,spen423-3b23,pass,2026-07-08 03:54:37.572587,o2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,1349.47,spen424-791b,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,4894.9,spen425-4aa9,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,473.59,spen426-7a0d,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.2,spen427-b6f6,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,903.81,spen428-7972,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.06,spen429-2a58,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,21.44,spen430-a73b,pass,2026-07-08 03:54:37.572587,comb,,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,5.89,spen431-e0bd,pass,2026-07-08 03:54:37.572587,lfl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,56.6,spen432-c752,pass,2026-07-08 03:54:37.572587,ufl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,16237.65,spen433-df07,pass,2026-07-08 03:54:37.572587,ch4,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,93812.13,spen434-1ead,pass,2026-07-08 03:54:37.572587,h2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,92531.36,spen435-191a,pass,2026-07-08 03:54:37.572587,co,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,149648.7,spen436-46f4,pass,2026-07-08 03:54:37.572587,co2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,576189.3,spen437-2c7e,pass,2026-07-08 03:54:37.572587,n2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,43921.04,spen438-3f64,pass,2026-07-08 03:54:37.572587,o2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,1317.31,spen439-d0f0,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,4650.39,spen440-2cc8,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,485.91,spen441-6cb1,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.17,spen442-2821,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,806.0,spen443-3655,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.04,spen444-074c,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,20.26,spen445-7334,pass,2026-07-08 03:54:37.572587,comb,,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,5.94,spen446-ee03,pass,2026-07-08 03:54:37.572587,lfl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,56.58,spen447-2458,pass,2026-07-08 03:54:37.572587,ufl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,448.93,spen597-e54a,pass,2026-07-08 03:54:37.572587,bio,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,5.0,spen598-999e,pass,2026-07-08 03:54:37.572587,wme,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.0,spen599-302a,pass,2026-07-08 03:54:37.572587,ash,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.0,spen600-9804,pass,2026-07-08 03:54:37.572587,unc-bio,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,42.0,spen601-6bc7,pass,2026-07-08 03:54:37.572587,time,min,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,2.0,spen602-37d9,pass,2026-07-08 03:54:37.572587,va,mps,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,22.6,spen603-e80c,pass,2026-07-08 03:54:37.572587,ta,c,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,30.0,spen604-278b,pass,2026-07-08 03:54:37.572587,pi,psi,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,70.0,spen605-dba3,pass,2026-07-08 03:54:37.572587,pv,psi,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.0,spen606-0505,pass,2026-07-08 03:54:37.572587,tar,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,39.67,spen607-5038,pass,2026-07-08 03:54:37.572587,char,g,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,16325.37,spen608-487d,pass,2026-07-08 03:54:37.572587,ch4,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,95786.94,spen609-0d05,pass,2026-07-08 03:54:37.572587,h2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,98559.97,spen610-ea71,pass,2026-07-08 03:54:37.572587,co,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,85623.31,spen611-6683,pass,2026-07-08 03:54:37.572587,co2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,489540.4,spen612-f5c3,pass,2026-07-08 03:54:37.572587,n2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,19546.93,spen613-4e1a,pass,2026-07-08 03:54:37.572587,o2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,1840.46,spen614-6ac0,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,10929.16,spen615-f0bf,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,470.49,spen616-8c01,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.03,spen617-a752,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,1217.59,spen618-e1ff,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.0,spen619-ef9d,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,21.07,spen620-6927,pass,2026-07-08 03:54:37.572587,comb,,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,6.0,spen621-bdd3,pass,2026-07-08 03:54:37.572587,lfl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,57.03,spen622-9d86,pass,2026-07-08 03:54:37.572587,ufl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,16165.83,spen623-f63f,pass,2026-07-08 03:54:37.572587,ch4,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,93651.7,spen624-98e1,pass,2026-07-08 03:54:37.572587,h2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,95666.48,spen625-faee,pass,2026-07-08 03:54:37.572587,co,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,88704.35,spen626-42c5,pass,2026-07-08 03:54:37.572587,co2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,487423.7,spen627-47da,pass,2026-07-08 03:54:37.572587,n2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,20138.01,spen628-c180,pass,2026-07-08 03:54:37.572587,o2,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,1634.45,spen629-c994,pass,2026-07-08 03:54:37.572587,c3h8,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,7351.67,spen630-ee3c,pass,2026-07-08 03:54:37.572587,c2h6,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,424.91,spen631-33b3,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.07,spen632-de68,pass,2026-07-08 03:54:37.572587,c5h12,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,1147.36,spen633-fb08,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,0.0,spen634-7100,pass,2026-07-08 03:54:37.572587,c6h14,ppm,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,20.55,spen635-9fdf,pass,2026-07-08 03:54:37.572587,comb,,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,5.99,spen636-b6d1,pass,2026-07-08 03:54:37.572587,lfl,pc,rigging,2026-07-08 03:54:37.572587
+spent oak chips,apex,56.83,spen637-bd00,pass,2026-07-08 03:54:37.572587,ufl,pc,rigging,2026-07-08 03:54:37.572587
+walnut shells,apex,763.77,waln122-3924,pass,2026-07-08 03:54:37.572587,bio,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,5.5,waln123-22bf,pass,2026-07-08 03:54:37.572587,wme,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,0.0,waln124-5e6b,pass,2026-07-08 03:54:37.572587,ash,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,133.85,waln125-1163,pass,2026-07-08 03:54:37.572587,unc-bio,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,0.05,waln126-11f7,pass,2026-07-08 03:54:37.572587,time,min,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,0.0,waln127-7d60,pass,2026-07-08 03:54:37.572587,va,mps,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,10.9,waln128-cf58,pass,2026-07-08 03:54:37.572587,ta,c,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,30.0,waln129-ef0e,pass,2026-07-08 03:54:37.572587,pi,psi,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,70.0,waln130-286f,pass,2026-07-08 03:54:37.572587,pv,psi,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,0.0,waln131-5910,pass,2026-07-08 03:54:37.572587,tar,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,apex,144.15,waln132-4abf,pass,2026-07-08 03:54:37.572587,char,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,292.7,waln243-34ea,pass,2026-07-08 03:54:37.572587,bio,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,5.0,waln244-9682,pass,2026-07-08 03:54:37.572587,wme,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,waln245-4fe7,pass,2026-07-08 03:54:37.572587,ash,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,waln246-ad59,pass,2026-07-08 03:54:37.572587,unc-bio,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.05,waln247-2906,pass,2026-07-08 03:54:37.572587,time,min,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,waln248-bfeb,pass,2026-07-08 03:54:37.572587,va,mps,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,30.8,waln249-eaff,pass,2026-07-08 03:54:37.572587,ta,c,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,30.0,waln250-8159,pass,2026-07-08 03:54:37.572587,pi,psi,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,70.0,waln251-3746,pass,2026-07-08 03:54:37.572587,pv,psi,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,waln252-f72c,pass,2026-07-08 03:54:37.572587,tar,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,waln253-c7e0,pass,2026-07-08 03:54:37.572587,char,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,6839.57,waln254-ec67,pass,2026-07-08 03:54:37.572587,ch4,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,16337.74,waln255-b771,pass,2026-07-08 03:54:37.572587,h2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,38363.16,waln256-44c0,pass,2026-07-08 03:54:37.572587,co,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,126845.4,waln257-c056,pass,2026-07-08 03:54:37.572587,co2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,759626.2,waln258-aadb,pass,2026-07-08 03:54:37.572587,n2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,100764.8,waln259-f7b6,pass,2026-07-08 03:54:37.572587,o2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,527.23,waln260-086c,pass,2026-07-08 03:54:37.572587,c3h8,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,3730.54,waln261-3d71,pass,2026-07-08 03:54:37.572587,c2h6,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.16,waln262-ab1f,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.27,waln263-cdb4,pass,2026-07-08 03:54:37.572587,c5h12,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,1923.97,waln264-ed1f,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,waln265-1532,pass,2026-07-08 03:54:37.572587,c6h14,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,6819.93,waln269-ac2c,pass,2026-07-08 03:54:37.572587,ch4,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,13616.81,waln270-1cca,pass,2026-07-08 03:54:37.572587,h2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,57139.91,waln271-ce0c,pass,2026-07-08 03:54:37.572587,co,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,145410.3,waln272-957e,pass,2026-07-08 03:54:37.572587,co2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,755958.3,waln273-854a,pass,2026-07-08 03:54:37.572587,n2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,98440.74,waln274-c1a9,pass,2026-07-08 03:54:37.572587,o2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,667.74,waln275-fd0f,pass,2026-07-08 03:54:37.572587,c3h8,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,5974.23,waln276-2c46,pass,2026-07-08 03:54:37.572587,c2h6,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.38,waln277-870f,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.25,waln278-5323,pass,2026-07-08 03:54:37.572587,c5h12,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,751.52,waln279-5a49,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.06,waln280-1cfc,pass,2026-07-08 03:54:37.572587,c6h14,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,400.03,waln284-659d,pass,2026-07-08 03:54:37.572587,bio,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,5.3,waln285-2836,pass,2026-07-08 03:54:37.572587,wme,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,0.0,waln286-acfc,pass,2026-07-08 03:54:37.572587,ash,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,0.0,waln287-b340,pass,2026-07-08 03:54:37.572587,unc-bio,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,59.0,waln288-1c22,pass,2026-07-08 03:54:37.572587,time,min,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,0.25,waln289-135f,pass,2026-07-08 03:54:37.572587,va,mps,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,8.0,waln290-adb1,pass,2026-07-08 03:54:37.572587,ta,c,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,30.0,waln291-62d0,pass,2026-07-08 03:54:37.572587,pi,psi,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,70.0,waln292-3997,pass,2026-07-08 03:54:37.572587,pv,psi,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,0.0,waln293-4325,pass,2026-07-08 03:54:37.572587,tar,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,50.8,waln294-3192,pass,2026-07-08 03:54:37.572587,char,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,34071.13,waln295-44b2,pass,2026-07-08 03:54:37.572587,ch4,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,129895.6,waln296-06bf,pass,2026-07-08 03:54:37.572587,h2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,88704.61,waln297-b7ee,pass,2026-07-08 03:54:37.572587,co,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,203045.6,waln298-e709,pass,2026-07-08 03:54:37.572587,co2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,389701.3,waln299-61ac,pass,2026-07-08 03:54:37.572587,n2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,2141.22,waln300-f564,pass,2026-07-08 03:54:37.572587,o2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,3699.32,waln301-bf08,pass,2026-07-08 03:54:37.572587,c3h8,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,8674.5,waln302-13a2,pass,2026-07-08 03:54:37.572587,c2h6,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,1814.19,waln303-39ea,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,0.36,waln304-c8d9,pass,2026-07-08 03:54:37.572587,c5h12,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,1643.11,waln305-e2fb,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,0.06,waln306-c327,pass,2026-07-08 03:54:37.572587,c6h14,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,25.27,waln307-510f,pass,2026-07-08 03:54:37.572587,comb,,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,5.45,waln308-1f7d,pass,2026-07-08 03:54:37.572587,lfl,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,48.6,waln309-7c80,pass,2026-07-08 03:54:37.572587,ufl,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,42504.5,waln310-f9f4,pass,2026-07-08 03:54:37.572587,ch4,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,119085.4,waln311-e7b9,pass,2026-07-08 03:54:37.572587,h2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,90230.91,waln312-c119,pass,2026-07-08 03:54:37.572587,co,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,201569.1,waln313-d800,pass,2026-07-08 03:54:37.572587,co2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,451384.7,waln314-ccd6,pass,2026-07-08 03:54:37.572587,n2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,2097.24,waln315-46e2,pass,2026-07-08 03:54:37.572587,o2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,3921.04,waln316-3448,pass,2026-07-08 03:54:37.572587,c3h8,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,13623.84,waln317-6cd4,pass,2026-07-08 03:54:37.572587,c2h6,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,1905.22,waln318-bb98,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,0.33,waln319-5db9,pass,2026-07-08 03:54:37.572587,c5h12,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,1722.4,waln320-4518,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,0.06,waln321-f764,pass,2026-07-08 03:54:37.572587,c6h14,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,25.18,waln322-8e54,pass,2026-07-08 03:54:37.572587,comb,,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,5.54,waln323-fc50,pass,2026-07-08 03:54:37.572587,lfl,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,ferdinand,44.67,waln324-3435,pass,2026-07-08 03:54:37.572587,ufl,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,305.1,walnr42-ff10,pass,2026-07-08 03:54:37.572587,bio,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,5.0,walnr43-2777,pass,2026-07-08 03:54:37.572587,wme,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,walnr44-419d,pass,2026-07-08 03:54:37.572587,ash,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,walnr45-8e96,pass,2026-07-08 03:54:37.572587,unc-bio,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.05,walnr46-0290,pass,2026-07-08 03:54:37.572587,time,min,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,walnr47-4ba1,pass,2026-07-08 03:54:37.572587,va,mps,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,19.2,walnr48-10ce,pass,2026-07-08 03:54:37.572587,ta,c,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,30.0,walnr49-5e5f,pass,2026-07-08 03:54:37.572587,pi,psi,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,70.0,walnr50-7fdb,pass,2026-07-08 03:54:37.572587,pv,psi,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,walnr51-362f,pass,2026-07-08 03:54:37.572587,tar,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,55.58,walnr52-cd64,pass,2026-07-08 03:54:37.572587,char,g,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,6748.79,walnr53-54ff,pass,2026-07-08 03:54:37.572587,ch4,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,114123.0,walnr54-2c69,pass,2026-07-08 03:54:37.572587,h2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,172963.7,walnr55-f607,pass,2026-07-08 03:54:37.572587,co,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,158332.0,walnr56-5b69,pass,2026-07-08 03:54:37.572587,co2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,472784.1,walnr57-1fbc,pass,2026-07-08 03:54:37.572587,n2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,walnr58-cef1,pass,2026-07-08 03:54:37.572587,o2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,15809.2,walnr59-ac4f,pass,2026-07-08 03:54:37.572587,c3h8,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,39372.41,walnr60-dde7,pass,2026-07-08 03:54:37.572587,c2h6,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,17071.3,walnr61-7824,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,3.87,walnr62-00fd,pass,2026-07-08 03:54:37.572587,c5h12,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,3257.27,walnr63-098e,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.05,walnr64-1a9b,pass,2026-07-08 03:54:37.572587,c6h14,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,29.38,walnr65-6db7,pass,2026-07-08 03:54:37.572587,comb,,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,6.72,walnr66-2523,pass,2026-07-08 03:54:37.572587,lfl,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,68.29,walnr67-0667,pass,2026-07-08 03:54:37.572587,ufl,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,8010.37,walnr68-a94d,pass,2026-07-08 03:54:37.572587,ch4,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,51661.39,walnr69-20b9,pass,2026-07-08 03:54:37.572587,h2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,117650.2,walnr70-070c,pass,2026-07-08 03:54:37.572587,co,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,110674.7,walnr71-65e8,pass,2026-07-08 03:54:37.572587,co2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,558836.6,walnr72-295c,pass,2026-07-08 03:54:37.572587,n2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.0,walnr73-230c,pass,2026-07-08 03:54:37.572587,o2,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,40182.31,walnr74-8c79,pass,2026-07-08 03:54:37.572587,c3h8,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,47784.78,walnr75-c70a,pass,2026-07-08 03:54:37.572587,c2h6,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,4156.37,walnr76-f744,pass,2026-07-08 03:54:37.572587,c4h10(b),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,2.08,walnr77-f5e4,pass,2026-07-08 03:54:37.572587,c5h12,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,2179.56,walnr78-b1cd,pass,2026-07-08 03:54:37.572587,c4h10(i),ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,0.04,walnr79-0489,pass,2026-07-08 03:54:37.572587,c6h14,ppm,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,17.73,walnr80-1a01,pass,2026-07-08 03:54:37.572587,comb,,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,7.41,walnr81-fbdf,pass,2026-07-08 03:54:37.572587,lfl,pc,energetic,2026-07-08 03:54:37.572587
+walnut shells,megadeath,63.14,walnr82-6e08,pass,2026-07-08 03:54:37.572587,ufl,pc,energetic,2026-07-08 03:54:37.572587

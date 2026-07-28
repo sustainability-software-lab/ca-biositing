@@ -1,0 +1,20 @@
+name: Audit Portal Deploy
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Weekly Monday 6am UTC
+  workflow_dispatch:
+jobs:
+  audit-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Pixi
+        run: curl -fsSL https://pixi.sh/install.sh | bash
+      - name: Generate Portal
+        run:
+          pixi run -e portal generate-portal && pixi run -e portal build-portal
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: audit/portal/_site

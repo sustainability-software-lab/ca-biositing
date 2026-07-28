@@ -1,0 +1,137 @@
+{
+  "executive_summary": "The data quality audit of the `mv_biomass_composition_extended` dataset reveals a high volume of low-severity anomalies (31% of the records) primarily concentrated in structural carbohydrate and lignin measurements across almond and sargassum biomass. A critical systemic failure was identified regarding metadata completeness: the 'harvest_date' column is 100% null, and 'sample_date' lacks granularity, appearing to represent batch upload timestamps rather than individual collection events. This lack of temporal metadata significantly hinders the ability to account for seasonal variance in biomass composition, which is a key driver in agricultural research.\n\nKey issue groups include systematic variance in the glucan/glucose and xylan/xylose pairs, particularly from providers 'tiny' and 'capstan' when processing almond hulls and shells. Furthermore, highly suspicious lignin values were recorded for Sargassum (macroalgae) by provider 'hairpin'; as macroalgae do not typically contain terrestrial lignin, these values likely represent acid-insoluble residue or 'pseudo-lignin' that requires specific analytical clarification. While the z-scores remain relatively low (1.0–1.4), the consistent flagging of nearly all major chemical components for specific providers suggests a need for instrument recalibration or standardization of the NREL biomass analytical procedures (BAPs) across the supply chain.",
+  "grouped_issues": [
+    {
+      "group_label": "Missing Temporal Metadata (Harvest Date)",
+      "hypothesis": "The harvest_date column is 100% missing across all 813 records, indicating a failure in the field-to-lab data pipeline or a lack of requirement for this field during data ingestion from providers like tiny, capstan, and hairpin.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)8c53",
+        "(04)0340",
+        "(0d)4993",
+        "(13)9bb5",
+        "(15)797a"
+      ],
+      "affected_parameters": [
+        "harvest_date"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells",
+        "sargassum",
+        "walnut shells",
+        "wheat straw",
+        "rice straw"
+      ],
+      "evidently_finding": "number_of_empty_columns: 1 (harvest_date)",
+      "recommended_action": "Mandate harvest date reporting in the provider data schema to allow for maturity-based compositional analysis."
+    },
+    {
+      "group_label": "Almond Hull Carbohydrate Variance (Provider: tiny/humorous)",
+      "hypothesis": "High z-scores across all structural sugars in almond hulls suggest either a specific high-sugar cultivar or, more likely, an incomplete removal of residual nut meat/fats during sample preparation, which inflates carbohydrate readings. The near-identical flag counts for monomer/polymer pairs suggest the error is in the primary HPLC measurement rather than the calculation factor.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(03)8c53",
+        "(03)d213",
+        "(03)e36d",
+        "(03)f1df",
+        "(15)1ee2",
+        "(15)65e3"
+      ],
+      "affected_parameters": [
+        "glucose",
+        "glucan",
+        "xylose",
+        "xylan"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Top anomalous parameters: xylan (54), xylose (53), glucose (48), glucan (48)",
+      "recommended_action": "Verify sample preparation protocols for almond hulls, specifically the ethanol extraction step to remove non-structural sugars."
+    },
+    {
+      "group_label": "Seaweed Lignin Measurement Anomaly (Provider: hairpin)",
+      "hypothesis": "Sargassum is a macroalgae and does not contain terrestrial lignin. A value of 26.39% likely represents 'pseudo-lignin'—protein interference or acid-insoluble ash—being misreported as lignin in the standard NREL BAP.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(0d)5006"
+      ],
+      "affected_parameters": [
+        "lignin"
+      ],
+      "affected_resources": [
+        "sargassum"
+      ],
+      "evidently_finding": "lignin: 26.39 (z-score 1.07)",
+      "recommended_action": "Reclassify 'lignin' for all macroalgae records to 'Acid Insoluble Residue' (AIR) and check for protein correction."
+    },
+    {
+      "group_label": "Almond Shell Compositional Shift (Provider: capstan)",
+      "hypothesis": "Records from provider 'capstan' show consistently high lignin (30.02%) and corresponding carbohydrate shifts. This may indicate a specific processing batch or a bias in the Klason lignin method used by this provider.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(04)0340",
+        "(04)5f38",
+        "(04)68e4",
+        "(04)a7a4",
+        "(04)c1d7",
+        "(13)9bb5"
+      ],
+      "affected_parameters": [
+        "lignin",
+        "xylan",
+        "xylose",
+        "glucan",
+        "glucose"
+      ],
+      "affected_resources": [
+        "almond shells"
+      ],
+      "evidently_finding": "Top anomalous resources: almond shells (24)",
+      "recommended_action": "Perform a cross-laboratory validation with provider 'capstan' using a standardized biomass reference material (e.g., NIST pine)."
+    },
+    {
+      "group_label": "Walnut Shell Hemicellulose Variance (Provider: cutaway)",
+      "hypothesis": "Elevated xylose in walnut shells (22.54%) recorded by 'cutaway' suggests high hemicellulose content which may be characteristic of the specific variety or an artifact of the acid hydrolysis time/temperature.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(15)797a",
+        "(15)93e3"
+      ],
+      "affected_parameters": [
+        "glucan",
+        "xylose"
+      ],
+      "affected_resources": [
+        "walnut shells"
+      ],
+      "evidently_finding": "Top anomalous parameters: xylose (53), glucan (48)",
+      "recommended_action": "Review hydrolysis logs for 'cutaway' to ensure adherence to the 60-minute 72% H2SO4 incubation standard."
+    },
+    {
+      "group_label": "Lack of Traceability/Batch Uploading",
+      "hypothesis": "The presence of only one unique sample_date and created_at timestamp for 813 records, combined with empty analyst fields, indicates that data is being uploaded in large batches without preserving original lab metadata or technician accountability.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)8c53",
+        "(04)0340",
+        "(0d)4993",
+        "(13)9bb5"
+      ],
+      "affected_parameters": [
+        "sample_date",
+        "analyst_name",
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells",
+        "sargassum"
+      ],
+      "evidently_finding": "number_uniques_by_columns: sample_date (1), created_at (1)",
+      "recommended_action": "Update the data ingestion API to require analyst identifiers and original lab assay dates to improve auditability."
+    }
+  ],
+  "flagged_count": 257
+}

@@ -3,60 +3,49 @@
 You are a data quality and database integrity specialist. You will be provided
 with raw data from the `audit` system of the `ca-biositing` repository.
 
+## Phase 2 Architecture
+
+The Audit Platform has been refined in Phase 2 to provide granular observability
+and AI-assisted investigation.
+
+### 1. Granular Sub-Targets
+
+Audit targets are now split into specialized sub-targets to improve detection
+precision:
+
+- **Analysis Type**: Focuses on specific analysis types that determine the
+  biomsas compositon or conversion potential
+- **Provider-Specific**:
+
+### 2. Schema Guard & Golden References
+
+- **Schema Guard**: Automatically detects schema drift in incoming data sources.
+- **Golden References**: Located in `audit/references/`, these are static
+  population snapshots used for longitudinal drift analysis. Use
+  `--freeze-reference` to update them.
+
+### 3. AI Sidecar Context System
+
+Found in `audit/targets/context/`, this system provides the LLM with
+domain-specific metadata (e.g., "Expected moisture range for almond hulls is
+10-15%") to ground the Semantic Review.
+
+### 4. Ad-Hoc Target Factory
+
+The `audit/targets/adhoc/` directory contains templates for generating temporary
+audit targets. This allows for rapid investigation of suspected issues without
+permanent registration.
+
 ## Running the Audit
 
-If you are asked to "run the audit" yourself as an agent:
+1. Ensure the database is accessible (local or staging).
+2. Ensure `.env` is configured (`CBORG_API_KEY`, `AUDITOR_STAGING_DATABASE_URL`,
+   `AUDITOR_ANOMALY_TRACKER_SHEET_KEY`).
+3. Run: `pixi run -e auditor run-auditor`.
 
-1. Ensure the database is accessible.
-2. For **local** checks, use: `pixi run audit`.
-3. For **staging** checks, ensure the tunnel is up and use:
-   `pixi run audit-staging`.
-4. After execution, read the results from `audit/output/audit_summary.md`.
+## Extending the Auditor
 
-## Goal
-
-Interpret the raw SQL query results and compile them into a comprehensive,
-insight-driven audit report using the provided `REPORT_PROMPT.md` template.
-
-## Interpretation Rules
-
-### 1. QC Filtering & Record Counts
-
-- **Total Records**: Total volume in the table.
-- **QC Pass Rate**: Percentage where `qc_pass = 'pass'`.
-- **Metrics/Averages**: Only include records where `qc_pass != 'fail'` in
-  statistical metrics.
-
-### 2. Lineage Integrity
-
-- **Connectivity**: Verify the % of Prepared Samples that can be traced all the
-  way back to a Primary Agricultural Product.
-- **Resources**: Report the number of unique resources and field samples
-  accounted for in each analysis type. High fragmentation (many records, few
-  linked resources) is a finding.
-
-### 3. Placeholder Values
-
-- Flag "nd", "ND", "blank", "BLANK", or empty strings in `observation.value`.
-- These are data gaps, even if stored as strings.
-
-### 4. Metadata Completeness
-
-- Critical fields: `analyst_id`, `method_id`, `experiment_id`, `dataset_id`.
-- Processing-specific fields (AIM2): `strain_id`, `vessel_id`, `eh_method_id`,
-  `pretreatment_method_id`.
-- 0% coverage on these is a **Severity 1: Critical** issue.
-
-### 5. Domain Performance Matrix
-
-Use the summarized results to populate the performance matrix in the final
-report.
-
-## Reporting Severity Levels
-
-- **CRITICAL (Severity 1)**: Blocks data usage (e.g., 0% method tracking, broken
-  lineage, 100% QC fail).
-- **HIGH (Severity 2)**: Significant quality issues (e.g., negative physical
-  values, mixed units, missing monomer measurements).
-- **MEDIUM (Severity 3)**: Metadata gaps or fragmentation.
-- **LOW (Severity 4)**: Minor inconsistencies.
+- **New Targets**: Define in `audit/targets/views/` or `audit/targets/tables/`.
+- **Updating GX Suites**: Edit the JSON files in `audit/expectations/`. Suites
+  should align with the SQL view logic.
+- **New Skills**: Implement in `audit/skills/` and register in `audit/agent.py`.
