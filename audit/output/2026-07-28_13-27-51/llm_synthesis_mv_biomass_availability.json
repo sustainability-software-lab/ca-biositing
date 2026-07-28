@@ -1,0 +1,43 @@
+{
+  "executive_summary": "The audit of the `mv_biomass_availability` dataset reveals a critical data density issue that severely undermines its utility for agricultural research and supply chain planning. While the dataset successfully identifies 90 unique resources, the primary metric of interest, `observed_value`, is missing for 85.56% of the records (77 out of 90). This leaves only 13 valid observations to represent the entire diversity of the biomass inventory, leading to a dataset that is more indicative of a \"resource list\" than a functional availability registry.\n\nThe key issue identified is the massive sparsity of observations, likely stemming from a failure in the data ingestion pipeline or an incomplete join between the resource master list and the availability measurement logs. Because the existing values (ranging from 0.2 to 2.3) represent such a small fraction of the total population, any statistical summary—such as the calculated mean of 1.25—suffers from significant selection bias and lack of statistical power. Immediate intervention is required to synchronize the measurement data and ensure the missing 77 values are either populated or formally accounted for as \"pending.\"",
+  "grouped_issues": [
+    {
+      "group_label": "Critical Sparsity in Biomass Availability Measurements",
+      "hypothesis": "The dataset likely results from a LEFT JOIN between a Resource Master list and a measurement table where only 14% of resources have completed availability assessments. Alternatively, a join-key mismatch between 'resource_name' and the measurement source may be dropping valid data.",
+      "priority": "High",
+      "affected_record_ids": [
+        "1.0",
+        "20.0",
+        "50.5",
+        "72.75",
+        "110.0"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "resource_name (90 unique entries)"
+      ],
+      "evidently_finding": "85.56% missing values (77/90) in observed_value column.",
+      "recommended_action": "Audit the join logic in the materialized view 'mv_biomass_availability'. Cross-reference the 77 records with null values against raw lab logs to determine if data exists but failed to ingest. If measurements are truly absent, flag these records as 'Pending Analysis' to avoid confusion with data loss."
+    },
+    {
+      "group_label": "Low Statistical Power and Selection Bias Risk",
+      "hypothesis": "With only 13 data points available, the calculated distribution (Mean: 1.25, Std: 0.61) is unlikely to be representative of the 90 unique biomass resources identified. This creates a high risk of misleading researchers who rely on these summary statistics for feedstock planning.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "1.0",
+        "110.0"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "Total Dataset"
+      ],
+      "evidently_finding": "Count of 13 observations out of 90 rows.",
+      "recommended_action": "Suspend the use of aggregate statistics (Mean, P50) for this dataset until a minimum threshold of 50% data density is achieved across all identified biomass resources."
+    }
+  ],
+  "flagged_count": 0
+}

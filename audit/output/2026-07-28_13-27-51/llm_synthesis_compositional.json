@@ -1,0 +1,107 @@
+{
+  "executive_summary": "The compositional analysis audit for the 723-record dataset reveals a concentrated cluster of statistical anomalies primarily within almond-derived biomass (shells, hulls, and branches). While the flagged observations are classified as 'LOW' severity, they represent systematic deviations in key structural components—specifically xylan, xylose, glucan, glucose, and lignin. A significant portion of these anomalies is associated with analyst xkang2@lbl.gov and specific providers such as 'tiny' and 'humorous'. The high degree of missingness in metadata—specifically 100% missing values for 'note' and 'analyst_name', and approximately 52% missing for 'analyst_email'—hinders deep contextual root-cause analysis.\n\nThe most critical findings involve the simultaneous elevation of both monomeric sugars (xylose, glucose) and their corresponding structural polymers (xylan, glucan) within the same samples. While the chemical correlation between these parameters is expected, the elevated Z-scores (ranging from 1.0 to 1.6) for both suggest either a concentrated feedstock batch or potential calibration bias during the chromatographic analysis. Furthermore, almond hulls from provider 'tiny' show a concurrent elevation in lignin and hemicellulose components, which warrants a mass closure verification to ensure that total compositional percentages remain within a physically plausible range (near or below 100%).",
+  "grouped_issues": [
+    {
+      "group_label": "Almond Hulls / Elevated Structural Components (Provider: tiny)",
+      "hypothesis": "Systematic elevation in both sugar and lignin fractions for provider 'tiny' may indicate either a specific feedstock variety or a slight over-estimation bias by analyst xkang2@lbl.gov during sample processing.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(03)677d",
+        "(03)8660",
+        "(03)ad41",
+        "(03)b32d",
+        "(03)d213",
+        "(03)e36d",
+        "(03)e546"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose",
+        "lignin"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Z-score deviation between 1.4 and 1.6 for hemicellulose and lignin components.",
+      "recommended_action": "Perform a mass closure sum-check for these record IDs to ensure the total does not exceed 100% and verify the lignin extraction protocol."
+    },
+    {
+      "group_label": "Almond Shells / Carbohydrate Inflation (Provider: humorous)",
+      "hypothesis": "Analyst xkang2@lbl.gov recorded values that are consistently on the higher end of the distribution for almond shells from provider 'humorous', possibly due to batch-specific preparation methods.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(13)29f0",
+        "(13)2c76",
+        "(13)6f70",
+        "(13)8405",
+        "(13)aaf9",
+        "(13)b6b6",
+        "(13)ce37"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose",
+        "glucose",
+        "glucan"
+      ],
+      "affected_resources": [
+        "almond shells"
+      ],
+      "evidently_finding": "Elevated sugar values with Z-scores > 1.0; polymer/monomer correlation is maintained but shifted high.",
+      "recommended_action": "Cross-reference these values with historical averages for 'humorous' provider almond shells to determine if this is a seasonal variation."
+    },
+    {
+      "group_label": "Almond Hulls / High Glucose (Provider: humorous)",
+      "hypothesis": "Possible residual sugar content or incomplete separation of hull fractions for provider 'humorous' leading to higher glucose readings.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(15)0b07",
+        "(15)3f87"
+      ],
+      "affected_parameters": [
+        "glucose"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Z-scores > 1.0 for glucose content in specific hull samples.",
+      "recommended_action": "Review sample preparation notes (currently missing) to check for evidence of high soluble sugar content prior to structural analysis."
+    },
+    {
+      "group_label": "Almond Shells / Xylan Bias (Provider: capstan)",
+      "hypothesis": "Feedstock from provider 'capstan' shows higher than average xylan/xylose, likely representing natural biological variance in the shell composition.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(04)68e4",
+        "(04)c1d7"
+      ],
+      "affected_parameters": [
+        "xylan",
+        "xylose"
+      ],
+      "affected_resources": [
+        "almond shells"
+      ],
+      "evidently_finding": "Elevated hemicellulose monomers and polymers.",
+      "recommended_action": "Monitor 'capstan' provider data for continued upward trends in hemicellulose content."
+    },
+    {
+      "group_label": "Walnut Shells / Glucan Outlier (Provider: cutaway)",
+      "hypothesis": "Isolated instance of elevated glucan in walnut shells; since monomeric glucose is not flagged here, this may be a polymer-specific calculation or measurement error.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(15)797a"
+      ],
+      "affected_parameters": [
+        "glucan"
+      ],
+      "affected_resources": [
+        "walnut shells"
+      ],
+      "evidently_finding": "Glucan Z-score > 1.1 for walnut shells.",
+      "recommended_action": "Verify the calculation used to derive glucan from glucose for this specific record."
+    }
+  ],
+  "flagged_count": 245
+}

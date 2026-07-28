@@ -1,0 +1,124 @@
+{
+  "executive_summary": "The data quality audit of the `mv_biomass_composition` dataset reveals a generally stable system with a high volume of low-severity statistical deviations, primarily centered around sugar yields and structural components (lignin, xylan) in nut-based biomass. A significant portion of these anomalies is associated with analyst xkang2@lbl.gov and specific providers like 'tiny', 'humorous', and 'capstan'. While many of these represent expected biological variance in agricultural residues, the presence of impossible negative values (minimum observed value of -244.0) and high-magnitude outliers (maximum of 161,000.0) indicates localized instrument calibration errors or unit conversion failures.\n\nThe most critical issues involve systematic deviations in sugar yield parameters (glucose_yld, xylose_yld) and the complete absence of `experiment_date` metadata, which prevents the identification of temporal equipment drift. Furthermore, the high variance in total and volatile solids for pomace-based resources suggests potential sample degradation or inconsistent moisture management during the pretreatment analysis phase. Addressing these calibration and metadata gaps is essential for the reliability of downstream biofuel yield modeling.",
+  "grouped_issues": [
+    {
+      "group_label": "Physically Impossible Negative Values",
+      "hypothesis": "The presence of negative values in compositional analysis suggests improper baseline subtraction in HPLC/GC software or incorrect blank correction during ICP/XRF runs.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(03)677d",
+        "(03)8660",
+        "(03)ad41",
+        "(03)b32d",
+        "(03)d213",
+        "(03)e36d",
+        "(03)e546",
+        "(13)29f0",
+        "(13)2c76"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells",
+        "sargassum"
+      ],
+      "evidently_finding": "ColumnSummaryMetric for observed_value shows a min of -244.0",
+      "recommended_action": "Audit all records with observed_value < 0; recalibrate instrument baselines and re-process raw signal data."
+    },
+    {
+      "group_label": "Systematic Sugar Yield Deviations (Analyst: xkang2@lbl.gov)",
+      "hypothesis": "Analyst xkang2@lbl.gov shows a consistent pattern of low-severity z-score deviations in carbohydrate yields across almond and sargassum samples. This may stem from specific sample hydrolysis durations or temperature settings during pretreatment.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(03)8660",
+        "(03)b32d",
+        "(03)d213",
+        "(03)e36d",
+        "(03)e546",
+        "(0d)4993",
+        "(0d)4996",
+        "(0d)4999",
+        "(0d)5002"
+      ],
+      "affected_parameters": [
+        "glucose_yld",
+        "xylose_yld",
+        "xylan",
+        "xylose"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells",
+        "sargassum",
+        "grape pomace"
+      ],
+      "evidently_finding": "Top anomalous parameters include glucose_yld (137) and xylose_yld (126)",
+      "recommended_action": "Review the standard operating procedure (SOP) with analyst xkang2@lbl.gov to ensure consistency in pretreatment and hydrolysis steps compared to other lab members."
+    },
+    {
+      "group_label": "Complete Loss of Temporal Metadata",
+      "hypothesis": "The experiment_date column is entirely null, indicating a failure in the data ingestion pipeline or the absence of timestamp logging in the source LIMS. This obscures equipment drift and seasonal biomass trends.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)1f0b",
+        "(04)68e4",
+        "(0d)4993",
+        "(13)29f0"
+      ],
+      "affected_parameters": [
+        "experiment_date"
+      ],
+      "affected_resources": [
+        "All resources"
+      ],
+      "evidently_finding": "DatasetSummaryMetric shows number_of_missing_values for experiment_date is 6366 (100%)",
+      "recommended_action": "Investigate the database migration/ETL process to restore experiment_date; enforce mandatory date entry in the source capture system."
+    },
+    {
+      "group_label": "Solids Variance in High-Moisture Pomace",
+      "hypothesis": "The high flagging rate for solids in pomace and hulls from providers 'capstan' and 'tiny' suggests inconsistent drying protocols or sample respiration/fermentation prior to analysis.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(04)68e4",
+        "(04)c1d7"
+      ],
+      "affected_parameters": [
+        "total solids",
+        "volatile solids",
+        "ash"
+      ],
+      "affected_resources": [
+        "almond shells",
+        "tomato pomace",
+        "grape pomace"
+      ],
+      "evidently_finding": "High frequency of anomalies in total solids (91) and volatile solids (90)",
+      "recommended_action": "Verify storage conditions for pomace samples received from 'capstan'; standardize the oven-drying duration for high-moisture agricultural residues."
+    },
+    {
+      "group_label": "Provider-Specific Compositional Shifting (Provider: humorous)",
+      "hypothesis": "Biomass from provider 'humorous' exhibits statistically significant shifts in structural carbohydrates, potentially due to different harvesting methods or varietal differences in the source almond orchards.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(13)29f0",
+        "(13)2c76",
+        "(13)6f70",
+        "(13)8405",
+        "(13)aaf9"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "almond shells"
+      ],
+      "evidently_finding": "Top anomalous resource: almond shells (184) from provider 'humorous'",
+      "recommended_action": "Cross-reference results with the provider's harvest logs to determine if these 'anomalies' represent a new legitimate baseline for this specific biomass source."
+    }
+  ],
+  "flagged_count": 1712
+}

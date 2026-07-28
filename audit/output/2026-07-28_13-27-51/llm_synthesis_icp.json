@@ -1,0 +1,126 @@
+{
+  "executive_summary": "The data quality audit for the ICP (Inductively Coupled Plasma) elemental analysis dataset identifies 147 low-severity anomalies primarily involving macro and micro-elemental concentrations in agricultural residues. The anomalies are heavily concentrated in tomato pomace, almond hulls, and almond shells. Statistical deviations (Z-scores ranging from 1.0 to 2.4) across elements like Potassium (K), Calcium (Ca), Magnesium (Mg), and Sulfur (S) suggest natural biological variance or variations in soil-loading rather than analytical failure. While these values are flagged, they represent plausible ranges for processed biomass byproducts and do not indicate critical data corruption.\n\nA significant metadata deficiency was observed: the 'analyst_name' field is 100% null, representing a systemic omission in the data entry or migration process. However, traceability is maintained via the 'analyst_email' field (mduran@lbl.gov), which is present for a majority of the records. Furthermore, the dataset shows consistent mineral profiles across different providers (Oakleaf, Pinecrest, Riverstone), suggesting that the observed variability is a characteristic of the resource types themselves. Silicon (Si) levels in tomato pomace remain within acceptable bounds for residues prone to soil contact, adhering to domain expectations for agricultural biomass.",
+  "grouped_issues": [
+    {
+      "group_label": "Tomato Pomace Macro-Nutrient Variance",
+      "hypothesis": "The elevated Z-scores (1.0 - 1.5) for K, Ca, and Mg in tomato pomace likely reflect natural variation in the fruit skins and seeds processed by Pinecrest and Riverstone. Analyst mduran@lbl.gov captured these variations, which are typical for concentrated pomace residues.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(69)66e5",
+        "(69)fb3a",
+        "(69)7ba0",
+        "(69)eb00",
+        "(69)1a06",
+        "(69)f2b1",
+        "(69)0f35",
+        "(6d)a6af",
+        "(6d)c741",
+        "(26)0be0"
+      ],
+      "affected_parameters": [
+        "k",
+        "ca",
+        "mg",
+        "p",
+        "s",
+        "na"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "ColumnSummaryMetric for observed_value shows multiple low-severity Z-score flags.",
+      "recommended_action": "Accept values as representative of biological variation; no correction required."
+    },
+    {
+      "group_label": "Systemic Null Analyst Identification",
+      "hypothesis": "A database migration or reporting template error has resulted in the 'analyst_name' field being left blank, despite 'analyst_email' being populated for the majority of the records (e.g., mduran@lbl.gov).",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(26)7272",
+        "(26)0be0",
+        "(69)3b52",
+        "(69)66e5",
+        "(6d)a6af",
+        "(6d)c741"
+      ],
+      "affected_parameters": [
+        "analyst_name"
+      ],
+      "affected_resources": [
+        "tomato pomace",
+        "almond hulls",
+        "almond shells",
+        "grape pomace"
+      ],
+      "evidently_finding": "100% missing values in analyst_name column.",
+      "recommended_action": "Perform a join with the user directory to backfill analyst_name based on the analyst_email field."
+    },
+    {
+      "group_label": "Trace Element Enrichment in Tomato Pomace",
+      "hypothesis": "Slightly elevated levels of Zn (Z=2.38) and Ti in Oakleaf and Pinecrest samples likely indicate soil adhesion or specific cultivation conditions rather than instrument error. mduran@lbl.gov is the consistent analyst for these observations.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(26)7272",
+        "(26)a23d",
+        "(69)3b52",
+        "(69)1bde",
+        "(69)0335",
+        "(69)8315",
+        "(69)dd28",
+        "(69)aa3d"
+      ],
+      "affected_parameters": [
+        "mn",
+        "cu",
+        "zn",
+        "al",
+        "ti",
+        "nd"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "Z-scores between 1.0 and 2.4 for transition and rare earth metals.",
+      "recommended_action": "Monitor for trends in future batches from Pinecrest to see if trace element concentration increases, otherwise treat as baseline."
+    },
+    {
+      "group_label": "Silicon Variance in Agricultural Residues",
+      "hypothesis": "Per domain context, Si outliers in agricultural residues (Z < 5) typically indicate minor soil contamination. This record (Z=1.71) is well within the expected range for residues like tomato pomace.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(69)c905"
+      ],
+      "affected_parameters": [
+        "si"
+      ],
+      "affected_resources": [
+        "tomato pomace"
+      ],
+      "evidently_finding": "Low-severity flag for Silicon (Si) with Z-score 1.71.",
+      "recommended_action": "Retain data; Si levels are non-critical and likely representative of harvest conditions."
+    },
+    {
+      "group_label": "Nut and Fruit Byproduct Elemental Baseline Shift",
+      "hypothesis": "The consistent flagging of S, Mn, and Zn across almond and grape resources indicates that the reference mean may be based on more diverse biomass types, causing these specific byproducts to appear as outliers.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(26)a23d",
+        "(26)0be0"
+      ],
+      "affected_parameters": [
+        "s",
+        "mn",
+        "cu",
+        "zn"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells",
+        "grape pomace"
+      ],
+      "evidently_finding": "High frequency of LOW severity flags in nut and fruit byproducts.",
+      "recommended_action": "Recalculate reference statistics specifically for nut-shell and fruit-pomace sub-groups to reduce false positive flags."
+    }
+  ],
+  "flagged_count": 147
+}

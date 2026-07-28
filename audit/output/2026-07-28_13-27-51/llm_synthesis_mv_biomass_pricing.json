@@ -1,0 +1,93 @@
+{
+  "executive_summary": "The data quality audit of the 'mv_biomass_pricing' dataset reveals significant statistical variance, primarily driven by extreme price outliers in specific almond byproduct categories. While the dataset maintains structural integrity with no missing values in core columns, the pricing for 'almond hash' (reaching up to 3,140 units) is several orders of magnitude higher than the values recorded for shells and hulls. This suggests either a fundamental unit mismatch—such as total shipment cost being entered as a unit price—or a catastrophic data entry error. Without the 'parameter_name' or 'provider_codename' populated, it is difficult to determine if these values represent processed almond oil extracts rather than raw biomass hash.\n\nFurthermore, the audit identified a systemic lack of metadata. All flagged records are missing analyst attribution, provider codenames, and specific parameter definitions. This absence of context prevents the verification of the high-end pricing observed for almond hulls (ranging from 194.55 to 252.26). While these hull prices are statistically flagged as high, they may represent organic premiums or 'delivered' prices inclusive of freight. The lack of temporal data (sample_date) further complicates the analysis, as we cannot determine if these spikes correlate with seasonal almond harvest shortages. Immediate intervention is required to standardize price units and populate missing metadata fields to ensure the dataset's utility for economic modeling.",
+  "grouped_issues": [
+    {
+      "group_label": "Almond Hash Price Outliers",
+      "hypothesis": "The extreme values for almond hash (1614 - 3140) likely represent a unit mismatch (e.g., price per total load instead of price per ton) or the inclusion of high-value almond meat/oil derivatives incorrectly classified as biomass hash.",
+      "priority": "High",
+      "affected_record_ids": [
+        "64",
+        "72",
+        "73",
+        "65"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "almond hash"
+      ],
+      "evidently_finding": "High maximum value (3140) compared to dataset mean (361.9)",
+      "recommended_action": "Verify units of measure for these records and confirm if 'almond hash' refers to raw biomass or a processed byproduct. Standardize to a single price per dry ton."
+    },
+    {
+      "group_label": "High-End Almond Hull Pricing",
+      "hypothesis": "These records represent the upper bound of the almond hull market. The lack of provider information makes it impossible to determine if these are retail prices or include long-distance transportation costs.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "31",
+        "10",
+        "32",
+        "8",
+        "1"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Values between 194.55 and 252.26 resulting in z-scores > 1.5",
+      "recommended_action": "Cross-reference these prices against historical commodity market reports for the same period (if dates can be recovered) and clarify if these are FOB or Delivered prices."
+    },
+    {
+      "group_label": "Almond Shell Value Variance",
+      "hypothesis": "Shell pricing is naturally lower than hulls but shows tight clustering at a slightly elevated range (30-40). These likely represent a specific contract or provider with higher quality standards for co-generation fuel.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "39",
+        "34",
+        "37",
+        "38",
+        "41",
+        "36",
+        "35"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "almond shells"
+      ],
+      "evidently_finding": "Consistent statistical outliers in the 29.1 to 39.3 range",
+      "recommended_action": "Monitor for continued variance; these values are within a plausible range for high-quality biomass shells but should be validated against the missing 'parameter_name'."
+    },
+    {
+      "group_label": "Systemic Metadata Deficiency",
+      "hypothesis": "A failure in the upstream data ingestion pipeline or manual entry form has resulted in the loss of critical provenance data, including analyst identity and sample dates.",
+      "priority": "High",
+      "affected_record_ids": [
+        "39",
+        "31",
+        "64",
+        "72",
+        "8",
+        "38"
+      ],
+      "affected_parameters": [
+        "parameter_name",
+        "analyst_name",
+        "provider_codename",
+        "sample_date"
+      ],
+      "affected_resources": [
+        "almond shells",
+        "almond hulls",
+        "almond hash"
+      ],
+      "evidently_finding": "Multiple columns with 0 unique values or entirely empty in flagged samples",
+      "recommended_action": "Audit the data entry workflow to ensure 'parameter_name' (e.g., $/ton, $/lb) and 'sample_date' are mandatory fields. Retroactively populate analyst and provider info from source manifests."
+    }
+  ],
+  "flagged_count": 16
+}

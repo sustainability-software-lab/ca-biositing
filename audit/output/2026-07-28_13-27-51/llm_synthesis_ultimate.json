@@ -1,0 +1,46 @@
+{
+  "executive_summary": "The quality audit of the 'ultimate' analysis dataset, focusing on nitrogen content in agricultural biomass, reveals significant gaps in metadata and minor statistical variance in specific pomace samples. The most critical systemic issue is the 100% absence of analyst attribution across all 15 records. The `analyst_name` and `analyst_email` columns are entirely empty, which compromises the chain of custody and prevents targeted follow-up on laboratory procedures. Additionally, the dataset shows evidence of structural redundancy, with several constant and duplicated columns (e.g., `qc_pass`, `unit`, and `sample_date`) suggesting a rigid or potentially misconfigured data ingestion pipeline.\n\nThree low-severity anomalies were identified within the nitrogen parameters for tomato and grape pomace samples provided by Pinecrest, Riverstone, and Maplewood. These observations, characterized by Z-scores between 1.0 and 1.26, appear to be associated with replicate testing, as indicated by the \"dup\" designation in the record notes. While the observed values (1.93% to 2.98% nitrogen) are within plausible ranges for these biomass types, their statistical deviation from the batch mean suggests a slight upward bias in these specific replicates or localized heterogeneity in the pomace samples. The impact is currently low, but the lack of analyst metadata makes it difficult to determine if these variances are due to sample preparation or instrument calibration.",
+  "grouped_issues": [
+    {
+      "group_label": "Metadata / Missing Analyst Attribution",
+      "hypothesis": "The data ingestion pipeline or LIMS export process is failing to map analyst identity fields, or the information was never entered at the point of analysis. Given the absence of this data, no specific analyst can be linked to the nitrogen measurements.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        ")u73ee73",
+        ")u91a791",
+        ")u87a587"
+      ],
+      "affected_parameters": [
+        "analyst_name",
+        "analyst_email"
+      ],
+      "affected_resources": [
+        "tomato pomace",
+        "grape pomace",
+        "almond hulls"
+      ],
+      "evidently_finding": "100% missing values for analyst_name and analyst_email across all rows.",
+      "recommended_action": "Review the LIMS export configuration to ensure analyst metadata is captured. Implement a mandatory field requirement for analyst identification during data entry."
+    },
+    {
+      "group_label": "Nitrogen / Pomace Replicate Variance",
+      "hypothesis": "The records flagged as anomalies are identified as duplicates ('dup') in the notes. The slight statistical elevation suggests either intra-sample heterogeneity in the pomace materials or a minor drift in the combustion analysis for these specific replicates across multiple providers (Pinecrest, Riverstone, Maplewood).",
+      "priority": "Low",
+      "affected_record_ids": [
+        ")u73ee73",
+        ")u91a791",
+        ")u87a587"
+      ],
+      "affected_parameters": [
+        "nitrogen"
+      ],
+      "affected_resources": [
+        "tomato pomace",
+        "grape pomace"
+      ],
+      "evidently_finding": "Low-severity Z-score anomalies (1.00 - 1.26) for nitrogen observed values.",
+      "recommended_action": "Compare these duplicate values against their primary counterparts to calculate Relative Percent Difference (RPD). If RPD exceeds 10%, re-homogenize the samples and re-run the nitrogen analysis."
+    }
+  ],
+  "flagged_count": 3
+}

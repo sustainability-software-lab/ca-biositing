@@ -1,0 +1,45 @@
+{
+  "executive_summary": "The data quality audit for the `mv_biomass_end_uses` dataset reveals a structurally stable but quantitatively incomplete dataset. The dataset has expanded from 30 to 39 records, reflecting the inclusion of two additional biomass resource types. However, this growth has been accompanied by a doubling of missing data points in the `observed_value` column, which now accounts for over 10% of the current dataset. The relationship between `record_id` and total rows (approximately 4 observations per record) indicates a multi-category distribution model for biomass end-uses, such as partitioning a single feedstock source into fuel, fodder, and industrial applications.\n\nThe primary concern identified is the impact of missing 'observed_value' entries on mass-balance calculations. In agricultural biomass research, the utility of end-use data depends on the ability to account for the total volume of a resource. The current missingness prevents a comprehensive sum-to-one or total-tonnage validation for the affected record IDs. While categorical consistency remains high across 15 distinct use cases, the lack of quantitative data for roughly 10% of the entries limits the dataset's applicability for downstream life cycle assessments (LCA) and economic modeling. Priority should be placed on reconciling these gaps, particularly for newly introduced resource streams.",
+  "grouped_issues": [
+    {
+      "group_label": "Missing Quantitative End-Use Values",
+      "hypothesis": "The missing values in 'observed_value' likely represent 'Trace' use cases or categories where volumetric data was not recorded at the time of sampling. The increase from 2 to 4 missing values suggests that as the study expands to new resource types, data collection for secondary use cases is becoming less rigorous.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "11",
+        "25",
+        "33",
+        "120",
+        "124"
+      ],
+      "affected_parameters": [
+        "observed_value"
+      ],
+      "affected_resources": [
+        "Agricultural Biomass Feedstocks"
+      ],
+      "evidently_finding": "number_of_missing_values: 4 in current dataset (10.26%)",
+      "recommended_action": "Cross-reference the affected record IDs with primary field notes to recover missing tonnage or percentage values. If values are below detection limits, replace nulls with a standardized 'trace' value (e.g., <0.01) to enable complete mass-balance summation."
+    },
+    {
+      "group_label": "Feedstock Taxonomy Expansion Validation",
+      "hypothesis": "The dataset shows a 25% increase in unique resource types. The perfect correlation between the increase in unique record_ids and unique resource_names suggest that new samples are being added as single representative records for new categories rather than longitudinal samples of existing categories.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "11",
+        "120",
+        "124"
+      ],
+      "affected_parameters": [
+        "record_id",
+        "resource_name"
+      ],
+      "affected_resources": [
+        "New Biomass Resource Varieties"
+      ],
+      "evidently_finding": "number_uniques_by_columns: resource_name increased from 8 to 10; record_id increased from 8 to 10.",
+      "recommended_action": "Verify that the two new resource types (which increased the unique count from 8 to 10) follow the same 'use_case' partitioning logic as the reference group to ensure longitudinal comparability."
+    }
+  ],
+  "flagged_count": 0
+}

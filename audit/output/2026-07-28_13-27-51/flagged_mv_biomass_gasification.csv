@@ -1,0 +1,31 @@
+record_id,resource_name,parameter_name,analysis_type,unit,observed_value,group_mean,group_std,group_n,z_score,severity,analyst_name,analyst_email,qc_pass,note,created_at,provider_codename,sample_date,repl_no
+spen418-0a28,spent oak chips,ch4,,ppm,17155.43,16471.07,460.8808427348659,4,1.4848957399465985,LOW,,iteran@ucmerced.edu,pass,,,rigging,,1
+spen419-9777,spent oak chips,h2,,ppm,100931.9,96045.6675,3399.1164596247118,4,1.437500761753681,LOW,,iteran@ucmerced.edu,pass,,,rigging,,1
+spen427-b6f6,spent oak chips,c5h12,,ppm,0.2,0.11750000000000001,0.0805708797684788,4,1.02394314468285,LOW,,iteran@ucmerced.edu,pass,,,rigging,,1
+spen429-2a58,spent oak chips,c6h14,,ppm,0.06,0.025,0.030000000000000002,4,1.1666666666666665,LOW,,iteran@ucmerced.edu,pass,,,rigging,,1
+spen431-e0bd,spent oak chips,lfl,,pc,5.89,5.955,0.050662280511902365,4,1.2830058051715534,LOW,,iteran@ucmerced.edu,pass,,,rigging,,1
+spen435-191a,spent oak chips,co,,ppm,92531.36,95756.2025,2485.268969808231,4,1.2975828931098896,LOW,,iteran@ucmerced.edu,pass,,,rigging,,2
+spen438-3f64,spent oak chips,o2,,ppm,43921.04,29369.75,11743.541452460866,4,1.2390887415781011,LOW,,iteran@ucmerced.edu,pass,,,rigging,,2
+spen443-3655,spent oak chips,c4h10(i),,ppm,806.0,1018.6899999999999,195.40695091696878,4,1.0884464396068232,LOW,,iteran@ucmerced.edu,pass,,,rigging,,2
+spen610-ea71,spent oak chips,co,,ppm,98559.97,95756.2025,2485.268969808231,4,1.1281545515036737,LOW,,iteran@ucmerced.edu,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",,rigging,,1
+spen614-6ac0,spent oak chips,c3h8,,ppm,1840.46,1535.4225000000001,248.33157744904975,4,1.2283476114212037,LOW,,iteran@ucmerced.edu,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",,rigging,,1
+spen615-f0bf,spent oak chips,c2h6,,ppm,10929.16,6956.530000000001,2915.848915438978,4,1.3624265574822911,LOW,,iteran@ucmerced.edu,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",,rigging,,1
+spen617-a752,spent oak chips,c5h12,,ppm,0.03,0.11750000000000001,0.0805708797684788,4,1.0860003049666591,LOW,,iteran@ucmerced.edu,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",,rigging,,1
+spen618-e1ff,spent oak chips,c4h10(i),,ppm,1217.59,1018.6899999999999,195.40695091696878,4,1.0178757667863896,LOW,,iteran@ucmerced.edu,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",,rigging,,1
+spen622-9d86,spent oak chips,ufl,,pc,57.03,56.76,0.21275964529643668,4,1.2690376486754047,LOW,,,pass,,,rigging,,1
+spen622-9d86,spent oak chips,ufl,,pc,57.03,56.76,0.21275964529643668,4,1.2690376486754047,LOW,,,pass,,,rigging,,1
+spen622-9d86,spent oak chips,ufl,,pc,57.03,56.76,0.21275964529643668,4,1.2690376486754047,LOW,,,pass,,,rigging,,1
+spen631-33b3,spent oak chips,c4h10(b),,ppm,424.91,463.725,26.719917040789383,4,1.4526616957959422,LOW,,iteran@ucmerced.edu,pass,"gasification temperatures sustained during the operation. gas sample successfully collected, however values should be normalized. can be normalized as xi/sum(xi/xn). ",,rigging,,2
+waln265-1532,walnut shells,c6h14,,ppm,0.0,0.0375,0.026299556396765834,4,1.4258795636800752,LOW,,iteran@ucmerced.edu,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",,energetic,,1
+waln279-5a49,walnut shells,c4h10(i),,ppm,751.52,2028.08,1028.6396473336358,4,1.2410176909950974,LOW,,iteran@ucmerced.edu,pass,"comb < lfl, but operational conditions were ideal and flame sustained, poor gas sample",,energetic,,2
+walnr54-2c69,walnut shells,h2,,ppm,114123.0,48934.735,46786.26739594607,4,1.3933204897137919,LOW,,iteran@ucmerced.edu,pass,,,energetic,,1
+walnr55-f607,walnut shells,co,,ppm,172963.7,96529.24250000001,61164.07934735462,4,1.249662519498151,LOW,,iteran@ucmerced.edu,pass,,,energetic,,1
+walnr56-5b69,walnut shells,co2,,ppm,158332.0,135315.6,20901.163268264918,4,1.101201866354813,LOW,,iteran@ucmerced.edu,pass,,,energetic,,1
+walnr57-1fbc,walnut shells,n2,,ppm,472784.1,636801.3,144065.35906888466,4,1.1384915920112029,LOW,,iteran@ucmerced.edu,pass,,,energetic,,1
+walnr61-7824,walnut shells,c4h10(b),,ppm,17071.3,5307.0525,8083.841299899344,4,1.4552793732042317,LOW,,iteran@ucmerced.edu,pass,,,energetic,,1
+walnr62-00fd,walnut shells,c5h12,,ppm,3.87,1.6175000000000002,1.7294965548775556,4,1.3024021317923191,LOW,,iteran@ucmerced.edu,pass,,,energetic,,1
+walnr63-098e,walnut shells,c4h10(i),,ppm,3257.27,2028.08,1028.6396473336358,4,1.1949665786130412,LOW,,iteran@ucmerced.edu,pass,,,energetic,,1
+walnr68-a94d,walnut shells,ch4,,ppm,8010.37,7104.665,605.0614133843494,4,1.4968811098596277,LOW,,iteran@ucmerced.edu,pass,,,energetic,,2
+walnr71-65e8,walnut shells,co2,,ppm,110674.7,135315.6,20901.163268264918,4,1.1789248131185734,LOW,,iteran@ucmerced.edu,pass,,,energetic,,2
+walnr74-8c79,walnut shells,c3h8,,ppm,40182.31,14296.619999999999,18687.779572570947,4,1.3851667020941218,LOW,,iteran@ucmerced.edu,pass,,,energetic,,2
+walnr75-c70a,walnut shells,c2h6,,ppm,47784.78,24215.49,22639.34920943768,4,1.0410763040032374,LOW,,iteran@ucmerced.edu,pass,,,energetic,,2

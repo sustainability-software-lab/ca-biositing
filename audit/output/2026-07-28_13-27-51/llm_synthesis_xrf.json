@@ -1,0 +1,133 @@
+{
+  "executive_summary": "The data quality audit of the XRF (X-Ray Fluorescence) elemental analysis dataset, comprising 2,431 records, reveals a concentrated pattern of anomalies primarily involving almond-based biomass and specific mineral tracers. While the majority of the 613 flagged observations are categorized as low severity, several medium-priority outliers in almond hulls—specifically involving Silicon (Si), Zinc (Zn), Thorium (Th), and Uranium (U)—suggest potential environmental contamination or specific mineral uptake issues. Data provenance is clearly split between two primary providers, 'tiny' (associated with xkang2@lbl.gov) and 'capstan' (associated with jduong@lbl.gov), with 'tiny' accounting for the majority of the high-variance trace element readings.\n\nKey issues identified include suspected soil contamination in almond hulls indicated by elevated Silicon and Iron levels, and a systemic occurrence of zero-values for elements like Manganese (Mn) and Lanthanum (La), which likely represent values below the instrument's Limit of Detection (LOD) rather than true absences. Furthermore, the dataset suffers from total omission of analyst names and qualitative notes, although analyst emails provide sufficient accountability for follow-up. The high z-scores for radioactive trace elements (Th, U) in almond hulls processed by provider 'tiny' warrant immediate calibration verification to rule out instrumental drift or spectral interference.",
+  "grouped_issues": [
+    {
+      "group_label": "Potential Soil Contamination in Almond Hulls",
+      "hypothesis": "Elevated Si (17,900 ppm) and Fe (527 ppm) suggest that these almond hull samples may contain residual soil or grit from harvesting, which is common in ground-collected almond biomass. Analyst xkang2@lbl.gov should verify if samples were pre-washed.",
+      "priority": "High",
+      "affected_record_ids": [
+        "(03)663c",
+        "(03)6a5b",
+        "(03)79f8"
+      ],
+      "affected_parameters": [
+        "si",
+        "fe",
+        "ti"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "number_of_almost_constant_columns: 3",
+      "recommended_action": "Perform ash content analysis to correlate with Si/Fe levels and verify if the high mineral content is extrinsic (soil) or intrinsic (plant uptake)."
+    },
+    {
+      "group_label": "Trace Heavy Metal and Radioactive Element Outliers",
+      "hypothesis": "High z-scores for Th (3.40) and U (3.02) in almond hulls provided by 'tiny' may indicate either localized soil mineralization or, more likely, XRF spectral overlap/interference in the higher energy regions. xkang2@lbl.gov should review the raw spectra.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)2448",
+        "(03)68d1",
+        "(03)1c00"
+      ],
+      "affected_parameters": [
+        "th",
+        "u",
+        "zn"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Top anomalous parameters: {'zn': 35, 'u': 40}",
+      "recommended_action": "Re-examine XRF spectra for potential peak overlaps between higher-Z elements and verify calibration using a certified reference material (CRM) for biomass."
+    },
+    {
+      "group_label": "Below-Detection-Limit (LOD) Zeros",
+      "hypothesis": "The presence of absolute zeros for Mn, La, and Nd (e.g., record (03)da2a) suggests a failure to report the Limit of Detection. These are likely trace concentrations below the instrument's threshold rather than true zero values.",
+      "priority": "Medium",
+      "affected_record_ids": [
+        "(03)da2a",
+        "(03)0161",
+        "(03)d09a"
+      ],
+      "affected_parameters": [
+        "mn",
+        "la",
+        "nd"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "observed_value: 0 for trace elements",
+      "recommended_action": "Update the data reporting protocol for provider 'tiny' to include <LOD values or replace zeros with half the LOD to avoid biasing statistical means."
+    },
+    {
+      "group_label": "Macro-nutrient Variance in Almond Biomass",
+      "hypothesis": "Significant deviations in Potassium (K) and Phosphorus (P) may reflect variations in fertilization regimes or the maturity of the almond crop at the time of harvest. Records handled by xkang2@lbl.gov show consistent low-severity deviations.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(03)bbdf",
+        "(03)82cf",
+        "(03)3e42",
+        "(03)645d"
+      ],
+      "affected_parameters": [
+        "k",
+        "p",
+        "s",
+        "ca"
+      ],
+      "affected_resources": [
+        "almond hulls"
+      ],
+      "evidently_finding": "Top anomalous parameters: {'s': 42, 'p': 39, 'k': 38}",
+      "recommended_action": "Cross-reference these nutrient profiles with known fertilization records for the 'tiny' provider source locations."
+    },
+    {
+      "group_label": "Trace Element Variance - Provider 'capstan'",
+      "hypothesis": "Provider 'capstan' (analyst jduong@lbl.gov) shows a cluster of anomalies in almond shells for Rare Earth Elements (Pr, Ce) and Copper (Cu). This may be characteristic of the specific shell samples or indicate a different XRF calibration curve than 'tiny'.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(04)0a4a",
+        "(04)0e4d",
+        "(04)661b",
+        "(04)9261"
+      ],
+      "affected_parameters": [
+        "cu",
+        "pr",
+        "mn",
+        "ce"
+      ],
+      "affected_resources": [
+        "almond shells"
+      ],
+      "evidently_finding": "Top anomalous resources: {'almond shells': 71}",
+      "recommended_action": "Compare the calibration standards used by 'capstan' and 'tiny' to ensure cross-provider data inter-operability."
+    },
+    {
+      "group_label": "Systemic Metadata Omission",
+      "hypothesis": "There is a 100% loss of qualitative notes and analyst names across all providers. While analyst emails are present, the lack of notes prevents context for high-z-score outliers.",
+      "priority": "Low",
+      "affected_record_ids": [
+        "(03)0161",
+        "(03)0663",
+        "(03)1c00",
+        "(04)0a4a"
+      ],
+      "affected_parameters": [
+        "note",
+        "analyst_name"
+      ],
+      "affected_resources": [
+        "almond hulls",
+        "almond shells",
+        "grape pomace",
+        "cotton stem mix"
+      ],
+      "evidently_finding": "number_of_empty_columns: 2, nans_by_columns: {'note': 2431, 'analyst_name': 2431}",
+      "recommended_action": "Implement mandatory field validation in the data upload tool to ensure analyst names and observational notes are captured."
+    }
+  ],
+  "flagged_count": 613
+}
