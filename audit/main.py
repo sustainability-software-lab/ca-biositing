@@ -41,7 +41,7 @@ def run_audit(env="local"):
 
     summary_file = output_dir / "audit_summary.md"
 
-    with summary_file.open("w") as f:
+    with summary_file.open("w", encoding="utf-8") as f:
         f.write(f"# Database Audit Summary ({env})\n")
         f.write(f"Generated: {timestamp}\n")
         f.write(f"Database: {engine.url.host}:{engine.url.port}\n\n")
@@ -58,7 +58,7 @@ def run_audit(env="local"):
             print(f"  - Running {module_name}...")
 
             try:
-                with sql_file.open("r") as sql_f:
+                with sql_file.open("r", encoding="utf-8") as sql_f:
                     sql_content = sql_f.read()
 
                 # Split queries by semi-colon
@@ -130,7 +130,7 @@ def run_audit(env="local"):
                 f.write(f"Error: `{e}`\n\n---\n\n")
 
     # Save structured JSON
-    with (output_dir / "audit_data.json").open("w") as jf:
+    with (output_dir / "audit_data.json").open("w", encoding="utf-8") as jf:
         json.dump(audit_results, jf, indent=2, default=str)
 
     print(f"\n✅ Audit complete! Results saved to {output_dir}/")

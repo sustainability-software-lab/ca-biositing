@@ -125,7 +125,7 @@ class AuditorAgent:
                 # Save LLM synthesis as JSON
                 if synthesis:
                     llm_path = self.output_dir / f"llm_synthesis_{target_name}.json"
-                    with open(llm_path, "w") as f:
+                    with open(llm_path, "w", encoding="utf-8") as f:
                         f.write(synthesis.model_dump_json(indent=2))
 
                 # Save flagged observations as CSV (Backend data)
@@ -195,7 +195,7 @@ class AuditorAgent:
                         min_group_size=settings.MIN_GROUP_SIZE
                     )
                     target_report_path = self.output_dir / f"report_{target_name}.md"
-                    target_report_path.write_text(report_md)
+                    target_report_path.write_text(report_md, encoding="utf-8")
             except Exception as e:
                 import traceback
                 print(f"❌ CRITICAL: Audit failed for {target_name}: {e}")

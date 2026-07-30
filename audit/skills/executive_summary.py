@@ -70,5 +70,5 @@ def generate_executive_summary(
         lines.append("\n---\n")
 
     summary_path = output_dir / "executive_audit_summary.md"
-    summary_path.write_text("".join(lines))
+    summary_path.write_text("".join(lines), encoding="utf-8")
     return summary_path

@@ -59,5 +59,5 @@ def audit_analysis_type_review(analysis_type: str, run_dir: str):
     deep_dive_dir = run_path / "deep_dives"
     deep_dive_dir.mkdir(exist_ok=True)
     report_path = deep_dive_dir / f"analysis_{analysis_type.lower()}.md"
-    report_path.write_text(report_content)
+    report_path.write_text(report_content, encoding="utf-8")
     print(f"✅ Analysis type review report saved to {report_path}")

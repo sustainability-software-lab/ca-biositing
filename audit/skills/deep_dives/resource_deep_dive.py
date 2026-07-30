@@ -63,5 +63,5 @@ def audit_resource_deep_dive(resource_name: str, run_dir: str):
     # Sanitize resource name for filename
     safe_name = resource_name.replace(" ", "_").lower()
     report_path = deep_dive_dir / f"resource_{safe_name}.md"
-    report_path.write_text(report_content)
+    report_path.write_text(report_content, encoding="utf-8")
     print(f"✅ Resource deep-dive report saved to {report_path}")

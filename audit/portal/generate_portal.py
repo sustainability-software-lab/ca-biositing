@@ -172,7 +172,7 @@ format:
         qmd_content += """
 :::
 """
-        qmd_path.write_text(qmd_content)
+        qmd_path.write_text(qmd_content, encoding="utf-8")
 
         # Extract grouped issues summary if available
         grouped_issues = synth_data.get("grouped_issues", [])
@@ -222,12 +222,12 @@ title: "Data Quality Portal"
 {summary_md}
 """
 
-    (portal_dir / "index.qmd").write_text(index_qmd)
+    (portal_dir / "index.qmd").write_text(index_qmd, encoding="utf-8")
 
     # 4. Update _quarto.yml sidebar
     quarto_yml_path = portal_dir / "_quarto.yml"
     if quarto_yml_path.exists():
-        with open(quarto_yml_path, "r") as f:
+        with open(quarto_yml_path, "r", encoding="utf-8") as f:
             quarto_yml = yaml.safe_load(f)
 
         # Ensure website structure
@@ -251,7 +251,7 @@ title: "Data Quality Portal"
             "contents": sidebar_contents
         }
 
-        with open(quarto_yml_path, "w") as f:
+        with open(quarto_yml_path, "w", encoding="utf-8") as f:
             yaml.dump(quarto_yml, f, sort_keys=False)
 
     print("Portal generation complete.")

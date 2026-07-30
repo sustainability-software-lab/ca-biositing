@@ -54,5 +54,5 @@ def audit_temporal_drift(target_name: str, run_dir: str):
 """
 
     report_path = deep_dive_dir / f"temporal_{target_name}.md"
-    report_path.write_text(report_content)
+    report_path.write_text(report_content, encoding="utf-8")
     print(f"✅ Temporal drift analysis saved to {report_path} and {plot_path}")
