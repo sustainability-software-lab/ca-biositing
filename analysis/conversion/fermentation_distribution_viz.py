@@ -105,6 +105,13 @@ def main():
     # Data Cleaning
     df['value'] = pd.to_numeric(df['value'], errors='coerce')
     df = df.dropna(subset=['value']).copy()
+
+    # Rename yields to percentages (they are already in percentage format in the DB)
+    yield_params = ['3hpyield', 'etohyield']
+    for yp in yield_params:
+        mask = df['analysis_param'] == yp
+        df.loc[mask, 'analysis_param'] = yp + '_pct'
+
     df['qc_pass'] = df['qc_pass'].fillna('unknown')
     df['provider_code'] = df['provider_code'].fillna('unknown')
     df['primary_ag_product'] = df['primary_ag_product'].fillna('unknown')
@@ -124,9 +131,10 @@ def main():
     unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
     strain_sel = alt.selection_point(name='strain_selector', fields=['strain_name'], toggle=True)
     method_sel = alt.selection_point(name='method_selector', fields=['bioconversion_method'], toggle=True)
+    param_sel = alt.selection_point(name='param_selector', fields=['analysis_param'], toggle=True)
 
     # Combined filters
-    all_filters = status_sel & res_sel & prod_sel & prov_sel & unit_sel & strain_sel & method_sel
+    all_filters = status_sel & res_sel & prod_sel & prov_sel & unit_sel & strain_sel & method_sel & param_sel
 
     # Base Chart
     base = alt.Chart(df)
@@ -134,13 +142,29 @@ def main():
     # Main Chart
     main_base = base.transform_filter(all_filters)
 
+    param_order = [
+        'sugar_cons',
+        'sugart0',
+        'gluconct0',
+        'xylconct0',
+        'sugarteof',
+        'gluconcteof',
+        'xylconcteof',
+        'od600teof',
+        'rel_growth',
+        '3hptiter',
+        '3hpyield_pct',
+        'etohtiter',
+        'etohyield_pct'
+    ]
+
     boxplot = main_base.mark_boxplot(extent='min-max', size=30, color='#00313C', opacity=0.3).encode(
-        x=alt.X('analysis_param:N', title='Product / Parameter', axis=alt.Axis(labelAngle=45)),
+        x=alt.X('analysis_param:N', title='Product / Parameter', axis=alt.Axis(labelAngle=45), sort=param_order),
         y=alt.Y('value:Q', title='Measured Value')
     )
 
     points = main_base.mark_circle(size=60, opacity=0.7).encode(
-        x=alt.X('analysis_param:N'),
+        x=alt.X('analysis_param:N', sort=param_order),
         y=alt.Y('value:Q'),
         xOffset='jitter:Q',
         color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
@@ -171,7 +195,7 @@ def main():
     # Sidebars
     sidebar = alt.vconcat(
         make_filter_bar('data_status', 'Data Status', status_sel),
-        make_filter_bar('data_status', 'Data Status', status_sel),
+        make_filter_bar('analysis_param', 'Parameter', param_sel),
         make_filter_bar('resource_name', 'Resource Name', res_sel),
         make_filter_bar('primary_ag_product', 'Ag Product', prod_sel),
         make_filter_bar('provider_code', 'Provider Code', prov_sel),
