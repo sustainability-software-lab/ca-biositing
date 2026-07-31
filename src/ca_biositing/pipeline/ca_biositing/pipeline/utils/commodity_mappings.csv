@@ -22,8 +22,10 @@ corn stover cobs,CORN  ALL,CORN,11199999.0,CROP_FALLBACK,Matched by enhanced_com
 corn stover husks,CORN  ALL,CORN,11199999.0,CROP_FALLBACK,Matched by enhanced_commodity_mapper.py - user_approved - CROP_FALLBACK - similarity: 38.53% - 2026-02-04T18:33:09.626496
 corn stover stalks,CORN  ALL,CORN,11199999.0,CROP_FALLBACK,Matched by enhanced_commodity_mapper.py - user_approved - CROP_FALLBACK - similarity: 46.39% - 2026-02-04T18:33:09.631356
 corn stover whole,CORN  ALL,CORN,11199999.0,CROP_FALLBACK,Matched by enhanced_commodity_mapper.py - user_approved - CROP_FALLBACK - similarity: 45.70% - 2026-02-04T18:33:09.635682 - Updated 2026-02-12 to map to CORN ALL for consistency
-cotton,COTTON  UPLAND,COTTON,12121999.0,DIRECT_MATCH,interactive_commodity_mapper.py - user_approved - DIRECT_MATCH - 2026-03-04T16:33:56.065431
-cotton stem mix,COTTON  UPLAND,COTTON,12121999.0,CROP_FALLBACK,Matched by enhanced_commodity_mapper.py - user_approved - CROP_FALLBACK - similarity: 43.94% - 2026-02-04T18:33:09.639517
+cotton,COTTON,COTTON,12121999.0,DIRECT_MATCH,interactive_commodity_mapper.py - user_approved - DIRECT_MATCH - 2026-03-04T16:33:56.065431
+cotton stem mix,COTTON,COTTON,12121999.0,CROP_FALLBACK,Matched by enhanced_commodity_mapper.py - user_approved - CROP_FALLBACK - similarity: 43.94% - 2026-02-04T18:33:09.639517
+cotton gin trash,COTTON,COTTON,12121999.0,CROP_FALLBACK,Manually added mapping to COTTON
+cotton field residues,COTTON,COTTON,12121999.0,CROP_FALLBACK,Manually added mapping to COTTON
 cucumber culls,CUCUMBERS,CUCUMBERS,32599999.0,DIRECT_MATCH,Matched by enhanced_commodity_mapper.py - user_approved - DIRECT_MATCH - similarity: 46.96% - 2026-02-04T18:33:09.643127
 cucumbers and pickles,CUCUMBERS,CUCUMBERS,32599999.0,DIRECT_MATCH,interactive_commodity_mapper.py - user_approved - DIRECT_MATCH - 2026-03-04T16:33:56.070746
 dairy manure,,,,NO_MATCH,interactive_commodity_mapper.py - user_approved - NO_MATCH - 2026-03-04T16:33:56.197150

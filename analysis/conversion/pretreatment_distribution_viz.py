@@ -45,6 +45,7 @@ def main():
         pap.name as primary_ag_product,
         psam.name as prepared_sample_name,
         prov.codename as provider_code,
+        pts.pretreatment_exper_name as raw_pretreatment_method,
         param.name as analysis_param,
         obs.value,
         u.name as unit,
@@ -63,6 +64,7 @@ def main():
     LEFT JOIN provider prov ON fs.provider_id = prov.id
     LEFT JOIN parameter param ON obs.parameter_id = param.id
     LEFT JOIN unit u ON obs.unit_id = u.id
+    LEFT JOIN pretreatment_setup pts ON pts.prepared_samples @> jsonb_build_array(psam.name)
     WHERE obs.record_type = 'pretreatment'
     """)
 
@@ -81,6 +83,23 @@ def main():
     df['primary_ag_product'] = df['primary_ag_product'].fillna('unknown')
     df['unit'] = df['unit'].fillna('unknown')
 
+    # Collapse Pretreatment Methods into categories consistent with data portal
+    def collapse_method(name):
+        if not name or pd.isna(name):
+            return 'unknown'
+        name_lower = name.lower()
+        if 'cholinium' in name_lower and 'lysinate' in name_lower:
+            return 'Cholinium Lysinate 140°C'
+        if 'butylamine' in name_lower:
+            return 'Butylamine 140°C'
+        if 'hot water' in name_lower or 'water pretreatment' in name_lower:
+            return 'Water 140°C'
+        if 'no pretreatment' in name_lower or 'no pretreat' in name_lower:
+            return 'No Pretreatment'
+        return name
+
+    df['pretreatment_method'] = df['raw_pretreatment_method'].apply(collapse_method)
+
     # 2. Build Altair Dashboard
 
     # Selections
@@ -88,9 +107,11 @@ def main():
     res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
     unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
     param_sel = alt.selection_point(name='param_selector', fields=['analysis_param'], toggle=True)
+    prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
+    method_sel = alt.selection_point(name='method_selector', fields=['pretreatment_method'], toggle=True)
 
     # Combined filters
-    all_filters = status_sel & res_sel & unit_sel & param_sel
+    all_filters = status_sel & res_sel & unit_sel & param_sel & prov_sel & method_sel
 
     # Base Chart
     base = alt.Chart(df)
@@ -108,7 +129,7 @@ def main():
         y=alt.Y('value:Q'),
         xOffset='jitter:Q',
         color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
-        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'data_status', 'qc_pass', 'value', 'unit']
+        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'provider_code', 'pretreatment_method', 'raw_pretreatment_method', 'data_status', 'qc_pass', 'value', 'unit']
     ).transform_calculate(
         jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
@@ -137,7 +158,9 @@ def main():
         make_filter_bar('data_status', 'Data Status', status_sel),
         make_filter_bar('unit', 'Unit', unit_sel),
         make_filter_bar('analysis_param', 'Parameter', param_sel),
-        make_filter_bar('resource_name', 'Resource Name', res_sel)
+        make_filter_bar('resource_name', 'Resource Name', res_sel),
+        make_filter_bar('provider_code', 'Provider', prov_sel),
+        make_filter_bar('pretreatment_method', 'Pretreatment Method', method_sel)
     ).resolve_scale(y='independent')
 
     # Final Assembly
