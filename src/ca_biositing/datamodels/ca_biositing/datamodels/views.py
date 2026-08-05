@@ -1,7 +1,7 @@
 """
 Materialized view definitions using SQLAlchemy Core select() expressions.
 
-This module defines all 7 materialized views for the ca_biositing schema:
+This module defines all 7 materialized views for the ca_biositing (Cal BioScape) schema:
 - landiq_record_view: LandIQ spatial records with crop mapping
 - landiq_tileset_view: LandIQ geospatial tile aggregation
 - analysis_data_view: Aim1 analytical records union with spatial joins
