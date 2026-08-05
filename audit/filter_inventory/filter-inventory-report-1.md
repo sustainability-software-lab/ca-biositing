@@ -1,6 +1,7 @@
 # BioCirv Filter Inventory — Phase 1 Report
 
-**Scan date:** 2026-08-05 · **Branch:** `filter-inventory` · **48 rules**
+**Scan date:** 2026-08-05 · **Branch:** `filter-inventory` · **56 rules**
+**Revised:** corrections plus 8 new rules folded in after the skill-evaluation runs; every correction is marked *Corrected in report 2*.
 **Question:** Where and why can data be removed from, excluded from, or hidden in BioCirv outputs?
 
 **Scanned:** `src/`, `alembic/versions/`, `resources/sql/`, `.github/workflows/`
@@ -20,7 +21,7 @@ Inclusion decisions are made at nearly every stage — including the first, befo
    ╔═ GOOGLE SHEETS ════════════╗  ┌─ USDA NASS API ─┐  ┌─ LandIQ / BillionTon ─┐
    ║  Analyst enters + QC-marks ║  │                 │  │                       │
    ║  records. qc_result=fail   ║  └────────┬────────┘  └───────────┬───────────┘
-   ║  decided HERE.        [1]  ║           │                       │
+   ║  decided HERE.        [2]  ║           │                       │
    ╚═════════════╤══════════════╝           │                       │
                  │                          │                       │
         ╔════════▼══════════════════════════▼═══════════════════════▼═══════╗
@@ -28,12 +29,12 @@ Inclusion decisions are made at nearly every stage — including the first, befo
         ║  Geographic + commodity scoping at the source                     ║
         ╚═══════════════════════════════╤═══════════════════════════════════╝
         ╔═══════════════════════════════▼═══════════════════════════════════╗
-        ║  ORCHESTRATION (PREFECT)   pipeline/flows/                  [5]   ║
+        ║  ORCHESTRATION (PREFECT)   pipeline/flows/                  [8]   ║
         ║  Swallowed extract errors + empty-frame guards drop WHOLE         ║
         ║  DATASETS while the flow still reports success                    ║
         ╚═══════════════════════════════╤═══════════════════════════════════╝
         ╔═══════════════════════════════▼═══════════════════════════════════╗
-        ║  TRANSFORM SCRIPTS   pipeline/etl/transform/                [8]   ║
+        ║  TRANSFORM SCRIPTS   pipeline/etl/transform/                [9]   ║
         ║  pandas row drops: null keys, placeholder tokens, dedup           ║
         ║  qc_result → qc_pass  (flag carried, NOT applied here)            ║
         ║      └─ shared: utils/cleaning_functions/cleaning.py        [1]   ║
@@ -43,7 +44,7 @@ Inclusion decisions are made at nearly every stage — including the first, befo
         ║  UPSERT (ON CONFLICT DO UPDATE / DO NOTHING)                      ║
         ╚═══════════════════════════════╤═══════════════════════════════════╝
         ╔═══════════════════════════════▼═══════════════════════════════════╗
-        ║  STAGING + PRODUCTION   datamodels/models/                  [3]   ║
+        ║  STAGING + PRODUCTION   datamodels/models/                  [4]   ║
         ║  Unique constraints collapse duplicates. ONE definition tree      ║
         ║  reaching both environments via the same alembic chain            ║
         ╟───────────────────────────────────────────────────────────────────╢
@@ -52,7 +53,7 @@ Inclusion decisions are made at nearly every stage — including the first, befo
         ╚═══════════════════════════════╤═══════════════════════════════════╝
                      ┌──────────────────┴──────────────────┐
    ╔═════════════════▼═══════════════╗  ╔══════════════════▼══════════════════╗
-   ║  MAT. VIEWS — data_portal [21]  ║  ║  MAT. VIEWS — ca_biositing    [2]   ║
+   ║  MAT. VIEWS — data_portal [21]  ║  ║  MAT. VIEWS — ca_biositing    [4]   ║
    ║  data_portal_views/*.py         ║  ║  views.py                           ║
    ║  12 mv_biomass_* views          ║  ║  8 views: analysis_data, usda_*,    ║
    ║                                 ║  ║  landiq/billion-ton tilesets        ║
@@ -63,7 +64,7 @@ Inclusion decisions are made at nearly every stage — including the first, befo
    ║  └───────────────────────────┘  ║  ║                                     ║
    ╚═════════════════╤═══════════════╝  ╚══════════════════╤══════════════════╝
    ╔═════════════════▼═══════════════╗  ╔══════════════════▼══════════════════╗
-   ║  BIOCIRV PORTAL             [0] ║  ║  API ENDPOINTS                [2]   ║
+   ║  BIOCIRV PORTAL             [0] ║  ║  API ENDPOINTS                [3]   ║
    ║  Frontend for users             ║  ║  REST API for developer access      ║
    ║  NOT SCANNED — submodule        ║  ║  pagination cap, facet null-drops   ║
    ╚═════════════════════════════════╝  ╚═════════════════════════════════════╝
@@ -111,18 +112,18 @@ from .data_portal_views.common import (
 
 | Stage | Rules | Effect summary |
 |---|---|---|
-| Google Sheets | 1 | Analyst sets the flag that later hides records |
+| Google Sheets | 2 | Analyst flags: one that works (F-48), one that does nothing (F-51) |
 | Extract Scripts | 2 | Records never enter the pipeline |
-| Orchestration (Prefect flows) | 5 | Whole datasets or records skipped, usually silently |
-| Transform Scripts | 8 | Rows dropped in pandas before load |
+| Orchestration (Prefect flows) | 8 | Whole datasets or records skipped, usually silently |
+| Transform Scripts | 9 | Rows dropped in pandas before load |
 | Load Scripts | 3 | Rows dropped or silently replaced on write |
-| Staging + Production (table definitions) | 3 | Constraints collapse duplicate rows |
+| Staging + Production (table definitions) | 4 | Constraints collapse rows; one table has no reader |
 | GitHub Action Checks | **0** | Gates schema and tests only |
 | Materialized Views — `data_portal` | 21 | Records hidden from portal outputs |
-| Materialized Views — `ca_biositing` | 2 | Records hidden from API outputs |
-| API Endpoints | 2 | Records withheld at request time |
+| Materialized Views — `ca_biositing` | 4 | Records hidden from API outputs |
+| API Endpoints | 3 | Records withheld — and F-49 wrongly *exposed* |
 | BioCirV Portal | **0** | Not scanned |
-| Stale artifact (not deployed) | 1 | No live effect |
+| Stale artifact (not deployed) | **0** | F-39 reclassified as live |
 
 **Rules originating in a shared script** — the `Shared script` column in the sheet carries this, for diagram grouping:
 
@@ -148,11 +149,12 @@ Table definitions live in a single `datamodels/models/` tree reaching both envir
 
 What kind of filtering happens where, grouped by function.
 
-### Google Sheets — 1 rule
+### Google Sheets — 2 rules
 
 | Function group | Rules | Notes |
 |---|---|---|
-| Analyst QC marking | 1 | F-48 |
+| Analyst QC marking | 1 | F-48 — works |
+| Dead analyst control | 1 | F-51 `Include In Totals`, honoured by nothing (see §4.H) |
 
 The only rule in the system decided by a human rather than a predicate. An analyst sets `qc_result` during entry or review; F-17 acts on it downstream, hiding the record across **both** view stacks and all 11 record types. No version control, no documented criteria, no recorded reviewer. Arguably the highest-leverage inclusion decision in the system.
 
@@ -164,18 +166,20 @@ The only rule in the system decided by a human rather than a predicate. An analy
 
 Both act on the USDA NASS pull. F-02 re-filters what F-01 already scoped, described in the code as a defensive "in case" measure. Note the extract pulls **all 58 counties** — the three-county narrowing (F-25) happens much later, at the view layer.
 
-### Orchestration (Prefect flows) — 5 rules
+### Orchestration (Prefect flows) — 8 rules
 
 | Function group | Rules | Notes |
 |---|---|---|
 | Silent failure paths | 2 | F-42 swallowed extract errors; F-43 empty-frame early return |
-| Source-availability gating | 3 | F-45 already-archived skip; F-46 missing GSheet URL; F-47 malformed worksheet |
+| Source-availability gating | 4 | F-45 already-archived skip; F-46 missing GSheet URL; F-47 malformed worksheet; **F-52** URL not found in five hardcoded columns |
+| Deduplication | 1 | **F-53** archival dedup keyed on spreadsheet URL |
+| Unfiltered surface | 1 | **F-55** archival applies no QC and no resource exclusion |
 
 **This stage holds a different *kind* of exclusion from every other.** Elsewhere, records are removed because someone wrote a predicate. Here they vanish through error paths, at whole-dataset granularity, with no record-level accounting.
 
 F-42 is the one to know: [analysis_records.py:65-67](src/ca_biositing/pipeline/ca_biositing/pipeline/flows/analysis_records.py#L65-L67) wraps an entire analysis-type extraction in `except (ValueError, IOError): return None`. A malformed proximate spreadsheet removes **every proximate record for that run** while the flow reports success. Only trace is one log line.
 
-### Transform Scripts — 8 rules
+### Transform Scripts — 9 rules
 
 | Function group | Rules | Notes |
 |---|---|---|
@@ -183,7 +187,7 @@ F-42 is the one to know: [analysis_records.py:65-67](src/ca_biositing/pipeline/c
 | Placeholder token → drop | 2 | F-04 `['-','nan','None','']`; F-08 experiment names |
 | Deduplication | 2 | F-05 observation 4-key; F-11 almond NSJV composite key |
 | Null coercion that changes inclusion | 1 | F-07 XRF/ICP null → 0 |
-| Whole-source drop on bad input | 1 | F-44 `standard_clean` returns `None` |
+| Whole-source drop on bad input | 2 | F-44 `standard_clean` returns `None`; **F-54** bare `except` in the gasification transform |
 
 F-07 deserves attention: it fills nulls with `0` for XRF/ICP fifty-five lines before F-06 drops null-valued rows. So the coercion is not cosmetic — it decides whether those rows are stored at all. A null XRF reading becomes a stored zero; a null reading of any other type is discarded.
 
@@ -200,11 +204,12 @@ F-14 has a reporting quirk: `success_count` increments even on `DO NOTHING`, so 
 
 F-10 is quietly consequential — a resource missing a residue factor is dropped here, and then excluded from volume estimation entirely by the inner joins in F-35.
 
-### Staging + Production (table definitions) — 3 rules
+### Staging + Production (table definitions) — 4 rules
 
 | Function group | Rules | Notes |
 |---|---|---|
 | Unique constraints | 3 | F-12 observation 4-key; F-13 `record_id` on all record tables; F-15 residue factor per type |
+| Output with no reader | 1 | **F-56** `gasification_timeseries` is written by nothing that reads it |
 
 **There is no model-level validation.** A search for `@field_validator`, `@validator`, `@model_validator` and `def validate` across all 128 files in `datamodels/` returns **zero matches**. Every SQLModel class is a plain schema declaration. Inclusion is decided in exactly three places — pandas transforms, DB constraints, view predicates — and nowhere else.
 
@@ -230,27 +235,35 @@ Seven of these (F-16 – F-22) originate in `common.py` and are inherited by the
 
 F-35 is the quiet one: unmatched geoids, resources and residue factors disappear through inner joins with no warning anywhere.
 
-### Materialized Views — `ca_biositing` — 2 rules
+### Materialized Views — `ca_biositing` — 4 rules
 
 | Function group | Rules | Notes |
 |---|---|---|
 | Record-type routing | 1 | F-37 USDA census/survey excluded, routed to dedicated views |
 | Inherited QC set | 1 | F-38 the full `common.py` filter set, via `views.py` import |
+| Join-based removal | 2 | **F-39** null `unit_id` dropped by an inner join; **F-50** gasification and FTNIR dropped entirely |
 
 Consumers must query three views to see all observations.
 
-### API Endpoints — 2 rules
+**F-50 is the most consequential rule found in either report, and nobody wrote it.** [views.py](src/ca_biositing/datamodels/ca_biositing/datamodels/views.py) outer-joins exactly nine record tables into `_analysis_base`; `GasificationRecord` and `FtnirRecord` are absent. `resource_id` coalesces over those nine, so gasification and FTNIR observations get NULL, and the inner join to `Resource` at [views.py:279](src/ca_biositing/datamodels/ca_biositing/datamodels/views.py#L279) drops every one — before any QC filter runs. Two entire analysis types are invisible to every REST API analysis endpoint.
+
+Verified in deployed SQL: migration 0021's `analysis_data_view` contains `gasification_record` **0** times against `fermentation_record` **12**. A zero alone proves nothing; a zero beside a peer's twelve proves omission.
+
+This is a filter created by *absence*. No predicate exists, so no keyword search finds it — the same blind spot that hid the three-county restriction and the commodity name map.
+
+### API Endpoints — 3 rules
 
 | Function group | Rules | Notes |
 |---|---|---|
 | Pagination | 1 | F-40 hard cap of 100 records per request |
 | Facet null-suppression | 1 | F-41 null `resource`/`geoid`/`parameter` omitted from facet lists |
+| View bypass | 1 | **F-49** availability endpoints read base tables directly |
 
 F-41 has a navigational consequence: records with a null geoid exist in the view but cannot be reached through geoid-based UI navigation.
 
-### Stale artifact — 1 rule
+**F-49 inverts the usual direction.** Every other rule hides data; this one *exposes* data the portal hides. [availability_service.py:38](src/ca_biositing/webservice/ca_biositing/webservice/services/availability_service.py#L38) and `:94-97` query the `Resource` and `ResourceAvailability` **base tables** and never touch a view, so F-16 never applies — while [mv_biomass_availability.py:26](src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_availability.py#L26) does filter. Sargassum is hidden in the portal and returned by the API.
 
-F-39, in [create_analytical_views.sql](resources/sql/create_analytical_views.sql). No live effect — see §4.G.
+The generalisable lesson: checking which *views* apply a filter is not the same as checking which *services bypass views altogether*.
 
 ---
 
@@ -300,17 +313,19 @@ Each fails silently if an upstream name changes.
 
 Almond-related records are shaped by three separate hardcoded lists: `EXCLUDED_RESOURCES`, the commodity map, and the `almond meats` removal in migration 0021.
 
-### E. Silent failure paths — 1 pattern, 3 postures
+### E. Silent failure paths — every failure in the orchestration layer is silent
 
-The orchestration layer handles "source data unusable" three incompatible ways:
+> **Corrected in report 2.** Report 1 originally described three postures, one of which "fails loudly." That was wrong. All three are silent.
 
 | Posture | Behaviour | Example |
 |---|---|---|
 | Silent skip, flow succeeds | Exception caught, `None` returned | [analysis_records.py:65-67](src/ca_biositing/pipeline/ca_biositing/pipeline/flows/analysis_records.py#L65-L67) |
 | Early return, flow succeeds | Empty frame detected, return before load | [billion_ton_etl.py:37,57](src/ca_biositing/pipeline/ca_biositing/pipeline/flows/billion_ton_etl.py#L37) |
-| Hard fail | `raise ValueError` | [gasification_archive_pipeline.py:34-42](src/ca_biositing/pipeline/ca_biositing/pipeline/flows/gasification_archive_pipeline.py#L34-L42) |
+| ~~Hard fail~~ **Silent skip** | `raise ValueError` at [:35](src/ca_biositing/pipeline/ca_biositing/pipeline/flows/gasification_archive_pipeline.py#L35) — but it is raised inside `process_gsheet_to_csv`, called inside a `try` at [:189](src/ca_biositing/pipeline/ca_biositing/pipeline/flows/gasification_archive_pipeline.py#L189) and swallowed by `except Exception` at [:219](src/ca_biositing/pipeline/ca_biositing/pipeline/flows/gasification_archive_pipeline.py#L219) | F-47 |
 
-**Is there alerting on these log lines?** If not, a silently-empty analysis type is indistinguishable from "no new data this run" until someone notices a missing category in the portal.
+The correction makes the finding worse, not better. There is no loud failure anywhere in the orchestration layer: a malformed source sheet, an unusable extract, and an empty transform all produce a log line and a flow that reports success.
+
+**Is there alerting on these log lines?** If not, a silently-empty analysis type is indistinguishable from "no new data this run" until someone notices a missing category in the portal. That is the only detection mechanism currently in place.
 
 ### F. Questions needing domain input — 4 instances
 
@@ -338,6 +353,27 @@ Code cannot answer these; they need a person who knows the science or the projec
 | `500000` | **0** (confirms §4.C) |
 
 The deployed view carries the full QC filter set, compiled from `views.py`. **Recommend deleting or regenerating the `.sql` file** — as written it documents behaviour the system does not have, under a header that invites trust.
+
+> **Corrected in report 2 — F-39 is live, not orphaned.** Report 1 claimed the inner-join-to-`unit` issue "exists only in this file and has no live effect," on the belief that `views.py` outer-joins `Unit`. It does not. [views.py:159](src/ca_biositing/datamodels/ca_biositing/datamodels/views.py#L159) is `.join(Unit, Observation.unit_id == Unit.id)` — an **inner** join, repeated at `:351`, `:379`, `:406`. Observations with a null `unit_id` are dropped from the **deployed** `analysis_data_view`. [mv_biomass_composition.py:59](src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_composition.py#L59) does outer-join, so the portal/API divergence is real. F-39 moves from "Stale artifact" to a live `ca_biositing` rule, and the `Stale artifact` stage is now empty.
+>
+> This was the one classification in report 1 that told a reader *not* to worry about something.
+
+### H. Analyst controls that control nothing — 1 instance
+
+`resources/assets/resource_info.csv` carries an analyst-maintained `Include In Totals` column. **26 of 94 resources are set to FALSE.** The ETL signals intent to use it — [static_resource_info.py:70](src/ca_biositing/pipeline/ca_biositing/pipeline/etl/transform/resource_information/static_resource_info.py#L70) explicitly coerces `include_in_totals` to boolean — and then it goes nowhere:
+
+| Checked | Result |
+|---|---|
+| Carried into `landiq_mapping_df` / `availability_df` | No |
+| Referenced in the loader | No |
+| A field on any model or migration | No |
+| Used by the published `index.html` | No |
+
+**F-51.** An analyst sets a flag named "Include In Totals," the pipeline parses it as a boolean, and nothing honours it. If anyone believes those 26 resources are excluded from totals, they are not.
+
+It is the sibling of F-48: both are inclusion decisions made by a human outside version control. F-48's flag works; F-51's does not. Neither is documented.
+
+This also exposes an output path missing from the stage taxonomy: `resource_info.csv` → [csv_to_json.py](scripts/csv_to_json.py) → `resource_info.json` → **GitHub Pages** ([gh-pages.yml:56](.github/workflows/gh-pages.yml#L56)). A published artifact outside both the portal and the API.
 
 ---
 
@@ -375,6 +411,15 @@ Encountered during the scan, outside Phase 1 scope, potentially significant late
 | Percentile tag thresholds — [mv_biomass_search.py:149-190](src/ca_biositing/datamodels/ca_biositing/datamodels/data_portal_views/mv_biomass_search.py#L149-L190) | Tags computed from the *already QC-filtered* population. If the front end filters by tag, they become an inclusion mechanism |
 | Fermentation tolerance of 100% (F-33) | A 100% tolerance admits nearly everything. Intent unclear |
 | `standard_clean` lowercasing order | §4.B's placeholder-token near-miss depends on it |
+
+### Gasification path — still outside the table
+
+Two findings from the gasification pass are **not** inventory rows, because neither is a record-inclusion rule:
+
+- **GCS bucket versioning is not enabled** for the gasification bucket, unlike the backup bucket. Overwrites are unrecoverable. A durability concern, not a filter.
+- **Gasification has no value, range, sum or unit QC anywhere.** `qc_pass` is the entire story, unlike proximate (F-21) or compositional (F-22). An absence of rules rather than a rule.
+
+The rest of that pass is now inventoried as F-52 – F-56; see §3.
 
 ---
 

@@ -2,7 +2,7 @@
   "sources": [
     {
       "registry": "local",
-      "skills": ["database-query", "data-visualization", "audit-investigator"]
+      "skills": ["database-query", "data-visualization", "audit-investigator", "filter-inventory"]
     },
     {
       "registry": "vercel-labs/agent-skills"

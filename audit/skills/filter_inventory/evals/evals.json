@@ -1,0 +1,46 @@
+{
+  "skill_name": "filter-inventory",
+  "notes": "Behaviour evals. Each runs twice: once with the skill, once with no skill (baseline). Subagents are instructed to treat audit/filter_inventory/ as read-only and never to run push_to_sheet.py, so evals cannot touch the shared Google Sheet or the real deliverables.",
+  "evals": [
+    {
+      "id": 0,
+      "name": "delta-reaudit",
+      "prompt": "we merged the food processor ETL branch last week and I think it added a couple new drops in the transform step. can you update the filter inventory? careful, I went through and marked priority on like 15 rows already, don't blow those away",
+      "expected_output": "Reads the existing inventory before scanning. Reconciles rather than rescanning from zero: stable rule IDs, reviewer columns untouched, rules that vanished marked rather than deleted. New report file numbered -2, leaving report-1 intact.",
+      "probes": [
+        "Mode B recognised (delta, not full rescan)",
+        "existing filter-inventory.csv read first",
+        "rule IDs preserved",
+        "reviewer columns (Priority / Review status / Reviewer notes) left empty in the build",
+        "report number incremented rather than overwriting report-1"
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "narrow-question",
+      "prompt": "someone on the modeling team asked why sargassum doesn't come back from the api. is that the same exclusion as the portal or a different one",
+      "expected_output": "A short answer sourced from the existing inventory: F-16 EXCLUDED_RESOURCES in data_portal_views/common.py, one rule applying to both stacks because views.py imports the same helper. Should NOT launch a full audit.",
+      "probes": [
+        "answers from the existing inventory instead of re-deriving",
+        "identifies F-16 / EXCLUDED_RESOURCES",
+        "correctly states it is ONE shared rule, not two parallel ones",
+        "proportionate effort - no full rescan for a two-line question"
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "scoped-inventory",
+      "prompt": "we're onboarding the gasification timeseries table and nobody's audited where it gets filtered. can you do the filter inventory thing but just for gasification? I don't need all 48 rules again",
+      "expected_output": "A gasification-scoped inventory. NOTE: the skill currently documents only Mode A (full) and Mode B (delta) with no scoped mode, so this is expected to expose a gap. A good outcome is the skill adapting sensibly and the run revealing what guidance is missing.",
+      "probes": [
+        "produces a gasification-scoped result rather than a full 48-rule inventory",
+        "finds the gasification rules that exist (F-45, F-46, F-47, plus qc_pass and resource filters reaching gasification records)",
+        "keeps the established field structure and stage vocabulary",
+        "does not corrupt or renumber the existing full inventory"
+      ],
+      "files": []
+    }
+  ]
+}

@@ -27,10 +27,77 @@ PRIORITY_OPTIONS = ["P1 - discuss across teams", "P2 - team decision", "P3 - not
 REVIEW_OPTIONS = ["Not reviewed", "In review", "Confirmed", "Needs domain input",
                   "Dismissed", "Action agreed"]
 
+# The ONE file to open to see this rule's code. Full repo-relative paths:
+# this repo nests packages doubly (src/ca_biositing/<pkg>/ca_biositing/<pkg>/)
+# and several filenames exist in three trees, so shorthand is ambiguous.
+_PIPE = "src/ca_biositing/pipeline/ca_biositing/pipeline/"
+_DM = "src/ca_biositing/datamodels/ca_biositing/datamodels/"
+_WS = "src/ca_biositing/webservice/ca_biositing/webservice/"
+
+PRIMARY_FILE_BY_ID = {
+    "F-01": _PIPE + "etl/extract/usda_census_survey.py",
+    "F-02": _PIPE + "etl/extract/usda_census_survey.py",
+    "F-03": _PIPE + "etl/transform/analysis/calorimetry_record.py",
+    "F-04": _PIPE + "etl/transform/analysis/fermentation_record.py",
+    "F-05": _PIPE + "etl/transform/analysis/observation.py",
+    "F-06": _PIPE + "etl/transform/analysis/observation.py",
+    "F-07": _PIPE + "etl/transform/analysis/observation.py",
+    "F-08": _PIPE + "etl/transform/analysis/experiment.py",
+    "F-09": _PIPE + "etl/load/analysis/method.py",
+    "F-10": _PIPE + "etl/load/resource_information/residue_factor.py",
+    "F-11": _PIPE + "etl/transform/analysis/almond_nsjv.py",
+    "F-12": _DM + "models/general_analysis/observation.py",
+    "F-13": _DM + "models/base.py",
+    "F-14": _PIPE + "etl/load/analysis/county_ag_report_record.py",
+    "F-15": _DM + "models/resource_information/residue_factor.py",
+    "F-16": _DM + "data_portal_views/common.py",
+    "F-17": _DM + "data_portal_views/common.py",
+    "F-18": _DM + "data_portal_views/common.py",
+    "F-19": _DM + "data_portal_views/common.py",
+    "F-20": _DM + "data_portal_views/common.py",
+    "F-21": _DM + "data_portal_views/mv_biomass_composition.py",
+    "F-22": _DM + "data_portal_views/mv_biomass_composition.py",
+    "F-23": _DM + "data_portal_views/mv_biomass_composition.py",
+    "F-24": _DM + "data_portal_views/common.py",
+    "F-25": _DM + "data_portal_views/mv_biomass_volume_estimate.py",
+    "F-26": _DM + "data_portal_views/mv_biomass_volume_estimate.py",
+    "F-27": "alembic/versions/0021_remove_almond_meats_from_volume_estimate.py",
+    "F-28": _DM + "data_portal_views/mv_biomass_volume_estimate.py",
+    "F-29": _DM + "data_portal_views/mv_biomass_volume_estimate.py",
+    "F-30": _DM + "data_portal_views/mv_biomass_volume_estimate.py",
+    "F-31": _DM + "data_portal_views/mv_biomass_volume_estimate.py",
+    "F-32": _DM + "data_portal_views/mv_biomass_search.py",
+    "F-33": _DM + "data_portal_views/mv_biomass_fermentation.py",
+    "F-34": _DM + "data_portal_views/mv_biomass_fermentation.py",
+    "F-35": _DM + "data_portal_views/mv_biomass_composition.py",
+    "F-36": _DM + "data_portal_views/mv_biomass_pricing.py",
+    "F-37": _DM + "views.py",
+    "F-38": _DM + "views.py",
+    "F-39": _DM + "views.py",
+    "F-40": _WS + "dependencies.py",
+    "F-41": _WS + "services/analysis_service.py",
+    "F-42": _PIPE + "flows/analysis_records.py",
+    "F-43": _PIPE + "flows/billion_ton_etl.py",
+    "F-44": _PIPE + "utils/cleaning_functions/cleaning.py",
+    "F-45": _PIPE + "flows/gasification_archive_pipeline.py",
+    "F-46": _PIPE + "flows/gasification_archive_pipeline.py",
+    "F-47": _PIPE + "flows/gasification_archive_pipeline.py",
+    "F-48": _PIPE + "etl/transform/analysis/proximate_record.py",
+    "F-49": _WS + "services/availability_service.py",
+    "F-50": _DM + "views.py",
+    "F-51": _PIPE + "etl/transform/resource_information/static_resource_info.py",
+    "F-52": _PIPE + "flows/thermochem_etl.py",
+    "F-53": _PIPE + "flows/thermochem_etl.py",
+    "F-54": _PIPE + "etl/transform/analysis/gasification_record.py",
+    "F-55": _PIPE + "flows/thermochem_etl.py",
+    "F-56": _DM + "models/aim2_records/gasification_timeseries.py",
+}
+
 HEADERS = [
     "ID",
     "Rule",
     *USER_COLUMNS,
+    "File",
     "Pipeline stage",
     "Shared script",
     "Data affected",
@@ -90,8 +157,18 @@ STAGE_BY_ID = {
     **{f"F-{n}": "Materialized Views - data_portal" for n in range(16, 37)},
     "F-37": "Materialized Views - ca_biositing",
     "F-38": "Materialized Views - ca_biositing",
-    "F-39": "Stale artifact (not deployed)",
+    "F-39": "Materialized Views - ca_biositing",
     "F-40": "API Endpoints", "F-41": "API Endpoints",
+    # Added in report 2, surfaced by the skill evaluation runs.
+    "F-49": "API Endpoints",
+    "F-50": "Materialized Views - ca_biositing",
+    "F-51": "Google Sheets",
+    # Gasification archival path, verified and promoted from report 1's notes.
+    "F-52": "Orchestration (Prefect flows)",
+    "F-53": "Orchestration (Prefect flows)",
+    "F-54": "Transform Scripts",
+    "F-55": "Orchestration (Prefect flows)",
+    "F-56": "Staging + Production (table definitions)",
 }
 
 # Stages that are real places filtering could happen but currently hold zero
@@ -117,6 +194,98 @@ SHARED_SCRIPT_BY_ID = {
 
 # fmt: off
 ROWS = [
+    # ---- GASIFICATION ARCHIVAL PATH (verified, promoted from report 1 notes) ----
+    (
+        "F-52",
+        "Gasification records are archived only if a URL is found in one of five hardcoded column names",
+        "PLACEHOLDER",
+        "gasification_timeseries rows and their GCS CSV archives",
+        "None of ['raw_data_url','Raw_data_url','Raw_Data_URL','Experiment_setup_url','Experiment_Setup_URL'] holds a value starting with 'http'",
+        "Omitted - the record is never appended to archive_data, so it is never archived. No warning is logged for the skipped record",
+        "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/thermochem_etl.py:110-118",
+        "F-46, F-45",
+        "This gate sits UPSTREAM of F-46, which only fires when gsheet_url is empty. Because only records that already have a URL reach the subflow, F-46's warning is effectively unreachable - the real skip happens here, silently. A renamed source column would silently stop all archival.",
+    ),
+    (
+        "F-53",
+        "Archival deduplicates by spreadsheet URL, so experiments sharing a workbook lose all but one",
+        "PLACEHOLDER",
+        "gasification_timeseries rows and their GCS CSV archives",
+        "Two or more gasification records reference the same gsheet_url",
+        "Discarded - only the first record per unique URL is archived, keep-first by iteration order",
+        "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/thermochem_etl.py:130-136",
+        "F-45, F-05",
+        "Dedup is keyed on gsheet_url but storage is keyed on (resource_id, experiment_id) - see the unique constraint on gasification_timeseries. If one workbook holds several experiments, the surviving row is stored under only the first experiment's identity. Do source workbooks ever contain more than one experiment?",
+    ),
+    (
+        "F-54",
+        "Any error in the gasification transform silently yields zero records",
+        "PLACEHOLDER",
+        "gasification_record, and the whole downstream archival path",
+        "Any exception inside transform_gasification_record, or a null/empty input frame",
+        "Removed - a bare 'except Exception' returns an empty DataFrame; the caller's 'if not gas_rec_df.empty' guard then skips load AND archival, and the flow reports success",
+        "src/ca_biositing/pipeline/ca_biositing/pipeline/etl/transform/analysis/gasification_record.py:152-154 (bare except), plus early returns at :34, :49, :54, :80",
+        "F-42, F-43",
+        "Transform-level sibling of F-42. One malformed gasification sheet removes every gasification record for that run, plus every archive, with only a log line.",
+    ),
+    (
+        "F-55",
+        "The GCS archival path applies no QC filter and no resource exclusion",
+        "PLACEHOLDER",
+        "GCS gasification CSV archives and gasification_timeseries rows",
+        "Always - archive_data is built from the transform output, which has never had qc_pass or EXCLUDED_RESOURCES applied",
+        "NOT filtered - records that F-17 hides from every view, and resources F-16 excludes, are archived in full. The archive is a laxer surface than the portal or API",
+        "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/thermochem_etl.py:95-127 (no qc_pass or resource-name reference anywhere in the file)",
+        "F-16, F-17, F-56",
+        "Deliberate (an archive should be raw) or an oversight? Note the archive is NOT raw either - it is built from post-transform output, so F-03/F-04/F-54 already removed rows. It is a curated subset filtered by accident rather than by policy.",
+    ),
+    (
+        "F-56",
+        "gasification_timeseries is written but read by nothing",
+        "PLACEHOLDER",
+        "gasification_timeseries table",
+        "Always - no view, service, endpoint or portal code selects from this table",
+        "Effectively invisible - rows are stored and unique-constrained, but there is no consumer, so no inclusion rule downstream can even apply",
+        "src/ca_biositing/datamodels/ca_biositing/datamodels/models/aim2_records/gasification_timeseries.py; written only by flows/gasification_archive_pipeline.py:99-130. Zero references in webservice/, zero in any view, zero in sql_schemas/main.sql",
+        "F-45, F-55",
+        "Like F-51, a mechanism with no effect - here an output with no reader rather than a flag with no consumer. Is a consumer planned? Until one exists, every rule on this path (F-45, F-46, F-47, F-52, F-53, F-55) governs data nobody can see.",
+    ),
+
+    # ---- ADDED IN REPORT 2 (surfaced by the skill evaluation runs) ----
+    (
+        "F-49",
+        "Availability endpoints bypass the excluded-resource filter entirely",
+        "PLACEHOLDER",
+        "GET availability endpoints: resource list, geoid list, and per-resource availability",
+        "Any request for a resource named in EXCLUDED_RESOURCES",
+        "NOT hidden - the API returns records the portal hides. AvailabilityService queries the Resource and ResourceAvailability BASE TABLES directly, never touching a view, so F-16 never applies",
+        "src/ca_biositing/webservice/ca_biositing/webservice/services/availability_service.py:38, :69-75, :94-97 (no filter) vs data_portal_views/mv_biomass_availability.py:26 (filtered)",
+        "F-16, F-41",
+        "Same rule, same data, opposite answers depending on endpoint. Is the API meant to expose excluded resources, or is this an oversight? Found by two independent eval agents and confirmed by direct inspection.",
+    ),
+    (
+        "F-50",
+        "Gasification and FTNIR observations never reach the API analysis view at all",
+        "PLACEHOLDER",
+        "ca_biositing.analysis_data_view and analysis_average_view -> every REST API analysis endpoint",
+        "record_type is 'gasification' or 'ftnir analysis'",
+        "Removed by join - _analysis_base outer-joins only 9 record tables; GasificationRecord and FtnirRecord are absent, so resource_id coalesces to NULL and the INNER join to Resource drops every row BEFORE any QC filter runs",
+        "src/ca_biositing/datamodels/ca_biositing/datamodels/views.py:163-243 (9 tables joined, gasification and ftnir omitted); dropped by the inner join at views.py:279",
+        "F-35, F-37, F-38, F-24",
+        "A filter created by ABSENCE - nobody wrote a predicate, so no keyword search finds it. Verified in deployed SQL: migration 0021's analysis_data_view contains 'gasification_record' 0 times vs 'fermentation_record' 12 times. Is the omission deliberate or a gap? Note the qc_pass coalesce also omits both and defaults to 'pass', so fixing the join alone would admit them with QC unapplied.",
+    ),
+    (
+        "F-51",
+        "The analyst 'Include In Totals' flag has no effect anywhere",
+        "PLACEHOLDER",
+        "26 of 94 resources in resources/assets/resource_info.csv are marked FALSE",
+        "Analyst sets Include In Totals = FALSE in the source spreadsheet",
+        "NO EFFECT - the transform explicitly coerces it to boolean, then never carries it into either output dataframe. Not referenced by the loader, not a field on any model or migration, not used by the published site. The 26 resources are included everywhere regardless",
+        "resources/assets/resource_info.csv (data); coerced at src/ca_biositing/pipeline/ca_biositing/pipeline/etl/transform/resource_information/static_resource_info.py:70, then dropped",
+        "F-48, F-16",
+        "An analyst-facing inclusion control that controls nothing. Do analysts believe these 26 resources are excluded from totals? Either wire it up or remove it - a dead flag is worse than no flag. Sibling of F-48: both are analyst inclusion decisions made outside version control.",
+    ),
+
     # ---------------- GOOGLE SHEETS (ANALYST INPUT) ----------------
     (
         "F-48",
@@ -125,7 +294,7 @@ ROWS = [
         "All 11 analytical record types, at source",
         "Analyst judgement during data entry / QC review, applied in the Google Sheet",
         "Flagged - sets the value that F-17 later acts on. Nothing is removed at this point; the record is still extracted, transformed and stored",
-        "Outside the repository. Enters the codebase as the 'qc_result' column, renamed to qc_pass in 10 transform files (calorimetry_record.py:99, compositional_record.py:75, fermentation_record.py:136, gasification_record.py:118, icp_record.py:62, pretreatment_record.py:87, proximate_record.py:74, ultimate_record.py:74, xrd_record.py:98, xrf_record.py:103)",
+        "Outside the repository. Enters the codebase as the 'qc_result' column, renamed to qc_pass in 10 files under src/ca_biositing/pipeline/ca_biositing/pipeline/etl/transform/analysis/ : calorimetry_record.py:99, compositional_record.py:75, fermentation_record.py:136, gasification_record.py:118, icp_record.py:62, pretreatment_record.py:87, proximate_record.py:74, ultimate_record.py:74, xrd_record.py:98, xrf_record.py:103",
         "F-17",
         "The single highest-leverage inclusion decision in the system is made by a human in a spreadsheet, with no version control and no documented criteria. What values besides 'pass' and 'fail' occur? Who reviews the decision?",
     ),
@@ -173,7 +342,7 @@ ROWS = [
         "billion_ton, biodiesel_plants, field_sample, aim2_bioconversion, landiq and peer flows",
         "Extract or transform returns None or an empty dataframe",
         "Removed - the flow returns early, load never runs, no exception is raised",
-        "flows/billion_ton_etl.py:37,57; flows/biodiesel_plants.py:30,42; flows/aim2_bioconversion.py:53-188 (guards throughout); flows/field_sample_etl.py:68,83",
+        "src/ca_biositing/pipeline/ca_biositing/pipeline/flows/billion_ton_etl.py:37,57; biodiesel_plants.py:30,42; aim2_bioconversion.py:53-188 (guards throughout); field_sample_etl.py:68,83; thermochem_etl.py:37,39,46,73,95,107",
         "F-42, F-44",
         "'No new data' and 'extraction broke' differ only in log level. Does a zero-row run look identical to a successful no-op to operators?",
     ),
@@ -216,10 +385,10 @@ ROWS = [
         "Orchestration (Prefect flow)",
         "gasification archive source Google Sheets",
         "Worksheet has fewer than 4 rows, or the header row (row 4) is empty",
-        "Rejected - raises ValueError; unlike F-42 and F-43 this one fails loudly",
+        "Removed, SILENTLY - the ValueError is raised inside process_gsheet_to_csv, which is called inside a try block at :189 and swallowed by except Exception at :219. The record is skipped, an error is logged, and the flow continues and reports success",
         "flows/gasification_archive_pipeline.py:34-42",
         "F-46",
-        "Header is assumed to be on row 4. A source sheet with a different layout fails rather than being misread, but the assumption is undocumented.",
+        "CORRECTED in report 2. Report 1 claimed this one 'fails loudly' and used it as the contrasting posture in the failure-mode analysis; it does not. Header is assumed to be on row 4, and a sheet with a different layout is skipped with only a log line. Every failure path in the orchestration layer is silent.",
     ),
 
     # ---------------- STAGE 2: TRANSFORM ----------------
@@ -627,14 +796,14 @@ ROWS = [
     ),
     (
         "F-39",
-        "Inner join to unit drops observations with no unit -- in an orphaned artifact only",
-        "Stale artifact (not deployed)",
-        "resources/sql/create_analytical_views.sql only; NOT the deployed views",
+        "Inner join to unit drops every observation that has no unit",
+        "Materialized Views - ca_biositing",
+        "ca_biositing.analysis_data_view, usda_census_view, usda_survey_view -> all REST API analysis endpoints",
         "observation.unit_id is null",
-        "No live effect - no code path in the repository executes this file",
-        "resources/sql/create_analytical_views.sql:53, :96, :117",
-        "F-38",
-        "The file is orphaned: grep finds zero references outside this inventory. It also lacks every QC filter the deployed view has. Recommend deleting or regenerating it - as written it misleads readers about live behaviour.",
+        "Removed by join - the observation is absent from the view entirely",
+        "src/ca_biositing/datamodels/ca_biositing/datamodels/views.py:159 (also :351, :379, :406); mirrored in the orphaned resources/sql/create_analytical_views.sql:53,:96,:117",
+        "F-35, F-38",
+        "CORRECTED in report 2. Report 1 classified this as affecting only the orphaned .sql file, on the mistaken belief that views.py outer-joins Unit. views.py:159 is an INNER join, so this is LIVE. mv_biomass_composition.py:59 does outerjoin, so the portal/API divergence is real. How many observations have a null unit_id?",
     ),
 
     # ---------------- STAGE 5: API ----------------
@@ -677,10 +846,13 @@ def build_rows() -> list[list[str]]:
         rule_id = row[0]
         if rule_id not in STAGE_BY_ID:
             raise KeyError(f"{rule_id} has no stage in STAGE_BY_ID")
+        if rule_id not in PRIMARY_FILE_BY_ID:
+            raise KeyError(f"{rule_id} has no entry in PRIMARY_FILE_BY_ID")
         stage = STAGE_BY_ID[rule_id]
         shared = SHARED_SCRIPT_BY_ID.get(rule_id, "")
+        primary = PRIMARY_FILE_BY_ID[rule_id]
         blanks = [""] * len(USER_COLUMNS)
-        out.append([row[0], row[1], *blanks, stage, shared, *row[3:]])
+        out.append([row[0], row[1], *blanks, primary, stage, shared, *row[3:]])
     stage_col = HEADERS.index("Pipeline stage")
     out.sort(key=lambda r: (stage_order[r[stage_col]], r[0]))
     return out
@@ -733,7 +905,7 @@ def main() -> None:
         cell.font = header_font
         cell.alignment = Alignment(vertical="center", wrap_text=True)
 
-    widths = {"ID": 7, "Rule": 52, "Priority": 22, "Review status": 18,
+    widths = {"ID": 7, "Rule": 52, "Priority": 22, "Review status": 18, "File": 58,
               "Reviewer notes": 34, "Pipeline stage": 26, "Shared script": 26,
               "Data affected": 40, "Trigger": 46, "Effect": 40, "Source": 56,
               "Related rules": 18, "Questions": 60}
