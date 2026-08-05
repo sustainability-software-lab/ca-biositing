@@ -18,9 +18,19 @@ from pathlib import Path
 
 HERE = Path(__file__).parent
 
+# Columns owned by the reviewer, not by this script. They are emitted empty
+# here and merged back from the live Google Sheet on every push, matched by ID,
+# so re-running the build never clobbers or misaligns human edits.
+USER_COLUMNS = ["Priority", "Review status", "Reviewer notes"]
+
+PRIORITY_OPTIONS = ["P1 - discuss across teams", "P2 - team decision", "P3 - note only"]
+REVIEW_OPTIONS = ["Not reviewed", "In review", "Confirmed", "Needs domain input",
+                  "Dismissed", "Action agreed"]
+
 HEADERS = [
     "ID",
     "Rule",
+    *USER_COLUMNS,
     "Pipeline stage",
     "Shared script",
     "Data affected",
@@ -669,8 +679,10 @@ def build_rows() -> list[list[str]]:
             raise KeyError(f"{rule_id} has no stage in STAGE_BY_ID")
         stage = STAGE_BY_ID[rule_id]
         shared = SHARED_SCRIPT_BY_ID.get(rule_id, "")
-        out.append([row[0], row[1], stage, shared, *row[3:]])
-    out.sort(key=lambda r: (stage_order[r[2]], r[0]))
+        blanks = [""] * len(USER_COLUMNS)
+        out.append([row[0], row[1], *blanks, stage, shared, *row[3:]])
+    stage_col = HEADERS.index("Pipeline stage")
+    out.sort(key=lambda r: (stage_order[r[stage_col]], r[0]))
     return out
 
 
@@ -686,12 +698,13 @@ def main() -> None:
 
     from collections import Counter
     print("\nRules by stage:")
-    counts = Counter(r[2] for r in rows)
+    counts = Counter(r[HEADERS.index("Pipeline stage")] for r in rows)
     for stage in STAGES:
         n = counts.get(stage, 0)
         note = f"   <- {EMPTY_STAGES[stage]}" if stage in EMPTY_STAGES else ""
         print(f"  {n:3}  {stage}{note}")
-    shared = Counter(r[3] for r in rows if r[3])
+    _sc = HEADERS.index("Shared script")
+    shared = Counter(r[_sc] for r in rows if r[_sc])
     print("\nRules originating in a shared script:")
     for script, n in shared.most_common():
         print(f"  {n:3}  {script}")
@@ -720,7 +733,8 @@ def main() -> None:
         cell.font = header_font
         cell.alignment = Alignment(vertical="center", wrap_text=True)
 
-    widths = {"ID": 7, "Rule": 52, "Pipeline stage": 26, "Shared script": 26,
+    widths = {"ID": 7, "Rule": 52, "Priority": 22, "Review status": 18,
+              "Reviewer notes": 34, "Pipeline stage": 26, "Shared script": 26,
               "Data affected": 40, "Trigger": 46, "Effect": 40, "Source": 56,
               "Related rules": 18, "Questions": 60}
     for idx, header in enumerate(HEADERS, start=1):
