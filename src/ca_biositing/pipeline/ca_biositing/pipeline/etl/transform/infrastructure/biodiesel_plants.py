@@ -131,7 +131,7 @@ def transform(
             for index, row in normalized_df.iterrows():
                 # Find or create LocationAddress and Place where geography_id = geoid
                 geoid = row["closest_geoid"]
-                if geoid != None:
+                if geoid != None and geoid != '00000':
                     stmt1 = select(Place).where(
                         Place.geoid == geoid
                     )
