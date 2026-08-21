@@ -60,7 +60,7 @@ def get_component(name_length, comp_type, addy_components):
     return next((name[name_length] for name in addy_components if comp_type in name["types"]), None)
 
 # main function; need to define names of columns where address and latlong are stored
-def parse_addresses(df, address_column="address", merge_columns=[], lat="latitude", long="longitude"):
+def parse_addresses(df, address_column="merged_address", merge_columns=[], lat="latitude", long="longitude"):
     try:
         logger = get_run_logger()
     except Exception:
@@ -78,13 +78,13 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
     geocode = get_geocoder()
     reverse = get_reverse_geocoder()
 
-    address_df = pd.DataFrame(columns=["status", "closest_address_line_1", "closest_address_line_2", "closest_city", "closest_county", "closest_state", "closest_postal_code", "closest_latitude", "closest_longitude"])
+    address_df = pd.DataFrame(columns=["geocoded_status", "closest_address_line_1", "closest_address_line_2", "closest_city", "closest_county", "closest_state", "closest_postal_code", "closest_latitude", "closest_longitude"])
     geoid_df = pd.DataFrame(columns=["closest_geoid", "closest_state_name", "closest_state_fips", "closest_county_name", "closest_county_fips"])
 
     # put weird addresses in an array for displaying in a warning
     unparsable = []
     for index, row in df.iterrows():
-      if row['status'] != 'pending':
+      if row['geocoded_status'] != 'pending':
         continue
       try:
           # Check if we have coordinates to fallback on if the address is missing
@@ -139,16 +139,17 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
               latitude = info['geometry']['location']['lat'] if isinstance(info['geometry']['location']['lat'], float) else None
               longitude = info['geometry']['location']['lng'] if isinstance(info['geometry']['location']['lng'], float) else None
 
-          address_result = {"status": "true", "closest_address_line_1": address, "closest_address_line_2": None, "closest_city": city, "closest_county": county, "closest_state": state, "closest_postal_code": zip_code + "-" + zip_suffix if (isinstance(zip_code, str) and isinstance(zip_suffix, str)) else zip_code, "closest_latitude": latitude, "closest_longitude": longitude}
-
+          address_result = {"geocoded_status": "true", "closest_address_line_1": address, "closest_address_line_2": None, "closest_city": city, "closest_county": county, "closest_state": state, "closest_postal_code": zip_code + "-" + zip_suffix if (isinstance(zip_code, str) and isinstance(zip_suffix, str)) else zip_code, "closest_latitude": latitude, "closest_longitude": longitude}
+          
           # get geoids
           geoid = af.get_county_fips(county, state) if (isinstance(county, str) and isinstance(state, str)) else None
           state_fips = geoid[:2] if isinstance(geoid, str) else None
           county_fips = geoid[2:] if isinstance(geoid, str) else None
           geoid_result = {'closest_geoid': geoid, "closest_state_name": state, "closest_state_fips": state_fips, "closest_county_name": county, "closest_county_fips": county_fips}
 
-          if geoid is None:
+          if geoid is None or geoid == "":
               unparsable = unparsable + [str(index) + "\t" + str(row[address_column])]
+              geoid_result = {'closest_geoid': "00000", "closest_state_name": None, "closest_state_fips": None, "closest_county_name": None, "closest_county_fips": None}
 
       except Exception as e:
           print(f'Warning for address "{str(row[address_column])}":')
@@ -166,7 +167,7 @@ def parse_addresses(df, address_column="address", merge_columns=[], lat="latitud
               latitude = 0
               longitude = 0
 
-          address_result = {"status": "false", "closest_address_line_1": None, "closest_address_line_2": None, "closest_city": None, "closest_county": None, "closest_state": None, "closest_postal_code": None, "closest_latitude": latitude, "closest_longitude": longitude}
+          address_result = {"geocoded_status": "false", "closest_address_line_1": None, "closest_address_line_2": None, "closest_city": None, "closest_county": None, "closest_state": None, "closest_postal_code": None, "closest_latitude": latitude, "closest_longitude": longitude}
           geoid_result = {'closest_geoid': "00000", "closest_state_name": None, "closest_state_fips": None, "closest_county_name": None, "closest_county_fips": None}
 
       address_df.loc[index] = address_result
