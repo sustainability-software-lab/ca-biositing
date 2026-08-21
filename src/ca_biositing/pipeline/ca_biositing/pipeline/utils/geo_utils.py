@@ -140,7 +140,7 @@ def parse_addresses(df, address_column="merged_address", merge_columns=[], lat="
               longitude = info['geometry']['location']['lng'] if isinstance(info['geometry']['location']['lng'], float) else None
 
           address_result = {"geocoded_status": "true", "closest_address_line_1": address, "closest_address_line_2": None, "closest_city": city, "closest_county": county, "closest_state": state, "closest_postal_code": zip_code + "-" + zip_suffix if (isinstance(zip_code, str) and isinstance(zip_suffix, str)) else zip_code, "closest_latitude": latitude, "closest_longitude": longitude}
-          
+
           # get geoids
           geoid = af.get_county_fips(county, state) if (isinstance(county, str) and isinstance(state, str)) else None
           state_fips = geoid[:2] if isinstance(geoid, str) else None
