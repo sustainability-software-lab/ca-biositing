@@ -28,7 +28,7 @@ repos:
         exclude: ^(docs/api/|readthedocs\.yaml|exports/plots/)
 
   - repo: https://github.com/codespell-project/codespell
-    rev: "v2.4.2"
+    rev: "v2.4.3"
     hooks:
       - id: codespell
         exclude: (\.ipynb$|pixi\.lock|temp_external_datasets/|exports/plots/)
@@ -42,7 +42,7 @@ repos:
         exclude: .pre-commit-config.yaml
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: "0.37.4"
+    rev: "0.38.0"
     hooks:
       - id: check-dependabot
       - id: check-github-workflows
