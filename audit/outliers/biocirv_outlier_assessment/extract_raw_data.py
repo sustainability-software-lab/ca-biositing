@@ -32,6 +32,27 @@ joins (prepared_sample, field_sample, provider, contact, method,
 experiment) are LEFT JOINs because their foreign keys are Optional on
 `Aim1RecordBase`.
 
+OUTPUT SCHEMA — this script emits the canonical long-form column names
+directly (see the handoff doc's "Shared Normalization Layer" section,
+`biocirv_outlier_assessment_handoff_v4.md`):
+
+    record_id, sample_id, resource_id, resource_type, analysis_type,
+    parameter, value, unit, lab, method, protocol_version,
+    existing_QC_status
+
+plus a handful of additional columns kept for downstream convenience that
+are not part of the strict canonical list (experiment_id,
+technical_replicate_no, technical_replicate_total, method_id, analyst_id,
+analyst_name, analyst_email, note, created_at).
+
+A separate `normalize_inputs.py` rename-only script was originally planned
+to map the raw SQL/DB-origin column names onto this canonical schema, but
+that indirection turned out to be unnecessary: `observation`'s
+`(parameter, value, unit)` structure already provides the structural
+harmonization the canonical schema is meant to achieve, so this script
+aliases directly to the canonical names in one step and no separate
+normalization stage exists.
+
 Run with:
     pixi run -e auditor python audit/outliers/biocirv_outlier_assessment/extract_raw_data.py
 """
@@ -58,29 +79,34 @@ except Exception:
 
 OUTPUT_DIR = Path(__file__).resolve().parent / "data"
 
-# Final long-form column schema shared across all 7 analysis types.
+# Final long-form column schema shared across all 7 analysis types. Names
+# match the handoff doc's "Shared Normalization Layer" canonical schema
+# directly (record_id, sample_id, resource_id, resource_type,
+# analysis_type, parameter, value, unit, lab, method, protocol_version,
+# existing_QC_status), plus a few extra columns kept for downstream
+# convenience that are not part of the strict canonical list.
 COLUMNS = [
     "record_id",
     "resource_id",
-    "resource_name",
-    "prepared_sample_id",
+    "resource_type",
+    "sample_id",
     "experiment_id",
     "analysis_type",
-    "parameter_name",
-    "observed_value",
-    "unit_name",
+    "parameter",
+    "value",
+    "unit",
     "technical_replicate_no",
     "technical_replicate_total",
     "method_id",
-    "method_name",
+    "method",
     "analyst_id",
     "analyst_name",
     "analyst_email",
-    "provider_codename",
-    "qc_pass",
+    "lab",
+    "existing_QC_status",
     "note",
     "created_at",
-    "exper_start_date",
+    "protocol_version",
 ]
 
 
@@ -98,34 +124,50 @@ def build_query(table: str, alias: str, analysis_type: str, record_type_list: st
     No WHERE clause filtering on qc_pass, no sum-range CTEs, no resource
     name exclusion list — deliberately, per the outlier-assessment handoff.
 
-    `exper_start_date` (from public.experiment) is carried as the closest
-    available stand-in for "protocol_version" / date context described in
-    the handoff's canonical schema — there is no dedicated protocol_version
-    column anywhere in this schema.
+    SELECT columns are aliased directly to the handoff's canonical
+    "Shared Normalization Layer" names (see module docstring). A few
+    aliases are approximations given the current schema — each is
+    commented below where it deviates from an exact 1:1 mapping:
+      - `sample_id`          <- prepared_sample_id (closest DB proxy to an
+                                independent sample)
+      - `resource_type`      <- resource.name (resource is metadata in this
+                                pass, per handoff)
+      - `lab`                <- provider.codename (approximation — no
+                                dedicated 'lab' field in current schema)
+      - `protocol_version`   <- experiment.exper_start_date (substitute —
+                                no dedicated protocol_version column in
+                                current schema)
+      - `existing_QC_status` <- qc_pass (metadata only, NOT used as a
+                                filter in this pipeline)
     """
     return f"""
         SELECT
             {alias}.record_id                      AS record_id,
             {alias}.resource_id                     AS resource_id,
-            r.name                                  AS resource_name,
-            {alias}.prepared_sample_id              AS prepared_sample_id,
+            -- resource is metadata in this pass, per handoff
+            r.name                                  AS resource_type,
+            -- closest DB proxy to an independent sample
+            {alias}.prepared_sample_id              AS sample_id,
             {alias}.experiment_id                   AS experiment_id,
             '{analysis_type}'                       AS analysis_type,
-            p.name                                  AS parameter_name,
-            o.value                                 AS observed_value,
-            u.name                                  AS unit_name,
+            p.name                                  AS parameter,
+            o.value                                 AS value,
+            u.name                                  AS unit,
             {alias}.technical_replicate_no          AS technical_replicate_no,
             {alias}.technical_replicate_total       AS technical_replicate_total,
             {alias}.method_id                       AS method_id,
-            m.name                                  AS method_name,
+            m.name                                  AS method,
             {alias}.analyst_id                      AS analyst_id,
             c.name                                  AS analyst_name,
             c.email                                 AS analyst_email,
-            prov.codename                           AS provider_codename,
-            {alias}.qc_pass                         AS qc_pass,
+            -- approximation — no dedicated 'lab' field in current schema
+            prov.codename                           AS lab,
+            -- metadata only, NOT used as a filter in this pipeline
+            {alias}.qc_pass                         AS "existing_QC_status",
             {alias}.note                            AS note,
             {alias}.created_at                      AS created_at,
-            e.exper_start_date                      AS exper_start_date
+            -- substitute — no dedicated protocol_version column in current schema
+            e.exper_start_date                      AS protocol_version
         FROM public.{table} {alias}
         JOIN public.observation o
             ON LOWER(o.record_id) = LOWER({alias}.record_id)

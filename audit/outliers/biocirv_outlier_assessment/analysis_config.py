@@ -50,7 +50,23 @@ TARGET_ANALYSES = CHARACTERIZATION_ANALYSES
 # method is included when available (method_id/method_name on every Aim1 record).
 # lab is approximated by provider_codename (no dedicated "lab" field in current
 # schema — documented limitation, see README.md).
-REPLICATE_GROUP_KEYS = ["sample_id", "analysis_type", "parameter", "unit", "method"]
+# experiment_id is included (design decision, natural analog to the handoff's
+# optional "method / protocol_version", "lab" additions) so that technical
+# replicates measured in genuinely different experimental runs are not
+# accidentally pooled together. This makes replicate_group_summary.csv (Step 1)
+# keyed at one-group-per-experimental-run granularity, distinct from
+# sample_level_summary.csv (Step 2), which deliberately aggregates ACROSS
+# experiment_id when a sample was analyzed in more than one experiment.
+#
+# IMPORTANT — null experiment_id handling: a small share of rows (~0.4% as of
+# raw_extract_20260825.csv) have a missing/null experiment_id. By pandas
+# `groupby()` default behavior, rows with NaN in any key column are silently
+# EXCLUDED from all groups (pre-pandas-1.1 behavior) or (pandas >=1.1) require
+# the `dropna` kwarg to control this. Any `groupby(REPLICATE_GROUP_KEYS, ...)`
+# call downstream (notably in 01_build_replicate_summary.py) MUST pass
+# `dropna=False` so that rows with a missing experiment_id still form their own
+# group instead of being silently dropped from the analysis.
+REPLICATE_GROUP_KEYS = ["sample_id", "analysis_type", "parameter", "unit", "method", "experiment_id"]
 
 # ---------------------------------------------------------------------------
 # Candidate flag settings (handoff Step 3) — comparison benchmarks only,

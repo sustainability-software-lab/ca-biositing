@@ -44,25 +44,69 @@ interest here. See
 [`extract_raw_data.py`](extract_raw_data.py) for the extraction query and a
 fuller explanation in its docstring.
 
+## No separate normalization step
+
+The handoff doc's "Shared Normalization Layer" section originally
+envisioned a dedicated `normalize_inputs.py` script to rename the raw
+SQL/DB-origin columns produced by extraction into a canonical long-form
+schema. That extra stage turned out to be unnecessary indirection:
+`observation`'s `(parameter, value, unit)` structure already provides the
+structural harmonization the normalization layer was meant to achieve
+across the seven characterization analysis tables. Instead,
+[`extract_raw_data.py`](extract_raw_data.py) aliases its SQL `SELECT`
+columns directly to the canonical names, so its output CSV already is the
+canonical schema — no separate `normalize_inputs.py` exists or is planned.
+
+The canonical long-form columns produced directly by `extract_raw_data.py` are:
+
+```text
+record_id
+sample_id
+resource_id
+resource_type
+analysis_type
+parameter
+value
+unit
+lab
+method
+protocol_version
+existing_QC_status
+```
+
+plus a few extra columns kept for downstream convenience that are not part
+of the strict canonical list: `experiment_id`, `technical_replicate_no`,
+`technical_replicate_total`, `method_id`, `analyst_id`, `analyst_name`,
+`analyst_email`, `note`, `created_at`.
+
+Several of these are approximations given the current schema (documented
+in the script's docstring/comments): `sample_id` is `prepared_sample_id`
+(closest DB proxy to an independent sample), `lab` is `provider_codename`
+(no dedicated "lab" field exists), `protocol_version` is
+`exper_start_date` (no dedicated protocol_version column exists), and
+`existing_QC_status` is `qc_pass` carried as metadata only — it is **not**
+used as a filter anywhere in this pipeline.
+
 ## Pipeline stages
 
-Mirrors the handoff's "Suggested Structure." Only extraction exists today;
-everything else is TBD and will be added as separate, incremental scripts.
+Mirrors the handoff's "Suggested Structure," minus the now-unnecessary
+`normalize_inputs.py` stage (see "No separate normalization step" above).
+Only extraction exists today; everything else is TBD and will be added as
+separate, incremental scripts.
 
 ```text
 biocirv_outlier_assessment/
 │
 ├── README.md                          ✅ exists (this file)
 ├── analysis_config.py                 ✅ exists
-├── extract_raw_data.py                ✅ exists (raw DB extraction)
-├── normalize_inputs.py                ⏳ TBD
+├── extract_raw_data.py                ✅ exists (raw DB extraction, outputs canonical schema directly)
 ├── 01_build_replicate_summary.py      ⏳ TBD
 ├── 02_build_method_parameter_summary.py  ⏳ TBD
 ├── 03_build_review_heatmap.py         ⏳ TBD
 ├── 04_selected_diagnostics.py         ⏳ TBD
 ├── 05_compare_candidate_rules.py      ⏳ TBD
 │
-├── data/                              ✅ exists (raw_extract_*.csv snapshots)
+├── data/                              ✅ exists (raw_extract_*.csv snapshots, canonical schema)
 │
 └── outputs/                           ✅ exists (empty, scaffolded)
     ├── replicate_group_summary.csv    ⏳ TBD
