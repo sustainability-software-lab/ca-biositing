@@ -10,7 +10,7 @@ Required index:
 """
 
 from sqlalchemy import select, func, union_all, cast, Integer, and_
-from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_provider_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.aim1_records.compositional_record import CompositionalRecord
 from ca_biositing.datamodels.models.aim1_records.proximate_record import ProximateRecord
@@ -67,4 +67,5 @@ mv_biomass_sample_stats = select(
  .outerjoin(PreparedSample, cast(all_samples.c.prepared_sample_id, Integer) == PreparedSample.id)\
  .outerjoin(FieldSample, (PreparedSample.field_sample_id == FieldSample.id) | (FieldSample.resource_id == Resource.id))\
  .outerjoin(Provider, FieldSample.provider_id == Provider.id)\
+ .where(get_provider_filter(Provider))\
  .group_by(Resource.id, Resource.name)
