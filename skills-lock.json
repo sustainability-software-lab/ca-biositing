@@ -17,13 +17,13 @@
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
-      "computedHash": "781bd6d3f9b19f8c9af6b53d8d0e4876d0183841b565db34ca7092ffa412d111"
+      "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
     },
     "github-issues": {
       "source": "github/awesome-copilot",
       "sourceType": "github",
       "skillPath": "skills/github-issues/SKILL.md",
-      "computedHash": "efa9746a60c4507ad5a7ad60e1e9a704b4eea06c1229befe3c86b3bbcaea67c9"
+      "computedHash": "9917c1e0908f0fd9ae0910acf07e3f779091ceddb910ce6a03453add92a6a876"
     },
     "skill-create": {
       "source": "skillscatalog/registry",
@@ -35,7 +35,7 @@
       "source": "garrytan/gbrain",
       "sourceType": "github",
       "skillPath": "skills/skillify/SKILL.md",
-      "computedHash": "ea6fa46fad79b896dc6109def3790fc2afd374806aa423360e0fa05b951929d9"
+      "computedHash": "d53f2563a4983eaadc8122e1d151b8eb252085a3b7ac8a50f0a35ca05cb7d2a5"
     },
     "vercel-cli-with-tokens": {
       "source": "vercel-labs/agent-skills",
@@ -71,7 +71,7 @@
       "source": "vercel-labs/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/react-view-transitions/SKILL.md",
-      "computedHash": "c8952fc9127fa0564d0cb71dccb4215a5608ac933b5831104f09173a97a46f85"
+      "computedHash": "b1be40dfc6e714612020c7583b574cc4c92a1b5bc185a7dd3eea5c0123653d1c"
     },
     "web-design-guidelines": {
       "source": "vercel-labs/agent-skills",
