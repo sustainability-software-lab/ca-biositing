@@ -135,6 +135,27 @@ flat, non-color-ranked background, since absolute SD is reported in
 different physical units per parameter (e.g. % vs ppm) and is not
 comparable across rows.
 
+### `outputs/precision_model_heatmap.png` — interpretation boundary
+
+`06b_build_precision_model_heatmap.py` (Step 6b) reads
+`precision_model_diagnostics.csv` (built by
+`06a_build_precision_model_diagnostics.py`) as-is — it performs no
+recomputation — and renders one compact heatmap with one row per
+`analysis_type x parameter`. This heatmap visualizes the comprehensive
+precision-model screen; `precision_model_category` labels are exploratory,
+descriptive triage categories based on simple log-log slope/R² heuristics —
+they are **NOT** validated statistical models, **NOT** production QC
+rules, and must **NOT** be used to automatically assign an
+absolute-SD-vs-relative-RSD precision model to any parameter without human
+review. Categories and correlation values are for identifying candidates
+worth closer visual inspection (see the 8 detailed diagnostic plots planned
+for `outputs/plots_selected/`), not for making final scientific
+determinations. Note that `precision_model_category` is rendered with
+discrete/categorical coloring (not a continuous gradient), since it is a
+label rather than a magnitude, and rows with `insufficient_data` naturally
+show blank/gray cells in the correlation/slope columns (too few usable
+replicate groups to compute them).
+
 ## Status
 
 This is exploratory / MVP work per the handoff's guardrails. No production
