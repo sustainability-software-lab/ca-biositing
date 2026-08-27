@@ -9,7 +9,7 @@ Output: [`outputs/replicate_group_summary.csv`](outputs/replicate_group_summary.
 Three exploratory, non-production candidate flag/status sets, added as new
 columns on the existing Step 1 replicate-group table:
 
-1. `rsd_gt_{threshold}` for each threshold in
+1. `rsd_gt_{threshold}` gives percent of data greater than ("gt") the given threshold for each threshold in
    `analysis_config.RSD_BENCHMARK_THRESHOLDS` (currently `[10, 20]`) —
    comparison benchmarks only, not proposed BioCirV thresholds.
 2. `dixon_q_statistic`, `dixon_candidate_record_id`, `dixon_flag_0_05`,

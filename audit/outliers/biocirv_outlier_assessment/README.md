@@ -118,6 +118,23 @@ biocirv_outlier_assessment/
     └── plots_selected/                ✅ exists (empty, scaffolded)
 ```
 
+### `outputs/precision_review_heatmap.png` — interpretation boundary
+
+`05_build_review_heatmap.py` (Step 5) reads `method_parameter_summary.csv`
+as-is — it performs no recomputation — and renders one compact heatmap with
+one row per `analysis_type x parameter`. This heatmap is a **descriptive
+comparison tool** for data coverage, typical/high-tail relative replicate
+precision (RSD-based), and RSD/Dixon flagging rates across
+`analysis_type x parameter` combinations. It must **NOT** be used to choose
+final QC thresholds, decide absolute-SD-vs-relative-RSD precision models, or
+rank parameters by absolute SD (units differ across parameters) — those are
+explicit human-review decisions per the handoff's "Scientific Decisions
+After the MVP" section. Note in particular that the heatmap's `median_SD`
+column is included only for reference and is deliberately rendered with a
+flat, non-color-ranked background, since absolute SD is reported in
+different physical units per parameter (e.g. % vs ppm) and is not
+comparable across rows.
+
 ## Status
 
 This is exploratory / MVP work per the handoff's guardrails. No production
