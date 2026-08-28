@@ -496,6 +496,35 @@ If easy, encode resource / matrix.
 outputs/plots_selected/
 ```
 
+## Future Enhancements Identified During Step 6 Review
+
+Recorded here per human review of the 8 selected diagnostic plots produced
+by `07_selected_diagnostics.py`. Not implemented in Step 6 itself — see
+[`STEP6_FINDINGS.md`](biocirv_outlier_assessment/STEP6_FINDINGS.md) §6 for
+full detail. Left as explicit future to-dos, not decided/implemented by the
+coding agent:
+
+1. **Label high-leverage points with `replicate_group_id`.** A future
+   revision of the selected-diagnostics plotting should annotate individual
+   points with their `replicate_group_id` when either `RSD_percent > 20`
+   or `standard_deviation > 2 × median(standard_deviation)` (median taken
+   within that same `analysis_type × parameter` combination, since absolute
+   SD units differ by parameter). This lets a reviewer go directly from "that
+   point looks high" to the exact replicate group / sample / resource /
+   experiment behind it.
+2. **Differentiate the `unclear` and `concentration_dependent_mixed`
+   categories into SD-dominant / RSD-dominant / genuinely-mixed behavior.**
+   Either (a) a human reviewer works through the SD and RSD scatter plots
+   for all combinations currently labeled `unclear` (25) or
+   `concentration_dependent_mixed` (13) and records a differentiated
+   judgment per combination, or (b) the `classify_precision_model()`
+   heuristic in `06a_build_precision_model_diagnostics.py` is revisited
+   (e.g., separate SD-only and RSD-only log-log fits instead of one
+   combined slope/R² pair) to see whether adjusted decision bounds can
+   programmatically split today's grab-bag `unclear`/mixed categories.
+   Per this document's "Scientific Decisions After the MVP" section, any
+   changed thresholds remain a human decision.
+
 # Step 7 — Add Human-Review Interpretation
 
 For selected combinations, add:
