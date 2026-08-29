@@ -178,10 +178,13 @@ def compute_group_diagnostics(group: pd.DataFrame) -> pd.Series:
 # ---------------------------------------------------------------------------
 # *** EXPLORATORY, NON-VALIDATED THRESHOLDS — TRIAGE ONLY ***
 #
-# The thresholds below (R^2 >= 0.3 as a "reasonably fit-able relationship"
-# cutoff, and abs(slope) or abs(slope - 1) <= 0.3 as a "close to 0/1"
-# tolerance band) are SIMPLE, DOCUMENTED, EXPLORATORY HEURISTICS chosen only
-# for descriptive first-pass triage across 74 combinations. They are:
+# The thresholds below (SLOPE_TOLERANCE / SPEARMAN_TOLERANCE = 0.3 as
+# "close to 0/1" and "small correlation magnitude" tolerance bands, and
+# CONCENTRATION_CLEAR_R_SQUARED_MIN = 0.15 as the "reasonably clear
+# concentration relationship" cutoff used ONLY to split
+# concentration_dependent_mixed from unclear) are SIMPLE, DOCUMENTED,
+# EXPLORATORY HEURISTICS chosen only for descriptive first-pass triage
+# across 74 combinations. They are:
 #   - NOT validated statistical cutoffs (no power analysis, no calibration
 #     against known-good/known-bad precision behavior),
 #   - NOT production QC rules,
@@ -194,38 +197,94 @@ def compute_group_diagnostics(group: pd.DataFrame) -> pd.Series:
 # later" principle — it is explicitly NOT the "early ABSOLUTE vs RELATIVE
 # branch" the handoff warns against building into automated downstream
 # routing.
-R_SQUARED_MIN_FOR_CLEAR_FIT = 0.3
+#
+# DESIGN FIX (post-hoc, see git history / audit notes for full rationale):
+# the two stability categories (approx_constant_absolute_SD,
+# approx_constant_relative_RSD) previously required loglog_r_squared >= 0.3
+# as a blanket gate BEFORE checking the slope at all. This was
+# self-defeating: a genuinely flat/no-trend SD-vs-mean pattern naturally
+# produces BOTH a near-zero slope AND a low R^2 (there is little real
+# variance for a log-log line to explain when there's no real trend), so
+# the old gate made approx_constant_absolute_SD nearly unreachable for real
+# flat data (0 of 74 combinations qualified). The R^2 gate is now used
+# ONLY to decide whether a non-stability relationship counts as
+# "concentration_dependent_mixed" vs "unclear" — the stability categories
+# are instead independently corroborated by the corresponding Spearman
+# rank correlation magnitude (mean vs SD, or mean vs RSD) being small,
+# which is a more direct "no concentration-dependence" check than R^2 of a
+# potentially-noisy log-log line.
 SLOPE_TOLERANCE = 0.3
+SPEARMAN_TOLERANCE = 0.3
+# "Reasonably clear concentration relationship" cutoff for
+# concentration_dependent_mixed vs unclear (Candidate A: log-log R^2
+# threshold). Chosen at 0.15 (rather than the prior 0.3) after reviewing
+# the actual 74-row distribution: at 0.3, 17 of 30 contested combinations
+# fall to "unclear"; at 0.15, only 10 do, better matching the intent that
+# "not a stability pattern, but with a real correlation" should default to
+# "mixed" rather than "unclear" for weak-but-nonzero R^2 cases. Candidates
+# based on Spearman-magnitude or p-value thresholds were also considered
+# (see audit notes) and would materially shift this split — this remains a
+# human-adjustable value, not a statistically derived cutoff.
+CONCENTRATION_CLEAR_R_SQUARED_MIN = 0.15
 
 
 def classify_precision_model(
-    n_points_usable_for_loglog: int, loglog_slope: float, loglog_r_squared: float
+    n_points_usable_for_loglog: int,
+    spearman_mean_vs_SD: float,
+    spearman_mean_vs_SD_pvalue: float,
+    spearman_mean_vs_RSD: float,
+    spearman_mean_vs_RSD_pvalue: float,
+    loglog_slope: float,
+    loglog_r_squared: float,
 ) -> str:
     """Return one descriptive category label. See module-level comment
-    block above for the explicit non-production-cutoff caveat.
+    block above for the explicit non-production-cutoff caveat and the
+    design-fix rationale for why the stability categories no longer gate
+    on loglog_r_squared.
+
+    `spearman_mean_vs_SD_pvalue` / `spearman_mean_vs_RSD_pvalue` are
+    accepted for interface completeness / future candidate definitions of
+    "reasonably clear concentration relationship" (see audit notes) but are
+    not used by the current (Candidate A, R^2-based) implementation.
     """
     if n_points_usable_for_loglog < MIN_N_FOR_LOGLOG:
         return "insufficient_data"
 
-    # loglog_r_squared/slope should be non-NaN whenever n_points_usable_for_loglog
-    # >= MIN_N_FOR_LOGLOG (see compute_group_diagnostics), but guard defensively.
-    if pd.isna(loglog_r_squared) or pd.isna(loglog_slope):
+    # These should all be non-NaN whenever n_points_usable_for_loglog >=
+    # MIN_N_FOR_LOGLOG (see compute_group_diagnostics), but guard
+    # defensively — Spearman NaNs can still occur if that correlation's own
+    # usable-n guard (MIN_N_FOR_CORRELATION) failed independently of the
+    # log-log usable-n guard.
+    required_values = (
+        loglog_slope,
+        loglog_r_squared,
+        spearman_mean_vs_SD,
+        spearman_mean_vs_RSD,
+    )
+    if any(pd.isna(v) for v in required_values):
         return "insufficient_data"
 
-    if loglog_r_squared < R_SQUARED_MIN_FOR_CLEAR_FIT:
-        # Fit itself is weak — no clean log-log relationship, regardless of
-        # what the slope value happens to be.
-        return "unclear"
+    is_approx_constant_absolute_SD = (
+        abs(loglog_slope) <= SLOPE_TOLERANCE
+        and abs(spearman_mean_vs_SD) <= SPEARMAN_TOLERANCE
+    )
+    is_approx_constant_relative_RSD = (
+        abs(loglog_slope - 1.0) <= SLOPE_TOLERANCE
+        and abs(spearman_mean_vs_RSD) <= SPEARMAN_TOLERANCE
+    )
 
-    if abs(loglog_slope) <= SLOPE_TOLERANCE:
+    if is_approx_constant_absolute_SD:
         return "approx_constant_absolute_SD"
-
-    if abs(loglog_slope - 1.0) <= SLOPE_TOLERANCE:
+    if is_approx_constant_relative_RSD:
         return "approx_constant_relative_RSD"
 
-    # A real relationship exists (R^2 clears the bar) but the slope is not
-    # clearly close to 0 or 1.
-    return "concentration_dependent_mixed"
+    # Neither stability pattern holds. If there is a reasonably clear
+    # concentration relationship (Candidate A: log-log R^2 clears the
+    # bar), call it "mixed"; otherwise it's genuinely unclear/noisy.
+    if loglog_r_squared >= CONCENTRATION_CLEAR_R_SQUARED_MIN:
+        return "concentration_dependent_mixed"
+
+    return "unclear"
 
 
 # ---------------------------------------------------------------------------
@@ -239,6 +298,10 @@ def build_precision_model_diagnostics(df: pd.DataFrame) -> pd.DataFrame:
     diagnostics["precision_model_category"] = diagnostics.apply(
         lambda row: classify_precision_model(
             row["n_points_usable_for_loglog"],
+            row["spearman_mean_vs_SD"],
+            row["spearman_mean_vs_SD_pvalue"],
+            row["spearman_mean_vs_RSD"],
+            row["spearman_mean_vs_RSD_pvalue"],
             row["loglog_slope"],
             row["loglog_r_squared"],
         ),

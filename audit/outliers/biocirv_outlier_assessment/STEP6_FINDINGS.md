@@ -1,3 +1,100 @@
+## Addendum — RSD sign-bug fix + `classify_precision_model()` redesign
+
+**Two fixes were applied after this document's original analysis below (see
+git history for `01_build_replicate_summary.py` and
+`06a_build_precision_model_diagnostics.py`):**
+
+1. **`RSD_percent` sign bug fix (Step 1).** `01_build_replicate_summary.py`
+   previously computed `RSD_percent = (sd / mean) * 100.0`, using the
+   *signed* mean. For the 13 `icp/na` replicate groups with a negative
+   `mean` (a legitimate outcome of background/blank subtraction upstream),
+   this produced **negative** RSD% values — contrary to the standard
+   convention that RSD is a non-negative dispersion measure — which
+   corrupted every downstream RSD-based comparison for `icp/na`
+   specifically (RSD benchmark flags, `spearman_mean_vs_RSD` correlation,
+   and any RSD quantile/percentile touching those 13 rows). The fix uses
+   `abs(mean)` in the denominator instead. Only `icp/na` rows were
+   affected (13 of 2712 replicate groups, 0.48%); all other combinations'
+   RSD values were computed from positive means and are numerically
+   unchanged by this fix.
+2. **`classify_precision_model()` redesign (Step 6a).** The prior
+   categorization function gated the stability categories
+   (`approx_constant_absolute_SD`, `approx_constant_relative_RSD`) behind
+   a blanket `loglog_r_squared >= 0.3` check. This was self-defeating: a
+   genuinely flat/no-trend SD-vs-mean pattern naturally produces *both* a
+   near-zero slope *and* a low R² (there's little real variance for a
+   log-log fit to explain when there's no real trend), so the old gate
+   made `approx_constant_absolute_SD` nearly unreachable for real flat
+   data — **0 of 74 combinations** qualified under the old logic (see
+   original §2 below). The redesigned function drops the R² gate for the
+   stability categories entirely and instead corroborates each stability
+   pattern independently via the corresponding Spearman correlation
+   magnitude (`spearman_mean_vs_SD` for absolute-SD, `spearman_mean_vs_RSD`
+   for relative-RSD) being small (`<= 0.3`). The R² threshold is retained,
+   but repurposed and lowered (`0.3` → `0.15`, per audit review of the
+   actual 74-row R² distribution) to distinguish
+   `concentration_dependent_mixed` from `unclear` only.
+
+### Category distribution: before vs after
+
+| Category | Before (RSD bug + old classifier) | After (both fixes applied) |
+|---|---:|---:|
+| `insufficient_data` | 26 | 26 |
+| `unclear` | 25 | 10 |
+| `concentration_dependent_mixed` | 13 | 20 |
+| `approx_constant_relative_RSD` | 10 | 13 |
+| `approx_constant_absolute_SD` | **0** | **5** |
+
+**`approx_constant_absolute_SD` now has 5 real members** —
+`compositional/xylan`, `compositional/xylose`, `icp/si`, `xrf/k`, and
+`proximate/volatile solids` — directly resolving the design flaw this
+document's original §5/§6 flagged (zero qualifying examples, forcing
+`07_selected_diagnostics.py` to pick a non-qualifying `xrf/sr` placeholder;
+see original text below, left unmodified as the historical record of that
+finding). A large share of the old `unclear` bucket (15 of 25 combinations)
+reclassified into either a stability category or
+`concentration_dependent_mixed` — consistent with §5's observation below
+that "the `unclear` / `concentration_dependent_mixed` categories are
+genuine grab-bags" and that the simple log-log heuristic was likely missing
+real structure.
+
+Combination directly affected by the RSD-sign fix: `icp/na` (the only
+combination with any negative-mean replicate groups) stays classified as
+`concentration_dependent_mixed` both before and after the fix (its
+`loglog_slope=0.680`/`loglog_r_squared=0.887` never qualified it for a
+stability category or for `unclear` either way), but its
+`spearman_mean_vs_RSD` value itself changed substantially: **+0.556**
+(p=0.0089, nominally significant) before the fix vs **-0.145** (p=0.529,
+not significant) after — a sign flip and a swing from "significant
+positive correlation" to "no significant correlation," entirely an
+artifact of the RSD-sign bug (13 of `icp/na`'s replicate groups have
+negative means, which previously produced negative `RSD_percent` values
+that distorted the rank correlation) rather than a real change in the
+underlying data. This also materially changed `icp/na`'s `median_RSD` /
+`percent_RSD_gt_10` / `percent_RSD_gt_20` in `method_parameter_summary.csv`
+and `candidate_rule_comparison.csv` (see `STEP8_FINDINGS.md` addendum for
+the exact before/after numbers: `median_RSD` was negative/misleading
+before the fix and is now a proper non-negative **8.32%**, with
+`percent_RSD_gt_20` rising from a smaller pre-fix count to **33.3%**
+post-fix as several previously-negative RSD values flipped sign and
+crossed the 20% magnitude threshold).
+
+**This addendum reflects a real pipeline rerun** (Steps 1, 3, 4, 5, 6a, 6b,
+8 were all regenerated from the corrected scripts) — it is not a
+simulation/preview. `07_selected_diagnostics.py` (the 8-PNG selected-plot
+script) was intentionally **not** rerun in this pass and its
+`SELECTED_COMBINATIONS` list (including the `xrf/sr` non-qualifying
+placeholder discussion in the original §2 below) still reflects the
+pre-fix categorization; whether to refresh that script's selections
+(e.g., swapping the `xrf/sr` non-qualifying placeholder for one of the 5
+newly-qualifying `approx_constant_absolute_SD` combinations) remains an
+open follow-up, not addressed here.
+
+Everything below this line is the **original, unmodified** Step 6 findings
+document, preserved as the historical record of the pre-fix analysis.
+
+---
+
 # Step 6 Findings — Selected Diagnostic Plots
 
 Script: [`07_selected_diagnostics.py`](07_selected_diagnostics.py)

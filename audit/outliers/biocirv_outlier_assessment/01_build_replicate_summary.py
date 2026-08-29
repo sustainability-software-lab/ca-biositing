@@ -145,10 +145,20 @@ def build_replicate_group_summary(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
             sd = sub["value"].std(ddof=1)
 
         # RSD%: NaN (never inf) when mean is (near-)zero or n_replicates == 1.
+        # Uses abs(mean) in the denominator (bug fix, previously used signed
+        # mean): RSD is conventionally reported as a non-negative dispersion
+        # measure. Using the signed mean produced negative RSD% values for
+        # any replicate group with a negative mean (observed in this
+        # dataset for icp/na, whose measured concentrations can be
+        # negative after background/blank subtraction), which is both
+        # counter to the standard RSD definition and corrupted downstream
+        # comparisons (RSD benchmark flags, Spearman mean-vs-RSD
+        # correlations, log-log precision-model classification) that
+        # implicitly assume RSD >= 0.
         if n_replicates == 1 or abs(mean) < RSD_MEAN_EPSILON:
             rsd_percent = np.nan
         else:
-            rsd_percent = (sd / mean) * 100.0
+            rsd_percent = (sd / abs(mean)) * 100.0
 
         # Metadata consistency check for columns NOT part of the grouping key
         # but expected to be constant per group (resource_id, resource_type,
@@ -278,7 +288,7 @@ def main() -> None:
         raw_values = [float(v) for v in example["values"].split(",")]
         manual_mean = sum(raw_values) / len(raw_values)
         manual_sd = float(np.std(raw_values, ddof=1))
-        manual_rsd = (manual_sd / manual_mean) * 100.0 if abs(manual_mean) >= RSD_MEAN_EPSILON else np.nan
+        manual_rsd = (manual_sd / abs(manual_mean)) * 100.0 if abs(manual_mean) >= RSD_MEAN_EPSILON else np.nan
         print(f"Raw values: {raw_values}")
         print(f"Manually computed mean={manual_mean}, sd={manual_sd}, rsd%={manual_rsd}")
         print(

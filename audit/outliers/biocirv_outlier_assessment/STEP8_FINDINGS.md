@@ -1,3 +1,57 @@
+## Addendum — rerun after `RSD_percent` sign-bug fix
+
+`01_build_replicate_summary.py`'s `RSD_percent = (sd / mean) * 100.0`
+computation was fixed to `(sd / abs(mean)) * 100.0` (see
+[`STEP6_FINDINGS.md`](STEP6_FINDINGS.md) addendum for full rationale). This
+step (`08_compare_candidate_rules.py`) was rerun end-to-end against the
+corrected `replicate_group_summary.csv`. Only `icp/na`'s 13 negative-mean
+replicate groups are affected; all other combinations are numerically
+unchanged.
+
+### Headline deltas (before → after)
+
+| Metric | Before | After |
+|---|---:|---:|
+| `rsd_gt_10` flagged (all 2712 groups) | 400 | 407 |
+| `rsd_gt_20` flagged (all 2712 groups) | 171 | 177 |
+| `RSD20_only` (3-way overlap) | 134 | 140 |
+| `flagged_by_any` (3-way overlap) | 421 | 427 |
+| `flagged_by_none` (3-way overlap) | 2291 | 2285 |
+| `icp` `n_RSD_gt_20` (by-analysis-type) | 56 | 62 |
+| `icp` `percent_RSD_gt_20` (by-analysis-type) | 15.5% | 17.2% |
+
+Dixon (`dixon_flag_0_05`) and 3×SD (`flag_3xSD`) counts are **unchanged**
+(246 and 51 respectively) — neither of those methods depends on the sign
+of `RSD_percent`, so they are correctly insensitive to this fix.
+
+### `icp/na` in detail
+
+| Metric | Before (sign-bug) | After (fixed) |
+|---|---:|---:|
+| `median_RSD` | negative/misleading (signed mean in denominator) | **8.32%** |
+| `percent_RSD_gt_10` | (distorted by sign) | **42.9%** |
+| `percent_RSD_gt_20` | (distorted by sign) | **33.3%** |
+| `P90_RSD` / `P95_RSD` | (distorted by sign) | **103.1%** / **147.2%** |
+
+All 13 `icp/na` negative-mean replicate groups now report a properly
+non-negative `RSD_percent` (magnitude-based, per the standard RSD
+definition), which is what drove `icp`'s overall `percent_RSD_gt_20` up
+from 15.5% to 17.2% in the by-analysis-type roll-up above — several
+groups' RSD magnitudes were already >20% but were previously being
+reported with a negative sign that the `rsd_gt_20` boolean comparison
+(`RSD_percent > 20`) could never satisfy regardless of magnitude.
+
+This rerun did not change any `flag_3xSD` or `dixon_flag_0_05` values, so
+§3 "Overlap / disagreement" and §5 "Method semantics" interpretations
+below remain valid as originally written; only the specific overlap counts
+in the §3 table (now 140/427/2285 instead of 134/421/2291) and the `icp`
+row of the §4 by-analysis-type table (now 62/17.2% instead of 56/15.5%)
+should be read from the updated numbers above rather than the original
+table text below, which is preserved unmodified as the historical
+pre-fix record.
+
+---
+
 # Step 8 Findings — Candidate-Rule Comparison
 
 Produced by [`08_compare_candidate_rules.py`](08_compare_candidate_rules.py),
