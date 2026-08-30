@@ -25,6 +25,7 @@ frontend = { features = [
 docs = { features = ["datamodels", "pipeline", "docs"], no-default-feature = true }
 deployment = { features = ["cloud"], solve-group = "default" }
 viz = { features = ["datamodels", "visualization", "kernel"], solve-group = "default" }
+auditor = { features = ["datamodels", "auditor"] }
 
 [dependencies]
 python = "~=3.12"
@@ -493,6 +494,23 @@ description = "Trigger the Master ETL flow via Prefect API (fire-and-forget). Fo
 [feature.gis.pypi-dependencies]
 geopandas = "*"
 matplotlib = "*"
+
+[feature.auditor.dependencies]
+scipy = ">=1.13.0,<1.14"
+scikit-learn = ">=1.4.2,<2"
+numpy = ">=1.24,<2"
+matplotlib = ">=3.5,<3.10"
+setuptools = "<70"
+
+[feature.auditor.pypi-dependencies]
+ydata-profiling = ">=4.12.0"
+great-expectations = ">=0.18.12,<1"
+litellm = ">=1.35.0,<2"
+pydantic-settings = ">=2.2.1,<3"
+setuptools = "*"
+
+[feature.auditor.tasks]
+run-auditor = { cmd = "python audit/agent.py", description = "Run the skill-based data auditor.", env = { PYTHONPATH = "." } }
 
 [pypi-dependencies]
 sqlalchemy = ">=2.0.44, <3"
