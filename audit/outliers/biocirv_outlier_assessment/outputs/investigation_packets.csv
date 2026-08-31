@@ -1,0 +1,115 @@
+packet_id,analysis_type,parameter,experiment_id,n_flagged_groups_in_packet,replicate_group_ids
+xrf|rb|47,xrf,rb,47.0,30,"922,931,1024,1109,1125,1264,1310,1336,1340,1459,1485,1501,1624,1658,1681,1698,1750,1760,1798,1811,1835,1837,1866,1900,2004,2026,2042,2068,2113,2132"
+xrf|cu|47,xrf,cu,47.0,26,"912,1000,1074,1121,1294,1311,1343,1402,1464,1488,1512,1537,1601,1667,1787,1827,1849,1886,1951,2031,2045,2053,2098,2109,2129,2152"
+xrf|sr|47,xrf,sr,47.0,24,"916,1094,1130,1153,1261,1313,1335,1353,1366,1417,1522,1587,1608,1648,1690,1791,1812,1829,1860,1895,2003,2027,2090,2176"
+xrf|u|47,xrf,u,47.0,23,"998,1080,1259,1271,1277,1278,1331,1342,1370,1389,1420,1583,1638,1673,1770,1789,1876,2024,2055,2078,2097,2128,2158"
+xrf|k|47,xrf,k,47.0,15,"909,1001,1119,1247,1300,1320,1579,1626,1680,1756,1769,1954,2010,2062,2073"
+xrf|mn|47,xrf,mn,47.0,14,"926,1242,1243,1393,1405,1581,1672,1696,1780,1788,1802,1828,1867,2126"
+xrf|zn|47,xrf,zn,47.0,14,"930,940,1015,1140,1257,1372,1383,1419,1677,1762,1872,2011,2131,2180"
+xrf|ba|47,xrf,ba,47.0,12,"949,992,1077,1135,1262,1301,1324,1360,1458,1942,2012,2133"
+xrf|mo|47,xrf,mo,47.0,12,"1083,1095,1124,1296,1339,1396,1483,1768,1897,2066,2086,2095"
+xrf|ca|47,xrf,ca,47.0,11,"1075,1132,1347,1469,1513,1614,1675,1943,2022,2043,2057"
+xrf|ce|47,xrf,ce,47.0,10,"920,993,1122,1305,1506,1665,1799,1847,2016,2048"
+xrf|th|47,xrf,th,47.0,10,"1138,1295,1392,1463,1477,1594,1689,2019,2047,2136"
+icp|p|43,icp,p,43.0,8,"2206,2220,2262,2280,2399,2511,2586,2650"
+xrf|pr|47,xrf,pr,47.0,8,"913,1280,1329,1398,1669,1793,1836,2118"
+icp|na|43,icp,na,43.0,7,"2185,2367,2397,2487,2578,2600,2697"
+xrf|p|47,xrf,p,47.0,7,"915,1481,1588,1628,1685,1745,1853"
+xrf|si|47,xrf,si,47.0,7,"1526,1645,1740,1797,1806,2061,2067"
+icp|al|43,icp,al,43.0,7,"2201,2223,2275,2368,2537,2590,2596"
+icp|ti|43,icp,ti,43.0,6,"2393,2465,2523,2571,2577,2676"
+icp|cu|43,icp,cu,43.0,6,"2250,2317,2336,2565,2579,2674"
+xrf|mg|47,xrf,mg,47.0,6,"1236,1244,1356,1794,1888,1958"
+icp|nd|43,icp,nd,43.0,5,"2251,2380,2445,2488,2587"
+icp|si|43,icp,si,43.0,5,"2352,2374,2405,2433,2668"
+xrf|fe|47,xrf,fe,47.0,5,"1012,1268,1484,1580,2178"
+icp|fe|43,icp,fe,43.0,5,"2362,2369,2547,2580,2701"
+icp|s|43,icp,s,43.0,4,"2372,2521,2581,2630"
+proximate|moisture|6,proximate,moisture,6.0,4,"566,610,642,665"
+proximate|volatile solids|5,proximate,volatile solids,5.0,4,"433,541,716,774"
+xrf|la|47,xrf,la,47.0,4,"996,1292,1326,2089"
+xrf|pb|47,xrf,pb,47.0,4,"1250,1615,1777,1803"
+proximate|total solids|6,proximate,total solids,6.0,4,"575,609,644,666"
+icp|zn|43,icp,zn,43.0,3,"2353,2403,2585"
+proximate|total solids|5,proximate,total solids,5.0,3,"435,770,773"
+proximate|ash|11,proximate,ash,11.0,3,"389,703,713"
+xrf|s|47,xrf,s,47.0,3,"1136,1783,2059"
+compositional|xylan|27,compositional,xylan,27.0,3,"8,129,174"
+compositional|xylose|27,compositional,xylose,27.0,3,"10,130,176"
+proximate|ash|5,proximate,ash,5.0,3,"490,706,769"
+compositional|xylose|31,compositional,xylose,31.0,2,"237,242"
+compositional|xylan|31,compositional,xylan,31.0,2,"236,243"
+proximate|moisture|12,proximate,moisture,12.0,2,"399,685"
+icp|mn|43,icp,mn,43.0,2,"2386,2589"
+compositional|lignin|34,compositional,lignin,34.0,2,"69,320"
+compositional|glucan|27,compositional,glucan,27.0,2,"132,178"
+compositional|glucose|27,compositional,glucose,27.0,2,"131,175"
+compositional|glucan|31,compositional,glucan,31.0,2,"234,240"
+compositional|glucose|31,compositional,glucose,31.0,2,"238,241"
+compositional|xylan|32,compositional,xylan,32.0,2,"121,300"
+compositional|arabinan|33,compositional,arabinan,33.0,2,"296,334"
+compositional|arabinose|33,compositional,arabinose,33.0,2,"294,336"
+xrf|al|47,xrf,al,47.0,2,"1348,2174"
+xrf|nd|47,xrf,nd,47.0,2,"1023,1820"
+xrf|ti|47,xrf,ti,47.0,2,"2009,2173"
+proximate|ash|12,proximate,ash,12.0,2,"727,756"
+proximate|total solids|12,proximate,total solids,12.0,2,"402,684"
+proximate|volatile solids|4,proximate,volatile solids,4.0,2,"516,697"
+proximate|volatile solids|6,proximate,volatile solids,6.0,2,"592,622"
+proximate|volatile solids|15,proximate,volatile solids,15.0,2,"477,788"
+xrf|y|47,xrf,y,47.0,2,"1632,2170"
+proximate|ash|6,proximate,ash,6.0,2,"437,611"
+proximate|ash|10,proximate,ash,10.0,2,"395,423"
+compositional|xylan|30,compositional,xylan,30.0,1,199
+compositional|xylan|40,compositional,xylan,40.0,1,98
+compositional|xylan|38,compositional,xylan,38.0,1,22
+compositional|xylan|36,compositional,xylan,36.0,1,270
+compositional|xylan|37,compositional,xylan,37.0,1,191
+compositional|lignin|35,compositional,lignin,35.0,1,318
+compositional|lignin|41,compositional,lignin,41.0,1,61
+compositional|lignin|38,compositional,lignin,38.0,1,134
+compositional|glucose|28,compositional,glucose,28.0,1,301
+compositional|glucose|34,compositional,glucose,34.0,1,225
+compositional|arabinose|32,compositional,arabinose,32.0,1,76
+compositional|glucan|30,compositional,glucan,30.0,1,203
+compositional|glucan|28,compositional,glucan,28.0,1,302
+compositional|glucan|40,compositional,glucan,40.0,1,96
+compositional|glucan|34,compositional,glucan,34.0,1,227
+compositional|glucose|30,compositional,glucose,30.0,1,200
+compositional|lignin|31,compositional,lignin,31.0,1,235
+compositional|lignin|29,compositional,lignin,29.0,1,281
+compositional|glucose|40,compositional,glucose,40.0,1,97
+compositional|xylose|30,compositional,xylose,30.0,1,202
+compositional|xylose|32,compositional,xylose,32.0,1,117
+icp|k|43,icp,k,43.0,1,2582
+icp|mg|43,icp,mg,43.0,1,2583
+compositional|xylose|35,compositional,xylose,35.0,1,153
+compositional|xylose|36,compositional,xylose,36.0,1,273
+compositional|xylose|40,compositional,xylose,40.0,1,99
+compositional|xylose|37,compositional,xylose,37.0,1,193
+icp|ca|43,icp,ca,43.0,1,2584
+icp|fe|42,icp,fe,42.0,1,2680
+compositional|xylan|35,compositional,xylan,35.0,1,101
+proximate|volatile solids|2,proximate,volatile solids,2.0,1,795
+proximate|total solids|21,proximate,total solids,21.0,1,403
+proximate|total solids|24,proximate,total solids,24.0,1,517
+proximate|ash|15,proximate,ash,15.0,1,786
+proximate|ash|19,proximate,ash,19.0,1,538
+proximate|ash|20,proximate,ash,20.0,1,472
+proximate|ash|22,proximate,ash,22.0,1,790
+proximate|ash|3,proximate,ash,3.0,1,607
+proximate|ash|2,proximate,ash,2.0,1,796
+proximate|ash|7,proximate,ash,7.0,1,581
+proximate|total solids|1,proximate,total solids,1.0,1,636
+proximate|total solids|2,proximate,total solids,2.0,1,793
+proximate|moisture|13,proximate,moisture,13.0,1,499
+proximate|moisture|21,proximate,moisture,21.0,1,407
+proximate|moisture|24,proximate,moisture,24.0,1,519
+proximate|ash|24,proximate,ash,24.0,1,757
+proximate|moisture|1,proximate,moisture,1.0,1,633
+proximate|moisture|2,proximate,moisture,2.0,1,794
+proximate|ash|13,proximate,ash,13.0,1,735
+xrf|as|47,xrf,as,47.0,1,1113
+proximate|volatile solids|12,proximate,volatile solids,12.0,1,406
+proximate|volatile solids|21,proximate,volatile solids,21.0,1,560
+proximate|volatile solids|23,proximate,volatile solids,23.0,1,510

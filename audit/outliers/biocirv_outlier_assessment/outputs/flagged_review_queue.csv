@@ -1,0 +1,428 @@
+replicate_group_id,sample_id,resource_id,resource_type,analysis_type,parameter,lab,method,protocol_version,experiment_id,n_replicates,mean,standard_deviation,RSD_percent,existing_QC_status,rsd_gt_20,dixon_flag_0_05,flag_3xSD,dixon_candidate_record_id,flag_category
+8,148,31,almond shells,compositional,xylan,capstan,knife mill (2mm),,27.0,3,16.413333333333334,1.0767698608956948,6.560336276781244,pass,False,True,False,(04)68e4,Dixon_only
+10,148,31,almond shells,compositional,xylose,capstan,knife mill (2mm),,27.0,3,18.653333333333336,1.2240234202552407,6.5619554338200885,pass,False,True,False,(04)c1d7,Dixon_only
+22,70,31,almond shells,compositional,xylan,humorous,knife mill (2mm),,38.0,3,16.51,2.70449625623701,16.380958547771108,pass,False,False,True,(13)9bb5,3xSD_only
+61,48,25,almond hulls,compositional,lignin,vibrant,knife mill (2mm),,41.0,3,20.646666666666665,0.2973774257292119,1.4403168827698347,pass,False,True,False,(31)504a,Dixon_only
+69,77,5,alfalfa,compositional,lignin,possessive,knife mill (2mm),,34.0,3,20.87,0.2338803112705296,1.1206531445641097,pass,False,True,False,(3c)1095,Dixon_only
+76,81,27,rice straw,compositional,arabinose,possessive,knife mill (2mm),,32.0,3,2.6166666666666667,0.0404145188432739,1.5445039048384956,pass,False,True,False,(42)7a67,Dixon_only
+96,32,23,grape pomace,compositional,glucan,ebony,oven dry,,40.0,3,7.609999999999999,1.7714683175264525,23.278164487864025,pass,True,False,False,(4e)e137,RSD_only
+97,32,23,grape pomace,compositional,glucose,ebony,oven dry,,40.0,3,8.456666666666665,1.96871362400257,23.28001920381439,pass,True,False,False,(4e)e140,RSD_only
+98,32,23,grape pomace,compositional,xylan,ebony,oven dry,,40.0,3,4.896666666666667,1.7591001487503015,35.9244414312519,pass,True,False,False,(4e)e143,RSD_only
+99,32,23,grape pomace,compositional,xylose,ebony,oven dry,,40.0,3,5.566666666666667,1.99930821369126,35.915716413615435,pass,True,False,False,(4e)e146,RSD_only
+101,37,33,sweet potato culls,compositional,xylan,tackle,oven dry,,35.0,3,3.176666666666667,0.0404145188432739,1.272230393807155,pass,False,True,False,(56)ea26,Dixon_only
+117,80,20,wheat straw,compositional,xylose,possessive,knife mill (2mm),,32.0,3,21.996666666666663,0.0461880215351711,0.2099773671851998,pass,False,True,False,(62)5ab6,Dixon_only
+121,80,20,wheat straw,compositional,xylan,possessive,knife mill (2mm),,32.0,3,19.356666666666666,0.0461880215351711,0.2386155753496011,pass,False,True,False,(62)ed41,Dixon_only
+129,147,31,almond shells,compositional,xylan,humorous,knife mill (2mm),,27.0,3,14.993333333333332,2.4113136115680454,16.08257188684779,pass,False,False,True,(71)5316,3xSD_only
+130,147,31,almond shells,compositional,xylose,humorous,knife mill (2mm),,27.0,3,17.036666666666665,2.743307006759057,16.10236943900836,pass,False,True,False,(71)3ea0,Dixon_only
+131,147,31,almond shells,compositional,glucose,humorous,knife mill (2mm),,27.0,3,21.75333333333333,3.458342570268788,15.897989137000252,pass,False,True,False,(71)470a,Dixon_only
+132,147,31,almond shells,compositional,glucan,humorous,knife mill (2mm),,27.0,3,19.58,3.1177074910902083,15.9229187491839,pass,False,True,False,(71)b8d9,Dixon_only
+134,67,21,corn stover husks,compositional,lignin,caterpillar,knife mill (2mm),,38.0,3,18.57,0.0692820323027556,0.3730857959222169,pass,False,True,False,(72)ed34,Dixon_only
+153,57,19,walnut shells,compositional,xylose,energetic,oven dry + knife mill (2mm),,35.0,4,18.895,9.037040444747385,47.82768163401632,pass,True,True,True,(82)6771,all_three
+174,135,34,grape stem,compositional,xylan,rigging,oven dry + knife mill (2mm),,27.0,3,4.843333333333333,1.45249211128093,29.989513653425952,pass,True,False,False,(87)8932,RSD_only
+175,135,34,grape stem,compositional,glucose,rigging,oven dry + knife mill (2mm),,27.0,3,18.606666666666666,5.585743758295158,30.02012052111336,pass,True,False,True,(87)49e8,RSD_and_3xSD
+176,135,34,grape stem,compositional,xylose,rigging,oven dry + knife mill (2mm),,27.0,3,5.503333333333333,1.6471288150394714,29.92965745074752,pass,True,False,False,(87)50d0,RSD_only
+178,135,34,grape stem,compositional,glucan,rigging,oven dry + knife mill (2mm),,27.0,3,16.75,5.02930412681516,30.02569627949349,pass,True,False,True,(87)a5ef,RSD_and_3xSD
+191,143,31,almond shells,compositional,xylan,tiny,knife mill (2mm),,37.0,3,19.03333333333333,0.0115470053837922,0.0606672787239523,pass,False,True,False,(a2)6e8b,Dixon_only
+193,143,31,almond shells,compositional,xylose,tiny,knife mill (2mm),,37.0,3,21.63,0.0173205080756894,0.0800763202759566,pass,False,True,False,(a2)8f0a,Dixon_only
+199,161,25,almond hulls,compositional,xylan,humorous,knife mill (2mm),,30.0,3,6.97,1.548805991723947,22.221032879827074,pass,True,False,False,(a8)aa72,RSD_only
+200,161,25,almond hulls,compositional,glucose,humorous,knife mill (2mm),,30.0,3,23.23333333333333,4.965252595118735,21.37124502920546,pass,True,True,False,(a8)29ea,RSD_and_Dixon
+202,161,25,almond hulls,compositional,xylose,humorous,knife mill (2mm),,30.0,3,7.923333333333332,1.7600094696714934,22.212992886051666,pass,True,False,False,(a8)bf74,RSD_only
+203,161,25,almond hulls,compositional,glucan,humorous,knife mill (2mm),,30.0,3,20.913333333333338,4.47160299370744,21.38158906777545,pass,True,True,False,(a8)a893,RSD_and_Dixon
+225,79,5,alfalfa,compositional,glucose,possessive,knife mill (2mm),,34.0,3,31.49666666666667,0.9555277773740198,3.0337425464303727,pass,False,True,False,(b8)3b4b,Dixon_only
+227,79,5,alfalfa,compositional,glucan,possessive,knife mill (2mm),,34.0,3,28.346666666666668,0.8602519010925415,3.034755060298241,pass,False,True,False,(b8)da13,Dixon_only
+234,124,26,spent oak chips,compositional,glucan,rigging,oven dry + knife mill (2mm),,31.0,3,36.27333333333333,8.66197052253893,23.87972024225031,,True,False,True,(bc)3853,RSD_and_3xSD
+235,124,26,spent oak chips,compositional,lignin,rigging,oven dry + knife mill (2mm),,31.0,3,43.11666666666667,0.3666515148384552,0.8503707340667691,,False,True,False,(bc)e785,Dixon_only
+236,124,26,spent oak chips,compositional,xylan,rigging,oven dry + knife mill (2mm),,31.0,3,4.503333333333333,1.0406888744160443,23.10930143040809,,True,False,False,(bc)a1d4,RSD_only
+237,124,26,spent oak chips,compositional,xylose,rigging,oven dry + knife mill (2mm),,31.0,3,5.116666666666667,1.1853410198475938,23.16627400353603,,True,False,False,(bc)b2b8,RSD_only
+238,124,26,spent oak chips,compositional,glucose,rigging,oven dry + knife mill (2mm),,31.0,3,40.3,9.622245060275691,23.876538611105936,,True,False,True,(bc)b1c1,RSD_and_3xSD
+240,122,26,spent oak chips,compositional,glucan,rigging,oven dry + knife mill (2mm),,31.0,3,34.35333333333333,8.530031262154512,24.83028700413695,,True,False,True,(be)61e9,RSD_and_3xSD
+241,122,26,spent oak chips,compositional,glucose,rigging,oven dry + knife mill (2mm),,31.0,3,38.17333333333333,9.474646871167986,24.82006689967164,,True,False,True,(be)d020,RSD_and_3xSD
+242,122,26,spent oak chips,compositional,xylose,rigging,oven dry + knife mill (2mm),,31.0,3,19.933333333333334,4.845217573374114,24.30711157211094,,True,True,True,(be)8eeb,all_three
+243,122,26,spent oak chips,compositional,xylan,rigging,oven dry + knife mill (2mm),,31.0,3,17.54,4.262018301227718,24.298850064012075,,True,True,True,(be)a222,all_three
+270,53,35,almond branches,compositional,xylan,vibrant,knife mill (2mm),,36.0,3,14.796666666666669,0.7765522090196725,5.248156402475821,pass,False,True,False,(c7)0c90,Dixon_only
+273,53,35,almond branches,compositional,xylose,vibrant,knife mill (2mm),,36.0,3,16.816666666666666,0.880473357537485,5.235718677130734,pass,False,True,False,(c7)bffa,Dixon_only
+281,97,37,tomato pomace,compositional,lignin,gossamer,oven dry + knife mill (2mm),,29.0,3,48.66666666666666,1.4670151101244089,3.014414609844676,,False,False,True,(d0)0896,3xSD_only
+294,131,11,pistachio stems & leaves,compositional,arabinose,tripod,oven dry + knife mill (2mm),,33.0,3,1.6366666666666667,0.0577350269189625,3.527598386087321,,False,True,False,(d4)3d93,Dixon_only
+296,131,11,pistachio stems & leaves,compositional,arabinan,tripod,oven dry + knife mill (2mm),,33.0,3,1.4399999999999995,0.0519615242270663,3.608439182435165,,False,True,False,(d4)96b0,Dixon_only
+300,82,20,wheat straw,compositional,xylan,wardrobe,knife mill (2mm),,32.0,3,20.58666666666667,0.1327905619136121,0.6450318745803696,pass,False,True,False,(da)ab96,Dixon_only
+301,153,3,pistachio shells,compositional,glucose,tripod,knife mill (2mm),,28.0,3,24.22,0.770778826901725,3.182406386877477,pass,False,True,False,(da)a0f5,Dixon_only
+302,153,3,pistachio shells,compositional,glucan,tripod,knife mill (2mm),,28.0,3,21.8,0.6928203230275526,3.178074876273177,pass,False,True,False,(da)11ef,Dixon_only
+318,58,13,walnut hulls,compositional,lignin,energetic,oven dry + knife mill (2mm),,35.0,3,35.10333333333333,0.7765522090196739,2.212189371435782,pass,False,True,False,(e7)6d58,Dixon_only
+320,78,5,alfalfa,compositional,lignin,possessive,knife mill (2mm),,34.0,3,20.76,0.1732050807568881,0.8343211982509061,pass,False,True,False,(ed)fbeb,Dixon_only
+334,83,55,peach seeds,compositional,arabinan,rushes,oven dry + knife mill (2mm),,33.0,3,0.0266666666666666,0.04618802153517,173.20508075688772,,True,True,False,(f6)1aa2,RSD_and_Dixon
+336,83,55,peach seeds,compositional,arabinose,rushes,oven dry + knife mill (2mm),,33.0,3,0.03,0.0519615242270663,173.20508075688775,,True,True,False,(f6)6013,RSD_and_Dixon
+389,34,23,grape pomace,proximate,ash,ebony,as is,,11.0,3,4.033333333333333,0.1674315780649914,4.15119615037169,pass,False,True,False,(13)ade3,Dixon_only
+395,88,30,peach pomace,proximate,ash,rushes,as is,,10.0,3,0.3166666666666666,0.0115470053837925,3.646422752776588,pass,False,True,False,(14)bd40,Dixon_only
+399,160,19,walnut shells,proximate,moisture,cutaway,knife mill (2mm),,12.0,3,9.866666666666667,0.0115470053837932,0.1170304599708779,pass,False,True,False,(15)6ecb,Dixon_only
+402,160,19,walnut shells,proximate,total solids,cutaway,knife mill (2mm),,12.0,3,90.13333333333333,0.0115470053837902,0.0128110266831992,pass,False,True,False,(15)ea15,Dixon_only
+403,179,14,olive stems / leaves,proximate,total solids,excellent,as is,,21.0,3,50.17,3.1772787098396003,6.333025134222843,pass,False,False,True,(15)e432,3xSD_only
+406,160,19,walnut shells,proximate,volatile solids,cutaway,knife mill (2mm),,12.0,3,89.00999999999999,0.0866025403784471,0.0972952930889194,pass,False,True,False,(15)77aa,Dixon_only
+407,179,14,olive stems / leaves,proximate,moisture,excellent,as is,,21.0,3,49.830000000000005,3.1772787098396003,6.376236624201486,pass,False,False,True,(15)9820,3xSD_only
+423,89,36,peach screening waste,proximate,ash,rushes,as is,,10.0,3,0.2333333333333333,0.023094010767585,9.897433186107872,pass,False,True,False,(23)5b30,Dixon_only
+433,59,37,tomato pomace,proximate,volatile solids,oakleaf,oven dry + knife mill (2mm),,5.0,3,0.99,2.946183972531247,297.5943406597219,fail,True,False,False,(26)1b74,RSD_only
+435,59,37,tomato pomace,proximate,total solids,oakleaf,oven dry + knife mill (2mm),,5.0,3,96.31333333333332,2.963517054672262,3.076954095665808,fail,False,False,True,(26)b8f7,3xSD_only
+437,144,25,almond hulls,proximate,ash,tiny,knife mill (2mm),,6.0,3,9.75,3.1715453646448126,32.528670406613465,pass,True,False,True,(27)13cb,RSD_and_3xSD
+472,47,31,almond shells,proximate,ash,vibrant,knife mill (2mm),,20.0,3,4.416666666666667,0.0808290376865474,1.8300914193180544,pass,False,True,False,(37)94ef,Dixon_only
+477,77,5,alfalfa,proximate,volatile solids,possessive,knife mill (2mm),,15.0,3,83.41333333333334,0.2829016319029137,0.3391563681700531,pass,False,True,False,(3c)8756,Dixon_only
+490,55,22,walnut tree sticks,proximate,ash,energetic,oven dry + knife mill (2mm),,5.0,3,5.613333333333333,0.239652526240249,4.269344291690897,fail,False,True,False,(4d)52a0,Dixon_only
+499,314,125,#n/a,proximate,moisture,,#n/a,,13.0,3,54.64333333333334,2.995402032003941,5.481733725377797,pass,False,False,True,(53)7399,3xSD_only
+510,37,33,sweet potato culls,proximate,volatile solids,tackle,oven dry,,23.0,3,82.60333333333334,0.0057735026918992,0.0069894306427091,fail,False,True,False,(56)955f,Dixon_only
+516,69,29,corn stover stalks,proximate,volatile solids,caterpillar,knife mill (2mm),,4.0,3,82.33666666666666,0.2136195996001559,0.2594464996560738,pass,False,True,False,(5b)ace1,Dixon_only
+517,80,20,wheat straw,proximate,total solids,possessive,knife mill (2mm),,24.0,3,93.37333333333332,0.0230940107675886,0.0247329831153669,pass,False,True,False,(62)0751,Dixon_only
+519,80,20,wheat straw,proximate,moisture,possessive,knife mill (2mm),,24.0,3,6.626666666666666,0.023094010767585,0.3485011685249253,pass,False,True,False,(62)0d6c,Dixon_only
+538,223,22,walnut tree sticks,proximate,ash,badger,chipper (1in) + knife mill (2mm),,19.0,3,2.7466666666666666,0.1270170592217175,4.6244074959363175,pass,False,True,False,(6b)3fbc,Dixon_only
+541,61,37,tomato pomace,proximate,volatile solids,riverstone,oven dry + knife mill (2mm),,5.0,3,3.48,0.7279423054061358,20.91788233925677,fail,True,False,False,(6d)0433,RSD_only
+560,177,23,grape pomace,proximate,volatile solids,boatswain,as is,,21.0,3,41.11333333333333,0.7044383105235938,1.7134059766262215,pass,False,True,False,(75)b527,Dixon_only
+566,150,35,almond branches,proximate,moisture,capstan,knife mill (2mm),,6.0,3,10.916666666666666,0.0635085296108585,0.5817575231529024,pass,False,True,False,(7e)1c60,Dixon_only
+575,150,35,almond branches,proximate,total solids,capstan,knife mill (2mm),,6.0,3,89.08333333333333,0.0635085296108585,0.0712911464294015,pass,False,True,False,(7e)e58c,Dixon_only
+581,95,37,tomato pomace,proximate,ash,oakleaf,oven dry + knife mill (2mm),,7.0,3,3.6666666666666665,0.0115470053837925,0.3149183286488871,fail,False,True,False,(83)0fe6,Dixon_only
+592,146,25,almond hulls,proximate,volatile solids,humorous,knife mill (2mm),,6.0,3,79.22333333333331,0.3521836642056714,0.4445453749387867,pass,False,True,False,(86)7b7d,Dixon_only
+607,165,14,olive stems / leaves,proximate,ash,excellent,oven dry + knife mill (2mm),,3.0,3,3.41,0.2511971337416095,7.366484860457759,fail,False,True,False,(a0)f05c,Dixon_only
+609,143,31,almond shells,proximate,total solids,tiny,knife mill (2mm),,6.0,3,88.73,0.1039230484541283,0.1171227864917484,pass,False,True,False,(a2)1666,Dixon_only
+610,143,31,almond shells,proximate,moisture,tiny,knife mill (2mm),,6.0,3,11.27,0.1039230484541324,0.9221211042957628,pass,False,True,False,(a2)4a98,Dixon_only
+611,143,31,almond shells,proximate,ash,tiny,knife mill (2mm),,6.0,3,4.573333333333333,0.4389001405027497,9.596941847727765,pass,False,True,False,(a2)83ca,Dixon_only
+622,161,25,almond hulls,proximate,volatile solids,humorous,knife mill (2mm),,6.0,3,76.29333333333334,0.4792007234273884,0.6281030104343608,pass,False,True,False,(a8)5bb6,Dixon_only
+633,244,95,olive prunings,proximate,moisture,excellent,chipper (1in) + freeze,,1.0,3,20.62333333333333,0.2800595174839326,1.3579740624726002,pass,False,True,False,(ab)938c,Dixon_only
+636,244,95,olive prunings,proximate,total solids,excellent,chipper (1in) + freeze,,1.0,3,79.37666666666667,0.2800595174839367,0.3528234798017093,pass,False,True,False,(ab)e228,Dixon_only
+642,149,25,almond hulls,proximate,moisture,capstan,knife mill (2mm),,6.0,3,14.223333333333334,0.0288675134594817,0.2029588478519922,pass,False,True,False,(b3)fc9e,Dixon_only
+644,149,25,almond hulls,proximate,total solids,capstan,knife mill (2mm),,6.0,3,85.77666666666666,0.0288675134594796,0.0336542728708036,pass,False,True,False,(b3)71d8,Dixon_only
+665,154,25,almond hulls,proximate,moisture,capstan,knife mill (2mm),,6.0,3,11.246666666666668,0.0115470053837922,0.1026704687355566,pass,False,True,False,(b7)022b,Dixon_only
+666,154,25,almond hulls,proximate,total solids,capstan,knife mill (2mm),,6.0,3,88.75333333333333,0.0115470053837984,0.0130102216447815,pass,False,True,False,(b7)d205,Dixon_only
+684,156,4,corn stover whole,proximate,total solids,possessive,knife mill (2mm),,12.0,3,92.04,0.05196152422706,0.0564553718242721,pass,False,True,False,(be)28ae,Dixon_only
+685,156,4,corn stover whole,proximate,moisture,possessive,knife mill (2mm),,12.0,3,7.96,0.0519615242270662,0.6527829676767115,pass,False,True,False,(be)b18d,Dixon_only
+697,54,12,almond woodchips,proximate,volatile solids,popular,knife mill (2mm),,4.0,3,89.32666666666665,0.0057735026918992,0.006463358487834,pass,False,True,False,(c1)565f,Dixon_only
+703,29,6,unused oak stick,proximate,ash,maplewood,knife mill (2mm),,11.0,3,0.0766666666666666,0.0808290376865476,105.42917959114904,pass,True,True,False,(c4)2c69,RSD_and_Dixon
+706,29,6,unused oak stick,proximate,ash,maplewood,knife mill (2mm),,5.0,3,0.16,0.0435889894354067,27.2431183971292,pass,True,False,False,(c4)3d57,RSD_only
+713,27,26,spent oak chips,proximate,ash,maplewood,knife mill (2mm),,11.0,3,0.5966666666666667,0.0057735026918962,0.9676261494798204,pass,False,True,False,(c5)2aba,Dixon_only
+716,27,26,spent oak chips,proximate,volatile solids,maplewood,knife mill (2mm),,5.0,3,3.526666666666667,1.2816135663035613,36.34064932807829,pass,True,False,False,(c5)92ea,RSD_only
+727,157,10,cotton stem mix,proximate,ash,schooner,knife mill (2mm),,12.0,3,7.793333333333334,0.0461880215351701,0.592660669826819,pass,False,True,False,(ce)6f27,Dixon_only
+735,120,23,grape pomace,proximate,ash,rigging,as is,,13.0,3,2.0500000000000003,0.6533758489567852,31.8719926320383,pass,True,False,False,(d0)618a,RSD_only
+756,153,3,pistachio shells,proximate,ash,tripod,knife mill (2mm),,12.0,3,0.6933333333333334,0.0577350269189625,8.327167344081138,pass,False,True,False,(da)8a0c,Dixon_only
+757,82,20,wheat straw,proximate,ash,wardrobe,knife mill (2mm),,24.0,3,10.433333333333332,1.483924975641738,14.222923089217938,pass,False,True,False,(da)fa91,Dixon_only
+769,58,13,walnut hulls,proximate,ash,energetic,oven dry + knife mill (2mm),,5.0,3,38.4,3.721007927967904,9.690124812416416,fail,False,False,True,(e7)ae0c,3xSD_only
+770,58,13,walnut hulls,proximate,total solids,energetic,oven dry + knife mill (2mm),,5.0,3,33.943333333333335,5.657741009743496,16.66819505963909,fail,False,False,True,(e7)86e3,3xSD_only
+773,22,1,spent yeast,proximate,total solids,maplewood,oven dry,,5.0,3,58.35666666666666,4.125243427160791,7.069018267825655,pass,False,True,True,(e8)0406,Dixon_and_3xSD
+774,22,1,spent yeast,proximate,volatile solids,maplewood,oven dry,,5.0,3,17.646666666666665,3.270693096781374,18.53433942263718,pass,False,True,True,(e8)7f66,Dixon_and_3xSD
+786,78,5,alfalfa,proximate,ash,possessive,knife mill (2mm),,15.0,3,11.026666666666666,7.1597928275428,64.93161572741354,"fail,pass",True,False,True,(ed)c23d,RSD_and_3xSD
+788,78,5,alfalfa,proximate,volatile solids,possessive,knife mill (2mm),,15.0,3,78.88666666666667,6.649829571750944,8.429598882469715,"fail,pass",False,False,True,(ed)cdf5,3xSD_only
+790,103,37,tomato pomace,proximate,ash,oakleaf,as is,,22.0,3,1.1266666666666667,0.0115470053837923,1.02488213465613,pass,False,True,False,(f1)cd95,Dixon_only
+793,180,35,almond branches,proximate,total solids,tiny,as is,,2.0,3,85.89333333333333,3.08170948230578,3.587833144565872,"pass,provisional",False,False,True,(f3)161b,3xSD_only
+794,180,35,almond branches,proximate,moisture,tiny,as is,,2.0,3,14.106666666666667,3.081709482305776,21.84576665150597,"pass,provisional",True,False,True,(f3)f33d,RSD_and_3xSD
+795,180,35,almond branches,proximate,volatile solids,tiny,as is,,2.0,3,20.13,4.471319715699158,22.212219153994823,"pass,provisional",True,False,True,(f3)e4ed,RSD_and_3xSD
+796,180,35,almond branches,proximate,ash,tiny,as is,,2.0,3,65.76,7.538441483489807,11.4635667328008,"pass,provisional",False,False,True,(f3)889a,3xSD_only
+909,148,31,almond shells,xrf,k,capstan,knife mill (2mm),,47.0,3,21800.0,1212.4355652982142,5.561631033478047,pass,False,True,False,(04)7479,Dixon_only
+912,148,31,almond shells,xrf,cu,capstan,knife mill (2mm),,47.0,3,10.333333333333334,1.1547005383792517,11.174521339154047,pass,False,True,False,(04)0a4a,Dixon_only
+913,148,31,almond shells,xrf,pr,capstan,knife mill (2mm),,47.0,2,111.5,50.20458146424488,45.02653046120616,pass,True,,False,,RSD_only
+915,148,31,almond shells,xrf,p,capstan,knife mill (2mm),,47.0,3,764.6666666666666,14.433756729740644,1.887588064046292,pass,False,True,False,(04)b583,Dixon_only
+916,148,31,almond shells,xrf,sr,capstan,knife mill (2mm),,47.0,3,21.666666666666668,1.1547005383792517,5.32938710021193,pass,False,True,False,(04)2bcb,Dixon_only
+920,148,31,almond shells,xrf,ce,capstan,knife mill (2mm),,47.0,2,63.5,20.50609665440988,32.29306559749587,pass,True,,False,,RSD_only
+922,148,31,almond shells,xrf,rb,capstan,knife mill (2mm),,47.0,3,13.333333333333334,1.1547005383792517,8.660254037844387,pass,False,True,False,(04)bc1d,Dixon_only
+926,148,31,almond shells,xrf,mn,capstan,knife mill (2mm),,47.0,3,37.333333333333336,11.846237095944574,31.730992221280108,pass,True,False,False,(04)c6e9,RSD_only
+930,148,31,almond shells,xrf,zn,capstan,knife mill (2mm),,47.0,3,20.666666666666668,0.5773502691896258,2.793630334788512,pass,False,True,False,(04)edd8,Dixon_only
+931,160,19,walnut shells,xrf,rb,cutaway,knife mill (2mm),,47.0,3,4.666666666666667,0.5773502691896258,12.37179148263484,pass,False,True,False,(15)00d9,Dixon_only
+940,160,19,walnut shells,xrf,zn,cutaway,knife mill (2mm),,47.0,3,9.333333333333334,1.1547005383792517,12.37179148263484,pass,False,True,False,(15)86eb,Dixon_only
+949,160,19,walnut shells,xrf,ba,cutaway,knife mill (2mm),,47.0,3,27.33333333333333,4.041451884327381,14.78579957680749,pass,False,True,False,(15)dc7b,Dixon_only
+992,108,23,grape pomace,xrf,ba,boatswain,oven dry + knife mill (2mm),,47.0,3,731.3333333333334,1176.7116610849632,160.89949786941156,pass,True,True,True,(24)c777,all_three
+993,108,23,grape pomace,xrf,ce,boatswain,oven dry + knife mill (2mm),,47.0,3,1393.3333333333333,2248.87734955318,161.40268058994113,pass,True,True,True,(24)c76f,all_three
+996,108,23,grape pomace,xrf,la,boatswain,oven dry + knife mill (2mm),,47.0,3,1058.6666666666667,1707.225917485244,161.26189396900918,pass,True,True,True,(24)3474,all_three
+998,108,23,grape pomace,xrf,u,boatswain,oven dry + knife mill (2mm),,47.0,3,13.333333333333334,1.1547005383792517,8.660254037844387,pass,False,True,False,(24)55e4,Dixon_only
+1000,108,23,grape pomace,xrf,cu,boatswain,oven dry + knife mill (2mm),,47.0,3,22.33333333333333,0.5773502691896258,2.5851504590580263,pass,False,True,False,(24)d959,Dixon_only
+1001,108,23,grape pomace,xrf,k,boatswain,oven dry + knife mill (2mm),,47.0,3,19933.33333333333,635.0852961085884,3.186046635996264,pass,False,True,False,(24)c419,Dixon_only
+1012,144,25,almond hulls,xrf,fe,tiny,knife mill (2mm),,47.0,3,475.0,21.65640782770772,4.559243753201623,pass,False,True,False,(27)1859,Dixon_only
+1015,144,25,almond hulls,xrf,zn,tiny,knife mill (2mm),,47.0,3,15.333333333333334,0.5773502691896257,3.765327842541037,pass,False,True,False,(27)e35f,Dixon_only
+1023,144,25,almond hulls,xrf,nd,tiny,knife mill (2mm),,47.0,2,112.5,27.577164466275352,24.513035081133648,pass,True,,False,,RSD_only
+1024,144,25,almond hulls,xrf,rb,tiny,knife mill (2mm),,47.0,3,9.333333333333334,1.1547005383792517,12.37179148263484,pass,False,True,False,(27)edc1,Dixon_only
+1074,77,5,alfalfa,xrf,cu,possessive,knife mill (2mm),,47.0,3,26.666666666666668,2.309401076758504,8.660254037844387,pass,False,True,False,(3c)1002,Dixon_only
+1075,77,5,alfalfa,xrf,ca,possessive,knife mill (2mm),,47.0,3,28166.666666666668,1823.001188516709,6.472193568698375,pass,False,False,True,(3c)591a,3xSD_only
+1077,77,5,alfalfa,xrf,ba,possessive,knife mill (2mm),,47.0,3,26.0,5.5677643628300215,21.414478318577007,pass,True,False,False,(3c)2527,RSD_only
+1080,77,5,alfalfa,xrf,u,possessive,knife mill (2mm),,47.0,3,20.0,1.7320508075688772,8.660254037844387,pass,False,True,False,(3c)8474,Dixon_only
+1083,77,5,alfalfa,xrf,mo,possessive,knife mill (2mm),,47.0,3,9.0,3.0,33.33333333333333,pass,True,False,False,(3c)499c,RSD_only
+1094,81,27,rice straw,xrf,sr,possessive,knife mill (2mm),,47.0,3,31.33333333333333,2.309401076758504,7.370428968378202,pass,False,True,False,(42)e4b6,Dixon_only
+1095,81,27,rice straw,xrf,mo,possessive,knife mill (2mm),,47.0,3,11.0,1.7320508075688772,15.745916432444336,pass,False,True,False,(42)6055,Dixon_only
+1109,81,27,rice straw,xrf,rb,possessive,knife mill (2mm),,47.0,3,45.66666666666666,1.1547005383792517,2.528541324918069,pass,False,True,False,(42)fd60,Dixon_only
+1113,81,27,rice straw,xrf,as,possessive,knife mill (2mm),,47.0,3,7.333333333333333,0.5773502691896258,7.872958216222171,pass,False,True,False,(42)ae01,Dixon_only
+1119,125,26,spent oak chips,xrf,k,rigging,oven dry + knife mill (2mm),,47.0,3,28800.0,5629.387178015028,19.546483256996623,pass,False,True,True,(48)06c7,Dixon_and_3xSD
+1121,125,26,spent oak chips,xrf,cu,rigging,oven dry + knife mill (2mm),,47.0,3,9.333333333333334,0.5773502691896257,6.1858957413174185,pass,False,True,False,(48)0a1a,Dixon_only
+1122,125,26,spent oak chips,xrf,ce,rigging,oven dry + knife mill (2mm),,47.0,3,52.0,10.583005244258365,20.351933162035312,pass,True,False,False,(48)0a9f,RSD_only
+1124,125,26,spent oak chips,xrf,mo,rigging,oven dry + knife mill (2mm),,47.0,2,5.0,1.4142135623730951,28.284271247461906,pass,True,,False,,RSD_only
+1125,125,26,spent oak chips,xrf,rb,rigging,oven dry + knife mill (2mm),,47.0,3,19.33333333333333,1.1547005383792517,5.972588991616818,pass,False,True,False,(48)1f4d,Dixon_only
+1130,125,26,spent oak chips,xrf,sr,rigging,oven dry + knife mill (2mm),,47.0,3,5.333333333333333,0.5773502691896258,10.825317547305485,pass,False,True,False,(48)a73d,Dixon_only
+1132,125,26,spent oak chips,xrf,ca,rigging,oven dry + knife mill (2mm),,47.0,3,1610.0,199.24858845171275,12.375688723708866,pass,False,True,False,(48)68fb,Dixon_only
+1135,145,35,almond branches,xrf,ba,humorous,knife mill (2mm),,47.0,3,34.666666666666664,8.082903768654761,23.3160685634272,pass,True,True,False,(4c)44cd,RSD_and_Dixon
+1136,145,35,almond branches,xrf,s,humorous,knife mill (2mm),,47.0,3,783.6666666666666,25.69695182961071,3.27906658821064,pass,False,True,False,(4c)d431,Dixon_only
+1138,145,35,almond branches,xrf,th,humorous,knife mill (2mm),,47.0,3,51.0,1.7320508075688772,3.396178054056622,pass,False,True,False,(4c)f943,Dixon_only
+1140,145,35,almond branches,xrf,zn,humorous,knife mill (2mm),,47.0,3,34.333333333333336,4.618802153517007,13.452821806360213,pass,False,True,False,(4c)3298,Dixon_only
+1153,145,35,almond branches,xrf,sr,humorous,knife mill (2mm),,47.0,3,101.66666666666669,0.5773502691896257,0.5678855106783204,pass,False,True,False,(4c)dbea,Dixon_only
+1236,80,20,wheat straw,xrf,mg,possessive,knife mill (2mm),,47.0,3,8400.0,718.9575787207476,8.559018794294616,pass,False,True,False,(62)82c1,Dixon_only
+1242,80,20,wheat straw,xrf,mn,possessive,knife mill (2mm),,47.0,3,87.33333333333333,17.47378989610821,20.00815636958956,pass,True,False,False,(62)5479,RSD_only
+1243,152,10,cotton stem mix,xrf,mn,schooner,knife mill (2mm),,47.0,3,53.0,12.489995996796797,23.566030182635465,pass,True,False,False,(62)55f5,RSD_only
+1244,152,10,cotton stem mix,xrf,mg,schooner,knife mill (2mm),,47.0,3,9750.0,2279.495558232128,23.37944162289362,pass,True,False,False,(62)4f6a,RSD_only
+1247,152,10,cotton stem mix,xrf,k,schooner,knife mill (2mm),,47.0,3,19933.33333333333,57.735026918962575,0.2896406032723875,pass,False,True,False,(62)a275,Dixon_only
+1250,80,20,wheat straw,xrf,pb,possessive,knife mill (2mm),,47.0,3,5.333333333333333,1.1547005383792517,21.65063509461097,pass,True,True,False,(62)6c63,RSD_and_Dixon
+1257,80,20,wheat straw,xrf,zn,possessive,knife mill (2mm),,47.0,3,19.666666666666668,4.041451884327381,20.549755344037525,pass,True,False,False,(62)56ec,RSD_only
+1259,152,10,cotton stem mix,xrf,u,schooner,knife mill (2mm),,47.0,3,22.0,1.7320508075688772,7.872958216222169,pass,False,True,False,(62)fdc0,Dixon_only
+1261,80,20,wheat straw,xrf,sr,possessive,knife mill (2mm),,47.0,3,18.33333333333333,1.1547005383792517,6.298366572977736,pass,False,True,False,(62)6a74,Dixon_only
+1262,152,10,cotton stem mix,xrf,ba,schooner,knife mill (2mm),,47.0,3,24.666666666666668,5.859465277082315,23.75458896114452,pass,True,False,False,(62)d9c3,RSD_only
+1264,152,10,cotton stem mix,xrf,rb,schooner,knife mill (2mm),,47.0,3,17.666666666666668,0.5773502691896258,3.268020391639391,pass,False,True,False,(62)fb45,Dixon_only
+1268,80,20,wheat straw,xrf,fe,possessive,knife mill (2mm),,47.0,3,382.3333333333333,23.96525262402492,6.268156745603728,pass,False,True,False,(62)b482,Dixon_only
+1271,80,20,wheat straw,xrf,u,possessive,knife mill (2mm),,47.0,3,21.33333333333333,2.309401076758504,10.825317547305485,pass,False,True,False,(62)b4b7,Dixon_only
+1277,123,26,spent oak chips,xrf,u,rigging,oven dry + knife mill (2mm),,47.0,3,20.666666666666668,1.1547005383792517,5.587260669577023,pass,False,True,False,(65)0179,Dixon_only
+1278,117,23,grape pomace,xrf,u,rigging,oven dry + knife mill (2mm),,47.0,3,12.666666666666666,0.5773502691896257,4.5580284409707295,pass,False,True,False,(65)efe3,Dixon_only
+1280,117,23,grape pomace,xrf,pr,rigging,oven dry + knife mill (2mm),,47.0,2,100.5,31.81980515339464,31.66149766506929,pass,True,,False,,RSD_only
+1292,123,26,spent oak chips,xrf,la,rigging,oven dry + knife mill (2mm),,47.0,2,38.0,8.48528137423857,22.329687826943605,pass,True,,False,,RSD_only
+1294,123,26,spent oak chips,xrf,cu,rigging,oven dry + knife mill (2mm),,47.0,3,9.0,2.6457513110645907,29.397236789606563,pass,True,False,False,(65)3505,RSD_only
+1295,117,23,grape pomace,xrf,th,rigging,oven dry + knife mill (2mm),,47.0,3,36.0,1.7320508075688772,4.811252243246881,pass,False,True,False,(65)3cab,Dixon_only
+1296,117,23,grape pomace,xrf,mo,rigging,oven dry + knife mill (2mm),,47.0,3,5.333333333333333,1.5275252316519463,28.641098093474,pass,True,False,False,(65)53d6,RSD_only
+1300,117,23,grape pomace,xrf,k,rigging,oven dry + knife mill (2mm),,47.0,3,16433.333333333332,404.145188432738,2.459301349489278,pass,False,True,False,(65)999c,Dixon_only
+1301,123,26,spent oak chips,xrf,ba,rigging,oven dry + knife mill (2mm),,47.0,3,22.666666666666668,2.886751345948129,12.735667702712334,pass,False,True,False,(65)5d26,Dixon_only
+1305,117,23,grape pomace,xrf,ce,rigging,oven dry + knife mill (2mm),,47.0,2,59.5,16.263455967290593,27.333539440824527,pass,True,,False,,RSD_only
+1310,123,26,spent oak chips,xrf,rb,rigging,oven dry + knife mill (2mm),,47.0,3,7.666666666666667,0.5773502691896258,7.530655685082076,pass,False,True,False,(65)7c35,Dixon_only
+1311,117,23,grape pomace,xrf,cu,rigging,oven dry + knife mill (2mm),,47.0,3,18.33333333333333,0.5773502691896258,3.1491832864888685,"fail,pass",False,True,False,(65)b893,Dixon_only
+1313,117,23,grape pomace,xrf,sr,rigging,oven dry + knife mill (2mm),,47.0,3,45.66666666666666,0.5773502691896258,1.2642706624590347,pass,False,True,False,(65)9b52,Dixon_only
+1320,147,31,almond shells,xrf,k,humorous,knife mill (2mm),,47.0,3,21766.666666666668,57.735026918962575,0.2652451466414819,pass,False,True,False,(71)7936,Dixon_only
+1324,147,31,almond shells,xrf,ba,humorous,knife mill (2mm),,47.0,2,28.5,7.7781745930520225,27.29184067737552,pass,True,,False,,RSD_only
+1326,147,31,almond shells,xrf,la,humorous,knife mill (2mm),,47.0,3,43.0,3.4641016151377544,8.05605026776222,pass,False,True,False,(71)e011,Dixon_only
+1329,147,31,almond shells,xrf,pr,humorous,knife mill (2mm),,47.0,3,93.33333333333331,19.65536398374076,21.05931855400795,pass,True,False,False,(71)cc2a,RSD_only
+1331,147,31,almond shells,xrf,u,humorous,knife mill (2mm),,47.0,3,11.666666666666666,0.5773502691896257,4.948716593053935,pass,False,True,False,(71)dd2f,Dixon_only
+1335,147,31,almond shells,xrf,sr,humorous,knife mill (2mm),,47.0,3,16.666666666666668,0.5773502691896258,3.4641016151377544,pass,False,True,False,(71)ac33,Dixon_only
+1336,147,31,almond shells,xrf,rb,humorous,knife mill (2mm),,47.0,3,21.666666666666668,0.5773502691896258,2.664693550105965,pass,False,True,False,(71)aba8,Dixon_only
+1339,84,30,peach pomace,xrf,mo,rushes,oven dry + knife mill (2mm),,47.0,3,5.333333333333333,0.5773502691896258,10.825317547305485,pass,False,True,False,(78)7dd7,Dixon_only
+1340,84,30,peach pomace,xrf,rb,rushes,oven dry + knife mill (2mm),,47.0,3,40.333333333333336,0.5773502691896258,1.4314469484040309,pass,False,True,False,(78)08ef,Dixon_only
+1342,84,30,peach pomace,xrf,u,rushes,oven dry + knife mill (2mm),,47.0,3,11.666666666666666,0.5773502691896257,4.948716593053935,pass,False,True,False,(78)0f6e,Dixon_only
+1343,84,30,peach pomace,xrf,cu,rushes,oven dry + knife mill (2mm),,47.0,3,21.666666666666668,1.1547005383792517,5.32938710021193,pass,False,True,False,(78)1254,Dixon_only
+1347,84,30,peach pomace,xrf,ca,rushes,oven dry + knife mill (2mm),,47.0,3,3376.6666666666665,23.09401076758503,0.6839292428702378,pass,False,True,False,(78)2aac,Dixon_only
+1348,84,30,peach pomace,xrf,al,rushes,oven dry + knife mill (2mm),,47.0,3,2003.3333333333333,577.0904030854554,28.80650930543038,pass,True,False,False,(78)494a,RSD_only
+1353,84,30,peach pomace,xrf,sr,rushes,oven dry + knife mill (2mm),,47.0,3,19.666666666666668,0.5773502691896258,2.9356793348625043,pass,False,True,False,(78)9049,Dixon_only
+1356,84,30,peach pomace,xrf,mg,rushes,oven dry + knife mill (2mm),,47.0,2,5010.0,1781.9090885900998,35.5670476764491,pass,True,,False,,RSD_only
+1360,150,35,almond branches,xrf,ba,capstan,knife mill (2mm),,47.0,3,33.666666666666664,8.144527815247077,24.19166677796162,pass,True,False,False,(7e)292a,RSD_only
+1366,150,35,almond branches,xrf,sr,capstan,knife mill (2mm),,47.0,3,83.66666666666667,1.1547005383792517,1.3801201653935278,pass,False,True,False,(7e)e852,Dixon_only
+1370,150,35,almond branches,xrf,u,capstan,knife mill (2mm),,47.0,3,18.33333333333333,0.5773502691896258,3.1491832864888685,pass,False,True,False,(7e)5d7f,Dixon_only
+1372,150,35,almond branches,xrf,zn,capstan,knife mill (2mm),,47.0,3,1130.0,20.0,1.7699115044247788,pass,False,False,True,(7e)71cd,3xSD_only
+1383,107,23,grape pomace,xrf,zn,boatswain,oven dry + knife mill (2mm),,47.0,3,19.33333333333333,0.5773502691896258,2.98629449580841,pass,False,True,False,(82)68e4,Dixon_only
+1389,107,23,grape pomace,xrf,u,boatswain,oven dry + knife mill (2mm),,47.0,3,13.333333333333334,0.5773502691896257,4.330127018922193,pass,False,True,False,(82)8ff1,Dixon_only
+1392,107,23,grape pomace,xrf,th,boatswain,oven dry + knife mill (2mm),,47.0,3,45.66666666666666,2.309401076758503,5.057082649836138,pass,False,True,False,(82)e136,Dixon_only
+1393,107,23,grape pomace,xrf,mn,boatswain,oven dry + knife mill (2mm),,47.0,3,34.0,1.7320508075688772,5.094267081084933,pass,False,True,False,(82)928f,Dixon_only
+1396,107,23,grape pomace,xrf,mo,boatswain,oven dry + knife mill (2mm),,47.0,2,4.5,2.1213203435596424,47.14045207910316,pass,True,,False,,RSD_only
+1398,146,25,almond hulls,xrf,pr,humorous,knife mill (2mm),,47.0,2,139.5,47.37615433949868,33.961400960214114,pass,True,,False,,RSD_only
+1402,146,25,almond hulls,xrf,cu,humorous,knife mill (2mm),,47.0,3,10.0,1.7320508075688772,17.320508075688775,pass,False,True,False,(86)4d71,Dixon_only
+1405,146,25,almond hulls,xrf,mn,humorous,knife mill (2mm),,47.0,3,42.333333333333336,4.041451884327381,9.546736734631606,pass,False,True,False,(86)1089,Dixon_only
+1417,146,25,almond hulls,xrf,sr,humorous,knife mill (2mm),,47.0,3,21.33333333333333,1.1547005383792517,5.412658773652741,pass,False,True,False,(86)741c,Dixon_only
+1419,146,25,almond hulls,xrf,zn,humorous,knife mill (2mm),,47.0,3,15.666666666666666,0.5773502691896257,3.6852144841891006,pass,False,True,False,(86)3ec5,Dixon_only
+1420,146,25,almond hulls,xrf,u,humorous,knife mill (2mm),,47.0,3,10.333333333333334,0.5773502691896257,5.587260669577023,pass,False,True,False,(86)8dad,Dixon_only
+1458,135,34,grape stem,xrf,ba,rigging,oven dry + knife mill (2mm),,47.0,3,38.66666666666666,8.32666399786453,21.5344758565462,pass,True,False,False,(87)3bed,RSD_only
+1459,135,34,grape stem,xrf,rb,rigging,oven dry + knife mill (2mm),,47.0,3,33.666666666666664,0.5773502691896258,1.714901789672156,pass,False,True,False,(87)d7e5,Dixon_only
+1463,135,34,grape stem,xrf,th,rigging,oven dry + knife mill (2mm),,47.0,3,32.666666666666664,2.8867513459481287,8.836993916167742,pass,False,True,False,(87)f6d3,Dixon_only
+1464,135,34,grape stem,xrf,cu,rigging,oven dry + knife mill (2mm),,47.0,3,22.0,1.7320508075688772,7.872958216222169,pass,False,True,False,(87)2fc0,Dixon_only
+1469,135,34,grape stem,xrf,ca,rigging,oven dry + knife mill (2mm),,47.0,3,8053.333333333333,245.4248017893329,3.047493399701981,pass,False,True,False,(87)c584,Dixon_only
+1477,85,36,peach screening waste,xrf,th,rushes,oven dry + knife mill (2mm),,47.0,3,54.66666666666666,0.5773502691896258,1.0561285412005352,pass,False,True,False,(8f)a6d1,Dixon_only
+1481,85,36,peach screening waste,xrf,p,rushes,oven dry + knife mill (2mm),,47.0,3,4046.6666666666665,250.06665778014727,6.179571444319952,pass,False,False,True,(8f)69f7,3xSD_only
+1483,85,36,peach screening waste,xrf,mo,rushes,oven dry + knife mill (2mm),,47.0,3,6.666666666666667,1.5275252316519463,22.9128784747792,pass,True,False,False,(8f)329a,RSD_only
+1484,85,36,peach screening waste,xrf,fe,rushes,oven dry + knife mill (2mm),,47.0,3,2790.0,17.320508075688775,0.6208067410641138,pass,False,True,False,(8f)f7a9,Dixon_only
+1485,85,36,peach screening waste,xrf,rb,rushes,oven dry + knife mill (2mm),,47.0,3,11.666666666666666,0.5773502691896257,4.948716593053935,pass,False,True,False,(8f)5993,Dixon_only
+1488,85,36,peach screening waste,xrf,cu,rushes,oven dry + knife mill (2mm),,47.0,3,45.333333333333336,4.041451884327381,8.914967391898633,pass,False,True,False,(8f)49ee,Dixon_only
+1501,158,10,cotton stem mix,xrf,rb,schooner,knife mill (2mm),,47.0,3,15.666666666666666,0.5773502691896257,3.6852144841891006,pass,False,True,False,(91)1941,Dixon_only
+1506,158,10,cotton stem mix,xrf,ce,schooner,knife mill (2mm),,47.0,3,51.0,1.7320508075688772,3.396178054056622,pass,False,True,False,(91)5b21,Dixon_only
+1512,158,10,cotton stem mix,xrf,cu,schooner,knife mill (2mm),,47.0,3,17.333333333333332,2.309401076758504,13.323467750529828,pass,False,True,False,(91)e940,Dixon_only
+1513,158,10,cotton stem mix,xrf,ca,schooner,knife mill (2mm),,47.0,3,23166.666666666668,1792.5772879665003,7.737743689064029,pass,False,False,True,(91)8197,3xSD_only
+1522,151,8,rice hulls,xrf,sr,sextant,knife mill (2mm),,47.0,3,3.6666666666666665,1.1547005383792517,31.49183286488868,pass,True,True,False,(96)0792,RSD_and_Dixon
+1526,151,8,rice hulls,xrf,si,sextant,knife mill (2mm),,47.0,3,157666.66666666666,4932.882862316247,3.128678348192123,pass,False,False,True,(96)bae6,3xSD_only
+1537,151,8,rice hulls,xrf,cu,sextant,knife mill (2mm),,47.0,3,8.666666666666666,2.516611478423583,29.037824751041345,pass,True,False,False,(96)8280,RSD_only
+1579,165,14,olive stems / leaves,xrf,k,excellent,oven dry + knife mill (2mm),,47.0,3,13833.333333333334,57.735026918962575,0.4173616403780427,pass,False,True,False,(a0)0699,Dixon_only
+1580,165,14,olive stems / leaves,xrf,fe,excellent,oven dry + knife mill (2mm),,47.0,3,208.66666666666663,0.5773502691896258,0.27668543251899,pass,False,True,False,(a0)5a5f,Dixon_only
+1581,165,14,olive stems / leaves,xrf,mn,excellent,oven dry + knife mill (2mm),,47.0,3,34.666666666666664,12.096831541082702,34.8947063685078,pass,True,False,False,(a0)e544,RSD_only
+1583,165,14,olive stems / leaves,xrf,u,excellent,oven dry + knife mill (2mm),,47.0,3,13.333333333333334,0.5773502691896257,4.330127018922193,pass,False,True,False,(a0)904b,Dixon_only
+1587,165,14,olive stems / leaves,xrf,sr,excellent,oven dry + knife mill (2mm),,47.0,3,33.666666666666664,0.5773502691896258,1.714901789672156,pass,False,True,False,(a0)ad97,Dixon_only
+1588,165,14,olive stems / leaves,xrf,p,excellent,oven dry + knife mill (2mm),,47.0,3,1540.0,17.320508075688775,1.1247083166031673,pass,False,True,False,(a0)33b6,Dixon_only
+1594,165,14,olive stems / leaves,xrf,th,excellent,oven dry + knife mill (2mm),,47.0,3,39.66666666666666,0.5773502691896258,1.4555048803099813,pass,False,True,False,(a0)a1f6,Dixon_only
+1601,143,31,almond shells,xrf,cu,tiny,knife mill (2mm),,47.0,3,13.333333333333334,0.5773502691896257,4.330127018922193,pass,False,True,False,(a2)002d,Dixon_only
+1608,143,31,almond shells,xrf,sr,tiny,knife mill (2mm),,47.0,3,23.33333333333333,0.5773502691896258,2.474358296526968,pass,False,True,False,(a2)1e71,Dixon_only
+1614,143,31,almond shells,xrf,ca,tiny,knife mill (2mm),,47.0,3,3153.333333333333,40.41451884327381,1.2816443607803532,pass,False,True,False,(a2)4986,Dixon_only
+1615,143,31,almond shells,xrf,pb,tiny,knife mill (2mm),,47.0,2,3.5,0.7071067811865476,20.203050891044217,pass,True,,False,,RSD_only
+1624,159,10,cotton stem mix,xrf,rb,schooner,knife mill (2mm),,47.0,3,22.666666666666668,0.5773502691896258,2.547133540542467,pass,False,True,False,(a4)3253,Dixon_only
+1626,159,10,cotton stem mix,xrf,k,schooner,knife mill (2mm),,47.0,3,36266.66666666666,115.47005383792516,0.3183916925678083,pass,False,True,False,(a4)4252,Dixon_only
+1628,159,10,cotton stem mix,xrf,p,schooner,knife mill (2mm),,47.0,3,1936.6666666666667,5.773502691896257,0.2981154574128876,pass,False,True,False,(a4)8a90,Dixon_only
+1632,159,10,cotton stem mix,xrf,y,schooner,knife mill (2mm),,47.0,3,8.333333333333334,1.1547005383792517,13.856406460551018,pass,False,True,False,(a4)b84a,Dixon_only
+1638,159,10,cotton stem mix,xrf,u,schooner,knife mill (2mm),,47.0,3,20.33333333333333,1.1547005383792517,5.678855106783205,pass,False,True,False,(a4)7c64,Dixon_only
+1645,162,31,almond shells,xrf,si,humorous,knife mill (2mm),,47.0,3,3596.6666666666665,28.86751345948129,0.8026185391885438,pass,False,True,False,(a5)62e9,Dixon_only
+1648,162,31,almond shells,xrf,sr,humorous,knife mill (2mm),,47.0,3,38.66666666666666,1.1547005383792517,2.98629449580841,pass,False,True,False,(a5)1efe,Dixon_only
+1658,162,31,almond shells,xrf,rb,humorous,knife mill (2mm),,47.0,3,27.33333333333333,0.5773502691896258,2.1122570824010705,pass,False,True,False,(a5)c629,Dixon_only
+1665,161,25,almond hulls,xrf,ce,humorous,knife mill (2mm),,47.0,3,57.333333333333336,13.650396819628847,23.808831662143337,pass,True,False,False,(a8)0739,RSD_only
+1667,161,25,almond hulls,xrf,cu,humorous,knife mill (2mm),,47.0,3,9.666666666666666,2.0816659994661326,21.5344758565462,pass,True,False,False,(a8)6be0,RSD_only
+1669,161,25,almond hulls,xrf,pr,humorous,knife mill (2mm),,47.0,3,89.0,26.962937525425527,30.29543542182644,pass,True,False,False,(a8)1c96,RSD_only
+1672,161,25,almond hulls,xrf,mn,humorous,knife mill (2mm),,47.0,3,34.333333333333336,0.5773502691896258,1.6816027257950266,pass,False,True,False,(a8)3708,Dixon_only
+1673,161,25,almond hulls,xrf,u,humorous,knife mill (2mm),,47.0,3,11.333333333333334,0.5773502691896257,5.094267081084933,pass,False,True,False,(a8)bba7,Dixon_only
+1675,161,25,almond hulls,xrf,ca,humorous,knife mill (2mm),,47.0,3,2646.6666666666665,40.41451884327381,1.526996933624955,pass,False,True,False,(a8)ede9,Dixon_only
+1677,161,25,almond hulls,xrf,zn,humorous,knife mill (2mm),,47.0,3,14.333333333333334,1.1547005383792517,8.05605026776222,pass,False,True,False,(a8)40df,Dixon_only
+1680,161,25,almond hulls,xrf,k,humorous,knife mill (2mm),,47.0,3,33933.333333333336,115.47005383792516,0.3402850309565574,pass,False,True,False,(a8)7443,Dixon_only
+1681,161,25,almond hulls,xrf,rb,humorous,knife mill (2mm),,47.0,3,10.666666666666666,0.5773502691896257,5.412658773652741,pass,False,True,False,(a8)8059,Dixon_only
+1685,149,25,almond hulls,xrf,p,capstan,knife mill (2mm),,47.0,3,1173.3333333333333,23.09401076758504,1.9682395540555429,pass,False,True,False,(b3)1f12,Dixon_only
+1689,149,25,almond hulls,xrf,th,capstan,knife mill (2mm),,47.0,3,39.333333333333336,4.041451884327381,10.274877672018762,pass,False,True,False,(b3)a334,Dixon_only
+1690,149,25,almond hulls,xrf,sr,capstan,knife mill (2mm),,47.0,3,21.33333333333333,0.5773502691896258,2.706329386826371,pass,False,True,False,(b3)46dd,Dixon_only
+1696,149,25,almond hulls,xrf,mn,capstan,knife mill (2mm),,47.0,3,42.66666666666666,9.073771725877467,21.26665248252532,pass,True,False,False,(b3)6547,RSD_only
+1698,149,25,almond hulls,xrf,rb,capstan,knife mill (2mm),,47.0,3,20.666666666666668,0.5773502691896258,2.793630334788512,pass,False,True,False,(b3)a785,Dixon_only
+1740,154,25,almond hulls,xrf,si,capstan,knife mill (2mm),,47.0,3,2186.6666666666665,23.09401076758503,1.056128541200535,pass,False,True,False,(b7)d340,Dixon_only
+1745,154,25,almond hulls,xrf,p,capstan,knife mill (2mm),,47.0,3,922.6666666666666,27.13546265191241,2.940982223834437,pass,False,True,False,(b7)e81c,Dixon_only
+1750,154,25,almond hulls,xrf,rb,capstan,knife mill (2mm),,47.0,3,24.33333333333333,0.5773502691896258,2.3726723391354487,pass,False,True,False,(b7)c595,Dixon_only
+1756,154,25,almond hulls,xrf,k,capstan,knife mill (2mm),,47.0,3,28666.666666666668,57.735026918962575,0.2014012566940554,pass,False,True,False,(b7)ea76,Dixon_only
+1760,79,5,alfalfa,xrf,rb,possessive,knife mill (2mm),,47.0,3,54.66666666666666,0.5773502691896258,1.0561285412005352,pass,False,True,False,(b8)06c3,Dixon_only
+1762,79,5,alfalfa,xrf,zn,possessive,knife mill (2mm),,47.0,3,45.66666666666666,1.1547005383792517,2.528541324918069,pass,False,True,False,(b8)0a91,Dixon_only
+1768,79,5,alfalfa,xrf,mo,possessive,knife mill (2mm),,47.0,2,7.0,1.4142135623730951,20.203050891044217,pass,True,,False,,RSD_only
+1769,79,5,alfalfa,xrf,k,possessive,knife mill (2mm),,47.0,3,12766.666666666666,57.735026918962575,0.452232586832605,pass,False,True,False,(b8)6c14,Dixon_only
+1770,79,5,alfalfa,xrf,u,possessive,knife mill (2mm),,47.0,3,22.666666666666668,0.5773502691896258,2.547133540542467,pass,False,True,False,(b8)3ec9,Dixon_only
+1777,79,5,alfalfa,xrf,pb,possessive,knife mill (2mm),,47.0,3,6.0,1.7320508075688772,28.867513459481287,pass,True,True,False,(b8)94d2,RSD_and_Dixon
+1780,79,5,alfalfa,xrf,mn,possessive,knife mill (2mm),,47.0,3,76.66666666666667,16.041612554021285,20.92384246176689,pass,True,False,False,(b8)deb4,RSD_only
+1783,164,32,olive pomace,xrf,s,excellent,oven dry + knife mill (2mm),,47.0,3,1843.3333333333333,11.547005383792516,0.6264198219055614,pass,False,True,False,(ba)d20c,Dixon_only
+1787,164,32,olive pomace,xrf,cu,excellent,oven dry + knife mill (2mm),,47.0,3,35.666666666666664,0.5773502691896258,1.6187390724942785,pass,False,True,False,(ba)d0cb,Dixon_only
+1788,164,32,olive pomace,xrf,mn,excellent,oven dry + knife mill (2mm),,47.0,3,38.333333333333336,9.018499505645789,23.526520449510752,pass,True,False,False,(ba)272e,RSD_only
+1789,164,32,olive pomace,xrf,u,excellent,oven dry + knife mill (2mm),,47.0,3,10.333333333333334,0.5773502691896257,5.587260669577023,pass,False,True,False,(ba)2d78,Dixon_only
+1791,164,32,olive pomace,xrf,sr,excellent,oven dry + knife mill (2mm),,47.0,3,14.666666666666666,0.5773502691896257,3.936479108111085,pass,False,True,False,(ba)b832,Dixon_only
+1793,164,32,olive pomace,xrf,pr,excellent,oven dry + knife mill (2mm),,47.0,2,99.5,24.748737341529164,24.87310285580821,pass,True,,False,,RSD_only
+1794,164,32,olive pomace,xrf,mg,excellent,oven dry + knife mill (2mm),,47.0,3,8093.333333333333,2580.8784034381265,31.88894238185494,pass,True,False,False,(ba)9588,RSD_only
+1797,164,32,olive pomace,xrf,si,excellent,oven dry + knife mill (2mm),,47.0,3,7120.0,17.320508075688775,0.2432655628607974,pass,False,True,False,(ba)8d27,Dixon_only
+1798,164,32,olive pomace,xrf,rb,excellent,oven dry + knife mill (2mm),,47.0,3,38.333333333333336,0.5773502691896258,1.5061311370164152,pass,False,True,False,(ba)a279,Dixon_only
+1799,164,32,olive pomace,xrf,ce,excellent,oven dry + knife mill (2mm),,47.0,2,67.5,20.50609665440988,30.3794024509776,pass,True,,False,,RSD_only
+1802,124,26,spent oak chips,xrf,mn,rigging,oven dry + knife mill (2mm),,47.0,3,40.0,12.529964086141668,31.32491021535417,pass,True,False,False,(bc)1c20,RSD_only
+1803,124,26,spent oak chips,xrf,pb,rigging,oven dry + knife mill (2mm),,47.0,2,3.5,0.7071067811865476,20.203050891044217,pass,True,,False,,RSD_only
+1806,124,26,spent oak chips,xrf,si,rigging,oven dry + knife mill (2mm),,47.0,3,571.6666666666666,126.17580327992104,22.071569086866656,pass,True,False,False,(bc)7210,RSD_only
+1811,124,26,spent oak chips,xrf,rb,rigging,oven dry + knife mill (2mm),,47.0,3,10.666666666666666,0.5773502691896257,5.412658773652741,pass,False,True,False,(bc)a5c5,Dixon_only
+1812,124,26,spent oak chips,xrf,sr,rigging,oven dry + knife mill (2mm),,47.0,3,3.333333333333333,1.1547005383792517,34.64101615137754,pass,True,True,False,(bc)a7af,RSD_and_Dixon
+1820,156,4,corn stover whole,xrf,nd,possessive,knife mill (2mm),,47.0,3,94.66666666666669,25.00666577801473,26.41549201902965,pass,True,False,False,(be)01e4,RSD_only
+1827,122,26,spent oak chips,xrf,cu,rigging,oven dry + knife mill (2mm),,47.0,3,8.0,2.6457513110645907,33.071891388307385,pass,True,False,False,(be)1955,RSD_only
+1828,122,26,spent oak chips,xrf,mn,rigging,oven dry + knife mill (2mm),,47.0,3,26.33333333333333,5.859465277082316,22.25113396360373,pass,True,False,False,(be)1cfe,RSD_only
+1829,156,4,corn stover whole,xrf,sr,possessive,knife mill (2mm),,47.0,3,36.66666666666666,0.5773502691896258,1.5745916432444342,pass,False,True,False,(be)7255,Dixon_only
+1835,156,4,corn stover whole,xrf,rb,possessive,knife mill (2mm),,47.0,3,22.666666666666668,0.5773502691896258,2.547133540542467,pass,False,True,False,(be)9a38,Dixon_only
+1836,122,26,spent oak chips,xrf,pr,rigging,oven dry + knife mill (2mm),,47.0,2,105.5,24.748737341529164,23.45851880713665,pass,True,,False,,RSD_only
+1837,122,26,spent oak chips,xrf,rb,rigging,oven dry + knife mill (2mm),,47.0,3,10.333333333333334,0.5773502691896257,5.587260669577023,pass,False,True,False,(be)71bd,Dixon_only
+1847,122,26,spent oak chips,xrf,ce,rigging,oven dry + knife mill (2mm),,47.0,2,74.0,18.384776310850235,24.844292311959776,pass,True,,False,,RSD_only
+1849,156,4,corn stover whole,xrf,cu,possessive,knife mill (2mm),,47.0,3,23.0,6.082762530298219,26.44679360999226,pass,True,False,False,(be)9ba2,RSD_only
+1853,122,26,spent oak chips,xrf,p,rigging,oven dry + knife mill (2mm),,47.0,3,440.6666666666667,25.69695182961071,5.831380899306515,pass,False,True,False,(be)ed67,Dixon_only
+1860,122,26,spent oak chips,xrf,sr,rigging,oven dry + knife mill (2mm),,47.0,3,5.666666666666667,0.5773502691896258,10.188534162169868,pass,False,True,False,(be)d206,Dixon_only
+1866,133,9,pistachio hulls,xrf,rb,stuntman,oven dry + knife mill (2mm),,47.0,3,16.666666666666668,0.5773502691896258,3.4641016151377544,pass,False,True,False,(c0)229f,Dixon_only
+1867,133,9,pistachio hulls,xrf,mn,stuntman,oven dry + knife mill (2mm),,47.0,3,40.333333333333336,13.05118130030126,32.35830074454858,pass,True,False,False,(c0)1893,RSD_only
+1872,133,9,pistachio hulls,xrf,zn,stuntman,oven dry + knife mill (2mm),,47.0,3,25.666666666666668,0.5773502691896258,2.2494166332063346,pass,False,True,False,(c0)2d99,Dixon_only
+1876,133,9,pistachio hulls,xrf,u,stuntman,oven dry + knife mill (2mm),,47.0,3,15.333333333333334,0.5773502691896257,3.765327842541037,pass,False,True,False,(c0)dfc4,Dixon_only
+1886,155,27,rice straw,xrf,cu,possessive,knife mill (2mm),,47.0,3,10.666666666666666,1.1547005383792517,10.825317547305485,pass,False,True,False,(ca)53a9,Dixon_only
+1888,155,27,rice straw,xrf,mg,possessive,knife mill (2mm),,47.0,2,6895.0,1407.1424945612296,20.408158006689334,pass,True,,False,,RSD_only
+1895,155,27,rice straw,xrf,sr,possessive,knife mill (2mm),,47.0,3,21.0,1.7320508075688772,8.247860988423225,pass,False,True,False,(ca)7d23,Dixon_only
+1897,155,27,rice straw,xrf,mo,possessive,knife mill (2mm),,47.0,3,31.666666666666668,1.1547005383792517,3.646422752776583,pass,False,True,False,(ca)862e,Dixon_only
+1900,155,27,rice straw,xrf,rb,possessive,knife mill (2mm),,47.0,3,4.333333333333333,0.5773502691896258,13.323467750529828,pass,False,True,False,(ca)de5b,Dixon_only
+1942,157,10,cotton stem mix,xrf,ba,schooner,knife mill (2mm),,47.0,3,27.0,13.07669683062202,48.43221048378526,pass,True,False,False,(ce)283f,RSD_only
+1943,157,10,cotton stem mix,xrf,ca,schooner,knife mill (2mm),,47.0,3,16766.666666666668,57.735026918962575,0.3443440969321823,pass,False,True,False,(ce)ea82,Dixon_only
+1951,157,10,cotton stem mix,xrf,cu,schooner,knife mill (2mm),,47.0,3,14.0,1.7320508075688772,12.371791482634835,pass,False,True,False,(ce)fa1a,Dixon_only
+1954,157,10,cotton stem mix,xrf,k,schooner,knife mill (2mm),,47.0,3,21866.666666666668,57.735026918962575,0.2640321353001337,pass,False,True,False,(ce)a9ae,Dixon_only
+1958,157,10,cotton stem mix,xrf,mg,schooner,knife mill (2mm),,47.0,2,8370.0,1810.1933598375613,21.627160810484607,pass,True,,False,,RSD_only
+2003,131,11,pistachio stems & leaves,xrf,sr,tripod,oven dry + knife mill (2mm),,47.0,3,66.0,4.358898943540674,6.604392338697991,pass,False,False,True,(d4)03db,3xSD_only
+2004,131,11,pistachio stems & leaves,xrf,rb,tripod,oven dry + knife mill (2mm),,47.0,3,51.333333333333336,1.1547005383792517,2.2494166332063346,pass,False,True,False,(d4)072e,Dixon_only
+2009,131,11,pistachio stems & leaves,xrf,ti,tripod,oven dry + knife mill (2mm),,47.0,3,224.3333333333333,53.00314456080255,23.62695894240827,pass,True,False,False,(d4)2876,RSD_only
+2010,131,11,pistachio stems & leaves,xrf,k,tripod,oven dry + knife mill (2mm),,47.0,3,29733.33333333333,115.47005383792516,0.3883521990064747,pass,False,True,False,(d4)2d2f,Dixon_only
+2011,131,11,pistachio stems & leaves,xrf,zn,tripod,oven dry + knife mill (2mm),,47.0,3,34.666666666666664,1.1547005383792517,3.330866937632457,pass,False,True,False,(d4)fecf,Dixon_only
+2012,131,11,pistachio stems & leaves,xrf,ba,tripod,oven dry + knife mill (2mm),,47.0,3,39.0,9.539392014169456,24.45997952351143,pass,True,False,False,(d4)dbe3,RSD_only
+2016,131,11,pistachio stems & leaves,xrf,ce,tripod,oven dry + knife mill (2mm),,47.0,2,70.0,29.698484809834994,42.42640687119285,pass,True,,False,,RSD_only
+2019,131,11,pistachio stems & leaves,xrf,th,tripod,oven dry + knife mill (2mm),,47.0,3,36.0,1.7320508075688772,4.811252243246881,pass,False,True,False,(d4)dd86,Dixon_only
+2022,131,11,pistachio stems & leaves,xrf,ca,tripod,oven dry + knife mill (2mm),,47.0,3,20500.0,2253.885533916929,10.99456358008258,pass,False,False,True,(d4)c26b,3xSD_only
+2024,116,23,grape pomace,xrf,u,rigging,oven dry + knife mill (2mm),,47.0,3,16.333333333333332,0.5773502691896258,3.5347975664670974,pass,False,True,False,(d6)0264,Dixon_only
+2026,116,23,grape pomace,xrf,rb,rigging,oven dry + knife mill (2mm),,47.0,3,21.33333333333333,0.5773502691896258,2.706329386826371,pass,False,True,False,(d6)3037,Dixon_only
+2027,116,23,grape pomace,xrf,sr,rigging,oven dry + knife mill (2mm),,47.0,3,38.66666666666666,1.1547005383792517,2.98629449580841,pass,False,True,False,(d6)cdec,Dixon_only
+2031,116,23,grape pomace,xrf,cu,rigging,oven dry + knife mill (2mm),,47.0,3,18.0,4.0,22.22222222222222,pass,True,False,False,(d6)cabd,RSD_only
+2042,82,20,wheat straw,xrf,rb,wardrobe,knife mill (2mm),,47.0,3,54.66666666666666,3.785938897200183,6.925497982683261,pass,False,False,True,(da)0531,3xSD_only
+2043,153,3,pistachio shells,xrf,ca,tripod,knife mill (2mm),,47.0,3,553.6666666666666,328.80135847245725,59.386157460407695,pass,True,True,False,(da)99ec,RSD_and_Dixon
+2045,153,3,pistachio shells,xrf,cu,tripod,knife mill (2mm),,47.0,3,5.666666666666667,0.5773502691896258,10.188534162169868,pass,False,True,False,(da)3a75,Dixon_only
+2047,82,20,wheat straw,xrf,th,wardrobe,knife mill (2mm),,47.0,3,75.0,3.4641016151377544,4.618802153517006,pass,False,True,False,(da)caca,Dixon_only
+2048,153,3,pistachio shells,xrf,ce,tripod,knife mill (2mm),,47.0,2,61.5,14.849242404917495,24.145109601491864,pass,True,,False,,RSD_only
+2053,82,20,wheat straw,xrf,cu,wardrobe,knife mill (2mm),,47.0,3,12.666666666666666,1.1547005383792517,9.116056881941462,pass,False,True,False,(da)c60a,Dixon_only
+2055,82,20,wheat straw,xrf,u,wardrobe,knife mill (2mm),,47.0,3,22.33333333333333,1.1547005383792517,5.170300918116052,pass,False,True,False,(da)7146,Dixon_only
+2057,82,20,wheat straw,xrf,ca,wardrobe,knife mill (2mm),,47.0,3,6040.0,233.88031127053,3.872190583949172,pass,False,True,False,(da)3776,Dixon_only
+2059,153,3,pistachio shells,xrf,s,tripod,knife mill (2mm),,47.0,3,1353.0,1781.4261141007223,131.66490126391147,pass,True,True,True,(da)6931,all_three
+2061,82,20,wheat straw,xrf,si,wardrobe,knife mill (2mm),,47.0,3,63900.0,3724.244889907215,5.828239264330539,pass,False,False,True,(da)d588,3xSD_only
+2062,82,20,wheat straw,xrf,k,wardrobe,knife mill (2mm),,47.0,3,39100.0,519.6152422706632,1.3289392385438958,pass,False,True,False,(da)eb64,Dixon_only
+2066,153,3,pistachio shells,xrf,mo,tripod,knife mill (2mm),,47.0,2,5.0,1.4142135623730951,28.284271247461906,pass,True,,False,,RSD_only
+2067,153,3,pistachio shells,xrf,si,tripod,knife mill (2mm),,47.0,3,624.0,285.243755409299,45.71214028995176,pass,True,False,False,(da)59ab,RSD_only
+2068,153,3,pistachio shells,xrf,rb,tripod,knife mill (2mm),,47.0,3,2.0,1.0,50.0,pass,True,False,False,(da)6516,RSD_only
+2073,153,3,pistachio shells,xrf,k,tripod,knife mill (2mm),,47.0,3,3062.6666666666665,1978.636230673373,64.60501406203875,pass,True,True,False,(da)766d,RSD_and_Dixon
+2078,153,3,pistachio shells,xrf,u,tripod,knife mill (2mm),,47.0,3,13.333333333333334,0.5773502691896257,4.330127018922193,pass,False,True,False,(da)b707,Dixon_only
+2086,78,5,alfalfa,xrf,mo,possessive,knife mill (2mm),,47.0,3,8.333333333333334,3.055050463303893,36.66060555964671,pass,True,False,False,(ed)057d,RSD_only
+2089,109,23,grape pomace,xrf,la,,oven dry + knife mill (2mm),,47.0,2,53.0,12.727922061357855,24.01494728558086,pass,True,,False,,RSD_only
+2090,78,5,alfalfa,xrf,sr,possessive,knife mill (2mm),,47.0,3,108.33333333333331,2.8867513459481287,2.664693550105965,pass,False,True,False,(ed)ec76,Dixon_only
+2095,109,23,grape pomace,xrf,mo,,oven dry + knife mill (2mm),,47.0,2,5.5,2.1213203435596424,38.5694607919935,pass,True,,False,,RSD_only
+2097,109,23,grape pomace,xrf,u,,oven dry + knife mill (2mm),,47.0,3,13.333333333333334,0.5773502691896257,4.330127018922193,pass,False,True,False,(ed)2185,Dixon_only
+2098,78,5,alfalfa,xrf,cu,possessive,knife mill (2mm),,47.0,3,22.0,1.7320508075688772,7.872958216222169,pass,False,True,False,(ed)8974,Dixon_only
+2109,109,23,grape pomace,xrf,cu,,oven dry + knife mill (2mm),,47.0,3,23.33333333333333,1.1547005383792517,4.948716593053935,pass,False,True,False,(ed)49b0,Dixon_only
+2113,78,5,alfalfa,xrf,rb,possessive,knife mill (2mm),,47.0,3,55.333333333333336,0.5773502691896258,1.0434041009451067,pass,False,True,False,(ed)9e36,Dixon_only
+2118,109,23,grape pomace,xrf,pr,,oven dry + knife mill (2mm),,47.0,2,86.0,19.79898987322333,23.022081247934107,pass,True,,False,,RSD_only
+2126,132,9,pistachio hulls,xrf,mn,tripod,oven dry + knife mill (2mm),,47.0,3,33.333333333333336,8.082903768654761,24.24871130596428,pass,True,False,False,(f2)3976,RSD_only
+2128,132,9,pistachio hulls,xrf,u,tripod,oven dry + knife mill (2mm),,47.0,3,5.666666666666667,0.5773502691896258,10.188534162169868,pass,False,True,False,(f2)15c2,Dixon_only
+2129,132,9,pistachio hulls,xrf,cu,tripod,oven dry + knife mill (2mm),,47.0,3,14.333333333333334,5.033222956847166,35.1155090012593,pass,True,False,False,(f2)7fa0,RSD_only
+2131,132,9,pistachio hulls,xrf,zn,tripod,oven dry + knife mill (2mm),,47.0,3,22.666666666666668,1.1547005383792517,5.094267081084933,pass,False,True,False,(f2)85e3,Dixon_only
+2132,132,9,pistachio hulls,xrf,rb,tripod,oven dry + knife mill (2mm),,47.0,3,150.66666666666666,0.5773502691896258,0.3831970813205481,pass,False,True,False,(f2)fbfd,Dixon_only
+2133,132,9,pistachio hulls,xrf,ba,tripod,oven dry + knife mill (2mm),,47.0,3,39.0,9.539392014169456,24.45997952351143,pass,True,False,False,(f2)c584,RSD_only
+2136,132,9,pistachio hulls,xrf,th,tripod,oven dry + knife mill (2mm),,47.0,3,12.666666666666666,1.1547005383792517,9.116056881941462,pass,False,True,False,(f2)6bb5,Dixon_only
+2152,83,55,peach seeds,xrf,cu,rushes,oven dry + knife mill (2mm),,47.0,3,12.333333333333334,0.5773502691896257,4.681218398834803,pass,False,True,False,(f6)f791,Dixon_only
+2158,83,55,peach seeds,xrf,u,rushes,oven dry + knife mill (2mm),,47.0,3,13.333333333333334,1.1547005383792517,8.660254037844387,"fail,pass",False,True,False,(f6)9bb6,Dixon_only
+2170,86,16,peach stems / leaves,xrf,y,rushes,oven dry + knife mill (2mm),,47.0,3,8.0,2.0,25.0,pass,True,False,False,(f7)815b,RSD_only
+2173,86,16,peach stems / leaves,xrf,ti,rushes,oven dry + knife mill (2mm),,47.0,2,289.5,71.4177848998413,24.66935575124052,pass,True,,False,,RSD_only
+2174,86,16,peach stems / leaves,xrf,al,rushes,oven dry + knife mill (2mm),,47.0,3,2006.6666666666667,552.2982286168708,27.52316753904672,pass,True,False,False,(f7)8919,RSD_only
+2176,86,16,peach stems / leaves,xrf,sr,rushes,oven dry + knife mill (2mm),,47.0,3,216.3333333333333,4.932882862316247,2.2802232029196827,pass,False,False,True,(f7)5f04,3xSD_only
+2178,86,16,peach stems / leaves,xrf,fe,rushes,oven dry + knife mill (2mm),,47.0,3,1656.6666666666667,223.6813209307682,13.501890599442747,pass,False,False,True,(f7)6772,3xSD_only
+2180,86,16,peach stems / leaves,xrf,zn,rushes,oven dry + knife mill (2mm),,47.0,3,86.0,3.4641016151377544,4.02802513388111,pass,False,True,False,(f7)796e,Dixon_only
+2185,50,25,almond hulls,icp,na,tiny,,,43.0,2,-131.3,135.34023791910522,103.07710427959267,fail,True,,False,,RSD_only
+2201,52,7,sargassum,icp,al,hairpin,,,43.0,2,124.5,31.81980515339464,25.558076428429427,pass,True,,False,,RSD_only
+2206,52,7,sargassum,icp,p,hairpin,,,43.0,2,869.5,198.69700551341987,22.851869524257605,pass,True,,False,,RSD_only
+2220,70,31,almond shells,icp,p,humorous,,,43.0,2,569.0,172.5340546095176,30.322329456857226,pass,True,,False,,RSD_only
+2223,70,31,almond shells,icp,al,humorous,,,43.0,2,46.5,35.35533905932738,76.03298722435994,pass,True,,False,,RSD_only
+2250,71,25,almond hulls,icp,cu,humorous,,,43.0,2,7.5,4.949747468305833,65.99663291074444,pass,True,,False,,RSD_only
+2251,71,25,almond hulls,icp,nd,humorous,,,43.0,2,7.5,4.949747468305833,65.99663291074444,pass,True,,False,,RSD_only
+2262,71,25,almond hulls,icp,p,humorous,,,43.0,2,951.5,252.43712088359743,26.530438348249863,pass,True,,False,,RSD_only
+2275,56,33,sweet potato culls,icp,al,tackle,,,43.0,2,12.5,2.545584412271572,20.36467529817257,pass,True,,False,,RSD_only
+2280,56,33,sweet potato culls,icp,p,tackle,,,43.0,2,2735.0,700.035713374682,25.595455699257112,pass,True,,False,,RSD_only
+2317,64,23,grape pomace,icp,cu,ebony,,,43.0,2,9.0,2.8284271247461903,31.42696805273545,pass,True,,False,,RSD_only
+2336,49,31,almond shells,icp,cu,tiny,,,43.0,2,9.0,2.8284271247461903,31.42696805273545,pass,True,,False,,RSD_only
+2352,59,37,tomato pomace,icp,si,oakleaf,,,43.0,2,8.5,2.1213203435596424,24.956709924231088,pass,True,,False,,RSD_only
+2353,59,37,tomato pomace,icp,zn,oakleaf,,,43.0,2,37.0,8.48528137423857,22.93319290334749,pass,True,,False,,RSD_only
+2362,59,37,tomato pomace,icp,fe,oakleaf,,,43.0,2,11.95,2.757716446627536,23.07712507638105,pass,True,,False,,RSD_only
+2367,48,25,almond hulls,icp,na,vibrant,,,43.0,2,-133.8,121.9052090765608,91.11002173136085,fail,True,,False,,RSD_only
+2368,48,25,almond hulls,icp,al,vibrant,,,43.0,2,13.0,2.8284271247461903,21.757131728816848,pass,True,,False,,RSD_only
+2369,48,25,almond hulls,icp,fe,vibrant,,,43.0,2,12.65,2.757716446627536,21.8001300128659,pass,True,,False,,RSD_only
+2372,48,25,almond hulls,icp,s,vibrant,,,43.0,2,203.0,43.840620433565945,21.596364745598983,pass,True,,False,,RSD_only
+2374,48,25,almond hulls,icp,si,vibrant,,,43.0,2,14.5,4.949747468305833,34.13618943659195,pass,True,,False,,RSD_only
+2380,48,25,almond hulls,icp,nd,vibrant,,,43.0,2,5.5,2.1213203435596424,38.5694607919935,pass,True,,False,,RSD_only
+2386,47,31,almond shells,icp,mn,vibrant,,,43.0,2,9.0,2.8284271247461903,31.42696805273545,pass,True,,False,,RSD_only
+2393,47,31,almond shells,icp,ti,vibrant,,,43.0,2,2.0,2.8284271247461903,141.4213562373095,pass,True,,False,,RSD_only
+2397,55,22,walnut tree sticks,icp,na,energetic,,,43.0,2,9.0,2.8284271247461903,31.42696805273545,pass,True,,False,,RSD_only
+2399,55,22,walnut tree sticks,icp,p,energetic,,,43.0,2,453.5,112.42997820866104,24.79161592252724,pass,True,,False,,RSD_only
+2403,55,22,walnut tree sticks,icp,zn,energetic,,,43.0,2,9.0,2.8284271247461903,31.42696805273545,pass,True,,False,,RSD_only
+2405,55,22,walnut tree sticks,icp,si,energetic,,,43.0,2,10.5,4.949747468305833,47.14045207910317,pass,True,,False,,RSD_only
+2433,60,37,tomato pomace,icp,si,pinecrest,,,43.0,2,13.0,2.8284271247461903,21.757131728816848,pass,True,,False,,RSD_only
+2445,61,37,tomato pomace,icp,nd,riverstone,,,43.0,2,1.84,2.602152954766495,141.4213562373095,pass,True,,False,,RSD_only
+2465,51,15,almond shells and hulls mix,icp,ti,tiny,,,43.0,2,1.795,2.5385133444597057,141.4213562373095,pass,True,,False,,RSD_only
+2487,51,15,almond shells and hulls mix,icp,na,tiny,,,43.0,2,-98.5,144.95689014324225,147.16435547537284,"fail,pass",True,,False,,RSD_only
+2488,51,15,almond shells and hulls mix,icp,nd,tiny,,,43.0,2,8.99,2.559726547895303,28.473042801949976,pass,True,,False,,RSD_only
+2511,57,19,walnut shells,icp,p,energetic,,,43.0,2,204.5,43.1335136523794,21.09218271509995,pass,True,,False,,RSD_only
+2521,72,35,almond branches,icp,s,humorous,,,43.0,2,269.5,61.518289963229634,22.826823734036967,pass,True,,False,,RSD_only
+2523,72,35,almond branches,icp,ti,humorous,,,43.0,2,2.0,2.8284271247461903,141.4213562373095,pass,True,,False,,RSD_only
+2537,63,34,grape stem,icp,al,maplewood,,,43.0,2,9.15,2.4748737341529163,27.04780037325592,pass,True,,False,,RSD_only
+2547,63,34,grape stem,icp,fe,maplewood,,,43.0,2,31.0,7.071067811865476,22.809896167307983,pass,True,,False,,RSD_only
+2565,54,12,almond woodchips,icp,cu,popular,,,43.0,2,7.19,5.105310960166873,71.0057157185935,pass,True,,False,,RSD_only
+2571,54,12,almond woodchips,icp,ti,popular,,,43.0,2,1.79,2.53144227664784,141.42135623730948,pass,True,,False,,RSD_only
+2577,29,6,unused oak stick,icp,ti,maplewood,,,43.0,2,9.0,7.071067811865476,78.56742013183862,pass,True,,False,,RSD_only
+2578,29,6,unused oak stick,icp,na,maplewood,,,43.0,2,-10.45,71.34707422172265,682.7471217389727,"fail,pass",True,,False,,RSD_only
+2579,29,6,unused oak stick,icp,cu,maplewood,,,43.0,2,11.0,9.899494936611664,89.9954085146515,pass,True,,False,,RSD_only
+2580,29,6,unused oak stick,icp,fe,maplewood,,,43.0,2,1227.15,1715.2289191242085,139.7733707471954,pass,True,,True,,RSD_and_3xSD
+2581,29,6,unused oak stick,icp,s,maplewood,,,43.0,2,615.0,742.4621202458749,120.72554800745934,pass,True,,True,,RSD_and_3xSD
+2582,29,6,unused oak stick,icp,k,maplewood,,,43.0,2,8838.0,11825.65380856382,133.80463689255285,pass,True,,True,,RSD_and_3xSD
+2583,29,6,unused oak stick,icp,mg,maplewood,,,43.0,2,603.58,843.4652528705614,139.74373784263253,pass,True,,True,,RSD_and_3xSD
+2584,29,6,unused oak stick,icp,ca,maplewood,,,43.0,2,6600.5,8908.838336169312,134.9721738681814,pass,True,,True,,RSD_and_3xSD
+2585,29,6,unused oak stick,icp,zn,maplewood,,,43.0,2,10.75,15.202795795510772,141.4213562373095,pass,True,,False,,RSD_only
+2586,29,6,unused oak stick,icp,p,maplewood,,,43.0,2,369.4,471.7816444076645,127.71565901669317,pass,True,,False,,RSD_only
+2587,29,6,unused oak stick,icp,nd,maplewood,,,43.0,2,12.6,17.819090885900998,141.4213562373095,pass,True,,True,,RSD_and_3xSD
+2589,29,6,unused oak stick,icp,mn,maplewood,,,43.0,2,57.35,51.40666299226201,89.6367271007184,pass,True,,True,,RSD_and_3xSD
+2590,29,6,unused oak stick,icp,al,maplewood,,,43.0,2,232.5,323.1477990022522,138.98830064613,pass,True,,True,,RSD_and_3xSD
+2596,27,26,spent oak chips,icp,al,maplewood,,,43.0,2,7.195,5.098239892355008,70.85809440382221,pass,True,,False,,RSD_only
+2600,27,26,spent oak chips,icp,na,maplewood,,,43.0,2,-141.5,129.4005409571382,91.44914555274784,fail,True,,False,,RSD_only
+2630,53,35,almond branches,icp,s,vibrant,,,43.0,2,367.5,96.873629022557,26.360171162600547,pass,True,,False,,RSD_only
+2650,58,13,walnut hulls,icp,p,energetic,,,43.0,2,777.0,189.5046173579948,24.389268643242566,pass,True,,False,,RSD_only
+2668,22,1,spent yeast,icp,si,maplewood,,,43.0,2,9.0,2.8284271247461903,31.42696805273545,pass,True,,False,,RSD_only
+2674,22,1,spent yeast,icp,cu,maplewood,,,43.0,2,18.25,5.444722215136417,29.83409432951461,pass,True,,False,,RSD_only
+2676,62,23,grape pomace,icp,ti,maplewood,,,43.0,2,1.85,2.616295090390226,141.4213562373095,pass,True,,False,,RSD_only
+2680,62,23,grape pomace,icp,fe,maplewood,,,42.0,2,287.0,127.27922061357856,44.34816049253608,pass,True,,False,,RSD_only
+2697,62,23,grape pomace,icp,na,maplewood,,,43.0,2,-138.0,117.37972567696688,85.05777222968615,"fail,pass",True,,False,,RSD_only
+2701,62,23,grape pomace,icp,fe,maplewood,,,43.0,2,9.0,2.8284271247461903,31.42696805273545,pass,True,,False,,RSD_only

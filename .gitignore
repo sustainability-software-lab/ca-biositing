@@ -54,6 +54,7 @@ data/landiq/*.sbx
 !resources/assets/*.csv
 !data/static/*.csv
 !audit/references/*.csv
+!audit/outliers/**/*.csv
 *.pdf
 src/ca_biositing/webservice/ca_biositing/webservice/_version.py
 
