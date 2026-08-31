@@ -1,57 +1,3 @@
-## Addendum — rerun after `RSD_percent` sign-bug fix
-
-`01_build_replicate_summary.py`'s `RSD_percent = (sd / mean) * 100.0`
-computation was fixed to `(sd / abs(mean)) * 100.0` (see
-[`STEP6_FINDINGS.md`](STEP6_FINDINGS.md) addendum for full rationale). This
-step (`08_compare_candidate_rules.py`) was rerun end-to-end against the
-corrected `replicate_group_summary.csv`. Only `icp/na`'s 13 negative-mean
-replicate groups are affected; all other combinations are numerically
-unchanged.
-
-### Headline deltas (before → after)
-
-| Metric | Before | After |
-|---|---:|---:|
-| `rsd_gt_10` flagged (all 2712 groups) | 400 | 407 |
-| `rsd_gt_20` flagged (all 2712 groups) | 171 | 177 |
-| `RSD20_only` (3-way overlap) | 134 | 140 |
-| `flagged_by_any` (3-way overlap) | 421 | 427 |
-| `flagged_by_none` (3-way overlap) | 2291 | 2285 |
-| `icp` `n_RSD_gt_20` (by-analysis-type) | 56 | 62 |
-| `icp` `percent_RSD_gt_20` (by-analysis-type) | 15.5% | 17.2% |
-
-Dixon (`dixon_flag_0_05`) and 3×SD (`flag_3xSD`) counts are **unchanged**
-(246 and 51 respectively) — neither of those methods depends on the sign
-of `RSD_percent`, so they are correctly insensitive to this fix.
-
-### `icp/na` in detail
-
-| Metric | Before (sign-bug) | After (fixed) |
-|---|---:|---:|
-| `median_RSD` | negative/misleading (signed mean in denominator) | **8.32%** |
-| `percent_RSD_gt_10` | (distorted by sign) | **42.9%** |
-| `percent_RSD_gt_20` | (distorted by sign) | **33.3%** |
-| `P90_RSD` / `P95_RSD` | (distorted by sign) | **103.1%** / **147.2%** |
-
-All 13 `icp/na` negative-mean replicate groups now report a properly
-non-negative `RSD_percent` (magnitude-based, per the standard RSD
-definition), which is what drove `icp`'s overall `percent_RSD_gt_20` up
-from 15.5% to 17.2% in the by-analysis-type roll-up above — several
-groups' RSD magnitudes were already >20% but were previously being
-reported with a negative sign that the `rsd_gt_20` boolean comparison
-(`RSD_percent > 20`) could never satisfy regardless of magnitude.
-
-This rerun did not change any `flag_3xSD` or `dixon_flag_0_05` values, so
-§3 "Overlap / disagreement" and §5 "Method semantics" interpretations
-below remain valid as originally written; only the specific overlap counts
-in the §3 table (now 140/427/2285 instead of 134/421/2291) and the `icp`
-row of the §4 by-analysis-type table (now 62/17.2% instead of 56/15.5%)
-should be read from the updated numbers above rather than the original
-table text below, which is preserved unmodified as the historical
-pre-fix record.
-
----
-
 # Step 8 Findings — Candidate-Rule Comparison
 
 Produced by [`08_compare_candidate_rules.py`](08_compare_candidate_rules.py),
@@ -68,14 +14,24 @@ method × experiment_id` technical replicate group) and writing:
 - [`outputs/replicate_group_3xSD_flags.csv`](outputs/replicate_group_3xSD_flags.csv)
   — 2712 rows, traceability copy of the new 3×SD flag per replicate group
 
-`outputs/replicate_group_summary.csv` itself was **not modified** — the
-3×SD flag is computed on an in-memory copy only, per this step's explicit
-guardrail.
+`outputs/replicate_group_summary.csv` itself was **not modified by this
+step** — the 3×SD flag is computed on an in-memory copy only, per this
+step's explicit guardrail. (`replicate_group_summary.csv`'s `RSD_percent`
+column was corrected upstream, in Step 1 — see note below.)
 
 All figures below are pulled directly from these four CSVs (no invented
 statistics). Per the project's guardrails, every number below describes a
 **statistical flag rate**, not a judgment that flagged replicate groups
 contain bad data.
+
+**Note on the `RSD_percent` computation:** [`01_build_replicate_summary.py`](01_build_replicate_summary.py:151)
+computes `RSD_percent = (sd / abs(mean)) * 100.0` (absolute value of the
+mean in the denominator), consistent with the standard convention that RSD
+is a non-negative dispersion measure. This affects only the 13 `icp/na`
+replicate groups that have a negative `mean` (a legitimate outcome of
+background/blank subtraction upstream, 0.48% of all 2712 groups); all
+other combinations are unaffected. All numbers in this document reflect
+that corrected computation.
 
 ---
 
@@ -85,13 +41,13 @@ Across all 2712 replicate groups:
 
 | Screen | Flagged | % of all 2712 groups | % of groups the screen could evaluate |
 |---|---:|---:|---:|
-| RSD > 10% | 400 | 14.7% | 20.5% (of 1955 RSD-defined) |
-| RSD > 20% | 171 | 6.3% | 8.7% (of 1955 RSD-defined) |
+| RSD > 10% | 407 | 15.0% | 20.8% (of 1955 RSD-defined) |
+| RSD > 20% | 177 | 6.5% | 9.1% (of 1955 RSD-defined) |
 | Dixon (α=0.05) | 246 | 9.1% | 17.0% (of 1447 Dixon-applicable) |
 | 3×SD (pooled, exploratory) | 51 | 1.9% | 2.6% (of 1966 3×SD-applicable) |
 
-RSD > 10% produces by far the largest raw backlog (400 groups), followed by
-Dixon (246), RSD > 20% (171), and 3×SD (51 — the smallest by a wide margin).
+RSD > 10% produces by far the largest raw backlog (407 groups), followed by
+Dixon (246), RSD > 20% (177), and 3×SD (51 — the smallest by a wide margin).
 
 ---
 
@@ -146,15 +102,15 @@ Dixon-not-applicable is *not* the same as Dixon evaluating it and saying
 
 | Category | Count | % of 2712 |
 |---|---:|---:|
-| RSD20 only | 134 | 4.9% |
+| RSD20 only | 140 | 5.2% |
 | Dixon only | 224 | 8.3% |
 | 3×SD only | 23 | 0.8% |
 | RSD20 + Dixon (not 3×SD) | 12 | 0.4% |
 | RSD20 + 3×SD (not Dixon) | 18 | 0.7% |
 | Dixon + 3×SD (not RSD20) | 3 | 0.1% |
 | All three | 7 | 0.3% |
-| **Flagged by any** | **421** | **15.5%** |
-| Flagged by none | 2291 | 84.5% |
+| **Flagged by any** | **427** | **15.7%** |
+| Flagged by none | 2285 | 84.3% |
 
 **Interpretation:**
 
@@ -167,15 +123,15 @@ Dixon-not-applicable is *not* the same as Dixon evaluating it and saying
   value within an otherwise low-spread group, a pattern RSD (which reflects
   overall group spread) and 3×SD (an absolute, cross-group threshold) will
   not necessarily also catch.
-- **RSD20-only (134 groups, 4.9%)** is the second-largest single-method
+- **RSD20-only (140 groups, 5.2%)** is the second-largest single-method
   category, suggesting a meaningful share of high-relative-spread groups
   have no single standout extreme value (so Dixon does not fire) and are
   not far enough on an absolute scale to trip 3×SD.
 - **3×SD-only (23 groups, 0.8%)** is small and adds comparatively little
   unique signal beyond RSD/Dixon in this dataset — most of what it flags
   (28 of 51 total 3×SD flags) overlaps with RSD20 and/or Dixon.
-- Only **15.5% of all 2712 groups (421)** are flagged by at least one of the
-  three methods; the large majority (84.5%) are not flagged by any of the
+- Only **15.7% of all 2712 groups (427)** are flagged by at least one of the
+  three methods; the large majority (84.3%) are not flagged by any of the
   three main review candidates.
 
 ---
@@ -187,7 +143,7 @@ Dixon-not-applicable is *not* the same as Dixon evaluating it and saying
 | analysis_type | n_replicate_groups | RSD>20 flagged (%) | Dixon flagged (%) | 3×SD flagged (%) |
 |---|---:|---:|---:|---:|
 | xrf | 1315 | 82 (10.5%) | 172 (26.1%) | 16 (2.1%) |
-| icp | 518 | 56 (15.5%) | 0 (n/a — 0 applicable) | 8 (2.2%) |
+| icp | 518 | 62 (17.2%) | 0 (n/a — 0 applicable) | 8 (2.2%) |
 | proximate | 460 | 10 (2.3%) | 41 (9.3%) | 15 (3.4%) |
 | compositional | 352 | 23 (6.6%) | 33 (9.7%) | 12 (3.4%) |
 | ultimate | 57 | 0 (0.0%) | 0 (n/a) | 0 (0.0%) |
@@ -195,10 +151,26 @@ Dixon-not-applicable is *not* the same as Dixon evaluating it and saying
 
 `xrf` is both the largest analytical family (1315 of 2712 groups, 48.5%)
 and contributes the majority of the raw Dixon backlog (172 of 246 total
-Dixon flags, 69.9%) and a substantial share of RSD>20 flags (82 of 171,
-48.0%). `icp` has the highest RSD>20 flag *rate* (15.5% of its RSD-defined
-groups) despite zero Dixon applicability. `ultimate` and `xrd` contribute
-essentially no flags across all three methods in this dataset.
+Dixon flags, 69.9%) and a substantial share of RSD>20 flags (82 of 177,
+46.3%). `icp` has the highest RSD>20 flag *rate* (17.2% of its RSD-defined
+groups) despite zero Dixon applicability — all 13 `icp/na` negative-mean
+replicate groups now report a properly non-negative `RSD_percent`
+(magnitude-based), which is what drives `icp`'s `RSD>20` count to 62
+groups: several of those groups' RSD magnitudes were already above 20% but
+could never satisfy the `RSD_percent > 20` boolean comparison while
+reported with a negative sign. `ultimate` and `xrd` contribute essentially
+no flags across all three methods in this dataset.
+
+### `icp / na` in detail
+
+The 13 negative-mean replicate groups in this combination now report:
+
+| Metric | Value |
+|---|---:|
+| `median_RSD` | 8.32% |
+| `percent_RSD_gt_10` | 42.9% |
+| `percent_RSD_gt_20` | 33.3% |
+| `P90_RSD` / `P95_RSD` | 103.1% / 147.2% |
 
 ### Top individual `analysis_type × parameter` combinations by flag rate
 
@@ -210,7 +182,7 @@ essentially no flags across all three methods in this dataset.
 | icp | ti | 14 | 42.9% |
 | xrf | mo | 21 | 42.9% |
 | xrf | ce | 23 | 39.1% |
-| xrf | mg | 17 | 29.4% |
+| icp | na | 21 | 33.3% |
 
 **Highest Dixon flag rate** (among combinations with ≥5 Dixon-applicable groups):
 
@@ -235,6 +207,9 @@ essentially no flags across all three methods in this dataset.
 The `xrf` analytical family dominates both the top RSD>20 and top Dixon
 flag-rate lists, reinforcing the by-analysis-type finding that `xrf`
 carries a disproportionate share of the review backlog for both methods.
+Dixon and 3×SD flag rates are unaffected by the RSD sign fix (Dixon and
+3×SD do not depend on the sign of `RSD_percent`), so their top-5 lists
+above are numerically identical to any earlier run.
 
 ---
 
@@ -273,18 +248,17 @@ The 3×SD comparator implemented in this step is **exploratory only** and is
 **not** being proposed as a production QC threshold. It was computed purely
 to give a third, absolute-scale point of comparison against RSD and Dixon.
 
-This framing is directly supported by Step 6A
-(`06a_build_precision_model_diagnostics.py` /
-[`STEP6_FINDINGS.md`](STEP6_FINDINGS.md)): across the comprehensive
-precision-model screen of all 74 `analysis_type × parameter` combinations,
-**zero** combinations were classified as `approx_constant_absolute_SD`. In
-other words, Step 6A found no strong empirical evidence in this dataset that
-an absolute-SD-based precision model — the exact assumption a 3×SD-style
-threshold rests on — is the "right" precision model for essentially any
-parameter examined. The 3×SD comparator retained here is included purely
-for exploratory comparison against RSD/Dixon in this Step 8 table, not
-because Step 6A's classification endorsed absolute-SD thresholds as
-appropriate for this data.
+Step 6A (`06a_build_precision_model_diagnostics.py` /
+[`STEP6_FINDINGS.md`](STEP6_FINDINGS.md)) now finds 5 of 74 combinations
+classified as `approx_constant_absolute_SD`
+(`compositional/xylan`, `compositional/xylose`, `icp/si`, `xrf/k`,
+`proximate/volatile solids`) — a small minority, giving only limited
+empirical support for an absolute-SD-based precision model, the exact
+assumption a 3×SD-style threshold rests on, and only for those specific
+parameters. The 3×SD comparator retained here remains included purely for
+exploratory comparison against RSD/Dixon in this Step 8 table, not as an
+endorsement of absolute-SD thresholds as broadly appropriate for this
+dataset.
 
 ---
 

@@ -10,58 +10,83 @@ before the comprehensive 74-row screen existed. This script instead selects
 a SMALL, DELIBERATE set of 4 representative examples (one per non-trivial
 precision_model_category: approx_constant_absolute_SD,
 approx_constant_relative_RSD, concentration_dependent_mixed, unclear) by
-reviewing the actual 74-row table, and renders 2 plots per example (mean vs
-SD, mean vs RSD) = 8 PNGs total. See the completion report for the full
-selection reasoning; short version reproduced here for anyone reading only
+reviewing the actual 74-row table, and renders ONE combined figure per
+example (mean vs SD on the left, mean vs RSD on the right, side by side) =
+4 PNGs total. Selections below reflect the CURRENT `classify_precision_model()`
+logic (Spearman-corroborated stability categories, no blanket R^2 gate) and
+the corrected `RSD_percent` computation (abs(mean) denominator) — see
+`STEP6_FINDINGS.md` for the full history of that redesign. Short version of
+the current selection reasoning, reproduced here for anyone reading only
 this file:
 
-  1. approx_constant_absolute_SD -> xrf / sr
-     ZERO of the 74 combinations were actually classified into this
-     category by 06a's heuristic (R^2 >= 0.3 AND |slope| <= 0.3). Per this
-     task's instructions, we relax the R^2 threshold to >= 0.2 for
-     BROWSING PURPOSES ONLY (not to relabel anything) and pick the
-     candidate with the smallest |loglog_slope| among those. That is
-     xrf/sr: loglog_slope=0.294, loglog_r_squared=0.258, n=39 usable
-     log-log points. Its ACTUAL precision_model_category in the CSV is
-     "unclear" (R^2 of 0.258 is just under the 0.3 clear-fit bar). This
-     pick is explicitly NON-QUALIFYING and is labeled as such in its plot
-     titles and in the printed validation summary below — it is presented
-     as "closest available candidate", never as a clean positive example.
+  1. approx_constant_absolute_SD -> proximate / volatile solids
+     One of 5 combinations now genuinely classified into this category
+     (previously 0, before the classifier redesign). Largest
+     n_points_usable_for_loglog (115) of any row in the entire 74-row
+     table, with loglog_slope=-0.091 and loglog_r_squared=0.006 (log-log
+     fit itself is negligible, consistent with "no real trend to fit") and
+     spearman_mean_vs_SD=-0.289 (small magnitude, corroborating "no
+     concentration-dependence" independent of the noisy log-log fit) — a
+     well-populated, genuine positive example, not a placeholder.
 
   2. approx_constant_relative_RSD -> icp / ca
-     Highest loglog_r_squared (0.886) among the 10 rows actually
-     classified as approx_constant_relative_RSD, with a decent n=30
-     usable log-log points (not the smallest-n option in the category).
+     Highest loglog_r_squared (0.886) among the 13 rows classified as
+     approx_constant_relative_RSD, with a decent n=30 usable log-log
+     points (not the smallest-n option in the category). Unchanged by the
+     classifier redesign.
 
   3. concentration_dependent_mixed -> xrf / zn
-     Among the 13 rows in this category, slope=0.529 sits cleanly in the
-     0.4-0.6 "real relationship but not close to 0 or 1" band requested by
-     this task, with decent R^2=0.438 and the largest n (41) of any
-     candidate in that slope band.
+     Among the 20 rows in this category, slope=0.529 sits cleanly in the
+     0.4-0.6 "real relationship but not close to 0 or 1" band, with decent
+     R^2=0.438 and the largest n (41) of any candidate in that slope band.
+     Unchanged by the classifier redesign.
 
-  4. unclear -> proximate / volatile solids
-     Largest n_points_usable_for_loglog (115) of any row in the ENTIRE
-     74-row table, with essentially no log-log fit (R^2=0.006, slope close
-     to 0 by coincidence but not a good fit) -- a genuinely "many points,
-     no clean relationship" control case, not "unclear due to low n".
+  4. unclear -> proximate / total solids
+     Largest n_points_usable_for_loglog (115) of any row remaining in the
+     (now much smaller, 10-row) unclear category, with loglog_r_squared
+     =0.085 (weak log-log fit) and loglog_slope=-0.696 (not close to 0 or
+     1) — a genuinely ambiguous case, not a low-n artifact. (The prior
+     pick, proximate/volatile solids, reclassified into
+     approx_constant_absolute_SD under the redesigned classifier and now
+     serves that category instead — see #1 above.)
 
 This step does NOT recompute or re-derive any precision-model statistics.
 Every category/slope/R^2 value shown comes as-is from
 `precision_model_diagnostics.csv`; this script only visualizes the
 underlying `replicate_group_summary.csv` rows for the 4 selected
-combinations and annotates each plot with that pre-computed classification
-for visual sanity-checking.
+combinations and annotates each figure with that pre-computed
+classification for visual sanity-checking.
+
+OUTPUT FORMAT: one PNG per selected combination (not one per metric). Each
+PNG contains TWO side-by-side subplots (mean vs replicate SD on the left,
+mean vs replicate RSD on the right) so both views can be visually compared
+directly. The PROPOSED `precision_model_category` is displayed as the
+most visually prominent line of the figure's top-level title (large,
+bold) AND is embedded in the output filename (e.g.
+`proximate_volatile_solids_approx_constant_absolute_SD.png`), so the
+proposed categorization is immediately visible both when looking at the
+image and when browsing the output directory. Every plotted point is also
+checked against simple high-leverage thresholds (RSD_percent > 20, or
+standard_deviation > 2x that combination's own median SD); qualifying
+points are annotated directly on the plot with their `replicate_group_id`
+so a reviewer can go straight from "that point looks high" to the exact
+replicate group / sample / resource / experiment to pull up in
+`replicate_group_summary.csv`.
 
 Guardrails honored:
 - Does NOT modify replicate_group_summary.csv, precision_model_diagnostics.csv,
   method_parameter_summary.csv, or any earlier script.
 - Does NOT introduce new statistical claims -- titles only restate values
-  already present in precision_model_diagnostics.csv.
+  already present in precision_model_diagnostics.csv; high-leverage-point
+  labeling is a visual aid only (replicate_group_id), not a new flag/status
+  column written anywhere.
 - NaN standard_deviation / RSD_percent points (singleton replicate groups)
   are never silently dropped -- their count is explicitly reported in each
-  plot's caption and in the printed validation summary.
+  subplot's caption and in the printed validation summary.
 - resource_type color-coding uses a legend only when there are <=15
-  distinct values present in the plotted subset; above that cutoff we
+  distinct values present in the plotted subset (evaluated independently
+  per subplot, since the SD-defined and RSD-defined subsets of a
+  combination's replicate groups can differ); above that cutoff we
   document the fallback to a single, uncolored marker style.
 
 Usage:
@@ -100,10 +125,10 @@ import matplotlib.pyplot as plt
 # Color-coding cutoff (documented per task Step 4 requirement).
 # ---------------------------------------------------------------------------
 # If more than this many distinct resource_type values are present in a
-# given plot's plotted (non-NaN) subset, per-category coloring becomes
+# given subplot's plotted (non-NaN) subset, per-category coloring becomes
 # visually unreadable (too many legend entries / indistinguishable colors),
 # so we fall back to a single, uncolored marker style and note this in the
-# subtitle instead of forcing an unreadable 16+-color legend.
+# subplot's caption instead of forcing an unreadable 16+-color legend.
 MAX_DISTINCT_RESOURCE_TYPES_FOR_LEGEND = 15
 
 # ---------------------------------------------------------------------------
@@ -111,44 +136,32 @@ MAX_DISTINCT_RESOURCE_TYPES_FOR_LEGEND = 15
 # ---------------------------------------------------------------------------
 SELECTED_COMBINATIONS = [
     {
-        "analysis_type": "xrf",
-        "parameter": "sr",
-        "role_label": "approx_constant_absolute_SD -- CLOSEST AVAILABLE, NON-QUALIFYING",
-        "non_qualifying_note": (
-            "NON-QUALIFYING PICK: this combination's actual precision_model_category "
-            "is 'unclear', not 'approx_constant_absolute_SD'. Zero of the 74 "
-            "combinations met the real categorization bar (R2>=0.3 & |slope|<=0.3) "
-            "for approx_constant_absolute_SD. This is the closest available "
-            "candidate (smallest |slope| among rows with R2>=0.2, threshold relaxed "
-            "for browsing only) -- it does NOT meet the R2>=0.3 & |slope|<=0.3 "
-            "threshold for that category."
-        ),
+        "analysis_type": "proximate",
+        "parameter": "volatile solids",
+        "role_label": "approx_constant_absolute_SD -- best of 5 (largest n, genuinely qualifying)",
     },
     {
         "analysis_type": "icp",
         "parameter": "ca",
-        "role_label": "approx_constant_relative_RSD -- best of 10 (highest R2)",
-        "non_qualifying_note": None,
+        "role_label": "approx_constant_relative_RSD -- best of 13 (highest R2)",
     },
     {
         "analysis_type": "xrf",
         "parameter": "zn",
         "role_label": "concentration_dependent_mixed -- representative (slope in 0.4-0.6 band)",
-        "non_qualifying_note": None,
     },
     {
         "analysis_type": "proximate",
-        "parameter": "volatile solids",
-        "role_label": "unclear -- representative (largest n in table, genuinely no fit)",
-        "non_qualifying_note": None,
+        "parameter": "total solids",
+        "role_label": "unclear -- representative (largest n in category, genuinely no fit)",
     },
 ]
 
 
 def sanitize_for_filename(value: str) -> str:
     """Replace filesystem-unsafe characters (spaces, slashes, etc.) with
-    underscores so parameter names like "volatile solids" or "lignin+"
-    become safe path components.
+    underscores so parameter names like "volatile solids" or category
+    labels like "approx_constant_absolute_SD" become safe path components.
     """
     return re.sub(r"[^A-Za-z0-9_.-]+", "_", str(value).strip())
 
@@ -192,45 +205,29 @@ def format_stat(value: float, decimals: int = 3) -> str:
     return f"{value:.{decimals}f}"
 
 
-def build_title_lines(
-    analysis_type: str,
-    parameter: str,
+def build_subplot_caption(
     metric_label: str,
-    diag_row: pd.Series,
-    non_qualifying_note: str | None,
     n_plotted: int,
     n_excluded_nan: int,
     n_distinct_resource_types: int,
     color_coded: bool,
+    n_high_leverage: int,
 ) -> str:
-    """Build the full multi-line title/caption text for one plot, per task
-    Step 2/3/4/5 requirements: states category/slope/R^2, flags
-    non-qualifying picks, notes NaN-excluded count, and notes
-    resource_type cardinality / color-coding decision.
+    """Build the per-subplot caption text: NaN-excluded count,
+    resource_type color-coding decision, and high-leverage-point label
+    count. The category/slope/R^2 line lives in the figure-level suptitle
+    instead (see build_suptitle), since it is shared by both subplots.
     """
-    category = diag_row["precision_model_category"]
-    slope_str = format_stat(diag_row["loglog_slope"])
-    r2_str = format_stat(diag_row["loglog_r_squared"])
-
     lines = [
-        f"{analysis_type} / {parameter} -- mean vs {metric_label}",
+        f"mean vs {metric_label}",
         (
-            f"Comprehensive screen classified this as {category} "
-            f"(slope={slope_str}, R\u00b2={r2_str}) -- visual check."
+            f"{n_plotted} points plotted; {n_excluded_nan} singleton/NaN-{metric_label} "
+            "group(s) excluded."
         ),
     ]
-
-    if non_qualifying_note:
-        lines.append(non_qualifying_note)
-
-    lines.append(
-        f"{n_plotted} points plotted; {n_excluded_nan} singleton/NaN-{metric_label} "
-        "group(s) excluded from this view."
-    )
-
     if color_coded:
         lines.append(
-            f"Points colored by resource_type ({n_distinct_resource_types} distinct values, legend shown)."
+            f"Colored by resource_type ({n_distinct_resource_types} distinct values, legend shown)."
         )
     else:
         lines.append(
@@ -238,26 +235,58 @@ def build_title_lines(
             f"exceeds the {MAX_DISTINCT_RESOURCE_TYPES_FOR_LEGEND}-category legend cutoff "
             "-- single-color fallback used."
         )
-
+    lines.append(
+        f"{n_high_leverage} high-leverage point(s) labeled with replicate_group_id "
+        f"(RSD>{HIGH_LEVERAGE_RSD_THRESHOLD}% or SD>{HIGH_LEVERAGE_SD_MEDIAN_MULTIPLIER}x median SD)."
+    )
     return "\n".join(lines)
 
 
-def make_scatter_plot(
+def build_suptitle_lines(analysis_type: str, parameter: str, diag_row: pd.Series) -> tuple[str, str, str]:
+    """Build the three figure-level title lines, returned separately so
+    each can be rendered with its own font size/weight:
+      1. combination name (small)
+      2. "PROPOSED precision_model_category: {category}" (large, bold --
+         the primary, most prominent line per task requirement)
+      3. underlying slope/R^2 diagnostics + non-validated-cutoff caveat (small)
+    """
+    category = diag_row["precision_model_category"]
+    slope_str = format_stat(diag_row["loglog_slope"])
+    r2_str = format_stat(diag_row["loglog_r_squared"])
+    line1 = f"{analysis_type} / {parameter}"
+    line2 = f"PROPOSED precision_model_category: {category}"
+    line3 = (
+        f"(loglog_slope={slope_str}, loglog_r\u00b2={r2_str}) -- visual check, "
+        "not a validated statistical cutoff"
+    )
+    return line1, line2, line3
+
+
+# High-leverage-point labeling thresholds (per STEP6_FINDINGS.md future-work
+# item, now implemented here): a point is annotated with its
+# `replicate_group_id` when EITHER of these holds, so a reviewer can go
+# directly from "that point looks high" to the exact replicate group /
+# sample / resource / experiment to pull up, without cross-referencing
+# replicate_group_summary.csv by eye.
+HIGH_LEVERAGE_RSD_THRESHOLD = 20  # RSD_percent > 20
+HIGH_LEVERAGE_SD_MEDIAN_MULTIPLIER = 2  # standard_deviation > 2 x per-combination median SD
+
+
+def plot_one_subplot(
+    ax: plt.Axes,
     combo_df: pd.DataFrame,
     metric_col: str,
     metric_label: str,
-    analysis_type: str,
-    parameter: str,
-    diag_row: pd.Series,
-    non_qualifying_note: str | None,
-    output_path: str,
 ) -> dict:
-    """Build one scatter plot (mean on x-axis, `metric_col` on y-axis) for
-    one selected combination, color-coded by resource_type (with legend
-    fallback per MAX_DISTINCT_RESOURCE_TYPES_FOR_LEGEND), and save it to
-    `output_path`. Returns a small dict of validation-summary stats.
+    """Draw one mean-vs-metric scatter into the given Axes, color-coded by
+    resource_type (with legend fallback per
+    MAX_DISTINCT_RESOURCE_TYPES_FOR_LEGEND). High-leverage points (per
+    HIGH_LEVERAGE_* thresholds, evaluated over the FULL combo_df so the
+    per-combination median SD is not biased by this subplot's own NaN
+    filtering) are annotated with their `replicate_group_id`. Returns a
+    small dict of validation-summary stats for this subplot.
     """
-    # --- Explicit NaN handling (Step 5 / guardrail: never silently drop) ---
+    # --- Explicit NaN handling (guardrail: never silently drop) ---
     # mean is essentially always defined per replicate group; the metric
     # column (SD or RSD_percent) is undefined for singleton replicate
     # groups (n_replicates == 1) or, for RSD, near-zero-mean groups.
@@ -266,13 +295,25 @@ def make_scatter_plot(
     plot_df = combo_df.loc[~is_metric_nan].copy()
     n_plotted = len(plot_df)
 
+    # --- High-leverage point flags (computed on the full combo_df's
+    # standard_deviation, i.e. this combination's own SD distribution
+    # across ALL its replicate groups, not just this subplot's plotted
+    # subset -- .median() skips NaN automatically). ---
+    median_sd = combo_df["standard_deviation"].median()
+    is_high_rsd = plot_df["RSD_percent"] > HIGH_LEVERAGE_RSD_THRESHOLD
+    is_high_sd = (
+        plot_df["standard_deviation"] > HIGH_LEVERAGE_SD_MEDIAN_MULTIPLIER * median_sd
+        if pd.notna(median_sd)
+        else pd.Series(False, index=plot_df.index)
+    )
+    is_high_leverage = (is_high_rsd.fillna(False)) | (is_high_sd.fillna(False))
+    n_high_leverage = int(is_high_leverage.sum())
+
     # --- resource_type color-coding decision ---
     resource_types = plot_df["resource_type"].fillna("(missing resource_type)")
     distinct_resource_types = sorted(resource_types.unique().tolist())
     n_distinct = len(distinct_resource_types)
     color_coded = n_distinct <= MAX_DISTINCT_RESOURCE_TYPES_FOR_LEGEND
-
-    fig, ax = plt.subplots(figsize=(9, 7))
 
     if color_coded and n_distinct > 0:
         cmap = cm.get_cmap("tab20", max(n_distinct, 1))
@@ -291,8 +332,8 @@ def make_scatter_plot(
             )
         ax.legend(
             title="resource_type",
-            fontsize=7,
-            title_fontsize=8,
+            fontsize=6.5,
+            title_fontsize=7.5,
             loc="best",
             ncol=1 if n_distinct <= 8 else 2,
             framealpha=0.9,
@@ -308,33 +349,70 @@ def make_scatter_plot(
             s=45,
         )
 
+    # --- Annotate high-leverage points with their replicate_group_id ---
+    for _, row in plot_df.loc[is_high_leverage].iterrows():
+        ax.annotate(
+            str(int(row["replicate_group_id"])),
+            (row["mean"], row[metric_col]),
+            xytext=(4, 4),
+            textcoords="offset points",
+            fontsize=7,
+            fontweight="bold",
+            color="#c0392b",
+        )
+
     ax.set_xlabel("sample mean")
     ax.set_ylabel(metric_label)
 
-    title_text = build_title_lines(
-        analysis_type=analysis_type,
-        parameter=parameter,
+    caption = build_subplot_caption(
         metric_label=metric_label,
-        diag_row=diag_row,
-        non_qualifying_note=non_qualifying_note,
         n_plotted=n_plotted,
         n_excluded_nan=n_excluded_nan,
         n_distinct_resource_types=n_distinct,
         color_coded=color_coded,
+        n_high_leverage=n_high_leverage,
     )
-    ax.set_title(title_text, fontsize=9, loc="left", wrap=True)
-
-    fig.tight_layout()
-    fig.savefig(output_path, dpi=150)
-    plt.close(fig)
+    ax.set_title(caption, fontsize=8, loc="left", wrap=True)
 
     return {
-        "output_path": output_path,
         "n_plotted": n_plotted,
         "n_excluded_nan": n_excluded_nan,
         "n_distinct_resource_types": n_distinct,
         "color_coded": color_coded,
+        "n_high_leverage": n_high_leverage,
     }
+
+
+def make_combined_plot(
+    combo_df: pd.DataFrame,
+    analysis_type: str,
+    parameter: str,
+    diag_row: pd.Series,
+    output_path: str,
+) -> dict:
+    """Build ONE figure with two side-by-side subplots (mean vs SD on the
+    left, mean vs RSD on the right) for one selected combination, and save
+    it to `output_path`. Returns a dict of validation-summary stats for
+    both subplots.
+    """
+    fig, (ax_sd, ax_rsd) = plt.subplots(1, 2, figsize=(16, 7.5))
+
+    sd_stats = plot_one_subplot(ax_sd, combo_df, "standard_deviation", "replicate SD")
+    rsd_stats = plot_one_subplot(ax_rsd, combo_df, "RSD_percent", "replicate RSD (%)")
+
+    # Three-line figure title, each line rendered independently via
+    # fig.text() so the "PROPOSED precision_model_category" line can be
+    # made visually dominant (larger + bold) relative to the other two.
+    line1, line2, line3 = build_suptitle_lines(analysis_type, parameter, diag_row)
+    fig.text(0.5, 0.975, line1, ha="center", fontsize=11, fontweight="normal")
+    fig.text(0.5, 0.945, line2, ha="center", fontsize=15, fontweight="bold")
+    fig.text(0.5, 0.915, line3, ha="center", fontsize=9, fontweight="normal", style="italic")
+
+    fig.tight_layout(rect=(0, 0, 1, 0.88))
+    fig.savefig(output_path, dpi=150)
+    plt.close(fig)
+
+    return {"output_path": output_path, "sd": sd_stats, "rsd": rsd_stats}
 
 
 def main() -> None:
@@ -348,9 +426,9 @@ def main() -> None:
         analysis_type = combo["analysis_type"]
         parameter = combo["parameter"]
         role_label = combo["role_label"]
-        non_qualifying_note = combo["non_qualifying_note"]
 
         diag_row = get_diagnostics_row(diagnostics_df, analysis_type, parameter)
+        category = diag_row["precision_model_category"]
 
         combo_df = replicate_df[
             (replicate_df["analysis_type"] == analysis_type)
@@ -365,43 +443,31 @@ def main() -> None:
 
         safe_analysis_type = sanitize_for_filename(analysis_type)
         safe_parameter = sanitize_for_filename(parameter)
+        safe_category = sanitize_for_filename(category)
 
-        sd_path = os.path.join(
-            PLOTS_DIR, f"{safe_analysis_type}_{safe_parameter}_mean_vs_SD.png"
-        )
-        rsd_path = os.path.join(
-            PLOTS_DIR, f"{safe_analysis_type}_{safe_parameter}_mean_vs_RSD.png"
+        # Category is embedded directly in the filename (per task
+        # requirement), so the proposed categorization is visible when
+        # browsing the output directory without opening each image.
+        output_path = os.path.join(
+            PLOTS_DIR, f"{safe_analysis_type}_{safe_parameter}_{safe_category}.png"
         )
 
-        sd_stats = make_scatter_plot(
+        combined_stats = make_combined_plot(
             combo_df=combo_df,
-            metric_col="standard_deviation",
-            metric_label="replicate SD",
             analysis_type=analysis_type,
             parameter=parameter,
             diag_row=diag_row,
-            non_qualifying_note=non_qualifying_note,
-            output_path=sd_path,
-        )
-        rsd_stats = make_scatter_plot(
-            combo_df=combo_df,
-            metric_col="RSD_percent",
-            metric_label="replicate RSD (%)",
-            analysis_type=analysis_type,
-            parameter=parameter,
-            diag_row=diag_row,
-            non_qualifying_note=non_qualifying_note,
-            output_path=rsd_path,
+            output_path=output_path,
         )
 
         validation_summary.append(
             {
                 "analysis_type": analysis_type,
                 "parameter": parameter,
+                "category": category,
                 "role_label": role_label,
                 "n_replicate_groups_total": len(combo_df),
-                "sd_plot": sd_stats,
-                "rsd_plot": rsd_stats,
+                "combined_stats": combined_stats,
             }
         )
 
@@ -411,18 +477,24 @@ def main() -> None:
     print("=" * 78)
     n_pngs = 0
     for entry in validation_summary:
-        print(f"\n{entry['analysis_type']} / {entry['parameter']}  ({entry['role_label']})")
+        print(
+            f"\n{entry['analysis_type']} / {entry['parameter']}  "
+            f"({entry['role_label']})"
+        )
         print(f"  total replicate groups: {entry['n_replicate_groups_total']}")
-        for plot_key, human_label in (("sd_plot", "mean vs SD"), ("rsd_plot", "mean vs RSD")):
-            stats = entry[plot_key]
-            n_pngs += 1
+        stats = entry["combined_stats"]
+        n_pngs += 1
+        for side_key, human_label in (("sd", "mean vs SD"), ("rsd", "mean vs RSD")):
+            side_stats = stats[side_key]
             print(
-                f"  [{human_label}] plotted={stats['n_plotted']}, "
-                f"NaN-excluded={stats['n_excluded_nan']}, "
-                f"distinct resource_type={stats['n_distinct_resource_types']}, "
-                f"color-coded={stats['color_coded']} -> {stats['output_path']}"
+                f"  [{human_label}] plotted={side_stats['n_plotted']}, "
+                f"NaN-excluded={side_stats['n_excluded_nan']}, "
+                f"distinct resource_type={side_stats['n_distinct_resource_types']}, "
+                f"color-coded={side_stats['color_coded']}, "
+                f"high-leverage labeled={side_stats['n_high_leverage']}"
             )
-    print(f"\nTotal PNG files written: {n_pngs} (expected 8 = 4 combinations x 2 plot types)")
+        print(f"  -> {stats['output_path']}")
+    print(f"\nTotal PNG files written: {n_pngs} (expected 4 = 4 combinations x 1 combined figure)")
     print("=" * 78)
 
 
