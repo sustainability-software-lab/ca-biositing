@@ -26,6 +26,23 @@ columns on the existing Step 1 replicate-group table:
 - `rsd_gt_20 == True`: **171 groups** (6.3% of all groups; 8.7% of
   RSD-defined groups)
 
+**Correction (added after the Step 6 `RSD_percent` sign-fix — see
+STEP6_FINDINGS.md §2):** The two counts above (400 / 171) were computed
+*before* [`01_build_replicate_summary.py`](01_build_replicate_summary.py:151)
+was corrected to compute `RSD_percent = (sd / abs(mean)) * 100.0` (absolute
+value of the mean in the denominator). Before that fix, the 13 `icp/na`
+replicate groups with a negative `mean` produced a **negative** `RSD_percent`,
+which could never satisfy the `RSD_percent > 10` / `> 20` boolean comparisons
+regardless of the underlying RSD magnitude — undercounting both flags by a
+small, `icp/na`-specific amount. After the fix, `replicate_group_summary.csv`
+reports **407 groups** with `rsd_gt_10 == True` (15.0% of all 2712; 20.8% of
+the 1955 RSD-defined groups) and **177 groups** with `rsd_gt_20 == True` (6.5%
+of all groups; 9.1% of RSD-defined groups) — see STEP8_FINDINGS.md §1 and
+STEP9_FINDINGS.md §1 for these corrected, final figures, which are the ones
+used throughout the rest of the pipeline (Step 8 onward). The 400 / 171
+figures above are left unedited as the historical record of what this step
+originally computed; **do not cite 400 / 171 elsewhere — use 407 / 177.**
+
 ## Dixon Q test
 
 Critical-value table source: Rorabacher, D. B. (1991), *Analytical
@@ -80,6 +97,22 @@ sensitive to different failure patterns (RSD>20 flags overall spread
 regardless of shape; Dixon flags a single extreme value relative to the
 group's range) and should be compared side by side in later review rather
 than treated as interchangeable.
+
+**Correction (post Step-6 RSD sign-fix):** the table above reflects the
+pre-fix `RSD_percent` (see the correction note in "RSD sensitivity flags"
+above). After the fix, the corrected cross-tab (`replicate_group_summary.csv`,
+current) is:
+
+| | Dixon flagged | Dixon not flagged | Row total |
+| --- | --- | --- | --- |
+| **RSD>20 flagged** | 19 | 158 | 177 |
+| **RSD>20 not flagged** | 227 | 2308 | 2535 |
+| **Column total** | 246 | 2466 | 2712 |
+
+The both-flagged count (19) is unchanged by the fix (Dixon does not depend on
+`RSD_percent`'s sign); only the RSD>20-only cell moves from 152→158 and the
+RSD>20 row total from 171→177, consistent with the correction above. Use this
+corrected table, not the original one, for any downstream citation.
 
 ## ROUT placeholder
 
