@@ -10,9 +10,20 @@ analysis_type x parameter - used ONLY as the denominator for Part B.1).
 
 *** CRITICAL FRAMING (repeated throughout Step 9): a statistical flag is
 NOT a determination that the underlying data is invalid, bad, or should be
-excluded. This script mea I think it's a good idea to have a Oh, just so you know, if you're making brown rice, there's a bunch in the Fridge already. Oh, word. Well, I was, I literally was like, if I'm making the brown rice, I might as well Because I did Well, I'll tell you if I talk on the phone, Now I did not hear my phone, but I think that's rare. It doesn't happen to me so often.review WORKLOAD and organizes investigation
+excluded. This script measures review WORKLOAD and organizes investigation
 only - it does not filter, exclude, or judge any replicate group's
 underlying data. ***
+
+TERMINOLOGY NOTE: the upstream `lab` and `method` columns (unchanged,
+persisted verbatim in Steps 1-8's own CSVs, and still present as-is on
+`flagged_review_queue.csv`'s SOURCE data before this pipeline's own
+aliasing) are semantically mislabeled -- `lab` actually holds provider /
+source codename values (e.g. "rigging"), not a laboratory identifier, and
+`method` actually holds sample preparation method values (e.g.
+"knife mill (2mm)"), not the analytical method. This script aliases them
+to `provider` / `sample_preparation_method` immediately after loading, and
+uses those names throughout its own groupbys, printed output, and CSV
+outputs.
 
 Part B - Concentration of the backlog:
     B.1: outputs/review_queue_by_analysis_parameter.csv - one row per
@@ -21,16 +32,18 @@ Part B - Concentration of the backlog:
     B.2: outputs/review_queue_by_dimension_summary.csv - one combined table
          (dimension, value, n_flagged_groups, percent_of_total_flags,
          n_replicate_groups_total, flag_rate_percent) covering
-         analysis_type, resource_type, experiment_id, lab, method,
-         protocol_version, existing_QC_status. EVERY groupby here uses
-         dropna=False so that groups with a null dimension value form
-         their own explicit "(missing)" row rather than vanishing.
+         analysis_type, resource_type, experiment_id, provider,
+         sample_preparation_method, protocol_version, existing_QC_status.
+         EVERY groupby here uses dropna=False so that groups with a null
+         dimension value form their own explicit "(missing)" row rather
+         than vanishing.
 
 Part C - Provisional investigation-packet consolidation:
     Tests the grouping key `analysis_type + parameter + experiment_id`
     (dropna=False) against a handful of alternatives that add resource_id /
-    lab / method / protocol_version, reports a small comparison table, then
-    builds outputs/investigation_packets.csv using the CHOSEN key.
+    provider / sample_preparation_method / protocol_version, reports a
+    small comparison table, then builds outputs/investigation_packets.csv
+    using the CHOSEN key.
 
     LIMITATION (documented per Step 9 spec, repeated in STEP9_FINDINGS.md):
     `experiment_id` is used here as a convenience batching key. The data
@@ -54,6 +67,10 @@ Guardrails honored:
 - Does not create new statistical thresholds.
 - Does not classify or imply flagged data is bad/invalid.
 - Every dimension/packet groupby explicitly uses dropna=False.
+- Does not change the chosen packet grouping key
+  (analysis_type + parameter + experiment_id) or its results - only the
+  human-facing labels for `lab`/`method` (-> `provider`/
+  `sample_preparation_method`) were corrected.
 
 Usage:
     pixi run python audit/outliers/biocirv_outlier_assessment/09b_analyze_backlog_concentration.py
@@ -87,12 +104,17 @@ MISSING_LABEL = "(missing)"
 
 # Dimensions summarized individually in Part B.2. Every groupby against
 # these columns MUST use dropna=False.
+#
+# NOTE: `provider` / `sample_preparation_method` are this script's own
+# human-readable aliases (see module docstring TERMINOLOGY NOTE) for the
+# upstream `lab` / `method` columns, applied immediately after loading in
+# `load_inputs()`.
 DIMENSION_COLUMNS = [
     "analysis_type",
     "resource_type",
     "experiment_id",
-    "lab",
-    "method",
+    "provider",
+    "sample_preparation_method",
     "protocol_version",
     "existing_QC_status",
 ]
@@ -105,11 +127,11 @@ PACKET_GROUP_KEY = ["analysis_type", "parameter", "experiment_id"]
 ALTERNATIVE_GROUP_KEYS = {
     "base (analysis_type+parameter+experiment_id)": PACKET_GROUP_KEY,
     "+resource_id": PACKET_GROUP_KEY + ["resource_id"],
-    "+lab": PACKET_GROUP_KEY + ["lab"],
-    "+method": PACKET_GROUP_KEY + ["method"],
+    "+provider": PACKET_GROUP_KEY + ["provider"],
+    "+sample_preparation_method": PACKET_GROUP_KEY + ["sample_preparation_method"],
     "+protocol_version": PACKET_GROUP_KEY + ["protocol_version"],
-    "+resource_id+lab+method+protocol_version (all)": PACKET_GROUP_KEY
-    + ["resource_id", "lab", "method", "protocol_version"],
+    "+resource_id+provider+sample_preparation_method+protocol_version (all)": PACKET_GROUP_KEY
+    + ["resource_id", "provider", "sample_preparation_method", "protocol_version"],
 }
 
 # Part D workload planning scenarios (minutes per review). PLANNING
@@ -138,11 +160,20 @@ def load_inputs():
             f"flagged_review_queue.csv has {len(queue)} rows, expected exactly {EXPECTED_QUEUE_ROWS}. "
             "Re-run 09_build_review_queue.py and confirm it passes validation before running this script."
         )
+    # flagged_review_queue.csv already exposes `provider`/`sample_preparation_method`
+    # (aliased by 09_build_review_queue.py), so no rename needed here.
 
     summary = pd.read_csv(SUMMARY_PATH)
     print(f"Loaded {len(summary)} rows from {SUMMARY_PATH}")
     if len(summary) != EXPECTED_TOTAL_ROWS:
         print(f"*** WARNING: row count {len(summary)} != expected {EXPECTED_TOTAL_ROWS}. Proceeding anyway. ***")
+
+    # replicate_group_summary.csv is an upstream Steps 1-8 CSV and still uses the
+    # legacy `lab`/`method` column names (unchanged, per Part 1 scope rule). Alias
+    # them here, immediately after loading, to `provider`/`sample_preparation_method`
+    # so every downstream groupby/print in THIS script uses the corrected labels.
+    # See module docstring TERMINOLOGY NOTE.
+    summary = summary.rename(columns={"lab": "provider", "method": "sample_preparation_method"})
 
     comparison = pd.read_csv(COMPARISON_PATH)
     print(f"Loaded {len(comparison)} rows from {COMPARISON_PATH}")
@@ -273,7 +304,7 @@ def print_dimension_summaries(dim_summary: pd.DataFrame) -> None:
 
 def print_experiment_resource_clustering(queue: pd.DataFrame, summary: pd.DataFrame) -> None:
     print("\n=== Part B: Clustering concentration summary (counts AND rates) ===")
-    for dim in ["experiment_id", "resource_id", "lab", "method", "protocol_version"]:
+    for dim in ["experiment_id", "resource_id", "provider", "sample_preparation_method", "protocol_version"]:
         flagged_by_dim = queue.groupby(dim, dropna=False).size().sort_values(ascending=False)
         n_distinct_flagged = len(flagged_by_dim)
         n_distinct_total = summary[dim].nunique(dropna=False)
@@ -307,6 +338,15 @@ def print_qc_status_overlap(queue: pd.DataFrame) -> None:
         "statuses ('fail', 'provisional', and compound values) are over- or under-represented among flagged "
         "groups relative to the full dataset - reported purely descriptively above, no causal claim made."
     )
+    print(
+        "\nNote on comma-joined values (e.g. 'fail,pass', 'pass,provisional'): `existing_QC_status` is built "
+        "in Step 1 by comma-joining the DISTINCT record-level QC statuses observed within a replicate group. "
+        "A comma-joined value therefore indicates that replicate group CONTAINS underlying records with "
+        "different/mixed QC statuses - it is not a standalone QC category equivalent to a clean 'pass' or "
+        "'fail'. Any high flag rate reported for these mixed-status values should be read as an interesting "
+        "candidate for direct human review, not as strong statistical evidence, given how few replicate "
+        "groups fall into each mixed-status bucket (see STEP9_FINDINGS.md for the actual denominators)."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -339,13 +379,13 @@ def print_grouping_comparison(comparison_table: pd.DataFrame) -> None:
     print("\n=== Part C.2: Investigation-packet grouping-key comparison (all dropna=False) ===")
     print(comparison_table.to_string(index=False))
     print(
-        "\nInterpretation: adding resource_id, lab, method, or protocol_version to the base "
-        "(analysis_type+parameter+experiment_id) key increases the packet count toward the raw "
-        "427-group count (i.e., most added splits produce singleton packets), which defeats the "
-        "purpose of consolidation. protocol_version is 100% null in this dataset, so splitting on "
-        "it changes nothing on its own. The base key is retained as the MVP grouping definition "
-        "because it provides the most consolidation while remaining a plausible (if unproven) "
-        "review-batching unit - see the documented limitation below."
+        "\nInterpretation: adding resource_id, provider, sample_preparation_method, or "
+        "protocol_version to the base (analysis_type+parameter+experiment_id) key increases the "
+        "packet count toward the raw 427-group count (i.e., most added splits produce singleton "
+        "packets), which defeats the purpose of consolidation. protocol_version is 100% null in "
+        "this dataset, so splitting on it changes nothing on its own. The base key is retained as "
+        "the MVP grouping definition because it provides the most consolidation while remaining a "
+        "plausible (if unproven) review-batching unit - see the documented limitation below."
     )
 
 

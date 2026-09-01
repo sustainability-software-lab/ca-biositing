@@ -74,6 +74,9 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 # that distinguishes sample_level_summary.csv (Step 2) from
 # replicate_group_summary.csv (Step 1). See STEP0_FINDINGS.md for the
 # design rationale and the confirmed 151-combination overlap count.
+#
+# NOTE: the normalized column `method` actually contains sample preparation method
+#       values (e.g. "knife mill (2mm)"), not the analytical method.
 SAMPLE_LEVEL_KEYS = ["sample_id", "analysis_type", "parameter", "unit", "method"]
 
 # Metadata columns that are NOT part of the grouping key but should logically
@@ -81,6 +84,9 @@ SAMPLE_LEVEL_KEYS = ["sample_id", "analysis_type", "parameter", "unit", "method"
 # across experiments — e.g. a resample analyzed under a different protocol
 # version). We check for within-group consistency and warn if more than one
 # distinct non-null value is found, per the task spec (item 6).
+#
+# NOTE: the normalized column `lab` actually contains provider / source codename values
+#       (e.g. "rigging"), not a laboratory identifier.
 METADATA_CONSISTENCY_COLS = ["resource_id", "resource_type", "lab", "protocol_version"]
 
 # Same epsilon as Step 1 (01_build_replicate_summary.py's RSD_MEAN_EPSILON):

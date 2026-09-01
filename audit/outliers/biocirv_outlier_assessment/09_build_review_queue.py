@@ -16,6 +16,16 @@ overlap tally (see that script's `build_overlap_summary()`). This is a
 deliberate, explicitly-labeled simplification carried forward for
 consistency, not a new statistical choice.
 
+TERMINOLOGY_NOTE_LAB_METHOD: the upstream lab and method columns
+(unchanged, persisted verbatim in Steps 1-8's own CSVs) are semantically
+mislabeled -- lab actually holds provider / source codename values (e.g.
+"rigging"), not a laboratory identifier, and method actually holds sample
+preparation method values (e.g. "knife mill (2mm)"), not the analytical
+method. This script does NOT rename the upstream CSV columns it reads, but
+DOES alias them to human-readable names (provider,
+sample_preparation_method) in its OWN output (flagged_review_queue.csv) so
+downstream consumers see accurate labels.
+
 *** CRITICAL FRAMING (repeated throughout Step 9): a statistical flag is
 NOT a determination that the underlying data is invalid, bad, or should be
 excluded. This script only organizes review workload - it does not filter,
@@ -68,8 +78,8 @@ QUEUE_COLUMNS = [
     "resource_type",
     "analysis_type",
     "parameter",
-    "lab",
-    "method",
+    "provider",
+    "sample_preparation_method",
     "protocol_version",
     "experiment_id",
     "n_replicates",
@@ -125,6 +135,13 @@ def load_joined_summary():
     if len(joined) != len(summary):
         raise AssertionError("Join changed row count unexpectedly.")
     print("Joined on replicate_group_id -> " + str(len(joined)) + " rows.")
+
+    # Alias the upstream lab/method columns (unchanged, persisted as-is from
+    # Steps 1-8) to human-readable names for THIS script's own output only.
+    # See module docstring's TERMINOLOGY_NOTE_LAB_METHOD above: lab actually
+    # holds provider/source codename values, method actually holds sample
+    # preparation method values.
+    joined = joined.rename(columns={"lab": "provider", "method": "sample_preparation_method"})
     return joined
 
 

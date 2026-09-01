@@ -23,6 +23,11 @@ identified that would make pooling inappropriate at this stage; that
 judgment is left to human review of this summary table (and later steps),
 per the handoff's default behavior.
 
+NOTE: the normalized column `lab` actually contains provider / source codename values
+      (e.g. "rigging"), not a laboratory identifier.
+NOTE: the normalized column `method` actually contains sample preparation method values
+      (e.g. "knife mill (2mm)"), not the analytical method.
+
 Guardrails honored:
 - Groups over replicate_group_summary.csv rows only — never touches raw
   observations.

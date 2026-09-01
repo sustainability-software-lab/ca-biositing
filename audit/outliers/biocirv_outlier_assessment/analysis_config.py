@@ -50,6 +50,11 @@ TARGET_ANALYSES = CHARACTERIZATION_ANALYSES
 # method is included when available (method_id/method_name on every Aim1 record).
 # lab is approximated by provider_codename (no dedicated "lab" field in current
 # schema — documented limitation, see README.md).
+#
+# NOTE: the normalized column `lab` actually contains provider / source codename values
+#       (e.g. "rigging"), not a laboratory identifier.
+# NOTE: the normalized column `method` actually contains sample preparation method values
+#       (e.g. "knife mill (2mm)"), not the analytical method.
 # experiment_id is included (design decision, natural analog to the handoff's
 # optional "method / protocol_version", "lab" additions) so that technical
 # replicates measured in genuinely different experimental runs are not

@@ -74,6 +74,15 @@ protocol_version
 existing_QC_status
 ```
 
+> **NOTE:** the normalized column `lab` actually contains provider / source
+> codename values (e.g. "rigging"), not a laboratory identifier. The
+> normalized column `method` actually contains sample preparation method
+> values (e.g. "knife mill (2mm)"), not the analytical method. These are
+> human-facing terminology clarifications only — the persisted column
+> names (`lab`, `method`) are unchanged in Steps 1–8's own CSV outputs;
+> Step 9 exposes human-readable aliases (`provider`,
+> `sample_preparation_method`) in its own output files only.
+
 plus a few extra columns kept for downstream convenience that are not part
 of the strict canonical list: `experiment_id`, `technical_replicate_no`,
 `technical_replicate_total`, `method_id`, `analyst_id`, `analyst_name`,

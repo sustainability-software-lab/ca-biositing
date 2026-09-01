@@ -51,6 +51,12 @@ REPLICATE_GROUP_KEYS = analysis_config.REPLICATE_GROUP_KEYS
 # Metadata columns that are NOT part of the grouping key but should logically
 # be constant within a group. We check for within-group consistency and warn
 # if more than one distinct non-null value is found.
+#
+# NOTE: the normalized column `lab` actually contains provider / source codename values
+#       (e.g. "rigging"), not a laboratory identifier.
+# NOTE: the normalized column `method` (part of REPLICATE_GROUP_KEYS, above) actually
+#       contains sample preparation method values (e.g. "knife mill (2mm)"), not the
+#       analytical method.
 METADATA_CONSISTENCY_COLS = ["resource_id", "resource_type", "lab", "protocol_version"]
 
 # Epsilon for "near-zero mean" RSD-undefined check. Chosen to be well below

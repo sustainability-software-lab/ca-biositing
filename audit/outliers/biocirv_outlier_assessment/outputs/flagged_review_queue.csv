@@ -1,4 +1,4 @@
-replicate_group_id,sample_id,resource_id,resource_type,analysis_type,parameter,lab,method,protocol_version,experiment_id,n_replicates,mean,standard_deviation,RSD_percent,existing_QC_status,rsd_gt_20,dixon_flag_0_05,flag_3xSD,dixon_candidate_record_id,flag_category
+replicate_group_id,sample_id,resource_id,resource_type,analysis_type,parameter,provider,sample_preparation_method,protocol_version,experiment_id,n_replicates,mean,standard_deviation,RSD_percent,existing_QC_status,rsd_gt_20,dixon_flag_0_05,flag_3xSD,dixon_candidate_record_id,flag_category
 8,148,31,almond shells,compositional,xylan,capstan,knife mill (2mm),,27.0,3,16.413333333333334,1.0767698608956948,6.560336276781244,pass,False,True,False,(04)68e4,Dixon_only
 10,148,31,almond shells,compositional,xylose,capstan,knife mill (2mm),,27.0,3,18.653333333333336,1.2240234202552407,6.5619554338200885,pass,False,True,False,(04)c1d7,Dixon_only
 22,70,31,almond shells,compositional,xylan,humorous,knife mill (2mm),,38.0,3,16.51,2.70449625623701,16.380958547771108,pass,False,False,True,(13)9bb5,3xSD_only
