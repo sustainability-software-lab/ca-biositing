@@ -1,16 +1,16 @@
-# BioCirV Exploratory Outlier & Variance Analysis — Synthesis Report
+# BioCirV Exploratory Outlier & Variance Analysis Report
 
-**Status:** Synthesis of a completed Exploratory Outlier & Variance Analysis (Steps 0–10). This is not new analysis — it summarizes and cross-references the existing, frozen Step 0–10 outputs.
+**Status:** Synthesis of a completed Exploratory Outlier & Variance Analysis (Steps 0–10). This analysis summarizes and cross-references the existing, frozen Step 0–10 outputs.
 
-This document is a colleague-facing synthesis of the BioCirV **Exploratory Outlier & Variance Analysis**, which characterized technical-replicate precision and compared candidate outlier/high-variance screens across BioCirV's characterization data. It is exploratory work intended to inform human review — it does not implement, recommend, or finalize any production QC threshold, rerun policy, or database filter.
+This document is a colleague-facing synthesis of the BioCirV **Exploratory Outlier & Variance Analysis**, which investigated technical-replicate precision and compared candidate outlier/high-variance screens across BioCirV's characterization data. It is exploratory work intended to inform human review and does not implement, recommend, or finalize any production QC threshold, rerun policy, or database filter.
 
 ---
 
 ## 1. Executive Summary
 
-The Exploratory Outlier & Variance Analysis examined **2,712 technical-replicate groups** spanning six characterization analysis families (`xrf`, `icp`, `proximate`, `compositional`, `ultimate`, `xrd`) extracted from BioCirV's raw, unfiltered data. Its purpose was to characterize how consistently repeated measurements of the same sample agree with one another (Level 1, within-sample technical-replicate variation), and to compare several candidate statistical screens for flagging replicate groups that show unusually large or unusual disagreement.
+The analysis examined **2,712 technical-replicate groups** spanning six characterization analysis families (`xrf`, `icp`, `proximate`, `compositional`, `ultimate`, `xrd`) extracted from BioCirV's raw, unfiltered data. Its purpose was to characterize how consistently repeated measurements of the same sample agree with one another, and to compare several candidate statistical screens for flagging replicate groups that show unusually large or unusual disagreement.
 
-**Broad picture of replicate precision.** Typical (median) replicate precision is good to excellent for most well-populated analysis × parameter combinations — for example, `proximate` mass-balance parameters (total solids, moisture, volatile solids) and most `compositional` sugars run at low single-digit median relative standard deviation (RSD). Precision is not uniform, however: several `xrf` trace elements, several `icp` elements' upper tails, and a handful of low-concentration/near-detection-limit `compositional` sugars show materially higher typical or tail variability. A few analysis families (`ultimate`, `xrd`) have too little replicate data to draw firm precision conclusions at all — sparse data should not be read as "high precision."
+**Broad picture of replicate precision.** Typical (median) replicate precision is good to excellent for most well-populated analysis × parameter combinations — for example, `proximate` mass-balance parameters (total solids, moisture, volatile solids) and most `compositional` sugars run at low single-digit median relative standard deviation (RSD). Precision is not uniform, however: several `xrf` trace elements, several `icp` elements' upper tails, and a handful of low-concentration/near-detection-limit `compositional` sugars show materially higher typical or tail variability. A few analysis families (`ultimate`, `xrd`) have too little replicate data to draw firm precision conclusions at all. Sparse data should not be read as "high precision."
 
 **Analysis families / parameters needing attention.** No single analysis family is uniformly "poor." Specific `xrf` trace elements (rubidium, copper, strontium, uranium, molybdenum, potassium, manganese, zinc, barium, cerium, praseodymium, thorium) show flag rates several times the dataset-wide baseline. `icp` shows reasonable median precision but extreme upper-tail RSD for elements including titanium, neodymium, aluminum, and sodium. `proximate` ash shows a modestly elevated flag rate; volatile solids and total solids contribute meaningful review-queue counts despite flag rates *below* the dataset-wide baseline (their large denominators, not disproportionate unreliability, drive their raw counts). `compositional` xylan and xylose are modestly elevated; arabinan/arabinose show high enrichment but rest on very small samples (n=7).
 
@@ -18,9 +18,7 @@ The Exploratory Outlier & Variance Analysis examined **2,712 technical-replicate
 
 **Concentration of the review burden.** The 427-group backlog is highly concentrated: a single `experiment_id` (47) accounts for 59.5% of all flags at an elevated flag rate (27.5%, 1.74× the overall 15.7% baseline); a second (`experiment_id` 43) adds another 14.3%. Five additional `analysis_type × parameter` combinations bring cumulative, non-overlapping coverage to **90.6%** of the entire 427-group backlog using only seven review targets.
 
-**Organizing the backlog for review.** Grouping flagged replicate groups by `analysis_type + parameter + experiment_id` consolidates the 427 raw flagged groups into **114 investigation packets** — a substantially more tractable review unit than reviewing every flagged group independently, though this grouping key remains a provisional convenience, not a validated common-root-cause unit.
-
-**A statistical flag is not proof of bad data.** Throughout this analysis, a flag from RSD, Dixon, or the exploratory 3×SD comparator identifies a replicate group **worth reviewing**. It does not, on its own, establish that any individual measurement is erroneous, and it does not justify excluding or deleting an observation. The distinctions between *typical precision*, *upper-tail variability*, *flag rate*, *raw contribution to the queue*, and *evidence sufficiency* are kept separate throughout this report and should be kept separate in any downstream decision-making as well.
+**A statistical flag is not proof of bad data.** Throughout this analysis, a flag from RSD, Dixon, or the exploratory 3×SD comparator identifies a replicate group **worth reviewing**. It does not, on its own, establish that any individual measurement is erroneous, and it does not justify excluding or deleting an observation.
 
 ---
 
@@ -30,7 +28,7 @@ The Exploratory Outlier & Variance Analysis examined **2,712 technical-replicate
 
 This analysis focused exclusively on **characterization measurements** — `xrf`, `icp`, `proximate`, `compositional`, `ultimate`, and `xrd` analyses of physical samples/resources. It did **not** evaluate bioconversion or process-performance data (e.g., biogas yield, digestion performance), which follows a fundamentally different data shape and was out of scope from the outset.
 
-A seventh characterization analysis, `calorimetry`, was scoped for potential inclusion but currently has **0 rows** in the extracted dataset and therefore contributes no findings here — it is schema-compatible and will be evaluated once data exists. No characterization analysis was skipped for reasons of incompatible schema; the seven candidate analyses were all judged workable under a shared `sample × analysis × parameter × value` structure (with `ultimate` flagged as a small, atypical mapping — see below).
+A seventh characterization analysis, `calorimetry`, was scoped for potential inclusion but currently has **0 rows** in the extracted dataset and therefore contributes no findings here — it is schema-compatible and will be evaluated once data exists.
 
 The analysis used a **point-in-time extracted snapshot** of BioCirV's raw, unfiltered database (`extract_raw_data.py` → `data/raw_extract_20260825.csv`, 6,155 rows), deliberately bypassing the pre-filtered audit-target views (which drop `qc_pass == 'fail'` rows, apply compositional/proximate sum-range filters, an ICP max-ppm filter, and hard-coded resource exclusions) because a replicate-precision and outlier study needs to see exactly the rows those filters would otherwise hide. This means the analysis reflects a snapshot, not a live query — it is **not** wired into the production BioCirV database, and no repeatable/automated pipeline against the staging or production database currently exists. Building such a repeatable workflow (rerun on a schedule or on demand against the staging database) is identified as future work, not something already implemented.
 
@@ -40,13 +38,13 @@ Steps 0–10 progressively built one shared, auditable pipeline. Script and outp
 
 | Step | Script(s) | Activity | Goal / question answered |
 |---|---|---|---|
-| 0 | `00_validate_replicate_grouping.py` | Validate the replicate-grouping key | Does grouping raw rows by `sample_id + analysis_type + parameter + unit + method + experiment_id` produce a sound, non-broken definition of a "technical replicate group"? (2,712 groups confirmed; singleton rate and replicate-number sanity checks passed — stop condition not triggered.) |
+| 0 | `00_validate_replicate_grouping.py` | Validate the replicate-grouping key | Does grouping raw rows by `sample_id + analysis_type + parameter + unit + method + experiment_id` produce a sound, non-broken definition of a "technical replicate group"? (2,712 groups confirmed) |
 | 1 | `01_build_replicate_summary.py` | Build the replicate-group summary | For every replicate group, compute n, mean, standard deviation (SD), and relative standard deviation (RSD). Produces `replicate_group_summary.csv` (2,712 rows), the base table for everything downstream. |
 | 2 | `02_build_sample_level_summary.py` | Build the sample-level summary | One level up from Step 1 (collapsing across `experiment_id`): separates *pooled* (within + between experiment) variability from *between-experiment* variability for the same sample, so that inter-experiment disagreement is not silently mixed into "technical replicate" precision. |
 | 3 | `03_add_candidate_flags.py` | Add candidate replicate-level flags | Enrich the Step 1 table in place with RSD-benchmark flags (>10%, >20%), a classical Dixon's Q test (single-pass, flag-only, α = 0.05), and an explicit ROUT placeholder status (ROUT was never implemented). |
 | 4 | `04_build_method_parameter_summary.py` | Build the analysis × parameter summary | Pool the 2,712 replicate groups into 74 `analysis_type × parameter` combinations, characterizing typical and tail precision (median/Q1/Q3/P90/P95 RSD, median SD) and flag rates per combination. |
-| 5 | `05_build_review_heatmap.py` | Build the review heatmap | Render a descriptive, non-recomputing heatmap of the Step 4 table — a visual comparison tool, not a threshold-setting device. |
-| 6 | `06a_build_precision_model_diagnostics.py`, `06b_build_precision_model_heatmap.py`, `07_selected_diagnostics.py` | Characterize relative-vs-absolute error behavior | For each of the 74 combinations, classify whether replicate error behaves more like constant absolute error, constant relative error, mixed concentration-dependent behavior, or is unclear/insufficiently supported — using log-log slope/R² with Spearman-correlation corroboration — and render one annotated diagnostic figure per non-trivial category. |
+| 5 | `05_build_review_heatmap.py` | Build the review heatmap | Render a descriptive, non-recomputing heatmap of the Step 4 table. |
+| 6 | `06a_build_precision_model_diagnostics.py`, `06b_build_precision_model_heatmap.py`, `07_selected_diagnostics.py` | Characterize relative-vs-absolute error behavior | For each of the 74 combinations, classify whether replicate error behaves more like 1) constant absolute error, 2) constant relative error, 3) mixed concentration-dependent behavior, or 4) is unclear/insufficiently supported using log-log slope and R² with Spearman-correlation corroboration. Render one annotated diagnostic figure per non-trivial category. |
 | 8 | `08_compare_candidate_rules.py` | Compare candidate screens | Quantify applicability, overlap, and disagreement among RSD > 20%, Dixon's Q, and an exploratory pooled 3×SD comparator across all 2,712 groups. |
 | 9 | `09_build_review_queue.py`, `09b_analyze_backlog_concentration.py` | Characterize the review backlog and consolidate into investigations | Assemble the union of all three screens' flags into a single 427-group review queue; characterize where flags concentrate (analysis × parameter, analysis type, experiment, resource, provider, sample preparation method, existing QC status); consolidate into 114 investigation packets; estimate hypothetical review workload. |
 | 10 | `10_build_review_priorities.py` | Build human-review priorities | Rank a small number of non-overlapping, high-coverage review targets so that a limited set of investigations addresses most of the 427-group backlog. |
@@ -70,7 +68,7 @@ This matters because a bare statement like "SD = 3" is not inherently meaningful
 
 ### Metrics used to characterize precision
 
-The table below preserves the column definitions used throughout the Step 4 analysis × parameter summary (`outputs/method_parameter_summary.csv`) and downstream tables, with interpretation guidance added.
+The table below preserves the column definitions used throughout the Step 4 analysis × parameter summary (`outputs/method_parameter_summary.csv`). Not all metrics are discussed in downstream tables. See the .csv for full findings. 
 
 | Metric | Definition / denominator | How to interpret it |
 |---|---|---|
@@ -82,16 +80,30 @@ The table below preserves the column definitions used throughout the Step 4 anal
 | `median_SD` / `Q1_SD` / `Q3_SD` | Median/Q1/Q3 of absolute standard deviation across groups (NaN-skipping; singleton groups excluded, never coerced to 0). | Absolute-unit dispersion. **Not comparable across parameters with different units** (e.g., % vs. ppm). |
 | `median_RSD` / `Q1_RSD` / `Q3_RSD` / `P90_RSD` / `P95_RSD` | Median/Q1/Q3/90th/95th percentile of relative (%) dispersion across groups (NaN-skipping). | Unit-agnostic — comparable across parameters. `P90`/`P95` reveal upper-tail behavior a median can hide. |
 | `n_RSD_defined` / `percent_RSD_defined` | Count/% of groups where RSD is computable (requires `n_replicates ≥ 2` and a non-near-zero mean). | Low `percent_RSD_defined` means the RSD statistics for that combination rest on limited evidence. |
-| `percent_RSD_gt_10` / `percent_RSD_gt_20` | % of **RSD-defined** groups exceeding 10%/20% RSD. | **Exploratory comparison benchmarks only — not adopted BioCirV production thresholds.** |
+| `percent_RSD_gt_10` / `percent_RSD_gt_20` | % of **RSD-defined** groups exceeding 10%/20% RSD. | Exploratory comparison benchmarks only — not adopted BioCirV production thresholds. |
 | `n_Dixon_calculated` / `percent_Dixon_calculated` | Count/% of groups where Dixon's Q was applicable (`3 ≤ n_replicates ≤ 30`). | Low applicability (e.g., 0% for all of `icp`) means Dixon simply cannot evaluate that combination under the current replicate design. |
 | `percent_Dixon_flagged` | % of **Dixon-calculated** groups flagged at α = 0.05. | A within-group, single-extreme-value screen — see Section 5. |
 | `percent_ROUT_flagged` | Always `NaN`. | ROUT was never implemented in this analysis; this column is retained only so its absence is explicit, never fabricated. |
 
-Two qualifications carry through every table in this section: absolute SD retains each parameter's own units and must not be compared across unrelated parameters, and singleton (`n_replicates == 1`) groups have undefined SD/RSD by construction — they were never coerced to zero.
+Two qualifications carry through every table in this section: absolute SD retains each parameter's own units and must not be compared across unrelated parameters, and singleton (`n_replicates == 1`) groups have undefined SD/RSD by construction. They were never coerced to zero.
+
+### Precision by analysis type
+
+| Analysis | Overall precision | Typical precision across parameters | Main issue | Parameters needing attention | Frontend implication |
+|---|---|---|---|---|---|
+| Proximate | Generally strong | Total solids, moisture, and volatile solids all run at very low median RSD (0.31–1.05%); ash is somewhat higher (4.40%). All four parameters are close to fully RSD-defined (81.7–100%). | Ash's flag rate (18.3%, 1.16×) is modestly elevated; volatile solids and total solids contribute meaningful *counts* to the review queue (14 and 13 groups) despite flag *rates below* the 15.7% baseline (12.2%/0.77×, 11.3%/0.72×) — their large denominator (115 groups each), not disproportionate unreliability, drives their raw contribution. | ash (mild); note that VS/TS queue presence ≠ poor overall precision | Present proximate parameters as generally reliable; an ash-specific caveat is reasonable, but VS/TS should not inherit a caveat merely from queue-count presence. |
+| XRF | Highly heterogeneous | Matrix/major elements (ca, k, p, s, si, th, zn) sit in a tight 2–6% median-RSD band; several trace elements (ba 16.4%, mg 16.2%, mo 15.7%, pr 15.2%, ce 12.3%) run much higher, consistent with expected behavior near detection limits. | XRF's analysis-type-level flag rate (19.3%, 1.23×) is only modestly above baseline — its 59.5% share of the raw 427-group queue is driven mainly by it being the largest analysis family (48.5% of all 2,712 groups), not by uniquely poor per-group precision. Specific parameters are, however, substantially more enriched (rb 3.66×, cu 3.00×, sr 2.82×, u 2.65×, mo 1.91×, k 1.73×, mn/zn 1.62×). | rb, cu, sr, u, mo, k, mn, zn, ba, ce, pr, th | Do not issue a blanket XRF caveat; reserve parameter-specific caveats for the enriched trace elements above. |
+| ICP | Reasonable at the median, long tails for specific elements | Most element median RSDs sit at 1.2–5.3%. | P90/P95 RSD "blow out" for several elements despite adequate coverage: `ti` (P90=P95=141.4%, 58.3% RSD-defined), `nd` (P90=57.8%, P95=130.1%, 100% RSD-defined). ICP also has **0% Dixon applicability dataset-wide** (n_replicates never reaches 3 under the current replicate design), so Dixon provides no signal for any ICP parameter. | ti, nd, al, na | Avoid a single universal ICP precision statement; median-only framing would hide the real upper-tail risk for these elements. |
+| Compositional | Strong for major sugars, weaker for trace sugars | glucan, glucose, lignin, xylan, xylose all run tight (median RSD ~1–2%). | arabinan/arabinose run notably higher (~6.5% median RSD) and are the two lowest-concentration, lowest-n sugars (spans of ~0.03–4 vs. tens for glucan/xylan) — precision appears to degrade near detection limits, but n=7 for each is thin evidence. xylan/xylose show modestly elevated flag rates (1.21×, 1.06×). | arabinan, arabinose (sparse-evidence caveat), xylan/xylose (mild) | Summarize typical strong precision for major sugars; flag arabinan/arabinose as sparse-evidence rather than firmly "imprecise." |
+| Ultimate | Insufficient evidence, not "high precision" | 57 total groups across the analysis type; several parameters (`carbon`, `oxygen`) have only 1 replicate group each; `dm` has only 1 of 13 groups RSD-defined (7.7%); `adf-r`/`cf` have 4 of 13 (30.8%); `nitrogen` has 5 of 14 (35.7%). Zero flags were raised across all of `ultimate`. | Zero flags reflects near-total structural inapplicability (too few multi-replicate groups), not demonstrated precision. | All ultimate parameters — sparse-evidence caveat | Present as "limited replicate evidence," never as "high precision," per the guardrail below. |
+| XRD | Insufficient evidence | Only 10 replicate groups total (`crystallinity`); the smallest analysis-type population in the dataset. Zero flags. | Same sparse-evidence caveat as ultimate. | crystallinity | Present as "limited replicate evidence." |
+
+🚩 **Flagged for further discussion:** Twelve `xrf` trace parameters (`ag`, `bi`, `cd`, `cr`, `hg`, `nb`, `ni`, `sb`, `se`, `sn`, `v`, `w`) have `percent_RSD_defined = 0%` because every replicate group for these parameters currently has exactly one replicate. RSD/SD can never be computed for these parameters without a change to the replicate design, independent of how much additional sample volume is collected. Whether triplicate runs for these (and for `icp`, where Dixon is entirely inapplicable) would be worth the added cost is a design question for the team, not something this analysis can resolve.
+
 
 ### Precision by analysis × parameter
 
-The full BioCirV characterization dataset spans **74 distinct `analysis_type × parameter` combinations**. The table below is a representative subset, ordered by contribution to the combined review backlog (the same 427-group union of RSD>20/Dixon/3×SD flags used throughout this report), together with each combination's flag rate and its enrichment relative to the dataset-wide 15.7% baseline flag rate. The complete 74-row table appears in the Appendix (Section 10, Table A1).
+The characterization dataset spans **74 distinct `analysis_type × parameter` combinations**. The table below is a representative subset, ordered by contribution to the combined review backlog (the same 427-group union of RSD>20/Dixon/3×SD flags used throughout this report), together with each combination's flag rate and its enrichment relative to the dataset-wide 15.7% baseline flag rate. The complete 74-row table appears in the Appendix (Section 10, Table A1).
 
 | analysis_type | parameter | n_replicate_groups | n_flagged_groups | flag_rate % | enrichment vs 15.7% baseline |
 |---|---|---:|---:|---:|---:|
@@ -116,26 +128,10 @@ The full BioCirV characterization dataset spans **74 distinct `analysis_type × 
 
 *(This is a subset selected for narrative usefulness — largest raw contributors, most-enriched parameters, and parameters called out elsewhere in this report. The full 74-row table with all combinations, including the 51 combinations that contributed zero flags, is in Appendix Table A1.)*
 
-**Typical precision** is strong for most well-populated combinations: `proximate` (total solids median SD 0.1823, median RSD 0.31%, 100% RSD-defined; moisture median SD 0.1145, median RSD 0.99%; volatile solids median SD 0.3522, median RSD 1.05%; ash median SD 0.1888, median RSD 4.40%) and most `compositional` sugars (glucan, glucose, lignin, xylan, xylose all median RSD in the 1–2% range) show low typical replicate disagreement. `icp` is more mixed at the median (most elements sit at median RSD 1.2–5.3%) but hides important **upper-tail variability**: `icp/ti` has P90 = P95 = 141.4% RSD (though based on only 14 of 24, 58.3%, RSD-defined groups — a data-sufficiency caveat), and `icp/nd` has P90 = 57.8%, P95 = 130.1% RSD on a **fully** RSD-defined base (24 of 24 groups) — a case where the tail is real, not a small-sample artifact. The corrected `icp/na` combination (see Section 5 note on the RSD sign fix) shows median RSD 8.32%, %RSD>10 = 42.9%, %RSD>20 = 33.3%, and P90/P95 RSD of 103.1%/147.2%.
+🚩 **Flagged for further discussion:** The `xrf` trace elements with the highest Dixon flag rates (rb, sr, u, cu) and the `icp` elements with the most extreme upper-tail RSD (ti, nd, al, na) are strong candidates for additional replicate collection and/or analyst review. Their signal is robust (adequate n, in most cases fully RSD-defined), not a small-sample artifact, so it warrants attention rather than dismissal as noise.
 
-The highest **RSD>20 rates** with adequate sample size are `xrf/pr` (44.4%, n=18), `xrf/mo` (42.9%, n=21), and `xrf/ce` (39.1%, n=23). The highest **Dixon flag rates** are `xrf/rb` (75.7%, n=37), `xrf/sr` (56.4%, n=39), `xrf/u` (54.8%, n=42), and `xrf/cu` (43.2%, n=44) — a largely different set of parameters than the RSD list, reinforcing that these screens answer different questions (Section 5).
+🚩 **Flagged for further discussion:** `compositional/arabinose` and `arabinan` show the highest enrichment values in the entire 74-row table (2.72x and 1.82x) but rest on only 7 replicate groups each. Before treating these as a genuine precision concern, additional replicate data for these two low-concentration sugars would materially strengthen (or weaken) the finding.
 
-**Flagged for further discussion:** The `xrf` trace elements with the highest Dixon flag rates (rb, sr, u, cu) and the `icp` elements with the most extreme upper-tail RSD (ti, nd, al, na) are strong candidates for additional replicate collection and/or analyst review — their signal is robust (adequate n, in most cases fully RSD-defined), not a small-sample artifact, so it warrants attention rather than dismissal as noise.
-
-**Flagged for further discussion:** `compositional/arabinose` and `arabinan` show the highest enrichment values in the entire 74-row table (2.72x and 1.82x) but rest on only 7 replicate groups each — before treating these as a genuine precision concern, additional replicate data for these two low-concentration sugars would materially strengthen (or weaken) the finding.
-
-### Precision by analysis type
-
-| Analysis | Overall precision | Typical precision across parameters | Main issue | Parameters needing attention | Frontend implication |
-|---|---|---|---|---|---|
-| Proximate | Generally strong | Total solids, moisture, and volatile solids all run at very low median RSD (0.31–1.05%); ash is somewhat higher (4.40%). All four parameters are close to fully RSD-defined (81.7–100%). | Ash's flag rate (18.3%, 1.16×) is modestly elevated; volatile solids and total solids contribute meaningful *counts* to the review queue (14 and 13 groups) despite flag *rates below* the 15.7% baseline (12.2%/0.77×, 11.3%/0.72×) — their large denominator (115 groups each), not disproportionate unreliability, drives their raw contribution. | ash (mild); note that VS/TS queue presence ≠ poor overall precision | Present proximate parameters as generally reliable; an ash-specific caveat is reasonable, but VS/TS should not inherit a caveat merely from queue-count presence. |
-| XRF | Highly heterogeneous | Matrix/major elements (ca, k, p, s, si, th, zn) sit in a tight 2–6% median-RSD band; several trace elements (ba 16.4%, mg 16.2%, mo 15.7%, pr 15.2%, ce 12.3%) run much higher, consistent with expected behavior near detection limits. | XRF's analysis-type-level flag rate (19.3%, 1.23×) is only modestly above baseline — its 59.5% share of the raw 427-group queue is driven mainly by it being the largest analysis family (48.5% of all 2,712 groups), not by uniquely poor per-group precision. Specific parameters are, however, substantially more enriched (rb 3.66×, cu 3.00×, sr 2.82×, u 2.65×, mo 1.91×, k 1.73×, mn/zn 1.62×). | rb, cu, sr, u, mo, k, mn, zn, ba, ce, pr, th | Do not issue a blanket XRF caveat; reserve parameter-specific caveats for the enriched trace elements above. |
-| ICP | Reasonable at the median, long tails for specific elements | Most element median RSDs sit at 1.2–5.3%. | P90/P95 RSD "blow out" for several elements despite adequate coverage: `ti` (P90=P95=141.4%, 58.3% RSD-defined), `nd` (P90=57.8%, P95=130.1%, 100% RSD-defined). ICP also has **0% Dixon applicability dataset-wide** (n_replicates never reaches 3 under the current replicate design), so Dixon provides no signal for any ICP parameter. | ti, nd, al, na | Avoid a single universal ICP precision statement; median-only framing would hide the real upper-tail risk for these elements. |
-| Compositional | Strong for major sugars, weaker for trace sugars | glucan, glucose, lignin, xylan, xylose all run tight (median RSD ~1–2%). | arabinan/arabinose run notably higher (~6.5% median RSD) and are the two lowest-concentration, lowest-n sugars (spans of ~0.03–4 vs. tens for glucan/xylan) — precision appears to degrade near detection limits, but n=7 for each is thin evidence. xylan/xylose show modestly elevated flag rates (1.21×, 1.06×). | arabinan, arabinose (sparse-evidence caveat), xylan/xylose (mild) | Summarize typical strong precision for major sugars; flag arabinan/arabinose as sparse-evidence rather than firmly "imprecise." |
-| Ultimate | Insufficient evidence, not "high precision" | 57 total groups across the analysis type; several parameters (`carbon`, `oxygen`) have only 1 replicate group each; `dm` has only 1 of 13 groups RSD-defined (7.7%); `adf-r`/`cf` have 4 of 13 (30.8%); `nitrogen` has 5 of 14 (35.7%). Zero flags were raised across all of `ultimate`. | Zero flags reflects near-total structural inapplicability (too few multi-replicate groups), not demonstrated precision. | All ultimate parameters — sparse-evidence caveat | Present as "limited replicate evidence," never as "high precision," per the guardrail below. |
-| XRD | Insufficient evidence | Only 10 replicate groups total (`crystallinity`); the smallest analysis-type population in the dataset. Zero flags. | Same sparse-evidence caveat as ultimate. | crystallinity | Present as "limited replicate evidence." |
-
-**Flagged for further discussion:** Twelve `xrf` trace parameters (`ag`, `bi`, `cd`, `cr`, `hg`, `nb`, `ni`, `sb`, `se`, `sn`, `v`, `w`) have `percent_RSD_defined = 0%` because every replicate group for these parameters currently has exactly one replicate — RSD/SD can never be computed for these parameters without a change to the replicate design, independent of how much additional sample volume is collected. Whether triplicate runs for these (and for `icp`, where Dixon is entirely inapplicable) would be worth the added cost is a design question for the team, not something this analysis can resolve.
 
 ---
 
@@ -156,7 +152,7 @@ The distinction matters because values near zero can produce very high RSD despi
 | SD rises with mean; RSD flat | Relative/RSD-like |
 | Both strongly depend on mean | Neither simple model fits |
 | Neither clearly depends on mean | Could be either; possibly too little range/data |
-| High RSD mostly near zero | Possible low-concentration artifact; inspect absolute SD |
+| High RSD mostly near zero | Possible low-concentration artifact; inspect as absolute SD |
 
 ### Observed precision-model behavior
 
@@ -164,21 +160,19 @@ Each of the 74 `analysis_type × parameter` combinations was classified into one
 
 | Category | Count | Named example(s) |
 |---|---:|---|
-| Insufficient data | 26 | — (too few usable replicate groups to fit) |
+| Insufficient data | 26 | Too few usable replicate groups to fit |
 | Unclear | 10 | `proximate/total solids` (largest n in category, R²=0.085, slope=−0.696) |
 | Concentration-dependent mixed | 20 | `xrf/zn` (slope=0.529, R²=0.438, n=41 — representative) |
 | Approximately constant relative RSD | 13 | `icp/ca` (best of 13, R²=0.886, slope=1.056, n=30) |
 | Approximately constant absolute SD | 5 | `compositional/xylan`, `compositional/xylose`, `icp/si`, `xrf/k`, `proximate/volatile solids` (best: `proximate/volatile solids`, n=115, slope=−0.091, R²=0.006, Spearman=−0.289) |
 
-**Only a minority (5 of 74) of combinations clearly support a constant-absolute-SD model.** The majority behave more like relative error (13), mixed concentration-dependence (20), unclear behavior (10), or lack sufficient replicate evidence to classify at all (26). This is a direct empirical caution against assuming one universal absolute-SD or relative-RSD error model applies dataset-wide.
+**Only a minority (5 of 74) of combinations clearly support a constant-absolute-SD model.** The majority behave more like relative error (13), mixed concentration-dependence (20), unclear behavior (10), or lack sufficient replicate evidence to classify at all (26). This is a direct empirical caution against assuming one universal absolute-SD or relative-RSD error model applies dataset-wide. Review of absolute-SD graphs may reveal their flagging was due to outliers or other graphical features that disproportionately impacted the categorization defining parameters. Removal of outlier/erroneous data could also change the slope and R² values enough to change classifications.
 
-Two corrections underlie the current category counts: the RSD sign fix (13 `icp/na` groups, discussed in Section 5) and a redesign of the classifier that decoupled the stability categories from a blanket R² ≥ 0.3 gate (using Spearman-correlation corroboration instead) — this redesign is specifically why `approx_constant_absolute_SD` moved from 0 members to its current 5.
+Four existing diagnostic figures (one representative example per non-trivial category) are available for visual review. See the Appendix (Section 10) for embedded images and captions. Each figure contains two side-by-side subplots (mean vs. SD, mean vs. RSD), labels high-leverage points with their `replicate_group_id`, and displays a title reading "PROPOSED precision_model_category: {category}" together with the underlying log-log slope/R² diagnostics and an explicit "not a validated statistical cutoff" caveat.
 
-Four existing diagnostic figures (one representative example per non-trivial category) are available for visual review — see the Appendix (Section 10) for embedded images and captions. Each figure contains two side-by-side subplots (mean vs. SD, mean vs. RSD), labels high-leverage points with their `replicate_group_id`, and displays a title reading "PROPOSED precision_model_category: {category}" together with the underlying log-log slope/R² diagnostics and an explicit "not a validated statistical cutoff" caveat.
+🚩 **Flagged for further analysis:** Manually review of mixed and unclear diagnostic plots before assigning an analysis × parameter to a relative- or absolute-error model.
 
-**Flagged for further analysis:** Manually review mixed and unclear diagnostic plots before assigning an analysis × parameter to a relative- or absolute-error model.
-
-**Flagged for further analysis:** During visual diagnostic review, consider labeling unusually extreme RSD>20 / 3×SD points with their replicate-group IDs so conspicuous cases can be traced directly back to source records.
+🚩 **Flagged for further analysis:** During visual diagnostic review, consider noting unusually extreme RSD>20 / 3×SD points replicate-group IDs (labeled) so conspicuous cases can be traced directly back to source records.
 
 ---
 
@@ -187,14 +181,14 @@ Four existing diagnostic figures (one representative example per non-trivial cat
 ### What question does each screen ask?
 
 - **RSD > 10% / RSD > 20%** — *Does this replicate group have unusually large overall disagreement relative to its own mean?* RSD is a relative, within-group statistic; it only uses that one group's own values and mean.
-- **Dixon's Q** — *Does one individual measurement appear unusually extreme relative to the other measurements in this same replicate group?* Dixon is also within-group, but focuses on a single extreme value rather than the group's total spread — a genuinely different question from RSD.
-- **3× pooled within-replicate SD (exploratory only)** — *Does an individual value deviate unusually far, on an absolute scale, relative to the historical within-replicate precision observed for this `analysis_type × parameter`?* This is the only *cross-group, absolute-scale* comparator among the three; it borrows a pooled SD from every SD-defined replicate group sharing that combination. It is explicitly **exploratory only, not a proposed production threshold** — see the connection to Section 4 below.
+- **Dixon's Q** — *Does one individual measurement appear unusually extreme relative to the other measurements in this same replicate group?* Dixon is also within-group, but focuses on a single extreme value rather than the group's total spread. This is a genuinely different question from RSD.
+- **3× pooled within-replicate SD (exploratory only)** — *Does an individual value deviate unusually far, on an absolute scale, relative to the historical within-replicate precision observed for this `analysis_type × parameter`?* This is the only *cross-group, absolute-scale* comparator among the three; it borrows a pooled SD from every SD-defined replicate group sharing that combination. It is explicitly **exploratory only, not a proposed production threshold** given that most parameter x analysis combinations do not support absolute standard deviation constancy.
 
 ### Screen applicability and review burden
 
 Not every screen can evaluate every replicate group; raw flag counts are misleading without knowing each screen's own applicable denominator.
 
-| Screen | Flagged | % of all 2,712 | Applicable groups | % of 2,712 applicable | % of applicable flagged |
+| Screen | Flagged | % of all 2,712 replicate groups | Applicable groups | % of 2,712 applicable | % of applicable flagged |
 |---|---:|---:|---:|---:|---:|
 | RSD > 10% | 407 | 15.0% | 1,955 (RSD-defined) | 72.1% | 20.8% |
 | RSD > 20% | 177 | 6.5% | 1,955 (RSD-defined) | 72.1% | 9.1% |
@@ -217,13 +211,13 @@ Dixon has **0% applicability across the entire `icp` analysis type** (518 groups
 | Flagged by any | 427 | 100% | 15.7% |
 | Flagged by none | 2,285 | — | 84.3% |
 
-Only 7 groups (0.3% of 2,712) were flagged by all three methods simultaneously — genuine three-way agreement is rare. **Low overlap is expected because the screens answer different statistical questions; it is not evidence that one method is "wrong."** Dixon-only is the single largest category, consistent with Dixon most often firing on an isolated extreme value in an otherwise low-spread group — a pattern RSD (overall group spread) and 3×SD (an absolute, cross-group threshold) do not necessarily also catch.
+Only 7 groups (0.3% of 2,712) were flagged by all three methods simultaneously. Genuine three-way agreement is rare. **Low overlap is expected because the screens answer different statistical questions; it is not evidence that one method is "wrong."** 
 
-The screens also prioritize different parameters. Highest **RSD>20** rate: `xrf/pr` (44.4%, n=18), `xrf/mo` (42.9%, n=21), `xrf/ce` (39.1%, n=23). Highest **Dixon** rate: `xrf/rb` (75.7%, n=37), `xrf/sr` (56.4%, n=39), `xrf/u` (54.8%, n=42), `xrf/cu` (43.2%, n=44). These are largely disjoint lists — further confirmation that the screens are not redundant.
+Dixon-only is the single largest category, consistent with Dixon most often firing on an isolated extreme value in an otherwise low-spread group, a pattern RSD (overall group spread) and 3×SD (an absolute, cross-group threshold) do not necessarily also catch.
 
-**Connecting 3×SD back to Section 4:** the 3×SD comparator's implicit assumption — that replicate error is well described by a constant absolute SD for a given `analysis_type × parameter` — is only clearly supported for 5 of 74 combinations (Section 4). This gives limited empirical justification for treating 3×SD as a broadly appropriate absolute-scale screening model; it remains useful here purely as an exploratory point of comparison against RSD and Dixon, not as a candidate production rule.
+**Connecting 3×SD back to Section 4:** the 3×SD comparator's implicit assumption, that replicate error is well described by a constant absolute SD for a given `analysis_type × parameter` , is only clearly supported for 5 of 74 combinations (Section 4). This gives limited empirical justification for treating 3×SD as a broadly appropriate absolute-scale screening model; it remains useful here purely as an exploratory point of comparison against RSD and Dixon, not as a candidate production rule.
 
-**Flagged for further discussion:** Which signal — or combination of signals — should eventually trigger routine analyst review?
+🚩 **Flagged for further discussion:** Which signal or combination of signals should eventually trigger routine analyst review?
 
 ---
 
@@ -231,11 +225,11 @@ The screens also prioritize different parameters. Highest **RSD>20** rate: `xrf/
 
 ### Size and composition of the review backlog
 
-**427 of 2,712 replicate groups (15.7%) were flagged by at least one of RSD>20, Dixon, or the exploratory 3×SD screen.** The flag-category breakdown (Section 5) shows Dixon-only as the largest single category (52.5% of the queue), RSD-only second (32.8%), and all pairwise/triple combinations together making up the remaining ~15% — a distribution consistent with three screens that are complementary rather than redundant.
+**427 of 2,712 replicate groups (15.7%) were flagged by at least one of RSD>20, Dixon, or the exploratory 3×SD screen.** The flag-category breakdown (Section 5) shows Dixon-only as the largest single category (52.5% of the queue), RSD-only second (32.8%), and all pairwise/triple combinations together making up the remaining ~15%.
 
 ### Where flags are concentrated
 
-**Analysis × parameter.** The top-10 contributors below account for **45.4% of all 427 flags** (the top 5 alone account for 29.0%):
+**Analysis × parameter:** The top-10 contributors below account for **45.4% of all 427 flags** (the top 5 alone account for 29.0%):
 
 | analysis_type | parameter | n_flagged_groups | % of 427 | n_replicate_groups | flag_rate_percent |
 |---|---|---:|---:|---:|---:|
@@ -252,7 +246,7 @@ The screens also prioritize different parameters. Highest **RSD>20** rate: `xrf/
 
 This table highlights an important distinction: `xrf/rb`, `cu`, `sr`, `u` combine **both** high raw counts **and** high within-parameter flag rates (42–58% of their own replicate groups flagged, on modest denominators of 52–55 groups). `proximate/ash` contributes a substantial count with only modest enrichment (18.3% rate, 1.16×). `proximate/volatile solids` and `total solids` contribute meaningful counts (14, 13) despite flag rates *below* the 15.7% dataset baseline (12.2%/0.77×, 11.3%/0.72×) — their large shared denominator (115 groups each) drives the raw count, not elevated per-group risk. The complete 74-row table (including all combinations with zero flags) is in Appendix Table A1.
 
-**Analysis type.**
+**Analysis type:**
 
 | analysis_type | Flagged groups | % of 427 | All replicate groups | Flag rate |
 |---|---:|---:|---:|---:|
@@ -263,7 +257,7 @@ This table highlights an important distinction: `xrf/rb`, `cu`, `sr`, `u` combin
 
 Raw contribution and per-group flag propensity are different things: `xrf` contributes the majority of raw flags (59.5%), but its flag *rate* (19.3%) is only modestly above the other three analysis types (12.0–14.8%) — `xrf`'s dominance in raw counts is driven substantially by its population size (48.5% of all 2,712 groups), not by a uniquely higher per-group flag propensity. **"XRF is poor" is not a supportable blanket statement.**
 
-**Other review dimensions — human-review priority targets and baseline/enrichment.** The table below merges the Step 10 priority-order targets (rows 1–7, which achieve 90.6% true set-union cumulative coverage of the 427-group backlog) with additional Step 9 supporting-context dimension cuts (rows 8–11, not promoted to standalone Step 10 targets because they are redundant with or subsumed by an already-selected target).
+**Other review dimensions** The table below merges the Step 10 priority-order targets (rows 1–7, which achieve 90.6% true set-union cumulative coverage of the 427-group backlog) with additional Step 9 supporting-context dimension cuts (rows 8–11, not promoted to standalone Step 10 targets because they are redundant with or subsumed by an already-selected target).
 
 | analysis | parameter | experiment_id | provider | sample_preparation_method | all groups | flagged groups | % of 427 | flag rate | enrichment vs baseline | cumulative % (Step 10 order) | source |
 |---|---|---|---|---|---:|---:|---:|---:|---:|---:|---|
@@ -295,7 +289,7 @@ Rows 1–7 use true set-union cumulative coverage — verified zero overlap betw
 | fail,pass | 7 | 1.6% | 8 | 87.5% |
 | pass,provisional | 4 | 0.9% | 4 | 100.0% |
 
-Values such as `fail,pass` and `pass,provisional` are **mixed within-group QC statuses** — comma-joined distinct statuses observed across the underlying records of that one replicate group — not standalone QC categories. Their apparently striking 87.5%/100.0% flag rates rest on tiny denominators (8 and 4 groups) and are better read as a small number of interesting candidates for direct human review than as strong statistical evidence. Groups already marked `fail` are actually flagged at a *lower* rate (5.2%) than the dataset average (15.7%) — statistical screening and existing QC do not simply reproduce one another. Note also that `protocol_version` is 100% null dataset-wide (2,712/2,712) and provides zero discriminating power for any of these comparisons.
+Values such as `fail,pass` and `pass,provisional` are **mixed within replicate group QC statuses**, comma-joined distinct statuses observed across the underlying records of that one replicate group, not standalone QC categories. Their apparently striking 87.5%/100.0% flag rates rest on tiny denominators (8 and 4 groups) and are better read as a small number of interesting candidates for direct human review than as strong statistical evidence. Groups already marked `fail` are actually flagged at a *lower* rate (5.2%) than the dataset average (15.7%). This may be due to other reasons than variance being cause of QC fail statu, showing statistical screening and existing QC do not simply reproduce one another. 
 
 ### Consolidating cases into investigations
 
@@ -322,15 +316,15 @@ Adding more metadata dimensions rapidly fragments the backlog into mostly single
 | Moderate | 10 | 4,270 | 71.2 | 1,140 | 19.0 |
 | Thorough | 15 | 6,405 | 106.8 | 1,710 | 28.5 |
 
-These are **hypothetical planning scenarios only**, not measured analyst-time data. The packet consolidation ratio (114/427 ≈ 0.267, roughly a 73% reduction in the number of review *units*) rests on the unvalidated assumption that reviewing one packet takes about as long as reviewing one individual replicate group — an assumption this analysis cannot verify. **Packet-count reduction should not be read as implying an equivalent reduction in total review labor.**
+These are **hypothetical planning scenarios only**, not measured analyst-time data. 
 
 ### Human-review priorities
 
-The merged priority table above (Section 6, "Other review dimensions") reproduces the final Step 10 ranking. Its key practical finding: **seven non-overlapping review targets — two `experiment_id`s and five `analysis_type × parameter` combinations — collectively address 90.6% of the entire 427-group backlog** (387 of 427 unique replicate groups), using a true set-union calculation so that any group belonging to more than one target would be counted only once (in this particular selection, none of the seven targets overlap with any other). This means a small number of coherent investigations can, in principle, address most of the backlog — though see the caveats above about `experiment_id`'s unvalidated status as a common-root-cause grouping.
+The merged priority table above ("Other review dimensions") reproduces the final Step 10 ranking. Its key practical finding: **seven non-overlapping review targets — two `experiment_id`s and five `analysis_type × parameter` combinations — collectively address 90.6% of the entire 427-group backlog** (387 of 427 unique replicate groups), using a true set-union calculation so that any group belonging to more than one target would be counted only once (in this particular selection, none of the seven targets overlap with any other). This means a small number of coherent investigations can, in principle, address most of the backlog.
 
-**Flagged for further discussion:** Is `analysis_type + parameter + experiment_id` actually a useful investigation grain for the analysts who will conduct review?
+🚩 **Flagged for further discussion:** Is `analysis_type + parameter + experiment_id` actually a useful investigation grain for the analysts who will conduct review?
 
-**Flagged for further discussion:** What is a reasonable analyst review load? The answer depends not only on case count but on how much friction the review interface and documentation workflow create.
+🚩 **Flagged for further discussion:** What is a reasonable analyst review load? The answer depends not only on case count but on how much friction the review interface and documentation workflow create.
 
 ---
 
@@ -346,11 +340,11 @@ The merged priority table above (Section 6, "Other review dimensions") reproduce
 
 **Investigation grain remains provisional.** The `analysis_type + parameter + experiment_id` packet structure used to consolidate 427 flagged groups into 114 investigation packets is analytically useful but has not yet been validated with the analysts who will actually perform review.
 
-**Flagged for further discussion:** Is the proposed investigation-packet grain useful to analysts?
+🚩 **Flagged for further discussion:** Is the proposed investigation-packet grain useful to analysts?
 
-**Flagged for further discussion:** What information must be visible together in an analyst-review interface to make disposition fast and credible?
+🚩 **Flagged for further discussion:** What information must be visible together in an analyst-review interface to make disposition fast and credible?
 
-**Flagged for further discussion:** What recurring review workload is operationally acceptable?
+🚩 **Flagged for further discussion:** What recurring review workload is operationally acceptable?
 
 ---
 
@@ -376,11 +370,11 @@ Frontend communication of precision/variability findings should remain clearly d
 
 **Sparse evidence.** For `ultimate`, `xrd`, and other sparsely replicated measurements, the frontend (and any internal messaging) should distinguish "limited evidence about precision" from "high precision" — the current zero-flag result for these analyses reflects insufficient multi-replicate data to evaluate, not demonstrated reliability.
 
-**Flagged for further discussion:** Which precision/variability information is useful to BioCirV users versus appropriate only for internal QC?
+🚩 **Flagged for further discussion:** Which precision/variability information is useful to BioCirV users versus appropriate only for internal QC?
 
-**Flagged for further discussion:** Should frontend caveats be defined at the analysis level, analysis × parameter level, or only after analyst disposition of individual cases?
+🚩 **Flagged for further discussion:** Should frontend caveats be defined at the analysis level, analysis × parameter level, or only after analyst disposition of individual cases?
 
-**Flagged for further discussion:** How should insufficient replicate evidence be represented so absence of evidence is not mistaken for evidence of high precision?
+🚩 **Flagged for further discussion:** How should insufficient replicate evidence be represented so absence of evidence is not mistaken for evidence of high precision?
 
 ---
 
@@ -392,7 +386,7 @@ This Exploratory Outlier & Variance Analysis demonstrates that BioCirV can quant
 
 Relevant unresolved decisions — intentionally not settled in this report — include: which signals should trigger review; what evidence analysts should inspect for disposition; what constitutes sufficient disposition/documentation; what review burden is operationally acceptable; and which findings should remain backend-only versus become frontend-facing context.
 
-**Flagged for further discussion:** What exactly should a BioCirV "Data Quality Due Diligence Guarantee" promise?
+🚩 **Flagged for further discussion:** What exactly should a BioCirV "Data Quality Due Diligence Guarantee" promise?
 
 ---
 
