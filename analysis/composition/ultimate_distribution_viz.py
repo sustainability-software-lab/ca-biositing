@@ -30,6 +30,8 @@ def main():
     # 1. Query Data
     engine = get_engine()
 
+    EXCLUDED_PROVIDERS = ["jaguar"]
+
     EXCLUDED_RESOURCES = [
         "sargassum", "#n/a", "lab media", "alfalfa",
         "almond hulls and shells mix", "almond shells and hulls mix", "almond woodchips"
@@ -53,6 +55,7 @@ def main():
         rec.qc_pass,
         CASE
             WHEN LOWER(res.name) IN :excluded THEN 'Raw'
+            WHEN LOWER(prov.codename) IN :excluded_providers THEN 'Raw'
             WHEN rec.qc_pass = 'fail' THEN 'Raw'
             WHEN LOWER(param.name) NOT IN :whitelist THEN 'Raw'
             WHEN obs.value > 100 THEN 'Raw'
@@ -73,6 +76,7 @@ def main():
     with engine.connect() as conn:
         df = pd.read_sql(query, conn, params={
             "excluded": tuple(EXCLUDED_RESOURCES),
+            "excluded_providers": tuple(EXCLUDED_PROVIDERS),
             "whitelist": tuple(ULTIMATE_PARAMETERS)
         })
 
