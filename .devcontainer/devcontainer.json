@@ -9,18 +9,42 @@
       "settings": {
         "workbench.editorAssociations": {
           "*.md": "vscode.markdown.preview.editor"
-        }
+        },
+        "search.exclude": {
+          "**/.pixi": true,
+          "**/backups": true,
+          "**/node_modules": true
+        },
+        "files.watcherExclude": {
+          "**/.pixi/**": true,
+          "**/backups/**": true,
+          "**/node_modules/**": true
+        },
+        "search.followSymlinks": false,
+        "python.analysis.exclude": ["**/.pixi"]
       },
       "extensions": [
         "ms-toolsai.jupyter",
         "ms-python.python",
         "charliermarsh.ruff",
         "tamasfe.even-better-toml",
-        "jjjermiah.pixi-vscode"
+        "jjjermiah.pixi-vscode",
+        "unbound.zoocode",
+        "GitHub.vscode-pull-request-github",
+        "ck-dev.dbcode"
       ]
     }
   },
-  "features": {},
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": "true",
+      "moby": "true"
+    },
+    "ghcr.io/devcontainers/features/sshd:1": {
+      "version": "latest"
+    }
+  },
   "mounts": [
     "source=${localWorkspaceFolderBasename}-pixi,target=${containerWorkspaceFolder}/.pixi,type=volume"
   ],

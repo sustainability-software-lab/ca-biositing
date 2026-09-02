@@ -1,3 +1,9 @@
 {
-  "recommendations": ["ms-vscode.live-preview"]
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.vscode-python-envs",
+    "ms-toolsai.jupyter",
+    "renan-r-santos.pixi-code",
+    "ms-vscode.live-preview"
+  ]
 }
