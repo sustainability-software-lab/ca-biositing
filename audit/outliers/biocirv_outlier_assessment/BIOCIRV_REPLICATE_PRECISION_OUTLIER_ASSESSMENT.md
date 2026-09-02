@@ -89,6 +89,19 @@ Two qualifications carry through every table in this section: absolute SD retain
 
 ### Precision by analysis type
 
+The table below summarizes replicate-level RSD at the analysis-type grain, computed directly from the 2,712 underlying replicate groups (not from averaging per-parameter medians).
+
+| Analysis type | Median RSD | Min RSD | Max RSD | P90 RSD | % RSD > 10 | % RSD > 20 | n replicate groups |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| xrf | 5.40% | 0.00% | 161.40% | 20.23% | 30.30% | 10.53% | 1,315 |
+| icp | 2.89% | 0.00% | 682.75% | 31.43% | 26.59% | 17.17% | 518 |
+| proximate | 1.30% | 0.01% | 297.59% | 8.76% | 8.20% | 2.28% | 460 |
+| compositional | 1.66% | 0.06% | 173.21% | 13.72% | 11.14% | 6.57% | 352 |
+| ultimate | 0.00% | 0.00% | 4.93% | 3.52% | 0.00% | 0.00% | 57 |
+| xrd | 1.49% | 0.44% | 3.99% | 3.64% | 0.00% | 0.00% | 10 |
+
+*Computed directly from `outputs/replicate_group_summary.csv`'s `RSD_percent` column, grouped by `analysis_type` — i.e. pooling all RSD-defined replicate groups for that analysis type and taking the median/min/max/P90/%>10/%>20 of their individual RSD values, not by averaging the 74 per-`analysis_type × parameter` medians in `method_parameter_summary.csv`. `n replicate groups` is the total replicate-group count for that analysis type (1,315/518/460/352/57/10, summing to 2,712); the RSD-based columns are computed only over the subset with a defined RSD (779/361/439/350/17/9 groups respectively, summing to the dataset's 1,955 RSD-defined groups).*
+
 | Analysis | Overall precision | Typical precision across parameters | Main issue | Parameters needing attention | Frontend implication |
 |---|---|---|---|---|---|
 | Proximate | Generally strong | Total solids, moisture, and volatile solids all run at very low median RSD (0.31–1.05%); ash is somewhat higher (4.40%). All four parameters are close to fully RSD-defined (81.7–100%). | Ash's flag rate (18.3%, 1.16×) is modestly elevated; volatile solids and total solids contribute meaningful *counts* to the review queue (14 and 13 groups) despite flag *rates below* the 15.7% baseline (12.2%/0.77×, 11.3%/0.72×) — their large denominator (115 groups each), not disproportionate unreliability, drives their raw contribution. | ash (mild); note that VS/TS queue presence ≠ poor overall precision | Present proximate parameters as generally reliable; an ash-specific caveat is reasonable, but VS/TS should not inherit a caveat merely from queue-count presence. |
@@ -444,11 +457,21 @@ Key cross-checks: volatile solids and total solids are both below baseline (0.77
 | Dixon rate (≥5 Dixon-applicable) | xrf/rb 75.7% (n=37) | xrf/sr 56.4% (n=39) | xrf/u 54.8% (n=42) | xrf/cu 43.2% (n=44) | compositional/arabinose 42.9% (n=7) |
 | 3×SD rate (≥10 3×SD-applicable) | xrf/ca 6.7% (n=45) | xrf/la 5.6% (n=18) | xrf/sr 4.7% (n=43) | compositional/glucose 4.5% (n=66) | xrf/si 4.4% (n=45) |
 
-### Table A4 — Precision-model diagnostics: supplementary detail
+### Table A3 — Precision-model diagnostics: supplementary detail
 
-- ICP median RSDs mostly sit at 1.2–5.3%, but P90/P95 blow out for specific elements: `icp/ti` P90=P95=141.4% (n=14, 58.3% RSD-defined); `icp/nd` P90=57.8%, P95=130.1% (n=24, 100% RSD-defined) — the median alone hides these tails.
-- `icp/na` special case: the RSD sign fix corrected 13 negative-mean replicate groups; corrected figures are median RSD=8.32%, %RSD>10=42.9%, %RSD>20=33.3%, P90/P95 RSD=103.1%/147.2%.
-- Ash/moisture/total solids/volatile solids precision detail: ash median SD=0.1888, median RSD=4.40%, %RSD>10=22.6%, %RSD>20=4.3%, n_RSD_defined=115 (100%); moisture median SD=0.1145, median RSD=0.99%, %RSD>10=1.06%, %RSD>20=1.06%, n_RSD_defined=94 (81.7%); total solids median SD=0.1823, median RSD=0.31%, %RSD>10=0.87%, %RSD>20=0.0%, n_RSD_defined=115 (100%); volatile solids median SD=0.3522, median RSD=1.05%, %RSD>10=6.96%, %RSD>20=3.48%, n_RSD_defined=115 (100%).
+| analysis_type | parameter | median_SD | median_RSD | P90_RSD | P95_RSD | %RSD>10 | %RSD>20 | n_RSD_defined | Note |
+|---|---|---:|---:|---:|---:|---:|---:|---:|---|
+| icp | ti | - | - | 141.4% | 141.4% | - | - | 14 (58.3%) | P90/P95 tie; tail blow-out despite adequate coverage — median alone hides this |
+| icp | nd | - | - | 57.8% | 130.1% | - | - | 24 (100%) | Tail blow-out despite full RSD coverage — median alone hides this |
+| icp | na (13 negative-mean subset) | — | 8.32% | 103.1% | 147.2% | 42.9% | 33.3% | 13 | Figures after the RSD sign fix (`RSD = SD / abs(mean)`) corrected these 13 previously mis-signed negative-mean replicate groups |
+| proximate | ash | 0.1888 | 4.40% | - | - | 22.6% | 4.3% | 115 (100%) | |
+| proximate | moisture | 0.1145 | 0.99% | - | - | 1.06% | 1.06% | 94 (81.7%) | |
+| proximate | total solids | 0.1823 | 0.31% | - | - | 0.87% | 0.0% | 115 (100%) | |
+| proximate | volatile solids | 0.3522 | 1.05% | - | - | 6.96% | 3.48% | 115 (100%) | - |
+
+ICP median RSDs mostly sit at 1.2–5.3% (see Table A1), but P90/P95 blow out for the `ti`/`nd` rows above despite adequate coverage.
+
+
 
 ### Figure catalog
 
