@@ -10,7 +10,7 @@ This document is a colleague-facing synthesis of the BioCirV **Exploratory Outli
 
 The analysis examined **2,712 technical-replicate groups** spanning six characterization analysis families (`xrf`, `icp`, `proximate`, `compositional`, `ultimate`, `xrd`) extracted from BioCirV's raw, unfiltered data. Its purpose was to characterize how consistently repeated measurements of the same sample agree with one another, and to compare several candidate statistical screens for flagging replicate groups that show unusually large or unusual disagreement.
 
-**Broad picture of replicate precision.** Typical (median) replicate precision is good to excellent for most well-populated analysis × parameter combinations — for example, `proximate` mass-balance parameters (total solids, moisture, volatile solids) and most `compositional` sugars run at low single-digit median relative standard deviation (RSD). Precision is not uniform, however: several `xrf` trace elements, several `icp` elements' upper tails, and a handful of low-concentration/near-detection-limit `compositional` sugars show materially higher typical or tail variability. A few analysis families (`ultimate`, `xrd`) have too little replicate data to draw firm precision conclusions at all. Sparse data should not be read as "high precision."
+**Broad picture of replicate precision.** Typical (median) replicate precision is good to excellent for most well-populated analysis families. See the analysis-type precision table in Section 3 for the full quantitative breakdown. Precision is not uniform: several `xrf` trace elements, several `icp` elements' upper tails, and a handful of low-concentration/near-detection-limit `compositional` sugars show materially higher typical or tail variability, and a few analysis families (`ultimate`, `xrd`) have too little replicate data to draw firm precision conclusions at all. Sparse data should not be read as "high precision."
 
 **Analysis families / parameters needing attention.** No single analysis family is uniformly "poor." Specific `xrf` trace elements (rubidium, copper, strontium, uranium, molybdenum, potassium, manganese, zinc, barium, cerium, praseodymium, thorium) show flag rates several times the dataset-wide baseline. `icp` shows reasonable median precision but extreme upper-tail RSD for elements including titanium, neodymium, aluminum, and sodium. `proximate` ash shows a modestly elevated flag rate; volatile solids and total solids contribute meaningful review-queue counts despite flag rates *below* the dataset-wide baseline (their large denominators, not disproportionate unreliability, drive their raw counts). `compositional` xylan and xylose are modestly elevated; arabinan/arabinose show high enrichment but rest on very small samples (n=7).
 
@@ -160,7 +160,7 @@ Each of the 74 `analysis_type × parameter` combinations was classified into one
 
 | Category | Count | Named example(s) |
 |---|---:|---|
-| Insufficient data | 26 | Too few usable replicate groups to fit |
+| Insufficient data | 26 | `compositional/lignin+` (n=4 replicate groups, n_points_usable_for_loglog=4 — just below the MIN_N_FOR_LOGLOG=5 fitting threshold; no slope/R² could be computed, but this is the combination closest to being fittable in this category) |
 | Unclear | 10 | `proximate/total solids` (largest n in category, R²=0.085, slope=−0.696) |
 | Concentration-dependent mixed | 20 | `xrf/zn` (slope=0.529, R²=0.438, n=41 — representative) |
 | Approximately constant relative RSD | 13 | `icp/ca` (best of 13, R²=0.886, slope=1.056, n=30) |
@@ -186,12 +186,12 @@ Four existing diagnostic figures (one representative example per non-trivial cat
 
 ### Screen applicability and review burden
 
-Not every screen can evaluate every replicate group; raw flag counts are misleading without knowing each screen's own applicable denominator.
+Not every screen can evaluate every replicate group; raw flag counts are misleading without knowing each screen's own applicable denominator. **Note on the shared RSD denominator:** RSD > 10% and RSD > 20% intentionally share the same 1,955-group "applicable population" — both thresholds are two different cutoffs applied to the *same* underlying RSD-defined population (any group with a computable RSD is applicable to both).
 
-| Screen | Flagged | % of all 2,712 replicate groups | Applicable groups | % of 2,712 applicable | % of applicable flagged |
+| Screen | Flagged (count) | % of all 2,712 groups | Applicable population | % of 2,712 for which screen is applicable | % of applicable population flagged |
 |---|---:|---:|---:|---:|---:|
 | RSD > 10% | 407 | 15.0% | 1,955 (RSD-defined) | 72.1% | 20.8% |
-| RSD > 20% | 177 | 6.5% | 1,955 (RSD-defined) | 72.1% | 9.1% |
+| RSD > 20% | 177 | 6.5% | 1,955 (RSD-defined, same population as RSD > 10%) | 72.1% | 9.1% |
 | Dixon (α=0.05) | 246 | 9.1% | 1,447 (Dixon-applicable) | 53.4% | 17.0% |
 | 3×SD (pooled, exploratory) | 51 | 1.9% | 1,966 (3×SD-applicable) | 72.5% | 2.6% |
 
@@ -229,33 +229,7 @@ Dixon-only is the single largest category, consistent with Dixon most often firi
 
 ### Where flags are concentrated
 
-**Analysis × parameter:** The top-10 contributors below account for **45.4% of all 427 flags** (the top 5 alone account for 29.0%):
-
-| analysis_type | parameter | n_flagged_groups | % of 427 | n_replicate_groups | flag_rate_percent |
-|---|---|---:|---:|---:|---:|
-| xrf | rb | 30 | 7.0% | 52 | 57.7% |
-| xrf | cu | 26 | 6.1% | 55 | 47.3% |
-| xrf | sr | 24 | 5.6% | 54 | 44.4% |
-| xrf | u | 23 | 5.4% | 55 | 41.8% |
-| proximate | ash | 21 | 4.9% | 115 | 18.3% |
-| xrf | k | 15 | 3.5% | 55 | 27.3% |
-| proximate | volatile solids | 14 | 3.3% | 115 | 12.2% |
-| xrf | mn | 14 | 3.3% | 55 | 25.5% |
-| xrf | zn | 14 | 3.3% | 55 | 25.5% |
-| proximate | total solids | 13 | 3.0% | 115 | 11.3% |
-
-This table highlights an important distinction: `xrf/rb`, `cu`, `sr`, `u` combine **both** high raw counts **and** high within-parameter flag rates (42–58% of their own replicate groups flagged, on modest denominators of 52–55 groups). `proximate/ash` contributes a substantial count with only modest enrichment (18.3% rate, 1.16×). `proximate/volatile solids` and `total solids` contribute meaningful counts (14, 13) despite flag rates *below* the 15.7% dataset baseline (12.2%/0.77×, 11.3%/0.72×) — their large shared denominator (115 groups each) drives the raw count, not elevated per-group risk. The complete 74-row table (including all combinations with zero flags) is in Appendix Table A1.
-
-**Analysis type:**
-
-| analysis_type | Flagged groups | % of 427 | All replicate groups | Flag rate |
-|---|---:|---:|---:|---:|
-| xrf | 254 | 59.5% | 1,315 | 19.3% |
-| icp | 62 | 14.5% | 518 | 12.0% |
-| proximate | 59 | 13.8% | 460 | 12.8% |
-| compositional | 52 | 12.2% | 352 | 14.8% |
-
-Raw contribution and per-group flag propensity are different things: `xrf` contributes the majority of raw flags (59.5%), but its flag *rate* (19.3%) is only modestly above the other three analysis types (12.0–14.8%) — `xrf`'s dominance in raw counts is driven substantially by its population size (48.5% of all 2,712 groups), not by a uniquely higher per-group flag propensity. **"XRF is poor" is not a supportable blanket statement.**
+See [Precision by analysis × parameter](#precision-by-analysis--parameter) above for the full per-combination and per-analysis-type breakdown (flagged counts, flag rates, and enrichment vs. the 15.7% baseline); this section focuses on cross-cutting concentration patterns not already covered there — experiment_id, provider, sample preparation method, and existing QC status.
 
 **Other review dimensions** The table below merges the Step 10 priority-order targets (rows 1–7, which achieve 90.6% true set-union cumulative coverage of the 427-group backlog) with additional Step 9 supporting-context dimension cuts (rows 8–11, not promoted to standalone Step 10 targets because they are redundant with or subsumed by an already-selected target).
 
@@ -462,11 +436,7 @@ Source: `outputs/candidate_rule_comparison.csv` joined with `outputs/review_queu
 
 Key cross-checks: volatile solids and total solids are both below baseline (0.77×, 0.72×) despite meaningful absolute counts (14, 13), driven by their shared large denominator (115 groups). The highest single enrichment values in the table are `compositional/arabinose` (2.72×, n=7 — small-denominator caveat applies) and `xrf/rb` (3.66×, n=52 — a robust denominator).
 
-### Table A2 — Screen applicability and overlap (repeated from Sections 5–6 for appendix completeness)
-
-See Section 5 ("Screen applicability and review burden," "Agreement and disagreement among screens") and Section 6 ("Size and composition of the review backlog") for the complete applicability and overlap tables; not duplicated here to avoid redundant repetition of the same complete table.
-
-### Table A3 — Top parameters by individual screen (extended)
+### Table A2 — Top parameters by individual screen (extended)
 
 | Screen | Rank 1 | Rank 2 | Rank 3 | Rank 4 | Rank 5 |
 |---|---|---|---|---|---|
