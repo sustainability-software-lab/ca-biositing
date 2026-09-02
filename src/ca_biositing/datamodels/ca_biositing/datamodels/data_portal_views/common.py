@@ -34,6 +34,11 @@ EXCLUDED_RESOURCES = [
     "almond woodchips",
 ]
 
+# Global provider filters to exclude problematic providers
+EXCLUDED_PROVIDERS = [
+    "jaguar",
+]
+
 # Allowed parameters for Ultimate Analysis
 ULTIMATE_PARAMETERS = ["carbon", "nitrogen", "oxygen", "sulfur", "hydrogen"]
 
@@ -134,6 +139,14 @@ def get_resource_filter(resource_model):
     """Filter to exclude problematic resources."""
     return and_(
         func.lower(resource_model.name).not_in(EXCLUDED_RESOURCES)
+    )
+
+
+def get_provider_filter(provider_model):
+    """Filter to exclude problematic providers."""
+    return or_(
+        provider_model.id.is_(None),
+        func.lower(provider_model.codename).not_in(EXCLUDED_PROVIDERS)
     )
 
 
