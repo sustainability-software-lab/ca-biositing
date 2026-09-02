@@ -259,7 +259,7 @@ Raw contribution and per-group flag propensity are different things: `xrf` contr
 
 **Other review dimensions** The table below merges the Step 10 priority-order targets (rows 1–7, which achieve 90.6% true set-union cumulative coverage of the 427-group backlog) with additional Step 9 supporting-context dimension cuts (rows 8–11, not promoted to standalone Step 10 targets because they are redundant with or subsumed by an already-selected target).
 
-| analysis | parameter | experiment_id | provider | sample_preparation_method | all groups | flagged groups | % of 427 | flag rate | enrichment vs baseline | cumulative % (Step 10 order) | source |
+| analysis | parameter | experiment_id | provider | sample_preparation_method | all groups | flagged groups | % of 427 | flag rate | enrichment vs baseline | cumulative % | source |
 |---|---|---|---|---|---:|---:|---:|---:|---:|---:|---|
 | — | — | 47 | — | — | 925 | 254 | 59.5% | 27.5% | 1.74x | 59.5% (Priority 1) | Step 9 + Step 10 |
 | — | — | 43 | — | — | 336 | 61 | 14.3% | 18.2% | 1.15x | 73.8% (Priority 2) | Step 9 + Step 10 |
@@ -268,12 +268,12 @@ Raw contribution and per-group flag propensity are different things: `xrf` contr
 | compositional | xylan | — | — | — | 68 | 13 | 3.0% | 19.1% | 1.21x | 85.0% (Priority 5) | Step 10 |
 | proximate | total solids | — | — | — | 115 | 13 | 3.0% | 11.3% | 0.72x | 88.1% (Priority 6) | Step 10 |
 | compositional | xylose | — | — | — | 66 | 11 | 2.6% | 16.7% | 1.06x | 90.6% (Priority 7) | Step 10 |
-| xrf (all params) | — | — | — | — | 1,315 | 254 | 59.5% | 19.3% | 1.23x | n/a — not a Step 10 top-level target | Step 9 only |
-| — | — | — | rigging | — | 178 | 55 | 12.9% | 30.9% | 1.96x | n/a — subsumed in experiment_id=47 (41/254) | Step 9 only |
-| — | — | — | — | knife mill (2mm) | 952 | 197 | 46.1% | 20.7% | 1.31x | n/a — not a Step 10 top-level target | Step 9 only |
-| — | — | — | — | oven dry + knife mill (2mm) | 590 | 144 | 33.7% | 24.4% | 1.55x | n/a — not a Step 10 top-level target | Step 9 only |
+| xrf (all params) | — | — | — | — | 1,315 | 254 | 59.5% | 19.3% | 1.23x |  | Step 9 only |
+| — | — | — | rigging | — | 178 | 55 | 12.9% | 30.9% | 1.96x | subsumed in experiment_id=47 (41/254) | Step 9 only |
+| — | — | — | — | knife mill (2mm) | 952 | 197 | 46.1% | 20.7% | 1.31x |  | Step 9 only |
+| — | — | — | — | oven dry + knife mill (2mm) | 590 | 144 | 33.7% | 24.4% | 1.55x |  | Step 9 only |
 
-Rows 1–7 use true set-union cumulative coverage — verified zero overlap between the five analysis × parameter rows and the two experiment_id rows — so the final 90.6% is not double-counted. Rows 8–11 are Step-9-only supporting context, not promoted to standalone Step 10 rows: `xrf` overlaps heavily with experiment 47's own sub-focus list; the `rigging` provider is already 41-of-254 inside the experiment 47 target and so was not made a separate row; `provider` and `sample_preparation_method` were considered but rejected as standalone Step 10 targets for being redundant with, or too small relative to, the selected targets.
+Rows 1–7 use true set-union cumulative coverage (verified zero overlap between the five analysis × parameter rows and the two experiment_id rows) so the final 90.6% is not double-counted. Rows 8–11 are non unique: `xrf` overlaps heavily with experiment 47's own sub-focus list; the `rigging` provider is already 41-of-254 inside the experiment 47 target and so was not made a separate row; `provider` and `sample_preparation_method` were considered but rejected as standalone Step 10 targets for being redundant with, or too small relative to, the selected targets.
 
 **Experiment 47 sub-focus** (254 groups): `xrf/rb`=30, `cu`=26, `sr`=24, `u`=23, `k`=15, `mn`=14, `zn`=14, `mo`=12, `ba`=12, `ca`=11 — these 10 parameters make up 181/254 (71%) of experiment 47's flags, each 100% contained within experiment 47, with a Dixon_only-dominant flag-category mix.
 
@@ -301,26 +301,15 @@ The provisional grouping key `analysis_type + parameter + experiment_id` was cho
 | +resource_id | 340 | 1.0 | 5 | 273 | 80.3% |
 | +provider | 297 | 1.0 | 6 | 211 | 71.0% |
 | +sample_preparation_method | 144 | 2.0 | 18 | 69 | 47.9% |
-| +protocol_version | 114 | 2.0 | 30 | 53 | 46.5% (unchanged — protocol_version is 100% null, so it never splits any group) |
 | all metadata dims combined | 379 | 1.0 | 4 | 338 | 89.2% |
 
-Adding more metadata dimensions rapidly fragments the backlog into mostly singleton packets, defeating the purpose of consolidation; the base key provides substantially more consolidation than any richer alternative. The largest packets — `xrf|rb|47` (30 groups), `xrf|cu|47` (26), `xrf|sr|47` (24) — all belong to experiment 47.
+Adding more metadata dimensions rapidly fragments the backlog into mostly singleton packets, defeating the purpose of consolidation.
 
-**Documented limitation, preserved as-is:** `experiment_id` is a convenient review-grouping key. The available data do **not** establish that it corresponds to a specific common day/run/batch or a validated shared root cause — it is a provisional simplification for organizing review, not a proven investigation unit.
-
-### Review effort (hypothetical planning scenarios only)
-
-| Scenario | Min/review | Total min (427 raw) | Total hrs (427 raw) | Total min (114 packets) | Total hrs (114 packets) |
-|---|---:|---:|---:|---:|---:|
-| Fast | 5 | 2,135 | 35.6 | 570 | 9.5 |
-| Moderate | 10 | 4,270 | 71.2 | 1,140 | 19.0 |
-| Thorough | 15 | 6,405 | 106.8 | 1,710 | 28.5 |
-
-These are **hypothetical planning scenarios only**, not measured analyst-time data. 
+**Documented limitation, preserved as-is:** `experiment_id` is a convenient review-grouping key. The available data do **not** establish that it corresponds to a specific common day/run/batch or a validated shared root cause. It is a provisional simplification for organizing review, not a proven investigation unit.
 
 ### Human-review priorities
 
-The merged priority table above ("Other review dimensions") reproduces the final Step 10 ranking. Its key practical finding: **seven non-overlapping review targets — two `experiment_id`s and five `analysis_type × parameter` combinations — collectively address 90.6% of the entire 427-group backlog** (387 of 427 unique replicate groups), using a true set-union calculation so that any group belonging to more than one target would be counted only once (in this particular selection, none of the seven targets overlap with any other). This means a small number of coherent investigations can, in principle, address most of the backlog.
+The merged priority table above ("Other review dimensions") key practical finding is that **seven non-overlapping review targets (2 `experiment_id`s and 5 `analysis_type × parameter` combinations) collectively address 90.6% of the entire 427-group backlog** (387 of 427 unique replicate groups), calculated such that any group belonging to more than one target would be counted only once. This means a small number of coherent investigations can, in principle, address most of the backlog.
 
 🚩 **Flagged for further discussion:** Is `analysis_type + parameter + experiment_id` actually a useful investigation grain for the analysts who will conduct review?
 
@@ -328,17 +317,15 @@ The merged priority table above ("Other review dimensions") reproduces the final
 
 ---
 
-## 7. Implications for Analysts
+## 7. Report Summary for Analysts
 
-**Prioritize coherent investigations rather than reviewing randomly.** The flagged queue is concentrated enough (Section 6) that analyst review can begin with a small number of high-coverage investigations — two experiment-level targets and five analysis × parameter targets already reach 90.6% cumulative coverage of the 427-group backlog — rather than working through 427 unordered cases.
+**Different flags imply different review questions.** A high RSD flag calls for investigating large *overall* replicate disagreement within a group. A Dixon flag calls for investigating whether a single, potentially isolated extreme replicate is responsible for that group's spread. A 3×SD flag calls for investigating an unusual *absolute* deviation relative to the historical within-replicate precision for that analysis × parameter, but remember 3xSD comparator's exploratory status and its limited empirical support (only 5 of 74 combinations behave like constant-absolute-SD; Section 4).
 
-**Different flags imply different review questions.** A high RSD flag calls for investigating large *overall* replicate disagreement within a group. A Dixon flag calls for investigating whether a single, potentially isolated extreme replicate is responsible for that group's spread. A 3×SD flag calls for investigating an unusual *absolute* deviation relative to the historical within-replicate precision for that analysis × parameter — while remembering this comparator's exploratory status and its limited empirical support (only 5 of 74 combinations behave like constant-absolute-SD; Section 4).
+**Flags need contextual review.** A statistical flag alone is not enough information to disposition a case. An analyst reviewing a flagged replicate group will typically need the individual replicate values, source record IDs, existing QC status/notes, experiment context, resource/sample context, and relevant preparation/method metadata together in one place. This report does not prescribe a specific interface to do this, only that the flag by itself is insufficient.
 
-**Flags need contextual review.** A statistical flag alone is not enough information to disposition a case. An analyst reviewing a flagged replicate group will typically need the individual replicate values, source record IDs, existing QC status/notes, experiment context, resource/sample context, and relevant preparation/method metadata together in one place. This report does not prescribe a specific interface — only that the flag by itself is insufficient.
+**Existing QC and statistical screening are complementary, not redundant.** The large majority of statistically flagged groups (91.3%) already carry an `existing_QC_status` of `pass`. This does not mean existing QC was wrong; it means statistical screening surfaces forms of replicate disagreement that the existing QC field does not currently represent.
 
-**Existing QC and statistical screening are complementary, not redundant.** The large majority of statistically flagged groups (91.3%) already carry an `existing_QC_status` of `pass` — this does not mean existing QC was wrong; it means statistical screening surfaces forms of replicate disagreement that the existing QC field does not currently represent. Mixed values such as `fail,pass` or `pass,provisional` represent replicate groups whose underlying records carried *different* QC statuses, not a standalone QC category — they should be read as "this group's records disagreed," not as a distinct QC verdict.
-
-**Investigation grain remains provisional.** The `analysis_type + parameter + experiment_id` packet structure used to consolidate 427 flagged groups into 114 investigation packets is analytically useful but has not yet been validated with the analysts who will actually perform review.
+**Investigation grain remains provisional.** The `analysis_type + parameter + experiment_id` packet structure used to consolidate 427 flagged groups into 114 investigation packets  may be useful, but remains an unruly workload. Some experimentation may be required to determine the most efficient way to select, evaluate and mark-as-analysis-ready swaths of data.  
 
 🚩 **Flagged for further discussion:** Is the proposed investigation-packet grain useful to analysts?
 
@@ -348,7 +335,7 @@ The merged priority table above ("Other review dimensions") reproduces the final
 
 ---
 
-## 8. Implications for Frontend Data Visualization
+## 8. Report Summary for Frontend Data Visualization
 
 Frontend communication of precision/variability findings should remain clearly distinct from backend statistical QC screening. **A statistical flag should not be displayed to end users as "bad data."** Instead, these findings can inform how BioCirV communicates expected precision, parameter-specific variability, evidence sufficiency, and relevant methodological context.
 
@@ -364,11 +351,11 @@ Frontend communication of precision/variability findings should remain clearly d
 
 **ICP.** Typical median precision is reasonable for most ICP elements, but several show important upper-tail variability (ti, nd, al, na) that a single, universal ICP precision statement would obscure. Frontend messaging should avoid collapsing ICP into one precision claim.
 
-**Proximate.** Several major parameters (total solids, moisture, volatile solids) show strong typical repeatability while still contributing flagged cases — driven substantially by dataset size rather than poor reliability. Presence in the human-review queue should not be equated with poor user-facing reliability for these parameters; ash carries a more warranted, though still modest, caveat.
+**Proximate.** Several major parameters (total solids, moisture, volatile solids) show strong typical repeatability while still contributing flagged cases driven substantially by dataset size rather than poor reliability. Presence in the human-review queue should not be equated with poor user-facing reliability for these parameters; ash carries a more warranted, though still modest, caveat.
 
-**Compositional.** Major structural sugars (glucan, glucose, lignin, xylan, xylose) show strong typical precision; arabinan and arabinose are the exception, showing higher variability that likely reflects proximity to detection limits, but on only 7 replicate groups each — a sparse-evidence caveat is more appropriate than a firm "high variability" claim.
+**Compositional.** Major structural sugars (glucan, glucose, lignin, xylan, xylose) show strong typical precision; arabinan and arabinose are the exception, showing higher variability that likely reflects proximity to detection limits, but on only 7 replicate groups each. A sparse-evidence caveat is more appropriate than a firm "high variability" claim.
 
-**Sparse evidence.** For `ultimate`, `xrd`, and other sparsely replicated measurements, the frontend (and any internal messaging) should distinguish "limited evidence about precision" from "high precision" — the current zero-flag result for these analyses reflects insufficient multi-replicate data to evaluate, not demonstrated reliability.
+**Sparse evidence.** For `ultimate`, `xrd`, and other sparsely replicated measurements, the frontend (and any internal messaging) should distinguish "limited evidence about precision" from "high precision". The current zero-flag result for these analyses reflects insufficient multi-replicate data to evaluate, not demonstrated reliability.
 
 🚩 **Flagged for further discussion:** Which precision/variability information is useful to BioCirV users versus appropriate only for internal QC?
 
@@ -378,13 +365,13 @@ Frontend communication of precision/variability findings should remain clearly d
 
 ---
 
-## 9. Data Quality Due Diligence — Questions for Further Discussion
+## 9. Data Quality Due Diligence Questions for Further Discussion
 
 This Exploratory Outlier & Variance Analysis demonstrates that BioCirV can quantify replicate precision at measurement-specific grains; that different statistical signals identify complementary, largely non-redundant review candidates; that the resulting review burden is measurable (427 of 2,712 groups, 15.7%); that this burden is concentrated enough to prioritize a small number of coherent investigations (90.6% coverage from seven targets); and that none of these statistical signals, independently, proves that any observation is erroneous.
 
 **Proposed Data Quality Due Diligence principle** (proposed only — not a claim that production infrastructure already implements it): *BioCirV preserves raw observations, screens analysis-ready data for predefined quality signals, and uses flagged cases to prioritize documented human review. Statistical flags initiate due diligence; they do not independently establish that a measurement is erroneous or justify deletion.*
 
-Relevant unresolved decisions — intentionally not settled in this report — include: which signals should trigger review; what evidence analysts should inspect for disposition; what constitutes sufficient disposition/documentation; what review burden is operationally acceptable; and which findings should remain backend-only versus become frontend-facing context.
+Relevant unresolved decisions intentionally not settled in this report include: which signals should trigger review; what evidence analysts should inspect for disposition; what constitutes sufficient disposition/documentation; what review burden is operationally acceptable; and which findings should remain backend-only versus become frontend-facing context.
 
 🚩 **Flagged for further discussion:** What exactly should a BioCirV "Data Quality Due Diligence Guarantee" promise?
 
@@ -473,7 +460,7 @@ Source: `outputs/candidate_rule_comparison.csv` joined with `outputs/review_queu
 | xrf | w | 12 | 0 | 0.0 | 0.00x |
 | xrf | zr | 12 | 0 | 0.0 | 0.00x |
 
-Key cross-checks: `proximate/ash` is the only one of ash/volatile-solids/total-solids above baseline (1.16×); volatile solids and total solids are both below baseline (0.77×, 0.72×) despite meaningful absolute counts (14, 13), driven by their shared large denominator (115 groups). The highest single enrichment values in the table are `compositional/arabinose` (2.72×, n=7 — small-denominator caveat applies) and `xrf/rb` (3.66×, n=52 — a robust denominator). `icp/al` and `icp/na` are both 1.85×; `icp/ti` is 1.59×.
+Key cross-checks: volatile solids and total solids are both below baseline (0.77×, 0.72×) despite meaningful absolute counts (14, 13), driven by their shared large denominator (115 groups). The highest single enrichment values in the table are `compositional/arabinose` (2.72×, n=7 — small-denominator caveat applies) and `xrf/rb` (3.66×, n=52 — a robust denominator).
 
 ### Table A2 — Screen applicability and overlap (repeated from Sections 5–6 for appendix completeness)
 
