@@ -1,5 +1,6 @@
+from datetime import datetime
 from decimal import Decimal
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 from typing import Optional
 
 
@@ -8,7 +9,6 @@ class InfrastructureWastewaterTreatmentPlants(SQLModel, table=True):
 
     plant_id: Optional[int] = Field(default=None, primary_key=True)
     name: Optional[str] = Field(default=None)
-    state: Optional[str] = Field(default=None)
     codigestion: Optional[str] = Field(default=None)
     flow_design_adjusted: Optional[Decimal] = Field(default=None)
     flow_average: Optional[Decimal] = Field(default=None)
@@ -25,14 +25,16 @@ class InfrastructureWastewaterTreatmentPlants(SQLModel, table=True):
     electric_kwh: Optional[Decimal] = Field(default=None)
     thermal_annual_mmbtu_y: Optional[Decimal] = Field(default=None)
     anaerobic_digestion_facility: Optional[str] = Field(default=None)
-    county: Optional[str] = Field(default=None)
     dayload_bdt: Optional[Decimal] = Field(default=None)
     dayload: Optional[Decimal] = Field(default=None)
     equivalent_generation: Optional[Decimal] = Field(default=None)
     facility_type: Optional[str] = Field(default=None)
     feedstock: Optional[str] = Field(default=None)
     type: Optional[str] = Field(default=None)
-    city: Optional[str] = Field(default=None)
     latitude: Optional[Decimal] = Field(default=None)
     longitude: Optional[Decimal] = Field(default=None)
-    zipcode: Optional[str] = Field(default=None)
+    address_id: Optional[int] = Field(default=None, foreign_key="location_address.id")
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
+
+    address: Optional["LocationAddress"] = Relationship()

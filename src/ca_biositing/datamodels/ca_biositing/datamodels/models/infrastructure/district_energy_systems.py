@@ -1,5 +1,6 @@
+from datetime import datetime
 from decimal import Decimal
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 from typing import Optional
 
 
@@ -11,8 +12,6 @@ class InfrastructureDistrictEnergySystems(SQLModel, table=True):
     name: Optional[str] = Field(default=None)
     system: Optional[str] = Field(default=None)
     object_id: Optional[int] = Field(default=None)
-    city: Optional[str] = Field(default=None)
-    state: Optional[str] = Field(default=None)
     primary_fuel: Optional[str] = Field(default=None)
     secondary_fuel: Optional[str] = Field(default=None)
     usetype: Optional[str] = Field(default=None)
@@ -27,3 +26,8 @@ class InfrastructureDistrictEnergySystems(SQLModel, table=True):
     geom: Optional[str] = Field(default=None)
     latitude: Optional[Decimal] = Field(default=None)
     longitude: Optional[Decimal] = Field(default=None)
+    address_id: Optional[int] = Field(default=None, foreign_key="location_address.id")
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
+
+    address: Optional["LocationAddress"] = Relationship()

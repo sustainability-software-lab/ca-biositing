@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 from typing import Optional
 
 
@@ -15,15 +15,6 @@ class InfrastructureBiosolidsFacilities(SQLModel, table=True):
     authority: Optional[str] = Field(default=None)
     plant_type: Optional[str] = Field(default=None)
     aqmd: Optional[str] = Field(default=None)
-    facility_address: Optional[str] = Field(default=None)
-    facility_city: Optional[str] = Field(default=None)
-    state: Optional[str] = Field(default=None)
-    facility_zip: Optional[str] = Field(default=None)
-    facility_county: Optional[str] = Field(default=None)
-    mailing_street_1: Optional[str] = Field(default=None)
-    mailing_city: Optional[str] = Field(default=None)
-    mailing_state: Optional[str] = Field(default=None)
-    mailing_zip: Optional[str] = Field(default=None)
     biosolids_number: Optional[str] = Field(default=None)
     biosolids_contact: Optional[str] = Field(default=None)
     biosolids_contact_phone: Optional[str] = Field(default=None)
@@ -49,3 +40,8 @@ class InfrastructureBiosolidsFacilities(SQLModel, table=True):
     other: Optional[int] = Field(default=None)
     name_of_other: Optional[str] = Field(default=None)
     incineration: Optional[int] = Field(default=None)
+    address_id: Optional[int] = Field(default=None, foreign_key="location_address.id")
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
+
+    address: Optional["LocationAddress"] = Relationship()

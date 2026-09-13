@@ -1,10 +1,4 @@
-"""
-ETL Transform Template.
-
-
-This module provides a template for transforming raw data from multiple sources.
-It includes standard cleaning, coercion, and normalization patterns used in the pipeline.
-"""
+#Modified ETL Transform for Biodiesel.
 
 import pandas as pd
 import numpy as np
@@ -21,19 +15,30 @@ from ca_biositing.pipeline.utils.geo_utils import parse_addresses
 # The pipeline runner provides these in the `data_sources` dictionary.
 EXTRACT_SOURCES: List[str] = ["biodiesel_plants"]
 
+# List the unique address information needed to find the geocoded address.
+MERGE_COLUMNS = ["company", "city", "state", "address"]
+
+# don't edit
+geocoded_columns = ["geocoded_status", "closest_address_line_1", "closest_address_line_2", "closest_city", "closest_county", "closest_state", "closest_postal_code", "closest_latitude", "closest_longitude", "closest_geoid", "closest_state_name", "closest_state_fips", "closest_county_name", "closest_county_fips"]
+
 @task
 def transform(
     data_sources: Dict[str, pd.DataFrame],
+    geocoded_df: pd.DataFrame,
     etl_run_id: int = None,
-    lineage_group_id: int = None
+    lineage_group_id: int = None,
 ) -> Optional[pd.DataFrame]:
     """
-    Transforms raw data from multiple sources into a structured format.
+    Transforms raw biodiesel plants data.
 
     Args:
         data_sources: Dictionary where keys are source names and values are DataFrames.
+        geocoded_df: DataFrame containing geocoded addresses from Google Sheets.
         etl_run_id: ID of the current ETL run.
         lineage_group_id: ID of the lineage group.
+
+    Returns:
+        A DataFrame ready for loading into infrastructure_biodiesel_plants.
     """
     try:
         logger = get_run_logger()
@@ -71,8 +76,6 @@ def transform(
         cleaned_df['etl_run_id'] = etl_run_id
         cleaned_df['lineage_group_id'] = lineage_group_id
 
-        # if address = null add state + city
-        cleaned_df["address"] = np.where(cleaned_df["address"].isna(), cleaned_df["city"] + " " + cleaned_df["state"], cleaned_df["address"])
 
         # Coerce data types (Update these lists based on your schema)
         coerced_df = coercion_mod.coerce_columns(
@@ -90,19 +93,22 @@ def transform(
     # Combine sources if necessary, or handle them individually
     combined_df = pd.concat(processed_dfs, ignore_index=True)
 
-    address_df, geoid_df = parse_addresses(combined_df, address_column="address", lat="latitude", long="longitude")
+    # 3. Merge geocoded information with incoming data
 
-    added_address_df = pd.concat([combined_df, address_df, geoid_df], axis=1)
+    geocoded_df = cleaning_mod.standard_clean(geocoded_df)
 
-    # 3. Normalization (Name-to-ID Swapping)
+    GEOCODED_DF_FILTER = MERGE_COLUMNS + geocoded_columns
+
+    added_address_df = pd.merge(combined_df, geocoded_df[GEOCODED_DF_FILTER], on=MERGE_COLUMNS, how='left')
+
+    # 4. Normalization (Name-to-ID Swapping)
     # Format: 'dataframe_column': (SQLAlchemyModel, 'lookup_field_in_db')
     normalize_columns = {
 
     }
 
 
-
-     # Manual normalization for Place (County) to avoid NotNullViolation on geoid
+    # Manual normalization for Place (County) to avoid NotNullViolation on geoid
     # and provide a resilient lookup that defaults to state-level GEOID.
     from ca_biositing.pipeline.utils.geo_utils import get_geoid
     from sqlmodel import Session, select
@@ -131,7 +137,7 @@ def transform(
             for index, row in normalized_df.iterrows():
                 # Find or create LocationAddress and Place where geography_id = geoid
                 geoid = row["closest_geoid"]
-                if geoid != None and geoid != '00000':
+                if geoid is not pd.NA and geoid is not None and geoid != "" and geoid != "00000":
                     stmt1 = select(Place).where(
                         Place.geoid == geoid
                     )
@@ -158,14 +164,18 @@ def transform(
                     if not address:
                         logger.info(f"Creating new generic LocationAddress for county geoid: {geoid}")
 
+                        # Convert pandas NA to None for database insertion
+                        def to_none_if_na(value):
+                            return None if pd.isna(value) else value
+
                         address = LocationAddress(
                             geography_id=geoid,
-                            address_line1=row["closest_address_line_1"],
-                            address_line2=row["closest_address_line_2"],
-                            city=row["closest_city"],
-                            zip=row["closest_postal_code"],
-                            lat=row["closest_latitude"],
-                            lon=row["closest_longitude"],
+                            address_line1=to_none_if_na(row["closest_address_line_1"]),
+                            address_line2=to_none_if_na(row["closest_address_line_2"]),
+                            city=to_none_if_na(row["closest_city"]),
+                            zip=to_none_if_na(row["closest_postal_code"]),
+                            lat=to_none_if_na(row["closest_latitude"]),
+                            lon=to_none_if_na(row["closest_longitude"]),
                             is_anonymous=False
                             )
                         session.add(address)
@@ -176,17 +186,9 @@ def transform(
             session.commit()
 
             # Map county_id (Place.geoid) to sampling_location_id (LocationAddress.id)
-            normalized_df['address'] = normalized_df['closest_geoid'].map(place_to_address_map)
+            normalized_df['address_id'] = normalized_df['closest_geoid'].map(place_to_address_map)
             logger.info(f"Mapped {len(place_to_address_map)} counties to LocationAddresses")
 
-
-    # 4. Column Renaming
-    # TODO: Update this dictionary to match your source-to-target mapping
-
-    rename_columns = {
-
-    }
-    normalized_df = normalized_df.rename(columns=rename_columns)
 
     # 5. Final Mapping & Selection
     # TODO: Update this list to match the columns in your target database table
@@ -205,7 +207,7 @@ def transform(
             "capacity_mmg_per_y",
             "feedstock",
             "status",
-            "address",
+            "address_id",
             "coordinates",
             "latitude",
             "longitude",

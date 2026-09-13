@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 from typing import Optional
 
 
@@ -10,8 +10,6 @@ class InfrastructureLivestockAnaerobicDigesters(SQLModel, table=True):
     digester_id: Optional[int] = Field(default=None, primary_key=True)
     project_name: Optional[str] = Field(default=None)
     project_type: Optional[str] = Field(default=None)
-    city: Optional[str] = Field(default=None)
-    state: Optional[str] = Field(default=None)
     digester_type: Optional[str] = Field(default=None)
     profile: Optional[str] = Field(default=None)
     year_operational: Optional[date] = Field(default=None)
@@ -30,3 +28,8 @@ class InfrastructureLivestockAnaerobicDigesters(SQLModel, table=True):
     methane_emission_reductions: Optional[int] = Field(default=None)
     latitude: Optional[Decimal] = Field(default=None)
     longitude: Optional[Decimal] = Field(default=None)
+    address_id: Optional[int] = Field(default=None, foreign_key="location_address.id")
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
+
+    address: Optional["LocationAddress"] = Relationship()
