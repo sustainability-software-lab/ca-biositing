@@ -199,9 +199,12 @@ def main():
 
     # Using the built-in save with default options is most reliable
     dashboard.save(export_path)
+    from scripts.inject_click_export import inject_click_export
+    inject_click_export(export_path)
 
     # Also save to the "dashboard" named file for safety
     dashboard.save("exports/plots/composition/proximate_distribution_dashboard.html")
+    inject_click_export("exports/plots/composition/proximate_distribution_dashboard.html")
 
     print(f"Dashboard saved to {export_path}")
 

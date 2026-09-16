@@ -76,6 +76,8 @@ def main():
     # Save as Interactive HTML
     html_path = "exports/plots/composition/moisture_vs_ash.html"
     chart.save(html_path)
+    from scripts.inject_click_export import inject_click_export
+    inject_click_export(html_path)
     print(f"Interactive plot saved to {html_path}")
 
     # Save as Static PNG

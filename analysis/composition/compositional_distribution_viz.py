@@ -186,6 +186,8 @@ def main():
     os.makedirs("exports/plots/composition", exist_ok=True)
     export_path = "exports/plots/composition/compositional_distribution.html"
     dashboard.save(export_path)
+    from scripts.inject_click_export import inject_click_export
+    inject_click_export(export_path)
 
     # Save static PNG as well (using pixi run)
     print(f"Dashboard saved to {export_path}")
