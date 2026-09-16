@@ -70,6 +70,17 @@ def regenerate_all_plots():
         except subprocess.CalledProcessError as e:
             print(f"❌ Failed to update gallery: {e}")
 
+    # Safety net: re-inject the click-export snippet into all HTML files.
+    # Individual viz scripts call inject_click_export() themselves, but this
+    # ensures the snippet is present even if a script was added without that call.
+    if successes:
+        print("\n💉 Re-injecting click-export snippet into all dashboard HTML files...")
+        try:
+            subprocess.run([sys.executable, "scripts/_reinject_all.py"], check=True)
+            print("✅ Click-export snippet re-injected successfully!")
+        except subprocess.CalledProcessError as e:
+            print(f"⚠️  Failed to re-inject click-export snippet: {e}")
+
     if failures:
         sys.exit(1)
 
