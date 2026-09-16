@@ -188,6 +188,19 @@ multi-dimensional cross-filtering by Resource, Provider, and Pretreatment Method
 > [`analysis/conversion/pretreatment_distribution_viz.py`](analysis/conversion/pretreatment_distribution_viz.py)
 > | **Generated:** 2026-07-08 19:15 UTC
 
+## Pretreatment Variance Analysis
+
+[Interactive Visualization](plots/conversion/pretreatment_variance.html)
+_Interactive dashboard for Aim 2 pretreatment variance analysis. Features
+multi-dimensional cross-filtering by Resource, Parameter, Pretreatment Method,
+and Prepared Sample. Includes a scatter plot with shape indicating pretreatment
+method and color indicating prepared sample, along with a strip plot to clearly
+visualize variance within sample/method replicates._
+
+> **Source:**
+> [`analysis/conversion/pretreatment_variance_viz.py`](analysis/conversion/pretreatment_variance_viz.py)
+> | **Generated:** 2026-08-17 16:50 UTC
+
 ## Gasification Analysis Distribution
 
 [Interactive Visualization](plots/conversion/gasification_distribution.html)

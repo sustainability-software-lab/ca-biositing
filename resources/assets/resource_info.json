@@ -279,8 +279,8 @@
     "LandIQ Crop Name": "Melons/Squash",
     "Include In Totals": true,
     "Collected?": true,
-    "From Month": "6",
-    "To Month": "9",
+    "From Month": "8",
+    "To Month": "10",
     "Residue Yield (Wet Ton/Ac)": "1.2",
     "Moisture Content": "80%",
     "Residue Yield (Dry Ton/Ac)": "0.2"
@@ -319,7 +319,7 @@
     "Include In Totals": true,
     "Collected?": true,
     "From Month": "8",
-    "To Month": "10",
+    "To Month": "12",
     "Residue Yield (Wet Ton/Ac)": null,
     "Moisture Content": null,
     "Residue Yield (Dry Ton/Ac)": null
@@ -332,7 +332,7 @@
     "Include In Totals": true,
     "Collected?": true,
     "From Month": "8",
-    "To Month": "10",
+    "To Month": "12",
     "Residue Yield (Wet Ton/Ac)": "2",
     "Moisture Content": "45%",
     "Residue Yield (Dry Ton/Ac)": "1.1"

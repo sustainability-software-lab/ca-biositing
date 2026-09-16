@@ -12,7 +12,7 @@ Required index:
 from sqlalchemy import select, func, and_, or_, case, cast, Numeric
 from sqlalchemy.orm import aliased
 
-from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_provider_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
@@ -27,6 +27,7 @@ from ca_biositing.datamodels.models.sample_preparation.prepared_sample import Pr
 from ca_biositing.datamodels.models.field_sampling.field_sample import FieldSample
 from ca_biositing.datamodels.models.places.location_address import LocationAddress
 from ca_biositing.datamodels.models.places.place import Place
+from ca_biositing.datamodels.models.people.provider import Provider
 
 
 PM = aliased(Method, name="pm")
@@ -82,7 +83,11 @@ fermentation_qc_stats = select(
  .outerjoin(EM, FermentationRecord.eh_method_id == EM.id)\
  .outerjoin(EHM, FermentationRecord.eh_method_id_new == EHM.id)\
  .outerjoin(BCM, FermentationRecord.bioconversion_method_id == BCM.id)\
- .where(FermentationRecord.qc_pass != "fail")\
+ .outerjoin(Provider, FieldSample.provider_id == Provider.id)\
+ .where(and_(
+     FermentationRecord.qc_pass != "fail",
+     get_provider_filter(Provider)
+ ))\
  .group_by(
      FermentationRecord.resource_id,
      LocationAddress.geography_id,
@@ -124,6 +129,7 @@ mv_biomass_fermentation = select(
  .outerjoin(EM, FermentationRecord.eh_method_id == EM.id)\
  .outerjoin(EHM, FermentationRecord.eh_method_id_new == EHM.id)\
  .outerjoin(BCM, FermentationRecord.bioconversion_method_id == BCM.id)\
+ .outerjoin(Provider, FieldSample.provider_id == Provider.id)\
  .join(Observation, func.lower(Observation.record_id) == func.lower(FermentationRecord.record_id))\
  .join(Parameter, Observation.parameter_id == Parameter.id)\
  .outerjoin(Unit, Observation.unit_id == Unit.id)\
@@ -143,6 +149,7 @@ mv_biomass_fermentation = select(
      and_(
          FermentationRecord.qc_pass != "fail",
          get_resource_filter(Resource),
+         get_provider_filter(Provider),
          # Sugar consumption validation with ~100% tolerance
          or_(
              # If required metrics are missing or sugart0 is 0, we bypass validation

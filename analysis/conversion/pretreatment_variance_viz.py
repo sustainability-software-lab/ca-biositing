@@ -12,8 +12,8 @@
 #     name: python3
 # ---
 
-# # Aim Record Distribution Visualization - Calorimetry Analysis
-# This script visualizes the distribution of individual data points for Calorimetry Analysis.
+# # Aim Record Variance Visualization - Pretreatment
+# This script visualizes the variance of individual data points for Pretreatment, grouped by prepared sample and pretreatment method.
 
 import os
 import pandas as pd
@@ -39,13 +39,15 @@ def main():
 
     query = text("""
     WITH all_records AS (
-        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM calorimetry_record
+        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note, pretreatment_method_id FROM pretreatment_record
     )
     SELECT
         obs.record_id,
         res.name as resource_name,
         pap.name as primary_ag_product,
+        psam.name as prepared_sample_name,
         prov.codename as provider_code,
+        meth.name as raw_pretreatment_method,
         param.name as analysis_param,
         obs.value,
         u.name as unit,
@@ -65,14 +67,15 @@ def main():
     LEFT JOIN provider prov ON fs.provider_id = prov.id
     LEFT JOIN parameter param ON obs.parameter_id = param.id
     LEFT JOIN unit u ON obs.unit_id = u.id
-    WHERE obs.record_type = 'calorimetry analysis'
+    LEFT JOIN method meth ON rec.pretreatment_method_id = meth.id
+    WHERE obs.record_type = 'pretreatment'
     """)
 
     with engine.connect() as conn:
         df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES), "excluded_providers": tuple(EXCLUDED_PROVIDERS)})
 
     if df.empty:
-        print("No Calorimetry Analysis data found.")
+        print("No Pretreatment data found.")
         return
 
     # Data Cleaning
@@ -82,45 +85,72 @@ def main():
     df['provider_code'] = df['provider_code'].fillna('unknown')
     df['primary_ag_product'] = df['primary_ag_product'].fillna('unknown')
     df['unit'] = df['unit'].fillna('unknown')
+    df['prepared_sample_name'] = df['prepared_sample_name'].fillna('unknown')
+
+    # Collapse Pretreatment Methods into categories consistent with data portal
+    def collapse_method(name):
+        if not name or pd.isna(name):
+            return 'unknown'
+        name_lower = name.lower()
+        if 'cholinium' in name_lower and 'lysinate' in name_lower:
+            return 'Cholinium Lysinate 140°C'
+        if 'butylamine' in name_lower:
+            return 'Butylamine 140°C'
+        if 'hot water' in name_lower or 'water pretreatment' in name_lower:
+            return 'Water 140°C'
+        if 'no pretreatment' in name_lower or 'no pretreat' in name_lower:
+            return 'No Pretreatment'
+        return name
+
+    df['pretreatment_method'] = df['raw_pretreatment_method'].apply(collapse_method)
 
     # 2. Build Altair Dashboard
 
     # Selections
     status_sel = alt.selection_point(name='status_selector', fields=['data_status'], toggle=True)
     res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
-    prod_sel = alt.selection_point(name='prod_selector', fields=['primary_ag_product'], toggle=True)
-    prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
-    qc_sel = alt.selection_point(name='qc_selector', fields=['qc_pass'], toggle=True)
-    unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
+    param_sel = alt.selection_point(name='param_selector', fields=['analysis_param'], toggle=True)
+    method_sel = alt.selection_point(name='method_selector', fields=['pretreatment_method'], toggle=True)
+    sample_sel = alt.selection_point(name='sample_selector', fields=['prepared_sample_name'], toggle=True)
 
     # Combined filters
-    all_filters = status_sel & res_sel & prod_sel & prov_sel & qc_sel & unit_sel
+    all_filters = status_sel & res_sel & param_sel & method_sel & sample_sel
 
     # Base Chart
     base = alt.Chart(df)
 
-    # Main Chart
+    # Main Chart 1: Scatter plot with shape for method and color for sample
     main_base = base.transform_filter(all_filters)
 
-    boxplot = main_base.mark_boxplot(extent='min-max', size=30, color='#00313C', opacity=0.3).encode(
-        x=alt.X('analysis_param:N', title='Analysis Parameter', axis=alt.Axis(labelAngle=0)),
-        y=alt.Y('value:Q', title='Measured Value')
-    )
-
-    points = main_base.mark_circle(size=60, opacity=0.7).encode(
-        x=alt.X('analysis_param:N'),
-        y=alt.Y('value:Q'),
+    points = main_base.mark_point(size=100, opacity=0.8, filled=True).encode(
+        x=alt.X('analysis_param:N', title='Pretreatment Parameter'),
+        y=alt.Y('value:Q', title='Measured Value (%)'),
         xOffset='jitter:Q',
-        color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
-        tooltip=['record_id', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit']
+        color=alt.Color('prepared_sample_name:N', scale=alt.Scale(scheme='category20'), legend=alt.Legend(title="Prepared Sample", columns=2, symbolLimit=50)),
+        shape=alt.Shape('pretreatment_method:N', legend=alt.Legend(title="Pretreatment Method")),
+        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'provider_code', 'pretreatment_method', 'raw_pretreatment_method', 'data_status', 'qc_pass', 'value', 'unit']
     ).transform_calculate(
         jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
 
-    main_chart = (boxplot + points).properties(
-        width=800,
-        height=600,
-        title='Calorimetry Analysis Distribution'
+    main_chart = points.properties(
+        width=600,
+        height=500,
+        title='Pretreatment Variance by Sample and Method'
+    )
+
+    # Chart 2: Strip plot grouped by sample and method to see variance clearly
+    strip_plot = main_base.mark_circle(size=60, opacity=0.7).encode(
+        x=alt.X('value:Q', title='Measured Value (%)'),
+        y=alt.Y('prepared_sample_name:N', title='Prepared Sample', sort='-x'),
+        color=alt.Color('prepared_sample_name:N', legend=None),
+        row=alt.Row('pretreatment_method:N', title='Pretreatment Method'),
+        column=alt.Column('analysis_param:N', title='Parameter'),
+        tooltip=['record_id', 'prepared_sample_name', 'pretreatment_method', 'value']
+    ).properties(
+        width=300,
+        height=alt.Step(20),
+        title='Variance within Sample/Method Replicates'
     )
 
     # Sidebar Filter Factory
@@ -136,22 +166,19 @@ def main():
             title=alt.TitleParams(text=title, fontSize=13, anchor='start')
         )
 
-    # All requested sidebars
+    # Sidebars
     sidebar = alt.vconcat(
         make_filter_bar('data_status', 'Data Status', status_sel),
-        make_filter_bar('unit', 'Unit', unit_sel),
+        make_filter_bar('analysis_param', 'Parameter', param_sel),
+        make_filter_bar('pretreatment_method', 'Pretreatment Method', method_sel),
         make_filter_bar('resource_name', 'Resource Name', res_sel),
-        make_filter_bar('primary_ag_product', 'Ag Product', prod_sel),
-        make_filter_bar('provider_code', 'Provider Code', prov_sel),
-        make_filter_bar('qc_pass', 'QC Pass Status', qc_sel)
+        make_filter_bar('prepared_sample_name', 'Prepared Sample', sample_sel)
     ).resolve_scale(y='independent')
 
     # Final Assembly
-    dashboard = alt.hconcat(
-        sidebar,
-        main_chart
-    ).resolve_scale(
-        color='independent'
+    dashboard = alt.vconcat(
+        alt.hconcat(sidebar, main_chart).resolve_scale(color='independent', shape='independent'),
+        strip_plot
     ).configure_view(
         stroke=None
     ).configure_title(
@@ -160,8 +187,8 @@ def main():
     )
 
     # 4. Save
-    os.makedirs("exports/plots/composition", exist_ok=True)
-    export_path = "exports/plots/composition/calorimetry_distribution.html"
+    os.makedirs("exports/plots/conversion", exist_ok=True)
+    export_path = "exports/plots/conversion/pretreatment_variance.html"
     dashboard.save(export_path)
 
     print(f"Dashboard saved to {export_path}")

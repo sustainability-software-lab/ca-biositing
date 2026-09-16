@@ -12,8 +12,9 @@
 #     name: python3
 # ---
 
-# # Aim Record Distribution Visualization - Calorimetry Analysis
-# This script visualizes the distribution of individual data points for Calorimetry Analysis.
+# # Aim Record Variance Visualization - XRF Analysis
+# This script visualizes the variance of individual data points for XRF Analysis,
+# allowing for exploration across provider, quality control, and resource dimensions.
 
 import os
 import pandas as pd
@@ -39,12 +40,13 @@ def main():
 
     query = text("""
     WITH all_records AS (
-        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM calorimetry_record
+        SELECT record_id, resource_id, experiment_id, prepared_sample_id, qc_pass, note FROM xrf_record
     )
     SELECT
         obs.record_id,
         res.name as resource_name,
         pap.name as primary_ag_product,
+        psam.name as prepared_sample_name,
         prov.codename as provider_code,
         param.name as analysis_param,
         obs.value,
@@ -65,14 +67,14 @@ def main():
     LEFT JOIN provider prov ON fs.provider_id = prov.id
     LEFT JOIN parameter param ON obs.parameter_id = param.id
     LEFT JOIN unit u ON obs.unit_id = u.id
-    WHERE obs.record_type = 'calorimetry analysis'
+    WHERE obs.record_type = 'xrf analysis'
     """)
 
     with engine.connect() as conn:
         df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES), "excluded_providers": tuple(EXCLUDED_PROVIDERS)})
 
     if df.empty:
-        print("No Calorimetry Analysis data found.")
+        print("No XRF Analysis data found.")
         return
 
     # Data Cleaning
@@ -82,28 +84,30 @@ def main():
     df['provider_code'] = df['provider_code'].fillna('unknown')
     df['primary_ag_product'] = df['primary_ag_product'].fillna('unknown')
     df['unit'] = df['unit'].fillna('unknown')
+    df['prepared_sample_name'] = df['prepared_sample_name'].fillna('unknown')
 
     # 2. Build Altair Dashboard
 
     # Selections
     status_sel = alt.selection_point(name='status_selector', fields=['data_status'], toggle=True)
     res_sel = alt.selection_point(name='res_selector', fields=['resource_name'], toggle=True)
-    prod_sel = alt.selection_point(name='prod_selector', fields=['primary_ag_product'], toggle=True)
     prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
     qc_sel = alt.selection_point(name='qc_selector', fields=['qc_pass'], toggle=True)
-    unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
+    param_sel = alt.selection_point(name='param_selector', fields=['analysis_param'], toggle=True)
+    sample_sel = alt.selection_point(name='sample_selector', fields=['prepared_sample_name'], toggle=True)
 
     # Combined filters
-    all_filters = status_sel & res_sel & prod_sel & prov_sel & qc_sel & unit_sel
+    all_filters = status_sel & res_sel & prov_sel & qc_sel & param_sel & sample_sel
 
     # Base Chart
     base = alt.Chart(df)
 
-    # Main Chart
+    # Filtered Data
     main_base = base.transform_filter(all_filters)
 
+    # --- Main Chart 1: Boxplot + Points Distribution (ICP Style) ---
     boxplot = main_base.mark_boxplot(extent='min-max', size=30, color='#00313C', opacity=0.3).encode(
-        x=alt.X('analysis_param:N', title='Analysis Parameter', axis=alt.Axis(labelAngle=0)),
+        x=alt.X('analysis_param:N', title='Analysis Parameter', axis=alt.Axis(labelAngle=45)),
         y=alt.Y('value:Q', title='Measured Value')
     )
 
@@ -112,15 +116,27 @@ def main():
         y=alt.Y('value:Q'),
         xOffset='jitter:Q',
         color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
-        tooltip=['record_id', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit']
+        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit']
     ).transform_calculate(
         jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
 
-    main_chart = (boxplot + points).properties(
-        width=800,
-        height=600,
-        title='Calorimetry Analysis Distribution'
+    distribution_chart = (boxplot + points).properties(
+        width=600,
+        height=400,
+        title='XRF Analysis Distribution (By Resource)'
+    )
+
+    # --- Main Chart 2: Variance by Sample (Pretreatment Style) ---
+    variance_chart = main_base.mark_circle(size=60, opacity=0.7).encode(
+        x=alt.X('value:Q', title='Measured Value'),
+        y=alt.Y('prepared_sample_name:N', title='Prepared Sample', sort='-x'),
+        color=alt.Color('provider_code:N', title="Provider", scale=alt.Scale(scheme='category20')),
+        facet=alt.Facet('analysis_param:N', columns=2, title='Variance within Sample Replicates'),
+        tooltip=['record_id', 'prepared_sample_name', 'provider_code', 'value', 'unit']
+    ).properties(
+        width=300,
+        height=alt.Step(20)
     )
 
     # Sidebar Filter Factory
@@ -136,22 +152,20 @@ def main():
             title=alt.TitleParams(text=title, fontSize=13, anchor='start')
         )
 
-    # All requested sidebars
+    # Sidebars
     sidebar = alt.vconcat(
         make_filter_bar('data_status', 'Data Status', status_sel),
-        make_filter_bar('unit', 'Unit', unit_sel),
+        make_filter_bar('analysis_param', 'Parameter', param_sel),
         make_filter_bar('resource_name', 'Resource Name', res_sel),
-        make_filter_bar('primary_ag_product', 'Ag Product', prod_sel),
         make_filter_bar('provider_code', 'Provider Code', prov_sel),
-        make_filter_bar('qc_pass', 'QC Pass Status', qc_sel)
+        make_filter_bar('qc_pass', 'QC Pass Status', qc_sel),
+        make_filter_bar('prepared_sample_name', 'Prepared Sample', sample_sel)
     ).resolve_scale(y='independent')
 
     # Final Assembly
-    dashboard = alt.hconcat(
-        sidebar,
-        main_chart
-    ).resolve_scale(
-        color='independent'
+    dashboard = alt.vconcat(
+        alt.hconcat(sidebar, distribution_chart).resolve_scale(color='independent'),
+        variance_chart
     ).configure_view(
         stroke=None
     ).configure_title(
@@ -161,7 +175,7 @@ def main():
 
     # 4. Save
     os.makedirs("exports/plots/composition", exist_ok=True)
-    export_path = "exports/plots/composition/calorimetry_distribution.html"
+    export_path = "exports/plots/composition/xrf_variance_distribution.html"
     dashboard.save(export_path)
 
     print(f"Dashboard saved to {export_path}")

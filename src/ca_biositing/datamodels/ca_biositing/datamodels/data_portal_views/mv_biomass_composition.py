@@ -17,7 +17,8 @@ from sqlalchemy.types import Integer, Numeric, String
 from ca_biositing.datamodels.data_portal_views.common import (
     get_resource_filter,
     get_ultimate_filter,
-    get_icp_filter
+    get_icp_filter,
+    get_provider_filter
 )
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
@@ -38,6 +39,7 @@ from ca_biositing.datamodels.models.sample_preparation.prepared_sample import Pr
 from ca_biositing.datamodels.models.field_sampling.field_sample import FieldSample
 from ca_biositing.datamodels.models.places.location_address import LocationAddress
 from ca_biositing.datamodels.models.places.place import Place
+from ca_biositing.datamodels.models.people.provider import Provider
 
 
 def get_composition_query(model, analysis_type):
@@ -60,9 +62,11 @@ def get_composition_query(model, analysis_type):
      .outerjoin(PreparedSample, model.prepared_sample_id == PreparedSample.id)\
      .outerjoin(FieldSample, PreparedSample.field_sample_id == FieldSample.id)\
      .outerjoin(LocationAddress, FieldSample.sampling_location_id == LocationAddress.id)\
+     .outerjoin(Provider, FieldSample.provider_id == Provider.id)\
      .where(
          and_(
              model.qc_pass != "fail",
+             get_provider_filter(Provider),
              get_ultimate_filter(literal(analysis_type), Parameter.name),
              get_icp_filter(literal(analysis_type), Unit.name),
              or_(

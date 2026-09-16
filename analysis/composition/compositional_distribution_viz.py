@@ -30,6 +30,8 @@ def main():
     # 1. Query Data
     engine = get_engine()
 
+    EXCLUDED_PROVIDERS = ["jaguar"]
+
     EXCLUDED_RESOURCES = [
         "sargassum", "#n/a", "lab media", "alfalfa",
         "almond hulls and shells mix", "almond shells and hulls mix", "almond woodchips"
@@ -71,6 +73,7 @@ def main():
         cs.comp_sum,
         CASE
             WHEN LOWER(res.name) IN :excluded THEN 'Raw'
+            WHEN LOWER(prov.codename) IN :excluded_providers THEN 'Raw'
             WHEN rec.qc_pass = 'fail' THEN 'Raw'
             WHEN cs.comp_sum != 0 AND (cs.comp_sum < 40 OR cs.comp_sum > 105) THEN 'Raw'
             ELSE 'Portal Compliant'
@@ -89,7 +92,7 @@ def main():
     """)
 
     with engine.connect() as conn:
-        df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES)})
+        df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES), "excluded_providers": tuple(EXCLUDED_PROVIDERS)})
 
     if df.empty:
         print("No Compositional Analysis data found.")

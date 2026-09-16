@@ -30,6 +30,8 @@ def main():
     # 1. Query Data
     engine = get_engine()
 
+    EXCLUDED_PROVIDERS = ["jaguar"]
+
     EXCLUDED_RESOURCES = [
         "sargassum", "#n/a", "lab media", "alfalfa",
         "almond hulls and shells mix", "almond shells and hulls mix", "almond woodchips"
@@ -72,6 +74,7 @@ def main():
         fqc.avg_sugarteof,
         CASE
             WHEN LOWER(res.name) IN :excluded THEN 'Raw'
+            WHEN LOWER(prov.codename) IN :excluded_providers THEN 'Raw'
             WHEN rec.qc_pass = 'fail' THEN 'Raw'
             WHEN (fqc.avg_sugart0 IS NOT NULL AND fqc.avg_sugart0 != 0 AND fqc.avg_sugar_cons IS NOT NULL)
                  AND ABS(fqc.avg_sugar_cons - ((fqc.avg_sugart0 - COALESCE(fqc.avg_sugarteof, 0)) / fqc.avg_sugart0) * 100) > 100 THEN 'Raw'
@@ -96,7 +99,7 @@ def main():
     """)
 
     with engine.connect() as conn:
-        df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES)})
+        df = pd.read_sql(query, conn, params={"excluded": tuple(EXCLUDED_RESOURCES), "excluded_providers": tuple(EXCLUDED_PROVIDERS)})
 
     if df.empty:
         print("No Fermentation data found.")

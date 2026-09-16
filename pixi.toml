@@ -58,6 +58,8 @@ jinja2 = ">=3.1.5,<4"
 
 [tasks]
 skills-sync = "python skills.py"
+register-jupyter-kernel = { cmd = "python scripts/register_jupyter_kernel.py", description = "Register the active Pixi Python as a VS Code/Jupyter kernel." }
+jupyter-lab = { cmd = "jupyter lab --no-browser", description = "Start JupyterLab from the Pixi environment for notebooks." }
 pre-commit-all = "pre-commit run --all-files"
 pre-commit-install = "pre-commit install"
 initial-migration = { cmd = [

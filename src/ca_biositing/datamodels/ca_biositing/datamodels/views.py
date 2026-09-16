@@ -21,6 +21,7 @@ from .data_portal_views.common import (
     get_ultimate_filter,
     get_icp_filter,
     get_resource_filter,
+    get_provider_filter,
 )
 
 # Import all models needed for view definitions
@@ -57,6 +58,7 @@ from .models import (
     # Resource and place models
     Resource,
     Place,
+    Provider,
 )
 
 # Schema for all materialized views
@@ -242,9 +244,13 @@ _analysis_base = (
         ),
     )
     .outerjoin(LocationAddress, LocationAddress.id == FieldSample.sampling_location_id)
+    .outerjoin(Provider, Provider.id == FieldSample.provider_id)
     .where(
-        func.lower(Observation.record_type).notin_(
-            ["usda_census_record", "usda_survey_record"]
+        and_(
+            func.lower(Observation.record_type).notin_(
+                ["usda_census_record", "usda_survey_record"]
+            ),
+            get_provider_filter(Provider)
         )
     )
 ).subquery()
