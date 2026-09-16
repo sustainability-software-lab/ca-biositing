@@ -11,9 +11,17 @@ Usage (from a viz script's main() function):
     inject_click_export(export_path)
 
 The function reads the JS snippet from scripts/dashboard_click_export.js,
-wraps it in a <script> tag, and inserts it immediately before </body>.
+wraps it in a <script> tag, and inserts it into <head> (before </head>).
 It also patches the vegaEmbed() call to invoke attachClickExport(view)
 after the chart renders.
+
+IMPORTANT — placement in <head>:
+    The snippet must be in <head>, not before </body>. The vegaEmbed()
+    Promise resolves as a microtask, which fires before the browser parses
+    the next <script> tag in the body. Placing the snippet in <head>
+    ensures window.attachClickExport is defined before any body scripts
+    execute. The snippet itself defers DOM manipulation to DOMContentLoaded
+    so that document.body exists when it runs.
 
 The file is modified in place.
 """
@@ -77,9 +85,14 @@ def inject_click_export(html_path: str) -> None:
 
     html = html.replace(_OLD_CHAIN, _NEW_CHAIN)
 
-    # ── Step 2: Inject the JS snippet before </body> ──────────────────────────
+    # ── Step 2: Inject the JS snippet into <head> ─────────────────────────────
+    # IMPORTANT: The snippet must be in <head> (before the body <script> that
+    # calls vegaEmbed), not before </body>. The vegaEmbed Promise resolves as
+    # a microtask, which fires before the browser parses the next <script> tag
+    # in the body. Placing the snippet in <head> ensures attachClickExport is
+    # defined on window before any body scripts execute.
     snippet_tag = f"\n<script>\n{js_snippet}\n</script>\n"
-    html = html.replace("</body>", snippet_tag + "</body>")
+    html = html.replace("</head>", snippet_tag + "</head>")
 
     # ── Step 3: Write back ────────────────────────────────────────────────────
     html_path.write_text(html, encoding="utf-8")

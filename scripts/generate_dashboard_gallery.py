@@ -114,6 +114,15 @@ def generate_gallery():
     </div>
 </div>
 
+<div class="container mb-3">
+  <div class="alert" style="background:#e8f7fc; border-left:4px solid #00B5E2; border-radius:4px; padding:1rem">
+    <strong>💡 Click-to-Export:</strong> Click any data point in a dashboard
+    to pin its details and add it to an exportable table. Use the
+    <strong>⬇ Export CSV</strong> button to download flagged points for
+    tracking in a spreadsheet.
+  </div>
+</div>
+
 <div class="container mb-5">
     {all_sections_html}
 </div>
