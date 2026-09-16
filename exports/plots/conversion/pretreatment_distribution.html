@@ -144,7 +144,6 @@
       "  border: 2px solid #00B5E2;",
       "  border-radius: 8px;",
       "  box-shadow: 0 4px 16px rgba(0,0,0,0.18);",
-      "  display: none;" /* hidden until first click */,
       "}",
       "#cab-float-panel-header {",
       "  display: flex;",
@@ -236,6 +235,8 @@
       "  gap: 0.25rem 1.25rem;",
       "}",
       ".cab-field { font-size: 0.82rem; line-height: 1.45; word-break: break-word; }",
+      ".cab-field-id { background: #fff; padding: 2px 4px; border-radius: 4px; border: 1px solid #00B5E2; margin: 2px 0; }",
+      ".cab-copyable-id { cursor: pointer; text-decoration: underline dotted; color: #00B5E2; font-weight: bold; }",
       ".cab-field strong { color: #00313C; }",
       ".cab-notes-row {",
       "  display: flex;",
@@ -316,6 +317,7 @@
     // ── Fixed floating panel ───────────────────────────────────────────────
     var floatPanel = document.createElement("div");
     floatPanel.id = "cab-float-panel";
+    floatPanel.style.display = "none";
     floatPanel.innerHTML = [
       '<div id="cab-float-panel-header">',
       "  <h3>📌 Last Clicked Point</h3>",
@@ -345,7 +347,8 @@
     floatTray.innerHTML = [
       '<span id="cab-tray-count">📋 0 flagged points</span>',
       '<span id="cab-tray-flash"></span>',
-      '<button class="cab-btn cab-btn-primary cab-btn-sm" id="cab-tray-export-btn">⬇ CSV</button>',
+      '<button class="cab-btn cab-btn-success cab-btn-sm" id="cab-tray-copy-ids-btn" title="Copy all flagged record_ids">📋 IDs</button>',
+      '<button class="cab-btn cab-btn-primary cab-btn-sm" id="cab-tray-export-btn" title="Export flagged points to CSV">⬇ CSV</button>',
     ].join("\n");
     document.body.appendChild(floatTray);
 
@@ -453,14 +456,29 @@
 
   // ── Pinned Panel ──────────────────────────────────────────────────────────
 
+  function setupIdCopy(container) {
+    container.querySelectorAll(".cab-copyable-id").forEach(function (el) {
+      el.addEventListener("click", function () {
+        var id = el.textContent;
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(id).then(function () {
+            flashTray("ID Copied!");
+          });
+        }
+      });
+    });
+  }
+
   function renderPinned(datum) {
     // Float panel (desktop)
     var floatPanel = document.getElementById("cab-float-panel");
     var floatFields = document.getElementById("cab-float-fields");
     if (floatPanel && floatFields) {
-      floatPanel.style.display = "";
+      floatPanel.style.display = "block";
       var html = buildFieldsHtml(datum);
       floatFields.innerHTML = html;
+      setupIdCopy(floatFields);
+
       // Expand if collapsed
       if (panelCollapsed) {
         panelCollapsed = false;
@@ -479,17 +497,26 @@
     if (panel && fieldsEl) {
       panel.style.display = "";
       fieldsEl.innerHTML = buildFieldsHtml(datum);
+      setupIdCopy(fieldsEl);
     }
   }
 
   function buildFieldsHtml(datum) {
     var html = "";
     Object.keys(datum).forEach(function (k) {
+      var val = formatValue(datum[k]);
+      var isId = k === "record_id";
       html +=
-        '<div class="cab-field"><strong>' +
+        '<div class="cab-field' +
+        (isId ? " cab-field-id" : "") +
+        '"><strong>' +
         escHtml(k) +
         ":</strong> " +
-        escHtml(formatValue(datum[k])) +
+        (isId
+          ? '<span class="cab-copyable-id" title="Click to copy ID">' +
+            escHtml(val) +
+            "</span>"
+          : escHtml(val)) +
         "</div>";
     });
     return html;
@@ -682,8 +709,11 @@
   // ── View Wiring ───────────────────────────────────────────────────────────
 
   function wireView(view) {
+    console.debug("[cab-click-export] Wiring view:", view);
+
     // ── Vega click handler ────────────────────────────────────────────────
     view.addEventListener("click", function (event, item) {
+      console.debug("[cab-click-export] Click event:", event, "Item:", item);
       if (!item || !item.datum) return;
       var datum = filterDatum(item.datum);
       if (Object.keys(datum).length === 0) return;
@@ -760,6 +790,28 @@
 
     var trayExportBtn = document.getElementById("cab-tray-export-btn");
     if (trayExportBtn) trayExportBtn.addEventListener("click", exportCSV);
+
+    var trayCopyIdsBtn = document.getElementById("cab-tray-copy-ids-btn");
+    if (trayCopyIdsBtn) {
+      trayCopyIdsBtn.addEventListener("click", function () {
+        var ids = [];
+        rows.forEach(function (row) {
+          if (row.record_id) ids.push(row.record_id);
+        });
+        if (ids.length === 0) {
+          flashTray("No IDs to copy");
+          return;
+        }
+        var text = ids.join(", ");
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(function () {
+            flashTray("✅ IDs Copied!");
+          });
+        } else {
+          alert("Copy IDs list:\n\n" + text);
+        }
+      });
+    }
 
     var clearBtn = document.getElementById("cab-clear-btn");
     if (clearBtn) {
