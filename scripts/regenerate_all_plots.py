@@ -76,7 +76,7 @@ def regenerate_all_plots():
     if successes:
         print("\n💉 Re-injecting click-export snippet into all dashboard HTML files...")
         try:
-            subprocess.run([sys.executable, "scripts/_reinject_all.py"], check=True)
+            subprocess.run([sys.executable, "scripts/viz/reinject_click_exports.py"], check=True)
             print("✅ Click-export snippet re-injected successfully!")
         except subprocess.CalledProcessError as e:
             print(f"⚠️  Failed to re-inject click-export snippet: {e}")

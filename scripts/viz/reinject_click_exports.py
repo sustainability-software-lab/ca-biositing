@@ -1,6 +1,6 @@
 """
-_reinject_all.py
-----------------
+reinject_click_exports.py
+-------------------------
 Re-injects the click-export snippet into all dashboard HTML files,
 replacing any existing injection. Ensures:
   - Snippet is in <head> (not before </body>)
@@ -8,7 +8,7 @@ replacing any existing injection. Ensures:
   - No literal \\n escape sequences in the injected block
 
 Run with:
-    pixi run python scripts/_reinject_all.py
+    pixi run python scripts/viz/reinject_click_exports.py
 """
 
 import pathlib
@@ -35,7 +35,7 @@ SCRIPT_CLOSE = "</script>"
 OLD_CHAIN = ".catch(error => showError(el, error));"
 NEW_CHAIN = ".then(function(result) { attachClickExport(result.view); }).catch(error => showError(el, error));"
 
-SNIPPET_PATH = pathlib.Path("scripts/dashboard_click_export.js")
+SNIPPET_PATH = pathlib.Path(__file__).parent / "dashboard_click_export.js"
 
 
 def find_all_snippet_blocks(html: str) -> list:

@@ -6,11 +6,11 @@ click-to-export UI snippet.
 
 Usage (from a viz script's main() function):
 
-    from scripts.inject_click_export import inject_click_export
+    from scripts.viz.inject_click_export import inject_click_export
     dashboard.save(export_path)
     inject_click_export(export_path)
 
-The function reads the JS snippet from scripts/dashboard_click_export.js,
+The function reads the JS snippet from scripts/viz/dashboard_click_export.js,
 wraps it in a <script> tag, and inserts it into <head> (before </head>).
 It also patches the vegaEmbed() call to invoke attachClickExport(view)
 after the chart renders.
@@ -63,15 +63,15 @@ def inject_click_export(html_path: str) -> None:
         the Altair HTML template may have changed) or if the injection
         verification fails.
     """
-    html_path = Path(html_path)
+    html_path_obj = Path(html_path)
 
     if not SNIPPET_PATH.exists():
         raise FileNotFoundError(
             f"JS snippet not found at {SNIPPET_PATH}. "
-            "Ensure scripts/dashboard_click_export.js exists."
+            "Ensure scripts/viz/dashboard_click_export.js exists."
         )
 
-    html = html_path.read_text(encoding="utf-8")
+    html = html_path_obj.read_text(encoding="utf-8")
     js_snippet = SNIPPET_PATH.read_text(encoding="utf-8")
 
     # ── Step 1: Patch the vegaEmbed() call ───────────────────────────────────
@@ -95,10 +95,10 @@ def inject_click_export(html_path: str) -> None:
     html = html.replace("</head>", snippet_tag + "</head>")
 
     # ── Step 3: Write back ────────────────────────────────────────────────────
-    html_path.write_text(html, encoding="utf-8")
+    html_path_obj.write_text(html, encoding="utf-8")
 
     # ── Step 4: Verify the injection succeeded ────────────────────────────────
-    verification_html = html_path.read_text(encoding="utf-8")
+    verification_html = html_path_obj.read_text(encoding="utf-8")
     if "attachClickExport" not in verification_html:
         raise RuntimeError(
             f"Injection verification failed for {html_path}. "
