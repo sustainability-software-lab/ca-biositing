@@ -61,6 +61,10 @@ class WebServiceConfig(BaseSettings):
     # Defaults to False for local HTTP dev. Cloud Run must set API_JWT_COOKIE_SECURE=true.
     jwt_cookie_secure: bool = False
 
+    # Knowledge Base MCP configuration
+    kb_mcp_url: str = "https://biocirv-kb-api-xyz.run.app/mcp"
+    kb_api_key: str = ""
+
 
 # Global configuration instance
 config = WebServiceConfig()
