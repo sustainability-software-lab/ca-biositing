@@ -6,16 +6,22 @@ This module provides the main FastAPI application with REST API endpoints.
 from __future__ import annotations
 
 import logging
+from contextlib import asynccontextmanager
+from typing import AsyncIterator
 
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
+from mcp.server.transport_security import TransportSecuritySettings
 from sqlalchemy import text
+from sqlalchemy.orm import sessionmaker
+from sqlmodel import Session
 
 from ca_biositing.datamodels.database import get_engine
 
 from ca_biositing.webservice.config import config
+from ca_biositing.webservice.mcp_server import build_mcp_server
 from ca_biositing.webservice.v1 import router as v1_router
 
 logger = logging.getLogger(__name__)
@@ -27,6 +33,25 @@ if config.jwt_secret_key == "changeme-only-for-local-dev-do-not-use-in-prod!!":
         "Set a strong random secret in production via GCP Secret Manager."
     )
 
+# Initialize MCP server
+session_factory = sessionmaker(bind=get_engine(), class_=Session, expire_on_commit=False)
+mcp, _tools = build_mcp_server(session_factory, config)
+mcp_app = mcp.streamable_http_app(
+    streamable_http_path="/",
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+)
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Lifespan context manager for the FastAPI application.
+
+    Drives the MCP session manager.
+    """
+    async with mcp.session_manager.run():
+        yield
+
+
 # Create FastAPI application with metadata
 app = FastAPI(
     title=config.api_title,
@@ -35,6 +60,7 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    lifespan=lifespan,
 )
 
 # Configure CORS middleware for frontend integration
@@ -128,3 +154,6 @@ def health_check() -> JSONResponse:
 
 # Mount v1 router
 app.include_router(v1_router.router)
+
+# Mount MCP server
+app.mount("/mcp", mcp_app)
