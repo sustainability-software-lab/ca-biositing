@@ -106,6 +106,7 @@ uvicorn ca_biositing.webservice.main:app --host 0.0.0.0 --port 8000 --reload
 **Access endpoints:**
 
 - API: <http://localhost:8000>
+- MCP Server (SSE): <http://localhost:8000/mcp>
 - Interactive docs (Swagger): <http://localhost:8000/docs>
 - Alternative docs (ReDoc): <http://localhost:8000/redoc>
 - OpenAPI JSON: <http://localhost:8000/openapi.json>
@@ -205,6 +206,31 @@ async def read_biomass(biomass_id: int):
 # In main.py
 app.include_router(router)
 ```
+
+### 6. Model Context Protocol (MCP) Integration
+
+The webservice includes an embedded MCP server powered by `mcp` SDK and
+`FastMCP`.
+
+```python
+# In main.py
+from ca_biositing.webservice.mcp_server import build_mcp_server
+
+mcp = build_mcp_server(session_factory, config)
+
+# Lifespan drives the session manager
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    _ = mcp.streamable_http_app()
+    async with mcp.session_manager.run():
+        yield
+
+# Mounted as streamable HTTP
+app.mount("/mcp", mcp.streamable_http_app())
+```
+
+**Testing MCP:** Use `TestClient` with a special `parse_mcp_sse` helper as
+demonstrated in `tests/test_mcp.py`.
 
 ## Integration with Datamodels
 

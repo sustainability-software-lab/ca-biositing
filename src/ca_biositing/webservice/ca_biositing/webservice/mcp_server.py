@@ -39,83 +39,113 @@ def build_mcp_server(
     # --- Relational Tools (PostgreSQL) ---
 
     @mcp.tool(
+        name="list_analysis_resources",
+        description="Discover all biomass resource names available in the analysis database. Call this to find valid resource names for analysis queries.",
+    )
+    async def list_analysis_resources() -> str:
+        """Discover all biomass resource names available in the analysis database.
+        Call this to find valid resource names for analysis queries.
+        """
+        import json
+        with session_factory() as session:
+            return json.dumps({"resources": AnalysisService.list_resources(session)})
+
+    @mcp.tool(
         name="list_feedstock_resources",
         description="Discover all biomass resource names available in the database. Call this first to find valid resource names before querying availability or analysis.",
     )
-    async def list_feedstock_resources() -> dict[str, Any]:
+    async def list_feedstock_resources() -> str:
         """Discover all biomass resource names available in the database.
         Call this first to find valid resource names before querying availability or analysis.
         """
+        import json
         with session_factory() as session:
-            return {"resources": AvailabilityService.list_resources(session)}
+            return json.dumps({"resources": AvailabilityService.list_resources(session)})
 
     @mcp.tool(
         name="list_geoids",
         description="List all California county FIPS codes that have data. Use to discover valid geoid values.",
     )
-    async def list_geoids() -> dict[str, Any]:
+    async def list_geoids() -> str:
         """List all California county FIPS codes that have data.
         Use to discover valid geoid values.
         """
+        import json
         with session_factory() as session:
-            return {"geoids": AvailabilityService.list_geoids(session)}
+            return json.dumps({"geoids": AvailabilityService.list_geoids(session)})
+
+    @mcp.tool(
+        name="list_analysis_parameters",
+        description="List all biomass analysis parameters (e.g. 'ash', 'moisture') available in the database.",
+    )
+    async def list_analysis_parameters() -> str:
+        """List all biomass analysis parameters (e.g. 'ash', 'moisture') available in the database.
+        """
+        import json
+        with session_factory() as session:
+            return json.dumps({"parameters": AnalysisService.list_parameters(session)})
 
     @mcp.tool(
         name="get_feedstock_availability",
         description="Get the seasonal harvest window (from_month, to_month) for a specific resource in a specific county.",
     )
-    async def get_feedstock_availability(resource: str, geoid: str) -> dict[str, Any]:
+    async def get_feedstock_availability(resource: str, geoid: str) -> str:
         """Get the seasonal harvest window (from_month, to_month) for a specific resource in a specific county.
         """
+        import json
         with session_factory() as session:
-            return AvailabilityService.get_by_resource(session, resource, geoid)
+            return json.dumps(AvailabilityService.get_by_resource(session, resource, geoid))
 
     @mcp.tool(
         name="get_feedstock_analysis_all",
         description="Get all compositional/proximate/ultimate analysis parameters for a resource+county combination. Returns ash, moisture, nitrogen, carbon, etc.",
     )
-    async def get_feedstock_analysis_all(resource: str, geoid: str) -> dict[str, Any]:
+    async def get_feedstock_analysis_all(resource: str, geoid: str) -> str:
         """Get all compositional/proximate/ultimate analysis parameters for a resource+county combination.
         Returns ash, moisture, nitrogen, carbon, etc.
         """
+        import json
         with session_factory() as session:
-            return AnalysisService.list_by_resource(session, resource, geoid)
+            return json.dumps(AnalysisService.list_by_resource(session, resource, geoid))
 
     @mcp.tool(
         name="get_feedstock_analysis_parameter",
         description="Get a single named analysis parameter (e.g. 'ash', 'moisture') for a resource+county.",
     )
-    async def get_feedstock_analysis_parameter(resource: str, geoid: str, parameter: str) -> dict[str, Any]:
+    async def get_feedstock_analysis_parameter(resource: str, geoid: str, parameter: str) -> str:
         """Get a single named analysis parameter (e.g. 'ash', 'moisture') for a resource+county.
         """
+        import json
         with session_factory() as session:
-            return AnalysisService.get_by_resource(session, resource, geoid, parameter)
+            return json.dumps(AnalysisService.get_by_resource(session, resource, geoid, parameter))
 
     @mcp.tool(
         name="get_usda_census_data",
         description="Get USDA census data for a crop and county. Includes acreage, yield, production values. If parameter is omitted, all available parameters for the crop/county are returned.",
     )
-    async def get_usda_census_data(crop: str, geoid: str, parameter: str | None = None) -> dict[str, Any]:
+    async def get_usda_census_data(crop: str, geoid: str, parameter: str | None = None) -> str:
         """Get USDA census data for a crop and county. Includes acreage, yield, production values.
         If parameter is omitted, all available parameters for the crop/county are returned.
         """
+        import json
         with session_factory() as session:
             if parameter:
-                return UsdaCensusService.get_by_crop(session, crop, geoid, parameter)
-            return UsdaCensusService.list_by_crop(session, crop, geoid)
+                return json.dumps(UsdaCensusService.get_by_crop(session, crop, geoid, parameter))
+            return json.dumps(UsdaCensusService.list_by_crop(session, crop, geoid))
 
     @mcp.tool(
         name="get_usda_survey_data",
         description="Get USDA survey data for a crop and county, including seasonal flags and survey period metadata. If parameter is omitted, all available parameters for the crop/county are returned.",
     )
-    async def get_usda_survey_data(crop: str, geoid: str, parameter: str | None = None) -> dict[str, Any]:
+    async def get_usda_survey_data(crop: str, geoid: str, parameter: str | None = None) -> str:
         """Get USDA survey data for a crop and county, including seasonal flags and survey period metadata.
         If parameter is omitted, all available parameters for the crop/county are returned.
         """
+        import json
         with session_factory() as session:
             if parameter:
-                return UsdaSurveyService.get_by_crop(session, crop, geoid, parameter)
-            return UsdaSurveyService.list_by_crop(session, crop, geoid)
+                return json.dumps(UsdaSurveyService.get_by_crop(session, crop, geoid, parameter))
+            return json.dumps(UsdaSurveyService.list_by_crop(session, crop, geoid))
 
     # --- KB Proxy Tools (biocirv-kb) ---
 

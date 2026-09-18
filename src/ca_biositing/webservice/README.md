@@ -31,6 +31,7 @@ Interactive docs at `http://localhost:8000/docs`.
 | Analysis        | `/v1/feedstocks/analysis/`    | Lab analysis data by resource and location |
 | USDA Census     | `/v1/feedstocks/usda/census/` | USDA Census data by crop or resource       |
 | USDA Survey     | `/v1/feedstocks/usda/survey/` | USDA Survey data by crop or resource       |
+| MCP Server      | `/mcp`                        | Model Context Protocol (SSE transport)     |
 
 Each family includes discovery endpoints returning available crops, resources,
 geoids, and parameters. All lookups are case-insensitive.
@@ -53,6 +54,21 @@ The token is time-limited. When it expires, call `/v1/auth/token` again to get a
 new one. No session state is stored server-side — each request is validated by
 verifying the token signature.
 
+## Model Context Protocol (MCP)
+
+The web service includes an embedded MCP server at `/mcp` using the SSE
+transport. This allows AI agents to query biomass feedstock data directly.
+
+**Key Tools:**
+
+- `list_feedstock_resources`: Availability resources.
+- `list_analysis_resources`: Analysis resources.
+- `get_feedstock_analysis_parameter`: compositional values.
+- `search_biositing_knowledge`: RAG-enabled search via proxy.
+
+_Note: In local development, ensure the backend services (PostgreSQL) are
+running via `pixi run start-services` before connecting._
+
 ## Key Dependencies
 
 - [`ca-biositing-datamodels`](https://pypi.org/project/ca-biositing-datamodels/)
@@ -60,6 +76,8 @@ verifying the token signature.
 - [FastAPI](https://fastapi.tiangolo.com/) — web framework
 - [Uvicorn](https://www.uvicorn.org/) — ASGI server
 - [PyJWT](https://pyjwt.readthedocs.io/) — JWT authentication
+- [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk) — AI
+  agent protocol
 
 ## Links
 
