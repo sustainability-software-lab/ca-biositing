@@ -35,11 +35,9 @@ if config.jwt_secret_key == "changeme-only-for-local-dev-do-not-use-in-prod!!":
 
 # Initialize MCP server
 session_factory = sessionmaker(bind=get_engine(), class_=Session, expire_on_commit=False)
-mcp, _tools = build_mcp_server(session_factory, config)
-mcp_app = mcp.streamable_http_app(
-    streamable_http_path="/",
-    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
-)
+mcp = build_mcp_server(session_factory, config)
+
+
 
 
 @asynccontextmanager
@@ -48,9 +46,11 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
     Drives the MCP session manager.
     """
+    # StreamableHTTPSessionManager.run() is required for streamable HTTP to work.
+    # We ensure it's initialized by calling streamable_http_app()
+    _ = mcp.streamable_http_app()
     async with mcp.session_manager.run():
         yield
-
 
 # Create FastAPI application with metadata
 app = FastAPI(
@@ -156,4 +156,5 @@ def health_check() -> JSONResponse:
 app.include_router(v1_router.router)
 
 # Mount MCP server
-app.mount("/mcp", mcp_app)
+# Mount MCP server
+app.mount("/mcp", mcp.streamable_http_app())
