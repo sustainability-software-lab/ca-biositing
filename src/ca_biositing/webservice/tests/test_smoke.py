@@ -326,11 +326,11 @@ def test_smoke_survey_by_resource_endpoints(client):
 
 @pytest.mark.integration
 def test_root_endpoint(base_url):
-    """Root endpoint is accessible without authentication."""
-    with httpx.Client(base_url=base_url) as c:
+    """Root endpoint redirects to Swagger UI docs."""
+    with httpx.Client(base_url=base_url, follow_redirects=False) as c:
         resp = c.get("/")
-    assert resp.status_code == 200
-    assert "message" in resp.json()
+    assert resp.status_code == 307
+    assert resp.headers["location"] == "/docs"
 
 
 @pytest.mark.integration

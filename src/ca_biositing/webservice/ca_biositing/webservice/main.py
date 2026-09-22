@@ -136,18 +136,31 @@ def read_hello() -> dict[str, str]:
 
 @app.get("/health", tags=["health"])
 def health_check() -> JSONResponse:
-    """Health check verifying database connectivity.
+    """Health check verifying database connectivity and MCP readiness.
 
-    Used by Cloud Run readiness probe to gate traffic routing.
+    Returns the server status, database connectivity, and whether the MCP server
+    is ready to handle requests. Used by Cloud Run readiness probe to gate traffic
+    routing.
     """
     try:
         engine = get_engine()
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        return JSONResponse(content={"status": "healthy", "database": "connected"})
-    except Exception as e:
         return JSONResponse(
-            content={"status": "unhealthy", "database": str(e)},
+            content={
+                "status": "healthy",
+                "db": "connected",
+                "ready_for_mcp": True,
+            }
+        )
+    except Exception as e:
+        logger.warning(f"Health check: database connectivity failed: {e}")
+        return JSONResponse(
+            content={
+                "status": "unhealthy",
+                "db": "disconnected",
+                "ready_for_mcp": False,
+            },
             status_code=503,
         )
 

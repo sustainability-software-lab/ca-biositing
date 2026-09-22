@@ -212,6 +212,8 @@ app.include_router(router)
 The webservice includes an embedded MCP server powered by `mcp` SDK and
 `FastMCP`.
 
+#### Server Setup
+
 ```python
 # In main.py
 from ca_biositing.webservice.mcp_server import build_mcp_server
@@ -228,6 +230,29 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 # Mounted as streamable HTTP
 app.mount("/mcp", mcp.streamable_http_app())
 ```
+
+#### Interacting with the MCP Server (Agent Guidance)
+
+When interacting with the MCP server as an AI agent or programmatic client:
+
+1.  **Functional Endpoint:** The functional endpoint for JSON-RPC tool calls is
+    `http://localhost:8000/mcp/mcp`.
+2.  **Session Management:** The server requires an `mcp-session-id` header for
+    all `POST` requests. You can generate a random UUID for this purpose or
+    capture one from a `GET` request to the same endpoint.
+3.  **SSE Response Format:** All responses are wrapped in **Server-Sent Events
+    (SSE)**. Even `POST` responses return a stream. You must parse lines
+    starting with `data: ` and decode the inner JSON-RPC payload.
+4.  **Local Database Connectivity:** If running the webservice locally (outside
+    Docker), ensure the `POSTGRES_HOST` environment variable is set to
+    `localhost` (the default is `db` for container networking).
+5.  **Workflow Sequence:**
+    - **Validate Names:** Call `list_analysis_resources` to find the exact
+      feedstock name (e.g., `"almond shells"` vs `"almond hulls"`).
+    - **Identify Parameters:** Call `list_analysis_parameters` for valid metric
+      keys (e.g., `"moisture"`).
+    - **Fetch Data:** Call `get_feedstock_analysis_parameter` with the validated
+      strings and a `geoid` (use `"06000"` for California state-level results).
 
 **Testing MCP:** Use `TestClient` with a special `parse_mcp_sse` helper as
 demonstrated in `tests/test_mcp.py`.
