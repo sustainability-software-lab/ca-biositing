@@ -54,6 +54,6 @@ jobs:
           pixi run pytest src/ca_biositing/webservice -m "not integration" --cov=ca_biositing.webservice --cov-report=xml --cov-append --cov-report=term-missing
 
       - name: Upload coverage report
-        uses: codecov/codecov-action@v7.0.0
+        uses: codecov/codecov-action@v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
