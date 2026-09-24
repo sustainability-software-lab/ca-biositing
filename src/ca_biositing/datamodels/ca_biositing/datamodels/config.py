@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 from urllib.parse import quote_plus
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from sqlalchemy.engine import URL
+from sqlalchemy.engine import URL, make_url
 from typing import Optional
 
 # Determine the project root (directory containing "pixi.toml") to locate the shared .env file.
@@ -13,6 +13,9 @@ while not (_project_root / "pixi.toml").exists():
         break
     _project_root = parent
 _env_path = _project_root / "resources" / "docker" / ".env"
+
+# Auto-detect execution context: check if running in Docker
+_in_docker = os.path.exists("/.dockerenv")
 
 
 class Settings(BaseSettings):
@@ -25,7 +28,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = "postgres"
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "biositing"
-    POSTGRES_HOST: str = "db"
+    POSTGRES_HOST: str = "db" if _in_docker else "localhost"
     POSTGRES_PORT: int = 5432
     DATABASE_URL: Optional[str] = None
     # Cloud Run / Cloud SQL Auth Proxy (Unix socket mode)
@@ -50,7 +53,12 @@ class Settings(BaseSettings):
         3. TCP fallback using POSTGRES_HOST/POSTGRES_PORT
         """
         if self.DATABASE_URL:
-            return self.DATABASE_URL
+            url = make_url(self.DATABASE_URL)
+            if url.host == "db" and not _in_docker:
+                # resources/docker/.env bakes in the Docker Compose service
+                # name "db" as the host; rewrite it for local (non-Docker) runs.
+                url = url.set(host="localhost")
+            return url.render_as_string(hide_password=False)
         if self.INSTANCE_CONNECTION_NAME:
             user = self.DB_USER or self.POSTGRES_USER
             password = self.DB_PASS or self.POSTGRES_PASSWORD
