@@ -1,4 +1,6 @@
+import io
 import os
+import tempfile
 import pyproj
 # CRITICAL: Set PROJ_LIB before importing any geospatial libraries to avoid macOS version conflicts
 os.environ['PROJ_LIB'] = pyproj.datadir.get_data_dir()
@@ -20,6 +22,13 @@ def gdrive_to_df(
     """
     Extracts data from a CSV, ZIP, or GEOJSON file into a pandas DataFrame.
 
+    Uses GetContentString() to download file content as a string, then converts
+    to the appropriate in-memory type based on mime_type:
+      - text/csv          → parsed directly with pd.read_csv via io.StringIO
+      - application/zip   → re-encoded to bytes (latin-1 round-trip preserves
+                            binary), extracted via zipfile in a temp directory
+      - application/geo+json → parsed directly with gpd.read_file via io.StringIO
+
     Args:
         file_name: The name of the requested file (used as local filename).
         mime_type: The MIME type - according to https://mime-type.com/
@@ -28,7 +37,7 @@ def gdrive_to_df(
         file_id: Optional Google Drive File ID. If provided, used instead of searching by name.
 
     Returns:
-        A pandas DataFrame containing the data from the specified worksheet, or None on error.
+        A pandas DataFrame or GeoDataFrame, or None on error.
     """
     try:
         settings = {
@@ -53,33 +62,41 @@ def gdrive_to_df(
                     raise FileNotFoundError(f"Error: File '{file_name}' not found. \n Please make sure the name and mimeType is correct and that you have shared it with the service account email.")
                 file_entry = file_entries[0]
 
-            # Ensure dataset_folder ends with a slash
-            if not dataset_folder.endswith(os.path.sep):
-                dataset_folder += os.path.sep
+            # ZIP is a binary format; use latin-1 so every byte round-trips
+            # perfectly through encode/decode without corruption.
+            # CSV and GeoJSON are text; utf-8 is the correct encoding.
+            encoding = "latin-1" if mime_type == "application/zip" else "utf-8"
+            content_str = file_entry.GetContentString(mimetype=mime_type, encoding=encoding)
 
-            download_path = os.path.join(dataset_folder, file_name)
-            file_entry.GetContentFile(download_path) # Download file
         except ApiRequestError as e:
             print(f"An unexpected error occurred: {e}")
             return None
 
-        # read csv if file is csv
+        # --- Convert string content to the appropriate DataFrame type ---
+
         if mime_type == "text/csv":
-            df = pd.read_csv(download_path)
+            # Parse CSV directly from the downloaded string — no disk I/O needed.
+            df = pd.read_csv(io.StringIO(content_str))
 
-        # extract from zip if file is zip
-        # note: THIS CODE ASSUMES THAT THE ZIP ONLY CONTAINS ONE CSV FILE
         elif mime_type == "application/zip":
-
-            # note: THIS CODE ASSUMES THAT THE CSV FILE HAS THE SAME NAME AS THE ZIP FILE
+            # ZIP is binary: re-encode the latin-1 string back to the original
+            # bytes, write to a temp file (outside OneDrive to avoid lock
+            # issues), then extract the inner CSV.
+            # THIS CODE ASSUMES THE ZIP CONTAINS ONE CSV WITH THE SAME STEM NAME.
+            zip_bytes = content_str.encode("latin-1")
             csv_name = file_name[:-4] + ".csv"
-
-            with zipfile.ZipFile(download_path, "r") as zip_ref:
-                zip_ref.extractall(dataset_folder)
-            df = pd.read_csv(os.path.join(dataset_folder, csv_name))
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                tmp_zip = os.path.join(tmp_dir, file_name)
+                with open(tmp_zip, "wb") as fh:
+                    fh.write(zip_bytes)
+                with zipfile.ZipFile(tmp_zip, "r") as zip_ref:
+                    zip_ref.extractall(tmp_dir)
+                df = pd.read_csv(os.path.join(tmp_dir, csv_name))
 
         elif mime_type == "application/geo+json":
-            df = gpd.read_file(download_path)
+            # Parse GeoJSON directly from the downloaded string — no disk I/O needed.
+            df = gpd.read_file(io.StringIO(content_str))
+
         else:
             raise Exception("Can't handle this MIME type. Sorry.")
 

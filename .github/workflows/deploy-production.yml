@@ -152,7 +152,14 @@ jobs:
       - name: Run Alembic migrations
         env:
           IMAGE_TAG: ${{ needs.image-tag.outputs.image_tag }}
-        run: pixi run -e deployment cloud-migrate-ci
+          DEPLOY_ENV: ${{ env.DEPLOY_ENV }}
+          GCP_REGION: ${{ env.GCP_REGION }}
+          GCP_PROJECT: ${{ env.GCP_PROJECT }}
+        run: |
+          echo "Running migrations with IMAGE_TAG=${IMAGE_TAG}"
+          echo "DEPLOY_ENV=${DEPLOY_ENV}"
+          echo "GCP_REGION=${GCP_REGION}"
+          pixi run -e deployment cloud-migrate-ci
 
   update-services:
     name: Force Cloud Run Revision Updates
@@ -180,7 +187,14 @@ jobs:
       - name: Force new Cloud Run revisions
         env:
           IMAGE_TAG: ${{ needs.image-tag.outputs.image_tag }}
-        run: pixi run -e deployment cloud-update-services
+          DEPLOY_ENV: ${{ env.DEPLOY_ENV }}
+          GCP_REGION: ${{ env.GCP_REGION }}
+          GCP_PROJECT: ${{ env.GCP_PROJECT }}
+        run: |
+          echo "Updating services with IMAGE_TAG=${IMAGE_TAG}"
+          echo "DEPLOY_ENV=${DEPLOY_ENV}"
+          echo "GCP_REGION=${GCP_REGION}"
+          pixi run -e deployment cloud-update-services
 
   validate-deployment:
     name: Validate Deployment Health
@@ -201,6 +215,11 @@ jobs:
 
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v3
+
+      - name: Install jq
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y jq
 
       - name: Validate services are healthy
         run: bash scripts/validate-deployment.sh

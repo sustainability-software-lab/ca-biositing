@@ -13,6 +13,22 @@ ELAPSED=0
 
 echo "Validating deployment for environment: ${DEPLOY_ENV}"
 
+# Check if jq is installed (required for JSON parsing)
+if ! command -v jq &> /dev/null; then
+    echo "ERROR: jq is required but not installed. Installing..."
+    # Try to install jq if not available
+    if command -v apt-get &> /dev/null; then
+        sudo apt-get update && sudo apt-get install -y jq
+    elif command -v yum &> /dev/null; then
+        sudo yum install -y jq
+    elif command -v brew &> /dev/null; then
+        brew install jq
+    else
+        echo "ERROR: Cannot install jq automatically. Please install it manually."
+        exit 1
+    fi
+fi
+
 check_webservice_health() {
     local url
     url=$(gcloud run services describe "biocirv-${DEPLOY_ENV}-webservice" \
@@ -41,7 +57,7 @@ check_worker_ready() {
     local ready
     ready=$(gcloud run services describe "biocirv-${DEPLOY_ENV}-prefect-worker" \
         --region="${GCP_REGION}" --format=json 2>/dev/null \
-        | jq -r '.status.conditions[] | select(.type=="Ready") | .status') || return 1
+        | jq -r '.status.conditions[]? | select(.type=="Ready") | .status' 2>/dev/null) || return 1
     [ "$ready" = "True" ]
 }
 
