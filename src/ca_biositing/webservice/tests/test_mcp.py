@@ -10,6 +10,7 @@ def parse_mcp_sse(text: str) -> dict:
             return json.loads(line[6:])
     raise ValueError(f"No data found in SSE response: {text}")
 
+@pytest.mark.integration
 def test_mcp_unified_smoke_test():
     """Verify MCP /mcp endpoint tool discovery and calling in a single session.
 
