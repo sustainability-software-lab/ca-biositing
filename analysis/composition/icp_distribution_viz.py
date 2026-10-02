@@ -54,6 +54,7 @@ def main():
     )
     SELECT
         obs.record_id,
+        exp.name as experiment_name,
         res.name as resource_name,
         pap.name as primary_ag_product,
         psam.name as prepared_sample_name,
@@ -73,6 +74,7 @@ def main():
         END as data_status
     FROM observation obs
     JOIN all_records rec ON obs.record_id = rec.record_id
+    LEFT JOIN experiment exp ON rec.experiment_id = exp.id
     LEFT JOIN resource res ON rec.resource_id = res.id
     LEFT JOIN primary_ag_product pap ON res.primary_ag_product_id = pap.id
     LEFT JOIN prepared_sample psam ON rec.prepared_sample_id = psam.id
@@ -98,6 +100,7 @@ def main():
     df['provider_code'] = df['provider_code'].fillna('unknown')
     df['primary_ag_product'] = df['primary_ag_product'].fillna('unknown')
     df['unit'] = df['unit'].fillna('unknown')
+    df['experiment_name'] = df['experiment_name'].fillna('unknown').astype(str)
 
     # 2. Build Altair Dashboard
 
@@ -108,9 +111,10 @@ def main():
     prov_sel = alt.selection_point(name='prov_selector', fields=['provider_code'], toggle=True)
     qc_sel = alt.selection_point(name='qc_selector', fields=['qc_pass'], toggle=True)
     unit_sel = alt.selection_point(name='unit_selector', fields=['unit'], toggle=True)
+    exp_sel = alt.selection_point(name='exp_selector', fields=['experiment_name'], toggle=True)
 
     # Combined filters
-    all_filters = status_sel & res_sel & prod_sel & prov_sel & qc_sel & unit_sel
+    all_filters = status_sel & res_sel & prod_sel & prov_sel & qc_sel & unit_sel & exp_sel
 
     # Base Chart
     base = alt.Chart(df)
@@ -128,7 +132,7 @@ def main():
         y=alt.Y('value:Q'),
         xOffset='jitter:Q',
         color=alt.Color('resource_name:N', scale=alt.Scale(range=LBNL_PALETTE), legend=None),
-        tooltip=['record_id', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit', 'max_icp_ppm']
+        tooltip=['record_id', 'experiment_name', 'prepared_sample_name', 'resource_name', 'primary_ag_product', 'provider_code', 'data_status', 'qc_pass', 'value', 'unit', 'max_icp_ppm']
     ).transform_calculate(
         jitter='sqrt(-2*log(random()))*cos(2*PI*random())'
     )
@@ -156,6 +160,7 @@ def main():
     sidebar = alt.vconcat(
         make_filter_bar('data_status', 'Data Status', status_sel),
         make_filter_bar('unit', 'Unit', unit_sel),
+        make_filter_bar('experiment_name', 'Experiment Name', exp_sel),
         make_filter_bar('resource_name', 'Resource Name', res_sel),
         make_filter_bar('primary_ag_product', 'Ag Product', prod_sel),
         make_filter_bar('provider_code', 'Provider Code', prov_sel),

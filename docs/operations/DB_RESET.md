@@ -79,9 +79,12 @@ GRANT biocirv_user TO postgres;
 
 ### Staging/Production
 
-- Cloud SQL Auth Proxy must be running on the expected ports:
-  - **Staging**: Port `5434`
-  - **Production**: Port `5433`
+- Cloud SQL Auth Proxy must be running on the expected ports. Local port
+  convention across the project:
+  - `5432`: local `ca-biositing` database
+  - `5433`: `biocirv-kb` (knowledge base)
+  - `5434`: `ca-biositing` staging
+  - `5435`: `ca-biositing` production
 - Credentials must be set in environment variables:
   - `DB_PASSWORD_STAGING`
   - `DB_PASSWORD_PROD`
@@ -153,7 +156,7 @@ POSTGRES_HOST=localhost POSTGRES_PORT=5434 pixi run migrate
 **Production**:
 
 ```bash
-POSTGRES_HOST=localhost POSTGRES_PORT=5433 pixi run migrate
+POSTGRES_HOST=localhost POSTGRES_PORT=5435 pixi run migrate
 ```
 
 ### 2. Trigger ETL

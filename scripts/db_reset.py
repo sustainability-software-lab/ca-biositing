@@ -157,6 +157,22 @@ class DatabaseResetOrchestrator:
                         user=user,
                         password=password
                     )
+                    # We must switch to the target database if we connected to postgres
+                    self.conn.autocommit = True
+                    with self.conn.cursor() as cur:
+                        cur.execute(f"SELECT 1 FROM pg_database WHERE datname = '{database}'")
+                        if not cur.fetchone():
+                            self.logger.info(f"Database {database} does not exist, creating it...")
+                            cur.execute(f"CREATE DATABASE \"{database}\"")
+                    self.conn.close()
+                    self.logger.info(f"Reconnecting to {database}...")
+                    self.conn = psycopg2.connect(
+                        host=host,
+                        port=port,
+                        database=database,
+                        user=user,
+                        password=password
+                    )
                 else:
                     raise e
 
@@ -168,9 +184,17 @@ class DatabaseResetOrchestrator:
     def validate_connection(self):
         """Validate database is accessible."""
         try:
+            assert self.conn is not None
             with self.conn.cursor() as cur:
                 cur.execute("SELECT version()")
-                self.logger.info(f"Database version: {cur.fetchone()[0]}")
+                row = cur.fetchone()
+                if row:
+                    self.logger.info(f"Database version: {row[0]}")
+
+                cur.execute("SELECT current_database()")
+                row = cur.fetchone()
+                if row:
+                    self.logger.info(f"Connected to database: {row[0]}")
         except psycopg2.Error as e:
             self.logger.error(f"Connection validation failed: {e}")
             raise
@@ -243,11 +267,23 @@ class DatabaseResetOrchestrator:
             return
 
         try:
+            # Type hint for Pylance
+            assert self.conn is not None
+
             with self.conn.cursor() as cur:
                 self.logger.info(f"Executing Phase {phase_num}: {sql_file}")
-                # Ensure we are operating on the correct database if we used fallback
-                # Note: Cloud SQL doesn't support CROSS-DATABASE queries, so we must be on the right DB.
-                # The SQL scripts themselves should be schema-qualified.
+
+                # Safety check: Ensure we are not accidentally wiping the 'postgres' database
+                # unless it is explicitly the target database.
+                cur.execute("SELECT current_database()")
+                row = cur.fetchone()
+                if row:
+                    current_db = row[0]
+                    target_db = self._expand_env_vars(self.env_config)['database']
+
+                    if current_db != target_db:
+                        raise RuntimeError(f"CRITICAL SAFETY ERROR: Connected to '{current_db}' but target is '{target_db}'. Aborting to prevent wiping wrong database.")
+
                 cur.execute(rendered_sql)
 
                 # Log any notices from PostgreSQL
