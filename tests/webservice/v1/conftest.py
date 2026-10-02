@@ -29,6 +29,7 @@ from ca_biositing.datamodels.models import (
     PreparedSample,
     PretreatmentRecord,
     PrimaryAgProduct,
+    Provider,
     ProximateRecord,
     Resource,
     ResourceAvailability,
@@ -74,6 +75,7 @@ def engine_fixture():
         Observation.__table__.create(connection, checkfirst=True)
         Place.__table__.create(connection, checkfirst=True)
         LocationAddress.__table__.create(connection, checkfirst=True)
+        Provider.__table__.create(connection, checkfirst=True)
         FieldSample.__table__.create(connection, checkfirst=True)
         PreparedSample.__table__.create(connection, checkfirst=True)
         ProximateRecord.__table__.create(connection, checkfirst=True)
