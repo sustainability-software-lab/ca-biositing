@@ -1,5 +1,12 @@
 import pytest
 import json
+
+from sqlmodel import select
+
+from ca_biositing.datamodels.models import ApiKey
+from ca_biositing.webservice.config import config
+from ca_biositing.webservice.main import session_factory
+from ca_biositing.webservice.services.auth_service import ensure_mcp_service_key, generate_api_key
 from fastapi.testclient import TestClient
 from ca_biositing.webservice.main import app
 
@@ -129,3 +136,42 @@ def test_mcp_unified_smoke_test():
         assert analysis_data["geoid"] == "06000"
         assert "value" in analysis_data
         assert "unit" in analysis_data
+
+        # Step 5: With dev_mode off, a valid mcp-service API key (provisioned
+        # against the real DB) must authenticate successfully end-to-end,
+        # and a missing/invalid key must be rejected with 401. This reuses
+        # the same TestClient/session because mcp 1.30.0's
+        # StreamableHTTPSessionManager singleton cannot .run() twice per
+        # process (see test_mcp_auth.py's docstring for the unit-test-level
+        # coverage of the middleware itself).
+        raw_key, prefix, _ = generate_api_key()
+        with session_factory() as session:
+            ensure_mcp_service_key(session, raw_key)
+
+        original_dev_mode = config.dev_mode
+        config.dev_mode = False
+        try:
+            response = client.post("/mcp/mcp", json=json_rpc_list, headers=headers)
+            assert response.status_code == 401
+
+            response = client.post(
+                "/mcp/mcp",
+                json=json_rpc_list,
+                headers={**headers, "X-API-Key": raw_key},
+            )
+            assert response.status_code == 200
+            result_envelope = parse_mcp_sse(response.text)
+            assert "result" in result_envelope
+        finally:
+            config.dev_mode = original_dev_mode
+            # This test runs against a real dev DB (not an ephemeral test DB),
+            # so remove the key this run provisioned rather than leaving it
+            # behind. The shared mcp-service ApiUser is intentionally left in
+            # place — it's meant to be stable and reused across key rotations.
+            with session_factory() as session:
+                leftover = session.exec(
+                    select(ApiKey).where(ApiKey.key_prefix == prefix)
+                ).first()
+                if leftover is not None:
+                    session.delete(leftover)
+                    session.commit()

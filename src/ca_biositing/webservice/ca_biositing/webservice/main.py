@@ -22,6 +22,8 @@ from ca_biositing.datamodels.database import get_engine
 
 from ca_biositing.webservice.config import config
 from ca_biositing.webservice.mcp_server import build_mcp_server
+from ca_biositing.webservice.middleware import MCPAuthMiddleware
+from ca_biositing.webservice.services.auth_service import ensure_mcp_service_key
 from ca_biositing.webservice.v1 import router as v1_router
 
 logger = logging.getLogger(__name__)
@@ -31,6 +33,16 @@ if config.jwt_secret_key == "changeme-only-for-local-dev-do-not-use-in-prod!!":
     logger.warning(
         "API_JWT_SECRET_KEY is set to the insecure default. "
         "Set a strong random secret in production via GCP Secret Manager."
+    )
+
+# Fail fast if auth is required but no MCP key was provisioned. Prevents a
+# deploy that accidentally omits API_DEV_MODE=false from silently leaving
+# /mcp unauthenticated, and prevents one that omits the secret from starting
+# with no credential anyone could ever present.
+if not config.dev_mode and not config.mcp_api_key:
+    raise RuntimeError(
+        "API_MCP_API_KEY is required when API_DEV_MODE is not set to true "
+        "(auth is enabled by default outside local development)."
     )
 
 # Initialize MCP server
@@ -44,8 +56,12 @@ mcp = build_mcp_server(session_factory, config)
 async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     """Lifespan context manager for the FastAPI application.
 
-    Drives the MCP session manager.
+    Drives the MCP session manager and provisions the mcp-service API key.
     """
+    if config.mcp_api_key:
+        with session_factory() as session:
+            ensure_mcp_service_key(session, config.mcp_api_key)
+
     # StreamableHTTPSessionManager.run() is required for streamable HTTP to work.
     # We ensure it's initialized by calling streamable_http_app()
     _ = mcp.streamable_http_app()
@@ -168,6 +184,5 @@ def health_check() -> JSONResponse:
 # Mount v1 router
 app.include_router(v1_router.router)
 
-# Mount MCP server
-# Mount MCP server
-app.mount("/mcp", mcp.streamable_http_app())
+# Mount MCP server, gated by MCPAuthMiddleware (bypassed when config.dev_mode)
+app.mount("/mcp", MCPAuthMiddleware(mcp.streamable_http_app(), session_factory, config))
