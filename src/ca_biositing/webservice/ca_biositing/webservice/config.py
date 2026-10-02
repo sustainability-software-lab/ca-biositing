@@ -5,12 +5,17 @@ This module provides API-specific configuration using Pydantic Settings.
 
 from __future__ import annotations
 
+import os
 from typing import List
 
 from ca_biositing.webservice._version import __version__ as _pkg_version
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+# Cloud Run sets INSTANCE_CONNECTION_NAME (see datamodels/config.py); its absence
+# means we're running locally, where auth on /mcp should default to off.
+_is_local_dev = not os.environ.get("INSTANCE_CONNECTION_NAME")
 
 
 class WebServiceConfig(BaseSettings):
@@ -60,6 +65,19 @@ class WebServiceConfig(BaseSettings):
     jwt_expire_minutes: int = 30
     # Defaults to False for local HTTP dev. Cloud Run must set API_JWT_COOKIE_SECURE=true.
     jwt_cookie_secure: bool = False
+
+    # Knowledge Base MCP configuration
+    kb_mcp_url: str = "https://biocirv-kb-api-xyz.run.app/mcp"
+    kb_api_key: str = ""
+
+    # MCP auth configuration
+    # Skips auth on /mcp. Defaults to True locally, False in Cloud Run
+    # (detected via absence/presence of INSTANCE_CONNECTION_NAME). Override
+    # with API_DEV_MODE if needed.
+    dev_mode: bool = Field(default=_is_local_dev)
+    # Raw API key used to authenticate MCP callers. In Cloud Run this is
+    # populated from GCP Secret Manager; see mcp_auth_implementation_plan.md.
+    mcp_api_key: str = ""
 
 
 # Global configuration instance

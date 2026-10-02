@@ -23,6 +23,7 @@ from config import (
     SECRET_OAUTH2_CLIENT_ID,
     SECRET_OAUTH2_CLIENT_SECRET,
     SECRET_OAUTH2_COOKIE_SECRET,
+    SECRET_MCP_API_KEY,
 )
 
 
@@ -50,6 +51,8 @@ class SecretResources:
     oauth2_client_secret_secret: gcp.secretmanager.Secret = None
     oauth2_cookie_secret: random.RandomPassword = None
     oauth2_cookie_secret_sm: gcp.secretmanager.Secret = None
+    mcp_api_key: random.RandomPassword = None
+    mcp_api_key_sm: gcp.secretmanager.Secret = None
 
 
 def create_secrets(
@@ -295,6 +298,28 @@ def create_secrets(
         secret_data=oauth2_cookie_secret.result,
     )
 
+    # MCP API key for tool access
+    mcp_api_key = random.RandomPassword(
+        "mcp-api-key",
+        length=64,
+        special=False,
+    )
+
+    mcp_api_key_sm = gcp.secretmanager.Secret(
+        "mcp-api-key-sm",
+        secret_id=SECRET_MCP_API_KEY,
+        replication=gcp.secretmanager.SecretReplicationArgs(
+            auto=gcp.secretmanager.SecretReplicationAutoArgs(),
+        ),
+        opts=secret_opts,
+    )
+
+    gcp.secretmanager.SecretVersion(
+        "mcp-api-key-version",
+        secret=mcp_api_key_sm.id,
+        secret_data=mcp_api_key.result,
+    )
+
     return SecretResources(
         db_password=db_password,
         db_user=db_user,
@@ -318,4 +343,6 @@ def create_secrets(
         oauth2_client_secret_secret=oauth2_client_secret_secret,
         oauth2_cookie_secret=oauth2_cookie_secret,
         oauth2_cookie_secret_sm=oauth2_cookie_secret_sm,
+        mcp_api_key=mcp_api_key,
+        mcp_api_key_sm=mcp_api_key_sm,
     )

@@ -21,7 +21,8 @@ def test_health_returns_200_when_db_available():
     assert resp.status_code == 200
     body = resp.json()
     assert body["status"] == "healthy"
-    assert body["database"] == "connected"
+    assert body["db"] == "connected"
+    assert body["ready_for_mcp"] is True
 
 
 def test_health_returns_503_when_db_unavailable():
@@ -34,4 +35,5 @@ def test_health_returns_503_when_db_unavailable():
     assert resp.status_code == 503
     body = resp.json()
     assert body["status"] == "unhealthy"
-    assert "connection refused" in body["database"]
+    assert body["db"] == "disconnected"
+    assert body["ready_for_mcp"] is False

@@ -196,3 +196,58 @@ def check_and_increment_rate_limit(session: Session, api_key: ApiKey) -> bool:
     session.add(locked_key)
     session.commit()
     return True
+
+
+# --- MCP service account provisioning ---
+
+MCP_SERVICE_USERNAME = "mcp-service"
+
+
+def ensure_mcp_service_key(session: Session, raw_key: str) -> None:
+    """Idempotently provision the dedicated mcp-service ApiUser and its ApiKey.
+
+    Called at startup when API_MCP_API_KEY is set. Safe to call on every boot
+    and from multiple concurrent instances: duplicate inserts are caught via
+    the unique constraints on ApiUser.username and ApiKey.key_hash.
+
+    The mcp-service ApiUser exists only to satisfy ApiKey.api_user_id's NOT
+    NULL foreign key; its password is a random value that is never surfaced
+    or used for login.
+    """
+    user = session.exec(select(ApiUser).where(ApiUser.username == MCP_SERVICE_USERNAME)).first()
+    if user is None:
+        user = ApiUser(
+            username=MCP_SERVICE_USERNAME,
+            hashed_password=get_password_hash(secrets.token_urlsafe(32)),
+            is_admin=False,
+            disabled=False,
+        )
+        session.add(user)
+        try:
+            session.commit()
+        except Exception:
+            # Lost a race with another instance provisioning the same user.
+            session.rollback()
+        user = session.exec(select(ApiUser).where(ApiUser.username == MCP_SERVICE_USERNAME)).first()
+
+    prefix = raw_key[:_API_KEY_PREFIX_LEN]
+    existing = session.exec(
+        select(ApiKey).where(ApiKey.key_prefix == prefix, ApiKey.is_active.is_(True))
+    ).first()
+    if existing is not None:
+        return
+
+    api_key = ApiKey(
+        api_user_id=user.id,
+        name="mcp-service-key",
+        key_prefix=prefix,
+        key_hash=password_hash.hash(raw_key),
+        is_active=True,
+        rate_limit_per_minute=60,
+    )
+    session.add(api_key)
+    try:
+        session.commit()
+    except Exception:
+        # Lost a race with another instance provisioning the same key.
+        session.rollback()

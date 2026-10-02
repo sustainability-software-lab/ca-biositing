@@ -107,6 +107,11 @@ def pulumi_program():
         secret_resources.admin_password_sm.name,
     )
 
+    pulumi.export(
+        "mcp_api_key_secret_name",
+        secret_resources.mcp_api_key_sm.name,
+    )
+
     # IAM
     for sa_name, sa in iam.service_accounts.items():
         pulumi.export(f"sa_{sa_name}_email", sa.email)

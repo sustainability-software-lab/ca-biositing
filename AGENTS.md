@@ -28,7 +28,8 @@ prototyping for bioeconomy site selection.
   `data_portal_views/`.
 - **`ca_biositing.pipeline`**: Prefect-orchestrated ETL workflows
   (Docker-based).
-- **`ca_biositing.webservice`**: FastAPI REST API.
+- **`ca_biositing.webservice`**: FastAPI REST API and Model Context Protocol
+  (MCP) server.
 - **`resources/`**: Docker Compose and Prefect deployment configuration.
 - **`frontend/`**: Git submodule for frontend application.
 
@@ -208,8 +209,25 @@ The API layer.
 
 - `pixi run pre-commit-all`: Run all checks (MANDATORY before PR).
 - `pixi run test`: Run pytest suite.
-- `pixi run start-webservice`: Launch API locally.
+- `pixi run start-webservice`: Launch API and MCP server locally at
+  `http://localhost:8000`.
 - `pixi run skills-sync`: Synchronize agent skills from `skills.json`.
+
+### Model Context Protocol (MCP) Server
+
+The webservice includes an embedded MCP server at `http://localhost:8000/mcp`.
+This allows AI agents to directly query biositing data.
+
+**Key Tools:**
+
+- `list_feedstock_resources`: Discover biomass resources.
+- `get_feedstock_analysis_parameter`: Query specific analysis values (moisture,
+  ash, etc.).
+- `search_biositing_knowledge`: Semantic search across scientific literature
+  (via biocirv-kb proxy).
+
+**Usage for Agents:** To use this server, connect your MCP-capable client to the
+SSE transport at `http://localhost:8000/mcp`.
 
 ### ETL Flow Management
 
