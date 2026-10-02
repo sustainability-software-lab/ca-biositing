@@ -583,5 +583,5 @@ The approach supersedes the static-key list plan in `mcp-architecture.md` and pr
 
 **Plan Author:** Claude Haiku 4.5
 **Date:** 2026-09-29
-**Status:** Ready for implementation
-**Next Step:** Phase 1 — local auth infrastructure development
+**Status:** Phase 1, 2, and 3 implemented.
+**Next Step:** Phase 4 — Production deployment.

@@ -75,6 +75,7 @@ def create_cloud_run_resources(
                         "sh", "-c",
                         "export DB_PASS=$(cat /secrets/db-password/value) "
                         "&& export API_JWT_SECRET_KEY=$(cat /secrets/jwt-secret/value) "
+                        "&& export API_MCP_API_KEY=$(cat /secrets/mcp-api-key/value) "
                         "&& exec uvicorn ca_biositing.webservice.main:app "
                         "--host 0.0.0.0 --port 8080",
                     ],
@@ -126,6 +127,10 @@ def create_cloud_run_resources(
                             name="jwt-secret",
                             mount_path="/secrets/jwt-secret",
                         ),
+                        gcp.cloudrunv2.ServiceTemplateContainerVolumeMountArgs(
+                            name="mcp-api-key",
+                            mount_path="/secrets/mcp-api-key",
+                        ),
                     ],
                     # Cloud Run v2 supports startup_probe and liveness_probe only.
                     # Readiness probes are not available in the Cloud Run v2 API.
@@ -171,6 +176,15 @@ def create_cloud_run_resources(
                     name="jwt-secret",
                     secret=gcp.cloudrunv2.ServiceTemplateVolumeSecretArgs(
                         secret=secrets.jwt_secret_sm.name,
+                        items=[gcp.cloudrunv2.ServiceTemplateVolumeSecretItemArgs(
+                            version="latest", path="value",
+                        )],
+                    ),
+                ),
+                gcp.cloudrunv2.ServiceTemplateVolumeArgs(
+                    name="mcp-api-key",
+                    secret=gcp.cloudrunv2.ServiceTemplateVolumeSecretArgs(
+                        secret=secrets.mcp_api_key_sm.name,
                         items=[gcp.cloudrunv2.ServiceTemplateVolumeSecretItemArgs(
                             version="latest", path="value",
                         )],
