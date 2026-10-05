@@ -583,5 +583,5 @@ The approach supersedes the static-key list plan in `mcp-architecture.md` and pr
 
 **Plan Author:** Claude Haiku 4.5
 **Date:** 2026-09-29
-**Status:** Phase 1, 2, and 3 implemented.
-**Next Step:** Phase 4 — Production deployment.
+**Status:** Phase 1–3 code complete; staging deploy pending (`pixi run cloud-plan` still shows the MCP secret as 3 resources to create — `cloud-deploy` has not yet been run for this change).
+**Next Step:** Run `cloud-deploy` for staging (Phase 3), verify, then Phase 4 — Production deployment.

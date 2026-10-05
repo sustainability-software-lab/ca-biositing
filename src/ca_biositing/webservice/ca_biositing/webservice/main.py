@@ -28,8 +28,16 @@ from ca_biositing.webservice.v1 import router as v1_router
 
 logger = logging.getLogger(__name__)
 
-# Warn if the JWT secret key is the insecure default
+# Fail fast if the JWT secret is still the insecure default outside local
+# dev. Mirrors the API_MCP_API_KEY check below: a missing/forgotten secret
+# must stop the app from starting, not silently sign tokens with a
+# publicly-known key.
 if config.jwt_secret_key == "changeme-only-for-local-dev-do-not-use-in-prod!!":
+    if not config.dev_mode:
+        raise RuntimeError(
+            "API_JWT_SECRET_KEY is required when API_DEV_MODE is not set to "
+            "true (the default value is insecure outside local development)."
+        )
     logger.warning(
         "API_JWT_SECRET_KEY is set to the insecure default. "
         "Set a strong random secret in production via GCP Secret Manager."
