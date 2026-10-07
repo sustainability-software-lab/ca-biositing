@@ -13,6 +13,7 @@ from typing import Optional
 
 import jwt
 from pwdlib import PasswordHash
+from sqlalchemy.exc import IntegrityError
 from sqlmodel import Session, select
 
 from ca_biositing.datamodels.models import ApiKey, ApiUser
@@ -225,10 +226,13 @@ def ensure_mcp_service_key(session: Session, raw_key: str) -> None:
         session.add(user)
         try:
             session.commit()
-        except Exception:
+        except IntegrityError:
             # Lost a race with another instance provisioning the same user.
+            logger.info("IntegrityError provisioning mcp-service user; re-querying to find winner")
             session.rollback()
         user = session.exec(select(ApiUser).where(ApiUser.username == MCP_SERVICE_USERNAME)).first()
+        if user is None:
+            raise RuntimeError("failed to provision or find mcp-service user after IntegrityError")
 
     prefix = raw_key[:_API_KEY_PREFIX_LEN]
     existing = session.exec(
@@ -248,6 +252,7 @@ def ensure_mcp_service_key(session: Session, raw_key: str) -> None:
     session.add(api_key)
     try:
         session.commit()
-    except Exception:
+    except IntegrityError:
         # Lost a race with another instance provisioning the same key.
+        logger.info("IntegrityError provisioning mcp-service key with prefix %s; another instance won the race", prefix)
         session.rollback()

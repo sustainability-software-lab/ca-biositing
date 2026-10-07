@@ -31,6 +31,9 @@ async def call_kb_tool(
     Raises:
         httpx.HTTPStatusError: If the request fails
     """
+    if not kb_url:
+        return {"error": "knowledge base not configured (kb_mcp_url is unset)"}
+
     headers = {}
     if kb_api_key:
         headers["Authorization"] = f"Bearer {kb_api_key}"

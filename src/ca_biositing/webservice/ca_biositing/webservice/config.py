@@ -67,7 +67,7 @@ class WebServiceConfig(BaseSettings):
     jwt_cookie_secure: bool = False
 
     # Knowledge Base MCP configuration
-    kb_mcp_url: str = "https://biocirv-kb-api-xyz.run.app/mcp"
+    kb_mcp_url: str = ""
     kb_api_key: str = ""
 
     # MCP auth configuration

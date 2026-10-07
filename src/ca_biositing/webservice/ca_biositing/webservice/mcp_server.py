@@ -29,7 +29,7 @@ def build_mcp_server(
     """
     mcp = FastMCP(
         "ca-biositing",
-        transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
+        transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=not config.dev_mode),
         stateless_http=True,
     )
     # FastMCP doesn't have a version/instructions param in constructor for all versions,

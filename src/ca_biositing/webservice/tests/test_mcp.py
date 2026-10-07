@@ -10,6 +10,11 @@ from ca_biositing.webservice.services.auth_service import ensure_mcp_service_key
 from fastapi.testclient import TestClient
 from ca_biositing.webservice.main import app
 
+# Test fixtures — resources and parameters used in test_mcp_unified_smoke_test
+TEST_RESOURCE = "almond hulls"
+TEST_GEOID = "06000"
+TEST_PARAMETER = "moisture"
+
 def parse_mcp_sse(text: str) -> dict:
     """Parse JSON-RPC response from MCP SSE stream."""
     for line in text.splitlines():
@@ -74,7 +79,7 @@ def test_mcp_unified_smoke_test():
         assert "result" in result_envelope
 
         resources_data = json.loads(result_envelope["result"]["content"][0]["text"])
-        assert "almond hulls" in resources_data["resources"]
+        assert TEST_RESOURCE in resources_data["resources"]
 
         # Step 3: Get moisture for almond hulls in Fresno (06019)
         # Step 3: Discover valid analysis resources and parameters
@@ -113,9 +118,9 @@ def test_mcp_unified_smoke_test():
             "params": {
                 "name": "get_feedstock_analysis_parameter",
                 "arguments": {
-                    "resource": "almond hulls",
-                    "geoid": "06000",
-                    "parameter": "moisture"
+                    "resource": TEST_RESOURCE,
+                    "geoid": TEST_GEOID,
+                    "parameter": TEST_PARAMETER
                 },
             },
             "id": 5,
@@ -131,9 +136,9 @@ def test_mcp_unified_smoke_test():
         # If it's the error message, this will fail or we can inspect it
         analysis_data = json.loads(content_text)
         print(f"\nAlmond Hulls Moisture in Fresno: {analysis_data}")
-        assert analysis_data["parameter"] == "moisture"
-        assert analysis_data["resource"] == "almond hulls"
-        assert analysis_data["geoid"] == "06000"
+        assert analysis_data["parameter"] == TEST_PARAMETER
+        assert analysis_data["resource"] == TEST_RESOURCE
+        assert analysis_data["geoid"] == TEST_GEOID
         assert "value" in analysis_data
         assert "unit" in analysis_data
 
