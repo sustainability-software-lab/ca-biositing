@@ -316,3 +316,25 @@ def get_sum_constraints_subquery(measurements_subquery):
         measurements_subquery.c.experiment_id,
         measurements_subquery.c.analysis_type,
     ).subquery()
+
+
+# =============================================================================
+# DROP VISIBILITY (issues #475, #477, #478 touch-points)
+# =============================================================================
+# Lightweight logging helper so callers (e.g. refresh_all_views) can report
+# how many rows a named filter dimension removed, without building a new
+# logging subsystem. This does not change filter behavior; it only makes
+# existing drops visible, addressing the "silent data drops aren't logged"
+# half of issue #478 for the view layer. The broader ETL-side logging gap
+# in #478 is out of scope for this refactor.
+def log_filter_summary(label, before_count, after_count):
+    """Print how many rows a named filter dimension removed.
+
+    Args:
+        label: Human-readable name of the filter dimension (e.g. "resource blacklist").
+        before_count: Row count before this filter was applied.
+        after_count: Row count after this filter was applied.
+    """
+    removed = before_count - after_count
+    pct = (removed / before_count * 100) if before_count else 0
+    print(f"[filter] {label}: {before_count} -> {after_count} (removed {removed}, {pct:.1f}%)")
