@@ -38,6 +38,7 @@ from ca_biositing.datamodels.data_portal_views import (
     mv_biomass_sample_stats,
     mv_biomass_fermentation,
     mv_biomass_gasification,
+    mv_usda_county_production,
 )
 
 # Import ca_biositing views
@@ -145,6 +146,16 @@ VIEWS = [
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biomass_end_uses_resource_use_case ON data_portal.mv_biomass_end_uses (resource_id, use_case)",
             "CREATE INDEX idx_mv_biomass_end_uses_resource_id ON data_portal.mv_biomass_end_uses (resource_id)",
+        ],
+    },
+    {
+        "name": "mv_usda_county_production",
+        "schema": "data_portal",
+        "expr": mv_usda_county_production,
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_mv_usda_county_production_id ON data_portal.mv_usda_county_production (id)",
+            "CREATE INDEX idx_mv_usda_county_production_resource_id ON data_portal.mv_usda_county_production (resource_id)",
+            "CREATE INDEX idx_mv_usda_county_production_geoid ON data_portal.mv_usda_county_production (geoid)",
         ],
     },
     # ca_biositing schema views

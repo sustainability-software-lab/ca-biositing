@@ -134,20 +134,20 @@ analysis_metrics = select(
  ])).subquery()
 
 # Map record_id to resource_id across all analytical types
-# QC: filtered to exclude "fail" - include only observations from records that are not marked as failed
+# QC: filtered via get_qc_status_filter() - include only observations from records that are not marked as failed
 resource_analysis_map = select(
     CompositionalRecord.resource_id, CompositionalRecord.record_id, literal("compositional analysis").label("type")
-).where(CompositionalRecord.qc_pass != "fail").union_all(
-    select(ProximateRecord.resource_id, ProximateRecord.record_id, literal("proximate analysis").label("type")).where(ProximateRecord.qc_pass != "fail"),
-    select(UltimateRecord.resource_id, UltimateRecord.record_id, literal("ultimate analysis").label("type")).where(UltimateRecord.qc_pass != "fail"),
-    select(XrfRecord.resource_id, XrfRecord.record_id, literal("xrf analysis").label("type")).where(XrfRecord.qc_pass != "fail"),
-    select(IcpRecord.resource_id, IcpRecord.record_id, literal("icp analysis").label("type")).where(IcpRecord.qc_pass != "fail"),
-    select(CalorimetryRecord.resource_id, CalorimetryRecord.record_id, literal("calorimetry analysis").label("type")).where(CalorimetryRecord.qc_pass != "fail"),
-    select(XrdRecord.resource_id, XrdRecord.record_id, literal("xrd analysis").label("type")).where(XrdRecord.qc_pass != "fail"),
-    select(FtnirRecord.resource_id, FtnirRecord.record_id, literal("ftnir analysis").label("type")).where(FtnirRecord.qc_pass != "fail"),
-    select(FermentationRecord.resource_id, FermentationRecord.record_id, literal("fermentation").label("type")).where(FermentationRecord.qc_pass != "fail"),
-    select(GasificationRecord.resource_id, GasificationRecord.record_id, literal("gasification").label("type")).where(GasificationRecord.qc_pass != "fail"),
-    select(PretreatmentRecord.resource_id, PretreatmentRecord.record_id, literal("pretreatment").label("type")).where(PretreatmentRecord.qc_pass != "fail")
+).where(get_qc_status_filter(CompositionalRecord.qc_pass)).union_all(
+    select(ProximateRecord.resource_id, ProximateRecord.record_id, literal("proximate analysis").label("type")).where(get_qc_status_filter(ProximateRecord.qc_pass)),
+    select(UltimateRecord.resource_id, UltimateRecord.record_id, literal("ultimate analysis").label("type")).where(get_qc_status_filter(UltimateRecord.qc_pass)),
+    select(XrfRecord.resource_id, XrfRecord.record_id, literal("xrf analysis").label("type")).where(get_qc_status_filter(XrfRecord.qc_pass)),
+    select(IcpRecord.resource_id, IcpRecord.record_id, literal("icp analysis").label("type")).where(get_qc_status_filter(IcpRecord.qc_pass)),
+    select(CalorimetryRecord.resource_id, CalorimetryRecord.record_id, literal("calorimetry analysis").label("type")).where(get_qc_status_filter(CalorimetryRecord.qc_pass)),
+    select(XrdRecord.resource_id, XrdRecord.record_id, literal("xrd analysis").label("type")).where(get_qc_status_filter(XrdRecord.qc_pass)),
+    select(FtnirRecord.resource_id, FtnirRecord.record_id, literal("ftnir analysis").label("type")).where(get_qc_status_filter(FtnirRecord.qc_pass)),
+    select(FermentationRecord.resource_id, FermentationRecord.record_id, literal("fermentation").label("type")).where(get_qc_status_filter(FermentationRecord.qc_pass)),
+    select(GasificationRecord.resource_id, GasificationRecord.record_id, literal("gasification").label("type")).where(get_qc_status_filter(GasificationRecord.qc_pass)),
+    select(PretreatmentRecord.resource_id, PretreatmentRecord.record_id, literal("pretreatment").label("type")).where(get_qc_status_filter(PretreatmentRecord.qc_pass))
 ).subquery()
 
 # Direct expressions for carbon, hydrogen, nitrogen averages

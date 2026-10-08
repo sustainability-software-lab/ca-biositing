@@ -24,7 +24,7 @@ Required indexes:
 from sqlalchemy import select, func, union_all, literal, case, cast, String, Integer, Numeric, and_, or_, text
 from sqlalchemy.orm import aliased
 
-from ca_biositing.datamodels.data_portal_views.common import get_resource_filter
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_min_year_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.resource_information.primary_ag_product import PrimaryAgProduct
 from ca_biositing.datamodels.models.resource_information.residue_factor import ResidueFactor
@@ -82,7 +82,7 @@ production_based_volumes = select(
  .outerjoin(Unit, Observation.unit_id == Unit.id)\
  .where(and_(
      ResidueFactor.factor_type == "weight",
-     CountyAgReportRecord.data_year >= 2017,
+     get_min_year_filter(CountyAgReportRecord.data_year),
      get_resource_filter(Resource),
      func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"])
  ))\
@@ -177,7 +177,7 @@ census_based_volumes = select(
  .where(and_(
      ResidueFactor.prune_trim_yield.isnot(None),
      ResidueFactor.factor_type != "area",
-     UsdaCensusRecord.year >= 2017,
+     get_min_year_filter(UsdaCensusRecord.year),
      get_resource_filter(Resource),
      func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"])
  ))\
@@ -252,7 +252,7 @@ commodity_direct_volumes = select(
  .outerjoin(Parameter, Observation.parameter_id == Parameter.id)\
  .outerjoin(Unit, Observation.unit_id == Unit.id)\
  .where(and_(
-     CountyAgReportRecord.data_year >= 2017,
+     get_min_year_filter(CountyAgReportRecord.data_year),
      get_resource_filter(Resource),
      func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"])
  ))\
@@ -346,7 +346,7 @@ acreage_based_volumes = select(
   )
 ))\
 .where(and_(
-  UsdaCensusRecord.year >= 2017,
+  get_min_year_filter(UsdaCensusRecord.year),
   get_resource_filter(Resource),
   func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"])
 ))\
@@ -400,7 +400,7 @@ census_production_based_volumes = select(
      Observation.record_type == "usda_census_record"
  )) .outerjoin(Parameter, Observation.parameter_id == Parameter.id) .outerjoin(Unit, Observation.unit_id == Unit.id) .where(and_(
      ResidueFactor.factor_type == "weight",
-     UsdaCensusRecord.year >= 2017,
+     get_min_year_filter(UsdaCensusRecord.year),
      get_resource_filter(Resource),
      func.lower(Place.county_name).in_(["san joaquin", "stanislaus", "merced"]),
      # Only include resources that don't have production data in county ag reports

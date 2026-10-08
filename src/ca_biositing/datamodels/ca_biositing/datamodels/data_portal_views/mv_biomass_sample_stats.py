@@ -10,7 +10,7 @@ Required index:
 """
 
 from sqlalchemy import select, func, union_all, cast, Integer, and_
-from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_provider_filter
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_provider_filter, get_qc_status_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.aim1_records.compositional_record import CompositionalRecord
 from ca_biositing.datamodels.models.aim1_records.proximate_record import ProximateRecord
@@ -35,7 +35,7 @@ def get_sample_stats_query(model):
         model.resource_id,
         model.prepared_sample_id,
         model.dataset_id
-    ).where(model.qc_pass != "fail")
+    ).where(get_qc_status_filter(model.qc_pass))
 
 
 sample_queries = [

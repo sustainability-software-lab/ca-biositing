@@ -18,7 +18,13 @@ from ca_biositing.datamodels.data_portal_views.common import (
     get_resource_filter,
     get_ultimate_filter,
     get_icp_filter,
-    get_provider_filter
+    get_provider_filter,
+    get_qc_status_filter,
+    PROXIMATE_SUM_MIN,
+    PROXIMATE_SUM_MAX,
+    COMPOSITIONAL_SUM_MIN,
+    COMPOSITIONAL_SUM_MAX,
+    ICP_MAX_PPM,
 )
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
@@ -65,7 +71,7 @@ def get_composition_query(model, analysis_type):
      .outerjoin(Provider, FieldSample.provider_id == Provider.id)\
      .where(
          and_(
-             model.qc_pass != "fail",
+             get_qc_status_filter(model.qc_pass),
              get_provider_filter(Provider),
              get_ultimate_filter(literal(analysis_type), Parameter.name),
              get_icp_filter(literal(analysis_type), Unit.name),
@@ -100,7 +106,7 @@ fermentation_presence = select(
     cast(literal(None), Numeric).label("value"),
     cast(literal(None), String).label("unit"),
     cast(literal(None), String).label("geoid")
-).where(FermentationRecord.qc_pass != "fail").distinct()
+).where(get_qc_status_filter(FermentationRecord.qc_pass)).distinct()
 
 gasification_presence = select(
     GasificationRecord.resource_id,
@@ -110,7 +116,7 @@ gasification_presence = select(
     cast(literal(None), Numeric).label("value"),
     cast(literal(None), String).label("unit"),
     cast(literal(None), String).label("geoid")
-).where(GasificationRecord.qc_pass != "fail").distinct()
+).where(get_qc_status_filter(GasificationRecord.qc_pass)).distinct()
 
 comp_queries.extend([fermentation_presence, gasification_presence])
 
@@ -186,28 +192,28 @@ mv_biomass_composition = select(
                   or_(
                       qc_analysis_stats.c.proximate_sum == 0,
                       and_(
-                          qc_analysis_stats.c.proximate_sum >= 95,
-                          qc_analysis_stats.c.proximate_sum <= 105
+                          qc_analysis_stats.c.proximate_sum >= PROXIMATE_SUM_MIN,
+                          qc_analysis_stats.c.proximate_sum <= PROXIMATE_SUM_MAX
                       )
                   )
               ),
-              # For compositional: apply sum filter (40-105) or no data
+              # For compositional: apply sum filter (COMPOSITIONAL_SUM_MIN-MAX) or no data
               and_(
                   all_measurements.c.analysis_type == "compositional",
                   or_(
                       qc_analysis_stats.c.compositional_sum == 0,
                       and_(
-                          qc_analysis_stats.c.compositional_sum >= 40,
-                          qc_analysis_stats.c.compositional_sum <= 105
+                          qc_analysis_stats.c.compositional_sum >= COMPOSITIONAL_SUM_MIN,
+                          qc_analysis_stats.c.compositional_sum <= COMPOSITIONAL_SUM_MAX
                       )
                   )
               ),
-              # For ICP: filter out experiments with any value > 500,000 ppm
+              # For ICP: filter out experiments with any value > ICP_MAX_PPM
               and_(
                   all_measurements.c.analysis_type == "icp",
                   or_(
                       qc_analysis_stats.c.max_icp_ppm == None,
-                      qc_analysis_stats.c.max_icp_ppm <= 500000
+                      qc_analysis_stats.c.max_icp_ppm <= ICP_MAX_PPM
                   )
               ),
               # For all other analysis types: no filtering, include all

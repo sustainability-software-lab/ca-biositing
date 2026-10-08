@@ -9,6 +9,7 @@ Required index:
 
 from sqlalchemy import select, func, cast, String, and_, case, literal
 
+from ca_biositing.datamodels.data_portal_views.common import get_min_year_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.resource_information.primary_ag_product import PrimaryAgProduct
 from ca_biositing.datamodels.models.resource_information.resource_availability import ResourceAvailability
@@ -71,5 +72,5 @@ mv_usda_county_production = select(
  .join(Place, UsdaCensusRecord.geoid == Place.geoid)\
  .join(census_obs, cast(UsdaCensusRecord.id, String) == census_obs.c.record_id)\
  .outerjoin(ra_fallback, Resource.id == ra_fallback.c.resource_id)\
- .where(UsdaCensusRecord.year >= 2017)\
+ .where(get_min_year_filter(UsdaCensusRecord.year))\
  .group_by(Resource.id, Resource.name, PrimaryAgProduct.name, Place.geoid, Place.county_name, Place.state_name, UsdaCensusRecord.year)
