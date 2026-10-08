@@ -42,6 +42,39 @@ To iterate on a view fix migration without creating new revisions:
 pixi run compile-mv-fixes --revision 0009 --force
 ```
 
+## Data-Quality Filters
+
+All data-quality filtering applied by the materialized views (resource and
+provider blacklists, QC pass/fail gating, physically-impossible-value checks
+like the ICP ppm cap, production-year cutoffs) is centralized in
+[`data_portal_views/common.py`](ca_biositing/datamodels/data_portal_views/common.py).
+The file is organized into labeled sections — one per filter dimension
+(resource, primary product, experiment, replicate, provider, date, QC status,
+physically-impossible-value checks) — so a reviewer can scan it top-to-bottom
+and see everything that can exclude a record from a view, even where a dimension
+currently has no active exclusions.
+
+Some views (e.g. `usda_census_view`, `mv_usda_county_production`,
+`mv_billion_ton_county_production`) deliberately apply none of these filters
+because they surface raw external government data rather than BioCirV
+lab-analysis records; this is documented in each view's module-level docstring,
+not left as a silent omission.
+
+### How to exclude a new resource, provider, etc.
+
+1. Edit the relevant list or constant in `common.py` (e.g. add an entry to
+   `EXCLUDED_RESOURCES` with a comment citing the issue/rationale).
+2. Compile the change into a migration:
+   `pixi run compile-mv-fixes -m "Exclude <thing> - see issue #NNN"`.
+3. Review the generated migration diff in `alembic/versions/` - it's a full
+   view-body snapshot, so confirm only the intended views/clauses changed.
+4. Apply it: `pixi run migrate`.
+5. Refresh the views so the new data is reflected: `pixi run refresh-views`.
+
+See
+[docs/datamodels/ALEMBIC_VIEW_WORKFLOW.md](../../../docs/datamodels/ALEMBIC_VIEW_WORKFLOW.md)
+for the full view/migration workflow.
+
 ## Key Dependencies
 
 - [SQLModel](https://sqlmodel.tiangolo.com/) — ORM + Pydantic validation

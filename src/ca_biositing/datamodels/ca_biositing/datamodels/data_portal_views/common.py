@@ -3,6 +3,16 @@ Shared subqueries and helper expressions for data portal materialized views.
 
 This module contains reusable SQLAlchemy expressions that are imported by
 multiple view definitions.
+
+It is also the single, auditable gatekeeper for data-quality filtering
+(issues #476, #480): every blacklist/whitelist dimension a record can be
+excluded on - resource, primary product, experiment, replicate, provider,
+production date, QC status, and physically-impossible-value checks - is
+defined in a labeled section below, even where a dimension currently has no
+active exclusions. To add a new exclusion, edit the relevant constant here
+and run `pixi run compile-mv-fixes` (see the package README's
+"Data-Quality Filters" section for the full workflow); do not reintroduce
+inline filter literals in individual view modules.
 """
 
 from sqlalchemy import select, func, case, literal, and_, or_, cast, String, Integer, ARRAY, text
