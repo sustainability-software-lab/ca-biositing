@@ -1,0 +1,118 @@
+{
+  "metadata": {
+    "timestamp": "2026-10-08T11:19:51.920109",
+    "database": "localhost:5432/biocirv_db"
+  },
+  "base_counts": {
+    "compositional_record": 1043,
+    "proximate_record": 1348,
+    "ultimate_record": 84,
+    "xrf_record": 2777,
+    "icp_record": 826,
+    "calorimetry_record": 60,
+    "xrd_record": 28,
+    "ftnir_record": 0,
+    "fermentation_record": 4021,
+    "gasification_record": 801,
+    "pretreatment_record": 906,
+    "observation": 62600,
+    "resource": 127,
+    "provider": 51,
+    "experiment": 109
+  },
+  "qc_pass_distribution": {
+    "compositional_record": {
+      "pass": 812,
+      "fail": 0,
+      "other": 231
+    },
+    "proximate_record": {
+      "pass": 1134,
+      "fail": 209,
+      "other": 5
+    },
+    "ultimate_record": {
+      "pass": 65,
+      "fail": 4,
+      "other": 15
+    },
+    "xrf_record": {
+      "pass": 2250,
+      "fail": 136,
+      "other": 391
+    },
+    "icp_record": {
+      "pass": 803,
+      "fail": 23,
+      "other": 0
+    },
+    "calorimetry_record": {
+      "pass": 45,
+      "fail": 7,
+      "other": 8
+    },
+    "xrd_record": {
+      "pass": 0,
+      "fail": 27,
+      "other": 1
+    },
+    "ftnir_record": {
+      "pass": 0,
+      "fail": 0,
+      "other": 0
+    },
+    "fermentation_record": {
+      "pass": 2861,
+      "fail": 1160,
+      "other": 0
+    },
+    "gasification_record": {
+      "pass": 521,
+      "fail": 280,
+      "other": 0
+    },
+    "pretreatment_record": {
+      "pass": 835,
+      "fail": 65,
+      "other": 6
+    }
+  },
+  "view_row_counts": {
+    "ca_biositing.analysis_average_view": 1207,
+    "ca_biositing.analysis_data_view": 7481,
+    "ca_biositing.billion_ton_tileset_view": 0,
+    "ca_biositing.landiq_record_view": 0,
+    "ca_biositing.landiq_tileset_view": 0,
+    "ca_biositing.usda_census_view": 19893,
+    "ca_biositing.usda_resource_commodity_view": 84,
+    "ca_biositing.usda_survey_view": 30375,
+    "data_portal.mv_biomass_availability": 90,
+    "data_portal.mv_biomass_composition": 1127,
+    "data_portal.mv_biomass_county_production": 0,
+    "data_portal.mv_biomass_end_uses": 34,
+    "data_portal.mv_biomass_fermentation": 408,
+    "data_portal.mv_biomass_gasification": 269,
+    "data_portal.mv_biomass_pricing": 73,
+    "data_portal.mv_biomass_sample_stats": 121,
+    "data_portal.mv_biomass_search": 121,
+    "data_portal.mv_biomass_volume_estimate": 150,
+    "data_portal.mv_usda_county_production": 6941
+  },
+  "analysis_data_view_funnel": {
+    "candidate_pool": 11847,
+    "removed_by_qc_fail": 1361,
+    "removed_by_resource_blacklist": 969,
+    "removed_by_provider_blacklist": 665,
+    "removed_by_ultimate_whitelist": 42,
+    "removed_by_ultimate_value_gt_100": 0,
+    "removed_by_icp_non_ppm_unit": 0,
+    "unmapped_resource": 1218,
+    "final_row_count": 7481,
+    "retention_ratio": 0.631467882164261
+  },
+  "mv_biomass_composition_funnel": {
+    "candidate_pool_all_record_rows": 11894,
+    "final_row_count": 1127,
+    "retention_ratio": 0.0947536573062048
+  }
+}

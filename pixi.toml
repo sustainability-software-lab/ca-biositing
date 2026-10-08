@@ -222,6 +222,7 @@ db-reset-prod-force = { cmd = "python scripts/db_reset.py --env production --for
 # Database Auditing
 audit = { cmd = "POSTGRES_HOST=localhost python audit/main.py --env local", description = "Run a comprehensive database audit locally (requires local services)." }
 audit-staging = { cmd = "python audit/main.py --env staging", description = "Run a comprehensive database audit against staging (requires auth-proxy tunnel)." }
+filter-baseline-snapshot = { cmd = "POSTGRES_HOST=localhost python scripts/filter_funnel_snapshot.py", description = "Snapshot per-filter-dimension removal counts and retention ratios for analysis_data_view and mv_biomass_composition (requires local services)." }
 
 # pgschema CLI (pre-built binary, not on conda-forge)
 # See https://www.pgschema.com/installation#pre-built-binary
