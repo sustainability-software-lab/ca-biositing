@@ -12,7 +12,7 @@ Required index:
 from sqlalchemy import select, func, and_, or_, case, cast, Numeric
 from sqlalchemy.orm import aliased
 
-from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_provider_filter
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_provider_filter, get_qc_status_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
@@ -85,7 +85,7 @@ fermentation_qc_stats = select(
  .outerjoin(BCM, FermentationRecord.bioconversion_method_id == BCM.id)\
  .outerjoin(Provider, FieldSample.provider_id == Provider.id)\
  .where(and_(
-     FermentationRecord.qc_pass != "fail",
+     get_qc_status_filter(FermentationRecord.qc_pass),
      get_provider_filter(Provider)
  ))\
  .group_by(
@@ -147,7 +147,7 @@ mv_biomass_fermentation = select(
   )\
  .where(
      and_(
-         FermentationRecord.qc_pass != "fail",
+         get_qc_status_filter(FermentationRecord.qc_pass),
          get_resource_filter(Resource),
          get_provider_filter(Provider),
          # Sugar consumption validation with ~100% tolerance

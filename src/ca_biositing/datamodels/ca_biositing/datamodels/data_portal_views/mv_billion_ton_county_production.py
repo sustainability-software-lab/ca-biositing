@@ -7,6 +7,13 @@ Note: Will NOT be included in API responses (legacy view only).
 This view is retained for reference but has been superseded by updated production views
 that integrate additional qualitative and quantitative data sources.
 
+No resource/provider/QC filtering (EXCLUDED_RESOURCES, EXCLUDED_PROVIDERS,
+get_qc_status_filter, etc. from common.py) is applied here. This is
+deliberate, not an oversight: this view surfaces raw Billion Ton 2023
+government data for reference, and it is excluded from API responses
+entirely (see note above), so the data-quality filters that gate the
+analysis-facing views don't apply.
+
 Required index:
     CREATE UNIQUE INDEX idx_mv_billion_ton_county_production_id ON data_portal.mv_billion_ton_county_production (id)
 """

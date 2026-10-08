@@ -13,7 +13,7 @@ Required index:
 
 from sqlalchemy import select, func, and_
 
-from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_provider_filter
+from ca_biositing.datamodels.data_portal_views.common import get_resource_filter, get_provider_filter, get_qc_status_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.general_analysis.observation import Observation
 from ca_biositing.datamodels.models.methods_parameters_units.parameter import Parameter
@@ -51,7 +51,7 @@ mv_biomass_gasification = select(
  .outerjoin(Unit, Observation.unit_id == Unit.id)\
  .where(
      and_(
-         GasificationRecord.qc_pass != "fail",
+         get_qc_status_filter(GasificationRecord.qc_pass),
          get_resource_filter(Resource),
          get_provider_filter(Provider)
      )

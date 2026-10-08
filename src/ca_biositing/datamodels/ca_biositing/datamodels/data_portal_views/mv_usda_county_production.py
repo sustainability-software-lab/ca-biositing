@@ -3,12 +3,21 @@ mv_usda_county_production.py
 
 USDA Census-based county production data bridged with BioCirV resources and residue factors.
 
+No resource/provider/QC filtering (EXCLUDED_RESOURCES, EXCLUDED_PROVIDERS,
+get_qc_status_filter, etc. from common.py) is applied here. This is
+deliberate: this view bridges raw USDA Census production data to BioCirV
+resources via ResourceUsdaCommodityMap, and that external data isn't subject
+to the lab-analysis QC/resource/provider exclusions that gate the
+analysis-facing views. The only filter applied is the production-year
+cutoff (get_min_year_filter / MIN_PRODUCTION_DATA_YEAR).
+
 Required index:
     CREATE UNIQUE INDEX idx_mv_usda_county_production_id ON data_portal.mv_usda_county_production (id)
 """
 
 from sqlalchemy import select, func, cast, String, and_, case, literal
 
+from ca_biositing.datamodels.data_portal_views.common import get_min_year_filter
 from ca_biositing.datamodels.models.resource_information.resource import Resource
 from ca_biositing.datamodels.models.resource_information.primary_ag_product import PrimaryAgProduct
 from ca_biositing.datamodels.models.resource_information.resource_availability import ResourceAvailability
@@ -71,5 +80,5 @@ mv_usda_county_production = select(
  .join(Place, UsdaCensusRecord.geoid == Place.geoid)\
  .join(census_obs, cast(UsdaCensusRecord.id, String) == census_obs.c.record_id)\
  .outerjoin(ra_fallback, Resource.id == ra_fallback.c.resource_id)\
- .where(UsdaCensusRecord.year >= 2017)\
+ .where(get_min_year_filter(UsdaCensusRecord.year))\
  .group_by(Resource.id, Resource.name, PrimaryAgProduct.name, Place.geoid, Place.county_name, Place.state_name, UsdaCensusRecord.year)

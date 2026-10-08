@@ -20,8 +20,14 @@ from .data_portal_views.common import (
     get_sum_constraints_subquery,
     get_ultimate_filter,
     get_icp_filter,
+    get_qc_status_filter,
     get_resource_filter,
     get_provider_filter,
+    log_filter_summary,
+    PROXIMATE_SUM_MIN,
+    PROXIMATE_SUM_MAX,
+    COMPOSITIONAL_SUM_MIN,
+    COMPOSITIONAL_SUM_MAX,
 )
 
 # Import all models needed for view definitions
@@ -294,29 +300,32 @@ ANALYSIS_DATA_VIEW = (
     .where(
         and_(
             get_resource_filter(Resource),
-            _analysis_base.c.qc_pass != "fail",
+            get_qc_status_filter(_analysis_base.c.qc_pass),
             get_ultimate_filter(_analysis_base.c.analysis_type_norm, _analysis_base.c.parameter, _analysis_base.c.value),
-            get_icp_filter(_analysis_base.c.analysis_type_norm, _analysis_base.c.unit),
+            # ICP ppm cap (issue #476): previously applied only in
+            # mv_biomass_composition.py; adding it here brings the two
+            # schemas into agreement.
+            get_icp_filter(_analysis_base.c.analysis_type_norm, _analysis_base.c.unit, _analysis_base.c.value),
             or_(
-                # For proximate: apply sum filter (95-105) or no data
+                # For proximate: apply sum filter (PROXIMATE_SUM_MIN-MAX) or no data
                 and_(
                     _analysis_base.c.analysis_type_norm == "proximate",
                     or_(
                         _qc_stats.c.proximate_sum == 0,
                         and_(
-                            _qc_stats.c.proximate_sum >= 95,
-                            _qc_stats.c.proximate_sum <= 105
+                            _qc_stats.c.proximate_sum >= PROXIMATE_SUM_MIN,
+                            _qc_stats.c.proximate_sum <= PROXIMATE_SUM_MAX
                         )
                     )
                 ),
-                # For compositional: apply sum filter (40-105) or no data
+                # For compositional: apply sum filter (COMPOSITIONAL_SUM_MIN-MAX) or no data
                 and_(
                     _analysis_base.c.analysis_type_norm == "compositional",
                     or_(
                         _qc_stats.c.compositional_sum == 0,
                         and_(
-                            _qc_stats.c.compositional_sum >= 40,
-                            _qc_stats.c.compositional_sum <= 105
+                            _qc_stats.c.compositional_sum >= COMPOSITIONAL_SUM_MIN,
+                            _qc_stats.c.compositional_sum <= COMPOSITIONAL_SUM_MAX
                         )
                     )
                 ),
@@ -328,6 +337,12 @@ ANALYSIS_DATA_VIEW = (
 )
 
 # --- 4. usda_census_view ---
+# No resource/provider/QC filtering (EXCLUDED_RESOURCES, EXCLUDED_PROVIDERS,
+# get_qc_status_filter, etc. from data_portal_views/common.py) is applied to
+# usda_census_view or usda_survey_view below. This is deliberate: both
+# surface raw USDA Census/Survey data joined to commodities and places, not
+# BioCirV lab-analysis records, so the data-quality filters that gate
+# analysis_data_view don't apply here.
 # Create aliased Unit for dimension_unit
 DimensionUnit = aliased(Unit, name="du")
 
@@ -523,23 +538,33 @@ SPATIAL_VIEW_INDEXES = [
 ]
 
 
-def refresh_all_views(engine):
+def refresh_all_views(engine, log_summary=False):
     """Refresh all materialized views in dependency order.
 
     Args:
         engine: SQLAlchemy engine instance connected to the database.
+        log_summary: If True, print each view's row count before and after
+            refresh via log_filter_summary() - visibility into how much a
+            refresh (and the filters behind it) changed a view's size.
+            Defaults to False to keep routine refreshes quiet.
 
     Example:
         from ca_biositing.datamodels.database import get_engine
         from ca_biositing.datamodels.views import refresh_all_views
 
         engine = get_engine()
-        refresh_all_views(engine)
+        refresh_all_views(engine, log_summary=True)
     """
     with engine.connect() as conn:
         # 1. Refresh ca_biositing schema views
         for view_name, _ in VIEW_DEFINITIONS:
+            before_count = None
+            if log_summary:
+                before_count = conn.execute(text(f"SELECT COUNT(*) FROM {VIEW_SCHEMA}.{view_name}")).scalar()
             conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.{view_name}"))
+            if log_summary:
+                after_count = conn.execute(text(f"SELECT COUNT(*) FROM {VIEW_SCHEMA}.{view_name}")).scalar()
+                log_filter_summary(f"{VIEW_SCHEMA}.{view_name}", before_count, after_count)
         conn.execute(text(f"REFRESH MATERIALIZED VIEW {VIEW_SCHEMA}.usda_resource_commodity_view"))
 
         # 2. Refresh all data_portal schema views dynamically so new mat views
@@ -556,6 +581,12 @@ def refresh_all_views(engine):
         ).scalars().all()
 
         for view_name in data_portal_views:
+            before_count = None
+            if log_summary:
+                before_count = conn.execute(text(f"SELECT COUNT(*) FROM data_portal.{view_name}")).scalar()
             conn.execute(text(f"REFRESH MATERIALIZED VIEW CONCURRENTLY data_portal.{view_name}"))
+            if log_summary:
+                after_count = conn.execute(text(f"SELECT COUNT(*) FROM data_portal.{view_name}")).scalar()
+                log_filter_summary(f"data_portal.{view_name}", before_count, after_count)
 
         conn.commit()
