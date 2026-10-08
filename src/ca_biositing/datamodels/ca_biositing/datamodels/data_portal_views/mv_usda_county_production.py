@@ -3,6 +3,14 @@ mv_usda_county_production.py
 
 USDA Census-based county production data bridged with BioCirV resources and residue factors.
 
+No resource/provider/QC filtering (EXCLUDED_RESOURCES, EXCLUDED_PROVIDERS,
+get_qc_status_filter, etc. from common.py) is applied here. This is
+deliberate: this view bridges raw USDA Census production data to BioCirV
+resources via ResourceUsdaCommodityMap, and that external data isn't subject
+to the lab-analysis QC/resource/provider exclusions that gate the
+analysis-facing views. The only filter applied is the production-year
+cutoff (get_min_year_filter / MIN_PRODUCTION_DATA_YEAR).
+
 Required index:
     CREATE UNIQUE INDEX idx_mv_usda_county_production_id ON data_portal.mv_usda_county_production (id)
 """

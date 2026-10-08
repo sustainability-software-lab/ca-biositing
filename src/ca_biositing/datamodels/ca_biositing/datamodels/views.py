@@ -336,6 +336,12 @@ ANALYSIS_DATA_VIEW = (
 )
 
 # --- 4. usda_census_view ---
+# No resource/provider/QC filtering (EXCLUDED_RESOURCES, EXCLUDED_PROVIDERS,
+# get_qc_status_filter, etc. from data_portal_views/common.py) is applied to
+# usda_census_view or usda_survey_view below. This is deliberate: both
+# surface raw USDA Census/Survey data joined to commodities and places, not
+# BioCirV lab-analysis records, so the data-quality filters that gate
+# analysis_data_view don't apply here.
 # Create aliased Unit for dimension_unit
 DimensionUnit = aliased(Unit, name="du")
 
