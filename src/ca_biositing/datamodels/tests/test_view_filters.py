@@ -54,15 +54,12 @@ def test_analysis_data_view_has_proximate_and_compositional_sum_bounds():
     assert "40" in sql
 
 
-def test_analysis_data_view_missing_icp_ppm_cap_pre_phase2():
-    """Documents the #476 drift: views.py does not apply the ICP >500,000ppm cap.
-
-    This test is expected to need updating once Phase 2 adds the cap to
-    ANALYSIS_DATA_VIEW - at that point this should assert the cap IS present,
-    mirroring mv_biomass_composition's behavior.
-    """
+def test_analysis_data_view_has_icp_ppm_cap():
+    """Issue #476 drift fix (Phase 2): ANALYSIS_DATA_VIEW now applies the same
+    ICP >500,000ppm cap as mv_biomass_composition.py, closing the gap where
+    views.py previously let these rows through unfiltered."""
     sql = compile_sql(ca_views.ANALYSIS_DATA_VIEW)
-    assert "500000" not in sql
+    assert "500000" in sql
 
 
 def test_analysis_data_view_has_qc_pass_fail_check():

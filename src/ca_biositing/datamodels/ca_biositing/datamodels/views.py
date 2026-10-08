@@ -20,8 +20,13 @@ from .data_portal_views.common import (
     get_sum_constraints_subquery,
     get_ultimate_filter,
     get_icp_filter,
+    get_qc_status_filter,
     get_resource_filter,
     get_provider_filter,
+    PROXIMATE_SUM_MIN,
+    PROXIMATE_SUM_MAX,
+    COMPOSITIONAL_SUM_MIN,
+    COMPOSITIONAL_SUM_MAX,
 )
 
 # Import all models needed for view definitions
@@ -294,29 +299,32 @@ ANALYSIS_DATA_VIEW = (
     .where(
         and_(
             get_resource_filter(Resource),
-            _analysis_base.c.qc_pass != "fail",
+            get_qc_status_filter(_analysis_base.c.qc_pass),
             get_ultimate_filter(_analysis_base.c.analysis_type_norm, _analysis_base.c.parameter, _analysis_base.c.value),
-            get_icp_filter(_analysis_base.c.analysis_type_norm, _analysis_base.c.unit),
+            # ICP ppm cap (issue #476): previously applied only in
+            # mv_biomass_composition.py; adding it here brings the two
+            # schemas into agreement.
+            get_icp_filter(_analysis_base.c.analysis_type_norm, _analysis_base.c.unit, _analysis_base.c.value),
             or_(
-                # For proximate: apply sum filter (95-105) or no data
+                # For proximate: apply sum filter (PROXIMATE_SUM_MIN-MAX) or no data
                 and_(
                     _analysis_base.c.analysis_type_norm == "proximate",
                     or_(
                         _qc_stats.c.proximate_sum == 0,
                         and_(
-                            _qc_stats.c.proximate_sum >= 95,
-                            _qc_stats.c.proximate_sum <= 105
+                            _qc_stats.c.proximate_sum >= PROXIMATE_SUM_MIN,
+                            _qc_stats.c.proximate_sum <= PROXIMATE_SUM_MAX
                         )
                     )
                 ),
-                # For compositional: apply sum filter (40-105) or no data
+                # For compositional: apply sum filter (COMPOSITIONAL_SUM_MIN-MAX) or no data
                 and_(
                     _analysis_base.c.analysis_type_norm == "compositional",
                     or_(
                         _qc_stats.c.compositional_sum == 0,
                         and_(
-                            _qc_stats.c.compositional_sum >= 40,
-                            _qc_stats.c.compositional_sum <= 105
+                            _qc_stats.c.compositional_sum >= COMPOSITIONAL_SUM_MIN,
+                            _qc_stats.c.compositional_sum <= COMPOSITIONAL_SUM_MAX
                         )
                     )
                 ),
