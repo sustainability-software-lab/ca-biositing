@@ -11,6 +11,7 @@ def thermochem_etl_flow(force_refresh: bool = False, *args, **kwargs):
     from ca_biositing.pipeline.etl.extract import thermochem_data
     from ca_biositing.pipeline.etl.transform.analysis.observation import transform_observation
     from ca_biositing.pipeline.etl.transform.analysis.gasification_record import transform_gasification_record
+    from ca_biositing.pipeline.etl.transform.analysis.gasification_archive import build_gasification_archive_records
     from ca_biositing.pipeline.etl.transform.analysis.experiment import transform_experiment
     from ca_biositing.pipeline.etl.load.analysis.observation import load_observation
     from ca_biositing.pipeline.etl.load.analysis.gasification_record import load_gasification_record
@@ -96,45 +97,12 @@ def thermochem_etl_flow(force_refresh: bool = False, *args, **kwargs):
             load_gasification_record(gas_rec_df)
 
             # --- PART 3: Archival of Gasification Timeseries ---
-            archive_data = []
-            logger.info(f"Preparing archival for {len(gas_rec_df)} records...")
+            unique_archive = build_gasification_archive_records(
+                gas_rec_df=gas_rec_df,
+                raw_data_df=gas_raw_copy,
+            )
 
-            for _, row in gas_rec_df.iterrows():
-                rid = row['record_id']
-                # Case-insensitive match for record_id to account for default cleaning behavior
-                match = gas_raw_copy[gas_raw_copy['record_id'].astype(str).str.lower() == str(rid).lower()]
-
-                if not match.empty:
-                    gsheet_url = None
-                    # Search across possible URL column names (raw or cleaned)
-                    # Note: We now preserve casing for raw_data_url in transform
-                    for col in ['raw_data_url', 'Raw_data_url', 'Raw_Data_URL', 'Experiment_setup_url', 'Experiment_Setup_URL']:
-                        if col in match.columns:
-                            val = match.iloc[0].get(col)
-                            if val and str(val).startswith('http'):
-                                gsheet_url = str(val)
-                                break
-
-                    if gsheet_url:
-                        archive_data.append({
-                            "record_id": rid,
-                            "gsheet_url": gsheet_url,
-                            "resource_id": row.get('resource_id'),
-                            "experiment_id": row.get('experiment_id'),
-                            "resource_name": row.get('resource_name'),
-                            "reactor_name": row.get('reactor_name'),
-                            "reactor_type_id": row.get('reactor_type_id')
-                        })
-
-            if archive_data:
-                # Deduplicate by gsheet_url to ensure we only trigger archival once per unique spreadsheet
-                unique_archive = []
-                seen_urls = set()
-                for item in archive_data:
-                    if item['gsheet_url'] not in seen_urls:
-                        unique_archive.append(item)
-                        seen_urls.add(item['gsheet_url'])
-
+            if unique_archive:
                 logger.info(f"Triggering archival subflow for {len(unique_archive)} unique URLs...")
                 gasification_archive_subflow(
                     force_refresh=force_refresh,
