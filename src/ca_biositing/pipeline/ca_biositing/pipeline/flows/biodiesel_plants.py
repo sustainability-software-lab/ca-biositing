@@ -2,7 +2,7 @@
 from prefect import flow, get_run_logger
 from ca_biositing.pipeline.etl.extract.biodiesel_plants import extract
 from ca_biositing.pipeline.etl.transform.infrastructure.biodiesel_plants import transform
-from ca_biositing.pipeline.etl.load.biodiesel_plants import load
+from ca_biositing.pipeline.etl.load.infrastructure.biodiesel_plants import load
 from ca_biositing.pipeline.utils.lineage import create_etl_run_record, create_lineage_group
 
 @flow(name="Biodiesel Plants ETL", log_prints=True)
@@ -26,9 +26,13 @@ def biodiesel_plants_flow():
 
     # Step 1: Extract
     logger.info("\n[Step 1] Extracting Biodiesel Plant data...")
-    raw_data = extract()
+    raw_data, geocoded_extractor = extract()
     if raw_data is None or raw_data.empty:
-        logger.error("✗ Extract failed")
+        logger.error("✗ Extracting raw data failed")
+        return False
+    geocoded_data = geocoded_extractor()
+    if geocoded_data is None or geocoded_data.empty:
+        logger.error("✗ Extracting geocoded data failed")
         return False
     logger.info(f"✓ Extracted {len(raw_data)} records")
 
@@ -38,6 +42,7 @@ def biodiesel_plants_flow():
         data_sources={"biodiesel_plants": raw_data},
         etl_run_id=etl_run_id,
         lineage_group_id=lineage_group_id,
+        geocoded_df=geocoded_data
     )
     if cleaned_data is None or cleaned_data.empty:
         logger.error("✗ Transform failed")

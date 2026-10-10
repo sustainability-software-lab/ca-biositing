@@ -1,6 +1,6 @@
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
-from sqlmodel import Field, SQLModel
+from sqlmodel import Field, Relationship, SQLModel
 from typing import Optional
 
 
@@ -12,17 +12,10 @@ class InfrastructureLandfills(SQLModel, table=True):
     ghgrp_id: Optional[str] = Field(default=None)
     landfill_id: Optional[int] = Field(default=None)
     landfill_name: Optional[str] = Field(default=None)
-    state: Optional[str] = Field(default=None)
-    physical_address: Optional[str] = Field(default=None)
-    city: Optional[str] = Field(default=None)
-    county: Optional[str] = Field(default=None)
-    zip_code: Optional[str] = Field(default=None)
-    latitude: Optional[Decimal] = Field(default=None)
-    longitude: Optional[Decimal] = Field(default=None)
     ownership_type: Optional[str] = Field(default=None)
     landfill_owner_orgs: Optional[str] = Field(default=None)
-    landfill_opened_year: Optional[date] = Field(default=None)
-    landfill_closure_year: Optional[date] = Field(default=None)
+    landfill_opened_year: Optional[int] = Field(default=None)
+    landfill_closure_year: Optional[int] = Field(default=None)
     landfill_status: Optional[str] = Field(default=None)
     waste_in_place: Optional[int] = Field(default=None)
     waste_in_place_year: Optional[date] = Field(default=None)
@@ -41,3 +34,12 @@ class InfrastructureLandfills(SQLModel, table=True):
     lfg_flow_to_project: Optional[Decimal] = Field(default=None)
     direct_emission_reductions: Optional[Decimal] = Field(default=None)
     avoided_emission_reductions: Optional[Decimal] = Field(default=None)
+    latitude: Optional[Decimal] = Field(default=None)
+    longitude: Optional[Decimal] = Field(default=None)
+    address_id: Optional[int] = Field(default=None, foreign_key="location_address.id")
+    etl_run_id: Optional[int] = Field(default=None, foreign_key="etl_run.id")
+    lineage_group_id: Optional[int] = Field(default=None)
+    created_at: Optional[datetime] = Field(default=None)
+    updated_at: Optional[datetime] = Field(default=None)
+
+    address: Optional["LocationAddress"] = Relationship()
