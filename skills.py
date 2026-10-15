@@ -44,7 +44,19 @@ def main() -> int:
         skills = source.get("skills")
 
         if registry == "local":
-            print(f"--- Skipping installation for local registry: {skills} ---", flush=True)
+            print(f"--- Verifying local registry skills: {skills} ---", flush=True)
+            claude_skills_dir = root / ".claude" / "skills"
+            claude_skills_dir.mkdir(parents=True, exist_ok=True)
+            for skill in skills or []:
+                agent_skill_dir = root / ".agents" / "skills" / skill
+                claude_link = claude_skills_dir / skill
+                target_rel = Path("../../.agents/skills") / skill
+                if agent_skill_dir.exists() and not claude_link.exists():
+                    try:
+                        claude_link.symlink_to(target_rel)
+                        print(f"  Linked .claude/skills/{skill} -> {target_rel}", flush=True)
+                    except OSError as exc:
+                        print(f"  Warning: could not symlink {skill}: {exc}", file=sys.stderr)
             continue
 
         if skills:

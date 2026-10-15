@@ -36,14 +36,15 @@ prototyping for bioeconomy site selection.
 
 For detailed guidance on shared topics, see the `agent_docs/` directory:
 
-| Topic              | Document                                                                       | Description                        |
-| ------------------ | ------------------------------------------------------------------------------ | ---------------------------------- |
-| Namespace Packages | [agent_docs/namespace_packages.md](agent_docs/namespace_packages.md)           | PEP 420 structure, import patterns |
-| Testing Patterns   | [agent_docs/testing_patterns.md](agent_docs/testing_patterns.md)               | pytest fixtures, test commands     |
-| Code Quality       | [agent_docs/code_quality.md](agent_docs/code_quality.md)                       | Pre-commit, style, imports         |
-| Troubleshooting    | [agent_docs/troubleshooting.md](agent_docs/troubleshooting.md)                 | Common pitfalls and solutions      |
-| Docker Workflow    | [agent_docs/docker_workflow.md](agent_docs/docker_workflow.md)                 | Docker/Pixi service commands       |
-| SQL-First Workflow | [docs/datamodels/SQL_FIRST_WORKFLOW.md](docs/datamodels/SQL_FIRST_WORKFLOW.md) | Rapid schema iteration path        |
+| Topic              | Document                                                                       | Description                                                  |
+| ------------------ | ------------------------------------------------------------------------------ | ------------------------------------------------------------ |
+| Namespace Packages | [agent_docs/namespace_packages.md](agent_docs/namespace_packages.md)           | PEP 420 structure, import patterns                           |
+| Testing Patterns   | [agent_docs/testing_patterns.md](agent_docs/testing_patterns.md)               | pytest fixtures, test commands                               |
+| Code Quality       | [agent_docs/code_quality.md](agent_docs/code_quality.md)                       | Pre-commit, style, imports                                   |
+| Troubleshooting    | [agent_docs/troubleshooting.md](agent_docs/troubleshooting.md)                 | Common pitfalls and solutions                                |
+| Docker Workflow    | [agent_docs/docker_workflow.md](agent_docs/docker_workflow.md)                 | Docker/Pixi service commands                                 |
+| Geospatial & SRID  | [agent_docs/geospatial_standards.md](agent_docs/geospatial_standards.md)       | Canonical CRS (`EPSG:4326`, `EPSG:3310`) & county geo assets |
+| SQL-First Workflow | [docs/datamodels/SQL_FIRST_WORKFLOW.md](docs/datamodels/SQL_FIRST_WORKFLOW.md) | Rapid schema iteration path                                  |
 
 ## Build System & Environment Management
 
@@ -239,6 +240,13 @@ issue management, UI audits, etc.).
 Installed skills are located in `.agents/skills/`. Agents can use the `skill()`
 tool to load these specialized instructions. Key skills include:
 
+- `ca-county-map`: Generate reproducible California county and regional
+  (`north san joaquin valley`, `central valley`, etc.) choropleth maps and
+  interactive widgets using canonical `EPSG:4326`
+  (`data/static/ca_counties.geojson`) and `EPSG:3310`
+  (`data/static/ca_counties_svg.json`) boundary assets.
+- `generative_ui`: Render rich interactive HTML/SVG widgets inline in chat or as
+  standalone artifacts.
 - `github-issues`: Manage repository issues and projects.
 - `web-design-guidelines`: Perform UI and accessibility audits.
 - `find-skills`: Search for and discover new capabilities.
@@ -247,6 +255,16 @@ tool to load these specialized instructions. Key skills include:
 
 - **Import Errors**: Ensure you are running inside the Pixi environment
   (`pixi run ...`) or using the Pixi kernel in Jupyter.
+- **Geospatial SRID & County Boundaries**:
+  - **Canonical Storage SRID**: Always use `EPSG:4326` (WGS 84, SRID `4326`) for
+    GeoJSON files (`data/static/ca_counties.geojson`) and PostGIS geometry
+    columns, and `EPSG:3310` (NAD83 / California Albers) for planar
+    area/distance calculations and static/SVG cartographic projections
+    (`data/static/ca_counties_svg.json`). See
+    [`agent_docs/geospatial_standards.md`](agent_docs/geospatial_standards.md).
+  - **Never use `data/landiq/i15_Crop_Mapping_*.shp` for county boundaries**—it
+    is a large field-level parcel shapefile. Always use
+    `data/static/ca_counties.geojson` or `data/static/ca_counties_svg.json`.
 - **macOS Geospatial Library Conflicts**: On macOS (especially Apple Silicon),
   you may encounter `PROJ` database version mismatch errors when using
   `geopandas` or `pyogrio`.

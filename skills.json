@@ -2,7 +2,12 @@
   "sources": [
     {
       "registry": "local",
-      "skills": ["database-query", "data-visualization"]
+      "skills": [
+        "database-query",
+        "data-visualization",
+        "generative_ui",
+        "ca-county-map"
+      ]
     },
     {
       "registry": "vercel-labs/agent-skills"

@@ -250,3 +250,19 @@ to other feedstocks._
 > **Source:**
 > [`analysis/composition/moisture_vs_ash_viz.py`](analysis/composition/moisture_vs_ash_viz.py)
 > | **Generated:** 2026-07-08 20:13 UTC
+
+## North San Joaquin Valley (NSJV) — Almond Hull Production Map (2024)
+
+[Interactive Visualization](plots/geospatial/nsjv_almond_hull_map.html)
+_Interactive California and North San Joaquin Valley (`06099` Stanislaus,
+`06047` Merced, `06077` San Joaquin) county choropleth map showing 2024 almond
+hull production totals (`976,054 tons`), 2017–2024 historical trends, co-product
+almond shells (`400,554 tons`), and regional market pricing (`$74.10/ton` avg)
+from `data_portal.mv_biomass_volume_estimate` and
+`data_portal.mv_biomass_pricing`. Built from canonical `EPSG:4326`
+(`data/static/ca_counties.geojson`) and `EPSG:3310`
+(`data/static/ca_counties_svg.json`) county boundary assets._
+
+> **Source:**
+> [`analysis/geospatial/nsjv_almond_hull_production_map.py`](analysis/geospatial/nsjv_almond_hull_production_map.py)
+> | **Generated:** 2026-10-15 17:46 UTC
