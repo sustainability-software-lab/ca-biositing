@@ -134,16 +134,14 @@ def test_merge_pr_is_safe_in_linked_worktrees(repo_root):
     text = " ".join(text.split())
     for required in (
         "git rev-parse --git-common-dir",
-        'git stash push -u -m "merge-pr-<number>"',
-        "git stash apply <sha>",
         "git worktree remove <path>",
+        "isCrossRepository",
     ):
         assert required in text, required
-    for upstream_only in (
-        "stash them before proceeding: `git stash`",
-        "restore them: `git stash pop`",
-    ):
-        assert upstream_only not in text, upstream_only
+    # The stash stack is shared across worktrees, so the skill stops on a dirty
+    # tree instead of stashing.
+    for unsafe in ("git stash push", "git stash pop", "git stash apply", "git stash drop"):
+        assert unsafe not in text, unsafe
 
 
 def test_commit_and_pr_skills_follow_the_ai_policy(repo_root):

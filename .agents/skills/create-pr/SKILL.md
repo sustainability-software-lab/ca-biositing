@@ -27,26 +27,27 @@ Create a pull request for the current branch.
 
    - **Title**: Use conventional commit format: `type(scope): short description`
      (under 70 chars)
-   - **Body**: Structured summary with test plan
+   - **Body**: Start from `.github/pull_request_template.md` and fill in every
+     section with real, specific answers, including "How to test"
 
-5. Create the PR:
+5. On an AI-assisted PR, the "Author verification" section must come from the
+   human author: ask them what they personally verified, what they are less
+   certain about, and whether they can tick the two ownership boxes. Do not
+   answer those on their behalf.
+
+6. Complete the checklist in `.agents/rules/contribution-discipline.md`: show
+   the user the complete diff and the drafted body, and get explicit approval
+   before submitting.
+
+7. Write the filled-in body to a temporary file and create the PR:
 
 ```bash
-gh pr create --title "type(scope): description" --body "$(cat <<'EOF'
-## Summary
-<1-3 bullet points covering what changed and why>
-
-## Changes
-<bulleted list of specific changes, grouped by area if needed>
-
-## Test plan
-- [ ] <specific testable checklist items>
-EOF
-)"
+gh pr create --title "type(scope): description" --body-file <path-to-body.md>
 ```
 
-6. If there's a related issue, add `Closes #N` in the body.
-7. Return the PR URL to the user.
+8. If there's a related issue, put `Resolves #N` in the "Related Issues"
+   section.
+9. Return the PR URL to the user.
 
 ## Title Convention
 
@@ -61,7 +62,8 @@ Use the same conventional commit types as the `commit` skill:
 ## Rules
 
 - Keep title under 70 characters
-- Always include a test plan with specific checkboxes
+- Always fill the template's "How to test" section with specific steps
+- Never bypass the template with a hand-written `--body`
 - Never create a PR from `main` to `main`
 - If the branch name contains a hint (e.g., `feat/`, `fix/`), use that as the
   commit type

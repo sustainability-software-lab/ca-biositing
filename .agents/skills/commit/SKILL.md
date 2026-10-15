@@ -24,8 +24,9 @@ Commit staged and unstaged changes to the current branch.
 4. Do NOT commit files that likely contain secrets (`.env`, `.env.local`,
    credentials, API keys). Warn if any are staged.
 5. Do NOT commit `.DS_Store` files.
-6. Stage relevant untracked files by name (never use `git add -A` or
-   `git add .`).
+6. Stage every relevant change by explicit path — modified tracked files as well
+   as new untracked ones — with `git add <path>...` (never use `git add -A` or
+   `git add .`). Check `git diff --cached --stat` before committing.
 7. Create the commit using this format:
 
 ```
