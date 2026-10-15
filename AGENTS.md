@@ -50,6 +50,7 @@ Load the rule file whose trigger matches what you are about to do.
 | [namespace-packages.md](.agents/rules/namespace-packages.md)           | Adding modules under `src/ca_biositing/` or fixing import errors                       |
 | [schema-and-migrations.md](.agents/rules/schema-and-migrations.md)     | Changing SQLModel models, Alembic migrations, or materialized views                    |
 | [docker-workflow.md](.agents/rules/docker-workflow.md)                 | Starting, inspecting, or rebuilding the Docker services, or running ETL flows          |
+| [agent-skills.md](.agents/rules/agent-skills.md)                       | Adding, editing, or syncing an agent skill, or editing `skills.json`                   |
 | [troubleshooting.md](.agents/rules/troubleshooting.md)                 | A documented command fails or behaves unexpectedly                                     |
 
 ## Package Guides

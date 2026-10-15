@@ -73,7 +73,10 @@ The API layer.
 ├── AGENTS.md              # Agent entry point: non-negotiables and the rule index
 ├── CLAUDE.md              # `@AGENTS.md` import; every package AGENTS.md has one too
 ├── .agents/
-│   └── rules/             # On-demand rules indexed by AGENTS.md
+│   ├── rules/             # On-demand rules indexed by AGENTS.md
+│   └── skills/            # Project skills (committed) and synced third-party skills (ignored)
+├── .claude/
+│   └── skills -> ../.agents/skills   # Symlink so Claude Code discovers the skills
 ├── skills.json            # Third-party agent skills synced by `pixi run skills-sync`
 ├── skills.py              # The sync script behind `pixi run skills-sync`
 └── tests/agent_harness/   # Invariant tests for the harness (run in CI)

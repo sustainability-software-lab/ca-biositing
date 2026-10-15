@@ -2,7 +2,17 @@
   "sources": [
     {
       "registry": "local",
-      "skills": ["database-query", "data-visualization"]
+      "skills": [
+        "clean-branches",
+        "commit",
+        "create-issue",
+        "create-pr",
+        "data-visualization",
+        "database-query",
+        "docs",
+        "merge-pr",
+        "push"
+      ]
     },
     {
       "registry": "vercel-labs/agent-skills"

@@ -75,10 +75,22 @@ pgschema
 # Agents Braindump
 # .agents/ and .claude/ hold machine-local agent state and the third-party
 # skills that `pixi run skills-sync` installs. Only the committed harness is
-# tracked: .agents/rules/ (see AGENTS.md).
+# tracked: .agents/rules/, the project skills allowlisted below, and the
+# .claude/skills symlink. Allowlist each new project skill here (see
+# .agents/rules/agent-skills.md).
 .agents/*
 !.agents/rules/
-.claude/
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/clean-branches/
+!.agents/skills/commit/
+!.agents/skills/create-issue/
+!.agents/skills/create-pr/
+!.agents/skills/docs/
+!.agents/skills/merge-pr/
+!.agents/skills/push/
+.claude/*
+!.claude/skills
 .cline/
 .roo/
 

@@ -99,3 +99,9 @@ def pixi_tasks(pixi_manifest) -> set[str]:
     for feature in pixi_manifest.get("feature", {}).values():
         tasks |= set(feature.get("tasks", {}))
     return tasks
+
+
+@pytest.fixture(scope="session")
+def project_skill_dirs() -> list[Path]:
+    """Skill directories under .agents/skills/ that git would commit."""
+    return sorted({path.parent for path in repo_files(".agents/skills/*/SKILL.md")})
