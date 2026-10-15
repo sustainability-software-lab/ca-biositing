@@ -39,7 +39,7 @@ Five conditions the spec implies that the per-task feature tests would not other
 
 ## Decisions (spec of record)
 
-- **D1 Scope.** Port the template's harness: AGENTS.md progressive disclosure and rules (#29), skills plus the `.claude/skills` symlink (#30), the optional mkdocs+OKF rule (#31), devcontainer agent CLIs and Copilot setup (#32), the AI policy and `Assisted-by` trailer (#35), the PR template's AI disclosure (#28), OKF memory (#34–#38), and the README AI section (#39).
+- **D1 Scope.** Port the template's harness: AGENTS.md progressive disclosure and rules (#29), skills plus the `.claude/skills` symlink (#30), the optional mkdocs+OKF rule (#31), devcontainer agent CLIs and Copilot setup (#32), the AI policy and `Assisted-by` trailer (#35), the PR template's AI disclosure (#28), OKF memory (#34–#38), and the README AI section (#39). None of the template's onboarding is ported (see Not Ported).
 - **D2 Rules location.** `agent_docs/*.md` moves with `git mv` to `.agents/rules/` under kebab-case names and gains `**Load when:**` lines. `agent_docs/README.md` is deleted; the AGENTS.md Rule Index replaces it. The local `code_quality.md` and `troubleshooting.md` are supersets of the template's `pre-commit-and-quality.md` and `troubleshooting.md`, so those two template rules are merged in rather than copied.
 - **D3 One `CLAUDE.md` per `AGENTS.md`.** Claude Code ≥2.1.277 reads `AGENTS.md` natively only when no `CLAUDE.md` exists at or above the working directory; a subdirectory `AGENTS.md` loads on Read only in that mode. The template's root `CLAUDE.md` would therefore switch off the six nested guides, so each gets its own `@AGENTS.md` import, whose CLAUDE.md trigger (Read/Write/Edit) is also broader. Source: <https://code.claude.com/docs/en/memory#agents-md>.
 - **D4 Skills layout.** `.claude/skills -> ../.agents/skills`, committed as in the template; the Claude Code changelog fixed a bug for exactly this setup. Verified against `skills` CLI 1.7.1 source: its `createSymlink` compares real paths, so `skills-sync` leaves this symlink alone, but `cleanAndCreateDirectory` does `rm -rf .agents/skills/<name>` before copying, hence Review Focus #3. `.gitignore` changes from ignoring `.agents/` and `.claude/` wholesale to an allowlist, checked with `git check-ignore` in a scratch repository.
@@ -53,7 +53,7 @@ Five conditions the spec implies that the per-task feature tests would not other
 ## Not Ported, and Why
 
 - `release` skill: semver plus `plugins/` zip assets; this repo uses CalVer, has no `plugins/`, and its `CHANGELOG.md` has no released sections.
-- `onboard` environment, `ssec-cli`, `onboarded.md`, onboard issue template: SSEC onboarding, not harness. Open upstream PR #41 is not on `main`.
+- Onboarding, including everything built on `ssec-cli`: the template's `onboarding.md` rule, the `onboard` Pixi environment with its `ssec-setup` and `onboard` tasks, `onboarded.md`, the onboard issue template, and open upstream PR #41. Setup guidance for new contributors stays in `docs/ca_biositing_local_setup.md` and the README's Quick Start.
 - `zizmor.yml` (#25) and `detect-secrets` + `.secrets.baseline` (#33): CI/security hardening that predates or sits beside the harness. Each deserves its own PR, and detect-secrets needs an audit of the dev credentials already in `pixi.toml` and `.env.example`.
 - The `https://prefix.dev/conda-forge` channel switch (#34/#37): it re-solves the whole lock file.
 - `gh-cli` and `okf` Pixi features: deferred by D6.
@@ -74,7 +74,7 @@ Five conditions the spec implies that the per-task feature tests would not other
 | `tests/agent_harness/test_rules.py`, `test_links.py` | 1 (+2) | Rule shape and names; relative links resolve |
 | `.agents/rules/{code-quality,docker-workflow,namespace-packages,testing-patterns,troubleshooting}.md` | 1 (+2) | Former `agent_docs/` guides |
 | `.github/workflows/ci.yml` | 1 | Runs the harness tests in CI |
-| `.agents/rules/{working-agreement,contribution-discipline,pixi-environments,repository-map,onboarding,schema-and-migrations}.md` | 2 | Template behavior rules and the content leaving the root AGENTS.md |
+| `.agents/rules/{working-agreement,contribution-discipline,pixi-environments,repository-map,schema-and-migrations}.md` | 2 | Template behavior rules and the content leaving the root AGENTS.md |
 | `tests/agent_harness/test_pixi_references.py` | 2 | Every `pixi run X` names a real task |
 | `AGENTS.md`, `CLAUDE.md` ×7 | 3 | Entry point; Claude Code imports |
 | `tests/agent_harness/test_entrypoint.py` | 3 | Shims, index ↔ rules, nothing lost |
@@ -525,7 +525,7 @@ git commit -m "docs(agents): move agent_docs into on-demand .agents/rules" -m "A
 
 **Files:**
 - Create: `.agents/rules/working-agreement.md`, `.agents/rules/contribution-discipline.md` (upstream plus edits)
-- Create: `.agents/rules/pixi-environments.md`, `.agents/rules/repository-map.md`, `.agents/rules/onboarding.md`, `.agents/rules/schema-and-migrations.md`
+- Create: `.agents/rules/pixi-environments.md`, `.agents/rules/repository-map.md`, `.agents/rules/schema-and-migrations.md`
 - Modify: `.agents/rules/troubleshooting.md` (insert "Common Pitfalls"), `.agents/rules/code-quality.md` (append a section)
 - Modify: `tests/agent_harness/conftest.py`, `tests/agent_harness/test_rules.py`
 - Create: `tests/agent_harness/test_pixi_references.py`
@@ -562,7 +562,6 @@ In `tests/agent_harness/test_rules.py`, add after `MOVED_FROM_AGENT_DOCS`:
 ```python
 ADDED_IN_TASK_2 = {
     "contribution-discipline.md",
-    "onboarding.md",
     "pixi-environments.md",
     "repository-map.md",
     "schema-and-migrations.md",
@@ -638,7 +637,7 @@ def test_pixi_run_references_name_real_tasks(harness_markdown_files, pixi_tasks,
 - [ ] **Step 3: Run the tests to verify they fail**
 
 Run: `pixi run pytest tests/agent_harness -v`
-Expected: FAIL `test_core_rules_are_present_and_committable` (six files missing). Everything else PASS.
+Expected: FAIL `test_core_rules_are_present_and_committable` (five files missing). Everything else PASS.
 
 - [ ] **Step 4: Port `working-agreement.md`**
 
@@ -932,42 +931,7 @@ EOF
 
 The two extracted blocks become `## Jupyter Notebooks` and `## Validated Commands`, the latter with its `### Docker Operations`, `### Development & Quality`, and `### ETL Flow Management` subsections.
 
-- [ ] **Step 9: Create `onboarding.md`**
-
-Create `.agents/rules/onboarding.md`:
-
-````markdown
-# Onboarding
-
-**Load when:** setting up this repository for the first time, or helping a new
-contributor get started.
-
-The human-facing guide is
-[`docs/ca_biositing_local_setup.md`](../../docs/ca_biositing_local_setup.md),
-and the README's Quick Start covers the ETL pipeline and web service. The
-agent-relevant first steps:
-
-```bash
-pixi install                                              # default environment
-pixi run pre-commit-install                               # git hooks
-cp resources/docker/.env.example resources/docker/.env    # then fill in values
-pixi run start-services                                   # PostgreSQL + Prefect; Docker must be running
-pixi run submodule-frontend-init                          # only for frontend work
-pixi run skills-sync                                      # optional: third-party agent skills
-```
-
-- Google Sheets ETL needs a service-account key at `credentials.json` in the
-  repository root — see
-  [`docs/pipeline/GCP_SETUP.md`](../../docs/pipeline/GCP_SETUP.md). Never commit
-  it.
-- Commands run on the host that reach the Docker database (for example
-  `pixi run migrate`) need `DATABASE_URL` pointing at `localhost`, as the setup
-  guide shows.
-- Install the GitHub CLI and run `gh auth login`; see
-  [pixi-environments.md](pixi-environments.md#github-cli).
-````
-
-- [ ] **Step 10: Move the old AGENTS.md pitfalls into `troubleshooting.md`**
+- [ ] **Step 9: Move the old AGENTS.md pitfalls into `troubleshooting.md`**
 
 ```bash
 git show c5a592e:AGENTS.md | sed -n '246,270p' | sed -E 's#\]\((src|docs)/#](../../\1/#g' > "${TMPDIR:-/tmp}/pitfalls.md"
@@ -988,7 +952,7 @@ grep -n -E "^## (Common Pitfalls|Environment Issues)" .agents/rules/troubleshoot
 
 Expected: `## Common Pitfalls` appears directly before `## Environment Issues`.
 
-- [ ] **Step 11: Append the pre-PR workflow to `code-quality.md`**
+- [ ] **Step 10: Append the pre-PR workflow to `code-quality.md`**
 
 ```bash
 cat >> .agents/rules/code-quality.md <<'EOF'
@@ -1007,12 +971,12 @@ cat >> .agents/rules/code-quality.md <<'EOF'
 EOF
 ```
 
-- [ ] **Step 12: Run the tests to verify they pass**
+- [ ] **Step 11: Run the tests to verify they pass**
 
 Run: `pixi run pytest tests/agent_harness -v`
 Expected: 9 passed. If `test_harness_links_resolve` fails, the link is in a file you created in this task; fix its relative path. If `test_pixi_run_references_name_real_tasks` fails, the quoted task is a typo or an upstream leftover.
 
-- [ ] **Step 13: Run the gate and commit**
+- [ ] **Step 12: Run the gate and commit**
 
 ```bash
 git add .agents/rules tests/agent_harness
@@ -1197,7 +1161,6 @@ Load the rule file whose trigger matches what you are about to do.
 | [namespace-packages.md](.agents/rules/namespace-packages.md) | Adding modules under `src/ca_biositing/` or fixing import errors |
 | [schema-and-migrations.md](.agents/rules/schema-and-migrations.md) | Changing SQLModel models, Alembic migrations, or materialized views |
 | [docker-workflow.md](.agents/rules/docker-workflow.md) | Starting, inspecting, or rebuilding the Docker services, or running ETL flows |
-| [onboarding.md](.agents/rules/onboarding.md) | First-time setup, or helping a new contributor get started |
 | [troubleshooting.md](.agents/rules/troubleshooting.md) | A documented command fails or behaves unexpectedly |
 
 ## Package Guides
@@ -1897,7 +1860,7 @@ Keep `database-query` and `data-visualization`: they belong to the author of #44
 
 - [ ] **Step 9: Write the `agent-skills.md` rule and index it**
 
-Add this row to the `AGENTS.md` Rule Index, directly after the `onboarding.md` row:
+Add this row to the `AGENTS.md` Rule Index, directly after the `docker-workflow.md` row:
 
 ```markdown
 | [agent-skills.md](.agents/rules/agent-skills.md) | Adding, editing, or syncing an agent skill, or editing `skills.json` |
