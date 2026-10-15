@@ -544,38 +544,57 @@ def build_nsjv_dataset(
         avail_info.get("year_round"),
     )
 
-    # Determine sibling co-product if not predefined
+    # Determine primary and secondary sibling co-products
     coproduct_res = meta.get("coproduct_resource")
-    if not coproduct_res:
-        # Check which sibling in mv_vol_rows has positive volume
-        sibling_vols: dict[str, float] = {}
-        for r in mv_vol_rows:
-            rn = str(r.get("resource_name", "")).strip().lower()
-            est = r.get("estimated_residue_volume_mid")
-            if (
-                rn != target_res
-                and (not sibling_candidates or rn in sibling_candidates)
-                and est is not None
-                and float(est) > 0
-            ):
-                sibling_vols[rn] = sibling_vols.get(rn, 0.0) + float(est)
-        if sibling_vols:
-            # Pick highest-volume sibling co-product (preferring canonical shells/hulls on ties)
-            coproduct_res = max(
-                sibling_vols.items(),
-                key=lambda kv: (
-                    round(kv[1], 2),
-                    1 if ("shells" in kv[0] or "hulls" in kv[0]) else 0,
-                    -len(kv[0]),
-                ),
-            )[0]
-            meta["coproduct_resource"] = coproduct_res
-            meta["coproduct_short"] = coproduct_res
+    secondary_coprod_res = meta.get("secondary_coproduct_resource")
+    sibling_vols: dict[str, float] = {}
+    sibling_units: dict[str, str] = {}
+    for r in mv_vol_rows:
+        rn = str(r.get("resource_name", "")).strip().lower()
+        est = r.get("estimated_residue_volume_mid")
+        b_u = str(r.get("biomass_unit") or "tons")
+        if rn:
+            sibling_units[rn] = "dry t" if b_u == "dry_tons" else "t"
+        if (
+            rn != target_res
+            and (not sibling_candidates or rn in sibling_candidates)
+            and est is not None
+            and float(est) > 0
+        ):
+            sibling_vols[rn] = sibling_vols.get(rn, 0.0) + float(est)
+
+    ranked_siblings = [
+        kv[0]
+        for kv in sorted(
+            sibling_vols.items(),
+            key=lambda kv: (
+                round(kv[1], 2),
+                1 if ("shells" in kv[0] or "hulls" in kv[0]) else 0,
+                -len(kv[0]),
+            ),
+            reverse=True,
+        )
+    ]
+    if not coproduct_res and ranked_siblings:
+        coproduct_res = ranked_siblings[0]
+        meta["coproduct_resource"] = coproduct_res
+        meta["coproduct_short"] = coproduct_res
+    if not secondary_coprod_res:
+        for cand in ranked_siblings:
+            if cand != coproduct_res:
+                secondary_coprod_res = cand
+                break
+        if secondary_coprod_res:
+            meta["secondary_coproduct_resource"] = secondary_coprod_res
+            meta["secondary_coproduct_short"] = secondary_coprod_res
+
+    coproduct_unit_short = sibling_units.get(coproduct_res or "", "t")
 
     # 2. Tier 3 (base layer): Historical resource_production_record (2017-2024)
     primary_by_yr_geoid: dict[tuple[int, str], dict[str, Any]] = {}
     rpr_raw_by_yr_geoid: dict[tuple[int, str], float] = {}
     coprod_by_yr_geoid: dict[tuple[int, str], float] = {}
+    secondary_coprod_by_yr_geoid: dict[tuple[int, str], float] = {}
 
     for r in rpr_rows:
         rname = str(r.get("resource_name", "")).lower().strip()
@@ -604,6 +623,8 @@ def build_nsjv_dataset(
             }
         elif coproduct_res and rname == coproduct_res:
             coprod_by_yr_geoid[(yr, geoid)] = fval
+        elif secondary_coprod_res and rname == secondary_coprod_res:
+            secondary_coprod_by_yr_geoid[(yr, geoid)] = fval
 
     # 3. Tier 2 (USDA Census bearing/harvested acreage supplement): mv_usda_county_production
     for r in usda_rows:
@@ -641,6 +662,8 @@ def build_nsjv_dataset(
             }
         elif coproduct_res and rname == coproduct_res:
             coprod_by_yr_geoid[(yr, geoid)] = fest
+        elif secondary_coprod_res and rname == secondary_coprod_res:
+            secondary_coprod_by_yr_geoid[(yr, geoid)] = fest
 
     # 4. Tier 1 (Primary canonical view): mv_biomass_volume_estimate
     detected_unit = "tons"
@@ -654,22 +677,40 @@ def build_nsjv_dataset(
         geoid = str(r.get("geoid", "")).strip()
         yr = _extract_year(r.get("dataset_year"))
         est = r.get("estimated_residue_volume_mid")
-        if yr is None or est is None or geoid not in NSJV_GEOIDS:
+        if yr is None or geoid not in NSJV_GEOIDS:
             continue
-        fest = float(est)
         if rname == target_res:
             if meta["resource_id"] is None and r.get("resource_id") is not None:
                 meta["resource_id"] = int(r["resource_id"])
             b_unit = str(r.get("biomass_unit") or "tons")
             v_src = str(r.get("volume_source") or "production_based")
-            detected_unit = b_unit
-            detected_source = v_src
             f_mid = float(r["factor_mid"]) if r.get("factor_mid") is not None else 1.0
             f_min = float(r["factor_min"]) if r.get("factor_min") is not None else None
             f_max = float(r["factor_max"]) if r.get("factor_max") is not None else None
             detected_f_mid = f_mid
             detected_f_min = f_min
             detected_f_max = f_max
+
+            if est is None:
+                # Merge Tier 1 factor metadata into Tier 2 entry when Path D omits 'area bearing'
+                existing = primary_by_yr_geoid.get((yr, geoid))
+                if existing is not None:
+                    existing["factor_min"] = f_min
+                    existing["factor_max"] = f_max
+                    if existing.get("residue_factor") is None:
+                        existing["residue_factor"] = f_mid
+                    if (
+                        existing.get("crop_acres")
+                        and f_min is not None
+                        and f_max is not None
+                    ):
+                        existing["volume_min"] = float(existing["crop_acres"]) * f_min
+                        existing["volume_max"] = float(existing["crop_acres"]) * f_max
+                continue
+
+            fest = float(est)
+            detected_unit = b_unit
+            detected_source = v_src
 
             vmin = (
                 float(r["estimated_residue_volume_min"])
@@ -707,8 +748,12 @@ def build_nsjv_dataset(
                 "estimate_method": v_src,
                 "biomass_unit": b_unit,
             }
-        elif coproduct_res and rname == coproduct_res:
-            coprod_by_yr_geoid[(yr, geoid)] = fest
+        elif est is not None:
+            fest = float(est)
+            if coproduct_res and rname == coproduct_res:
+                coprod_by_yr_geoid[(yr, geoid)] = fest
+            elif secondary_coprod_res and rname == secondary_coprod_res:
+                secondary_coprod_by_yr_geoid[(yr, geoid)] = fest
 
     # Check unit from primary_by_yr_geoid if Tier 2 was used
     for item in primary_by_yr_geoid.values():
@@ -720,13 +765,23 @@ def build_nsjv_dataset(
 
     unit_label = "dry tons" if detected_unit == "dry_tons" else "tons"
     unit_short = "dry t" if detected_unit == "dry_tons" else "t"
+    wet_tons_per_acre = (
+        float(avail_info["wet_tons_per_acre"])
+        if avail_info.get("wet_tons_per_acre") is not None
+        else None
+    )
 
     # Build human-readable factor description if not preset
     if not meta.get("factor_description"):
         crop_lbl = primary_product if primary_product else "primary crop"
         if detected_source == "usda_census_acreage":
+            wet_note = (
+                f" ({wet_tons_per_acre:g} wet t/ac • {crop_lbl}, USDA Census)"
+                if wet_tons_per_acre
+                else f" ({crop_lbl}, USDA Census)"
+            )
             meta["factor_description"] = (
-                f"{detected_f_mid or 1.0:g} {unit_label} / bearing acre ({crop_lbl}, USDA Census)"
+                f"{detected_f_mid or 1.0:g} {unit_label} / bearing acre{wet_note}"
             )
         elif (
             detected_f_min is not None
@@ -822,11 +877,24 @@ def build_nsjv_dataset(
             for c in yr_counties_raw
             if c.get("crop_acres") is not None
         )
+        total_wet_tons = (
+            round(total_crop_acres * wet_tons_per_acre, 1)
+            if total_crop_acres > 0 and wet_tons_per_acre
+            else None
+        )
         total_rpr_tons = sum(
             rpr_raw_by_yr_geoid.get((yr, g), 0.0) for g in NSJV_GEOIDS.keys()
         )
         total_coprod = sum(
             coprod_by_yr_geoid.get((yr, g), 0.0) for g in NSJV_GEOIDS.keys()
+        )
+        total_sec_coprod = sum(
+            secondary_coprod_by_yr_geoid.get((yr, g), 0.0) for g in NSJV_GEOIDS.keys()
+        )
+        total_shells = (
+            total_sec_coprod
+            if secondary_coprod_res and "shells" in secondary_coprod_res
+            else total_coprod
         )
 
         yr_c_prices = [
@@ -847,12 +915,25 @@ def build_nsjv_dataset(
             p_info = price_by_yr_geoid.get((yr, geoid), {})
             c_price = p_info.get("price_usd", reg_avg_price)
             c_price_loc = p_info.get("location", "NSJV regional avg")
+            c_coprod = round(coprod_by_yr_geoid.get((yr, geoid), 0.0), 1)
+            c_sec_coprod = round(secondary_coprod_by_yr_geoid.get((yr, geoid), 0.0), 1)
+            c_shells = (
+                c_sec_coprod
+                if secondary_coprod_res and "shells" in secondary_coprod_res
+                else c_coprod
+            )
+            c_wet = (
+                round(c["crop_acres"] * wet_tons_per_acre, 1)
+                if c.get("crop_acres") is not None and wet_tons_per_acre
+                else None
+            )
 
             counties_dict[geoid] = {
                 "geoid": geoid,
                 "county_name": c["county_name"],
                 "display_name": c["county_name"].title(),
                 "estimated_volume_tons": round(tons, 1),
+                "estimated_wet_tons": c_wet,
                 "volume_min": round(c["volume_min"], 1) if c.get("volume_min") is not None else None,
                 "volume_max": round(c["volume_max"], 1) if c.get("volume_max") is not None else None,
                 "primary_crop_volume": (
@@ -870,8 +951,9 @@ def build_nsjv_dataset(
                 "factor_min": c.get("factor_min"),
                 "factor_max": c.get("factor_max"),
                 "share_pct": share_pct,
-                "coproduct_tons": round(coprod_by_yr_geoid.get((yr, geoid), 0.0), 1),
-                "shell_tons": round(coprod_by_yr_geoid.get((yr, geoid), 0.0), 1),
+                "coproduct_tons": c_coprod,
+                "secondary_coproduct_tons": c_sec_coprod,
+                "shell_tons": c_shells,
                 "price_usd": c_price,
                 "price_location": c_price_loc,
                 "estimate_method": c["estimate_method"],
@@ -880,6 +962,7 @@ def build_nsjv_dataset(
         by_year[yr_str] = {
             "year": yr,
             "total_tons": round(total_tons, 1),
+            "total_wet_tons": total_wet_tons,
             "total_min_tons": round(total_min_tons, 1) if has_range else None,
             "total_max_tons": round(total_max_tons, 1) if has_range else None,
             "has_range": has_range,
@@ -887,7 +970,8 @@ def build_nsjv_dataset(
             "total_crop_acres": round(total_crop_acres, 1) if total_crop_acres > 0 else None,
             "total_rpr_tons": round(total_rpr_tons, 1),
             "total_coproduct_tons": round(total_coprod, 1),
-            "total_shells_tons": round(total_coprod, 1),
+            "total_secondary_coproduct_tons": round(total_sec_coprod, 1),
+            "total_shells_tons": round(total_shells, 1),
             "regional_avg_price_usd": reg_avg_price,
             "counties": counties_dict,
         }
@@ -916,9 +1000,21 @@ def build_nsjv_dataset(
     elif " - " in primary_title:
         primary_short = primary_title.split(" - ")[0].strip()
 
+    source_view = (
+        "data_portal.mv_usda_county_production"
+        if detected_source == "usda_census_acreage"
+        else "data_portal.mv_biomass_volume_estimate"
+    )
+    subtitle_src = (
+        f"{source_view} + mv_biomass_volume_estimate"
+        if detected_source == "usda_census_acreage"
+        else source_view
+    )
+
     return {
         "title": f"North San Joaquin Valley — {meta['display_title']} Production",
-        "subtitle": f"Source: data_portal.mv_biomass_volume_estimate ({res_code_str}, {res_id_str})",
+        "subtitle": f"Source: {subtitle_src} ({res_code_str}, {res_id_str})",
+        "source_view": source_view,
         "resource_name": target_res,
         "resource_id": meta.get("resource_id"),
         "resource_code": res_code_str,
@@ -932,6 +1028,7 @@ def build_nsjv_dataset(
         "residue_factor_mid": detected_f_mid,
         "residue_factor_min": detected_f_min,
         "residue_factor_max": detected_f_max,
+        "wet_tons_per_acre": wet_tons_per_acre,
         "volume_source": detected_source,
         "biomass_unit": detected_unit,
         "unit_label": unit_label,
@@ -940,6 +1037,8 @@ def build_nsjv_dataset(
         "season_label": season_label,
         "composition_str": composition_str,
         "coproduct_short": meta.get("coproduct_short"),
+        "coproduct_unit_short": coproduct_unit_short,
+        "secondary_coproduct_short": meta.get("secondary_coproduct_short"),
         "thresholds": thresholds,
         "legend_bins": legend_bins,
         "search_summary": search_summary,
@@ -976,6 +1075,7 @@ def render_widget_html(
     short_kpi_label = dataset.get("short_kpi_label", f"NSJV {display_title} Total")
     res_code = dataset.get("resource_code", "almhu")
     res_id = dataset.get("resource_id", 32)
+    source_view = dataset.get("source_view", "data_portal.mv_biomass_volume_estimate")
     factor_desc = dataset.get("factor_description", "1.0 ton / ton commodity")
     legend_bins = dataset.get("legend_bins") or ["Low", "Medium", "High"]
     latest_yr = str(dataset.get("latest_year", 2024))
@@ -1049,7 +1149,7 @@ def render_widget_html(
           </span>
         </div>
         <p class="text-[var(--muted-foreground)] text-xs mt-0.5">
-          <code class="font-mono">data_portal.mv_biomass_volume_estimate</code> (<code class="font-mono">{res_code}</code>, <code class="font-mono">id={res_id}</code>) • Factor: <span class="font-medium">{factor_desc}</span>
+          <code class="font-mono">{source_view}</code> (<code class="font-mono">{res_code}</code>, <code class="font-mono">id={res_id}</code>) • Factor: <span class="font-medium">{factor_desc}</span>
         </p>
       </div>
 
@@ -1288,7 +1388,7 @@ def render_widget_html(
             }} else if (cStats.primary_crop_volume) {{
               extraTxt = ` • ${{formatTons(cStats.primary_crop_volume)}} t ${{DATA.primary_product_lower}} × ${{cStats.residue_factor}}`;
             }} else if (cStats.crop_acres) {{
-              extraTxt = ` • ${{formatTons(cStats.crop_acres)}} acres × ${{cStats.residue_factor}}`;
+              extraTxt = ` • ${{formatTons(cStats.crop_acres)}} bearing ac × ${{cStats.residue_factor}} ${{UNIT_SHORT}}/ac`;
             }}
             hoverReadoutEl.innerHTML = `<span class="font-semibold text-[#0082A6]">${{c.full_name}} (${{c.geoid}})</span>: <strong>${{formatTons(cStats.estimated_volume_tons)}} ${{UNIT_LABEL}}</strong> (${{cStats.share_pct}}% of NSJV)${{extraTxt}}`;
           }} else {{
@@ -1404,11 +1504,13 @@ def render_widget_html(
         document.getElementById("kpi-top-share").textContent = `${{countiesArr[0].share_pct.toFixed(1)}}% (${{formatShortK(countiesArr[0].estimated_volume_tons)}} ${{UNIT_SHORT}})`;
       }}
 
-      // Update KPI 3: Adaptive (Market Price when available, else Primary Crop / Acreage / Harvest Window)
+      // Update KPI 3: Adaptive (Market Price when available, else Primary Crop / Bearing Acres / Harvest Window)
       const kpiThirdLabel = document.getElementById("kpi-third-label");
       const kpiPriceEl = document.getElementById("kpi-price");
       const kpiCoprodEl = document.getElementById("kpi-coproduct");
       const cropShort = DATA.primary_product_short || DATA.primary_product;
+      const coprodUnit = DATA.coproduct_unit_short || "t";
+      const selCountyForKpi = selectedGeoid && yrData.counties[selectedGeoid] ? yrData.counties[selectedGeoid] : null;
 
       if (DATA.has_pricing && yrData.regional_avg_price_usd) {{
         kpiThirdLabel.textContent = "Market Price";
@@ -1416,16 +1518,19 @@ def render_widget_html(
         const coprodShort = DATA.coproduct_short || "co-product";
         kpiCoprodEl.textContent =
           yrData.total_coproduct_tons > 0
-            ? `+${{formatShortK(yrData.total_coproduct_tons)}} ${{UNIT_SHORT}} ${{coprodShort}}`
+            ? `+${{formatShortK(yrData.total_coproduct_tons)}} ${{coprodUnit}} ${{coprodShort}}`
             : `${{DATA.plural_label}} (NSJV)`;
       }} else if (yrData.total_primary_crop_tons) {{
+        const dispCrop = selCountyForKpi && selCountyForKpi.primary_crop_volume ? selCountyForKpi.primary_crop_volume : yrData.total_primary_crop_tons;
         kpiThirdLabel.textContent = cropShort.length > 12 ? `${{cropShort}}` : `Primary Crop (${{cropShort}})`;
-        kpiPriceEl.textContent = `${{formatTons(yrData.total_primary_crop_tons)}} t`;
+        kpiPriceEl.textContent = `${{formatTons(dispCrop)}} t`;
         kpiCoprodEl.textContent = `Harvest: ${{DATA.season_label}} • ×${{DATA.residue_factor_mid || 1}}`;
       }} else if (yrData.total_crop_acres) {{
-        kpiThirdLabel.textContent = `${{cropShort}} Acreage`;
-        kpiPriceEl.textContent = `${{formatTons(yrData.total_crop_acres)}} ac`;
-        kpiCoprodEl.textContent = `Harvest: ${{DATA.season_label}} • ×${{DATA.residue_factor_mid || 1}}/ac`;
+        const dispAcres = selCountyForKpi && selCountyForKpi.crop_acres ? selCountyForKpi.crop_acres : yrData.total_crop_acres;
+        const seasonPrefix = DATA.volume_source === "usda_census_acreage" ? "Pruning" : "Harvest";
+        kpiThirdLabel.textContent = `${{cropShort}} Bearing Acres`;
+        kpiPriceEl.textContent = `${{formatTons(dispAcres)}} ac`;
+        kpiCoprodEl.textContent = `${{seasonPrefix}}: ${{DATA.season_label}} • ×${{DATA.residue_factor_mid || 1}} ${{UNIT_SHORT}}/ac`;
       }} else {{
         kpiThirdLabel.textContent = "Harvest Window";
         kpiPriceEl.textContent = DATA.season_label || "Seasonal";
@@ -1580,6 +1685,7 @@ def render_widget_html(
           DATA.residue_factor_min && DATA.residue_factor_max && DATA.residue_factor_min !== DATA.residue_factor_max
             ? ` (×${{DATA.residue_factor_min}}–${{DATA.residue_factor_max}})`
             : "";
+        const wetSuffix = DATA.wet_tons_per_acre ? ` (${{DATA.wet_tons_per_acre}} wet t/ac)` : "";
         if (selCountyObj && selCountyObj.volume_min !== null && selCountyObj.volume_max !== null && selCountyObj.volume_min !== selCountyObj.volume_max) {{
           line1Label = "Est. Range";
           line1Val = `${{formatTons(selCountyObj.volume_min)}}–${{formatTons(selCountyObj.volume_max)}} ${{UNIT_SHORT}}${{fRangeSuffix}}`;
@@ -1593,19 +1699,23 @@ def render_widget_html(
           line1Label = `${{cropShort}} Crop`;
           line1Val = `${{formatTons(yrData.total_primary_crop_tons)}} t × ${{DATA.residue_factor_mid}}`;
         }} else if (selCountyObj && selCountyObj.crop_acres) {{
-          line1Label = `${{cropShort}} Area`;
-          line1Val = `${{formatTons(selCountyObj.crop_acres)}} ac × ${{selCountyObj.residue_factor}}`;
+          line1Label = `${{cropShort}} Bearing Area`;
+          line1Val = `${{formatTons(selCountyObj.crop_acres)}} ac × ${{selCountyObj.residue_factor}} ${{UNIT_SHORT}}/ac${{wetSuffix}}`;
         }} else if (yrData.total_crop_acres) {{
-          line1Label = `${{cropShort}} Area`;
-          line1Val = `${{formatTons(yrData.total_crop_acres)}} ac × ${{DATA.residue_factor_mid}}`;
+          line1Label = `${{cropShort}} Bearing Area`;
+          line1Val = `${{formatTons(yrData.total_crop_acres)}} ac × ${{DATA.residue_factor_mid}} ${{UNIT_SHORT}}/ac${{wetSuffix}}`;
         }}
 
         let line2Label = "Co-Product";
         let line2Val = "None reported";
         const coprodTons = selCountyObj ? selCountyObj.coproduct_tons : yrData.total_coproduct_tons;
-        if (DATA.coproduct_short && coprodTons > 0) {{
+        const secCoprodTons = selCountyObj ? selCountyObj.secondary_coproduct_tons : yrData.total_secondary_coproduct_tons;
+        if (DATA.coproduct_short && coprodTons > 0 && DATA.secondary_coproduct_short && secCoprodTons > 0) {{
+          line2Label = "Sibling Co-Products";
+          line2Val = `${{formatShortK(coprodTons)}} ${{coprodUnit}} ${{DATA.coproduct_short}} • ${{formatShortK(secCoprodTons)}} ${{coprodUnit}} ${{DATA.secondary_coproduct_short}}`;
+        }} else if (DATA.coproduct_short && coprodTons > 0) {{
           line2Label = `Co-Product (${{DATA.coproduct_short}})`;
-          line2Val = `${{formatTons(coprodTons)}} ${{UNIT_SHORT}}`;
+          line2Val = `${{formatTons(coprodTons)}} ${{coprodUnit}}`;
         }} else if (line1Label === "Est. Range" && selCountyObj && selCountyObj.primary_crop_volume) {{
           line2Label = `${{cropShort}}`;
           line2Val = `${{formatTons(selCountyObj.primary_crop_volume)}} t × ${{selCountyObj.residue_factor}} (${{DATA.season_label}})`;

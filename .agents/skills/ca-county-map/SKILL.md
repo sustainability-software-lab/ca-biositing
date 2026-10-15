@@ -104,18 +104,19 @@ box:
        `mv_usda_county_production`).
 2. **Tier 2 — `data_portal.mv_usda_county_production` _(Orchard Bearing-Acreage
    & Census Fallback)_**:
-   - **Columns**: `id`, `resource_id`, `resource_name`, `primary_product`,
-     `usda_commodity`, `geoid`, `county`, `state`, `dataset_year`, `Observation`
-     (`'production'`, `'area harvested'`, `'area bearing'`,
-     `'area non-bearing'`), `value`, `unit`, `residue_factor_dry_tons_per_acre`,
-     `estimated_Ton_per_ton`.
-   - **When Used**: Automatically fills county volumes when
+   - **Columns**: `id`, `resource_id`, `resource_name`, `primary_ag_product`,
+     `geoid`, `county`, `county_fips`, `state`, `dataset_year`,
+     `primary_product_volume`, `volume_unit`, `production_acres` (coalesced from
+     `'area bearing & non-bearing'`, `'area bearing'`, and `'area harvested'`),
+     `calculated_estimate_volume` (`production_acres * dry_tons_per_acre`).
+   - **When Used**: Automatically fills county volumes and bearing acreage when
      `mv_biomass_volume_estimate.estimated_residue_volume_mid` is `NULL`
-     (because USDA NASS reports `'area bearing'` rather than `'area harvested'`
-     for tree/vine crops such as **`walnut tree sticks`**,
-     **`almond branches`**, **`grape vines`**, **`grape stem`**,
-     **`olive prunings`**, as well as `'area harvested'` for
-     **`cucumber culls`**, **`cotton stem mix`**, and 2017/2022
+     (because `mv_biomass_volume_estimate` Path D queries
+     `parameter_id IN (7, 3)` and omits `parameter_id = 5` `'area bearing'`,
+     which USDA NASS Census reports for tree/vine crops such as
+     **`almond branches`**, **`walnut tree sticks`**, **`grape vines`**,
+     **`grape stem`**, and **`olive prunings`**, as well as `'area harvested'`
+     for **`cucumber culls`**, **`cotton stem mix`**, and 2017/2022
      **`rice straw`**).
 3. **Tier 3 — `public.resource_production_record` _(Historical Direct
    Series)_**:
@@ -128,23 +129,32 @@ box:
 
 - **`data_portal.mv_biomass_search`** _(Regional Search, Co-Products & Chemical
   Composition)_:
-  - **Columns**: `resource_id`, `resource_code`, `resource_name`,
-    `primary_product`, `region_name`, `county_count`, `total_annual_volume`,
-    `total_annual_volume_year`, `calculated_estimate_volume_mid`,
-    `volume_estimate_year`, `moisture_percent`, `ash_percent`, `lignin_percent`.
-  - Used to identify the `primary_product` (e.g. `'walnuts'` for
-    `walnut hulls`), discover **sibling co-product resources** sharing the same
-    `primary_product` (e.g. `walnut shells`, `walnut shelling fines`,
-    `walnut tree sticks`), and surface proximate/ultimate composition
-    (`moisture_percent`, `ash_percent`, `lignin_percent`).
+  - **Columns**: `id` (resource ID), `resource_code`, `resource` (resource
+    name), `primary_product`, `region` (lowercase region name), `county_count`,
+    `total_annual_volume`, `total_annual_volume_year`,
+    `calculated_estimate_volume_mid`, `volume_estimate_year`,
+    `moisture_percent`, `ash_percent`, `lignin_percent`, `cellulose_percent`,
+    `hemicellulose_percent`, `hhv`, `lhv`, `carbon_percent`.
+  - Used to identify the `primary_product` (e.g. `'almonds'` for
+    `almond branches` or `'walnuts'` for `walnut hulls`), discover **primary and
+    secondary sibling co-product resources** sharing the same `primary_product`
+    (e.g. `almond hulls`, `almond shells`, `almond hash`), and surface
+    proximate/ultimate composition (`moisture_percent`, `ash_percent`,
+    `lignin_percent`).
   - **Data Quality Note
     ([Issue #496](https://github.com/sustainability-software-lab/ca-biositing/issues/496))**:
-    Always prefer `calculated_estimate_volume_mid` over `total_annual_volume`.
-- **`data_portal.mv_biomass_availability`** _(Seasonal Harvest Window)_:
-  - **Columns**: `resource_id`, `resource_name`, `from_month` (`1`–`12`),
-    `to_month` (`1`–`12`), `year_round` (`bool`).
+    Always prefer `calculated_estimate_volume_mid` over `total_annual_volume`
+    (except for Tier 2 `'area bearing'` resources where
+    `calculated_estimate_volume_mid` is `NULL` and
+    `mv_usda_county_production.calculated_estimate_volume` is authoritative).
+- **`data_portal.mv_biomass_availability`** _(Seasonal Harvest/Pruning Window &
+  Per-Acre Residue Factors)_:
+  - **Columns**: `id`, `resource_id`, `resource_name`, `from_month` (`1`–`12`),
+    `to_month` (`1`–`12`), `year_round` (`bool`), `kg_per_acre`,
+    `dry_tons_per_acre`, `wet_tons_per_acre`.
   - **Schema Note**: This view has **1 row per `resource_id` and no `geoid` or
-    `county` column** (harvest seasonality is defined per biomass resource).
+    `county` column** (harvest/pruning seasonality and per-acre dry/wet residue
+    factors are defined per biomass resource).
 - **`data_portal.mv_biomass_pricing`** _(USDA AMS Market Pricing)_:
   - **Columns**: `resource_id`, `resource_name`, `geoid` (`'06099'` or regional
     `'NSJV'`), `county`, `report_date`, `report_source`, `market_type_category`,
