@@ -201,6 +201,25 @@ pixi run -e docs docs-serve
 # Open http://127.0.0.1:8000
 ```
 
+## AI Agents
+
+The repository is set up for AI coding agents such as Claude Code, Codex,
+Copilot, Cursor, and Gemini CLI, following the
+[UW SSEC project template](https://github.com/uw-ssec/project-template):
+
+- `AGENTS.md` is the agent entry point. It lists the non-negotiables and points
+  to the rules in `.agents/rules/`, which agents load on demand. Package
+  directories carry their own `AGENTS.md`, and every `AGENTS.md` has a
+  `CLAUDE.md` beside it that imports it for Claude Code.
+- `.agents/skills/` holds project skills such as `commit`, `push`, `create-pr`,
+  `merge-pr`, `docs`, and `okf-memory`; `.claude/skills` links there so Claude
+  Code finds them. `pixi run skills-sync` adds the third-party skills listed in
+  `skills.json`.
+- `knowledge/` is project memory: an OKF bundle that agents read and write with
+  `pixi run okf`, as the `okf-memory` skill describes.
+- The devcontainer installs Claude Code, Codex, Copilot CLI, and OpenCode, and
+  `.github/workflows/copilot-setup-steps.yml` prepares the Copilot cloud agent.
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for general contribution guidelines
