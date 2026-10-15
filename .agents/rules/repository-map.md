@@ -76,7 +76,7 @@ The API layer.
 │   ├── rules/             # On-demand rules indexed by AGENTS.md
 │   └── skills/            # Project skills (committed) and synced third-party skills (ignored)
 ├── .claude/
-│   └── skills -> ../.agents/skills   # Symlink so Claude Code discovers the skills
+│   └── skills/            # One link per project skill into .agents/skills/, so Claude Code finds them
 ├── knowledge/             # OKF project memory, read and written with `pixi run okf` (okf-memory skill)
 ├── .devcontainer/         # Codespaces image: pixi (checksum-verified) + Claude Code, Codex, Copilot CLI, OpenCode, gh
 ├── .github/workflows/copilot-setup-steps.yml   # Copilot cloud agent setup: locked pixi env, warm pre-commit hooks

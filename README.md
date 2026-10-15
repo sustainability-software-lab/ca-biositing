@@ -212,9 +212,9 @@ Copilot, Cursor, and Gemini CLI, following the
   directories carry their own `AGENTS.md`, and every `AGENTS.md` has a
   `CLAUDE.md` beside it that imports it for Claude Code.
 - `.agents/skills/` holds project skills such as `commit`, `push`, `create-pr`,
-  `merge-pr`, `docs`, and `okf-memory`; `.claude/skills` links there so Claude
-  Code finds them. `pixi run skills-sync` adds the third-party skills listed in
-  `skills.json`.
+  `merge-pr`, `docs`, and `okf-memory`; `.claude/skills` links to each one so
+  Claude Code finds them. `pixi run skills-sync` adds the third-party skills
+  listed in `skills.json`.
 - `knowledge/` is project memory: an OKF bundle that agents read and write with
   `pixi run okf`, as the `okf-memory` skill describes.
 - The devcontainer installs Claude Code, Codex, Copilot CLI, and OpenCode, and

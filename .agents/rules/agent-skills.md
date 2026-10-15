@@ -12,7 +12,11 @@
 
 Every harness finds both kinds in one place. Codex, Copilot, Cursor, and
 OpenCode read `.agents/skills/` natively. Claude Code reads `.claude/skills/`,
-which is a committed symlink to `../.agents/skills`.
+which holds a committed link for each project skill,
+`.claude/skills/<name> -> ../../.agents/skills/<name>`. `skills-sync` adds
+ignored links there for third-party skills. `.claude/skills/` itself stays a
+real directory, so personal skills you keep in it are ignored and survive
+checkouts.
 
 ## Add a Project Skill
 
@@ -20,10 +24,13 @@ which is a committed symlink to `../.agents/skills`.
    the directory name: lowercase letters, digits, and hyphens, at most 64
    characters — and `description`, at most 1024 characters, starting "Use when
    ...". Other frontmatter keys are Claude Code-specific and break portability.
-2. Add `!.agents/skills/<name>/` to the "Agents Braindump" block of
-   `.gitignore`. Without it, git silently ignores the new skill.
-3. Add `<name>` to the `"local"` registry's `skills` list in `skills.json`.
-4. Run `pixi run pytest tests/agent_harness -v`.
+2. Link it for Claude Code:
+   `ln -s ../../.agents/skills/<name> .claude/skills/<name>`.
+3. Add `!.agents/skills/<name>/` and `!.claude/skills/<name>` to the "Agents
+   Braindump" block of `.gitignore`. Without them, git silently ignores the new
+   skill.
+4. Add `<name>` to the `"local"` registry's `skills` list in `skills.json`.
+5. Run `pixi run pytest tests/agent_harness -v`.
 
 ## Add or Update a Third-Party Skill
 
@@ -46,15 +53,15 @@ project skill.
 
 ## Windows
 
-`.claude/skills` is a symlink. On Windows, git checks a symlink out as a plain
-text file unless Developer Mode is on and `core.symlinks` is enabled, and Claude
-Code then finds no project skills. Enable Developer Mode, run
-`git config core.symlinks true`, then `git checkout -- .claude/skills`.
+Each `.claude/skills/<name>` entry is a symlink. On Windows, git checks a
+symlink out as a plain text file unless Developer Mode is on and `core.symlinks`
+is enabled, and Claude Code then finds no project skills. Enable Developer Mode,
+run `git config core.symlinks true`, then `git checkout -- .claude/skills`.
 
 ## Verify
 
 - In Claude Code, `/skills` lists the project skills.
 - `claude plugin validate .agents/skills` checks their frontmatter. Point it at
-  `.agents/skills`: the validator does not follow the `.claude/skills` symlink.
-- `pixi run pytest tests/agent_harness -v` checks frontmatter, the symlink, the
+  `.agents/skills`: the validator does not follow the `.claude/skills` links.
+- `pixi run pytest tests/agent_harness -v` checks frontmatter, the links, the
   ignore rules, `skills.json`, and collisions.

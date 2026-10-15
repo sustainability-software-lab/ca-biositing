@@ -53,21 +53,41 @@ def test_skill_frontmatter_follows_the_agent_skills_spec(project_skill_dirs):
         assert description.startswith("Use "), f"{skill_dir.name}: say when to use it"
 
 
-def test_claude_code_sees_skills_through_a_committed_symlink(repo_root):
-    link = repo_root / ".claude" / "skills"
-    assert link.is_symlink(), ".claude/skills must be a symlink (Windows: core.symlinks)"
-    assert os.readlink(link) == "../.agents/skills"
-    staged = subprocess.run(
-        ["git", "ls-files", "-s", ".claude/skills"],
-        cwd=repo_root, capture_output=True, text=True, check=True,
-    ).stdout
-    assert staged.startswith("120000 "), "stage .claude/skills as a symlink"
+def test_claude_skills_is_a_real_directory(repo_root):
+    path = repo_root / ".claude" / "skills"
+    assert path.is_dir() and not path.is_symlink(), (
+        "keep .claude/skills a real directory: git replaces an ignored directory "
+        "with a committed symlink on checkout, deleting personal skills kept there"
+    )
+
+
+def test_claude_code_sees_each_project_skill_through_a_committed_link(repo_root, project_skill_dirs):
+    staged = {
+        line.split("\t", 1)[1]: line.split(" ", 1)[0]
+        for line in subprocess.run(
+            ["git", "ls-files", "-s", ".claude/skills"],
+            cwd=repo_root, capture_output=True, text=True, check=True,
+        ).stdout.splitlines()
+    }
+    for skill_dir in project_skill_dirs:
+        link = repo_root / ".claude" / "skills" / skill_dir.name
+        assert link.is_symlink(), f"{link} must be a symlink (Windows: core.symlinks)"
+        assert os.readlink(link) == f"../../.agents/skills/{skill_dir.name}", link
+        assert staged.get(f".claude/skills/{skill_dir.name}") == "120000", (
+            f"stage .claude/skills/{skill_dir.name} as a symlink"
+        )
 
 
 def test_synced_skills_and_local_agent_state_stay_ignored(is_git_ignored, synced_skill_names):
     for name in sorted(synced_skill_names):
         assert is_git_ignored(f".agents/skills/{name}/SKILL.md"), name
-    for path in (".claude/settings.local.json", ".claude/worktrees/x/y", ".agents/state.json"):
+        assert is_git_ignored(f".claude/skills/{name}"), name
+    for path in (
+        ".claude/settings.local.json",
+        ".claude/worktrees/x/y",
+        ".claude/skills/my-personal-skill/SKILL.md",
+        ".agents/state.json",
+    ):
         assert is_git_ignored(path), path
 
 
@@ -93,6 +113,19 @@ def test_declared_local_skills_on_disk_are_not_ignored(repo_root, local_registry
     ]
     assert not hidden, "allowlist in .gitignore: " + ", ".join(
         f"!.agents/skills/{name}/" for name in hidden
+    )
+
+
+def test_every_skill_on_disk_is_committed_or_synced(repo_root, is_git_ignored, synced_skill_names):
+    hidden = sorted(
+        skill.parent.name
+        for skill in (repo_root / ".agents" / "skills").glob("*/SKILL.md")
+        if skill.parent.name not in synced_skill_names and is_git_ignored(skill)
+    )
+    assert not hidden, (
+        "git ignores these skills, so teammates never get them; follow "
+        '"Add a Project Skill" in .agents/rules/agent-skills.md, starting with '
+        + ", ".join(f"!.agents/skills/{name}/" for name in hidden)
     )
 
 
