@@ -30,6 +30,10 @@ Request:
   [Conventional Commits](https://github.com/uw-ssec/rse-guidelines/blob/main/conventional-commits.md)
   naming for pull request titles.
 
+- If you use AI tools while contributing, read the [AI Policy](AI_POLICY.md)
+  first: it covers disclosure, review responsibility, and how to credit AI
+  assistance in commits.
+
 Your contributions make this project better—thank you for your support! 🚀
 
 ## Development

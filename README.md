@@ -204,7 +204,9 @@ pixi run -e docs docs-serve
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for general contribution guidelines
-(branching, PRs, commit style, pre-commit setup).
+(branching, PRs, commit style, pre-commit setup). If you use AI tools while
+contributing, read the [AI Policy](AI_POLICY.md) first: it covers disclosure,
+review responsibility, and how to credit AI assistance in commits.
 
 Each namespace package also has its own contributing guide with
 component-specific details:
