@@ -18,6 +18,27 @@ env:
   PROJECT_NAME: "ca_biositing"
 
 jobs:
+  harness:
+    name: Check agent harness invariants
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      # Install pixi only. Installing the environment from pixi.lock first
+      # would re-solve a lock that this pinned pixi cannot read, hiding the
+      # failure that tests/agent_harness/test_lockfile.py reports.
+      - name: Set up pixi
+        uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          pixi-version: v0.63.2
+          run-install: false
+
+      - name: Check agent harness invariants
+        run:
+          pixi exec --spec "python=3.12" --spec pytest --spec pyyaml -- python
+          -m pytest tests/agent_harness -v
+
   checks:
     name: Check Python ${{ matrix.python-version }} on ${{ matrix.runs-on }}
     runs-on: ${{ matrix.runs-on }}
@@ -40,9 +61,6 @@ jobs:
 
       - name: Print pixi version
         run: pixi --version
-
-      - name: Check agent harness invariants
-        run: pixi run pytest tests/agent_harness -v
 
       - name: Test ca_biositing.datamodels
         run: |

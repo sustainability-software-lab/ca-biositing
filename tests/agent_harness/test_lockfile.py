@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 import pytest
+import yaml
 
 Version = tuple[int, int, int]
 
@@ -92,4 +93,26 @@ def test_every_pixi_pin_is_the_same_release(repo_root):
     assert len(set(pins.values())) == 1, (
         "pin one pixi release everywhere, so no sanctioned environment writes a "
         f"lock file another cannot read: {sorted(pins.items())}"
+    )
+
+
+def test_ci_runs_the_harness_without_installing_from_pixi_lock(repo_root):
+    workflow = yaml.safe_load(
+        (repo_root / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    )
+    jobs = [
+        job
+        for job in workflow["jobs"].values()
+        if any("tests/agent_harness" in step.get("run", "") for step in job["steps"])
+    ]
+    assert len(jobs) == 1, "run the harness tests in exactly one CI job"
+    steps = jobs[0]["steps"]
+    setup = next(s for s in steps if s.get("uses", "").startswith("prefix-dev/setup-pixi@"))
+    assert setup.get("with", {}).get("run-install") is False, (
+        "installing from pixi.lock first re-solves a lock the pinned pixi cannot "
+        "read, so test_every_pinned_pixi_can_read_pixi_lock never reports it"
+    )
+    harness = next(s for s in steps if "tests/agent_harness" in s.get("run", ""))
+    assert harness["run"].startswith("pixi exec "), (
+        "run the harness through `pixi exec`, which does not read pixi.lock"
     )
