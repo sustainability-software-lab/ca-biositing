@@ -11,6 +11,7 @@
         "database-query",
         "docs",
         "merge-pr",
+        "okf-memory",
         "push"
       ]
     },

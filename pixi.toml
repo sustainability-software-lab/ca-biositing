@@ -58,6 +58,7 @@ jinja2 = ">=3.1.5,<4"
 
 [tasks]
 skills-sync = "python skills.py"
+okf = { cmd = "pixi exec --spec \"okf-agent-memory>=0.5.0,<0.6\" -- okf", description = "Run the okf agent-memory CLI on knowledge/ (fetched with pixi exec; adds nothing to pixi.lock)." }
 register-jupyter-kernel = { cmd = "python scripts/register_jupyter_kernel.py", description = "Register the active Pixi Python as a VS Code/Jupyter kernel." }
 jupyter-lab = { cmd = "jupyter lab --no-browser", description = "Start JupyterLab from the Pixi environment for notebooks." }
 pre-commit-all = "pre-commit run --all-files"

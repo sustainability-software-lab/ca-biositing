@@ -88,6 +88,7 @@ pgschema
 !.agents/skills/create-pr/
 !.agents/skills/docs/
 !.agents/skills/merge-pr/
+!.agents/skills/okf-memory/
 !.agents/skills/push/
 .claude/*
 !.claude/skills

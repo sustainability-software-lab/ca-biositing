@@ -11,7 +11,8 @@ import pytest
 import yaml
 
 PROJECT_SKILLS = {
-    "clean-branches", "commit", "create-issue", "create-pr", "docs", "merge-pr", "push",
+    "clean-branches", "commit", "create-issue", "create-pr", "docs", "merge-pr",
+    "okf-memory", "push",
 }
 SKILL_NAME_RE = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 

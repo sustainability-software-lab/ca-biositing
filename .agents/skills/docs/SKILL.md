@@ -53,6 +53,11 @@ Optional: a topic, a section, or "all" to cover everything from this session.
    - Infrastructure decisions (Docker Compose locally; GCP and Pulumi for
      deployment)
 
+   ### Decisions and Learnings
+   - Record decisions, rejected alternatives, and non-obvious gotchas in project
+     memory with the `okf-memory` skill, not in `docs/`. Link the concept to the
+     relevant docs page when that helps.
+
 4. **Place documentation correctly** — follow the existing layout:
 
    - System architecture → `docs/architecture.md`

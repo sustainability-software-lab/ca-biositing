@@ -70,6 +70,8 @@ whenever it re-solves — `pixi add`, `pixi remove`, `pixi update`, or `pixi loc
   request.
 - `pixi install` and `pixi run` leave an up-to-date `pixi.lock` alone, and
   adding or editing a task in `pixi.toml` does not change it.
+- `tests/agent_harness/test_lockfile.py` fails when the lock-file format
+  outgrows a pinned pixi.
 
 ## Adding Dependencies
 
@@ -89,6 +91,20 @@ Every new dependency needs a justification — see
 
 The GitHub CLI (`gh`) is not a Pixi dependency in this repository. Install it
 from <https://cli.github.com> and run `gh auth login` once.
+
+## OKF Agent Memory
+
+Project memory lives in the OKF bundle at `knowledge/`; the `okf-memory` skill
+says how to read and write it. The `okf` CLI is not a Pixi dependency here: the
+`okf` task runs it through `pixi exec`, which fetches
+`okf-agent-memory>=0.5.0,<0.6` into a cached temporary environment, so
+`pixi.lock` stays unchanged. Once every pinned pixi is upgraded (see Lock File
+Compatibility), move it into a Pixi feature, as the SSEC template does.
+
+```bash
+pixi run okf version   # okf version 0.5.x (OKF v0.2 specification)
+pixi run okf --help
+```
 
 ## Jupyter Notebooks
 

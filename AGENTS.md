@@ -39,19 +39,20 @@ These apply to every task, in every session:
 
 Load the rule file whose trigger matches what you are about to do.
 
-| Rule file                                                              | Load when                                                                              |
-| ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [working-agreement.md](.agents/rules/working-agreement.md)             | Starting any implementation, refactor, or bugfix — the behavioral baseline             |
-| [contribution-discipline.md](.agents/rules/contribution-discipline.md) | About to commit, open a PR, or asked to "contribute" / "fix some issues"               |
-| [pixi-environments.md](.agents/rules/pixi-environments.md)             | Running any command, adding a dependency, editing `pixi.toml`, or touching `pixi.lock` |
-| [code-quality.md](.agents/rules/code-quality.md)                       | Writing Python, committing, preparing a PR, or claiming checks pass                    |
-| [testing-patterns.md](.agents/rules/testing-patterns.md)               | Writing, fixing, or running tests                                                      |
-| [repository-map.md](.agents/rules/repository-map.md)                   | You need to know what this repo is, where a file lives, or what CI runs                |
-| [namespace-packages.md](.agents/rules/namespace-packages.md)           | Adding modules under `src/ca_biositing/` or fixing import errors                       |
-| [schema-and-migrations.md](.agents/rules/schema-and-migrations.md)     | Changing SQLModel models, Alembic migrations, or materialized views                    |
-| [docker-workflow.md](.agents/rules/docker-workflow.md)                 | Starting, inspecting, or rebuilding the Docker services, or running ETL flows          |
-| [agent-skills.md](.agents/rules/agent-skills.md)                       | Adding, editing, or syncing an agent skill, or editing `skills.json`                   |
-| [troubleshooting.md](.agents/rules/troubleshooting.md)                 | A documented command fails or behaves unexpectedly                                     |
+| Rule file                                                                      | Load when                                                                                           |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| [working-agreement.md](.agents/rules/working-agreement.md)                     | Starting any implementation, refactor, or bugfix — the behavioral baseline                          |
+| [contribution-discipline.md](.agents/rules/contribution-discipline.md)         | About to commit, open a PR, or asked to "contribute" / "fix some issues"                            |
+| [pixi-environments.md](.agents/rules/pixi-environments.md)                     | Running any command, adding a dependency, editing `pixi.toml`, or touching `pixi.lock`              |
+| [code-quality.md](.agents/rules/code-quality.md)                               | Writing Python, committing, preparing a PR, or claiming checks pass                                 |
+| [testing-patterns.md](.agents/rules/testing-patterns.md)                       | Writing, fixing, or running tests                                                                   |
+| [repository-map.md](.agents/rules/repository-map.md)                           | You need to know what this repo is, where a file lives, or what CI runs                             |
+| [namespace-packages.md](.agents/rules/namespace-packages.md)                   | Adding modules under `src/ca_biositing/` or fixing import errors                                    |
+| [schema-and-migrations.md](.agents/rules/schema-and-migrations.md)             | Changing SQLModel models, Alembic migrations, or materialized views                                 |
+| [docker-workflow.md](.agents/rules/docker-workflow.md)                         | Starting, inspecting, or rebuilding the Docker services, or running ETL flows                       |
+| [agent-skills.md](.agents/rules/agent-skills.md)                               | Adding, editing, or syncing an agent skill, or editing `skills.json`                                |
+| [troubleshooting.md](.agents/rules/troubleshooting.md)                         | A documented command fails or behaves unexpectedly                                                  |
+| [mkdocs-okf-knowledge-bundle.md](.agents/rules/mkdocs-okf-knowledge-bundle.md) | Rendering `knowledge/` with mkdocs (optional pattern), or debugging wikilink or frontmatter clashes |
 
 ## Package Guides
 

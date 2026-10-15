@@ -25,7 +25,7 @@ repos:
       - id: prettier
         types_or: [yaml, markdown, html, css, scss, javascript, json]
         args: [--prose-wrap=always, --ignore-unknown]
-        exclude: ^(docs/api/|readthedocs\.yaml|exports/plots/)
+        exclude: ^(docs/api/|readthedocs\.yaml|exports/plots/|knowledge/) # okf owns knowledge/; prettier folds its frontmatter
 
   - repo: https://github.com/codespell-project/codespell
     rev: "v2.4.3"

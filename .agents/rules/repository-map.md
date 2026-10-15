@@ -77,6 +77,7 @@ The API layer.
 │   └── skills/            # Project skills (committed) and synced third-party skills (ignored)
 ├── .claude/
 │   └── skills -> ../.agents/skills   # Symlink so Claude Code discovers the skills
+├── knowledge/             # OKF project memory, read and written with `pixi run okf` (okf-memory skill)
 ├── skills.json            # Third-party agent skills synced by `pixi run skills-sync`
 ├── skills.py              # The sync script behind `pixi run skills-sync`
 └── tests/agent_harness/   # Invariant tests for the harness (run in CI)
