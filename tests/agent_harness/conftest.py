@@ -8,8 +8,10 @@ Docker services, or network access.
 from __future__ import annotations
 
 import subprocess
+import tomllib
 from collections.abc import Callable
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -81,3 +83,19 @@ def is_git_ignored() -> Callable[[Path | str], bool]:
         return result.returncode == 0
 
     return check
+
+
+@pytest.fixture(scope="session")
+def pixi_manifest() -> dict[str, Any]:
+    """The parsed pixi.toml."""
+    with (REPO_ROOT / "pixi.toml").open("rb") as handle:
+        return tomllib.load(handle)
+
+
+@pytest.fixture(scope="session")
+def pixi_tasks(pixi_manifest) -> set[str]:
+    """Names of every task in pixi.toml, top-level and per feature."""
+    tasks = set(pixi_manifest.get("tasks", {}))
+    for feature in pixi_manifest.get("feature", {}).values():
+        tasks |= set(feature.get("tasks", {}))
+    return tasks
