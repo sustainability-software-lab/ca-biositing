@@ -24,12 +24,12 @@ selection data and analysis results.
 
 This package follows project-wide patterns documented in:
 
-| Topic              | Document                                                           | When to Reference                          |
-| ------------------ | ------------------------------------------------------------------ | ------------------------------------------ |
-| Namespace Packages | [namespace_packages.md](../../../agent_docs/namespace_packages.md) | Import errors, package structure questions |
-| Testing Patterns   | [testing_patterns.md](../../../agent_docs/testing_patterns.md)     | Writing tests, TestClient fixtures         |
-| Code Quality       | [code_quality.md](../../../agent_docs/code_quality.md)             | Pre-commit, style, imports                 |
-| Troubleshooting    | [troubleshooting.md](../../../agent_docs/troubleshooting.md)       | Common errors and solutions                |
+| Topic              | Document                                                              | When to Reference                          |
+| ------------------ | --------------------------------------------------------------------- | ------------------------------------------ |
+| Namespace Packages | [namespace-packages.md](../../../.agents/rules/namespace-packages.md) | Import errors, package structure questions |
+| Testing Patterns   | [testing-patterns.md](../../../.agents/rules/testing-patterns.md)     | Writing tests, TestClient fixtures         |
+| Code Quality       | [code-quality.md](../../../.agents/rules/code-quality.md)             | Pre-commit, style, imports                 |
+| Troubleshooting    | [troubleshooting.md](../../../.agents/rules/troubleshooting.md)       | Common errors and solutions                |
 
 ## Package Structure
 

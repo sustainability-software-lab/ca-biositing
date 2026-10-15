@@ -1,5 +1,8 @@
 # Troubleshooting Guide
 
+**Load when:** a documented command fails or behaves unexpectedly: environment,
+namespace import, Docker, database, Prefect, or Google credential problems.
+
 This document consolidates common issues and solutions from all ca-biositing
 packages and components.
 
@@ -42,7 +45,7 @@ Then run `pixi install`.
 ## Namespace Package Issues
 
 For detailed namespace package troubleshooting, see
-[namespace_packages.md](namespace_packages.md).
+[namespace-packages.md](namespace-packages.md).
 
 ### Issue: "ModuleNotFoundError: No module named 'ca_biositing.<package>'"
 
@@ -268,7 +271,7 @@ pixi run restart-services
 
 **Problem:** `MissingContextError: There is no active flow or task run context`
 
-**Solution:** See [testing_patterns.md](testing_patterns.md) for the `.fn()`
+**Solution:** See [testing-patterns.md](testing-patterns.md) for the `.fn()`
 pattern.
 
 Quick fix:
@@ -517,7 +520,7 @@ pixi run service-logs
 ### Getting help
 
 - Check the specific package AGENTS.md for package-specific guidance
-- Check the main [/AGENTS.md](../AGENTS.md) for project-wide guidance
+- Check the main [/AGENTS.md](../../AGENTS.md) for project-wide guidance
 - Search existing issues on GitHub
 - Check Prefect documentation: <https://docs.prefect.io/>
 - Check FastAPI documentation: <https://fastapi.tiangolo.com/>

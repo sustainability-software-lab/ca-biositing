@@ -1,5 +1,8 @@
 # Testing Patterns
 
+**Load when:** writing, fixing, or running tests: pytest fixtures, Prefect task
+tests, and FastAPI TestClient tests.
+
 This document consolidates testing patterns used across all ca-biositing
 packages.
 

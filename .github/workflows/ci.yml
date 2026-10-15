@@ -41,6 +41,9 @@ jobs:
       - name: Print pixi version
         run: pixi --version
 
+      - name: Check agent harness invariants
+        run: pixi run pytest tests/agent_harness -v
+
       - name: Test ca_biositing.datamodels
         run: |
           pixi run pytest src/ca_biositing/datamodels --cov=ca_biositing.datamodels --cov-report=xml --cov-append --cov-report=term-missing

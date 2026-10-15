@@ -26,6 +26,14 @@ and uses Prefect for workflow orchestration.
 
 This package follows project-wide patterns documented in:
 
+| Topic              | Document                                                              | When to Reference                          |
+| ------------------ | --------------------------------------------------------------------- | ------------------------------------------ |
+| Namespace Packages | [namespace-packages.md](../../../.agents/rules/namespace-packages.md) | Import errors, package structure questions |
+| Testing Patterns   | [testing-patterns.md](../../../.agents/rules/testing-patterns.md)     | Writing tests, Prefect task tests          |
+| Code Quality       | [code-quality.md](../../../.agents/rules/code-quality.md)             | Pre-commit, style, imports                 |
+| Docker Workflow    | [docker-workflow.md](../../../.agents/rules/docker-workflow.md)       | Running flows in the Docker services       |
+| Troubleshooting    | [troubleshooting.md](../../../.agents/rules/troubleshooting.md)       | Common errors and solutions                |
+
 ```text
 src/ca_biositing/pipeline/
 ├── ca_biositing/              # No __init__.py at this level (namespace)

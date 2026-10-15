@@ -4,14 +4,14 @@
 
 **ALWAYS start by reading these files for codebase best practices:**
 
-- [`AGENTS.md`](AGENTS.md) - Repository overview, build system, pathing, common
-  pitfalls
-- [`agent_docs/namespace_packages.md`](agent_docs/namespace_packages.md) - PEP
-  420 structure and import patterns
-- [`agent_docs/docker_workflow.md`](agent_docs/docker_workflow.md) - Docker/Pixi
-  service commands
-- [`agent_docs/troubleshooting.md`](agent_docs/troubleshooting.md) - Common
-  pitfalls and solutions
+- [`AGENTS.md`](../../../AGENTS.md) - Repository overview, build system,
+  pathing, common pitfalls
+- [`.agents/rules/namespace-packages.md`](../../../.agents/rules/namespace-packages.md) -
+  PEP 420 structure and import patterns
+- [`.agents/rules/docker-workflow.md`](../../../.agents/rules/docker-workflow.md) -
+  Docker/Pixi service commands
+- [`.agents/rules/troubleshooting.md`](../../../.agents/rules/troubleshooting.md) -
+  Common pitfalls and solutions
 
 **Build System:** This project uses **Pixi** for environment management. ALWAYS
 use `pixi run` commands, never conda/pip directly.

@@ -1,5 +1,8 @@
 # Code Quality Standards
 
+**Load when:** writing or reviewing Python code (style, type hints, docstrings,
+imports), committing, preparing a PR, or claiming that checks pass.
+
 This document consolidates code quality requirements, pre-commit workflows, and
 style guidelines used across all ca-biositing packages.
 

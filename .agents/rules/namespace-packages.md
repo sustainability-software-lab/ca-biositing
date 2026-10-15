@@ -1,5 +1,8 @@
 # Namespace Package Structure (PEP 420)
 
+**Load when:** adding a module or package under `src/ca_biositing/`, fixing an
+import error, or changing package structure or a `pyproject.toml`.
+
 This project uses PEP 420 implicit namespace packages to share the
 `ca_biositing` namespace across multiple independently-installable packages.
 

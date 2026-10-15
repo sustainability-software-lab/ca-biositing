@@ -23,10 +23,10 @@ for development and deployment.
 
 This directory uses project-wide patterns documented in:
 
-| Topic           | Document                                               | When to Reference                   |
-| --------------- | ------------------------------------------------------ | ----------------------------------- |
-| Docker Workflow | [docker_workflow.md](../agent_docs/docker_workflow.md) | Docker commands, service management |
-| Troubleshooting | [troubleshooting.md](../agent_docs/troubleshooting.md) | Common errors and solutions         |
+| Topic           | Document                                                  | When to Reference                   |
+| --------------- | --------------------------------------------------------- | ----------------------------------- |
+| Docker Workflow | [docker-workflow.md](../.agents/rules/docker-workflow.md) | Docker commands, service management |
+| Troubleshooting | [troubleshooting.md](../.agents/rules/troubleshooting.md) | Common errors and solutions         |
 
 ## Directory Structure
 
@@ -418,5 +418,5 @@ pixi run restart-services
 **Main Project Documentation**:
 
 - [/AGENTS.md](../AGENTS.md): Main AI assistant guidance
-- [/agent_docs/](../agent_docs/): Cross-cutting documentation
+- [/.agents/rules/](../.agents/rules/): Cross-cutting documentation
 - `src/ca_biositing/pipeline/AGENTS.md`: Pipeline-specific guidance

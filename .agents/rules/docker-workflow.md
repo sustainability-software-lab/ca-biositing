@@ -1,5 +1,8 @@
 # Docker Workflow
 
+**Load when:** starting, stopping, rebuilding, or inspecting the Docker services
+(PostgreSQL, Prefect server and worker), or deploying and running ETL flows.
+
 The ETL pipeline runs in Docker containers orchestrated by Prefect. Docker is
 managed through **Pixi tasks** - never use docker-compose commands directly.
 
@@ -380,7 +383,7 @@ pixi run exec-prefect-worker /bin/bash
 
 ## Related Documentation
 
-- **Resources AGENTS.md**: [/resources/AGENTS.md](../resources/AGENTS.md) -
+- **Resources AGENTS.md**: [/resources/AGENTS.md](../../resources/AGENTS.md) -
   Prefect deployment specifics
 - **Docker Workflow Guide**: `docs/pipeline/DOCKER_WORKFLOW.md`
 - **Prefect Workflow Guide**: `docs/pipeline/PREFECT_WORKFLOW.md`

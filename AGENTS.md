@@ -34,15 +34,15 @@ prototyping for bioeconomy site selection.
 
 ## Cross-Cutting Documentation
 
-For detailed guidance on shared topics, see the `agent_docs/` directory:
+For detailed guidance on shared topics, see the `.agents/rules/` directory:
 
 | Topic              | Document                                                                       | Description                        |
 | ------------------ | ------------------------------------------------------------------------------ | ---------------------------------- |
-| Namespace Packages | [agent_docs/namespace_packages.md](agent_docs/namespace_packages.md)           | PEP 420 structure, import patterns |
-| Testing Patterns   | [agent_docs/testing_patterns.md](agent_docs/testing_patterns.md)               | pytest fixtures, test commands     |
-| Code Quality       | [agent_docs/code_quality.md](agent_docs/code_quality.md)                       | Pre-commit, style, imports         |
-| Troubleshooting    | [agent_docs/troubleshooting.md](agent_docs/troubleshooting.md)                 | Common pitfalls and solutions      |
-| Docker Workflow    | [agent_docs/docker_workflow.md](agent_docs/docker_workflow.md)                 | Docker/Pixi service commands       |
+| Namespace Packages | [.agents/rules/namespace-packages.md](.agents/rules/namespace-packages.md)     | PEP 420 structure, import patterns |
+| Testing Patterns   | [.agents/rules/testing-patterns.md](.agents/rules/testing-patterns.md)         | pytest fixtures, test commands     |
+| Code Quality       | [.agents/rules/code-quality.md](.agents/rules/code-quality.md)                 | Pre-commit, style, imports         |
+| Troubleshooting    | [.agents/rules/troubleshooting.md](.agents/rules/troubleshooting.md)           | Common pitfalls and solutions      |
+| Docker Workflow    | [.agents/rules/docker-workflow.md](.agents/rules/docker-workflow.md)           | Docker/Pixi service commands       |
 | SQL-First Workflow | [docs/datamodels/SQL_FIRST_WORKFLOW.md](docs/datamodels/SQL_FIRST_WORKFLOW.md) | Rapid schema iteration path        |
 
 ## Build System & Environment Management

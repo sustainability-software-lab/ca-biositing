@@ -73,7 +73,11 @@ pgschema
 .pulumi/
 
 # Agents Braindump
-.agents/
+# .agents/ and .claude/ hold machine-local agent state and the third-party
+# skills that `pixi run skills-sync` installs. Only the committed harness is
+# tracked: .agents/rules/ (see AGENTS.md).
+.agents/*
+!.agents/rules/
 .claude/
 .cline/
 .roo/
