@@ -71,6 +71,7 @@ The API layer.
 ```text
 .
 ├── AGENTS.md              # Agent entry point: non-negotiables and the rule index
+├── CLAUDE.md              # `@AGENTS.md` import; every package AGENTS.md has one too
 ├── .agents/
 │   └── rules/             # On-demand rules indexed by AGENTS.md
 ├── skills.json            # Third-party agent skills synced by `pixi run skills-sync`
