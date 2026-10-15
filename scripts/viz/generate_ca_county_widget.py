@@ -907,13 +907,23 @@ def build_nsjv_dataset(
         comp_parts.append(f"Ash {float(search_summary['ash_percent']):.1f}%")
     composition_str = " • ".join(comp_parts) if comp_parts else "Lab analysis pending"
 
+    primary_title = primary_product.title() if primary_product else "Primary Crop"
+    primary_short = primary_title
+    if primary_product.lower() == "tomatoes for processing":
+        primary_short = "Processing Tomatoes"
+    elif primary_product.lower() == "olives - processing":
+        primary_short = "Processing Olives"
+    elif " - " in primary_title:
+        primary_short = primary_title.split(" - ")[0].strip()
+
     return {
         "title": f"North San Joaquin Valley — {meta['display_title']} Production",
         "subtitle": f"Source: data_portal.mv_biomass_volume_estimate ({res_code_str}, {res_id_str})",
         "resource_name": target_res,
         "resource_id": meta.get("resource_id"),
         "resource_code": res_code_str,
-        "primary_product": primary_product.title() if primary_product else "Primary Crop",
+        "primary_product": primary_title,
+        "primary_product_short": primary_short,
         "primary_product_lower": primary_product.lower() if primary_product else "crop",
         "display_title": meta["display_title"],
         "plural_label": meta["plural_label"],
@@ -1373,12 +1383,17 @@ def render_widget_html(
         (a, b) => b.estimated_volume_tons - a.estimated_volume_tons
       );
 
-      // Update KPI 1: Total Volume & YoY
+      // Update KPI 1: Total Volume & YoY (with min-max range when present)
       document.getElementById("kpi-total-tons").textContent = `${{formatTons(yrData.total_tons)}} ${{UNIT_SHORT}}`;
       if (prevData && prevData.total_tons > 0) {{
         const pct = ((yrData.total_tons - prevData.total_tons) / prevData.total_tons) * 100;
         const sign = pct >= 0 ? "+" : "";
-        document.getElementById("kpi-yoy").textContent = `${{sign}}${{pct.toFixed(1)}}% vs ${{prevYr}}`;
+        const rangeSuffix = yrData.has_range
+          ? ` • ${{formatShortK(yrData.total_min_tons)}}–${{formatShortK(yrData.total_max_tons)}}`
+          : "";
+        document.getElementById("kpi-yoy").textContent = `${{sign}}${{pct.toFixed(1)}}% vs ${{prevYr}}${{rangeSuffix}}`;
+      }} else if (yrData.has_range) {{
+        document.getElementById("kpi-yoy").textContent = `Range: ${{formatShortK(yrData.total_min_tons)}}–${{formatShortK(yrData.total_max_tons)}} ${{UNIT_SHORT}}`;
       }} else {{
         document.getElementById("kpi-yoy").textContent = `Baseline year (${{currentYear}})`;
       }}
@@ -1393,6 +1408,7 @@ def render_widget_html(
       const kpiThirdLabel = document.getElementById("kpi-third-label");
       const kpiPriceEl = document.getElementById("kpi-price");
       const kpiCoprodEl = document.getElementById("kpi-coproduct");
+      const cropShort = DATA.primary_product_short || DATA.primary_product;
 
       if (DATA.has_pricing && yrData.regional_avg_price_usd) {{
         kpiThirdLabel.textContent = "Market Price";
@@ -1403,11 +1419,11 @@ def render_widget_html(
             ? `+${{formatShortK(yrData.total_coproduct_tons)}} ${{UNIT_SHORT}} ${{coprodShort}}`
             : `${{DATA.plural_label}} (NSJV)`;
       }} else if (yrData.total_primary_crop_tons) {{
-        kpiThirdLabel.textContent = `Primary Crop (${{DATA.primary_product}})`;
+        kpiThirdLabel.textContent = cropShort.length > 12 ? `${{cropShort}}` : `Primary Crop (${{cropShort}})`;
         kpiPriceEl.textContent = `${{formatTons(yrData.total_primary_crop_tons)}} t`;
         kpiCoprodEl.textContent = `Harvest: ${{DATA.season_label}} • ×${{DATA.residue_factor_mid || 1}}`;
       }} else if (yrData.total_crop_acres) {{
-        kpiThirdLabel.textContent = `${{DATA.primary_product}} Acreage`;
+        kpiThirdLabel.textContent = `${{cropShort}} Acreage`;
         kpiPriceEl.textContent = `${{formatTons(yrData.total_crop_acres)}} ac`;
         kpiCoprodEl.textContent = `Harvest: ${{DATA.season_label}} • ×${{DATA.residue_factor_mid || 1}}/ac`;
       }} else {{
@@ -1560,23 +1576,27 @@ def render_widget_html(
 
         let line1Label = "Basis";
         let line1Val = `${{DATA.volume_source}}`;
+        const fRangeSuffix =
+          DATA.residue_factor_min && DATA.residue_factor_max && DATA.residue_factor_min !== DATA.residue_factor_max
+            ? ` (×${{DATA.residue_factor_min}}–${{DATA.residue_factor_max}})`
+            : "";
         if (selCountyObj && selCountyObj.volume_min !== null && selCountyObj.volume_max !== null && selCountyObj.volume_min !== selCountyObj.volume_max) {{
           line1Label = "Est. Range";
-          line1Val = `${{formatTons(selCountyObj.volume_min)}}–${{formatTons(selCountyObj.volume_max)}} ${{UNIT_SHORT}}`;
+          line1Val = `${{formatTons(selCountyObj.volume_min)}}–${{formatTons(selCountyObj.volume_max)}} ${{UNIT_SHORT}}${{fRangeSuffix}}`;
         }} else if (!selCountyObj && yrData.has_range) {{
           line1Label = "Est. Range";
-          line1Val = `${{formatTons(yrData.total_min_tons)}}–${{formatTons(yrData.total_max_tons)}} ${{UNIT_SHORT}}`;
+          line1Val = `${{formatTons(yrData.total_min_tons)}}–${{formatTons(yrData.total_max_tons)}} ${{UNIT_SHORT}}${{fRangeSuffix}}`;
         }} else if (selCountyObj && selCountyObj.primary_crop_volume) {{
-          line1Label = `${{DATA.primary_product}} Crop`;
+          line1Label = `${{cropShort}} Crop`;
           line1Val = `${{formatTons(selCountyObj.primary_crop_volume)}} t × ${{selCountyObj.residue_factor}}`;
         }} else if (yrData.total_primary_crop_tons) {{
-          line1Label = `${{DATA.primary_product}} Crop`;
+          line1Label = `${{cropShort}} Crop`;
           line1Val = `${{formatTons(yrData.total_primary_crop_tons)}} t × ${{DATA.residue_factor_mid}}`;
         }} else if (selCountyObj && selCountyObj.crop_acres) {{
-          line1Label = `${{DATA.primary_product}} Area`;
+          line1Label = `${{cropShort}} Area`;
           line1Val = `${{formatTons(selCountyObj.crop_acres)}} ac × ${{selCountyObj.residue_factor}}`;
         }} else if (yrData.total_crop_acres) {{
-          line1Label = `${{DATA.primary_product}} Area`;
+          line1Label = `${{cropShort}} Area`;
           line1Val = `${{formatTons(yrData.total_crop_acres)}} ac × ${{DATA.residue_factor_mid}}`;
         }}
 
@@ -1586,6 +1606,12 @@ def render_widget_html(
         if (DATA.coproduct_short && coprodTons > 0) {{
           line2Label = `Co-Product (${{DATA.coproduct_short}})`;
           line2Val = `${{formatTons(coprodTons)}} ${{UNIT_SHORT}}`;
+        }} else if (line1Label === "Est. Range" && selCountyObj && selCountyObj.primary_crop_volume) {{
+          line2Label = `${{cropShort}}`;
+          line2Val = `${{formatTons(selCountyObj.primary_crop_volume)}} t × ${{selCountyObj.residue_factor}} (${{DATA.season_label}})`;
+        }} else if (line1Label === "Est. Range" && yrData.total_primary_crop_tons) {{
+          line2Label = `${{cropShort}}`;
+          line2Val = `${{formatTons(yrData.total_primary_crop_tons)}} t × ${{DATA.residue_factor_mid}} (${{DATA.season_label}})`;
         }} else {{
           line2Label = "Season";
           line2Val = `${{DATA.season_label}} harvest window`;

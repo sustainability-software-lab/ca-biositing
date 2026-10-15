@@ -92,16 +92,16 @@ box:
        (`production_volume` tons) $\times$ residue conversion factor
        (`factor_mid`), covering **`walnut hulls`**, **`walnut shells`**,
        **`walnut shelling fines`**, **`pistachio shells`**,
-       **`pistachio culls`**, **`tomato pomace`**, **`tomato culls`**,
-       **`rice hulls`**, **`rice straw`** (2023–2024), **`corn stover`**,
-       **`cotton gin trash`**, **`wheat straw`**, **`barley straw`**,
-       **`Safflower Straw`**, and **`sorghum`**.
+       **`pistachio hulls`**, **`tomato pomace`**, **`grape pomace`**,
+       **`peach pomace`**, **`olive pomace`**, **`sweet potato culls`**,
+       **`rice hulls`**, and **`rice straw`** (2023–2024).
      - `census_production_based` (2017, 2022): USDA Census production $\times$
-       conversion factor (`olive pomace`, `garlic stems`, plus 2017/2022
-       baselines for `tomato pomace`, `tomato culls`, `cotton gin trash`,
-       `barley straw`).
-     - `prune_acres` (2017, 2022): Acreage-based pruning estimate
-       (`peach twigs`).
+       conversion factor (**`corn stover whole`**, **`corn stover stalks`**,
+       **`corn stover cobs`**, **`corn stover husks`**).
+     - `prune_acres` / `acreage_based` (2017, 2022): Acreage-based pruning/field
+       residue rows (**`grape vines`**, **`grape stem`**, **`almond branches`**,
+       **`walnut tree sticks`**, **`cotton stem mix`** — supplemented by Tier 2
+       `mv_usda_county_production`).
 2. **Tier 2 — `data_portal.mv_usda_county_production` _(Orchard Bearing-Acreage
    & Census Fallback)_**:
    - **Columns**: `id`, `resource_id`, `resource_name`, `primary_product`,
