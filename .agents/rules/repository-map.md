@@ -78,6 +78,8 @@ The API layer.
 ├── .claude/
 │   └── skills -> ../.agents/skills   # Symlink so Claude Code discovers the skills
 ├── knowledge/             # OKF project memory, read and written with `pixi run okf` (okf-memory skill)
+├── .devcontainer/         # Codespaces image: pixi (checksum-verified) + Claude Code, Codex, Copilot CLI, OpenCode, gh
+├── .github/workflows/copilot-setup-steps.yml   # Copilot cloud agent setup: locked pixi env, warm pre-commit hooks
 ├── skills.json            # Third-party agent skills synced by `pixi run skills-sync`
 ├── skills.py              # The sync script behind `pixi run skills-sync`
 └── tests/agent_harness/   # Invariant tests for the harness (run in CI)

@@ -85,3 +85,11 @@ def test_every_pinned_pixi_can_read_pixi_lock(repo_root):
         + ". Revert pixi.lock (`git checkout origin/main -- pixi.lock`) unless this "
         "pull request upgrades every pin; see .agents/rules/pixi-environments.md."
     )
+
+
+def test_every_pixi_pin_is_the_same_release(repo_root):
+    pins = pixi_pins(repo_root)
+    assert len(set(pins.values())) == 1, (
+        "pin one pixi release everywhere, so no sanctioned environment writes a "
+        f"lock file another cannot read: {sorted(pins.items())}"
+    )
