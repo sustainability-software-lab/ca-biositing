@@ -1,5 +1,32 @@
 # Visualization Gallery
 
+## Multi-Resource Analytical & Bioconversion Explorer Suite
+
+[7-Tab All-Resources AI Deep-Dive Dashboard](plots/metadata/resource_analysis_dashboard.html)
+|
+[Interactive Multi-Resource Canvas Dashboard](plots/metadata/resource_explorer_dashboard.html)
+|
+[Standalone Pretreatment Variance Canvas Dashboard](plots/conversion/pretreatment_variance_dashboard.html)
+| [Compact Quick Explorer Widget](plots/metadata/resource_quick_widget.html)
+
+_Unified multi-resource analytical & bioconversion dashboard suite covering all
+127 cataloged resources (45 with active lab records), 147 field samples, 384
+prepared samples, and 11,974 record-observation rows across all 10 Aim 1 and Aim
+2 database tables (Proximate, Compositional, Ultimate, XRD, Calorimetry, ICP,
+XRF, Pretreatment, Fermentation, and Gasification). Includes the **7-Tab
+Deep-Dive Dashboard** with synthesized AI insights, statewide percentile
+benchmarks, mass-balance closure diagnostics, and mined field/prep/analytical
+lab notes (`data/insights/resource_ai_insights.json`), alongside the **12-Column
+HTML5 `<canvas>` Explorer** with Scatter/Profile and Replicate Strip Plot views,
+Pinned Point Inspector, Export Tray (`Copy TSV` / `Download CSV`), Analyst
+Anonymization, Light/Dark theme toggle, and URL deep-linking._
+
+> **Sources:**
+> [`analysis/metadata/resource_insights_engine.py`](analysis/metadata/resource_insights_engine.py),
+> [`analysis/metadata/resource_analysis_dashboard.py`](analysis/metadata/resource_analysis_dashboard.py),
+> [`analysis/metadata/resource_explorer_dashboard.py`](analysis/metadata/resource_explorer_dashboard.py),
+> [`analysis/conversion/pretreatment_variance_dashboard.py`](analysis/conversion/pretreatment_variance_dashboard.py)
+
 ## Aim 1: Analytical Record Counts
 
 ![Aim 1 Record Counts](plots/metadata/aim1_record_counts.png) _Distribution of

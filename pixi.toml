@@ -242,8 +242,19 @@ schema-analytics-plan = { cmd = "pgschema plan --host localhost --port 5432 --us
 schema-analytics-list = { cmd = "pixi run access-db -c \"SELECT schemaname, matviewname, ispopulated FROM pg_matviews\"", description = "List all materialized views in the database." }
 refresh-views = { cmd = "python -c \"from ca_biositing.datamodels.views import refresh_all_views; from ca_biositing.datamodels.database import get_engine; refresh_all_views(get_engine())\"", description = "Refresh all materialized views using SQLAlchemy." }
 
-# Visualization Gallery Tasks
+# Database Environment Drift Assessment Tasks
+db-drift-extract-local = { cmd = "POSTGRES_HOST=localhost python analysis/audit/db_environment_drift.py --extract-env local", description = "Extract local database fingerprint to audit/output/env_fingerprints/local_fingerprint.json." }
+db-drift-extract-staging = { cmd = "python analysis/audit/db_environment_drift.py --extract-env staging", description = "Extract staging database fingerprint via Cloud SQL Auth Proxy (localhost:5434)." }
+db-drift-extract-prod = { cmd = "python analysis/audit/db_environment_drift.py --extract-env production", description = "Extract production database fingerprint via Cloud SQL Auth Proxy (localhost:5435)." }
+db-drift-compare = { cmd = "python analysis/audit/db_environment_drift.py --compare", description = "Compare environment fingerprints and generate exports/plots/audit/db_environment_drift_dashboard.html and audit/output/drift_report.md." }
+
+# Visualization Gallery & Modular Resource Dashboard Tasks
+refresh-resource-insights = { cmd = "python analysis/metadata/resource_insights_engine.py", description = "Recompute statistical outlier screening, within/between-group RSD variance decomposition, and bench-note AI insights sidecar." }
+build-resource-analysis-dashboard = { cmd = "python analysis/metadata/resource_analysis_dashboard.py", description = "Generate Page 1 (Characterization & AI Brief) and Page 2 (Statistical QC & Lab Notes Audit) dashboards." }
+build-resource-explorer-dashboard = { cmd = "python analysis/metadata/resource_explorer_dashboard.py", description = "Generate Page 3 (Multi-Resource Side-by-Side Comparison Canvas Explorer) and Quick Widget." }
 update-gallery = { cmd = "python scripts/generate_dashboard_gallery.py", description = "Regenerate the static HTML gallery for interactive dashboards." }
+refresh-dashboards = { cmd = "python analysis/metadata/resource_insights_engine.py && python analysis/metadata/resource_analysis_dashboard.py && python analysis/metadata/resource_explorer_dashboard.py && python analysis/conversion/pretreatment_variance_dashboard.py && python scripts/generate_dashboard_gallery.py", description = "One-command refresh of AI insights sidecar, all modular resource dashboards, pretreatment variance canvas, and gallery index." }
+update-resource-dashboard = { cmd = "python analysis/metadata/resource_insights_engine.py && python analysis/metadata/resource_explorer_dashboard.py && python analysis/metadata/resource_analysis_dashboard.py && python analysis/conversion/pretreatment_variance_dashboard.py && python scripts/generate_dashboard_gallery.py", description = "Alias for refresh-dashboards." }
 update-plots = { cmd = "python scripts/regenerate_all_plots.py", description = "Re-run all analysis scripts to regenerate plots with fresh data and update the gallery." }
 serve-gallery = { cmd = "python -m http.server 8000", cwd = "exports/plots", description = "Serve the dashboard gallery locally at http://localhost:8000." }
 

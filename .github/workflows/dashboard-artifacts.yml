@@ -1,0 +1,221 @@
+# Regenerates and exports the BioCirV DB Environment Drift Dashboard and the
+# Modular 3-Page Resource Explorer / Analysis Dashboard Suite whenever ETL flows,
+# datamodels/views, Alembic migrations, environment fingerprints, or dashboard
+# generator scripts change, or after a staging/production ETL run completes.
+name: Build & Export BioCirV Dashboards & Drift Audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      data_source:
+        description:
+          "Data source mode ('auto' tries live DB then falls back to tracked
+          snapshot)"
+        required: false
+        default: "auto"
+        type: choice
+        options:
+          - auto
+          - live_db
+          - snapshot
+  push:
+    branches:
+      - main
+      - "feat/**"
+    paths:
+      - "src/ca_biositing/pipeline/**"
+      - "src/ca_biositing/datamodels/**"
+      - "alembic/**"
+      - "analysis/audit/db_environment_drift.py"
+      - "analysis/metadata/resource_insights_engine.py"
+      - "analysis/metadata/resource_analysis_dashboard.py"
+      - "analysis/metadata/resource_explorer_dashboard.py"
+      - "analysis/conversion/pretreatment_variance_dashboard.py"
+      - "audit/output/env_fingerprints/**"
+      - ".github/workflows/dashboard-artifacts.yml"
+  pull_request:
+    paths:
+      - "src/ca_biositing/pipeline/**"
+      - "src/ca_biositing/datamodels/**"
+      - "alembic/**"
+      - "analysis/audit/db_environment_drift.py"
+      - "analysis/metadata/resource_insights_engine.py"
+      - "analysis/metadata/resource_analysis_dashboard.py"
+      - "analysis/metadata/resource_explorer_dashboard.py"
+      - "analysis/conversion/pretreatment_variance_dashboard.py"
+      - "audit/output/env_fingerprints/**"
+      - ".github/workflows/dashboard-artifacts.yml"
+  workflow_run:
+    workflows:
+      - "Trigger Staging ETL"
+      - "Trigger Production ETL"
+    types:
+      - completed
+
+concurrency:
+  group: dashboard-artifacts-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_COLOR: 3
+  PROJECT_NAME: "ca_biositing"
+  SNAPSHOT_PATH: "audit/output/env_fingerprints/baseline_records_snapshot.json"
+
+jobs:
+  build-dashboards-and-drift:
+    name: Generate BioCirV Dashboards & DB Drift Report
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Pixi
+        uses: prefix-dev/setup-pixi@v0.10.2
+        with:
+          pixi-version: v0.63.2
+          environments: default
+
+      - name: Set up Node.js (for inline JS syntax verification)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Determine Data Source Mode (Live PostgreSQL vs. Baseline Snapshot)
+        id: source_mode
+        run: |
+          REQUESTED="${{ github.event.inputs.data_source || 'auto' }}"
+          if [ "$REQUESTED" = "snapshot" ]; then
+            echo "mode=snapshot" >> "$GITHUB_OUTPUT"
+            echo "Using tracked baseline snapshot ($SNAPSHOT_PATH)"
+            exit 0
+          fi
+
+          # Probe whether a local or tunneled PostgreSQL instance is reachable
+          if pixi run python -c "
+          import socket, os
+          host = os.environ.get('POSTGRES_HOST', 'localhost')
+          port = int(os.environ.get('POSTGRES_PORT', '5432'))
+          s = socket.socket()
+          s.settimeout(1.5)
+          s.connect((host, port))
+          s.close()
+          " 2>/dev/null; then
+            echo "mode=live_db" >> "$GITHUB_OUTPUT"
+            echo "Live PostgreSQL detected — extracting fresh fingerprints and querying live DB."
+          else
+            if [ "$REQUESTED" = "live_db" ]; then
+              echo "::error::live_db mode was explicitly requested, but PostgreSQL is not reachable."
+              exit 1
+            fi
+            echo "mode=snapshot" >> "$GITHUB_OUTPUT"
+            echo "No live PostgreSQL tunnel detected in runner — building reproducibly from $SNAPSHOT_PATH."
+          fi
+
+      - name: Run DB Environment Drift Assessment & View Schema Guard
+        run: |
+          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
+            pixi run python analysis/audit/db_environment_drift.py --extract-env local
+          fi
+          pixi run python analysis/audit/db_environment_drift.py --compare
+
+      - name:
+          Build Modular Resource Characterization & QC Dashboards (Pages 1 & 2)
+        run: |
+          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
+            pixi run python analysis/metadata/resource_analysis_dashboard.py \
+              --output-dir exports/plots/metadata
+          else
+            pixi run python analysis/metadata/resource_analysis_dashboard.py \
+              --from-snapshot "$SNAPSHOT_PATH" \
+              --output-dir exports/plots/metadata
+          fi
+
+      - name:
+          Build Multi-Resource Side-by-Side Parameter Explorer & Quick Widget
+          (Page 3)
+        run: |
+          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
+            pixi run python analysis/metadata/resource_explorer_dashboard.py \
+              --output-dir exports/plots/metadata
+          else
+            pixi run python analysis/metadata/resource_explorer_dashboard.py \
+              --from-snapshot "$SNAPSHOT_PATH" \
+              --output-dir exports/plots/metadata
+          fi
+
+      - name: Build Pretreatment Variance Canvas Dashboard
+        run: |
+          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
+            pixi run python analysis/conversion/pretreatment_variance_dashboard.py \
+              --output exports/plots/conversion/pretreatment_variance_dashboard.html
+          else
+            pixi run python analysis/conversion/pretreatment_variance_dashboard.py \
+              --from-snapshot "$SNAPSHOT_PATH" \
+              --output exports/plots/conversion/pretreatment_variance_dashboard.html
+          fi
+
+      - name: Validate Generated HTML Dashboards & Inline JavaScript Bundles
+        run: |
+          pixi run python -c '
+          import os, re, subprocess, tempfile
+
+          dashboards = [
+              "exports/plots/audit/db_environment_drift_dashboard.html",
+              "exports/plots/metadata/resource_analysis_dashboard.html",
+              "exports/plots/metadata/resource_qc_outlier_dashboard.html",
+              "exports/plots/metadata/resource_explorer_dashboard.html",
+              "exports/plots/metadata/resource_quick_widget.html",
+              "exports/plots/conversion/pretreatment_variance_dashboard.html",
+          ]
+
+          for path in dashboards:
+              assert os.path.exists(path), f"Missing generated dashboard: {path}"
+              size_kb = os.path.getsize(path) / 1024.0
+              assert size_kb > 20, f"Dashboard unexpectedly small ({size_kb:.1f} KB): {path}"
+              with open(path, "r", encoding="utf-8") as f:
+                  html = f.read()
+              scripts = [s for s in re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>", html, re.S) if s.strip()]
+              assert scripts, f"No inline <script> blocks found in {path}"
+              with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as tmp:
+                  tmp.write(scripts[-1])
+                  tmp_path = tmp.name
+              try:
+                  subprocess.run(["node", "--check", tmp_path], check=True)
+              finally:
+                  os.remove(tmp_path)
+              print(f"Verified {path} ({size_kb:.1f} KB) — JS syntax OK")
+          '
+
+      - name: Publish Drift Summary to GitHub Step Summary
+        if: always()
+        run: |
+          if [ -f "audit/output/drift_report.md" ]; then
+            echo "## BioCirV Database Environment Drift & View Schema Guard Summary" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            head -n 80 audit/output/drift_report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload BioCirV Dashboards & Drift Audit Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: biocirv-dashboards-and-drift-suite
+          retention-days: 30
+          if-no-files-found: error
+          path: |
+            exports/plots/index.html
+            exports/plots/audit/db_environment_drift_dashboard.html
+            exports/plots/metadata/resource_analysis_dashboard.html
+            exports/plots/metadata/resource_qc_outlier_dashboard.html
+            exports/plots/metadata/resource_analysis_dashboard_v1_monolith.html
+            exports/plots/metadata/resource_explorer_dashboard.html
+            exports/plots/metadata/resource_quick_widget.html
+            exports/plots/conversion/pretreatment_variance_dashboard.html
+            audit/output/drift_report.md
+            audit/output/env_fingerprints/*_fingerprint.json
