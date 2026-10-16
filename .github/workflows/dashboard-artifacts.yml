@@ -8,7 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       data_source:
-        description: "Data source mode ('auto' tries live DB then falls back to tracked snapshot)"
+        description:
+          "Data source mode ('auto' tries live DB then falls back to tracked
+          snapshot)"
         required: false
         default: "auto"
         type: choice
@@ -123,7 +125,8 @@ jobs:
           fi
           pixi run python analysis/audit/db_environment_drift.py --compare
 
-      - name: Build Modular Resource Characterization & QC Dashboards (Pages 1 & 2)
+      - name:
+          Build Modular Resource Characterization & QC Dashboards (Pages 1 & 2)
         run: |
           if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
             pixi run python analysis/metadata/resource_analysis_dashboard.py \
@@ -134,7 +137,9 @@ jobs:
               --output-dir exports/plots/metadata
           fi
 
-      - name: Build Multi-Resource Side-by-Side Parameter Explorer & Quick Widget (Page 3)
+      - name:
+          Build Multi-Resource Side-by-Side Parameter Explorer & Quick Widget
+          (Page 3)
         run: |
           if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
             pixi run python analysis/metadata/resource_explorer_dashboard.py \

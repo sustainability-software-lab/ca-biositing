@@ -9,11 +9,7 @@
     "port": 5432,
     "database": "biocirv_db",
     "user": "biocirv_user",
-    "schemas": [
-      "public",
-      "ca_biositing",
-      "data_portal"
-    ]
+    "schemas": ["public", "ca_biositing", "data_portal"]
   },
   "layer1_schema": {
     "alembic_head": "8f4b2c19a03d (head)",
@@ -1777,9 +1773,7 @@
             "(b8)8bc2",
             "(b8)a1f0"
           ],
-          "prepared_samples": [
-            "war-alf037a(b8)"
-          ],
+          "prepared_samples": ["war-alf037a(b8)"],
           "record_hash": "cbfc436fec7a",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -1799,9 +1793,7 @@
             "(53)7399",
             "(53)a583"
           ],
-          "prepared_samples": [
-            "boa-gppm053a(53)"
-          ],
+          "prepared_samples": ["boa-gppm053a(53)"],
           "record_hash": "ad97c8a454b6",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -1811,16 +1803,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            ")u0e740e",
-            ")u88e188",
-            ")uf414f4",
-            "7ud442d4"
-          ],
-          "prepared_samples": [
-            "war-al037",
-            "war-alf037a(b8)"
-          ],
+          "record_ids_sample": [")u0e740e", ")u88e188", ")uf414f4", "7ud442d4"],
+          "prepared_samples": ["war-al037", "war-alf037a(b8)"],
           "record_hash": "cb0f6bf9e717",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -1832,16 +1816,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(b8)c3fd",
-            "(b8)f05a",
-            "(ed)7991",
-            "(ed)d7ec"
-          ],
-          "prepared_samples": [
-            "pos-alf035km2(ed)",
-            "pos-alf037km2(b8)"
-          ],
+          "record_ids_sample": ["(b8)c3fd", "(b8)f05a", "(ed)7991", "(ed)d7ec"],
+          "prepared_samples": ["pos-alf035km2(ed)", "pos-alf037km2(b8)"],
           "record_hash": "6c32020b3245",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -1973,16 +1949,8 @@
           "qc_pass": 3,
           "qc_fail": 0,
           "qc_other": 1,
-          "record_ids_sample": [
-            "(a0)1748",
-            "(a0)f4fe",
-            "(b5)341d",
-            "(b5)4938"
-          ],
-          "prepared_samples": [
-            "hum-almbr024km2(a0)",
-            "vib-almbr013a(b5)"
-          ],
+          "record_ids_sample": ["(a0)1748", "(a0)f4fe", "(b5)341d", "(b5)4938"],
+          "prepared_samples": ["hum-almbr024km2(a0)", "vib-almbr013a(b5)"],
           "record_hash": "c9c3cc774069",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2027,10 +1995,7 @@
             "proco28-2b27",
             "proco28-4aaf"
           ],
-          "prepared_samples": [
-            "hum-almbr024km2(a0)",
-            "vib-almbr013km2(c7)"
-          ],
+          "prepared_samples": ["hum-almbr024km2(a0)", "vib-almbr013km2(c7)"],
           "record_hash": "7ccc85b9de62",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2050,10 +2015,7 @@
             "(a0)2f1d",
             "(a0)37cf"
           ],
-          "prepared_samples": [
-            "hum-almbr024km2(a0)",
-            "vib-almbr013km2(c7)"
-          ],
+          "prepared_samples": ["hum-almbr024km2(a0)", "vib-almbr013km2(c7)"],
           "record_hash": "4668bc6be671",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2140,13 +2102,8 @@
           "qc_pass": 2,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(31)3702",
-            "(31)3947"
-          ],
-          "prepared_samples": [
-            "vib-almhu012km2(31)"
-          ],
+          "record_ids_sample": ["(31)3702", "(31)3947"],
+          "prepared_samples": ["vib-almhu012km2(31)"],
           "record_hash": "222925953e71",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2218,9 +2175,7 @@
             "almo495-e92e",
             "almo496-407f"
           ],
-          "prepared_samples": [
-            "cap-almhu076a(4a)"
-          ],
+          "prepared_samples": ["cap-almhu076a(4a)"],
           "record_hash": "ad6afd58d392",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2318,9 +2273,7 @@
             ")u763f76",
             ")ub9dab9"
           ],
-          "prepared_samples": [
-            "hum-almhu023km2(15)"
-          ],
+          "prepared_samples": ["hum-almhu023km2(15)"],
           "record_hash": "650fa7869667",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2444,9 +2397,7 @@
             "almor15-e088",
             "almor16-662f"
           ],
-          "prepared_samples": [
-            "tin-almsh014a(6d)"
-          ],
+          "prepared_samples": ["tin-almsh014a(6d)"],
           "record_hash": "fad21bc18776",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2544,9 +2495,7 @@
             ")ub890b8",
             ")ud275d2"
           ],
-          "prepared_samples": [
-            "hum-almsh022km2(13)"
-          ],
+          "prepared_samples": ["hum-almsh022km2(13)"],
           "record_hash": "4a11bb80a640",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2585,13 +2534,8 @@
           "qc_pass": 0,
           "qc_fail": 0,
           "qc_other": 2,
-          "record_ids_sample": [
-            "(7e)195e",
-            "(7e)c2da"
-          ],
-          "prepared_samples": [
-            "tin-almix016km2(7e)"
-          ],
+          "record_ids_sample": ["(7e)195e", "(7e)c2da"],
+          "prepared_samples": ["tin-almix016km2(7e)"],
           "record_hash": "2e3e6c4aa5d0",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2611,9 +2555,7 @@
             "(7e)5a6c",
             "(7e)5bdf"
           ],
-          "prepared_samples": [
-            "tin-almix016km2(7e)"
-          ],
+          "prepared_samples": ["tin-almix016km2(7e)"],
           "record_hash": "c57914fc2794",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2633,9 +2575,7 @@
             "proco32-2b14",
             "proco32-6615"
           ],
-          "prepared_samples": [
-            "tin-almix016km2(7e)"
-          ],
+          "prepared_samples": ["tin-almix016km2(7e)"],
           "record_hash": "1116389b3971",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2655,9 +2595,7 @@
             "(7e)359b",
             "(7e)39f9"
           ],
-          "prepared_samples": [
-            "tin-almix016km2(7e)"
-          ],
+          "prepared_samples": ["tin-almix016km2(7e)"],
           "record_hash": "ce33c7103107",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2677,9 +2615,7 @@
             "chol289-556f",
             "chol290-1381"
           ],
-          "prepared_samples": [
-            "tin-almix016km2(7e)"
-          ],
+          "prepared_samples": ["tin-almix016km2(7e)"],
           "record_hash": "cfdd012bb191",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2699,9 +2635,7 @@
             "(7e)4412",
             "(7e)4470"
           ],
-          "prepared_samples": [
-            "tin-almix016km2(7e)"
-          ],
+          "prepared_samples": ["tin-almix016km2(7e)"],
           "record_hash": "88714ee3785f",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2711,15 +2645,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            ")u089908",
-            ")ubae4ba",
-            ")uca43ca",
-            ")udcacdc"
-          ],
-          "prepared_samples": [
-            "tin-almix016km2(7e)"
-          ],
+          "record_ids_sample": [")u089908", ")ubae4ba", ")uca43ca", ")udcacdc"],
+          "prepared_samples": ["tin-almix016km2(7e)"],
           "record_hash": "54ee6e701139",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2739,9 +2666,7 @@
             "(86)1ce4",
             "(86)289f"
           ],
-          "prepared_samples": [
-            "tin-almix016a(86)"
-          ],
+          "prepared_samples": ["tin-almix016a(86)"],
           "record_hash": "826391ab2d20",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -2763,9 +2688,7 @@
             "almo169-445d",
             "almo170-20c1"
           ],
-          "prepared_samples": [
-            "vib-almbr013a(4e)"
-          ],
+          "prepared_samples": ["vib-almbr013a(4e)"],
           "record_hash": "e301755e8e98",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -2787,9 +2710,7 @@
             "(c1)6e7e",
             "(c1)8cf2"
           ],
-          "prepared_samples": [
-            "pop-almwc020km2(c1)"
-          ],
+          "prepared_samples": ["pop-almwc020km2(c1)"],
           "record_hash": "115821c2eba2",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2809,9 +2730,7 @@
             "proco32-2d74",
             "proco32-2ebb"
           ],
-          "prepared_samples": [
-            "pop-almwc020km2(c1)"
-          ],
+          "prepared_samples": ["pop-almwc020km2(c1)"],
           "record_hash": "6030d286e24e",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2831,9 +2750,7 @@
             "almo644-6bbb",
             "almo645-5fbd"
           ],
-          "prepared_samples": [
-            "pop-almwc020s1i(a2)"
-          ],
+          "prepared_samples": ["pop-almwc020s1i(a2)"],
           "record_hash": "142c58183e62",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2853,9 +2770,7 @@
             "(c1)5298",
             "(c1)5b24"
           ],
-          "prepared_samples": [
-            "pop-almwc020km2(c1)"
-          ],
+          "prepared_samples": ["pop-almwc020km2(c1)"],
           "record_hash": "97d9657d921a",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2875,9 +2790,7 @@
             "chol313-0987",
             "chol314-4667"
           ],
-          "prepared_samples": [
-            "pop-almwc020km2(c1)"
-          ],
+          "prepared_samples": ["pop-almwc020km2(c1)"],
           "record_hash": "834b02518fcd",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2897,9 +2810,7 @@
             "(c1)2d9c",
             "(c1)3aa5"
           ],
-          "prepared_samples": [
-            "pop-almwc020km2(c1)"
-          ],
+          "prepared_samples": ["pop-almwc020km2(c1)"],
           "record_hash": "a6a225aa366a",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -2921,10 +2832,7 @@
             "blen106-e936",
             "blen107-ed8c"
           ],
-          "prepared_samples": [
-            "bao-ble096a(79)",
-            "bao-ble111s1i(3c)"
-          ],
+          "prepared_samples": ["bao-ble096a(79)", "bao-ble111s1i(3c)"],
           "record_hash": "e74bbf9ad1ec",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -2946,9 +2854,7 @@
             "(28)9a1d",
             "(28)a625"
           ],
-          "prepared_samples": [
-            "cat-cnsc029km2(28)"
-          ],
+          "prepared_samples": ["cat-cnsc029km2(28)"],
           "record_hash": "5dcf05589ab1",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2968,9 +2874,7 @@
             "proco04-05ee",
             "proco04-07f9"
           ],
-          "prepared_samples": [
-            "cat-cnsc029km2(28)"
-          ],
+          "prepared_samples": ["cat-cnsc029km2(28)"],
           "record_hash": "8878f534df87",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -2990,9 +2894,7 @@
             "chol457-e399",
             "chol458-9402"
           ],
-          "prepared_samples": [
-            "cat-cnsc029km2(28)"
-          ],
+          "prepared_samples": ["cat-cnsc029km2(28)"],
           "record_hash": "4ac5ab739212",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3012,9 +2914,7 @@
             "(28)5a04",
             "(28)5dec"
           ],
-          "prepared_samples": [
-            "cat-cnsc029km2(28)"
-          ],
+          "prepared_samples": ["cat-cnsc029km2(28)"],
           "record_hash": "a003ecd551d5",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3026,13 +2926,8 @@
           "qc_pass": 2,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(72)9192",
-            "(72)e9cb"
-          ],
-          "prepared_samples": [
-            "cat-cnsh028km2(72)"
-          ],
+          "record_ids_sample": ["(72)9192", "(72)e9cb"],
+          "prepared_samples": ["cat-cnsh028km2(72)"],
           "record_hash": "e1da90604600",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3052,9 +2947,7 @@
             "(72)4e20",
             "(72)5d6f"
           ],
-          "prepared_samples": [
-            "cat-cnsh028km2(72)"
-          ],
+          "prepared_samples": ["cat-cnsh028km2(72)"],
           "record_hash": "24c72405b545",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3074,9 +2967,7 @@
             "proco33-3f72",
             "proco33-47d8"
           ],
-          "prepared_samples": [
-            "cat-cnsh028km2(72)"
-          ],
+          "prepared_samples": ["cat-cnsh028km2(72)"],
           "record_hash": "69affe55d60a",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3096,9 +2987,7 @@
             "chol433-db88",
             "chol434-3bb5"
           ],
-          "prepared_samples": [
-            "cat-cnsh028km2(72)"
-          ],
+          "prepared_samples": ["cat-cnsh028km2(72)"],
           "record_hash": "d6e51f88bbbd",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3118,9 +3007,7 @@
             "(72)5b2f",
             "(72)a9ae"
           ],
-          "prepared_samples": [
-            "cat-cnsh028km2(72)"
-          ],
+          "prepared_samples": ["cat-cnsh028km2(72)"],
           "record_hash": "f3d8b2d2944a",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3142,9 +3029,7 @@
             "(5b)651e",
             "(5b)7bed"
           ],
-          "prepared_samples": [
-            "cat-cnss030km2(5b)"
-          ],
+          "prepared_samples": ["cat-cnss030km2(5b)"],
           "record_hash": "6c0b46a15b55",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3164,9 +3049,7 @@
             "proco33-51e7",
             "proco33-5859"
           ],
-          "prepared_samples": [
-            "cat-cnss030km2(5b)"
-          ],
+          "prepared_samples": ["cat-cnss030km2(5b)"],
           "record_hash": "dd79760acfa6",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3186,9 +3069,7 @@
             "chol481-bf9a",
             "chol482-17bb"
           ],
-          "prepared_samples": [
-            "cat-cnss030km2(5b)"
-          ],
+          "prepared_samples": ["cat-cnss030km2(5b)"],
           "record_hash": "fe6143ddaa7a",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3208,9 +3089,7 @@
             "(5b)8c21",
             "(5b)8cb4"
           ],
-          "prepared_samples": [
-            "cat-cnss030km2(5b)"
-          ],
+          "prepared_samples": ["cat-cnss030km2(5b)"],
           "record_hash": "b3ef85fc3420",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3232,9 +3111,7 @@
             "proco25-3602",
             "proco25-403d"
           ],
-          "prepared_samples": [
-            "pos-cnsw084km2(be)"
-          ],
+          "prepared_samples": ["pos-cnsw084km2(be)"],
           "record_hash": "8f2754929f7d",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3252,9 +3129,7 @@
             "chol825-72ed",
             "chol826-27a9"
           ],
-          "prepared_samples": [
-            "pos-cnsw084km2(be)"
-          ],
+          "prepared_samples": ["pos-cnsw084km2(be)"],
           "record_hash": "305af2b66771",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3274,9 +3149,7 @@
             "(be)848b",
             "(be)b18d"
           ],
-          "prepared_samples": [
-            "pos-cnsw084km2(be)"
-          ],
+          "prepared_samples": ["pos-cnsw084km2(be)"],
           "record_hash": "e513a8b150b0",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3296,9 +3169,7 @@
             "(be)1441",
             "(be)1f2f"
           ],
-          "prepared_samples": [
-            "pos-cnsw084km2(be)"
-          ],
+          "prepared_samples": ["pos-cnsw084km2(be)"],
           "record_hash": "15f4d837197b",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3320,9 +3191,7 @@
             "cott685-143d",
             "cott686-8e64"
           ],
-          "prepared_samples": [
-            "sch-cotsm086s1i(a7)"
-          ],
+          "prepared_samples": ["sch-cotsm086s1i(a7)"],
           "record_hash": "84f9a4e70b5e",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3384,16 +3253,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(1b)12f8",
-            "(1b)18d4",
-            "(fe)7222",
-            "(fe)9420"
-          ],
-          "prepared_samples": [
-            "ebo-gppm010okm2(1b)",
-            "map-gppm04okm2(fe)"
-          ],
+          "record_ids_sample": ["(1b)12f8", "(1b)18d4", "(fe)7222", "(fe)9420"],
+          "prepared_samples": ["ebo-gppm010okm2(1b)", "map-gppm04okm2(fe)"],
           "record_hash": "c19899dc2eb9",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3461,10 +3322,7 @@
             "(1b)3c04",
             "(1b)3c7f"
           ],
-          "prepared_samples": [
-            "ebo-gppm010okm2(1b)",
-            "map-gppm04okm2(fe)"
-          ],
+          "prepared_samples": ["ebo-gppm010okm2(1b)", "map-gppm04okm2(fe)"],
           "record_hash": "755462d8b492",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3535,10 +3393,7 @@
             ")u87a587",
             ")ua51aa5"
           ],
-          "prepared_samples": [
-            "ebo-gppm010okm2(1b)",
-            "map-gppm04okm2(fe)"
-          ],
+          "prepared_samples": ["ebo-gppm010okm2(1b)", "map-gppm04okm2(fe)"],
           "record_hash": "66ad7d5d899b",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3609,10 +3464,7 @@
             "(5c)76f6",
             "(5c)7ce2"
           ],
-          "prepared_samples": [
-            "map-gpst05o(5c)",
-            "rig-gpst072okm2(87)"
-          ],
+          "prepared_samples": ["map-gpst05o(5c)", "rig-gpst072okm2(87)"],
           "record_hash": "716ed3a60c47",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3632,9 +3484,7 @@
             "proco31-41cd",
             "proco31-4ebc"
           ],
-          "prepared_samples": [
-            "map-gpst05okm2(ad)"
-          ],
+          "prepared_samples": ["map-gpst05okm2(ad)"],
           "record_hash": "2afec6d104fc",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3654,9 +3504,7 @@
             "(ad)63a0",
             "(ad)659a"
           ],
-          "prepared_samples": [
-            "map-gpst05okm2(ad)"
-          ],
+          "prepared_samples": ["map-gpst05okm2(ad)"],
           "record_hash": "38d91674cd6f",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3676,10 +3524,7 @@
             "chol025-5b64",
             "chol026-ad28"
           ],
-          "prepared_samples": [
-            "map-gpst05okm2(ad)",
-            "rig-gpst072okm2(87)"
-          ],
+          "prepared_samples": ["map-gpst05okm2(ad)", "rig-gpst072okm2(87)"],
           "record_hash": "86c3f40940a9",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3713,14 +3558,8 @@
           "qc_pass": 0,
           "qc_fail": 3,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(5c)2e17",
-            "(5c)7cd3",
-            "(5c)bd78"
-          ],
-          "prepared_samples": [
-            "map-gpst05o(5c)"
-          ],
+          "record_ids_sample": ["(5c)2e17", "(5c)7cd3", "(5c)bd78"],
+          "prepared_samples": ["map-gpst05o(5c)"],
           "record_hash": "2bdacf678e79",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3740,9 +3579,7 @@
             "(87)2aed",
             "(87)2cd4"
           ],
-          "prepared_samples": [
-            "rig-gpst072okm2(87)"
-          ],
+          "prepared_samples": ["rig-gpst072okm2(87)"],
           "record_hash": "ff85a23fe24f",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3764,9 +3601,7 @@
             "(35)8876",
             "(35)96f8"
           ],
-          "prepared_samples": [
-            "boa-gpvpr102chkm2(35)"
-          ],
+          "prepared_samples": ["boa-gpvpr102chkm2(35)"],
           "record_hash": "c5a9f869afa9",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3788,9 +3623,7 @@
             "(eb)6e5e",
             "(eb)8d0e"
           ],
-          "prepared_samples": [
-            "boa-gpvn103chkm2(eb)"
-          ],
+          "prepared_samples": ["boa-gpvn103chkm2(eb)"],
           "record_hash": "627d500090e7",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3838,9 +3671,7 @@
             "(63)6908",
             "(63)8d56"
           ],
-          "prepared_samples": [
-            "map-lees09a(63)"
-          ],
+          "prepared_samples": ["map-lees09a(63)"],
           "record_hash": "39b4439b376b",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3862,10 +3693,7 @@
             "(ba)057a",
             "(ba)10eb"
           ],
-          "prepared_samples": [
-            "exc-olpm091okm2(ba)",
-            "jag-olpm026okm2(29)"
-          ],
+          "prepared_samples": ["exc-olpm091okm2(ba)", "jag-olpm026okm2(29)"],
           "record_hash": "ce7e7266f8f2",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3885,10 +3713,7 @@
             "proco04-15ea",
             "proco04-171c"
           ],
-          "prepared_samples": [
-            "exc-olpm091okm2(ba)",
-            "jag-olpm026okm2(29)"
-          ],
+          "prepared_samples": ["exc-olpm091okm2(ba)", "jag-olpm026okm2(29)"],
           "record_hash": "08d0cfe91177",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3908,10 +3733,7 @@
             "buty529-d2fe",
             "buty530-10e1"
           ],
-          "prepared_samples": [
-            "exc-olpm091okm2(ba)",
-            "jag-olpm026okm2(29)"
-          ],
+          "prepared_samples": ["exc-olpm091okm2(ba)", "jag-olpm026okm2(29)"],
           "record_hash": "3ad9c316426a",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3931,10 +3753,7 @@
             "(ba)64ef",
             "(ba)6557"
           ],
-          "prepared_samples": [
-            "exc-olpm091a(be)",
-            "exc-olpm091okm2(ba)"
-          ],
+          "prepared_samples": ["exc-olpm091a(be)", "exc-olpm091okm2(ba)"],
           "record_hash": "232d21671b3c",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -3954,9 +3773,7 @@
             "(ba)2010",
             "(ba)272e"
           ],
-          "prepared_samples": [
-            "exc-olpm091okm2(ba)"
-          ],
+          "prepared_samples": ["exc-olpm091okm2(ba)"],
           "record_hash": "6d3be3ad6476",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -3978,10 +3795,7 @@
             "(85)b1ce",
             "(85)b606"
           ],
-          "prepared_samples": [
-            "exc-olpr106chf(ab)",
-            "exc-olpr107chf(85)"
-          ],
+          "prepared_samples": ["exc-olpr106chf(ab)", "exc-olpr107chf(85)"],
           "record_hash": "4684f7c79c36",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4001,9 +3815,7 @@
             "(fd)c146",
             "(fd)fd31"
           ],
-          "prepared_samples": [
-            "jag-olst027okm2(fd)"
-          ],
+          "prepared_samples": ["jag-olst027okm2(fd)"],
           "record_hash": "6a4661f9418e",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4025,9 +3837,7 @@
             "(a0)96b7",
             "(a0)975e"
           ],
-          "prepared_samples": [
-            "exc-olst092okm2(a0)"
-          ],
+          "prepared_samples": ["exc-olst092okm2(a0)"],
           "record_hash": "ee2a6ba6de08",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4047,10 +3857,7 @@
             "proco06-552c",
             "proco06-5564"
           ],
-          "prepared_samples": [
-            "exc-olst092okm2(a0)",
-            "jag-olst027okm2(fd)"
-          ],
+          "prepared_samples": ["exc-olst092okm2(a0)", "jag-olst027okm2(fd)"],
           "record_hash": "db4398814100",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4070,10 +3877,7 @@
             "buty850-2987",
             "chol517-fce8"
           ],
-          "prepared_samples": [
-            "exc-olst092okm2(a0)",
-            "jag-olst027okm2(fd)"
-          ],
+          "prepared_samples": ["exc-olst092okm2(a0)", "jag-olst027okm2(fd)"],
           "record_hash": "cc440a8920d1",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4093,10 +3897,7 @@
             "(15)9820",
             "(15)a12f"
           ],
-          "prepared_samples": [
-            "exc-olst092a(15)",
-            "exc-olst092okm2(a0)"
-          ],
+          "prepared_samples": ["exc-olst092a(15)", "exc-olst092okm2(a0)"],
           "record_hash": "a104ec901cf2",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4116,9 +3917,7 @@
             "(a0)207e",
             "(a0)21ce"
           ],
-          "prepared_samples": [
-            "exc-olst092okm2(a0)"
-          ],
+          "prepared_samples": ["exc-olst092okm2(a0)"],
           "record_hash": "99903e1f4506",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4140,9 +3939,7 @@
             "(14)d4a4",
             "(14)e13b"
           ],
-          "prepared_samples": [
-            "rus-pchpo040a(14)"
-          ],
+          "prepared_samples": ["rus-pchpo040a(14)"],
           "record_hash": "c99f1745cf0c",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4162,9 +3959,7 @@
             "(78)16ed",
             "(78)2124"
           ],
-          "prepared_samples": [
-            "rus-pchpo040okm2(78)"
-          ],
+          "prepared_samples": ["rus-pchpo040okm2(78)"],
           "record_hash": "76436cfbc2a2",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4186,9 +3981,7 @@
             "(23)8788",
             "(23)8d59"
           ],
-          "prepared_samples": [
-            "rus-pchsw041a(23)"
-          ],
+          "prepared_samples": ["rus-pchsw041a(23)"],
           "record_hash": "80ef28bcfc58",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4208,9 +4001,7 @@
             "(8f)302e",
             "(8f)329a"
           ],
-          "prepared_samples": [
-            "rus-pchsw041okm2(8f)"
-          ],
+          "prepared_samples": ["rus-pchsw041okm2(8f)"],
           "record_hash": "8a97636c513a",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4232,9 +4023,7 @@
             "(f6)4f1f",
             "(f6)5617"
           ],
-          "prepared_samples": [
-            "rus-pchsd039okm2(f6)"
-          ],
+          "prepared_samples": ["rus-pchsd039okm2(f6)"],
           "record_hash": "1547dd039140",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4254,9 +4043,7 @@
             "proco26-5708",
             "proco26-58ad"
           ],
-          "prepared_samples": [
-            "rus-pchsd039okm2(f6)"
-          ],
+          "prepared_samples": ["rus-pchsd039okm2(f6)"],
           "record_hash": "c6ca501ddb7b",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4276,9 +4063,7 @@
             "peac210-b008",
             "peac211-d2ed"
           ],
-          "prepared_samples": [
-            "rus-pchsd039a(ce)"
-          ],
+          "prepared_samples": ["rus-pchsd039a(ce)"],
           "record_hash": "2cf9d7666119",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4298,9 +4083,7 @@
             "hot563-d107",
             "hot564-44c4"
           ],
-          "prepared_samples": [
-            "rus-pchsd039okm2(f6)"
-          ],
+          "prepared_samples": ["rus-pchsd039okm2(f6)"],
           "record_hash": "73cb34a62c8f",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4320,9 +4103,7 @@
             "(f6)15fb",
             "(f6)1c49"
           ],
-          "prepared_samples": [
-            "rus-pchsd039okm2(f6)"
-          ],
+          "prepared_samples": ["rus-pchsd039okm2(f6)"],
           "record_hash": "8b2fbadabdbe",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4334,13 +4115,8 @@
           "qc_pass": 2,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(f6)2ed9",
-            "(f6)ec48"
-          ],
-          "prepared_samples": [
-            "rus-pchst042a(f6)"
-          ],
+          "record_ids_sample": ["(f6)2ed9", "(f6)ec48"],
+          "prepared_samples": ["rus-pchst042a(f6)"],
           "record_hash": "93322ca0022c",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4360,9 +4136,7 @@
             "(f7)4ee6",
             "(f7)5531"
           ],
-          "prepared_samples": [
-            "rus-pchst042okm2(f7)"
-          ],
+          "prepared_samples": ["rus-pchst042okm2(f7)"],
           "record_hash": "70f686c1d27a",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4382,9 +4156,7 @@
             "proco24-33ae",
             "proco24-3799"
           ],
-          "prepared_samples": [
-            "rus-pchst042okm2(f7)"
-          ],
+          "prepared_samples": ["rus-pchst042okm2(f7)"],
           "record_hash": "c075a13ab8db",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4402,9 +4174,7 @@
             "chol741-501a",
             "chol742-3f88"
           ],
-          "prepared_samples": [
-            "rus-pchst042okm2(f7)"
-          ],
+          "prepared_samples": ["rus-pchst042okm2(f7)"],
           "record_hash": "100d6835ddea",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4424,9 +4194,7 @@
             "(f6)c49a",
             "(f6)d062"
           ],
-          "prepared_samples": [
-            "rus-pchst042a(f6)"
-          ],
+          "prepared_samples": ["rus-pchst042a(f6)"],
           "record_hash": "f13a0d0c5da5",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4446,9 +4214,7 @@
             "(f7)32df",
             "(f7)3e14"
           ],
-          "prepared_samples": [
-            "rus-pchst042okm2(f7)"
-          ],
+          "prepared_samples": ["rus-pchst042okm2(f7)"],
           "record_hash": "d546f9a5db8e",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4470,9 +4236,7 @@
             "(b3)aa7d",
             "(b3)b37d"
           ],
-          "prepared_samples": [
-            "thy-pchpr104chf(b3)"
-          ],
+          "prepared_samples": ["thy-pchpr104chf(b3)"],
           "record_hash": "645c6644a39b",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4494,10 +4258,7 @@
             "(c0)4885",
             "(c0)6e53"
           ],
-          "prepared_samples": [
-            "stu-pihu063okm2(c0)",
-            "tri-pihu062okm2(f2)"
-          ],
+          "prepared_samples": ["stu-pihu063okm2(c0)", "tri-pihu062okm2(f2)"],
           "record_hash": "6eb7d778c5bb",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4517,10 +4278,7 @@
             "proco24-3e77",
             "proco24-3fd6"
           ],
-          "prepared_samples": [
-            "stu-pihu063okm2(c0)",
-            "tri-pihu062okm2(f2)"
-          ],
+          "prepared_samples": ["stu-pihu063okm2(c0)", "tri-pihu062okm2(f2)"],
           "record_hash": "37eda1ae25b3",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4540,10 +4298,7 @@
             "chol785-ee55",
             "chol786-39ce"
           ],
-          "prepared_samples": [
-            "stu-pihu063okm2(c0)",
-            "tri-pihu062okm2(f2)"
-          ],
+          "prepared_samples": ["stu-pihu063okm2(c0)", "tri-pihu062okm2(f2)"],
           "record_hash": "05a264fbcc03",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4587,10 +4342,7 @@
             "(c0)1b7d",
             "(c0)1ced"
           ],
-          "prepared_samples": [
-            "stu-pihu063okm2(c0)",
-            "tri-pihu062okm2(f2)"
-          ],
+          "prepared_samples": ["stu-pihu063okm2(c0)", "tri-pihu062okm2(f2)"],
           "record_hash": "0c140ac0ee47",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4612,9 +4364,7 @@
             "(da)6158",
             "(da)61f1"
           ],
-          "prepared_samples": [
-            "tri-pis081km2(da)"
-          ],
+          "prepared_samples": ["tri-pis081km2(da)"],
           "record_hash": "7d01f2533928",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4634,10 +4384,7 @@
             "pist331-cb2c",
             "pist332-2649"
           ],
-          "prepared_samples": [
-            "stu-pis064a(64)",
-            "tri-pis081a(d4)"
-          ],
+          "prepared_samples": ["stu-pis064a(64)", "tri-pis081a(d4)"],
           "record_hash": "dd5b8b461ee3",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4657,10 +4404,7 @@
             "(aa)956d",
             "(aa)a789"
           ],
-          "prepared_samples": [
-            "stu-pis064a(aa)",
-            "tri-pis081km2(da)"
-          ],
+          "prepared_samples": ["stu-pis064a(aa)", "tri-pis081km2(da)"],
           "record_hash": "7f9ad2da9a38",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4680,9 +4424,7 @@
             "(da)3a75",
             "(da)3b5c"
           ],
-          "prepared_samples": [
-            "tri-pis081km2(da)"
-          ],
+          "prepared_samples": ["tri-pis081km2(da)"],
           "record_hash": "d968eb633a47",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4704,9 +4446,7 @@
             "(d4)55da",
             "(d4)6252"
           ],
-          "prepared_samples": [
-            "tri-pisl061okm2(d4)"
-          ],
+          "prepared_samples": ["tri-pisl061okm2(d4)"],
           "record_hash": "3a0e764df564",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4726,9 +4466,7 @@
             "proco24-34db",
             "proco24-36bd"
           ],
-          "prepared_samples": [
-            "tri-pisl061okm2(d4)"
-          ],
+          "prepared_samples": ["tri-pisl061okm2(d4)"],
           "record_hash": "1187b998dcb2",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4746,9 +4484,7 @@
             "chol747-6a9b",
             "chol748-4538"
           ],
-          "prepared_samples": [
-            "tri-pisl061okm2(d4)"
-          ],
+          "prepared_samples": ["tri-pisl061okm2(d4)"],
           "record_hash": "c654e5d8ab3d",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4768,9 +4504,7 @@
             "(56)b037",
             "(56)b3fe"
           ],
-          "prepared_samples": [
-            "tri-pisl061a(56)"
-          ],
+          "prepared_samples": ["tri-pisl061a(56)"],
           "record_hash": "a248fa0946d2",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4790,9 +4524,7 @@
             "(d4)1bc6",
             "(d4)1ed9"
           ],
-          "prepared_samples": [
-            "tri-pisl061okm2(d4)"
-          ],
+          "prepared_samples": ["tri-pisl061okm2(d4)"],
           "record_hash": "b443e71866b8",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4814,9 +4546,7 @@
             "(96)4c68",
             "(96)7e58"
           ],
-          "prepared_samples": [
-            "sex-rihu079km2(96)"
-          ],
+          "prepared_samples": ["sex-rihu079km2(96)"],
           "record_hash": "32c467407713",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4836,9 +4566,7 @@
             "(96)1850",
             "(96)1cd8"
           ],
-          "prepared_samples": [
-            "sex-rihu079km2(96)"
-          ],
+          "prepared_samples": ["sex-rihu079km2(96)"],
           "record_hash": "25c917349a94",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4860,10 +4588,7 @@
             "(42)4816",
             "(42)54b7"
           ],
-          "prepared_samples": [
-            "pos-rist036km2(42)",
-            "pos-rist083km2(ca)"
-          ],
+          "prepared_samples": ["pos-rist036km2(42)", "pos-rist083km2(ca)"],
           "record_hash": "ea1ce90de851",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4883,10 +4608,7 @@
             "proco25-2430",
             "proco25-255e"
           ],
-          "prepared_samples": [
-            "pos-rist036km2(42)",
-            "pos-rist083km2(ca)"
-          ],
+          "prepared_samples": ["pos-rist036km2(42)", "pos-rist083km2(ca)"],
           "record_hash": "840d1af0f12f",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4906,10 +4628,7 @@
             "chol815-180b",
             "chol816-2558"
           ],
-          "prepared_samples": [
-            "pos-rist036km2(42)",
-            "pos-rist083km2(ca)"
-          ],
+          "prepared_samples": ["pos-rist036km2(42)", "pos-rist083km2(ca)"],
           "record_hash": "3a4d0303b5b7",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4929,10 +4648,7 @@
             "(42)a5e2",
             "(42)a6fe"
           ],
-          "prepared_samples": [
-            "pos-rist036km2(42)",
-            "pos-rist083km2(ca)"
-          ],
+          "prepared_samples": ["pos-rist036km2(42)", "pos-rist083km2(ca)"],
           "record_hash": "5cff8cb9dc38",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4952,10 +4668,7 @@
             "(42)141b",
             "(42)23fb"
           ],
-          "prepared_samples": [
-            "pos-rist036km2(42)",
-            "pos-rist083km2(ca)"
-          ],
+          "prepared_samples": ["pos-rist036km2(42)", "pos-rist083km2(ca)"],
           "record_hash": "91ba2f8206ef",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -4967,12 +4680,8 @@
           "qc_pass": 1,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(0d)ea9c"
-          ],
-          "prepared_samples": [
-            "hai-sarg025a(0d)"
-          ],
+          "record_ids_sample": ["(0d)ea9c"],
+          "prepared_samples": ["hai-sarg025a(0d)"],
           "record_hash": "e14fe80c92f1",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -4992,9 +4701,7 @@
             "(0d)4999",
             "(0d)5000"
           ],
-          "prepared_samples": [
-            "hai-sarg025a(0d)"
-          ],
+          "prepared_samples": ["hai-sarg025a(0d)"],
           "record_hash": "8f086f2c6ff2",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5038,9 +4745,7 @@
             "(0d)2df7",
             "(0d)56b6"
           ],
-          "prepared_samples": [
-            "hai-sarg025a(0d)"
-          ],
+          "prepared_samples": ["hai-sarg025a(0d)"],
           "record_hash": "390fb8d56298",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5060,9 +4765,7 @@
             "chol145-c4e9",
             "chol146-886f"
           ],
-          "prepared_samples": [
-            "hai-sarg025a(0d)"
-          ],
+          "prepared_samples": ["hai-sarg025a(0d)"],
           "record_hash": "dcfbb31a732e",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5098,14 +4801,8 @@
           "qc_pass": 3,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(c5)4343",
-            "(c5)abb1",
-            "(c5)d4c4"
-          ],
-          "prepared_samples": [
-            "map-spok07km2(c5)"
-          ],
+          "record_ids_sample": ["(c5)4343", "(c5)abb1", "(c5)d4c4"],
+          "prepared_samples": ["map-spok07km2(c5)"],
           "record_hash": "545b6c8c1ace",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5200,9 +4897,7 @@
             "(c5)41af",
             "(c5)45b4"
           ],
-          "prepared_samples": [
-            "map-spok07km2(c5)"
-          ],
+          "prepared_samples": ["map-spok07km2(c5)"],
           "record_hash": "0c8bedc50a8f",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5247,10 +4942,7 @@
             "(04)3ab3",
             "(04)4ab5"
           ],
-          "prepared_samples": [
-            "map-spok07a(04)",
-            "map-spok07km2(c5)"
-          ],
+          "prepared_samples": ["map-spok07a(04)", "map-spok07km2(c5)"],
           "record_hash": "8900af2a6175",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5260,15 +4952,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            ")u0e280e",
-            ")ub36fb3",
-            ")ud4f6d4",
-            ")uf825f8"
-          ],
-          "prepared_samples": [
-            "map-spok07km2(c5)"
-          ],
+          "record_ids_sample": [")u0e280e", ")ub36fb3", ")ud4f6d4", ")uf825f8"],
+          "prepared_samples": ["map-spok07km2(c5)"],
           "record_hash": "653e47f081ef",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5278,14 +4963,8 @@
           "qc_pass": 0,
           "qc_fail": 3,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(c5)2c23",
-            "(c5)35a6",
-            "(c5)cea6"
-          ],
-          "prepared_samples": [
-            "map-spok07km2(c5)"
-          ],
+          "record_ids_sample": ["(c5)2c23", "(c5)35a6", "(c5)cea6"],
+          "prepared_samples": ["map-spok07km2(c5)"],
           "record_hash": "edcc53c12253",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5332,9 +5011,7 @@
             "(e8)32bb",
             "(e8)3b93"
           ],
-          "prepared_samples": [
-            "map-spye06o(e8)"
-          ],
+          "prepared_samples": ["map-spye06o(e8)"],
           "record_hash": "d471e82e1026",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5354,10 +5031,7 @@
             "(d2)8f44",
             "(d2)a988"
           ],
-          "prepared_samples": [
-            "map-spye06a(d2)",
-            "map-spye06o(e8)"
-          ],
+          "prepared_samples": ["map-spye06a(d2)", "map-spye06o(e8)"],
           "record_hash": "90fba2c0c7dc",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5367,14 +5041,8 @@
           "qc_pass": 0,
           "qc_fail": 3,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(e8)4f02",
-            "(e8)66b4",
-            "(e8)896d"
-          ],
-          "prepared_samples": [
-            "map-spye06o(e8)"
-          ],
+          "record_ids_sample": ["(e8)4f02", "(e8)66b4", "(e8)896d"],
+          "prepared_samples": ["map-spye06o(e8)"],
           "record_hash": "48e947863a5e",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5394,9 +5062,7 @@
             "(d2)36f7",
             "(d2)3fd7"
           ],
-          "prepared_samples": [
-            "map-spye06a(d2)"
-          ],
+          "prepared_samples": ["map-spye06a(d2)"],
           "record_hash": "711f745b23f9",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -5418,9 +5084,7 @@
             "(56)91f5",
             "(56)9243"
           ],
-          "prepared_samples": [
-            "tac-spcul021o(56)"
-          ],
+          "prepared_samples": ["tac-spcul021o(56)"],
           "record_hash": "075f345ebd6a",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5440,9 +5104,7 @@
             "proco33-3dd4",
             "proco33-4a27"
           ],
-          "prepared_samples": [
-            "tac-spcul021okm2(1a)"
-          ],
+          "prepared_samples": ["tac-spcul021okm2(1a)"],
           "record_hash": "c67d845d952d",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5462,9 +5124,7 @@
             "(1a)20a4",
             "(1a)2761"
           ],
-          "prepared_samples": [
-            "tac-spcul021okm2(1a)"
-          ],
+          "prepared_samples": ["tac-spcul021okm2(1a)"],
           "record_hash": "18e8fa9b503c",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5484,9 +5144,7 @@
             "chol409-eccf",
             "chol410-cd0d"
           ],
-          "prepared_samples": [
-            "tac-spcul021okm2(1a)"
-          ],
+          "prepared_samples": ["tac-spcul021okm2(1a)"],
           "record_hash": "05af022b374d",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5521,15 +5179,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            ")u4b124b",
-            ")u7a3f7a",
-            ")u975c97",
-            ")ud06fd0"
-          ],
-          "prepared_samples": [
-            "tac-spcul021okm2(1a)"
-          ],
+          "record_ids_sample": [")u4b124b", ")u7a3f7a", ")u975c97", ")ud06fd0"],
+          "prepared_samples": ["tac-spcul021okm2(1a)"],
           "record_hash": "b74c845f37d8",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -5758,9 +5409,7 @@
             "(c4)9c6e",
             "(c4)b9f2"
           ],
-          "prepared_samples": [
-            "map-unok08km2(c4)"
-          ],
+          "prepared_samples": ["map-unok08km2(c4)"],
           "record_hash": "482ac59b9a43",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5780,9 +5429,7 @@
             "(c4)3724",
             "(c4)4695"
           ],
-          "prepared_samples": [
-            "map-unok08km2(c4)"
-          ],
+          "prepared_samples": ["map-unok08km2(c4)"],
           "record_hash": "c16b04e83996",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5802,9 +5449,7 @@
             "proco28-5481",
             "proco28-5ded"
           ],
-          "prepared_samples": [
-            "map-unok08km2(c4)"
-          ],
+          "prepared_samples": ["map-unok08km2(c4)"],
           "record_hash": "5f9ebe9cb755",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5824,9 +5469,7 @@
             "(c4)52fc",
             "(c4)5595"
           ],
-          "prepared_samples": [
-            "map-unok08km2(c4)"
-          ],
+          "prepared_samples": ["map-unok08km2(c4)"],
           "record_hash": "17f77a063bfd",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5846,9 +5489,7 @@
             "hot647-d76e",
             "hot648-0b95"
           ],
-          "prepared_samples": [
-            "map-unok08km2(c4)"
-          ],
+          "prepared_samples": ["map-unok08km2(c4)"],
           "record_hash": "134cbf2bc734",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5868,9 +5509,7 @@
             "(c4)3d57",
             "(c4)48ba"
           ],
-          "prepared_samples": [
-            "map-unok08km2(c4)"
-          ],
+          "prepared_samples": ["map-unok08km2(c4)"],
           "record_hash": "ed304a061b5d",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5880,14 +5519,8 @@
           "qc_pass": 0,
           "qc_fail": 3,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(c4)8595",
-            "(c4)b85a",
-            "(c4)bc8c"
-          ],
-          "prepared_samples": [
-            "map-unok08km2(c4)"
-          ],
+          "record_ids_sample": ["(c4)8595", "(c4)b85a", "(c4)bc8c"],
+          "prepared_samples": ["map-unok08km2(c4)"],
           "record_hash": "562511ce5af8",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -5899,13 +5532,8 @@
           "qc_pass": 2,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(e7)8804",
-            "(e7)b0bd"
-          ],
-          "prepared_samples": [
-            "ene-wahu018okm2(e7)"
-          ],
+          "record_ids_sample": ["(e7)8804", "(e7)b0bd"],
+          "prepared_samples": ["ene-wahu018okm2(e7)"],
           "record_hash": "725dac87955d",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5925,9 +5553,7 @@
             "(e7)6d58",
             "(e7)7925"
           ],
-          "prepared_samples": [
-            "ene-wahu018okm2(e7)"
-          ],
+          "prepared_samples": ["ene-wahu018okm2(e7)"],
           "record_hash": "8d7f61c0f273",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5947,9 +5573,7 @@
             "proco28-3727",
             "proco28-3873"
           ],
-          "prepared_samples": [
-            "ene-wahu018okm2(e7)"
-          ],
+          "prepared_samples": ["ene-wahu018okm2(e7)"],
           "record_hash": "25c263f67b1d",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5969,9 +5593,7 @@
             "(e7)3c51",
             "(e7)3e4f"
           ],
-          "prepared_samples": [
-            "ene-wahu018okm2(e7)"
-          ],
+          "prepared_samples": ["ene-wahu018okm2(e7)"],
           "record_hash": "ee38f2e1202b",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -5991,9 +5613,7 @@
             "hot641-a26b",
             "hot642-c1b7"
           ],
-          "prepared_samples": [
-            "ene-wahu018okm2(e7)"
-          ],
+          "prepared_samples": ["ene-wahu018okm2(e7)"],
           "record_hash": "a817e234bb25",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6013,10 +5633,7 @@
             "(20)7d8e",
             "(20)a041"
           ],
-          "prepared_samples": [
-            "ene-wahu018o(20)",
-            "ene-wahu018okm2(e7)"
-          ],
+          "prepared_samples": ["ene-wahu018o(20)", "ene-wahu018okm2(e7)"],
           "record_hash": "674f9062aef6",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6026,15 +5643,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            ")u1ce41c",
-            ")u2b452b",
-            ")u5bb65b",
-            ")u645364"
-          ],
-          "prepared_samples": [
-            "ene-wahu018okm2(e7)"
-          ],
+          "record_ids_sample": [")u1ce41c", ")u2b452b", ")u5bb65b", ")u645364"],
+          "prepared_samples": ["ene-wahu018okm2(e7)"],
           "record_hash": "2094f45d2a69",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6054,9 +5664,7 @@
             "(19)37ca",
             "(19)38c9"
           ],
-          "prepared_samples": [
-            "ene-wahu018a(19)"
-          ],
+          "prepared_samples": ["ene-wahu018a(19)"],
           "record_hash": "fe8ad3f130ac",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -6078,9 +5686,7 @@
             "(b5)70e4",
             "(b5)8e9b"
           ],
-          "prepared_samples": [
-            "cut-washf089a(b5)"
-          ],
+          "prepared_samples": ["cut-washf089a(b5)"],
           "record_hash": "50db0f238750",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6098,9 +5704,7 @@
             "chol863-48bb",
             "chol864-01eb"
           ],
-          "prepared_samples": [
-            "cut-washf089a(b5)"
-          ],
+          "prepared_samples": ["cut-washf089a(b5)"],
           "record_hash": "067e11752522",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6120,9 +5724,7 @@
             "(b5)7900",
             "(b5)889c"
           ],
-          "prepared_samples": [
-            "cut-washf089a(b5)"
-          ],
+          "prepared_samples": ["cut-washf089a(b5)"],
           "record_hash": "7cc43ff6b216",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -6134,16 +5736,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            "(29)2193",
-            "(29)4f19",
-            "(82)1fe6",
-            "(82)d7a6"
-          ],
-          "prepared_samples": [
-            "ene-wash017a(29)",
-            "ene-wash017okm2(82)"
-          ],
+          "record_ids_sample": ["(29)2193", "(29)4f19", "(82)1fe6", "(82)d7a6"],
+          "prepared_samples": ["ene-wash017a(29)", "ene-wash017okm2(82)"],
           "record_hash": "e755e464a6aa",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6163,10 +5757,7 @@
             "(15)8611",
             "(15)93e3"
           ],
-          "prepared_samples": [
-            "cut-wash088km2(15)",
-            "ene-wash017okm2(82)"
-          ],
+          "prepared_samples": ["cut-wash088km2(15)", "ene-wash017okm2(82)"],
           "record_hash": "f12be1ea4917",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6186,10 +5777,7 @@
             "proco25-2c71",
             "proco25-2db7"
           ],
-          "prepared_samples": [
-            "cut-wash088km2(15)",
-            "ene-wash017okm2(82)"
-          ],
+          "prepared_samples": ["cut-wash088km2(15)", "ene-wash017okm2(82)"],
           "record_hash": "c4b0075707bd",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6209,10 +5797,7 @@
             "waln128-cf58",
             "waln129-ef0e"
           ],
-          "prepared_samples": [
-            "cut-wash088a(8f)",
-            "ene-wash017a(45)"
-          ],
+          "prepared_samples": ["cut-wash088a(8f)", "ene-wash017a(45)"],
           "record_hash": "5014921e81f4",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6232,9 +5817,7 @@
             "(82)23f5",
             "(82)2b22"
           ],
-          "prepared_samples": [
-            "ene-wash017okm2(82)"
-          ],
+          "prepared_samples": ["ene-wash017okm2(82)"],
           "record_hash": "469bbd9b1240",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6254,10 +5837,7 @@
             "chol385-e8c2",
             "chol386-4955"
           ],
-          "prepared_samples": [
-            "cut-wash088km2(15)",
-            "ene-wash017okm2(82)"
-          ],
+          "prepared_samples": ["cut-wash088km2(15)", "ene-wash017okm2(82)"],
           "record_hash": "cb0812e71b80",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6291,15 +5871,8 @@
           "qc_pass": 4,
           "qc_fail": 0,
           "qc_other": 0,
-          "record_ids_sample": [
-            ")u068606",
-            ")u672b67",
-            ")u8b208b",
-            ")ud354d3"
-          ],
-          "prepared_samples": [
-            "ene-wash017okm2(82)"
-          ],
+          "record_ids_sample": [")u068606", ")u672b67", ")u8b208b", ")ud354d3"],
+          "prepared_samples": ["ene-wash017okm2(82)"],
           "record_hash": "6ee67072ecfd",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6319,10 +5892,7 @@
             "(15)1716",
             "(15)1866"
           ],
-          "prepared_samples": [
-            "cut-wash088km2(15)",
-            "ene-wash017a(29)"
-          ],
+          "prepared_samples": ["cut-wash088km2(15)", "ene-wash017a(29)"],
           "record_hash": "526de17daf49",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -6367,9 +5937,7 @@
             "proco32-2ed2",
             "proco32-30e8"
           ],
-          "prepared_samples": [
-            "ene-watrst019okm2(4d)"
-          ],
+          "prepared_samples": ["ene-watrst019okm2(4d)"],
           "record_hash": "f339b859a54f",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6389,9 +5957,7 @@
             "(4d)59ef",
             "(4d)6c47"
           ],
-          "prepared_samples": [
-            "ene-watrst019okm2(4d)"
-          ],
+          "prepared_samples": ["ene-watrst019okm2(4d)"],
           "record_hash": "a7240e753ece",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6411,9 +5977,7 @@
             "chol337-9361",
             "chol338-f021"
           ],
-          "prepared_samples": [
-            "ene-watrst019okm2(4d)"
-          ],
+          "prepared_samples": ["ene-watrst019okm2(4d)"],
           "record_hash": "6db7cc7c4b5e",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6459,9 +6023,7 @@
             "(51)4355",
             "(51)54f2"
           ],
-          "prepared_samples": [
-            "ene-watrst019a(51)"
-          ],
+          "prepared_samples": ["ene-watrst019a(51)"],
           "record_hash": "faee31c15820",
           "last_updated": "2026-10-15T03:17:00Z"
         }
@@ -6473,16 +6035,8 @@
           "qc_pass": 2,
           "qc_fail": 1,
           "qc_other": 1,
-          "record_ids_sample": [
-            "(62)00ca",
-            "(62)1300",
-            "(da)e7a9",
-            "(da)e951"
-          ],
-          "prepared_samples": [
-            "pos-wst034km2(62)",
-            "war-wst038km2(da)"
-          ],
+          "record_ids_sample": ["(62)00ca", "(62)1300", "(da)e7a9", "(da)e951"],
+          "prepared_samples": ["pos-wst034km2(62)", "war-wst038km2(da)"],
           "record_hash": "fe56502a1897",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6502,10 +6056,7 @@
             "(62)352d",
             "(62)3af6"
           ],
-          "prepared_samples": [
-            "pos-wst034km2(62)",
-            "war-wst038km2(da)"
-          ],
+          "prepared_samples": ["pos-wst034km2(62)", "war-wst038km2(da)"],
           "record_hash": "e4a9f2f59946",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6525,10 +6076,7 @@
             "proco25-28a9",
             "proco25-34fb"
           ],
-          "prepared_samples": [
-            "pos-wst034km2(62)",
-            "war-wst038km2(da)"
-          ],
+          "prepared_samples": ["pos-wst034km2(62)", "war-wst038km2(da)"],
           "record_hash": "96311c1009bc",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6548,10 +6096,7 @@
             "chol605-2922",
             "chol606-9627"
           ],
-          "prepared_samples": [
-            "pos-wst034km2(62)",
-            "war-wst038km2(da)"
-          ],
+          "prepared_samples": ["pos-wst034km2(62)", "war-wst038km2(da)"],
           "record_hash": "abd14f5fb6b1",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6571,10 +6116,7 @@
             "(62)82b8",
             "(62)912d"
           ],
-          "prepared_samples": [
-            "pos-wst034km2(62)",
-            "war-wst038km2(da)"
-          ],
+          "prepared_samples": ["pos-wst034km2(62)", "war-wst038km2(da)"],
           "record_hash": "129c8ced7e83",
           "last_updated": "2026-10-15T03:17:00Z"
         },
@@ -6594,10 +6136,7 @@
             "(62)294a",
             "(62)2bb0"
           ],
-          "prepared_samples": [
-            "pos-wst034km2(62)",
-            "war-wst038km2(da)"
-          ],
+          "prepared_samples": ["pos-wst034km2(62)", "war-wst038km2(da)"],
           "record_hash": "bda4c3c01f36",
           "last_updated": "2026-10-15T03:17:00Z"
         }
