@@ -1,0 +1,191 @@
+sample_name,analysis_type,parameter,value,unit,qc_status
+hai-sarg025,proximate,moisture,10.57,% total weight,pass
+hai-sarg025,proximate,moisture,10.36,% total weight,pass
+hai-sarg025,proximate,moisture,10.56,% total weight,pass
+hai-sarg025,proximate,ash,30.86,% total weight,pass
+hai-sarg025,proximate,ash,31.12,% total weight,pass
+hai-sarg025,proximate,ash,31.3,% total weight,pass
+hai-sarg025,proximate,total solids,89.43,% total weight,pass
+hai-sarg025,proximate,total solids,89.64,% total weight,pass
+hai-sarg025,proximate,total solids,89.44,% total weight,pass
+hai-sarg025,proximate,volatile solids,58.57,% total weight,pass
+hai-sarg025,proximate,volatile solids,58.52,% total weight,pass
+hai-sarg025,proximate,volatile solids,58.14,% total weight,pass
+hai-sarg031,proximate,moisture,14.1,% total weight,pass
+hai-sarg031,proximate,moisture,12.96,% total weight,pass
+hai-sarg031,proximate,moisture,15.42,% total weight,pass
+hai-sarg031,proximate,ash,31.76,% total weight,pass
+hai-sarg031,proximate,ash,33.65,% total weight,pass
+hai-sarg031,proximate,ash,30.88,% total weight,pass
+hai-sarg031,proximate,total solids,85.9,% total weight,pass
+hai-sarg031,proximate,total solids,87.04,% total weight,pass
+hai-sarg031,proximate,total solids,84.58,% total weight,pass
+hai-sarg031,proximate,volatile solids,54.14,% total weight,pass
+hai-sarg031,proximate,volatile solids,53.39,% total weight,pass
+hai-sarg031,proximate,volatile solids,53.7,% total weight,pass
+hai-sarg032,proximate,moisture,79.79,% total weight,pass
+hai-sarg032,proximate,moisture,82.14,% total weight,pass
+hai-sarg032,proximate,moisture,80.85,% total weight,pass
+hai-sarg032,proximate,ash,9.44,% total weight,pass
+hai-sarg032,proximate,ash,8.11,% total weight,pass
+hai-sarg032,proximate,ash,8.71,% total weight,pass
+hai-sarg032,proximate,total solids,20.21,% total weight,pass
+hai-sarg032,proximate,total solids,17.86,% total weight,pass
+hai-sarg032,proximate,total solids,19.15,% total weight,pass
+hai-sarg032,proximate,volatile solids,10.77,% total weight,pass
+hai-sarg032,proximate,volatile solids,9.75,% total weight,pass
+hai-sarg032,proximate,volatile solids,10.44,% total weight,pass
+hai-sarg025,proximate,moisture,2.01,% total weight,pass
+hai-sarg025,proximate,ash,37.08,% total weight,pass
+hai-sarg025,proximate,ash,37.39,% total weight,pass
+hai-sarg025,proximate,ash,37.13,% total weight,pass
+hai-sarg025,proximate,total solids,35.89,% total weight,pass
+hai-sarg025,proximate,total solids,35.3,% total weight,pass
+hai-sarg025,proximate,total solids,35.75,% total weight,pass
+hai-sarg025,proximate,volatile solids,27.03,% total weight,pass
+hai-sarg025,proximate,volatile solids,27.32,% total weight,pass
+hai-sarg025,proximate,volatile solids,27.13,% total weight,pass
+hai-sarg025,compositional,glucose,11.3,% dry weight,pass
+hai-sarg025,compositional,glucose,11.02,% dry weight,pass
+hai-sarg025,compositional,glucose,11.08,% dry weight,pass
+hai-sarg025,compositional,xylose,5.46,% dry weight,pass
+hai-sarg025,compositional,xylose,4.89,% dry weight,pass
+hai-sarg025,compositional,xylose,4.67,% dry weight,pass
+hai-sarg025,compositional,acid insoluble residue,25.4,% dry weight,pass
+hai-sarg025,compositional,acid insoluble residue,26.39,% dry weight,pass
+hai-sarg025,compositional,acid insoluble residue,25.76,% dry weight,pass
+hai-sarg025,icp,al,102.0,ppm,pass
+hai-sarg025,icp,ca,41900.0,ppm,pass
+hai-sarg025,icp,cu,11.0,ppm,pass
+hai-sarg025,icp,fe,251.0,ppm,pass
+hai-sarg025,icp,k,48200.0,ppm,pass
+hai-sarg025,icp,mg,9200.0,ppm,pass
+hai-sarg025,icp,mn,32.0,ppm,pass
+hai-sarg025,icp,na,15900.0,ppm,pass
+hai-sarg025,icp,nd,68.0,ppm,pass
+hai-sarg025,icp,p,1010.0,ppm,pass
+hai-sarg025,icp,s,11300.0,ppm,pass
+hai-sarg025,icp,si,10.8,ppm,pass
+hai-sarg025,icp,ti,0.0,ppm,pass
+hai-sarg025,icp,zn,14.4,ppm,pass
+hai-sarg025,icp,al,147.0,ppm,pass
+hai-sarg025,icp,ca,42100.0,ppm,pass
+hai-sarg025,icp,cu,11.0,ppm,pass
+hai-sarg025,icp,fe,234.0,ppm,pass
+hai-sarg025,icp,mg,9200.0,ppm,pass
+hai-sarg025,icp,mn,32.3,ppm,pass
+hai-sarg025,icp,nd,72.0,ppm,pass
+hai-sarg025,icp,p,729.0,ppm,pass
+hai-sarg025,icp,s,11400.0,ppm,pass
+hai-sarg025,icp,si,10.8,ppm,pass
+hai-sarg025,icp,ti,0.0,ppm,pass
+hai-sarg025,icp,zn,17.9,ppm,pass
+hai-sarg025,pretreatment,glucose,82.9,% of glucan,pass
+hai-sarg025,pretreatment,glucose,79.9,% of glucan,pass
+hai-sarg025,pretreatment,xylose,37.0,% of xylan,pass
+hai-sarg025,pretreatment,xylose,44.9,% of xylan,pass
+hai-sarg025,pretreatment,glucose,53.3,% of glucan,pass
+hai-sarg025,pretreatment,glucose,50.3,% of glucan,pass
+hai-sarg025,pretreatment,glucose,47.0,% of glucan,pass
+hai-sarg025,pretreatment,xylose,60.7,% of xylan,pass
+hai-sarg025,pretreatment,xylose,55.0,% of xylan,pass
+hai-sarg025,pretreatment,glucose,53.4,% of glucan,pass
+hai-sarg025,pretreatment,glucose,50.2,% of glucan,pass
+hai-sarg025,pretreatment,glucose,46.7,% of glucan,pass
+hai-sarg025,pretreatment,xylose,60.8,% of xylan,pass
+hai-sarg025,pretreatment,xylose,54.8,% of xylan,pass
+hai-sarg025,pretreatment,glucose,71.0,% of glucan,pass
+hai-sarg025,pretreatment,glucose,70.4,% of glucan,pass
+hai-sarg025,pretreatment,glucose,69.2,% of glucan,pass
+hai-sarg025,pretreatment,xylose,35.9,% of xylan,pass
+hai-sarg025,pretreatment,xylose,31.6,% of xylan,pass
+hai-sarg025,pretreatment,xylose,37.0,% of xylan,pass
+hai-sarg025,pretreatment,glucose,71.5,% of glucan,pass
+hai-sarg025,pretreatment,glucose,87.0,% of glucan,pass
+hai-sarg025,pretreatment,xylose,8.7,% of xylan,pass
+hai-sarg025,pretreatment,xylose,6.6,% of xylan,pass
+hai-sarg025,pretreatment,glucose,88.3,% of glucan,pass
+hai-sarg025,pretreatment,glucose,87.4,% of glucan,pass
+hai-sarg025,pretreatment,xylose,28.6,% of xylan,pass
+hai-sarg025,pretreatment,xylose,27.4,% of xylan,pass
+hai-sarg025,fermentation,gluconct0,17.51,g_l,pass
+hai-sarg025,fermentation,xylconct0,2.5,g_l,pass
+hai-sarg025,fermentation,gluconcteof,0.58,g_l,pass
+hai-sarg025,fermentation,xylconcteof,1.08,g_l,pass
+hai-sarg025,fermentation,sugart0,20.0,g_l,pass
+hai-sarg025,fermentation,sugarteof,1.66,g_l,pass
+hai-sarg025,fermentation,sugar_cons,18.34,pc,pass
+hai-sarg025,fermentation,3hptiter,3.5,g_l,pass
+hai-sarg025,fermentation,3hpyield,19.08,pc_g_g,pass
+hai-sarg025,fermentation,gluconct0,19.38,g_l,pass
+hai-sarg025,fermentation,xylconct0,2.22,g_l,pass
+hai-sarg025,fermentation,gluconcteof,0.58,g_l,pass
+hai-sarg025,fermentation,xylconcteof,1.45,g_l,pass
+hai-sarg025,fermentation,sugart0,21.6,g_l,pass
+hai-sarg025,fermentation,sugarteof,2.03,g_l,pass
+hai-sarg025,fermentation,sugar_cons,19.58,pc,pass
+hai-sarg025,fermentation,3hptiter,4.18,g_l,pass
+hai-sarg025,fermentation,3hpyield,21.37,pc_g_g,pass
+hai-sarg025,fermentation,gluconct0,30.12,g_l,pass
+hai-sarg025,fermentation,xylconct0,3.06,g_l,pass
+hai-sarg025,fermentation,gluconcteof,22.93,g_l,pass
+hai-sarg025,fermentation,xylconcteof,2.68,g_l,pass
+hai-sarg025,fermentation,sugart0,33.18,g_l,pass
+hai-sarg025,fermentation,sugarteof,25.61,g_l,pass
+hai-sarg025,fermentation,sugar_cons,7.57,pc,pass
+hai-sarg025,fermentation,3hptiter,0.0,g_l,pass
+hai-sarg025,fermentation,3hpyield,0.0,pc_g_g,pass
+hai-sarg025,fermentation,gluconct0,16.23,g_l,pass
+hai-sarg025,fermentation,xylconct0,2.61,g_l,pass
+hai-sarg025,fermentation,gluconcteof,0.16,g_l,pass
+hai-sarg025,fermentation,xylconcteof,0.85,g_l,pass
+hai-sarg025,fermentation,sugart0,18.84,g_l,pass
+hai-sarg025,fermentation,sugarteof,1.02,g_l,pass
+hai-sarg025,fermentation,sugar_cons,17.83,pc,pass
+hai-sarg025,fermentation,3hptiter,4.82,g_l,pass
+hai-sarg025,fermentation,3hpyield,27.07,pc_g_g,pass
+hai-sarg025,fermentation,gluconct0,18.67,g_l,pass
+hai-sarg025,fermentation,xylconct0,3.87,g_l,pass
+hai-sarg025,fermentation,gluconcteof,0.58,g_l,pass
+hai-sarg025,fermentation,xylconcteof,1.15,g_l,pass
+hai-sarg025,fermentation,sugart0,22.55,g_l,pass
+hai-sarg025,fermentation,sugarteof,1.73,g_l,pass
+hai-sarg025,fermentation,sugar_cons,20.82,pc,pass
+hai-sarg025,fermentation,3hptiter,4.96,g_l,pass
+hai-sarg025,fermentation,3hpyield,23.83,pc_g_g,pass
+hai-sarg025,fermentation,gluconct0,18.92,g_l,pass
+hai-sarg025,fermentation,xylconct0,4.06,g_l,pass
+hai-sarg025,fermentation,gluconcteof,0.56,g_l,pass
+hai-sarg025,fermentation,xylconcteof,1.22,g_l,pass
+hai-sarg025,fermentation,sugart0,22.98,g_l,pass
+hai-sarg025,fermentation,sugarteof,1.79,g_l,pass
+hai-sarg025,fermentation,sugar_cons,21.19,pc,pass
+hai-sarg025,fermentation,3hptiter,4.73,g_l,pass
+hai-sarg025,fermentation,3hpyield,22.34,pc_g_g,pass
+hai-sarg032,fermentation,gluconct0,21.97,g_l,pass
+hai-sarg032,fermentation,xylconct0,6.79,g_l,pass
+hai-sarg032,fermentation,gluconcteof,1.2,g_l,pass
+hai-sarg032,fermentation,xylconcteof,0.85,g_l,pass
+hai-sarg032,fermentation,sugart0,28.76,g_l,pass
+hai-sarg032,fermentation,sugarteof,2.05,g_l,pass
+hai-sarg032,fermentation,sugar_cons,26.71,pc,pass
+hai-sarg032,fermentation,3hptiter,3.92,g_l,pass
+hai-sarg032,fermentation,3hpyield,14.67,pc_g_g,pass
+hai-sarg032,fermentation,gluconct0,22.19,g_l,pass
+hai-sarg032,fermentation,xylconct0,7.45,g_l,pass
+hai-sarg032,fermentation,gluconcteof,1.16,g_l,pass
+hai-sarg032,fermentation,xylconcteof,0.77,g_l,pass
+hai-sarg032,fermentation,sugart0,29.64,g_l,pass
+hai-sarg032,fermentation,sugarteof,1.94,g_l,pass
+hai-sarg032,fermentation,sugar_cons,27.7,pc,pass
+hai-sarg032,fermentation,3hptiter,3.98,g_l,pass
+hai-sarg032,fermentation,3hpyield,14.36,pc_g_g,pass
+hai-sarg032,fermentation,gluconct0,19.86,g_l,pass
+hai-sarg032,fermentation,xylconct0,6.47,g_l,pass
+hai-sarg032,fermentation,gluconcteof,0.23,g_l,pass
+hai-sarg032,fermentation,xylconcteof,0.73,g_l,pass
+hai-sarg032,fermentation,sugart0,26.33,g_l,pass
+hai-sarg032,fermentation,sugarteof,0.96,g_l,pass
+hai-sarg032,fermentation,sugar_cons,25.37,pc,pass
+hai-sarg032,fermentation,3hptiter,3.93,g_l,pass
+hai-sarg032,fermentation,3hpyield,15.48,pc_g_g,pass

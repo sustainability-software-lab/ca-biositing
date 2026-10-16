@@ -1,0 +1,7362 @@
+<!doctype html>
+<html data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sargassum Analytical &amp; Bioconversion Dashboards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root,
+      [data-theme="light"] {
+        --background: #f1f5f9;
+        --card: #ffffff;
+        --content: #e2e8f0;
+        --foreground: #0f172a;
+        --muted-foreground: #475569;
+        --primary: #0284c7;
+        --primary-foreground: #ffffff;
+        --secondary: #e2e8f0;
+        --secondary-foreground: #0f172a;
+        --accent: #fef3c7;
+        --accent-foreground: #92400e;
+        --border: #cbd5e1;
+        --pass-bg: #d1fae5;
+        --pass-fg: #065f46;
+        --pass-border: #6ee7b7;
+        --fail-bg: #ffe4e6;
+        --fail-fg: #9f1239;
+        --fail-border: #fda4af;
+        color-scheme: light;
+      }
+      [data-theme="dark"] {
+        --background: #0f172a;
+        --card: #1e293b;
+        --content: #334155;
+        --foreground: #f8fafc;
+        --muted-foreground: #cbd5e1;
+        --primary: #38bdf8;
+        --primary-foreground: #0f172a;
+        --secondary: #334155;
+        --secondary-foreground: #f8fafc;
+        --accent: #451a03;
+        --accent-foreground: #fde68a;
+        --border: #475569;
+        --pass-bg: #064e3b;
+        --pass-fg: #6ee7b7;
+        --pass-border: #059669;
+        --fail-bg: #4c0519;
+        --fail-fg: #fda4af;
+        --fail-border: #e11d48;
+        color-scheme: dark;
+      }
+      html,
+      body {
+        background-color: var(--background) !important;
+        color: var(--foreground) !important;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      select,
+      input {
+        background-color: var(--card) !important;
+        color: var(--foreground) !important;
+        border-color: var(--border) !important;
+      }
+      option {
+        background-color: var(--card);
+        color: var(--foreground);
+      }
+      .badge-pass {
+        background-color: var(--pass-bg);
+        color: var(--pass-fg);
+        border: 1px solid var(--pass-border);
+      }
+      .badge-fail {
+        background-color: var(--fail-bg);
+        color: var(--fail-fg);
+        border: 1px solid var(--fail-border);
+      }
+    </style>
+  </head>
+  <body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-5">
+    <div class="max-w-7xl mx-auto space-y-4">
+      <!-- Top Header Banner -->
+      <div
+        class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm"
+      >
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <div class="flex flex-wrap items-center gap-2">
+              <h1 class="text-xl font-bold text-[var(--foreground)]">
+                Sargassum Multi-Analysis Dashboard Suite
+              </h1>
+              <span
+                class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]"
+                >Resource ID #3 · code: sarg</span
+              >
+              <span
+                class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)]"
+                >Class: macroalgae</span
+              >
+              <span
+                class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[var(--content)] text-[var(--foreground)] border border-[var(--border)] font-mono"
+                >Provider: hairpin · GEOID: 06000</span
+              >
+            </div>
+            <p class="text-sm text-[var(--muted-foreground)] mt-1">
+              Brown macroalgae that may form large mats that wash ashore
+              requiring extensive cleanup. Interactive exploration of
+              <strong>3 field samples</strong>,
+              <strong>6 prepared samples</strong>,
+              <strong>252 database records</strong>, and
+              <strong>249 analytical observations</strong>.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              id="btn-theme-toggle"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition"
+            >
+              🌙 Dark Mode
+            </button>
+            <button
+              id="btn-copy-csv"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition"
+            >
+              Copy Filtered CSV
+            </button>
+            <button
+              id="btn-reset-filters"
+              class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition"
+            >
+              Reset Filters
+            </button>
+          </div>
+        </div>
+
+        <!-- Global Metadata Filter Bar -->
+        <div
+          class="mt-4 pt-4 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3"
+        >
+          <!-- Prepared Sample -->
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Prepared Sample</label
+            >
+            <select
+              id="flt-prepared-sample"
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <option value="all">All Prepared Samples (6)</option>
+            </select>
+          </div>
+
+          <!-- QC Status -->
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >QC Status</label
+            >
+            <div
+              class="grid grid-cols-3 rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5"
+              id="flt-qc-group"
+            >
+              <button
+                data-qc="all"
+                class="qc-btn py-1 rounded-md text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]"
+              >
+                All
+              </button>
+              <button
+                data-qc="pass"
+                class="qc-btn py-1 rounded-md text-xs font-medium text-[var(--muted-foreground)]"
+              >
+                Pass
+              </button>
+              <button
+                data-qc="fail"
+                class="qc-btn py-1 rounded-md text-xs font-medium text-[var(--muted-foreground)]"
+              >
+                Fail
+              </button>
+            </div>
+          </div>
+
+          <!-- Field Sample -->
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Field Sample</label
+            >
+            <select
+              id="flt-field-sample"
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <option value="all">All Field Samples (3)</option>
+            </select>
+          </div>
+
+          <!-- Preparation Method -->
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Preparation Method</label
+            >
+            <select
+              id="flt-prep-method"
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <option value="all">All Prep Methods (3)</option>
+            </select>
+          </div>
+
+          <!-- Experiment -->
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Experiment ID</label
+            >
+            <select
+              id="flt-experiment"
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <option value="all">All Experiments</option>
+            </select>
+          </div>
+
+          <!-- Analyst -->
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Analyst / Protocol</label
+            >
+            <select
+              id="flt-analyst"
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <option value="all">All Analysts</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Secondary Process Metadata Filters (Pretreatment / EH / Vessel / Search) -->
+        <div
+          class="mt-3 pt-3 border-t border-[var(--border)] grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 items-end"
+        >
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Pretreatment Method</label
+            >
+            <select
+              id="flt-pt-method"
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <option value="all">All PT Methods</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Enzymatic Hydrolysis (EH)</label
+            >
+            <select
+              id="flt-eh-method"
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <option value="all">All EH Methods</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Reaction / Decon Vessel</label
+            >
+            <select
+              id="flt-vessel"
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs font-medium"
+            >
+              <option value="all">All Vessels</option>
+            </select>
+          </div>
+          <div>
+            <label
+              class="block text-xs font-semibold text-[var(--muted-foreground)] mb-1"
+              >Search Parameter / Record / Note</label
+            >
+            <input
+              id="flt-search"
+              type="text"
+              placeholder="e.g. moisture, 3hptiter, leaked, prox50sd..."
+              class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1.5 text-xs"
+            />
+          </div>
+          <div
+            class="bg-[var(--background)] border border-[var(--border)] rounded-lg px-3 py-1.5 flex items-center justify-between text-xs"
+          >
+            <span class="text-[var(--muted-foreground)] font-medium"
+              >Active Slice:</span
+            >
+            <span
+              id="active-slice-badge"
+              class="font-mono font-semibold text-[var(--foreground)]"
+              >252 / 252 rows</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <!-- Global KPI Strip -->
+      <div
+        class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3"
+        id="kpi-strip"
+      ></div>
+
+      <!-- Navigation Tabs -->
+      <div
+        class="flex flex-wrap gap-1.5 bg-[var(--card)] border border-[var(--border)] rounded-xl p-1.5 shadow-sm"
+        id="main-tabs"
+      >
+        <button
+          data-tab="overview"
+          class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]"
+        >
+          1. Overview &amp; Lineage
+        </button>
+        <button
+          data-tab="proximate"
+          class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]"
+        >
+          2. Proximate Analysis
+        </button>
+        <button
+          data-tab="compositional"
+          class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]"
+        >
+          3. Compositional Analysis
+        </button>
+        <button
+          data-tab="icp"
+          class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]"
+        >
+          4. ICP Elemental (14)
+        </button>
+        <button
+          data-tab="pretreatment"
+          class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]"
+        >
+          5. Pretreatment &amp; EH
+        </button>
+        <button
+          data-tab="fermentation"
+          class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]"
+        >
+          6. Fermentation (3-HP)
+        </button>
+        <button
+          data-tab="explorer"
+          class="tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]"
+        >
+          7. Record Explorer &amp; Calorimetry
+        </button>
+      </div>
+
+      <!-- Dynamic Tab Content Container -->
+      <div id="tab-content" class="space-y-4"></div>
+    </div>
+
+    <script>
+      const RAW_DATA = {
+        dicts: {
+          analysis_type: [
+            "Calorimetry",
+            "Compositional Analysis",
+            "Fermentation (Bioconversion)",
+            "ICP Elemental Analysis",
+            "Pretreatment & Hydrolysis",
+            "Proximate Analysis",
+          ],
+          prepared_sample: [
+            "hai-sarg025a(0d)",
+            "hai-sarg031a(e5)",
+            "hai-sarg031okm2(42)",
+            "hai-sarg032a(d9)",
+            "hai-sarg032okm2(96)",
+          ],
+          field_sample: ["hai-sarg025", "hai-sarg031", "hai-sarg032"],
+          prep_method: ["as is", "oven dry + knife mill (2mm)"],
+          qc_status: ["fail", "pass"],
+          experiment: [
+            "Unassigned",
+            "bio31",
+            "bio33",
+            "cal25xk",
+            "cmp14xk",
+            "icp03md",
+            "prox07xk",
+            "prox12xk",
+            "prox50sd",
+          ],
+          method: ["N/A", "as is"],
+          analyst: ["Unassigned", "—", "—", "—", "pass", "—"],
+          note: [
+            "",
+            "Failed glucose measurement",
+            "hydrolysate leaked, sample discarded",
+            "uc combined protocol",
+            "yield is slightly over 100%",
+          ],
+          pt_method: ["N/A", "butknt140c", "cho10pc", "h2o140c", "none20c"],
+          eh_method: ["N/A", "alga004", "enzy001", "enzymatic hydrolysis 1"],
+          vessel: [
+            "N/A",
+            "htx1",
+            "htx2",
+            "incubator shaker",
+            "micronic vials",
+            "pressure tube",
+          ],
+          strain: ["N/A", "Rhodosporidium toruloides MCR-ALD6-g2945"],
+          bioconv: ["2rho-3hp", "N/A"],
+          well_or_block: [
+            "",
+            "b7",
+            "b8",
+            "b9",
+            "d1",
+            "d2",
+            "d3",
+            "e7",
+            "e8",
+            "e9",
+            "f10",
+            "f11",
+            "f12",
+            "f4",
+            "f5",
+            "f6",
+          ],
+          parameter: [
+            "",
+            "3hptiter",
+            "3hpyield",
+            "al",
+            "ash",
+            "ca",
+            "cu",
+            "fe",
+            "glucan",
+            "gluconct0",
+            "gluconcteof",
+            "glucose",
+            "glucose_yld",
+            "k",
+            "lignin",
+            "mg",
+            "mn",
+            "moisture",
+            "na",
+            "nd",
+            "od600teof",
+            "p",
+            "rel_growth",
+            "s",
+            "si",
+            "sugar_cons",
+            "sugart0",
+            "sugarteof",
+            "ti",
+            "total solids",
+            "volatile solids",
+            "xylan",
+            "xylconct0",
+            "xylconcteof",
+            "xylose",
+            "xylose_yld",
+            "zn",
+          ],
+          unit: [
+            "",
+            "% dry weight",
+            "% of glucan",
+            "% of xylan",
+            "% total weight",
+            "g_l",
+            "pc",
+            "pc_g_g",
+            "ppm",
+          ],
+        },
+        str_cols: [
+          "analysis_type",
+          "prepared_sample",
+          "field_sample",
+          "prep_method",
+          "qc_status",
+          "experiment",
+          "method",
+          "analyst",
+          "note",
+          "pt_method",
+          "eh_method",
+          "vessel",
+          "strain",
+          "bioconv",
+          "well_or_block",
+          "parameter",
+          "unit",
+        ],
+        rows: [
+          [
+            "(0d)e718",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            1,
+            10.57,
+          ],
+          [
+            "(0d)77f8",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            2,
+            10.36,
+          ],
+          [
+            "(0d)9cec",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            3,
+            10.56,
+          ],
+          [
+            "(0d)188f",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            1,
+            30.86,
+          ],
+          [
+            "(0d)4657",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            2,
+            31.12,
+          ],
+          [
+            "(0d)6a9a",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            3,
+            31.3,
+          ],
+          [
+            "(0d)91cd",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            1,
+            89.43,
+          ],
+          [
+            "(0d)dca2",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            2,
+            89.64,
+          ],
+          [
+            "(0d)b14a",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            3,
+            89.44,
+          ],
+          [
+            "(0d)5044",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            1,
+            58.57,
+          ],
+          [
+            "(0d)be4a",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            2,
+            58.52,
+          ],
+          [
+            "(0d)388f",
+            5,
+            0,
+            0,
+            0,
+            1,
+            6,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            3,
+            58.14,
+          ],
+          [
+            "(e5)1fdb",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            1,
+            14.1,
+          ],
+          [
+            "(e5)9406",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            2,
+            12.96,
+          ],
+          [
+            "(e5)4838",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            3,
+            15.42,
+          ],
+          [
+            "(e5)77df",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            1,
+            31.76,
+          ],
+          [
+            "(e5)e6bf",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            2,
+            33.65,
+          ],
+          [
+            "(e5)ef1b",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            3,
+            30.88,
+          ],
+          [
+            "(e5)7b63",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            1,
+            85.9,
+          ],
+          [
+            "(e5)3ccb",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            2,
+            87.04,
+          ],
+          [
+            "(e5)4897",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            3,
+            84.58,
+          ],
+          [
+            "(e5)009c",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            1,
+            54.14,
+          ],
+          [
+            "(e5)1ded",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            2,
+            53.39,
+          ],
+          [
+            "(e5)60d4",
+            5,
+            1,
+            1,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            3,
+            53.7,
+          ],
+          [
+            "(d9)5c9f",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            1,
+            79.79,
+          ],
+          [
+            "(d9)b75c",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            2,
+            82.14,
+          ],
+          [
+            "(d9)bcd7",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            3,
+            80.85,
+          ],
+          [
+            "(d9)d83b",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            1,
+            9.44,
+          ],
+          [
+            "(d9)ad79",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            2,
+            8.11,
+          ],
+          [
+            "(d9)4098",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            3,
+            8.71,
+          ],
+          [
+            "(d9)6b1f",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            1,
+            20.21,
+          ],
+          [
+            "(d9)cef0",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            2,
+            17.86,
+          ],
+          [
+            "(d9)8120",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            3,
+            19.15,
+          ],
+          [
+            "(d9)a817",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            1,
+            10.77,
+          ],
+          [
+            "(d9)b18a",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            2,
+            9.75,
+          ],
+          [
+            "(d9)3bd6",
+            5,
+            3,
+            2,
+            0,
+            1,
+            7,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            3,
+            10.44,
+          ],
+          [
+            "(0d)1817",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            17,
+            4,
+            1,
+            2.01,
+          ],
+          [
+            "(0d)cd35",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            1,
+            37.08,
+          ],
+          [
+            "(0d)1559",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            2,
+            37.39,
+          ],
+          [
+            "(0d)d715",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            0,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            4,
+            4,
+            3,
+            37.13,
+          ],
+          [
+            "(0d)3fa6",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            4,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            1,
+            35.89,
+          ],
+          [
+            "(0d)329b",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            4,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            2,
+            35.3,
+          ],
+          [
+            "(0d)542d",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            4,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            29,
+            4,
+            3,
+            35.75,
+          ],
+          [
+            "(0d)2775",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            4,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            1,
+            27.03,
+          ],
+          [
+            "(0d)fe10",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            4,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            2,
+            27.32,
+          ],
+          [
+            "(0d)4978",
+            5,
+            0,
+            0,
+            0,
+            1,
+            8,
+            1,
+            4,
+            3,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            30,
+            4,
+            3,
+            27.13,
+          ],
+          [
+            "(0d)4993",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            8,
+            1,
+            1,
+            10.17,
+          ],
+          [
+            "(0d)4994",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            8,
+            1,
+            2,
+            9.92,
+          ],
+          [
+            "(0d)4995",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            8,
+            1,
+            3,
+            9.98,
+          ],
+          [
+            "(0d)4996",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            11,
+            1,
+            1,
+            11.3,
+          ],
+          [
+            "(0d)4997",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            11,
+            1,
+            2,
+            11.02,
+          ],
+          [
+            "(0d)4998",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            11,
+            1,
+            3,
+            11.08,
+          ],
+          [
+            "(0d)4999",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            31,
+            1,
+            1,
+            4.81,
+          ],
+          [
+            "(0d)5000",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            31,
+            1,
+            2,
+            4.3,
+          ],
+          [
+            "(0d)5001",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            31,
+            1,
+            3,
+            4.11,
+          ],
+          [
+            "(0d)5002",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            34,
+            1,
+            1,
+            5.46,
+          ],
+          [
+            "(0d)5003",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            34,
+            1,
+            2,
+            4.89,
+          ],
+          [
+            "(0d)5004",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            34,
+            1,
+            3,
+            4.67,
+          ],
+          [
+            "(0d)5005",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            14,
+            1,
+            1,
+            25.4,
+          ],
+          [
+            "(0d)5006",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            14,
+            1,
+            2,
+            26.39,
+          ],
+          [
+            "(0d)5007",
+            1,
+            0,
+            0,
+            0,
+            1,
+            4,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            14,
+            1,
+            3,
+            25.76,
+          ],
+          [
+            "(0d)214e",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            8,
+            1,
+            102.0,
+          ],
+          [
+            "(0d)0c19",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            5,
+            8,
+            1,
+            41900.0,
+          ],
+          [
+            "(0d)754b",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            6,
+            8,
+            1,
+            11.0,
+          ],
+          [
+            "(0d)9ac9",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            7,
+            8,
+            1,
+            251.0,
+          ],
+          [
+            "(0d)9293",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            13,
+            8,
+            1,
+            48200.0,
+          ],
+          [
+            "(0d)c35c",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            15,
+            8,
+            1,
+            9200.0,
+          ],
+          [
+            "(0d)2df7",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            16,
+            8,
+            1,
+            32.0,
+          ],
+          [
+            "(0d)c2e6",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            18,
+            8,
+            1,
+            15900.0,
+          ],
+          [
+            "(0d)a571",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            19,
+            8,
+            1,
+            68.0,
+          ],
+          [
+            "(0d)9b36",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            21,
+            8,
+            1,
+            1010.0,
+          ],
+          [
+            "(0d)a64a",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            23,
+            8,
+            1,
+            11300.0,
+          ],
+          [
+            "(0d)db11",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            24,
+            8,
+            1,
+            10.8,
+          ],
+          [
+            "(0d)0e8c",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            28,
+            8,
+            1,
+            0.0,
+          ],
+          [
+            "(0d)f63e",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            36,
+            8,
+            1,
+            14.4,
+          ],
+          [
+            "(0d)1940",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            8,
+            2,
+            147.0,
+          ],
+          [
+            "(0d)ce2e",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            5,
+            8,
+            2,
+            42100.0,
+          ],
+          [
+            "(0d)d418",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            6,
+            8,
+            2,
+            11.0,
+          ],
+          [
+            "(0d)cbba",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            7,
+            8,
+            2,
+            234.0,
+          ],
+          [
+            "(0d)56b6",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            15,
+            8,
+            2,
+            9200.0,
+          ],
+          [
+            "(0d)7039",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            16,
+            8,
+            2,
+            32.3,
+          ],
+          [
+            "(0d)72ba",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            19,
+            8,
+            2,
+            72.0,
+          ],
+          [
+            "(0d)6699",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            21,
+            8,
+            2,
+            729.0,
+          ],
+          [
+            "(0d)2a8a",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            23,
+            8,
+            2,
+            11400.0,
+          ],
+          [
+            "(0d)2c69",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            24,
+            8,
+            2,
+            10.8,
+          ],
+          [
+            "(0d)e39e",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            28,
+            8,
+            2,
+            0.0,
+          ],
+          [
+            "(0d)daf7",
+            3,
+            0,
+            0,
+            0,
+            1,
+            5,
+            0,
+            2,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            36,
+            8,
+            2,
+            17.9,
+          ],
+          [
+            "(0d)ea9c",
+            0,
+            0,
+            0,
+            0,
+            1,
+            3,
+            1,
+            5,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            1,
+            null,
+          ],
+          [
+            "proco31-899a",
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            20,
+            0,
+            3,
+            3.91,
+          ],
+          [
+            "proco31-3bae",
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            22,
+            6,
+            3,
+            93.59,
+          ],
+          [
+            "proco31-eec6",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            9,
+            5,
+            3,
+            17.51,
+          ],
+          [
+            "proco31-e9e6",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            32,
+            5,
+            3,
+            2.5,
+          ],
+          [
+            "proco31-66cc",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            10,
+            5,
+            3,
+            0.58,
+          ],
+          [
+            "proco31-8a70",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            33,
+            5,
+            3,
+            1.08,
+          ],
+          [
+            "proco31-f6ea",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            26,
+            5,
+            3,
+            20.0,
+          ],
+          [
+            "proco31-8cd8",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            27,
+            5,
+            3,
+            1.66,
+          ],
+          [
+            "proco31-e44f",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            25,
+            6,
+            3,
+            18.34,
+          ],
+          [
+            "proco31-9530",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            1,
+            5,
+            3,
+            3.5,
+          ],
+          [
+            "proco31-2810",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            1,
+            2,
+            7,
+            3,
+            19.08,
+          ],
+          [
+            "proco31-d020",
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            20,
+            0,
+            3,
+            4.27,
+          ],
+          [
+            "proco31-ef89",
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            22,
+            6,
+            3,
+            102.07,
+          ],
+          [
+            "proco31-b644",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            9,
+            5,
+            3,
+            19.38,
+          ],
+          [
+            "proco31-7bfe",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            32,
+            5,
+            3,
+            2.22,
+          ],
+          [
+            "proco31-1bcc",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            10,
+            5,
+            3,
+            0.58,
+          ],
+          [
+            "proco31-a862",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            33,
+            5,
+            3,
+            1.45,
+          ],
+          [
+            "proco31-1d28",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            26,
+            5,
+            3,
+            21.6,
+          ],
+          [
+            "proco31-d025",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            27,
+            5,
+            3,
+            2.03,
+          ],
+          [
+            "proco31-ada9",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            25,
+            6,
+            3,
+            19.58,
+          ],
+          [
+            "proco31-c5e3",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            1,
+            5,
+            3,
+            4.18,
+          ],
+          [
+            "proco31-40f9",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            2,
+            2,
+            7,
+            3,
+            21.37,
+          ],
+          [
+            "proco31-fcde",
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            20,
+            0,
+            3,
+            0.16,
+          ],
+          [
+            "proco31-3c4b",
+            2,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            22,
+            6,
+            3,
+            3.86,
+          ],
+          [
+            "proco31-fc17",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            9,
+            5,
+            3,
+            30.12,
+          ],
+          [
+            "proco31-9019",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            32,
+            5,
+            3,
+            3.06,
+          ],
+          [
+            "proco31-a5ed",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            10,
+            5,
+            3,
+            22.93,
+          ],
+          [
+            "proco31-0f60",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            33,
+            5,
+            3,
+            2.68,
+          ],
+          [
+            "proco31-d326",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            26,
+            5,
+            3,
+            33.18,
+          ],
+          [
+            "proco31-cd26",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            27,
+            5,
+            3,
+            25.61,
+          ],
+          [
+            "proco31-3437",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            25,
+            6,
+            3,
+            7.57,
+          ],
+          [
+            "proco31-fd40",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            1,
+            5,
+            3,
+            0.0,
+          ],
+          [
+            "proco31-5fb7",
+            2,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            3,
+            2,
+            7,
+            3,
+            0.0,
+          ],
+          [
+            "proco33-2215",
+            2,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            20,
+            0,
+            3,
+            5.15,
+          ],
+          [
+            "proco33-514e",
+            2,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            22,
+            6,
+            3,
+            123.2,
+          ],
+          [
+            "proco33-17db",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            9,
+            5,
+            3,
+            16.23,
+          ],
+          [
+            "proco33-797c",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            32,
+            5,
+            3,
+            2.61,
+          ],
+          [
+            "proco33-9bf0",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            10,
+            5,
+            3,
+            0.16,
+          ],
+          [
+            "proco33-5cc3",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            33,
+            5,
+            3,
+            0.85,
+          ],
+          [
+            "proco33-e879",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            26,
+            5,
+            3,
+            18.84,
+          ],
+          [
+            "proco33-7a31",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            27,
+            5,
+            3,
+            1.02,
+          ],
+          [
+            "proco33-89c1",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            25,
+            6,
+            3,
+            17.83,
+          ],
+          [
+            "proco33-db03",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            1,
+            5,
+            3,
+            4.82,
+          ],
+          [
+            "proco33-af74",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            7,
+            2,
+            7,
+            3,
+            27.07,
+          ],
+          [
+            "proco33-1f9b",
+            2,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            20,
+            0,
+            3,
+            4.27,
+          ],
+          [
+            "proco33-6f76",
+            2,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            22,
+            6,
+            3,
+            102.11,
+          ],
+          [
+            "proco33-dcfd",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            9,
+            5,
+            3,
+            18.67,
+          ],
+          [
+            "proco33-8543",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            32,
+            5,
+            3,
+            3.87,
+          ],
+          [
+            "proco33-dfc6",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            10,
+            5,
+            3,
+            0.58,
+          ],
+          [
+            "proco33-0cb9",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            33,
+            5,
+            3,
+            1.15,
+          ],
+          [
+            "proco33-9d7a",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            26,
+            5,
+            3,
+            22.55,
+          ],
+          [
+            "proco33-2b1f",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            27,
+            5,
+            3,
+            1.73,
+          ],
+          [
+            "proco33-5103",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            25,
+            6,
+            3,
+            20.82,
+          ],
+          [
+            "proco33-8d55",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            1,
+            5,
+            3,
+            4.96,
+          ],
+          [
+            "proco33-f34a",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            8,
+            2,
+            7,
+            3,
+            23.83,
+          ],
+          [
+            "proco33-160b",
+            2,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            20,
+            0,
+            3,
+            6.75,
+          ],
+          [
+            "proco33-74bd",
+            2,
+            0,
+            0,
+            0,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            22,
+            6,
+            3,
+            161.43,
+          ],
+          [
+            "proco33-0ad4",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            9,
+            5,
+            3,
+            18.92,
+          ],
+          [
+            "proco33-50b4",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            32,
+            5,
+            3,
+            4.06,
+          ],
+          [
+            "proco33-830c",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            10,
+            5,
+            3,
+            0.56,
+          ],
+          [
+            "proco33-c783",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            33,
+            5,
+            3,
+            1.22,
+          ],
+          [
+            "proco33-cf57",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            26,
+            5,
+            3,
+            22.98,
+          ],
+          [
+            "proco33-c026",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            27,
+            5,
+            3,
+            1.79,
+          ],
+          [
+            "proco33-04ac",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            25,
+            6,
+            3,
+            21.19,
+          ],
+          [
+            "proco33-865d",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            1,
+            5,
+            3,
+            4.73,
+          ],
+          [
+            "proco33-c9c0",
+            2,
+            0,
+            0,
+            0,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            9,
+            2,
+            7,
+            3,
+            22.34,
+          ],
+          [
+            "proco33-b376",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            20,
+            0,
+            3,
+            2.07,
+          ],
+          [
+            "proco33-2c5c",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            22,
+            6,
+            3,
+            49.47,
+          ],
+          [
+            "proco33-1545",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            9,
+            5,
+            3,
+            1.86,
+          ],
+          [
+            "proco33-4f61",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            32,
+            5,
+            3,
+            1.32,
+          ],
+          [
+            "proco33-3319",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            10,
+            5,
+            3,
+            0.84,
+          ],
+          [
+            "proco33-5fcb",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            33,
+            5,
+            3,
+            1.27,
+          ],
+          [
+            "proco33-9362",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            26,
+            5,
+            3,
+            3.18,
+          ],
+          [
+            "proco33-8a6d",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            27,
+            5,
+            3,
+            2.12,
+          ],
+          [
+            "proco33-959a",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            25,
+            6,
+            3,
+            1.07,
+          ],
+          [
+            "proco33-c76e",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            1,
+            5,
+            3,
+            4.13,
+          ],
+          [
+            "proco33-30b1",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            13,
+            2,
+            7,
+            3,
+            387.38,
+          ],
+          [
+            "proco33-279f",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            20,
+            0,
+            3,
+            4.51,
+          ],
+          [
+            "proco33-60fb",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            22,
+            6,
+            3,
+            107.8,
+          ],
+          [
+            "proco33-c731",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            9,
+            5,
+            3,
+            13.03,
+          ],
+          [
+            "proco33-4e65",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            32,
+            5,
+            3,
+            2.03,
+          ],
+          [
+            "proco33-18a9",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            10,
+            5,
+            3,
+            0.47,
+          ],
+          [
+            "proco33-67ec",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            33,
+            5,
+            3,
+            1.04,
+          ],
+          [
+            "proco33-2f08",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            26,
+            5,
+            3,
+            15.05,
+          ],
+          [
+            "proco33-6520",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            27,
+            5,
+            3,
+            1.51,
+          ],
+          [
+            "proco33-21e8",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            25,
+            6,
+            3,
+            13.54,
+          ],
+          [
+            "proco33-52a0",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            1,
+            5,
+            3,
+            4.62,
+          ],
+          [
+            "proco33-9a8c",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            14,
+            2,
+            7,
+            3,
+            34.12,
+          ],
+          [
+            "proco33-8266",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            20,
+            0,
+            3,
+            4.04,
+          ],
+          [
+            "proco33-0ca8",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            22,
+            6,
+            3,
+            96.67,
+          ],
+          [
+            "proco33-6cd4",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            9,
+            5,
+            3,
+            13.29,
+          ],
+          [
+            "proco33-11d9",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            32,
+            5,
+            3,
+            2.21,
+          ],
+          [
+            "proco33-4347",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            10,
+            5,
+            3,
+            0.47,
+          ],
+          [
+            "proco33-d29e",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            33,
+            5,
+            3,
+            1.04,
+          ],
+          [
+            "proco33-2927",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            26,
+            5,
+            3,
+            15.5,
+          ],
+          [
+            "proco33-5bb0",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            27,
+            5,
+            3,
+            1.51,
+          ],
+          [
+            "proco33-bc4f",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            25,
+            6,
+            3,
+            14.0,
+          ],
+          [
+            "proco33-32ac",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            1,
+            5,
+            3,
+            4.25,
+          ],
+          [
+            "proco33-c9a1",
+            2,
+            2,
+            1,
+            1,
+            0,
+            2,
+            0,
+            3,
+            1,
+            2,
+            3,
+            3,
+            1,
+            0,
+            15,
+            2,
+            7,
+            3,
+            30.39,
+          ],
+          [
+            "proco33-0676",
+            2,
+            4,
+            2,
+            1,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            20,
+            0,
+            3,
+            7.76,
+          ],
+          [
+            "proco33-ac1e",
+            2,
+            4,
+            2,
+            1,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            22,
+            6,
+            3,
+            185.69,
+          ],
+          [
+            "proco33-d82e",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            9,
+            5,
+            3,
+            21.97,
+          ],
+          [
+            "proco33-4f2e",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            32,
+            5,
+            3,
+            6.79,
+          ],
+          [
+            "proco33-a1c7",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            10,
+            5,
+            3,
+            1.2,
+          ],
+          [
+            "proco33-bc29",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            33,
+            5,
+            3,
+            0.85,
+          ],
+          [
+            "proco33-9949",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            26,
+            5,
+            3,
+            28.76,
+          ],
+          [
+            "proco33-b1bd",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            27,
+            5,
+            3,
+            2.05,
+          ],
+          [
+            "proco33-41ca",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            25,
+            6,
+            3,
+            26.71,
+          ],
+          [
+            "proco33-f79f",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            1,
+            5,
+            3,
+            3.92,
+          ],
+          [
+            "proco33-55ea",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            10,
+            2,
+            7,
+            3,
+            14.67,
+          ],
+          [
+            "proco33-2be3",
+            2,
+            4,
+            2,
+            1,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            20,
+            0,
+            3,
+            8.18,
+          ],
+          [
+            "proco33-c6b9",
+            2,
+            4,
+            2,
+            1,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            22,
+            6,
+            3,
+            195.71,
+          ],
+          [
+            "proco33-8493",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            9,
+            5,
+            3,
+            22.19,
+          ],
+          [
+            "proco33-8bc0",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            32,
+            5,
+            3,
+            7.45,
+          ],
+          [
+            "proco33-ac70",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            10,
+            5,
+            3,
+            1.16,
+          ],
+          [
+            "proco33-b52e",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            33,
+            5,
+            3,
+            0.77,
+          ],
+          [
+            "proco33-55b7",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            26,
+            5,
+            3,
+            29.64,
+          ],
+          [
+            "proco33-64ed",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            27,
+            5,
+            3,
+            1.94,
+          ],
+          [
+            "proco33-11c8",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            25,
+            6,
+            3,
+            27.7,
+          ],
+          [
+            "proco33-0795",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            1,
+            5,
+            3,
+            3.98,
+          ],
+          [
+            "proco33-7098",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            11,
+            2,
+            7,
+            3,
+            14.36,
+          ],
+          [
+            "proco33-5a0f",
+            2,
+            4,
+            2,
+            1,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            20,
+            0,
+            3,
+            9.05,
+          ],
+          [
+            "proco33-5ec2",
+            2,
+            4,
+            2,
+            1,
+            0,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            22,
+            6,
+            3,
+            216.45,
+          ],
+          [
+            "proco33-7cd3",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            9,
+            5,
+            3,
+            19.86,
+          ],
+          [
+            "proco33-2d20",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            32,
+            5,
+            3,
+            6.47,
+          ],
+          [
+            "proco33-8992",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            10,
+            5,
+            3,
+            0.23,
+          ],
+          [
+            "proco33-a0ca",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            33,
+            5,
+            3,
+            0.73,
+          ],
+          [
+            "proco33-d43e",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            26,
+            5,
+            3,
+            26.33,
+          ],
+          [
+            "proco33-de55",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            27,
+            5,
+            3,
+            0.96,
+          ],
+          [
+            "proco33-343f",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            25,
+            6,
+            3,
+            25.37,
+          ],
+          [
+            "proco33-f73d",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            1,
+            5,
+            3,
+            3.93,
+          ],
+          [
+            "proco33-66c5",
+            2,
+            4,
+            2,
+            1,
+            1,
+            2,
+            0,
+            3,
+            0,
+            2,
+            3,
+            3,
+            1,
+            0,
+            12,
+            2,
+            7,
+            3,
+            15.48,
+          ],
+          [
+            "chol512-f251",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            1,
+            5,
+            0,
+            1,
+            0,
+            35,
+            3,
+            2,
+            27.4,
+          ],
+          [
+            "chol511-a879",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            1,
+            5,
+            0,
+            1,
+            0,
+            35,
+            3,
+            1,
+            28.6,
+          ],
+          [
+            "chol510-755c",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            1,
+            5,
+            0,
+            1,
+            0,
+            12,
+            2,
+            2,
+            87.4,
+          ],
+          [
+            "chol509-00d6",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            1,
+            5,
+            0,
+            1,
+            0,
+            12,
+            2,
+            1,
+            88.3,
+          ],
+          [
+            "chol508-fd2a",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            5,
+            0,
+            1,
+            0,
+            35,
+            3,
+            2,
+            6.6,
+          ],
+          [
+            "chol507-0213",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            5,
+            0,
+            1,
+            0,
+            35,
+            3,
+            1,
+            8.7,
+          ],
+          [
+            "chol506-2a6b",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            5,
+            0,
+            1,
+            0,
+            12,
+            2,
+            2,
+            87.0,
+          ],
+          [
+            "chol505-017b",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            5,
+            0,
+            1,
+            0,
+            12,
+            2,
+            1,
+            71.5,
+          ],
+          [
+            "hot162-7ad7",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            3,
+            2,
+            1,
+            0,
+            1,
+            6,
+            35,
+            3,
+            3,
+            37.0,
+          ],
+          [
+            "hot161-1e57",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            3,
+            2,
+            1,
+            0,
+            1,
+            5,
+            35,
+            3,
+            2,
+            31.6,
+          ],
+          [
+            "hot160-6d9f",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            3,
+            2,
+            1,
+            0,
+            1,
+            4,
+            35,
+            3,
+            1,
+            35.9,
+          ],
+          [
+            "hot159-0747",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            3,
+            2,
+            1,
+            0,
+            1,
+            6,
+            12,
+            2,
+            3,
+            69.2,
+          ],
+          [
+            "hot158-54c5",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            3,
+            2,
+            1,
+            0,
+            1,
+            5,
+            12,
+            2,
+            2,
+            70.4,
+          ],
+          [
+            "hot157-a504",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            3,
+            2,
+            1,
+            0,
+            1,
+            4,
+            12,
+            2,
+            1,
+            71.0,
+          ],
+          [
+            "buty156-e324",
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            4,
+            1,
+            2,
+            2,
+            0,
+            1,
+            6,
+            35,
+            3,
+            3,
+            106.3,
+          ],
+          [
+            "buty155-9daa",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            2,
+            0,
+            1,
+            5,
+            35,
+            3,
+            2,
+            54.8,
+          ],
+          [
+            "buty154-c77b",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            2,
+            0,
+            1,
+            4,
+            35,
+            3,
+            1,
+            60.8,
+          ],
+          [
+            "buty153-b8c1",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            2,
+            0,
+            1,
+            6,
+            12,
+            2,
+            3,
+            46.7,
+          ],
+          [
+            "buty152-5d60",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            2,
+            0,
+            1,
+            5,
+            12,
+            2,
+            2,
+            50.2,
+          ],
+          [
+            "buty151-55cb",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            1,
+            2,
+            2,
+            0,
+            1,
+            4,
+            12,
+            2,
+            1,
+            53.4,
+          ],
+          [
+            "no p168-6f1f",
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            4,
+            4,
+            2,
+            4,
+            0,
+            1,
+            6,
+            35,
+            3,
+            3,
+            106.8,
+          ],
+          [
+            "no p167-405b",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            4,
+            2,
+            4,
+            0,
+            1,
+            5,
+            35,
+            3,
+            2,
+            55.0,
+          ],
+          [
+            "no p166-c183",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            4,
+            2,
+            4,
+            0,
+            1,
+            4,
+            35,
+            3,
+            1,
+            60.7,
+          ],
+          [
+            "no p165-cd3a",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            4,
+            2,
+            4,
+            0,
+            1,
+            6,
+            12,
+            2,
+            3,
+            47.0,
+          ],
+          [
+            "no p164-da03",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            4,
+            2,
+            4,
+            0,
+            1,
+            5,
+            12,
+            2,
+            2,
+            50.3,
+          ],
+          [
+            "no p163-6ec7",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            4,
+            2,
+            4,
+            0,
+            1,
+            4,
+            12,
+            2,
+            1,
+            53.3,
+          ],
+          [
+            "chol150-794b",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            1,
+            0,
+            1,
+            6,
+            35,
+            3,
+            3,
+            44.9,
+          ],
+          [
+            "chol149-4a31",
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            2,
+            2,
+            2,
+            1,
+            0,
+            1,
+            5,
+            0,
+            0,
+            2,
+            null,
+          ],
+          [
+            "chol148-695a",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            1,
+            0,
+            1,
+            4,
+            35,
+            3,
+            1,
+            37.0,
+          ],
+          [
+            "chol147-1246",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            1,
+            0,
+            1,
+            6,
+            12,
+            2,
+            3,
+            79.9,
+          ],
+          [
+            "chol146-886f",
+            4,
+            0,
+            0,
+            0,
+            0,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            1,
+            0,
+            1,
+            5,
+            0,
+            0,
+            2,
+            null,
+          ],
+          [
+            "chol145-c4e9",
+            4,
+            0,
+            0,
+            0,
+            1,
+            0,
+            1,
+            1,
+            0,
+            2,
+            2,
+            1,
+            0,
+            1,
+            4,
+            12,
+            2,
+            1,
+            82.9,
+          ],
+        ],
+        prepared_samples: [
+          {
+            id: 52,
+            name: "hai-sarg025a(0d)",
+            field_sample: "hai-sarg025",
+            prep_method: "as is",
+            prep_date: "2025-01-03",
+            preparer: "—",
+            note: "",
+          },
+          {
+            id: 73,
+            name: "hai-sarg031a(e5)",
+            field_sample: "hai-sarg031",
+            prep_method: "as is",
+            prep_date: "2025-06-05",
+            preparer: "—",
+            note: "",
+          },
+          {
+            id: 75,
+            name: "hai-sarg032a(d9)",
+            field_sample: "hai-sarg032",
+            prep_method: "as is",
+            prep_date: "2025-06-05",
+            preparer: "—",
+            note: "",
+          },
+          {
+            id: 74,
+            name: "hai-sarg031okm2(42)",
+            field_sample: "hai-sarg031",
+            prep_method: "oven dry + knife mill (2mm)",
+            prep_date: "2025-06-05",
+            preparer: "—",
+            note: "",
+          },
+          {
+            id: 76,
+            name: "hai-sarg032okm2(96)",
+            field_sample: "hai-sarg032",
+            prep_method: "oven dry + knife mill (2mm)",
+            prep_date: "2025-06-05",
+            preparer: "—",
+            note: "",
+          },
+          {
+            id: 253,
+            name: "hai-sarg025km2(b7)",
+            field_sample: "hai-sarg025",
+            prep_method: "knife mill (2mm)",
+            prep_date: "2025-01-03",
+            preparer: "—",
+            note: "xihui processed this in 2025",
+          },
+        ],
+      };
+
+      // Hydrate dictionary-encoded records
+      const ALL_RECORDS = RAW_DATA.rows.map((row) => {
+        const obj = { record_id: row[0] };
+        RAW_DATA.str_cols.forEach((col, idx) => {
+          obj[col] = RAW_DATA.dicts[col][row[idx + 1]];
+        });
+        obj.replicate = row[RAW_DATA.str_cols.length + 1];
+        obj.value = row[RAW_DATA.str_cols.length + 2];
+        obj.analyst_label =
+          obj.analyst === "pass"
+            ? "UC Combined Protocol (prox50sd)"
+            : obj.analyst;
+        return obj;
+      });
+
+      const PREPARED_SAMPLES = RAW_DATA.prepared_samples;
+
+      const FIELD_SAMPLES_META = [
+        {
+          id: 27,
+          name: "hai-sarg025",
+          collected: "2025-01-08 09:15",
+          provider: "hairpin",
+          geoid: "06000",
+        },
+        {
+          id: 31,
+          name: "hai-sarg031",
+          collected: "2025-02-06 14:00",
+          provider: "hairpin",
+          geoid: "06000",
+        },
+        {
+          id: 32,
+          name: "hai-sarg032",
+          collected: "2025-02-06 14:00",
+          provider: "hairpin",
+          geoid: "06000",
+        },
+      ];
+
+      const state = {
+        tab: "overview",
+        prepared_sample: "all",
+        qc_status: "all",
+        field_sample: "all",
+        prep_method: "all",
+        experiment: "all",
+        analyst: "all",
+        pt_method: "all",
+        eh_method: "all",
+        vessel: "all",
+        search: "",
+        proxGroupMode: "ps_exp",
+        icpScaleMode: "split",
+        fermMetricGroup: "titer_yield",
+      };
+
+      function populateSelect(id, values, allLabel, countsMap) {
+        const sel = document.getElementById(id);
+        const current = sel.value || "all";
+        sel.innerHTML =
+          `<option value="all">${allLabel}</option>` +
+          values
+            .map((v) => {
+              const cnt = countsMap ? ` (${countsMap[v] || 0})` : "";
+              const label =
+                v === "pass" ? "UC Combined Protocol (prox50sd)" : v;
+              return `<option value="${v}">${label}${cnt}</option>`;
+            })
+            .join("");
+        sel.value = current;
+      }
+
+      function initFilters() {
+        const countBy = (key) => {
+          const m = {};
+          ALL_RECORDS.forEach((r) => {
+            m[r[key]] = (m[r[key]] || 0) + 1;
+          });
+          return m;
+        };
+
+        const psCounts = countBy("prepared_sample");
+        const allPsNames = PREPARED_SAMPLES.map((p) => p.name);
+        const selPs = document.getElementById("flt-prepared-sample");
+        selPs.innerHTML =
+          `<option value="all">All Prepared Samples (6)</option>` +
+          PREPARED_SAMPLES.map((p) => {
+            const c = psCounts[p.name] || 0;
+            return `<option value="${p.name}">${p.name} · ${p.prep_method} (${c} recs)</option>`;
+          }).join("");
+
+        const fsCounts = countBy("field_sample");
+        populateSelect(
+          "flt-field-sample",
+          FIELD_SAMPLES_META.map((f) => f.name),
+          "All Field Samples (3)",
+          fsCounts,
+        );
+
+        const pmCounts = countBy("prep_method");
+        const allPm = Array.from(
+          new Set(PREPARED_SAMPLES.map((p) => p.prep_method)),
+        );
+        populateSelect(
+          "flt-prep-method",
+          allPm,
+          "All Prep Methods (3)",
+          pmCounts,
+        );
+
+        populateSelect(
+          "flt-experiment",
+          RAW_DATA.dicts.experiment,
+          "All Experiments (9)",
+          countBy("experiment"),
+        );
+        populateSelect(
+          "flt-analyst",
+          RAW_DATA.dicts.analyst,
+          "All Analysts (5)",
+          countBy("analyst"),
+        );
+        populateSelect(
+          "flt-pt-method",
+          RAW_DATA.dicts.pt_method,
+          "All PT Methods",
+          countBy("pt_method"),
+        );
+        populateSelect(
+          "flt-eh-method",
+          RAW_DATA.dicts.eh_method,
+          "All EH Methods",
+          countBy("eh_method"),
+        );
+        populateSelect(
+          "flt-vessel",
+          RAW_DATA.dicts.vessel,
+          "All Vessels",
+          countBy("vessel"),
+        );
+      }
+
+      function getFilteredRecords() {
+        const q = state.search.trim().toLowerCase();
+        return ALL_RECORDS.filter((r) => {
+          if (
+            state.prepared_sample !== "all" &&
+            r.prepared_sample !== state.prepared_sample
+          )
+            return false;
+          if (state.qc_status !== "all" && r.qc_status !== state.qc_status)
+            return false;
+          if (
+            state.field_sample !== "all" &&
+            r.field_sample !== state.field_sample
+          )
+            return false;
+          if (
+            state.prep_method !== "all" &&
+            r.prep_method !== state.prep_method
+          )
+            return false;
+          if (state.experiment !== "all" && r.experiment !== state.experiment)
+            return false;
+          if (state.analyst !== "all" && r.analyst !== state.analyst)
+            return false;
+          if (state.pt_method !== "all" && r.pt_method !== state.pt_method)
+            return false;
+          if (state.eh_method !== "all" && r.eh_method !== state.eh_method)
+            return false;
+          if (state.vessel !== "all" && r.vessel !== state.vessel) return false;
+          if (q) {
+            const hay =
+              `${r.record_id} ${r.analysis_type} ${r.prepared_sample} ${r.field_sample} ${r.experiment} ${r.parameter} ${r.note} ${r.pt_method} ${r.eh_method} ${r.vessel} ${r.well_or_block}`.toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        });
+      }
+
+      function calcStats(values) {
+        const nums = values.filter((v) => typeof v === "number" && !isNaN(v));
+        if (nums.length === 0)
+          return { n: 0, mean: null, sd: null, min: null, max: null, vals: [] };
+        const n = nums.length;
+        const mean = nums.reduce((a, b) => a + b, 0) / n;
+        const variance =
+          n > 1
+            ? nums.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (n - 1)
+            : 0;
+        const sd = Math.sqrt(variance);
+        return {
+          n,
+          mean,
+          sd,
+          min: Math.min(...nums),
+          max: Math.max(...nums),
+          vals: nums,
+        };
+      }
+
+      function fmtNum(v, digits = 2) {
+        if (v === null || v === undefined || isNaN(v)) return "—";
+        return Number(v).toLocaleString(undefined, {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: digits,
+        });
+      }
+
+      function qcBadgeHtml(qc) {
+        if (qc === "pass") {
+          return `<span class="badge-pass px-2 py-0.5 text-xs font-mono font-semibold rounded">PASS</span>`;
+        }
+        return `<span class="badge-fail px-2 py-0.5 text-xs font-mono font-semibold rounded">FAIL</span>`;
+      }
+
+      function renderKpiStrip(filtered) {
+        const passCount = filtered.filter((r) => r.qc_status === "pass").length;
+        const failCount = filtered.filter((r) => r.qc_status === "fail").length;
+        const passRate = filtered.length
+          ? ((passCount / filtered.length) * 100).toFixed(1)
+          : "0.0";
+        const activePs = new Set(filtered.map((r) => r.prepared_sample)).size;
+        const activeExps = new Set(filtered.map((r) => r.experiment)).size;
+        const activeTypes = new Set(filtered.map((r) => r.analysis_type)).size;
+
+        document.getElementById("active-slice-badge").textContent =
+          `${filtered.length} / 252 rows (${passCount}P · ${failCount}F)`;
+
+        const kpis = [
+          {
+            label: "Filtered Records",
+            value: `${filtered.length}`,
+            sub: `of 252 total DB records`,
+          },
+          {
+            label: "QC Pass Rate",
+            value: `${passRate}%`,
+            sub: `${passCount} Pass · ${failCount} Fail`,
+          },
+          {
+            label: "Prepared Samples",
+            value: `${activePs} / 6`,
+            sub:
+              state.prepared_sample === "all"
+                ? "5 with records, 1 pending"
+                : state.prepared_sample,
+          },
+          {
+            label: "Field Samples",
+            value: `${new Set(filtered.map((r) => r.field_sample)).size} / 3`,
+            sub: "hai-sarg025, 031, 032",
+          },
+          {
+            label: "Analysis Types",
+            value: `${activeTypes} / 6`,
+            sub: "Aim 1 (4) & Aim 2 (2)",
+          },
+          {
+            label: "Experiments",
+            value: `${activeExps}`,
+            sub: "Across LBNL & UC teams",
+          },
+        ];
+
+        document.getElementById("kpi-strip").innerHTML = kpis
+          .map(
+            (k) => `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-3.5 shadow-sm">
+          <div class="text-xs font-medium text-[var(--muted-foreground)]">${k.label}</div>
+          <div class="text-lg font-bold text-[var(--foreground)] mt-0.5 font-mono">${k.value}</div>
+          <div class="text-xs text-[var(--muted-foreground)] mt-0.5 truncate">${k.sub}</div>
+        </div>
+      `,
+          )
+          .join("");
+
+        // Update Tab counts
+        const typeMap = {
+          overview: filtered.length,
+          proximate: filtered.filter(
+            (r) => r.analysis_type === "Proximate Analysis",
+          ).length,
+          compositional: filtered.filter(
+            (r) => r.analysis_type === "Compositional Analysis",
+          ).length,
+          icp: filtered.filter(
+            (r) => r.analysis_type === "ICP Elemental Analysis",
+          ).length,
+          pretreatment: filtered.filter(
+            (r) => r.analysis_type === "Pretreatment & Hydrolysis",
+          ).length,
+          fermentation: filtered.filter(
+            (r) => r.analysis_type === "Fermentation (Bioconversion)",
+          ).length,
+          explorer: filtered.length,
+        };
+        const labels = {
+          overview: "1. Overview & Lineage",
+          proximate: `2. Proximate (${typeMap.proximate})`,
+          compositional: `3. Compositional (${typeMap.compositional})`,
+          icp: `4. ICP Elements (${typeMap.icp})`,
+          pretreatment: `5. Pretreatment (${typeMap.pretreatment})`,
+          fermentation: `6. Fermentation (${typeMap.fermentation})`,
+          explorer: `7. Record Explorer (${typeMap.explorer})`,
+        };
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          const t = btn.dataset.tab;
+          btn.textContent = labels[t];
+          btn.className =
+            t === state.tab
+              ? "tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]"
+              : "tab-btn px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--muted-foreground)] hover:text-[var(--foreground)]";
+        });
+      }
+
+      function renderOverviewTab(filtered) {
+        const byType = [
+          {
+            name: "Proximate Analysis",
+            tbl: "proximate_record",
+            aim: "Aim 1 Characterization",
+            tab: "proximate",
+            desc: "Moisture, Total Solids, Volatile Solids, Ash (% total weight)",
+          },
+          {
+            name: "Compositional Analysis",
+            tbl: "compositional_record",
+            aim: "Aim 1 Characterization",
+            tab: "compositional",
+            desc: "Lignin, Glucan, Glucose, Xylan, Xylose (% dry weight)",
+          },
+          {
+            name: "ICP Elemental Analysis",
+            tbl: "icp_record",
+            aim: "Aim 1 Characterization",
+            tab: "icp",
+            desc: "14 Macro & Trace Elements: K, Ca, Na, S, Mg, P, Fe, Al, Nd, Mn, Zn, Cu, Si, Ti (ppm)",
+          },
+          {
+            name: "Calorimetry",
+            tbl: "calorimetry_record",
+            aim: "Aim 1 Characterization",
+            tab: "explorer",
+            desc: "Record (0d)ea9c logged under cal25xk (metadata record only; 0 observations attached)",
+          },
+          {
+            name: "Pretreatment & Hydrolysis",
+            tbl: "pretreatment_record",
+            aim: "Aim 2 Deconstruction",
+            tab: "pretreatment",
+            desc: "Glucose & Xylose yields across 4 PT methods (cho10pc, h2o140c, butknt140c, none20c) & 2 EH enzymes",
+          },
+          {
+            name: "Fermentation (Bioconversion)",
+            tbl: "fermentation_record",
+            aim: "Aim 2 Bioconversion",
+            tab: "fermentation",
+            desc: "3-HP titer/yield, sugar consumption (t0 -> tEOF), OD600 & growth with R. toruloides MCR-ALD6-g2945",
+          },
+        ];
+
+        const psCards = PREPARED_SAMPLES.map((ps) => {
+          const recs = filtered.filter((r) => r.prepared_sample === ps.name);
+          const totalAll = ALL_RECORDS.filter(
+            (r) => r.prepared_sample === ps.name,
+          ).length;
+          const passCnt = recs.filter((r) => r.qc_status === "pass").length;
+          const failCnt = recs.filter((r) => r.qc_status === "fail").length;
+          const types =
+            Array.from(
+              new Set(recs.map((r) => r.analysis_type.split(" ")[0])),
+            ).join(", ") || "None in current filter";
+          const isSelected = state.prepared_sample === ps.name;
+          return `
+          <div onclick="setQuickFilter('prepared_sample', '${ps.name}')" class="cursor-pointer rounded-xl p-3.5 border transition ${isSelected ? "bg-[var(--secondary)] border-[var(--primary)] ring-1 ring-[var(--primary)]" : "bg-[var(--background)] border-[var(--border)] hover:border-[var(--primary)]"}">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-mono font-bold text-sm text-[var(--foreground)]">${ps.name}</span>
+              <span class="px-2 py-0.5 text-xs rounded-full bg-[var(--card)] border border-[var(--border)] font-mono">${recs.length} / ${totalAll} recs</span>
+            </div>
+            <div class="text-xs text-[var(--muted-foreground)] mt-1 space-y-0.5">
+              <div><strong class="text-[var(--foreground)]">Field Sample:</strong> <span class="font-mono">${ps.field_sample}</span></div>
+              <div><strong class="text-[var(--foreground)]">Prep Method:</strong> ${ps.prep_method}</div>
+              <div><strong class="text-[var(--foreground)]">Prep Date &amp; Preparer:</strong> ${ps.prep_date} · <span class="font-mono">${ps.preparer}</span></div>
+              <div><strong class="text-[var(--foreground)]">Analyses:</strong> ${types}</div>
+              ${ps.note ? `<div class="text-[var(--foreground)] italic">Note: "${ps.note}"</div>` : ""}
+            </div>
+            <div class="mt-2 pt-2 border-t border-[var(--border)] flex items-center justify-between text-xs font-mono">
+              <span>Pass: ${passCnt}</span>
+              <span>Fail: ${failCnt}</span>
+              <span class="underline text-[var(--primary)]">${isSelected ? "Selected (Click to clear)" : "Click to filter"}</span>
+            </div>
+          </div>
+        `;
+        }).join("");
+
+        const typeRows = byType
+          .map((t) => {
+            const recs = filtered.filter((r) => r.analysis_type === t.name);
+            const passCnt = recs.filter((r) => r.qc_status === "pass").length;
+            const failCnt = recs.filter((r) => r.qc_status === "fail").length;
+            const samples =
+              Array.from(new Set(recs.map((r) => r.prepared_sample))).join(
+                ", ",
+              ) || "—";
+            const exps =
+              Array.from(new Set(recs.map((r) => r.experiment))).join(", ") ||
+              "—";
+            return `
+          <tr class="border-t border-[var(--border)] hover:bg-[var(--background)] transition">
+            <td class="py-2.5 px-3 font-semibold text-xs text-[var(--foreground)]">${t.name}<div class="font-mono text-xs text-[var(--muted-foreground)] font-normal">${t.tbl}</div></td>
+            <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">${t.aim}</td>
+            <td class="py-2.5 px-3 text-xs text-[var(--muted-foreground)]">${t.desc}</td>
+            <td class="py-2.5 px-3 text-xs font-mono">${samples}</td>
+            <td class="py-2.5 px-3 text-xs font-mono">${exps}</td>
+            <td class="py-2.5 px-3 text-xs font-mono text-right font-semibold">${recs.length}</td>
+            <td class="py-2.5 px-3 text-xs font-mono text-right">${passCnt}P / ${failCnt}F</td>
+            <td class="py-2.5 px-3 text-right">
+              <button onclick="switchTab('${t.tab}')" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">Open</button>
+            </td>
+          </tr>
+        `;
+          })
+          .join("");
+
+        return `
+        <!-- Diagnostic Notice on Materialized Views -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+          <div class="flex items-start gap-3">
+            <div class="px-2 py-1 rounded bg-[var(--accent)] text-[var(--foreground)] font-mono text-xs font-bold shrink-0">DB NOTE</div>
+            <div class="text-xs text-[var(--muted-foreground)] leading-relaxed">
+              <strong class="text-[var(--foreground)]">Why Materialized Views Return 0 Rows for Sargassum:</strong>
+              In <span class="font-mono">ca_biositing.datamodels.data_portal_views.common.EXCLUDED_RESOURCES</span>, <span class="font-mono">"sargassum"</span> is currently listed in the global exclusion list, so <span class="font-mono">ca_biositing.analysis_data_view</span> and <span class="font-mono">ca_biositing.analysis_average_view</span> filter it out. All data below was queried directly from the underlying normalized relational tables (<span class="font-mono">resource</span>, <span class="font-mono">field_sample</span>, <span class="font-mono">prepared_sample</span>, <span class="font-mono">observation</span>, and the 6 Aim 1 / Aim 2 record tables).
+            </div>
+          </div>
+        </div>
+
+        <!-- Sample Lineage & Prepared Sample Inventory -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h2 class="text-base font-bold text-[var(--foreground)]">Sample Lineage &amp; Prepared Sample Inventory (Click any card to filter)</h2>
+              <p class="text-xs text-[var(--muted-foreground)]">3 Field Samples collected from provider <span class="font-mono">hairpin</span> (GEOID <span class="font-mono">06000</span>) were processed into 6 Prepared Samples across 3 preparation methods.</p>
+            </div>
+            <div class="flex gap-2">
+              ${FIELD_SAMPLES_META.map(
+                (fs) => `
+                <button onclick="setQuickFilter('field_sample', '${fs.name}')" class="px-2.5 py-1 rounded-lg text-xs font-mono border ${state.field_sample === fs.name ? "bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]" : "bg-[var(--background)] text-[var(--foreground)] border-[var(--border)]"}">
+                  Field: ${fs.name} (${fs.collected.split(" ")[0]})
+                </button>
+              `,
+              ).join("")}
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            ${psCards}
+          </div>
+        </div>
+
+        <!-- Analysis Type Matrix -->
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm overflow-x-auto">
+          <h2 class="text-base font-bold text-[var(--foreground)] mb-3">Database Coverage by Analysis Type</h2>
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="text-xs font-semibold text-[var(--muted-foreground)] border-b border-[var(--border)]">
+                <th class="py-2 px-3">Analysis Type / Table</th>
+                <th class="py-2 px-3">Category</th>
+                <th class="py-2 px-3">Measured Parameters</th>
+                <th class="py-2 px-3">Prepared Samples</th>
+                <th class="py-2 px-3">Experiments</th>
+                <th class="py-2 px-3 text-right">Records</th>
+                <th class="py-2 px-3 text-right">QC Split</th>
+                <th class="py-2 px-3 text-right">Dashboard</th>
+              </tr>
+            </thead>
+            <tbody>${typeRows}</tbody>
+          </table>
+        </div>
+      `;
+      }
+
+      function renderProximateTab(filtered) {
+        const recs = filtered.filter(
+          (r) => r.analysis_type === "Proximate Analysis",
+        );
+        if (recs.length === 0) {
+          return emptyStateHtml("Proximate Analysis");
+        }
+
+        const groupKeyFn = (r) =>
+          state.proxGroupMode === "ps_exp"
+            ? `${r.prepared_sample} · ${r.experiment}${r.note ? " (" + r.note + ")" : ""}`
+            : r.prepared_sample;
+
+        const groups = Array.from(new Set(recs.map(groupKeyFn)));
+        const params = ["moisture", "total solids", "volatile solids", "ash"];
+
+        // Mass balance rows per group
+        const massBalanceHtml = groups
+          .map((g) => {
+            const gRecs = recs.filter((r) => groupKeyFn(r) === g);
+            const mStat = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "moisture")
+                .map((r) => r.value),
+            );
+            const tsStat = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "total solids")
+                .map((r) => r.value),
+            );
+            const vsStat = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "volatile solids")
+                .map((r) => r.value),
+            );
+            const ashStat = calcStats(
+              gRecs.filter((r) => r.parameter === "ash").map((r) => r.value),
+            );
+
+            const m = mStat.mean || 0;
+            const vs = vsStat.mean || 0;
+            const ash = ashStat.mean || 0;
+            const sumWet = m + vs + ash;
+
+            return `
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <span class="font-mono font-semibold text-xs text-[var(--foreground)]">${g}</span>
+              <span class="text-xs font-mono text-[var(--muted-foreground)]">
+                Moisture (${fmtNum(m)}%) + VS (${fmtNum(vs)}%) + Ash (${fmtNum(ash)}%) = <strong class="text-[var(--foreground)]">${fmtNum(sumWet)}%</strong> | Total Solids = <strong class="text-[var(--foreground)]">${fmtNum(tsStat.mean)}%</strong>
+              </span>
+            </div>
+            <div class="w-full h-5 rounded-lg bg-[var(--content)] overflow-hidden flex border border-[var(--border)]">
+              <div style="width: ${Math.min(100, (m / Math.max(100, sumWet)) * 100)}%" class="bg-[var(--primary)] h-full flex items-center justify-center text-xs text-[var(--primary-foreground)] font-mono truncate" title="Moisture: ${fmtNum(m)}%">${m > 8 ? "M " + fmtNum(m, 1) + "%" : ""}</div>
+              <div style="width: ${Math.min(100, (vs / Math.max(100, sumWet)) * 100)}%" class="bg-[var(--secondary)] h-full flex items-center justify-center text-xs text-[var(--secondary-foreground)] font-mono truncate border-l border-[var(--border)]" title="Volatile Solids: ${fmtNum(vs)}%">${vs > 8 ? "VS " + fmtNum(vs, 1) + "%" : ""}</div>
+              <div style="width: ${Math.min(100, (ash / Math.max(100, sumWet)) * 100)}%" class="bg-[var(--accent)] h-full flex items-center justify-center text-xs text-[var(--foreground)] font-mono truncate border-l border-[var(--border)]" title="Ash: ${fmtNum(ash)}%">${ash > 8 ? "Ash " + fmtNum(ash, 1) + "%" : ""}</div>
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+
+        const paramCards = params
+          .map((param) => {
+            const pRecs = recs.filter((r) => r.parameter === param);
+            const rowsHtml = groups
+              .map((g) => {
+                const gRecs = pRecs.filter((r) => groupKeyFn(r) === g);
+                if (gRecs.length === 0) return "";
+                const st = calcStats(gRecs.map((r) => r.value));
+                const pct = Math.min(100, Math.max(2, st.mean));
+                const dots = st.vals
+                  .map(
+                    (v) =>
+                      `<span class="inline-block px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-xs">${fmtNum(v)}%</span>`,
+                  )
+                  .join(" ");
+                return `
+            <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-3 space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-mono font-semibold text-[var(--foreground)]">${g}</span>
+                <span class="font-mono font-bold text-[var(--foreground)]">${fmtNum(st.mean)}% <span class="font-normal text-[var(--muted-foreground)]">± ${fmtNum(st.sd)} (n=${st.n})</span></span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-[var(--content)] overflow-hidden">
+                <div class="h-full rounded-full bg-[var(--primary)]" style="width: ${pct}%"></div>
+              </div>
+              <div class="flex flex-wrap items-center justify-between gap-1 pt-0.5 text-xs text-[var(--muted-foreground)]">
+                <span>Replicates: ${dots}</span>
+                <span class="font-mono">Range: ${fmtNum(st.min)}–${fmtNum(st.max)}%</span>
+              </div>
+            </div>
+          `;
+              })
+              .join("");
+
+            return `
+          <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3">
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+              <h3 class="text-sm font-bold uppercase tracking-wide text-[var(--foreground)]">${param}</h3>
+              <span class="text-xs font-mono text-[var(--muted-foreground)]">Unit: % total weight · ${pRecs.length} obs</span>
+            </div>
+            <div class="space-y-2.5">${rowsHtml}</div>
+          </div>
+        `;
+          })
+          .join("");
+
+        return `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-base font-bold text-[var(--foreground)]">Proximate Analysis Dashboard (46 Records · 100% QC Pass)</h2>
+              <p class="text-xs text-[var(--muted-foreground)]">Compares wet vs air-dried/as-is vs UC combined protocol samples across <span class="font-mono">hai-sarg025a(0d)</span>, <span class="font-mono">hai-sarg031a(e5)</span>, and <span class="font-mono">hai-sarg032a(d9)</span>.</p>
+            </div>
+            <div class="inline-flex rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5">
+              <button onclick="setSubMode('proxGroupMode', 'ps_exp')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === "ps_exp" ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "text-[var(--muted-foreground)]"}">Group by Sample × Experiment</button>
+              <button onclick="setSubMode('proxGroupMode', 'ps')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === "ps" ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "text-[var(--muted-foreground)]"}">Group by Prepared Sample</button>
+            </div>
+          </div>
+          <div class="space-y-2.5">
+            <div class="text-xs font-semibold text-[var(--muted-foreground)]">Wet-Basis Mass Balance Closure (Moisture + Volatile Solids + Ash)</div>
+            ${massBalanceHtml}
+          </div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${paramCards}</div>
+      `;
+      }
+
+      function renderCompositionalTab(filtered) {
+        const recs = filtered.filter(
+          (r) => r.analysis_type === "Compositional Analysis",
+        );
+        if (recs.length === 0) return emptyStateHtml("Compositional Analysis");
+
+        const order = ["lignin", "glucose", "glucan", "xylose", "xylan"];
+        const cardsHtml = order
+          .map((param) => {
+            const pRecs = recs.filter((r) => r.parameter === param);
+            if (pRecs.length === 0) return "";
+            const st = calcStats(pRecs.map((r) => r.value));
+            const pct = Math.min(100, (st.mean / 30) * 100);
+            const repsHtml = pRecs
+              .map(
+                (r) =>
+                  `<span class="px-2 py-0.5 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-xs">Rep ${r.replicate}: ${fmtNum(r.value)}% (${r.record_id})</span>`,
+              )
+              .join(" ");
+            return `
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-2">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-sm font-bold uppercase text-[var(--foreground)]">${param}</span>
+                <span class="ml-2 text-xs text-[var(--muted-foreground)] font-mono">(% dry weight)</span>
+              </div>
+              <div class="text-sm font-mono font-bold text-[var(--foreground)]">
+                ${fmtNum(st.mean)}% <span class="text-xs font-normal text-[var(--muted-foreground)]">± ${fmtNum(st.sd)}%</span>
+              </div>
+            </div>
+            <div class="w-full h-3 rounded-full bg-[var(--content)] overflow-hidden">
+              <div class="h-full rounded-full bg-[var(--primary)]" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-[var(--muted-foreground)]">
+              <div class="flex flex-wrap gap-1.5">${repsHtml}</div>
+              <span class="font-mono">Min–Max: ${fmtNum(st.min)}–${fmtNum(st.max)}%</span>
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+
+        return `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-[var(--foreground)]">Compositional Analysis Dashboard (Experiment: cmp14xk · Sample: hai-sarg025a(0d))</h2>
+            <p class="text-xs text-[var(--muted-foreground)] mt-0.5">
+              Triplicate compositional characterization (<span class="font-mono">% dry weight</span>) by analyst <span class="font-mono">—</span>. Polymer sum (<span class="font-mono">Glucan 10.02% + Xylan 4.41% + Lignin 25.85% = 40.28% dw</span>) reflects high marine macroalgae ash (~31–37%) and unmeasured marine carbohydrates (alginate/mannitol/fucoidan).
+            </p>
+          </div>
+
+          <!-- Dry Matter Closure Bar -->
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4">
+            <div class="flex items-center justify-between text-xs mb-2">
+              <span class="font-semibold text-[var(--foreground)]">Estimated Dry-Matter Mass Closure (hai-sarg025a(0d))</span>
+              <span class="font-mono text-[var(--muted-foreground)]">Lignin (25.85%) + Glucan (10.02%) + Xylan (4.41%) = 40.28% Structural Polymers</span>
+            </div>
+            <div class="w-full h-6 rounded-lg bg-[var(--content)] overflow-hidden flex border border-[var(--border)] text-xs font-mono">
+              <div style="width: 25.85%" class="bg-[var(--primary)] text-[var(--primary-foreground)] flex items-center justify-center truncate">Lignin 25.9%</div>
+              <div style="width: 10.02%" class="bg-[var(--secondary)] text-[var(--secondary-foreground)] flex items-center justify-center border-l border-[var(--border)] truncate">Glucan 10.0%</div>
+              <div style="width: 4.41%" class="bg-[var(--accent)] text-[var(--foreground)] flex items-center justify-center border-l border-[var(--border)] truncate">Xyl 4.4%</div>
+              <div style="width: 59.72%" class="bg-[var(--card)] text-[var(--muted-foreground)] flex items-center justify-center border-l border-[var(--border)] truncate">Ash (~33%) + Alginate / Mannitol / Protein (~26.7%)</div>
+            </div>
+          </div>
+
+          <div class="space-y-3">${cardsHtml}</div>
+        </div>
+      `;
+      }
+
+      function renderIcpTab(filtered) {
+        const recs = filtered.filter(
+          (r) => r.analysis_type === "ICP Elemental Analysis",
+        );
+        if (recs.length === 0) return emptyStateHtml("ICP Elemental Analysis");
+
+        const elemNames = {
+          k: "Potassium (K)",
+          ca: "Calcium (Ca)",
+          na: "Sodium (Na)",
+          s: "Sulfur (S)",
+          mg: "Magnesium (Mg)",
+          p: "Phosphorus (P)",
+          fe: "Iron (Fe)",
+          al: "Aluminum (Al)",
+          nd: "Neodymium (Nd)",
+          mn: "Manganese (Mn)",
+          zn: "Zinc (Zn)",
+          cu: "Copper (Cu)",
+          si: "Silicon (Si)",
+          ti: "Titanium (Ti)",
+        };
+
+        const params = Array.from(new Set(recs.map((r) => r.parameter)));
+        const statsList = params
+          .map((p) => {
+            const pRecs = recs.filter((r) => r.parameter === p);
+            const st = calcStats(pRecs.map((r) => r.value));
+            return {
+              param: p,
+              label: elemNames[p] || p.toUpperCase(),
+              st,
+              recs: pRecs,
+            };
+          })
+          .sort((a, b) => (b.st.mean || 0) - (a.st.mean || 0));
+
+        const renderElemRow = (item, maxRef, useLog) => {
+          const val = item.st.mean || 0;
+          let pct = 2;
+          if (useLog) {
+            pct =
+              val > 0
+                ? Math.min(100, (Math.log10(val + 1) / Math.log10(50000)) * 100)
+                : 2;
+          } else {
+            pct =
+              maxRef > 0 ? Math.min(100, Math.max(2, (val / maxRef) * 100)) : 2;
+          }
+          const reps = item.recs
+            .map(
+              (r) =>
+                `<span class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-xs">Rep ${r.replicate}: ${fmtNum(r.value)} ppm</span>`,
+            )
+            .join(" ");
+          return `
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-3 space-y-1.5">
+            <div class="flex items-center justify-between text-xs">
+              <span class="font-bold text-[var(--foreground)]">${item.label}</span>
+              <span class="font-mono font-bold text-[var(--foreground)]">${fmtNum(val)} ppm <span class="font-normal text-[var(--muted-foreground)]">(${fmtNum(val / 10000, 3)}% dw · n=${item.st.n})</span></span>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-[var(--content)] overflow-hidden">
+              <div class="h-full rounded-full bg-[var(--primary)]" style="width: ${pct}%"></div>
+            </div>
+            <div class="flex flex-wrap items-center justify-between gap-1 text-xs text-[var(--muted-foreground)]">
+              <div class="flex flex-wrap gap-1">${reps}</div>
+              <span class="font-mono">SD: ±${fmtNum(item.st.sd)} ppm</span>
+            </div>
+          </div>
+        `;
+        };
+
+        let bodyHtml = "";
+        if (state.icpScaleMode === "split") {
+          const macro = statsList.filter((x) => (x.st.mean || 0) >= 500);
+          const trace = statsList.filter((x) => (x.st.mean || 0) < 500);
+          bodyHtml = `
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-2.5">
+              <h3 class="text-sm font-bold text-[var(--foreground)] border-b border-[var(--border)] pb-2">Macro Elements (&ge; 500 ppm · Linear Scale up to 50,000 ppm)</h3>
+              ${macro.map((x) => renderElemRow(x, 50000, false)).join("")}
+            </div>
+            <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 space-y-2.5">
+              <h3 class="text-sm font-bold text-[var(--foreground)] border-b border-[var(--border)] pb-2">Trace &amp; Heavy Metals (&lt; 500 ppm · Linear Scale up to 300 ppm)</h3>
+              ${trace.map((x) => renderElemRow(x, 260, false)).join("")}
+            </div>
+          </div>
+        `;
+        } else {
+          const useLog = state.icpScaleMode === "log";
+          bodyHtml = `
+          <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${statsList.map((x) => renderElemRow(x, 50000, useLog)).join("")}
+          </div>
+        `;
+        }
+
+        return `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-base font-bold text-[var(--foreground)]">ICP Elemental Analysis (Experiment: icp03md · Sample: hai-sarg025a(0d) · Analyst: —)</h2>
+            <p class="text-xs text-[var(--muted-foreground)] mt-0.5">Total measured mineral concentration is <strong class="text-[var(--foreground)]">~127,932 ppm (~12.79% dry weight)</strong>, dominated by Potassium (48,200 ppm), Calcium (42,000 ppm), Sodium (15,900 ppm), Sulfur (11,350 ppm), and Magnesium (9,200 ppm).</p>
+          </div>
+          <div class="inline-flex rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5">
+            <button onclick="setSubMode('icpScaleMode', 'split')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.icpScaleMode === "split" ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "text-[var(--muted-foreground)]"}">Split Macro / Trace</button>
+            <button onclick="setSubMode('icpScaleMode', 'log')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.icpScaleMode === "log" ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "text-[var(--muted-foreground)]"}">Log10 Scale</button>
+            <button onclick="setSubMode('icpScaleMode', 'linear')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.icpScaleMode === "linear" ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "text-[var(--muted-foreground)]"}">Linear Scale</button>
+          </div>
+        </div>
+        ${bodyHtml}
+      `;
+      }
+
+      function renderPretreatmentTab(filtered) {
+        const recs = filtered.filter(
+          (r) => r.analysis_type === "Pretreatment & Hydrolysis",
+        );
+        if (recs.length === 0)
+          return emptyStateHtml("Pretreatment & Hydrolysis");
+
+        const condKey = (r) => `${r.pt_method} + ${r.eh_method} (${r.vessel})`;
+        const conds = Array.from(new Set(recs.map(condKey)));
+
+        const condCards = conds
+          .map((c) => {
+            const cRecs = recs.filter((r) => condKey(r) === c);
+            const gluRecs = cRecs.filter((r) => r.parameter === "glucose_yld");
+            const xylRecs = cRecs.filter((r) => r.parameter === "xylose_yld");
+            const emptyRecs = cRecs.filter((r) => !r.parameter);
+
+            const gSt = calcStats(gluRecs.map((r) => r.value));
+            const xSt = calcStats(xylRecs.map((r) => r.value));
+
+            const failNotes = cRecs
+              .filter((r) => r.qc_status === "fail")
+              .map(
+                (r) =>
+                  `<div class="text-xs px-2.5 py-1 rounded bg-[var(--accent)] text-[var(--foreground)] border border-[var(--border)] font-mono">QC FAIL [${r.record_id}]: ${r.parameter || "no_obs"} = ${r.value !== null ? r.value + "%" : "N/A"} ${r.note ? '— "' + r.note + '"' : ""}</div>`,
+              )
+              .join("");
+
+            return `
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-2">
+              <span class="font-mono font-bold text-sm text-[var(--foreground)]">${c}</span>
+              <span class="text-xs font-mono text-[var(--muted-foreground)]">${cRecs.length} records (${cRecs.filter((r) => r.qc_status === "pass").length}P / ${cRecs.filter((r) => r.qc_status === "fail").length}F)</span>
+            </div>
+
+            <!-- Glucose Yield -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="font-semibold text-[var(--foreground)]">Glucose Yield (% of glucan)</span>
+                <span class="font-mono font-bold">${fmtNum(gSt.mean)}% <span class="font-normal text-[var(--muted-foreground)]">± ${fmtNum(gSt.sd)}% (n=${gSt.n})</span></span>
+              </div>
+              <div class="w-full h-3 rounded-full bg-[var(--content)] overflow-hidden">
+                <div class="h-full rounded-full bg-[var(--primary)]" style="width: ${Math.min(100, gSt.mean || 0)}%"></div>
+              </div>
+              <div class="flex flex-wrap gap-1 pt-0.5">
+                ${gluRecs.map((r) => `<span class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-xs">Rep ${r.replicate}${r.well_or_block ? " [" + r.well_or_block + "]" : ""}: ${fmtNum(r.value)}% (${r.qc_status.toUpperCase()})</span>`).join("")}
+              </div>
+            </div>
+
+            <!-- Xylose Yield -->
+            <div class="space-y-1">
+              <div class="flex justify-between text-xs">
+                <span class="font-semibold text-[var(--foreground)]">Xylose Yield (% of xylan)</span>
+                <span class="font-mono font-bold">${fmtNum(xSt.mean)}% <span class="font-normal text-[var(--muted-foreground)]">± ${fmtNum(xSt.sd)}% (n=${xSt.n})</span></span>
+              </div>
+              <div class="w-full h-3 rounded-full bg-[var(--content)] overflow-hidden">
+                <div class="h-full rounded-full bg-[var(--secondary)]" style="width: ${Math.min(100, ((xSt.mean || 0) / 110) * 100)}%"></div>
+              </div>
+              <div class="flex flex-wrap gap-1 pt-0.5">
+                ${xylRecs.map((r) => `<span class="px-1.5 py-0.5 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-xs">Rep ${r.replicate}${r.well_or_block ? " [" + r.well_or_block + "]" : ""}: ${fmtNum(r.value)}% (${r.qc_status.toUpperCase()})</span>`).join("")}
+              </div>
+            </div>
+
+            ${failNotes ? `<div class="space-y-1 pt-1">${failNotes}</div>` : ""}
+          </div>
+        `;
+          })
+          .join("");
+
+        return `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-[var(--foreground)]">Pretreatment &amp; Enzymatic Hydrolysis Dashboard (32 Records · Sample: hai-sarg025a(0d))</h2>
+            <p class="text-xs text-[var(--muted-foreground)] mt-0.5">
+              Analyst: <span class="font-mono">—</span>. Compares 4 pretreatment regimes (<span class="font-mono">cho10pc</span> 10% choline chloride, <span class="font-mono">h2o140c</span> liquid hot water 140°C, <span class="font-mono">butknt140c</span>, and <span class="font-mono">none20c</span> untreated control) paired with 2 enzyme cocktails (<span class="font-mono">alga004</span> vs <span class="font-mono">enzy001</span>) across 4 reactor vessels. Toggle <strong>QC Status: Pass</strong> above to exclude the two &gt;100% xylose yield outliers (<span class="font-mono">106.3%</span>, <span class="font-mono">106.8%</span>) and the leaked hydrolysate tube (<span class="font-mono">chol149-4a31</span>).
+            </p>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${condCards}</div>
+        </div>
+      `;
+      }
+
+      function renderFermentationTab(filtered) {
+        const recs = filtered.filter(
+          (r) => r.analysis_type === "Fermentation (Bioconversion)",
+        );
+        if (recs.length === 0)
+          return emptyStateHtml("Fermentation (Bioconversion)");
+
+        const groupKey = (r) => `${r.prepared_sample} · ${r.experiment}`;
+        const groups = Array.from(new Set(recs.map(groupKey)));
+
+        // 1. 3-HP Titer & Yield cards by group
+        const bioconvCards = groups
+          .map((g) => {
+            const gRecs = recs.filter((r) => groupKey(r) === g);
+            const titerRecs = gRecs.filter((r) => r.parameter === "3hptiter");
+            const yieldRecs = gRecs.filter((r) => r.parameter === "3hpyield");
+            const odRecs = gRecs.filter((r) => r.parameter === "od600teof");
+            const grRecs = gRecs.filter((r) => r.parameter === "rel_growth");
+            const scRecs = gRecs.filter((r) => r.parameter === "sugar_cons");
+            const glu0 = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "gluconct0")
+                .map((r) => r.value),
+            );
+            const gluE = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "gluconcteof")
+                .map((r) => r.value),
+            );
+            const xyl0 = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "xylconct0")
+                .map((r) => r.value),
+            );
+            const xylE = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "xylconcteof")
+                .map((r) => r.value),
+            );
+            const sug0 = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "sugart0")
+                .map((r) => r.value),
+            );
+            const sugE = calcStats(
+              gRecs
+                .filter((r) => r.parameter === "sugarteof")
+                .map((r) => r.value),
+            );
+
+            const tSt = calcStats(titerRecs.map((r) => r.value));
+            const ySt = calcStats(yieldRecs.map((r) => r.value));
+            const odSt = calcStats(odRecs.map((r) => r.value));
+            const grSt = calcStats(grRecs.map((r) => r.value));
+            const scSt = calcStats(scRecs.map((r) => r.value));
+
+            const wells = Array.from(
+              new Set(gRecs.map((r) => r.well_or_block).filter(Boolean)),
+            ).join(", ");
+            const notes = Array.from(
+              new Set(gRecs.map((r) => r.note).filter(Boolean)),
+            ).join("; ");
+            const passCnt = gRecs.filter((r) => r.qc_status === "pass").length;
+            const failCnt = gRecs.filter((r) => r.qc_status === "fail").length;
+
+            return `
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-3">
+            <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-2">
+              <div>
+                <span class="font-mono font-bold text-sm text-[var(--foreground)]">${g}</span>
+                <span class="ml-2 text-xs font-mono text-[var(--muted-foreground)]">Wells: ${wells || "N/A"} · Prep: ${gRecs[0].prep_method}</span>
+              </div>
+              <span class="text-xs font-mono px-2 py-0.5 rounded bg-[var(--card)] border border-[var(--border)]">${passCnt} Pass / ${failCnt} Fail</span>
+            </div>
+
+            ${notes ? `<div class="px-2.5 py-1.5 rounded bg-[var(--accent)] text-[var(--foreground)] border border-[var(--border)] text-xs font-mono">QC Note: "${notes}" (causes 387.38% yield outlier in Rep 1)</div>` : ""}
+
+            <!-- Key Metrics Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2.5">
+                <div class="text-xs text-[var(--muted-foreground)]">3-HP Titer (g/L)</div>
+                <div class="text-base font-bold font-mono text-[var(--foreground)]">${fmtNum(tSt.mean)} <span class="text-xs font-normal">± ${fmtNum(tSt.sd)}</span></div>
+                <div class="text-xs font-mono text-[var(--muted-foreground)]">Reps: ${tSt.vals.map((v) => fmtNum(v)).join(", ") || "—"}</div>
+              </div>
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2.5">
+                <div class="text-xs text-[var(--muted-foreground)]">3-HP Yield (% g/g)</div>
+                <div class="text-base font-bold font-mono text-[var(--foreground)]">${fmtNum(ySt.mean)} <span class="text-xs font-normal">± ${fmtNum(ySt.sd)}</span></div>
+                <div class="text-xs font-mono text-[var(--muted-foreground)]">Reps: ${ySt.vals.map((v) => fmtNum(v)).join(", ") || "—"}</div>
+              </div>
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2.5">
+                <div class="text-xs text-[var(--muted-foreground)]">Sugar Consumed (%)</div>
+                <div class="text-base font-bold font-mono text-[var(--foreground)]">${fmtNum(scSt.mean)}% <span class="text-xs font-normal">± ${fmtNum(scSt.sd)}</span></div>
+                <div class="text-xs font-mono text-[var(--muted-foreground)]">Reps: ${scSt.vals.map((v) => fmtNum(v)).join(", ") || "—"}</div>
+              </div>
+            </div>
+
+            <!-- Sugar Depletion t0 -> tEOF -->
+            <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-3 space-y-2">
+              <div class="text-xs font-semibold text-[var(--foreground)]">Sugar Depletion Dynamics (t0 Initial &rarr; tEOF Final, g/L)</div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs font-mono">
+                <div class="p-2 rounded bg-[var(--background)] border border-[var(--border)]">
+                  <div class="text-[var(--muted-foreground)]">Glucose (g/L)</div>
+                  <div class="font-bold text-[var(--foreground)]">${fmtNum(glu0.mean)} &rarr; ${fmtNum(gluE.mean)} g/L</div>
+                </div>
+                <div class="p-2 rounded bg-[var(--background)] border border-[var(--border)]">
+                  <div class="text-[var(--muted-foreground)]">Xylose (g/L)</div>
+                  <div class="font-bold text-[var(--foreground)]">${fmtNum(xyl0.mean)} &rarr; ${fmtNum(xylE.mean)} g/L</div>
+                </div>
+                <div class="p-2 rounded bg-[var(--background)] border border-[var(--border)]">
+                  <div class="text-[var(--muted-foreground)]">Total Sugar (g/L)</div>
+                  <div class="font-bold text-[var(--foreground)]">${fmtNum(sug0.mean)} &rarr; ${fmtNum(sugE.mean)} g/L</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Growth metrics (OD600 & Rel Growth) -->
+            <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--muted-foreground)] pt-1 font-mono">
+              <span>OD600 (tEOF): <strong class="text-[var(--foreground)]">${fmtNum(odSt.mean)}</strong> (n=${odSt.n})</span>
+              <span>Relative Growth: <strong class="text-[var(--foreground)]">${fmtNum(grSt.mean)}%</strong> (n=${grSt.n})</span>
+            </div>
+          </div>
+        `;
+          })
+          .join("");
+
+        return `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-[var(--foreground)]">Fermentation / Bioconversion Dashboard (132 Records · 81 QC Pass, 51 QC Fail)</h2>
+            <p class="text-xs text-[var(--muted-foreground)] mt-0.5">
+              Strain: <span class="font-mono font-semibold text-[var(--foreground)]">Rhodosporidium toruloides MCR-ALD6-g2945</span> · Bioconversion Method: <span class="font-mono">2rho-3hp</span> (3-hydroxypropionic acid production) · Pretreatment: <span class="font-mono">cho10pc</span> · EH: <span class="font-mono">enzymatic hydrolysis 1</span> · Vessel: <span class="font-mono">incubator shaker</span> · Analyst: <span class="font-mono">—</span>.
+            </p>
+          </div>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">${bioconvCards}</div>
+        </div>
+      `;
+      }
+
+      function renderExplorerTab(filtered) {
+        const rowsHtml = filtered
+          .map(
+            (r) => `
+        <tr class="border-t border-[var(--border)] hover:bg-[var(--background)] text-xs">
+          <td class="py-2 px-2.5 font-mono font-semibold">${r.record_id}</td>
+          <td class="py-2 px-2.5">${r.analysis_type}</td>
+          <td class="py-2 px-2.5 font-mono">${r.prepared_sample}</td>
+          <td class="py-2 px-2.5">${r.prep_method}</td>
+          <td class="py-2 px-2.5 font-mono">${r.experiment}</td>
+          <td class="py-2 px-2.5 font-mono font-semibold">${r.parameter || '<span class="text-[var(--muted-foreground)] italic">No obs (metadata only)</span>'}</td>
+          <td class="py-2 px-2.5 font-mono text-right font-bold">${r.value !== null ? fmtNum(r.value, 3) : "—"}</td>
+          <td class="py-2 px-2.5 font-mono text-[var(--muted-foreground)]">${r.unit || "—"}</td>
+          <td class="py-2 px-2.5 font-mono text-center">${r.replicate || "—"}</td>
+          <td class="py-2 px-2.5 font-mono">${r.pt_method !== "N/A" ? r.pt_method + " / " + r.eh_method : r.method}</td>
+          <td class="py-2 px-2.5 font-mono">${r.vessel !== "N/A" ? r.vessel : ""}${r.well_or_block ? " [" + r.well_or_block + "]" : ""}</td>
+          <td class="py-2 px-2.5 font-mono">${r.analyst_label}</td>
+          <td class="py-2 px-2.5 text-center">${qcBadgeHtml(r.qc_status)}</td>
+          <td class="py-2 px-2.5 text-[var(--muted-foreground)]">${r.note || ""}</td>
+        </tr>
+      `,
+          )
+          .join("");
+
+        return `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 class="text-base font-bold text-[var(--foreground)]">Complete Sargassum Record Explorer (${filtered.length} matching records)</h2>
+              <p class="text-xs text-[var(--muted-foreground)]">Includes all Aim 1 &amp; Aim 2 records, including Calorimetry record <span class="font-mono">(0d)ea9c</span> (<span class="font-mono">cal25xk</span>) and Pretreatment failed records without observations (<span class="font-mono">chol149-4a31</span>, <span class="font-mono">chol146-886f</span>).</p>
+            </div>
+          </div>
+          <div class="overflow-x-auto max-h-[560px] overflow-y-auto border border-[var(--border)] rounded-lg">
+            <table class="w-full text-left border-collapse">
+              <thead class="sticky top-0 bg-[var(--card)] border-b border-[var(--border)] text-xs font-semibold text-[var(--muted-foreground)]">
+                <tr>
+                  <th class="py-2.5 px-2.5">Record ID</th>
+                  <th class="py-2.5 px-2.5">Analysis Type</th>
+                  <th class="py-2.5 px-2.5">Prepared Sample</th>
+                  <th class="py-2.5 px-2.5">Prep Method</th>
+                  <th class="py-2.5 px-2.5">Exp</th>
+                  <th class="py-2.5 px-2.5">Parameter</th>
+                  <th class="py-2.5 px-2.5 text-right">Value</th>
+                  <th class="py-2.5 px-2.5">Unit</th>
+                  <th class="py-2.5 px-2.5 text-center">Rep</th>
+                  <th class="py-2.5 px-2.5">Method / PT+EH</th>
+                  <th class="py-2.5 px-2.5">Vessel / Pos</th>
+                  <th class="py-2.5 px-2.5">Analyst</th>
+                  <th class="py-2.5 px-2.5 text-center">QC</th>
+                  <th class="py-2.5 px-2.5">Note</th>
+                </tr>
+              </thead>
+              <tbody>${rowsHtml}</tbody>
+            </table>
+          </div>
+        </div>
+      `;
+      }
+
+      function emptyStateHtml(title) {
+        return `
+        <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-8 text-center space-y-2">
+          <div class="text-sm font-bold text-[var(--foreground)]">No ${title} records match the active filter combination</div>
+          <p class="text-xs text-[var(--muted-foreground)]">Try setting Prepared Sample, Experiment, or QC Status to "All" or click "Reset Filters".</p>
+        </div>
+      `;
+      }
+
+      function renderAll() {
+        const filtered = getFilteredRecords();
+        renderKpiStrip(filtered);
+
+        const container = document.getElementById("tab-content");
+        if (state.tab === "overview")
+          container.innerHTML = renderOverviewTab(filtered);
+        else if (state.tab === "proximate")
+          container.innerHTML = renderProximateTab(filtered);
+        else if (state.tab === "compositional")
+          container.innerHTML = renderCompositionalTab(filtered);
+        else if (state.tab === "icp")
+          container.innerHTML = renderIcpTab(filtered);
+        else if (state.tab === "pretreatment")
+          container.innerHTML = renderPretreatmentTab(filtered);
+        else if (state.tab === "fermentation")
+          container.innerHTML = renderFermentationTab(filtered);
+        else if (state.tab === "explorer")
+          container.innerHTML = renderExplorerTab(filtered);
+      }
+
+      window.switchTab = function (tabName) {
+        state.tab = tabName;
+        renderAll();
+      };
+
+      window.setSubMode = function (key, val) {
+        state[key] = val;
+        renderAll();
+      };
+
+      window.setQuickFilter = function (key, val) {
+        state[key] = state[key] === val ? "all" : val;
+        const mapId = {
+          prepared_sample: "flt-prepared-sample",
+          field_sample: "flt-field-sample",
+        };
+        if (mapId[key]) document.getElementById(mapId[key]).value = state[key];
+        renderAll();
+      };
+
+      function bindEvents() {
+        const selectMap = {
+          "flt-prepared-sample": "prepared_sample",
+          "flt-field-sample": "field_sample",
+          "flt-prep-method": "prep_method",
+          "flt-experiment": "experiment",
+          "flt-analyst": "analyst",
+          "flt-pt-method": "pt_method",
+          "flt-eh-method": "eh_method",
+          "flt-vessel": "vessel",
+        };
+        Object.entries(selectMap).forEach(([id, key]) => {
+          document.getElementById(id).addEventListener("change", (e) => {
+            state[key] = e.target.value;
+            renderAll();
+          });
+        });
+
+        document.getElementById("flt-search").addEventListener("input", (e) => {
+          state.search = e.target.value;
+          renderAll();
+        });
+
+        document.querySelectorAll(".qc-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            state.qc_status = btn.dataset.qc;
+            document.querySelectorAll(".qc-btn").forEach((b) => {
+              b.className =
+                b.dataset.qc === state.qc_status
+                  ? "qc-btn py-1 rounded-md text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]"
+                  : "qc-btn py-1 rounded-md text-xs font-medium text-[var(--muted-foreground)]";
+            });
+            renderAll();
+          });
+        });
+
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            state.tab = btn.dataset.tab;
+            renderAll();
+          });
+        });
+
+        document
+          .getElementById("btn-reset-filters")
+          .addEventListener("click", () => {
+            state.prepared_sample = "all";
+            state.qc_status = "all";
+            state.field_sample = "all";
+            state.prep_method = "all";
+            state.experiment = "all";
+            state.analyst = "all";
+            state.pt_method = "all";
+            state.eh_method = "all";
+            state.vessel = "all";
+            state.search = "";
+            Object.keys(selectMap).forEach((id) => {
+              document.getElementById(id).value = "all";
+            });
+            document.getElementById("flt-search").value = "";
+            document.querySelectorAll(".qc-btn").forEach((b) => {
+              b.className =
+                b.dataset.qc === "all"
+                  ? "qc-btn py-1 rounded-md text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]"
+                  : "qc-btn py-1 rounded-md text-xs font-medium text-[var(--muted-foreground)]";
+            });
+            renderAll();
+          });
+
+        document
+          .getElementById("btn-copy-csv")
+          .addEventListener("click", () => {
+            const filtered = getFilteredRecords();
+            const headers = [
+              "record_id",
+              "analysis_type",
+              "prepared_sample",
+              "field_sample",
+              "prep_method",
+              "experiment",
+              "parameter",
+              "value",
+              "unit",
+              "replicate",
+              "qc_status",
+              "pt_method",
+              "eh_method",
+              "vessel",
+              "well_or_block",
+              "analyst",
+              "note",
+            ];
+            const csv = [
+              headers.join(","),
+              ...filtered.map((r) =>
+                headers
+                  .map((h) => `"${String(r[h] ?? "").replace(/"/g, '""')}"`)
+                  .join(","),
+              ),
+            ].join("\n");
+            navigator.clipboard.writeText(csv);
+            const btn = document.getElementById("btn-copy-csv");
+            btn.textContent = `Copied ${filtered.length} rows!`;
+            setTimeout(() => {
+              btn.textContent = "Copy Filtered CSV";
+            }, 2000);
+          });
+
+        document
+          .getElementById("btn-theme-toggle")
+          .addEventListener("click", () => {
+            const root = document.documentElement;
+            const next =
+              root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+            root.setAttribute("data-theme", next);
+            root.classList.toggle("dark", next === "dark");
+            document.getElementById("btn-theme-toggle").textContent =
+              next === "dark" ? "☀️ Light Mode" : "🌙 Dark Mode";
+          });
+      }
+
+      initFilters();
+      bindEvents();
+      renderAll();
+    </script>
+  </body>
+</html>
