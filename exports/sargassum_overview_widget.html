@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root, [data-theme="light"] {
+      --background: #f1f5f9;
+      --card: #ffffff;
+      --content: #e2e8f0;
+      --foreground: #0f172a;
+      --muted-foreground: #475569;
+      --primary: #0284c7;
+      --primary-foreground: #ffffff;
+      --secondary: #e2e8f0;
+      --secondary-foreground: #0f172a;
+      --accent: #ffe4e6;
+      --accent-foreground: #9f1239;
+      --border: #cbd5e1;
+      --pass-bg: #d1fae5;
+      --pass-fg: #065f46;
+      --pass-border: #6ee7b7;
+      --fail-bg: #ffe4e6;
+      --fail-fg: #9f1239;
+      --fail-border: #fda4af;
+      --bar-fill: #0284c7;
+      --bar-fail: #e11d48;
+      color-scheme: light;
+    }
+    [data-theme="dark"] {
+      --background: #0f172a;
+      --card: #1e293b;
+      --content: #334155;
+      --foreground: #f8fafc;
+      --muted-foreground: #cbd5e1;
+      --primary: #38bdf8;
+      --primary-foreground: #0f172a;
+      --secondary: #334155;
+      --secondary-foreground: #f8fafc;
+      --accent: #4c0519;
+      --accent-foreground: #fda4af;
+      --border: #475569;
+      --pass-bg: #064e3b;
+      --pass-fg: #6ee7b7;
+      --pass-border: #059669;
+      --fail-bg: #4c0519;
+      --fail-fg: #fda4af;
+      --fail-border: #e11d48;
+      --bar-fill: #38bdf8;
+      --bar-fail: #fb7185;
+      color-scheme: dark;
+    }
+    html, body {
+      background-color: var(--background) !important;
+      color: var(--foreground) !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    select {
+      background-color: var(--card) !important;
+      color: var(--foreground) !important;
+      border-color: var(--border) !important;
+    }
+    option {
+      background-color: var(--card);
+      color: var(--foreground);
+    }
+    .badge-pass {
+      background-color: var(--pass-bg);
+      color: var(--pass-fg);
+      border: 1px solid var(--pass-border);
+    }
+    .badge-fail {
+      background-color: var(--fail-bg);
+      color: var(--fail-fg);
+      border: 1px solid var(--fail-border);
+    }
+  </style>
+</head>
+<body class="bg-[var(--background)] text-[var(--foreground)] antialiased p-3">
+  <div class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-xl p-4 shadow-sm">
+    <!-- Header & Quick Controls -->
+    <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-[var(--border)]">
+      <div>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-bold text-base text-[var(--foreground)]">Sargassum Quick Explorer</span>
+          <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">Resource #3 · macroalgae</span>
+          <span id="w-count-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)]">252 records</span>
+        </div>
+        <p class="text-xs text-[var(--muted-foreground)] mt-0.5">Filter by prepared sample &amp; QC status across 6 database analysis tables (Provider: <span class="font-mono font-semibold text-[var(--foreground)]">hairpin</span> · GEOID: <span class="font-mono font-semibold text-[var(--foreground)]">06000</span>)</p>
+      </div>
+
+      <!-- Filters + Theme Toggle -->
+      <div class="flex flex-wrap items-center gap-2">
+        <select id="w-sample-select" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg px-2.5 py-1 text-xs font-medium focus:outline-none">
+          <option value="all">All Prepared Samples (6)</option>
+          <option value="hai-sarg025a(0d)">hai-sarg025a(0d) · as is (162)</option>
+          <option value="hai-sarg031a(e5)">hai-sarg031a(e5) · as is (12)</option>
+          <option value="hai-sarg032a(d9)">hai-sarg032a(d9) · as is (12)</option>
+          <option value="hai-sarg031okm2(42)">hai-sarg031okm2(42) · oven+km2 (33)</option>
+          <option value="hai-sarg032okm2(96)">hai-sarg032okm2(96) · oven+km2 (33)</option>
+          <option value="hai-sarg025km2(b7)">hai-sarg025km2(b7) · km2 (0)</option>
+        </select>
+
+        <div class="inline-flex rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5" id="w-qc-group">
+          <button data-qc="all" class="w-qc-btn px-2.5 py-1 rounded-md text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">All QC</button>
+          <button data-qc="pass" class="w-qc-btn px-2.5 py-1 rounded-md text-xs font-medium text-[var(--muted-foreground)]">Pass</button>
+          <button data-qc="fail" class="w-qc-btn px-2.5 py-1 rounded-md text-xs font-medium text-[var(--muted-foreground)]">Fail</button>
+        </div>
+
+        <button id="w-theme-toggle" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]" title="Switch Light / Dark Theme">
+          🌙 Dark
+        </button>
+      </div>
+    </div>
+
+    <!-- Analysis Type Tabs -->
+    <div class="flex flex-wrap items-center justify-between gap-2 my-2.5">
+      <div class="flex flex-wrap gap-1" id="w-tabs">
+        <button data-tab="proximate" class="w-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">Proximate (46)</button>
+        <button data-tab="compositional" class="w-tab-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--secondary)] text-[var(--secondary-foreground)]">Compositional (15)</button>
+        <button data-tab="icp" class="w-tab-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--secondary)] text-[var(--secondary-foreground)]">ICP Elements (26)</button>
+        <button data-tab="pretreatment" class="w-tab-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--secondary)] text-[var(--secondary-foreground)]">Pretreatment (32)</button>
+        <button data-tab="fermentation" class="w-tab-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--secondary)] text-[var(--secondary-foreground)]">Fermentation (132)</button>
+      </div>
+      <div id="w-meta-pill" class="text-xs text-[var(--muted-foreground)] font-mono"></div>
+    </div>
+
+    <!-- Compact Bars Area -->
+    <div id="w-chart-area" class="space-y-2 pt-1"></div>
+
+    <!-- Footer Note -->
+    <div class="mt-3 pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-xs text-[var(--muted-foreground)]">
+      <span id="w-footer-note">Open <strong>sargassum_analysis_dashboards.html</strong> in the side pane for all 7 tabs, multi-metadata filters &amp; CSV export.</span>
+      <span class="font-mono font-semibold text-[var(--foreground)]" id="w-qc-summary">Pass: 197 · Fail: 55</span>
+    </div>
+  </div>
+
+  <script>
+    const SUMMARY_DATA = {
+      proximate: {
+        meta: "Exps: prox07xk, prox12xk, prox50sd · Unit: % total weight",
+        rows: [
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Moisture (prox07xk / as is)", val: 10.50, min: 10.36, max: 10.57, n: 9, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Moisture (prox50sd / UC comb.)", val: 2.01, min: 2.01, max: 2.01, n: 1, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg031a(e5)", qc: "pass", param: "Moisture (prox12xk / as is)", val: 14.16, min: 12.96, max: 15.42, n: 3, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg032a(d9)", qc: "pass", param: "Moisture (prox12xk / wet)", val: 80.93, min: 79.79, max: 82.14, n: 3, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Volatile Solids (all prox)", val: 50.60, min: 27.03, max: 58.57, n: 6, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg031a(e5)", qc: "pass", param: "Volatile Solids (prox12xk)", val: 53.74, min: 53.39, max: 54.14, n: 3, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg032a(d9)", qc: "pass", param: "Volatile Solids (prox12xk)", val: 10.32, min: 9.75, max: 10.77, n: 3, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Ash (all prox)", val: 32.62, min: 30.86, max: 37.39, n: 6, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg031a(e5)", qc: "pass", param: "Ash (prox12xk)", val: 32.10, min: 30.88, max: 33.65, n: 3, unit: "% wt", maxScale: 100 },
+          { ps: "hai-sarg032a(d9)", qc: "pass", param: "Ash (prox12xk)", val: 8.75, min: 8.11, max: 9.44, n: 3, unit: "% wt", maxScale: 100 }
+        ]
+      },
+      compositional: {
+        meta: "Exp: cmp14xk · Sample: hai-sarg025a(0d) · Unit: % dry weight",
+        rows: [
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Lignin", val: 25.85, min: 25.40, max: 26.39, n: 3, unit: "% dw", maxScale: 35 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Glucose (monomer eq.)", val: 11.13, min: 11.02, max: 11.30, n: 3, unit: "% dw", maxScale: 35 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Glucan (polymer)", val: 10.02, min: 9.92, max: 10.17, n: 3, unit: "% dw", maxScale: 35 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Xylose (monomer eq.)", val: 5.01, min: 4.67, max: 5.46, n: 3, unit: "% dw", maxScale: 35 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Xylan (polymer)", val: 4.41, min: 4.11, max: 4.81, n: 3, unit: "% dw", maxScale: 35 }
+        ]
+      },
+      icp: {
+        meta: "Exp: icp03md · Sample: hai-sarg025a(0d) · Top 6 Macro Elements (ppm)",
+        rows: [
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Potassium (K)", val: 48200, min: 48200, max: 48200, n: 1, unit: "ppm", maxScale: 50000 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Calcium (Ca)", val: 42000, min: 41900, max: 42100, n: 2, unit: "ppm", maxScale: 50000 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Sodium (Na)", val: 15900, min: 15900, max: 15900, n: 1, unit: "ppm", maxScale: 50000 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Sulfur (S)", val: 11350, min: 11300, max: 11400, n: 2, unit: "ppm", maxScale: 50000 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Magnesium (Mg)", val: 9200, min: 9200, max: 9200, n: 2, unit: "ppm", maxScale: 50000 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Phosphorus (P) + 8 Trace Metals", val: 869.5, min: 729, max: 1010, n: 20, unit: "ppm", maxScale: 50000 }
+        ]
+      },
+      pretreatment: {
+        meta: "Sample: hai-sarg025a(0d) · 4 PT Methods × 2 EH Methods",
+        rows: [
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Glucose Yield · cho10pc + alga004", val: 87.85, min: 87.4, max: 88.3, n: 2, unit: "% glucan", maxScale: 110 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Glucose Yield · cho10pc + enzy001", val: 80.33, min: 71.5, max: 87.0, n: 4, unit: "% glucan", maxScale: 110 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Glucose Yield · h2o140c + enzy001", val: 70.20, min: 69.2, max: 71.0, n: 3, unit: "% glucan", maxScale: 110 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Glucose Yield · butknt140c / none20c", val: 50.15, min: 46.7, max: 53.4, n: 6, unit: "% glucan", maxScale: 110 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "Xylose Yield · QC Pass (all PT)", val: 37.84, min: 6.6, max: 60.8, n: 13, unit: "% xylan", maxScale: 110 },
+          { ps: "hai-sarg025a(0d)", qc: "fail", param: "Xylose Yield · QC Fail (>100% outliers)", val: 106.55, min: 106.3, max: 106.8, n: 2, unit: "% xylan", maxScale: 110 }
+        ]
+      },
+      fermentation: {
+        meta: "Strain: R. toruloides MCR-ALD6-g2945 · Method: 2rho-3hp",
+        rows: [
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "3-HP Titer · hai-sarg025a(0d) (bio31/33)", val: 3.70, min: 0.0, max: 4.96, n: 6, unit: "g/L", maxScale: 6 },
+          { ps: "hai-sarg032okm2(96)", qc: "pass", param: "3-HP Titer · hai-sarg032okm2(96) (bio33)", val: 3.94, min: 3.92, max: 3.98, n: 3, unit: "g/L", maxScale: 6 },
+          { ps: "hai-sarg031okm2(42)", qc: "fail", param: "3-HP Titer · hai-sarg031okm2(42) [QC Fail]", val: 4.33, min: 4.13, max: 4.62, n: 3, unit: "g/L", maxScale: 6 },
+          { ps: "hai-sarg025a(0d)", qc: "pass", param: "3-HP Yield · hai-sarg025a(0d) [QC Pass]", val: 18.95, min: 0.0, max: 27.07, n: 6, unit: "% g/g", maxScale: 160 },
+          { ps: "hai-sarg032okm2(96)", qc: "pass", param: "3-HP Yield · hai-sarg032okm2(96) [QC Pass]", val: 14.84, min: 14.36, max: 15.48, n: 3, unit: "% g/g", maxScale: 160 },
+          { ps: "hai-sarg031okm2(42)", qc: "fail", param: "3-HP Yield · hai-sarg031okm2(42) [Failed Glu]", val: 150.63, min: 30.39, max: 387.38, n: 3, unit: "% g/g", maxScale: 160 }
+        ]
+      }
+    };
+
+    let activeTab = "proximate";
+    let activeSample = "all";
+    let activeQc = "all";
+
+    function renderWidget() {
+      const tabData = SUMMARY_DATA[activeTab];
+      document.getElementById("w-meta-pill").textContent = tabData.meta;
+
+      const filtered = tabData.rows.filter(r => {
+        const matchSample = activeSample === "all" || r.ps === activeSample;
+        const matchQc = activeQc === "all" || r.qc === activeQc;
+        return matchSample && matchQc;
+      });
+
+      const container = document.getElementById("w-chart-area");
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="py-6 text-center text-xs text-[var(--muted-foreground)] border border-dashed border-[var(--border)] rounded-lg">No records in <span class="font-semibold text-[var(--foreground)]">${activeTab}</span> match sample <span class="font-mono text-[var(--foreground)]">${activeSample}</span> with QC <span class="font-mono text-[var(--foreground)]">${activeQc}</span>. Try switching analysis tab or setting Sample/QC to All.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.slice(0, 6).map(r => {
+        const pct = Math.min(100, Math.max(3, (r.val / r.maxScale) * 100));
+        const qcBadge = r.qc === "pass"
+          ? `<span class="badge-pass px-1.5 py-0.5 text-xs rounded font-mono font-semibold">PASS</span>`
+          : `<span class="badge-fail px-1.5 py-0.5 text-xs rounded font-mono font-semibold">FAIL</span>`;
+        const barColor = r.qc === "pass" ? "var(--bar-fill)" : "var(--bar-fail)";
+        return `
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg px-3 py-2">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <div class="flex items-center gap-1.5 truncate">
+                ${qcBadge}
+                <span class="font-semibold text-[var(--foreground)] truncate">${r.param}</span>
+                <span class="text-[var(--muted-foreground)] font-mono">(${r.ps})</span>
+              </div>
+              <div class="font-mono text-xs shrink-0 ml-2">
+                <span class="font-bold text-[var(--foreground)]">${r.val.toLocaleString(undefined, {maximumFractionDigits: 2})} ${r.unit}</span>
+                <span class="text-[var(--muted-foreground)] ml-1">[${r.min}–${r.max}, n=${r.n}]</span>
+              </div>
+            </div>
+            <div class="w-full h-2.5 rounded-full bg-[var(--content)] overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-300" style="width: ${pct}%; background-color: ${barColor};"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    document.getElementById("w-sample-select").addEventListener("change", e => {
+      activeSample = e.target.value;
+      renderWidget();
+    });
+
+    document.querySelectorAll(".w-qc-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeQc = btn.dataset.qc;
+        document.querySelectorAll(".w-qc-btn").forEach(b => {
+          b.className = b.dataset.qc === activeQc
+            ? "w-qc-btn px-2.5 py-1 rounded-md text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]"
+            : "w-qc-btn px-2.5 py-1 rounded-md text-xs font-medium text-[var(--muted-foreground)]";
+        });
+        renderWidget();
+      });
+    });
+
+    document.querySelectorAll(".w-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeTab = btn.dataset.tab;
+        document.querySelectorAll(".w-tab-btn").forEach(b => {
+          b.className = b.dataset.tab === activeTab
+            ? "w-tab-btn px-2.5 py-1 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]"
+            : "w-tab-btn px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--secondary)] text-[var(--secondary-foreground)]";
+        });
+        renderWidget();
+      });
+    });
+
+    document.getElementById("w-theme-toggle").addEventListener("click", () => {
+      const root = document.documentElement;
+      const next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+      root.setAttribute("data-theme", next);
+      root.classList.toggle("dark", next === "dark");
+      document.getElementById("w-theme-toggle").textContent = next === "dark" ? "☀️ Light" : "🌙 Dark";
+    });
+
+    renderWidget();
+  </script>
+</body>
+</html>
