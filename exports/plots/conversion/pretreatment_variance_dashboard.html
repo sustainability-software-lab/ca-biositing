@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="en" class="dark" data-theme="dark" data-user-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BioCirV — Pretreatment Variance Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html[data-user-theme="light"], body[data-user-theme="light"] {
+      --background: #f8fafc;
+      --card: #ffffff;
+      --foreground: #0f172a;
+      --muted-foreground: #475569;
+      --primary: #0284c7;
+      --primary-foreground: #ffffff;
+      --secondary: #e2e8f0;
+      --secondary-foreground: #0f172a;
+      --border: #cbd5e1;
+      color-scheme: light;
+    }
+    :root, html[data-user-theme="dark"], body[data-user-theme="dark"] {
+      --background: #0f172a;
+      --card: #1e293b;
+      --foreground: #f8fafc;
+      --muted-foreground: #94a3b8;
+      --primary: #00B5E2;
+      --primary-foreground: #0f172a;
+      --secondary: #334155;
+      --secondary-foreground: #f8fafc;
+      --border: #334155;
+      color-scheme: dark;
+    }
+    body {
+      background-color: var(--background);
+      color: var(--foreground);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    select, input {
+      background-color: var(--background);
+      color: var(--foreground);
+      border-color: var(--border);
+    }
+  </style>
+</head>
+<body data-user-theme="dark" class="bg-[var(--background)] text-[var(--foreground)] antialiased p-2 select-none">
+  <div class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-xl p-3.5 shadow-sm">
+    <!-- Top Header & View Switcher -->
+    <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[var(--border)]">
+      <div class="flex items-center gap-2.5">
+        <div class="w-2.5 h-2.5 rounded-full bg-[#00B5E2]"></div>
+        <h2 class="text-[var(--foreground)] font-semibold text-base tracking-tight">BioCirV — Pretreatment Variance Dashboard</h2>
+        <span id="badge-count" class="text-xs px-2 py-0.5 rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] font-medium">884 obs</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1 bg-[var(--background)] p-1 rounded-lg border border-[var(--border)]">
+          <button id="tab-scatter" onclick="setTab('scatter')" class="text-xs px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)] transition-colors">
+            Scatter by Method
+          </button>
+          <button id="tab-strip" onclick="setTab('strip')" class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
+            Replicate Strip Plot
+          </button>
+          <button id="tab-export" onclick="setTab('export')" class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
+            Export Tray (<span id="tray-count">0</span>)
+          </button>
+        </div>
+        <button id="theme-toggle" onclick="toggleTheme()" class="text-xs px-2.5 py-1 rounded-lg border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:bg-[var(--secondary)] font-medium transition-colors">
+          ☀️ Light
+        </button>
+      </div>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="flex flex-wrap items-center gap-2 py-2 border-b border-[var(--border)] text-xs">
+      <!-- Status / QC Filter -->
+      <div class="flex items-center gap-1">
+        <span class="text-[var(--muted-foreground)] font-medium">Status / QC:</span>
+        <select id="filter-status" onchange="applyFilters()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs focus:outline-none">
+          <option value="ALL">All Statuses &amp; QC (884)</option>
+          <option value="Portal Compliant">Portal Compliant (685)</option>
+          <option value="Raw">Raw / Portal Excluded (199)</option>
+          <option value="qc_pass">qc_pass: pass (835)</option>
+          <option value="qc_fail">qc_pass: fail (49)</option>
+        </select>
+      </div>
+
+      <!-- Parameter Filter -->
+      <div class="flex items-center gap-1">
+        <span class="text-[var(--muted-foreground)] font-medium">Param:</span>
+        <select id="filter-param" onchange="applyFilters()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs focus:outline-none">
+          <option value="ALL">Both Parameters</option>
+          <option value="glucose_yld">glucose_yld (%)</option>
+          <option value="xylose_yld">xylose_yld (%)</option>
+        </select>
+      </div>
+
+      <!-- Method Filter -->
+      <div class="flex items-center gap-1">
+        <span class="text-[var(--muted-foreground)] font-medium">Method:</span>
+        <select id="filter-method" onchange="applyFilters()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs focus:outline-none">
+          <option value="ALL">All Methods (4)</option>
+          <option value="cho10pc">cho10pc (Cholinium Lysinate)</option>
+          <option value="h2o140c">h2o140c (Water 140°C)</option>
+          <option value="butknt140c">butknt140c (Butylamine 140°C)</option>
+          <option value="none20c">none20c (No Pretreatment)</option>
+        </select>
+      </div>
+
+      <!-- Resource Filter -->
+      <div class="flex items-center gap-1">
+        <span class="text-[var(--muted-foreground)] font-medium">Resource:</span>
+        <select id="filter-resource" onchange="applyFilters()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs max-w-[155px] focus:outline-none">
+          <option value="ALL">All Resources (28)</option>
+        </select>
+      </div>
+
+      <!-- Sample Filter -->
+      <div class="flex items-center gap-1">
+        <span class="text-[var(--muted-foreground)] font-medium">Sample:</span>
+        <select id="filter-sample" onchange="applyFilters()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs max-w-[150px] focus:outline-none">
+          <option value="ALL">All Samples (61)</option>
+        </select>
+      </div>
+
+      <button onclick="resetFilters()" class="ml-auto text-xs px-2 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+        Reset
+      </button>
+    </div>
+
+    <!-- Main Content Body (Compact 320px height to stay well under 500px total) -->
+    <div id="view-charts" class="grid grid-cols-12 gap-3 pt-2.5 items-start">
+      <!-- Left: Interactive Canvas Plot -->
+      <div class="col-span-8 bg-[var(--background)] border border-[var(--border)] rounded-lg p-2 relative">
+        <div class="flex items-center justify-between mb-1 px-1">
+          <span id="chart-title" class="text-xs font-semibold text-[var(--foreground)]">Pretreatment Variance by Sample &amp; Method</span>
+          <div id="strip-controls" class="hidden flex items-center gap-1.5 text-xs">
+            <span class="text-[var(--muted-foreground)]">Sort:</span>
+            <select id="strip-sort" onchange="renderCurrentView()" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs">
+              <option value="spread">Highest Variance (Range)</option>
+              <option value="mean">Highest Mean Value</option>
+              <option value="count">Most Replicates</option>
+            </select>
+          </div>
+          <div id="method-legend" class="flex items-center gap-2.5 text-xs text-[var(--muted-foreground)]">
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 inline-block rounded-full bg-[#00B5E2]"></span>cho10pc</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 inline-block bg-[#f59e0b]"></span>h2o140c</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 inline-block rotate-45 bg-[#10b981]"></span>butknt140c</span>
+            <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 inline-block rounded-sm bg-[#ec4899]"></span>none20c</span>
+          </div>
+        </div>
+        <canvas id="plot-canvas" width="540" height="275" class="w-full h-[275px] cursor-crosshair block"></canvas>
+        <!-- Floating Hover Tooltip -->
+        <div id="hover-tooltip" class="hidden pointer-events-none absolute z-20 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg p-2 shadow-lg text-xs max-w-[230px]"></div>
+      </div>
+
+      <!-- Right: Stats + Pinned Point Inspector -->
+      <div class="col-span-4 flex flex-col gap-2">
+        <!-- Summary Metrics -->
+        <div class="grid grid-cols-2 gap-1.5">
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2">
+            <div class="text-xs text-[var(--muted-foreground)]">Glucose Yield</div>
+            <div id="stat-glucose-mean" class="text-sm font-semibold text-[var(--foreground)]">—</div>
+            <div id="stat-glucose-sd" class="text-xs text-[var(--muted-foreground)]">SD: —</div>
+          </div>
+          <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2">
+            <div class="text-xs text-[var(--muted-foreground)]">Xylose Yield</div>
+            <div id="stat-xylose-mean" class="text-sm font-semibold text-[var(--foreground)]">—</div>
+            <div id="stat-xylose-sd" class="text-xs text-[var(--muted-foreground)]">SD: —</div>
+          </div>
+        </div>
+
+        <!-- Pinned Record Inspector (matches dashboard_click_export.js) -->
+        <div class="bg-[var(--background)] border border-[#00B5E2]/60 rounded-lg p-2.5 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-semibold text-[var(--foreground)]">Pinned Point Inspector</span>
+              <span id="pin-status-badge" class="text-xs px-1.5 py-0.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)]">Click a point</span>
+            </div>
+            <div id="pinned-details" class="text-xs text-[var(--muted-foreground)] space-y-1 min-h-[125px]">
+              <p class="pt-4 text-center">Click any point on the chart to inspect record details, or <strong class="text-[var(--foreground)]">Cmd/Ctrl+Click</strong> to add directly to the export tray.</p>
+            </div>
+          </div>
+          <div id="pinned-actions" class="hidden pt-2 mt-1.5 border-t border-[var(--border)] flex flex-col gap-1.5">
+            <input id="pin-note" type="text" placeholder="Add audit note..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none" />
+            <div class="flex items-center gap-1.5">
+              <button onclick="addPinnedToExport()" class="flex-1 bg-[#00B5E2] text-slate-950 font-semibold text-xs py-1 px-2 rounded hover:opacity-90">
+                + Add to Export
+              </button>
+              <button onclick="copyRecordId()" id="btn-copy-id" class="bg-[var(--secondary)] text-[var(--secondary-foreground)] text-xs py-1 px-2 rounded border border-[var(--border)] hover:opacity-90">
+                Copy ID
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Tray Tab View -->
+    <div id="view-export" class="hidden pt-2.5">
+      <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 h-[305px] flex flex-col justify-between">
+        <div class="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+          <span class="text-xs font-semibold text-[var(--foreground)]">Selected Records for Audit / CSV Export</span>
+          <div class="flex items-center gap-2">
+            <button onclick="copyExportTSV()" id="btn-copy-tsv" class="text-xs px-2.5 py-1 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] font-medium">
+              Copy TSV
+            </button>
+            <button onclick="downloadExportCSV()" class="text-xs px-2.5 py-1 rounded bg-[#00B5E2] text-slate-950 font-semibold">
+              Download CSV
+            </button>
+            <button onclick="clearExport()" class="text-xs px-2 py-1 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+              Clear
+            </button>
+          </div>
+        </div>
+        <div class="overflow-y-auto flex-1 my-1.5">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
+                <th class="py-1 px-1.5">Record ID</th>
+                <th class="py-1 px-1.5">Sample</th>
+                <th class="py-1 px-1.5">Resource</th>
+                <th class="py-1 px-1.5">Method</th>
+                <th class="py-1 px-1.5">Param</th>
+                <th class="py-1 px-1.5">Value</th>
+                <th class="py-1 px-1.5">Note</th>
+                <th class="py-1 px-1"></th>
+              </tr>
+            </thead>
+            <tbody id="export-tbody" class="divide-y divide-[var(--border)]"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PAYLOAD = {"d":{"resource_name":["alfalfa","almond branches","almond hulls","almond shells","almond shells and hulls mix","almond woodchips","corn stover cobs","corn stover husks","corn stover stalks","grape pomace","grape stem","olive pomace","olive stems / leaves","peach seeds","peach stems / leaves","pistachio hulls","pistachio stems & leaves","rice straw","sargassum","spent oak chips","sweet potato culls","tomato pomace","unused oak stick","walnut hulls","walnut shelling fines","walnut shells","walnut tree sticks","wheat straw"],"primary_ag_product":["almonds","corn - all","grapes","hay - alfalfa","olives - processing","peaches","pistachios","rice","sargassum","sweet potatoes","tomatoes for processing","walnuts","winter wheat"],"prepared_sample_name":["boa-gppm051okm2(82)","cap-almsh075km2(04)","cat-cnsc029km2(28)","cat-cnsh028km2(72)","cat-cnss030km2(5b)","cut-wash088km2(15)","cut-washf089a(b5)","ebo-gppm010okm2(1b)","ene-wahu018okm2(e7)","ene-wash017okm2(82)","ene-watrst019okm2(4d)","exc-olpm091okm2(ba)","exc-olst092okm2(a0)","gai-tmpm050okm2(ff)","gos-tmpm049okm2(d0)","hai-sarg025a(0d)","hum-almbr024km2(a0)","hum-almbr068km2(4c)","hum-almhu023km2(15)","hum-almhu069km2(86)","hum-almhu093km2(a8)","hum-almsh022km2(13)","hum-almsh070km2(71)","hum-almsh094km2(a5)","jag-olpm026okm2(29)","jag-olst027okm2(fd)","map-gppm04okm2(fe)","map-gpst05okm2(ad)","map-spok07km2(c5)","map-unok08km2(c4)","oak-tmpm01okm2(26)","oak-tmpm047okm2(83)","pin-tmpm02okm2(69)","pin-tmpm048okm2(0a)","pop-almwc020km2(c1)","pos-alf033km2(3c)","pos-alf035km2(ed)","pos-alf037km2(b8)","pos-rist036km2(42)","pos-rist083km2(ca)","pos-wst034km2(62)","rig-gpst072okm2(87)","rig-spok056okm2(be)","rig-spok057okm2(65)","rig-spok058okm2(bc)","riv-tmpm03okm2(6d)","rus-pchsd039okm2(f6)","rus-pchst042okm2(f7)","stu-pihu063okm2(c0)","tac-spcul021okm2(1a)","tin-almhu015km2(03)","tin-almhu067km2(27)","tin-almix016km2(7e)","tin-almsh014km2(24)","tin-almsh065km2(a2)","tri-pihu062okm2(f2)","tri-pisl061okm2(d4)","vib-almbr013km2(c7)","vib-almhu012km2(31)","vib-almsh011km2(37)","war-wst038km2(da)"],"provider_code":["boatswain","capstan","caterpillar","cutaway","ebony","energetic","excellent","gainful","gossamer","hairpin","humorous","jaguar","maplewood","oakleaf","pinecrest","popular","possessive","rigging","riverstone","rushes","stuntman","tackle","tiny","tripod","vibrant","wardrobe"],"raw_pretreatment_method":["butknt140c","cho10pc","h2o140c","none20c"],"analysis_param":["glucose_yld","xylose_yld"],"unit":["% of glucan","% of xylan"],"qc_pass":["fail","pass"],"data_status":["Portal Compliant","Raw"]},"r":[["chol791-4f8f",0,3,35,16,1,0,90.8,0,1,1],["chol792-af41",0,3,35,16,1,0,95.3,0,1,1],["chol793-fc4e",0,3,35,16,1,0,92.9,0,1,1],["chol794-31d2",0,3,35,16,1,1,64.6,1,1,1],["chol795-f7ba",0,3,35,16,1,1,64.3,1,1,1],["chol796-a68b",0,3,35,16,1,1,66.6,1,1,1],["chol797-6b6f",0,3,36,16,1,0,92.6,0,1,1],["chol798-d08d",0,3,36,16,1,0,91.6,0,1,1],["chol799-b75f",0,3,36,16,1,0,88.3,0,1,1],["chol800-4c15",0,3,36,16,1,1,65.0,1,1,1],["chol801-c7c5",0,3,36,16,1,1,64.2,1,1,1],["chol802-8f0d",0,3,36,16,1,1,61.1,1,1,1],["chol803-45de",0,3,37,16,1,0,84.4,0,1,1],["chol804-d391",0,3,37,16,1,0,90.0,0,1,1],["chol805-0494",0,3,37,16,1,0,83.5,0,1,1],["chol806-cfc3",0,3,37,16,1,1,57.5,1,1,1],["chol807-894d",0,3,37,16,1,1,60.3,1,1,1],["chol808-7f51",0,3,37,16,1,1,57.9,1,1,1],["buty367-7ab1",1,0,57,24,0,0,11.8,0,1,0],["buty369-947d",1,0,57,24,0,0,11.5,0,1,0],["buty370-5f0c",1,0,57,24,0,1,13.4,1,1,0],["buty372-f35e",1,0,57,24,0,1,11.9,1,1,0],["chol361-f08d",1,0,57,24,1,0,31.4,0,1,0],["chol362-9499",1,0,57,24,1,0,32.2,0,1,0],["chol363-0d94",1,0,57,24,1,0,32.7,0,1,0],["chol364-83b2",1,0,57,24,1,1,27.5,1,1,0],["chol365-ac9c",1,0,57,24,1,1,24.1,1,1,0],["chol366-7248",1,0,57,24,1,1,30.0,1,1,0],["chol713-af90",1,0,16,10,1,0,56.2,0,1,0],["chol714-9913",1,0,16,10,1,0,57.8,0,1,0],["chol715-ff6b",1,0,16,10,1,0,68.7,0,1,0],["chol716-4395",1,0,16,10,1,1,25.9,1,1,0],["chol717-1242",1,0,16,10,1,1,25.1,1,1,0],["chol718-cf60",1,0,16,10,1,1,34.1,1,1,0],["chol883-5583",1,0,17,10,1,0,73.2,0,1,0],["chol884-e5ea",1,0,17,10,1,0,83.2,0,1,0],["chol885-d8ff",1,0,17,10,1,0,99.0,0,1,0],["chol886-e1e5",1,0,17,10,1,1,36.9,1,1,0],["chol887-6e6c",1,0,17,10,1,1,75.9,1,1,0],["chol888-baaf",1,0,17,10,1,1,60.8,1,1,0],["hot373-1050",1,0,57,24,2,0,21.2,0,1,0],["hot374-b6d3",1,0,57,24,2,0,17.2,0,1,0],["hot375-7dee",1,0,57,24,2,0,18.4,0,1,0],["hot376-b189",1,0,57,24,2,1,21.7,1,1,0],["hot377-5324",1,0,57,24,2,1,16.3,1,1,0],["hot378-ff80",1,0,57,24,2,1,18.1,1,1,0],["hot665-1959",1,0,16,10,2,0,82.3,0,1,0],["hot666-cf65",1,0,16,10,2,0,79.5,0,1,0],["hot667-8921",1,0,16,10,2,0,67.8,0,1,0],["hot668-c320",1,0,16,10,2,1,95.5,1,1,0],["hot669-2216",1,0,16,10,2,1,90.3,1,1,0],["hot670-3b55",1,0,16,10,2,1,76.6,1,1,0],["no p379-e6ac",1,0,57,24,3,0,17.6,0,1,0],["no p380-959f",1,0,57,24,3,0,18.4,0,1,0],["no p381-73f6",1,0,57,24,3,0,17.1,0,1,0],["no p382-e1b1",1,0,57,24,3,1,22.1,1,1,0],["no p383-e3a8",1,0,57,24,3,1,21.7,1,1,0],["no p384-1e32",1,0,57,24,3,1,20.4,1,1,0],["buty223-96b2",2,0,58,24,0,0,29.3,0,1,0],["buty224-7b02",2,0,58,24,0,0,31.2,0,1,0],["buty225-7368",2,0,58,24,0,0,30.5,0,1,0],["buty226-fabd",2,0,58,24,0,1,28.9,1,1,0],["buty227-e468",2,0,58,24,0,1,45.0,1,1,0],["buty228-d7bf",2,0,58,24,0,1,35.1,1,1,0],["buty271-7522",2,0,50,22,0,0,30.9,0,1,0],["buty272-6b9b",2,0,50,22,0,0,11.0,0,1,0],["buty273-f151",2,0,50,22,0,0,38.5,0,1,0],["buty274-ed9d",2,0,50,22,0,1,33.2,1,1,0],["buty275-e980",2,0,50,22,0,1,10.9,1,1,0],["buty276-4aa7",2,0,50,22,0,1,41.3,1,1,0],["chol217-9521",2,0,58,24,1,0,46.1,0,1,0],["chol218-b29e",2,0,58,24,1,0,40.8,0,1,0],["chol219-8ed3",2,0,58,24,1,0,33.9,0,1,0],["chol220-d818",2,0,58,24,1,1,23.6,1,1,0],["chol221-d712",2,0,58,24,1,1,17.2,1,1,0],["chol222-1b49",2,0,58,24,1,1,19.8,1,1,0],["chol265-7c7f",2,0,50,22,1,0,34.7,0,1,0],["chol266-6a85",2,0,50,22,1,0,34.4,0,1,0],["chol267-76e0",2,0,50,22,1,0,31.2,0,1,0],["chol268-ac25",2,0,50,22,1,1,6.9,1,1,0],["chol269-e818",2,0,50,22,1,1,14.9,1,1,0],["chol270-a787",2,0,50,22,1,1,14.6,1,1,0],["chol707-57e3",2,0,18,10,1,0,121.3,0,0,1],["chol708-8733",2,0,18,10,1,0,103.6,0,0,1],["chol709-8ca1",2,0,18,10,1,0,109.9,0,0,1],["chol710-e6cf",2,0,18,10,1,1,124.1,1,0,1],["chol711-548e",2,0,18,10,1,1,100.8,1,0,1],["chol712-a8d9",2,0,18,10,1,1,104.4,1,0,1],["chol761-f77c",2,0,19,10,1,0,60.0,0,1,0],["chol762-d684",2,0,19,10,1,0,50.4,0,1,0],["chol763-4a3b",2,0,19,10,1,0,63.0,0,1,0],["chol764-6535",2,0,19,10,1,1,76.5,1,1,0],["chol765-cb44",2,0,19,10,1,1,78.4,1,1,0],["chol766-44db",2,0,19,10,1,1,92.9,1,1,0],["chol865-dc99",2,0,20,10,1,0,56.0,0,1,0],["chol866-1ad9",2,0,20,10,1,0,35.2,0,1,0],["chol867-f246",2,0,20,10,1,0,78.2,0,1,0],["chol868-4f46",2,0,20,10,1,1,82.4,1,1,0],["chol869-098a",2,0,20,10,1,1,38.5,1,1,0],["chol870-acb9",2,0,20,10,1,1,108.7,1,0,1],["chol877-1d22",2,0,51,22,1,0,54.4,0,1,0],["chol878-072c",2,0,51,22,1,0,84.6,0,1,0],["chol879-de43",2,0,51,22,1,0,27.8,0,1,0],["chol880-2799",2,0,51,22,1,1,104.5,1,0,1],["chol881-3f9e",2,0,51,22,1,1,93.0,1,1,0],["chol882-91d2",2,0,51,22,1,1,53.3,1,1,0],["hot229-d3e4",2,0,58,24,2,0,11.3,0,1,0],["hot230-f121",2,0,58,24,2,0,11.4,0,1,0],["hot231-9489",2,0,58,24,2,0,11.6,0,1,0],["hot232-7c2b",2,0,58,24,2,1,3.3,1,1,0],["hot233-c12f",2,0,58,24,2,1,3.0,1,1,0],["hot234-3e53",2,0,58,24,2,1,7.3,1,1,0],["hot277-54f1",2,0,50,22,2,0,14.5,0,1,0],["hot278-cf53",2,0,50,22,2,0,13.1,0,1,0],["hot279-c1b1",2,0,50,22,2,0,12.5,0,1,0],["hot280-3562",2,0,50,22,2,1,12.9,1,1,0],["hot281-6672",2,0,50,22,2,1,5.8,1,1,0],["hot282-5b39",2,0,50,22,2,1,3.8,1,1,0],["hot659-9e9a",2,0,18,10,2,0,57.0,0,1,0],["hot660-f5c1",2,0,18,10,2,0,63.7,0,1,0],["hot661-8611",2,0,18,10,2,0,72.9,0,1,0],["hot662-5e32",2,0,18,10,2,1,21.0,1,1,0],["hot663-94e0",2,0,18,10,2,1,33.6,1,1,0],["hot664-41e4",2,0,18,10,2,1,41.0,1,1,0],["no p235-87dd",2,0,58,24,3,0,57.3,0,1,0],["no p236-627e",2,0,58,24,3,0,58.5,0,1,0],["no p237-bd03",2,0,58,24,3,0,56.9,0,1,0],["no p238-b067",2,0,58,24,3,1,82.6,1,1,0],["no p239-c7c7",2,0,58,24,3,1,83.6,1,1,0],["no p240-610b",2,0,58,24,3,1,85.6,1,1,0],["no p283-17af",2,0,50,22,3,0,53.2,0,1,0],["no p284-0d21",2,0,50,22,3,0,52.5,0,1,0],["no p285-31f7",2,0,50,22,3,0,53.0,0,1,0],["no p286-4c22",2,0,50,22,3,1,66.6,1,1,0],["no p287-1f4f",2,0,50,22,3,1,67.9,1,1,0],["no p288-d25a",2,0,50,22,3,1,67.8,1,1,0],["buty199-b0d5",3,0,59,24,0,0,20.7,0,1,0],["buty200-bd41",3,0,59,24,0,0,20.8,0,1,0],["buty201-6894",3,0,59,24,0,0,21.1,0,1,0],["buty202-0af7",3,0,59,24,0,1,17.1,1,1,0],["buty203-61f6",3,0,59,24,0,1,16.9,1,1,0],["buty204-7eb8",3,0,59,24,0,1,17.2,1,1,0],["buty247-2fed",3,0,53,22,0,0,20.3,0,1,0],["buty248-817a",3,0,53,22,0,0,20.1,0,1,0],["buty249-c03e",3,0,53,22,0,0,17.0,0,1,0],["buty250-109f",3,0,53,22,0,1,14.4,1,1,0],["buty251-bdc1",3,0,53,22,0,1,14.5,1,1,0],["buty252-decb",3,0,53,22,0,1,13.3,1,1,0],["chol193-3045",3,0,59,24,1,0,31.7,0,1,0],["chol194-b381",3,0,59,24,1,0,25.9,0,1,0],["chol195-b26a",3,0,59,24,1,0,28.1,0,1,0],["chol196-86f4",3,0,59,24,1,1,32.2,1,1,0],["chol197-2a09",3,0,59,24,1,1,22.0,1,1,0],["chol198-84d1",3,0,59,24,1,1,19.1,1,1,0],["chol241-688b",3,0,53,22,1,0,36.1,0,1,0],["chol242-832a",3,0,53,22,1,0,38.2,0,1,0],["chol243-6a72",3,0,53,22,1,0,33.9,0,1,0],["chol244-f56f",3,0,53,22,1,1,27.1,1,1,0],["chol245-e539",3,0,53,22,1,1,31.3,1,1,0],["chol246-605b",3,0,53,22,1,1,19.9,1,1,0],["chol755-d717",3,0,21,10,1,0,74.1,0,1,0],["chol756-b7f5",3,0,21,10,1,0,63.0,0,1,0],["chol757-f5a2",3,0,21,10,1,0,66.3,0,1,0],["chol758-9380",3,0,21,10,1,1,23.5,1,1,0],["chol759-b963",3,0,21,10,1,1,18.5,1,1,0],["chol760-aa22",3,0,21,10,1,1,21.8,1,1,0],["chol767-c356",3,0,54,22,1,0,62.9,0,1,0],["chol768-8bb3",3,0,54,22,1,0,60.3,0,1,0],["chol769-0023",3,0,54,22,1,0,62.1,0,1,0],["chol770-14d1",3,0,54,22,1,1,32.0,1,1,0],["chol771-048c",3,0,54,22,1,1,28.8,1,1,0],["chol772-3b75",3,0,54,22,1,1,32.1,1,1,0],["chol871-7de7",3,0,23,10,1,0,98.8,0,1,0],["chol872-40fd",3,0,23,10,1,0,92.2,0,1,0],["chol873-5479",3,0,23,10,1,0,68.0,0,1,0],["chol874-a9fa",3,0,23,10,1,1,49.0,1,1,0],["chol875-52cf",3,0,23,10,1,1,58.9,1,1,0],["chol876-ed2d",3,0,23,10,1,1,24.2,1,1,0],["chol889-fcc8",3,0,22,10,1,0,110.1,0,0,1],["chol890-e0d9",3,0,22,10,1,0,71.6,0,1,0],["chol891-e59e",3,0,22,10,1,0,70.0,0,1,0],["chol892-3f6b",3,0,22,10,1,1,77.3,1,1,0],["chol893-4f00",3,0,22,10,1,1,24.4,1,1,0],["chol894-c6b0",3,0,22,10,1,1,70.3,1,1,0],["chol901-5c01",3,0,1,1,1,0,81.5,0,1,0],["chol902-f0ee",3,0,1,1,1,0,72.7,0,1,0],["chol903-ed22",3,0,1,1,1,0,87.7,0,1,0],["chol904-40db",3,0,1,1,1,1,14.4,1,1,0],["chol905-faa3",3,0,1,1,1,1,40.1,1,1,0],["chol906-7f4d",3,0,1,1,1,1,59.2,1,1,0],["hot205-f7d1",3,0,59,24,2,0,10.4,0,1,0],["hot206-a3c5",3,0,59,24,2,0,6.2,0,1,0],["hot207-3cac",3,0,59,24,2,0,18.2,0,1,0],["hot208-d500",3,0,59,24,2,1,8.1,1,1,0],["hot209-2c74",3,0,59,24,2,1,5.6,1,1,0],["hot210-aeaf",3,0,59,24,2,1,14.4,1,1,0],["hot253-c419",3,0,53,22,2,0,18.7,0,1,0],["hot254-3faf",3,0,53,22,2,0,17.5,0,1,0],["hot255-3c6c",3,0,53,22,2,0,17.9,0,1,0],["hot256-b828",3,0,53,22,2,1,13.6,1,1,0],["hot257-3a7a",3,0,53,22,2,1,13.3,1,1,0],["hot258-3014",3,0,53,22,2,1,12.2,1,1,0],["no p211-e849",3,0,59,24,3,0,29.5,0,1,0],["no p212-fcbd",3,0,59,24,3,0,31.7,0,1,0],["no p213-5627",3,0,59,24,3,0,30.5,0,1,0],["no p214-5955",3,0,59,24,3,1,29.4,1,1,0],["no p215-126f",3,0,59,24,3,1,31.2,1,1,0],["no p216-03ba",3,0,59,24,3,1,32.0,1,1,0],["no p259-cdc6",3,0,53,22,3,0,28.7,0,1,0],["no p260-a9dd",3,0,53,22,3,0,28.1,0,1,0],["no p261-3b25",3,0,53,22,3,0,29.8,0,1,0],["no p262-c623",3,0,53,22,3,1,24.9,1,1,0],["no p263-970e",3,0,53,22,3,1,24.4,1,1,0],["no p264-1dd8",3,0,53,22,3,1,26.4,1,1,0],["buty295-8fdf",4,0,52,22,0,0,28.9,0,1,1],["buty296-7ab2",4,0,52,22,0,0,22.7,0,1,1],["buty297-1cde",4,0,52,22,0,0,21.2,0,1,1],["buty298-af39",4,0,52,22,0,1,23.6,1,1,1],["buty299-5025",4,0,52,22,0,1,15.4,1,1,1],["buty300-72f0",4,0,52,22,0,1,18.3,1,1,1],["chol289-556f",4,0,52,22,1,0,33.1,0,1,1],["chol290-1381",4,0,52,22,1,0,30.7,0,1,1],["chol291-b083",4,0,52,22,1,0,33.1,0,1,1],["chol292-ce6c",4,0,52,22,1,1,12.5,1,1,1],["chol293-4dba",4,0,52,22,1,1,11.6,1,1,1],["chol294-425b",4,0,52,22,1,1,13.9,1,1,1],["hot301-42a1",4,0,52,22,2,0,16.6,0,1,1],["hot302-9469",4,0,52,22,2,0,17.8,0,1,1],["hot303-dd2c",4,0,52,22,2,0,9.7,0,1,1],["hot304-0e85",4,0,52,22,2,1,8.1,1,1,1],["hot305-1e54",4,0,52,22,2,1,8.7,1,1,1],["hot306-dc75",4,0,52,22,2,1,6.6,1,1,1],["no p307-f04d",4,0,52,22,3,0,38.4,0,1,1],["no p308-77e5",4,0,52,22,3,0,36.4,0,1,1],["no p309-a006",4,0,52,22,3,0,17.6,0,1,1],["no p310-3c22",4,0,52,22,3,1,42.4,1,1,1],["no p311-3a28",4,0,52,22,3,1,41.0,1,1,1],["no p312-dd34",4,0,52,22,3,1,16.3,1,1,1],["buty319-3eab",5,0,34,15,0,0,8.9,0,1,1],["buty320-0e18",5,0,34,15,0,0,17.8,0,1,1],["buty321-8687",5,0,34,15,0,0,8.8,0,1,1],["buty322-160a",5,0,34,15,0,1,9.6,1,1,1],["buty323-196d",5,0,34,15,0,1,19.1,1,1,1],["buty324-94ff",5,0,34,15,0,1,10.7,1,1,1],["chol313-0987",5,0,34,15,1,0,28.3,0,1,1],["chol314-4667",5,0,34,15,1,0,27.8,0,1,1],["chol315-cd5f",5,0,34,15,1,0,28.1,0,1,1],["chol316-4030",5,0,34,15,1,1,29.3,1,1,1],["chol317-e6ee",5,0,34,15,1,1,30.4,1,1,1],["chol318-a692",5,0,34,15,1,1,29.4,1,1,1],["hot325-f05f",5,0,34,15,2,0,16.4,0,1,1],["hot326-7876",5,0,34,15,2,0,17.1,0,1,1],["hot327-6d07",5,0,34,15,2,0,17.6,0,1,1],["hot328-1165",5,0,34,15,2,1,17.6,1,1,1],["hot329-8db2",5,0,34,15,2,1,17.3,1,1,1],["hot330-1b8d",5,0,34,15,2,1,17.7,1,1,1],["no p331-7280",5,0,34,15,3,0,26.7,0,1,1],["no p332-e180",5,0,34,15,3,0,16.2,0,1,1],["no p333-efb1",5,0,34,15,3,0,16.8,0,1,1],["no p334-7330",5,0,34,15,3,1,42.4,1,1,1],["no p335-3cf2",5,0,34,15,3,1,20.4,1,1,1],["no p336-f8f0",5,0,34,15,3,1,20.6,1,1,1],["buty463-ccd3",6,1,2,2,0,0,84.0,0,1,0],["buty465-e4d4",6,1,2,2,0,0,84.1,0,1,0],["buty466-ab89",6,1,2,2,0,1,68.1,1,1,0],["buty468-c171",6,1,2,2,0,1,69.3,1,1,0],["chol458-9402",6,1,2,2,1,0,97.6,0,1,0],["chol459-4393",6,1,2,2,1,0,93.5,0,1,0],["chol461-d4dd",6,1,2,2,1,1,70.5,1,1,0],["chol462-8e7c",6,1,2,2,1,1,65.7,1,1,0],["hot469-5cd0",6,1,2,2,2,0,21.0,0,1,0],["hot470-91c2",6,1,2,2,2,0,19.4,0,1,0],["hot471-7dce",6,1,2,2,2,0,20.9,0,1,0],["hot472-babc",6,1,2,2,2,1,8.7,1,1,0],["hot473-c2f6",6,1,2,2,2,1,8.1,1,1,0],["hot474-820c",6,1,2,2,2,1,9.7,1,1,0],["no p475-e75a",6,1,2,2,3,0,18.8,0,1,0],["no p476-50b0",6,1,2,2,3,0,18.1,0,1,0],["no p477-2558",6,1,2,2,3,0,18.9,0,1,0],["no p478-0c99",6,1,2,2,3,1,19.2,1,1,0],["no p479-16e8",6,1,2,2,3,1,18.5,1,1,0],["no p480-64bc",6,1,2,2,3,1,18.8,1,1,0],["buty439-f17b",7,1,3,2,0,0,82.4,0,1,0],["buty440-c36c",7,1,3,2,0,0,84.1,0,1,0],["buty441-d08d",7,1,3,2,0,0,78.9,0,1,0],["buty442-04c1",7,1,3,2,0,1,72.5,1,1,0],["buty443-ec72",7,1,3,2,0,1,71.5,1,1,0],["buty444-217a",7,1,3,2,0,1,67.4,1,1,0],["chol433-db88",7,1,3,2,1,0,104.5,0,1,0],["chol434-3bb5",7,1,3,2,1,0,102.6,0,1,0],["chol436-27b6",7,1,3,2,1,1,75.2,1,1,0],["chol437-f0f1",7,1,3,2,1,1,73.3,1,1,0],["hot445-649e",7,1,3,2,2,0,24.5,0,1,0],["hot446-43e7",7,1,3,2,2,0,24.5,0,1,0],["hot447-0188",7,1,3,2,2,0,22.2,0,1,0],["hot448-126d",7,1,3,2,2,1,5.7,1,1,0],["hot449-244a",7,1,3,2,2,1,12.4,1,1,0],["hot450-0c3f",7,1,3,2,2,1,12.1,1,1,0],["no p451-8091",7,1,3,2,3,0,35.8,0,1,0],["no p452-5cc5",7,1,3,2,3,0,35.7,0,1,0],["no p453-be77",7,1,3,2,3,0,35.8,0,1,0],["no p454-b8ca",7,1,3,2,3,1,29.5,1,1,0],["no p455-e41b",7,1,3,2,3,1,30.9,1,1,0],["no p456-f32a",7,1,3,2,3,1,30.0,1,1,0],["buty487-790a",8,1,4,2,0,0,75.4,0,1,0],["buty488-f0ed",8,1,4,2,0,0,71.8,0,1,0],["buty489-e20f",8,1,4,2,0,0,73.2,0,1,0],["buty490-d2b9",8,1,4,2,0,1,67.9,1,1,0],["buty491-0a44",8,1,4,2,0,1,62.5,1,1,0],["buty492-6317",8,1,4,2,0,1,62.5,1,1,0],["chol481-bf9a",8,1,4,2,1,0,91.0,0,1,0],["chol482-17bb",8,1,4,2,1,0,90.8,0,1,0],["chol483-9b58",8,1,4,2,1,0,89.9,0,1,0],["chol484-3dc7",8,1,4,2,1,1,71.3,1,1,0],["chol485-9b7f",8,1,4,2,1,1,70.2,1,1,0],["chol486-d222",8,1,4,2,1,1,68.0,1,1,0],["hot493-fa54",8,1,4,2,2,0,23.4,0,1,0],["hot494-c516",8,1,4,2,2,0,22.9,0,1,0],["hot495-eba8",8,1,4,2,2,0,23.2,0,1,0],["hot496-7613",8,1,4,2,2,1,29.6,1,1,0],["hot497-d76c",8,1,4,2,2,1,30.6,1,1,0],["hot498-81cf",8,1,4,2,2,1,29.6,1,1,0],["no p499-e87a",8,1,4,2,3,0,21.3,0,1,0],["no p500-f381",8,1,4,2,3,0,21.2,0,1,0],["no p501-6d83",8,1,4,2,3,0,22.6,0,1,0],["no p502-a371",8,1,4,2,3,1,18.4,1,1,0],["no p503-4cda",8,1,4,2,3,1,15.9,1,1,0],["no p504-a44d",8,1,4,2,3,1,16.5,1,1,0],["buty007-8d08",9,2,26,12,0,0,42.7,0,1,0],["buty008-128b",9,2,26,12,0,0,40.1,0,1,0],["buty009-f6f6",9,2,26,12,0,0,43.0,0,1,0],["buty010-561f",9,2,26,12,0,1,43.5,1,1,0],["buty011-c577",9,2,26,12,0,1,40.8,1,1,0],["buty012-ccdb",9,2,26,12,0,1,42.7,1,1,0],["buty055-d4d0",9,2,7,4,0,0,50.8,0,1,0],["buty056-2bb0",9,2,7,4,0,0,50.5,0,1,0],["buty057-c642",9,2,7,4,0,0,53.8,0,1,0],["buty058-c478",9,2,7,4,0,1,79.7,1,1,0],["buty059-af88",9,2,7,4,0,1,76.7,1,1,0],["buty060-09f3",9,2,7,4,0,1,83.3,1,1,0],["chol001-55cb",9,2,26,12,1,0,68.1,0,1,0],["chol002-bfed",9,2,26,12,1,0,77.4,0,1,0],["chol003-ed34",9,2,26,12,1,0,80.3,0,1,0],["chol004-671c",9,2,26,12,1,1,34.4,1,1,0],["chol005-e98d",9,2,26,12,1,1,41.0,1,1,0],["chol006-7523",9,2,26,12,1,1,41.3,1,1,0],["chol049-f714",9,2,7,4,1,0,75.5,0,1,0],["chol050-3b04",9,2,7,4,1,0,78.9,0,1,0],["chol051-b0e3",9,2,7,4,1,0,66.4,0,1,0],["chol052-ef7c",9,2,7,4,1,1,46.8,1,1,0],["chol053-5564",9,2,7,4,1,1,47.5,1,1,0],["chol054-8edf",9,2,7,4,1,1,41.1,1,1,0],["chol773-4bac",9,2,0,0,1,0,78.9,0,1,0],["chol774-7edc",9,2,0,0,1,0,89.7,0,1,0],["chol775-5b00",9,2,0,0,1,0,83.6,0,1,0],["chol776-1ce6",9,2,0,0,1,1,89.1,1,1,0],["chol777-642a",9,2,0,0,1,1,81.9,1,1,0],["chol778-75f9",9,2,0,0,1,1,106.1,1,0,1],["hot013-bd1d",9,2,26,12,2,0,60.7,0,1,0],["hot014-4f6f",9,2,26,12,2,0,61.1,0,1,0],["hot015-4cd6",9,2,26,12,2,0,55.0,0,1,0],["hot016-51aa",9,2,26,12,2,1,32.7,1,1,0],["hot017-ba80",9,2,26,12,2,1,34.1,1,1,0],["hot018-ca50",9,2,26,12,2,1,26.6,1,1,0],["hot061-9e08",9,2,7,4,2,0,79.7,0,1,0],["hot062-7ae5",9,2,7,4,2,0,67.1,0,1,0],["hot063-1b21",9,2,7,4,2,0,79.3,0,1,0],["hot064-1547",9,2,7,4,2,1,52.5,1,1,0],["hot065-c8ee",9,2,7,4,2,1,53.1,1,1,0],["hot066-4fcb",9,2,7,4,2,1,58.0,1,1,0],["no p019-c887",9,2,26,12,3,0,42.8,0,1,0],["no p020-9594",9,2,26,12,3,0,40.0,0,1,0],["no p021-5497",9,2,26,12,3,0,42.8,0,1,0],["no p022-4954",9,2,26,12,3,1,43.6,1,1,0],["no p023-b4fc",9,2,26,12,3,1,40.7,1,1,0],["no p024-107f",9,2,26,12,3,1,42.5,1,1,0],["no p067-e431",9,2,7,4,3,0,50.8,0,1,0],["no p068-0275",9,2,7,4,3,0,50.8,0,1,0],["no p069-9c5d",9,2,7,4,3,0,54.0,0,1,0],["no p070-593f",9,2,7,4,3,1,79.7,1,1,0],["no p071-668e",9,2,7,4,3,1,77.2,1,1,0],["no p072-dfa9",9,2,7,4,3,1,83.5,1,1,0],["buty031-1530",10,2,27,12,0,0,45.4,0,1,0],["buty032-8bc4",10,2,27,12,0,0,47.5,0,1,0],["buty033-a8aa",10,2,27,12,0,0,45.8,0,1,0],["buty034-24bf",10,2,27,12,0,1,167.9,1,0,1],["buty035-11bd",10,2,27,12,0,1,160.5,1,0,1],["buty036-71c8",10,2,27,12,0,1,152.1,1,0,1],["chol025-5b64",10,2,27,12,1,0,26.9,0,1,0],["chol026-ad28",10,2,27,12,1,0,25.4,0,1,0],["chol027-1686",10,2,27,12,1,0,24.6,0,1,0],["chol028-627e",10,2,27,12,1,1,37.4,1,1,0],["chol029-a71a",10,2,27,12,1,1,36.6,1,1,0],["chol030-4633",10,2,27,12,1,1,28.7,1,1,0],["chol895-5f6b",10,2,41,17,1,0,88.5,0,1,0],["chol896-53e3",10,2,41,17,1,0,57.8,0,1,0],["chol897-4e6c",10,2,41,17,1,0,70.0,0,1,0],["chol898-628b",10,2,41,17,1,1,84.2,1,1,0],["chol899-20ed",10,2,41,17,1,1,160.8,1,0,1],["chol900-a86b",10,2,41,17,1,1,80.4,1,1,0],["hot037-4f3b",10,2,27,12,2,0,40.8,0,1,0],["hot038-65e9",10,2,27,12,2,0,53.6,0,1,0],["hot039-4109",10,2,27,12,2,0,54.5,0,1,0],["hot040-29f7",10,2,27,12,2,1,103.5,1,0,1],["hot041-a7a6",10,2,27,12,2,1,132.4,1,0,1],["hot042-a0d6",10,2,27,12,2,1,127.8,1,0,1],["no p043-1a5b",10,2,27,12,3,0,45.3,0,1,0],["no p044-5955",10,2,27,12,3,0,47.6,0,1,0],["no p045-1c57",10,2,27,12,3,0,46.0,0,1,0],["no p046-caa6",10,2,27,12,3,1,167.6,1,0,1],["no p047-3882",10,2,27,12,3,1,160.7,1,0,1],["no p048-ca0f",10,2,27,12,3,1,152.8,1,0,1],["buty175-4243",11,4,24,11,0,0,41.2,0,1,1],["buty176-6692",11,4,24,11,0,0,44.6,0,1,1],["buty177-2177",11,4,24,11,0,0,44.7,0,1,1],["buty178-1d39",11,4,24,11,0,1,27.4,1,1,1],["buty179-a65a",11,4,24,11,0,1,42.9,1,1,1],["buty180-7834",11,4,24,11,0,1,42.8,1,1,1],["buty529-d2fe",11,4,11,6,0,0,36.32,0,1,0],["buty530-10e1",11,4,11,6,0,0,31.57,0,1,0],["buty531-481f",11,4,11,6,0,1,11.71,1,1,0],["buty532-9810",11,4,11,6,0,1,11.29,1,1,0],["buty843-68cd",11,4,24,11,0,0,64.64,0,1,1],["buty844-c581",11,4,24,11,0,0,63.06,0,1,1],["buty845-aae3",11,4,24,11,0,1,69.75,1,1,1],["buty846-ecc5",11,4,24,11,0,1,70.35,1,1,1],["chol169-c3b3",11,4,24,11,1,0,41.5,0,1,1],["chol170-b338",11,4,24,11,1,0,44.1,0,1,1],["chol171-13cc",11,4,24,11,1,0,41.3,0,1,1],["chol172-92f4",11,4,24,11,1,1,24.7,1,1,1],["chol173-2ffe",11,4,24,11,1,1,25.3,1,1,1],["chol174-ffc0",11,4,24,11,1,1,24.0,1,1,1],["chol513-898d",11,4,11,6,1,0,39.8,0,1,0],["chol514-adca",11,4,11,6,1,0,37.61,0,1,0],["chol515-06ea",11,4,11,6,1,1,21.33,1,1,0],["chol516-5624",11,4,11,6,1,1,18.66,1,1,0],["chol827-40a8",11,4,24,11,1,0,71.7,0,1,1],["chol828-4ac7",11,4,24,11,1,0,73.45,0,1,1],["chol829-398f",11,4,24,11,1,1,84.59,1,1,1],["chol830-0be3",11,4,24,11,1,1,85.5,1,1,1],["hot181-8fc5",11,4,24,11,2,0,33.4,0,1,1],["hot182-9751",11,4,24,11,2,0,31.0,0,1,1],["hot183-b661",11,4,24,11,2,0,36.5,0,1,1],["hot184-bb99",11,4,24,11,2,1,9.0,1,1,1],["hot185-d445",11,4,24,11,2,1,9.8,1,1,1],["hot186-3cc0",11,4,24,11,2,1,16.5,1,1,1],["hot537-48e1",11,4,11,6,2,0,20.95,0,1,0],["hot538-3b8f",11,4,11,6,2,0,21.66,0,1,0],["hot539-743c",11,4,11,6,2,1,9.02,1,1,0],["hot540-cdaa",11,4,11,6,2,1,9.32,1,1,0],["hot851-6a59",11,4,24,11,2,0,26.87,0,1,1],["hot852-9695",11,4,24,11,2,0,24.84,0,1,1],["hot853-1634",11,4,24,11,2,1,21.36,1,1,1],["hot854-c423",11,4,24,11,2,1,20.35,1,1,1],["no p187-28e9",11,4,24,11,3,0,41.4,0,1,1],["no p188-f8a0",11,4,24,11,3,0,44.5,0,1,1],["no p189-c5b3",11,4,24,11,3,0,44.7,0,1,1],["no p190-5b03",11,4,24,11,3,1,27.5,1,1,1],["no p191-5397",11,4,24,11,3,1,42.8,1,1,1],["no p192-e025",11,4,24,11,3,1,42.8,1,1,1],["no p521-8223",11,4,11,6,3,0,20.72,0,1,0],["no p522-cf64",11,4,11,6,3,0,20.79,0,1,0],["no p523-da82",11,4,11,6,3,1,3.58,1,1,0],["no p524-ec8b",11,4,11,6,3,1,3.76,1,1,0],["no p835-0b5a",11,4,24,11,3,0,26.48,0,1,1],["no p836-d9a2",11,4,24,11,3,0,25.89,0,1,1],["no p837-0b8c",11,4,24,11,3,1,9.5,1,1,1],["no p838-3752",11,4,24,11,3,1,9.32,1,1,1],["buty533-a4f3",12,4,12,6,0,0,38.04,0,1,0],["buty534-a669",12,4,12,6,0,0,33.28,0,1,0],["buty535-4714",12,4,12,6,0,1,19.32,1,1,0],["buty847-3213",12,4,25,11,0,0,23.6,0,1,1],["buty848-2733",12,4,25,11,0,0,27.07,0,1,1],["buty849-f303",12,4,25,11,0,1,41.64,1,1,1],["buty850-2987",12,4,25,11,0,1,38.71,1,1,1],["chol517-fce8",12,4,12,6,1,0,36.24,0,1,0],["chol518-1f1f",12,4,12,6,1,0,35.77,0,1,0],["chol519-4967",12,4,12,6,1,1,20.92,1,1,0],["chol520-2ce8",12,4,12,6,1,1,19.71,1,1,0],["chol831-9f7f",12,4,25,11,1,0,18.14,0,1,1],["chol832-71db",12,4,25,11,1,0,18.52,0,1,1],["chol833-4667",12,4,25,11,1,1,24.78,1,1,1],["chol834-b527",12,4,25,11,1,1,23.54,1,1,1],["hot536-225b",12,4,12,6,0,1,13.68,1,1,0],["hot541-9f4d",12,4,12,6,2,0,15.68,0,1,0],["hot542-9f8b",12,4,12,6,2,0,15.41,0,1,0],["hot543-cd35",12,4,12,6,2,1,5.72,1,1,0],["hot544-b2eb",12,4,12,6,2,1,4.85,1,1,0],["hot855-4e2d",12,4,25,11,2,0,19.01,0,1,1],["hot856-6664",12,4,25,11,2,0,18.83,0,1,1],["hot857-133c",12,4,25,11,2,1,14.32,1,1,1],["hot858-7d95",12,4,25,11,2,1,15.71,1,1,1],["no p525-7473",12,4,12,6,3,0,12.57,0,1,0],["no p526-783f",12,4,12,6,3,0,13.12,0,1,0],["no p527-d639",12,4,12,6,3,1,4.83,1,1,0],["no p528-8d81",12,4,12,6,0,1,5.03,1,1,0],["no p839-7ec8",12,4,25,11,3,0,15.03,0,1,1],["no p840-1ee5",12,4,25,11,3,0,16.57,0,1,1],["no p841-aec7",12,4,25,11,3,1,5.05,1,1,1],["no p842-d541",12,4,25,11,3,1,5.64,1,1,1],["chol611-b4b0",13,5,46,19,1,0,82.3,0,1,0],["chol612-ed7c",13,5,46,19,1,0,60.3,0,1,0],["chol613-9ada",13,5,46,19,1,0,80.1,0,1,0],["chol614-e5eb",13,5,46,19,1,1,13.1,1,1,0],["chol615-2dd1",13,5,46,19,1,1,9.1,1,1,0],["chol616-80a2",13,5,46,19,1,1,12.3,1,1,0],["hot563-d107",13,5,46,19,2,0,120.5,0,0,1],["hot564-44c4",13,5,46,19,2,0,80.5,0,1,0],["hot565-a40c",13,5,46,19,2,0,122.8,0,0,1],["hot566-4b76",13,5,46,19,2,1,13.9,1,1,0],["hot567-d009",13,5,46,19,2,1,9.5,1,1,0],["hot568-fd0e",13,5,46,19,2,1,13.9,1,1,0],["chol737-4098",14,5,47,19,1,0,73.5,0,1,0],["chol738-5d04",14,5,47,19,1,0,75.3,0,1,0],["chol739-bedf",14,5,47,19,1,0,77.6,0,1,0],["chol740-0a6b",14,5,47,19,1,1,36.1,1,1,0],["chol741-501a",14,5,47,19,1,1,23.8,1,1,0],["chol742-3f88",14,5,47,19,1,1,29.9,1,1,0],["chol749-1543",15,6,55,23,1,0,72.5,0,1,0],["chol750-2aae",15,6,55,23,1,0,56.7,0,1,0],["chol751-8ad2",15,6,55,23,1,0,38.0,0,1,0],["chol752-0681",15,6,55,23,1,1,14.2,1,1,0],["chol753-dcf4",15,6,55,23,1,1,15.9,1,1,0],["chol754-d591",15,6,55,23,1,1,5.0,1,1,0],["chol785-ee55",15,6,48,20,1,0,63.3,0,1,0],["chol786-39ce",15,6,48,20,1,0,55.7,0,1,0],["chol787-9e11",15,6,48,20,1,0,77.1,0,1,0],["chol788-acaf",15,6,48,20,1,1,19.6,1,1,0],["chol789-2c57",15,6,48,20,1,1,18.2,1,1,0],["chol790-a3c9",15,6,48,20,1,1,22.9,1,1,0],["chol743-2a97",16,6,56,23,1,0,87.3,0,1,0],["chol744-c6b2",16,6,56,23,1,0,120.5,0,0,1],["chol745-fb70",16,6,56,23,1,0,62.8,0,1,0],["chol746-df67",16,6,56,23,1,1,29.1,1,1,0],["chol747-6a9b",16,6,56,23,1,1,50.3,1,1,0],["chol748-4538",16,6,56,23,1,1,15.6,1,1,0],["chol599-1024",17,7,38,16,1,0,39.5,0,1,0],["chol600-282f",17,7,38,16,1,0,43.2,0,1,0],["chol601-178c",17,7,38,16,1,0,70.4,0,1,0],["chol602-93bc",17,7,38,16,1,1,14.7,1,1,0],["chol603-78cf",17,7,38,16,1,1,19.1,1,1,0],["chol604-9827",17,7,38,16,1,1,34.3,1,1,0],["chol815-180b",17,7,39,16,1,0,85.5,0,1,0],["chol816-2558",17,7,39,16,1,0,86.7,0,1,0],["chol817-e2c3",17,7,39,16,1,0,88.1,0,1,0],["chol818-ccd7",17,7,39,16,1,1,53.3,1,1,0],["chol819-e33e",17,7,39,16,1,1,54.5,1,1,0],["chol820-fca9",17,7,39,16,1,1,53.7,1,1,0],["hot551-7cf2",17,7,38,16,2,0,60.6,0,1,0],["hot552-d1c0",17,7,38,16,2,0,60.5,0,1,0],["hot553-aea7",17,7,38,16,2,0,61.4,0,1,0],["hot554-6c67",17,7,38,16,2,1,37.0,1,1,0],["hot555-3138",17,7,38,16,2,1,33.1,1,1,0],["hot556-f4c4",17,7,38,16,2,1,35.3,1,1,0],["buty151-55cb",18,8,15,9,0,0,53.4,0,1,1],["buty152-5d60",18,8,15,9,0,0,50.2,0,1,1],["buty153-b8c1",18,8,15,9,0,0,46.7,0,1,1],["buty154-c77b",18,8,15,9,0,1,60.8,1,1,1],["buty155-9daa",18,8,15,9,0,1,54.8,1,1,1],["buty156-e324",18,8,15,9,0,1,106.3,1,0,1],["chol145-c4e9",18,8,15,9,1,0,82.9,0,1,1],["chol147-1246",18,8,15,9,1,0,79.9,0,1,1],["chol148-695a",18,8,15,9,1,1,37.0,1,1,1],["chol150-794b",18,8,15,9,1,1,44.9,1,1,1],["chol505-017b",18,8,15,9,1,0,71.5,0,1,1],["chol506-2a6b",18,8,15,9,1,0,87.0,0,1,1],["chol507-0213",18,8,15,9,1,1,8.7,1,1,1],["chol508-fd2a",18,8,15,9,1,1,6.6,1,1,1],["chol509-00d6",18,8,15,9,1,0,88.3,0,1,1],["chol510-755c",18,8,15,9,1,0,87.4,0,1,1],["chol511-a879",18,8,15,9,1,1,28.6,1,1,1],["chol512-f251",18,8,15,9,1,1,27.4,1,1,1],["hot157-a504",18,8,15,9,2,0,71.0,0,1,1],["hot158-54c5",18,8,15,9,2,0,70.4,0,1,1],["hot159-0747",18,8,15,9,2,0,69.2,0,1,1],["hot160-6d9f",18,8,15,9,2,1,35.9,1,1,1],["hot161-1e57",18,8,15,9,2,1,31.6,1,1,1],["hot162-7ad7",18,8,15,9,2,1,37.0,1,1,1],["no p163-6ec7",18,8,15,9,3,0,53.3,0,1,1],["no p164-da03",18,8,15,9,3,0,50.3,0,1,1],["no p165-cd3a",18,8,15,9,3,0,47.0,0,1,1],["no p166-c183",18,8,15,9,3,1,60.7,1,1,1],["no p167-405b",18,8,15,9,3,1,55.0,1,1,1],["no p168-6f1f",18,8,15,9,3,1,106.8,1,0,1],["chol701-a51f",19,2,28,12,1,0,41.0,0,1,0],["chol702-95b4",19,2,28,12,1,0,44.7,0,1,0],["chol703-e236",19,2,28,12,1,0,73.1,0,1,0],["chol704-31e9",19,2,28,12,1,1,39.4,1,1,0],["chol705-4e16",19,2,28,12,1,1,64.2,1,1,0],["chol706-e62e",19,2,28,12,1,1,111.3,1,0,1],["chol719-f026",19,2,42,17,1,0,79.4,0,1,0],["chol720-3426",19,2,42,17,1,0,86.4,0,1,0],["chol721-9322",19,2,42,17,1,0,72.9,0,1,0],["chol722-c522",19,2,42,17,1,1,43.4,1,1,0],["chol723-8ed9",19,2,42,17,1,1,52.3,1,1,0],["chol724-5999",19,2,42,17,1,1,27.8,1,1,0],["chol725-b834",19,2,43,17,1,0,72.4,0,1,0],["chol726-b4ce",19,2,43,17,1,0,75.3,0,1,0],["chol727-433c",19,2,43,17,1,0,74.9,0,1,0],["chol728-dbd4",19,2,43,17,1,1,39.5,1,1,0],["chol729-b778",19,2,43,17,1,1,46.1,1,1,0],["chol730-cb98",19,2,43,17,1,1,38.6,1,1,0],["chol731-9f39",19,2,44,17,1,0,93.6,0,1,0],["chol732-4582",19,2,44,17,1,0,85.3,0,1,0],["chol733-da2c",19,2,44,17,1,0,76.7,0,1,0],["chol734-2d12",19,2,44,17,1,1,132.8,1,0,1],["chol735-ff95",19,2,44,17,1,1,131.9,1,0,1],["chol736-34d1",19,2,44,17,1,1,117.1,1,0,1],["hot653-5086",19,2,28,12,2,0,62.7,0,1,0],["hot654-0ee9",19,2,28,12,2,0,56.7,0,1,0],["hot655-e521",19,2,28,12,2,0,55.4,0,1,0],["hot656-7e43",19,2,28,12,2,1,248.7,1,0,1],["hot657-a56b",19,2,28,12,2,1,82.3,1,1,0],["hot658-3b6f",19,2,28,12,2,1,208.6,1,0,1],["hot671-ec72",19,2,42,17,2,0,54.6,0,1,0],["hot672-77fe",19,2,42,17,2,0,56.5,0,1,0],["hot673-3484",19,2,42,17,2,0,56.4,0,1,0],["hot674-cef3",19,2,42,17,2,1,42.0,1,1,0],["hot675-5666",19,2,42,17,2,1,44.6,1,1,0],["hot676-a0c6",19,2,42,17,2,1,41.1,1,1,0],["hot677-fa05",19,2,43,17,2,0,48.5,0,1,0],["hot678-1e9c",19,2,43,17,2,0,52.2,0,1,0],["hot679-a1ec",19,2,43,17,2,0,58.3,0,1,0],["hot680-3570",19,2,43,17,2,1,75.4,1,1,0],["hot681-b31c",19,2,43,17,2,1,78.5,1,1,0],["hot682-f727",19,2,43,17,2,1,88.2,1,1,0],["hot683-e069",19,2,44,17,2,0,81.3,0,1,0],["hot684-5dc7",19,2,44,17,2,0,82.0,0,1,0],["hot685-27a7",19,2,44,17,2,0,78.7,0,1,0],["hot686-4932",19,2,44,17,2,1,138.1,1,0,1],["hot687-5313",19,2,44,17,2,1,139.0,1,0,1],["hot688-1bd8",19,2,44,17,2,1,136.4,1,0,1],["buty415-90b5",20,9,49,21,0,0,23.9,0,1,0],["buty416-bf0a",20,9,49,21,0,0,27.3,0,1,0],["buty417-e945",20,9,49,21,0,0,34.7,0,1,0],["buty418-0f82",20,9,49,21,0,1,0.0,1,0,1],["buty419-730c",20,9,49,21,0,1,0.0,1,0,1],["buty420-f6b5",20,9,49,21,0,1,0.0,1,0,1],["chol409-eccf",20,9,49,21,1,0,72.0,0,1,0],["chol410-cd0d",20,9,49,21,1,0,75.7,0,1,0],["chol411-c3ee",20,9,49,21,1,0,70.9,0,1,0],["chol412-5fde",20,9,49,21,1,1,31.7,1,1,0],["chol413-fda3",20,9,49,21,1,1,83.8,1,1,0],["chol414-44e5",20,9,49,21,1,1,20.7,1,1,0],["hot421-015d",20,9,49,21,2,0,26.0,0,1,0],["hot422-d681",20,9,49,21,2,0,22.9,0,1,0],["hot423-e9db",20,9,49,21,2,0,19.0,0,1,0],["hot424-f2fd",20,9,49,21,2,1,121.1,1,0,1],["hot425-c52c",20,9,49,21,2,1,87.7,1,1,0],["hot426-b3c6",20,9,49,21,2,1,100.9,1,1,0],["no p427-8b93",20,9,49,21,3,0,27.9,0,1,0],["no p428-cc70",20,9,49,21,3,0,26.8,0,1,0],["no p429-ca6d",20,9,49,21,3,0,27.4,0,1,0],["no p430-1a29",20,9,49,21,3,1,191.6,1,0,1],["no p431-2d93",20,9,49,21,3,1,186.3,1,0,1],["no p432-8670",20,9,49,21,3,1,192.2,1,0,1],["buty079-aeb3",21,10,45,18,0,0,65.2,0,1,0],["buty080-2d78",21,10,45,18,0,0,65.4,0,1,0],["buty081-f476",21,10,45,18,0,0,66.3,0,1,0],["buty082-ad24",21,10,45,18,0,1,72.0,1,1,0],["buty083-30f5",21,10,45,18,0,1,70.8,1,1,0],["buty084-11f3",21,10,45,18,0,1,72.4,1,1,0],["buty103-5e9e",21,10,30,13,0,0,72.4,0,1,0],["buty104-8f3c",21,10,30,13,0,0,67.7,0,1,0],["buty105-8a32",21,10,30,13,0,0,73.2,0,1,0],["buty106-5d8b",21,10,30,13,0,1,86.4,1,1,0],["buty107-4b83",21,10,30,13,0,1,81.7,1,1,0],["buty108-4c57",21,10,30,13,0,1,75.1,1,1,0],["buty127-2bd2",21,10,32,14,0,0,67.9,0,1,0],["buty128-7672",21,10,32,14,0,0,73.8,0,1,0],["buty130-bbc1",21,10,32,14,0,1,70.1,1,1,0],["buty131-0cfc",21,10,32,14,0,1,74.0,1,1,0],["chol073-0695",21,10,45,18,1,0,58.6,0,1,0],["chol074-4525",21,10,45,18,1,0,61.3,0,1,0],["chol075-71e6",21,10,45,18,1,0,56.9,0,1,0],["chol076-a18d",21,10,45,18,1,1,39.9,1,1,0],["chol077-f9c7",21,10,45,18,1,1,42.9,1,1,0],["chol078-08c9",21,10,45,18,1,1,42.7,1,1,0],["chol097-af15",21,10,30,13,1,0,67.6,0,1,0],["chol098-1b2a",21,10,30,13,1,0,65.6,0,1,0],["chol099-04e8",21,10,30,13,1,0,66.1,0,1,0],["chol100-0d14",21,10,30,13,1,1,56.7,1,1,0],["chol101-a251",21,10,30,13,1,1,59.6,1,1,0],["chol102-fc37",21,10,30,13,1,1,53.5,1,1,0],["chol121-51ca",21,10,32,14,1,0,65.5,0,1,0],["chol122-e1e0",21,10,32,14,1,0,63.1,0,1,0],["chol123-c79f",21,10,32,14,1,0,60.5,0,1,0],["chol124-d47a",21,10,32,14,1,1,30.6,1,1,0],["chol125-a906",21,10,32,14,1,1,33.5,1,1,0],["chol126-7721",21,10,32,14,1,1,31.6,1,1,0],["chol617-d051",21,10,31,13,1,0,68.4,0,1,0],["chol618-4e26",21,10,31,13,1,0,93.3,0,1,0],["chol619-3575",21,10,31,13,1,0,90.6,0,1,0],["chol620-06c5",21,10,31,13,1,1,7.7,1,1,0],["chol621-cc06",21,10,31,13,1,1,11.5,1,1,0],["chol622-38a1",21,10,31,13,1,1,10.4,1,1,0],["chol623-d90c",21,10,33,14,1,0,71.8,0,1,0],["chol624-5123",21,10,33,14,1,0,96.7,0,1,0],["chol625-e307",21,10,33,14,1,0,26.6,0,1,0],["chol626-e546",21,10,33,14,1,1,24.7,1,1,0],["chol627-f31c",21,10,33,14,1,1,38.1,1,1,0],["chol628-c00c",21,10,33,14,1,1,12.5,1,1,0],["chol629-95b0",21,10,14,8,1,0,42.2,0,1,0],["chol630-628a",21,10,14,8,1,0,58.6,0,1,0],["chol631-67b9",21,10,14,8,1,0,61.6,0,1,0],["chol632-44e2",21,10,14,8,1,1,6.2,1,1,0],["chol633-6239",21,10,14,8,1,1,3.8,1,1,0],["chol634-4b8d",21,10,14,8,1,1,4.0,1,1,0],["chol635-f935",21,10,13,7,1,0,48.0,0,1,0],["chol636-885b",21,10,13,7,1,0,45.4,0,1,0],["chol637-878c",21,10,13,7,1,0,20.1,0,1,0],["chol638-827e",21,10,13,7,1,1,20.1,1,1,0],["chol639-6514",21,10,13,7,1,1,5.4,1,1,0],["chol640-e50a",21,10,13,7,1,1,20.7,1,1,0],["hot085-83c6",21,10,45,18,2,0,60.7,0,1,0],["hot086-82e7",21,10,45,18,2,0,61.3,0,1,0],["hot087-8edd",21,10,45,18,2,0,58.0,0,1,0],["hot088-38c9",21,10,45,18,2,1,52.1,1,1,0],["hot089-66f8",21,10,45,18,2,1,60.7,1,1,0],["hot090-bdbb",21,10,45,18,2,1,56.8,1,1,0],["hot109-e5ce",21,10,30,13,2,0,68.4,0,1,0],["hot110-f4ff",21,10,30,13,2,0,66.3,0,1,0],["hot111-19c5",21,10,30,13,2,0,63.5,0,1,0],["hot112-572e",21,10,30,13,2,1,66.0,1,1,0],["hot113-54ae",21,10,30,13,2,1,60.4,1,1,0],["hot114-5d11",21,10,30,13,2,1,64.7,1,1,0],["hot133-5a4e",21,10,32,14,2,0,67.9,0,1,0],["hot134-b6e8",21,10,32,14,2,0,67.8,0,1,0],["hot135-9d22",21,10,32,14,2,0,64.9,0,1,0],["hot136-f052",21,10,32,14,2,1,64.8,1,1,0],["hot137-3602",21,10,32,14,2,1,65.0,1,1,0],["hot138-9d87",21,10,32,14,2,1,64.1,1,1,0],["hot569-62fc",21,10,31,13,2,0,118.0,0,1,0],["hot570-4961",21,10,31,13,2,0,93.1,0,1,0],["hot571-7a03",21,10,31,13,2,0,131.8,0,0,1],["hot572-15ca",21,10,31,13,2,1,74.2,1,1,0],["hot573-87dc",21,10,31,13,2,1,54.5,1,1,0],["hot574-8d12",21,10,31,13,2,1,78.3,1,1,0],["hot575-b96c",21,10,33,14,2,0,129.7,0,0,1],["hot576-3e47",21,10,33,14,2,0,95.1,0,1,0],["hot577-0726",21,10,33,14,2,0,93.4,0,1,0],["hot578-6372",21,10,33,14,2,1,104.2,1,0,1],["hot579-f63a",21,10,33,14,2,1,84.3,1,1,0],["hot580-dcf4",21,10,33,14,2,1,84.8,1,1,0],["hot581-006a",21,10,14,8,2,0,109.5,0,0,1],["hot582-2288",21,10,14,8,2,0,113.9,0,0,1],["hot583-0d5f",21,10,14,8,2,0,80.4,0,1,0],["hot584-9ead",21,10,14,8,2,1,51.3,1,1,0],["hot585-5c6b",21,10,14,8,2,1,58.5,1,1,0],["hot586-9d69",21,10,14,8,2,1,40.8,1,1,0],["hot587-b187",21,10,13,7,2,0,71.9,0,1,0],["hot588-2b48",21,10,13,7,2,0,47.8,0,1,0],["hot589-8c7e",21,10,13,7,2,0,55.3,0,1,0],["hot590-f564",21,10,13,7,2,1,46.0,1,1,0],["hot591-a517",21,10,13,7,2,1,32.5,1,1,0],["hot592-6f6a",21,10,13,7,2,1,33.6,1,1,0],["no p091-2c23",21,10,45,18,3,0,65.6,0,1,0],["no p092-f9e3",21,10,45,18,3,0,66.0,0,1,0],["no p094-acab",21,10,45,18,3,1,71.0,1,1,0],["no p095-ea4a",21,10,45,18,3,1,72.1,1,1,0],["no p115-664f",21,10,30,13,3,0,72.6,0,1,0],["no p116-7c05",21,10,30,13,3,0,67.5,0,1,0],["no p117-f9f5",21,10,30,13,3,0,73.2,0,1,0],["no p118-001f",21,10,30,13,3,1,86.7,1,1,0],["no p119-1315",21,10,30,13,3,1,81.5,1,1,0],["no p120-54f1",21,10,30,13,3,1,75.1,1,1,0],["no p139-fc84",21,10,32,14,3,0,67.9,0,1,0],["no p140-fd88",21,10,32,14,3,0,73.5,0,1,0],["no p142-c30f",21,10,32,14,3,1,70.1,1,1,0],["no p143-3d70",21,10,32,14,3,1,73.6,1,1,0],["chol695-4cbf",22,2,29,12,1,0,51.6,0,1,0],["chol696-82ef",22,2,29,12,1,0,51.4,0,1,0],["chol697-2ae0",22,2,29,12,1,0,45.1,0,1,0],["chol698-8304",22,2,29,12,1,1,48.2,1,1,0],["chol699-20f5",22,2,29,12,1,1,45.6,1,1,0],["chol700-f09c",22,2,29,12,1,1,33.6,1,1,0],["hot647-d76e",22,2,29,12,2,0,50.9,0,1,0],["hot648-0b95",22,2,29,12,2,0,79.4,0,1,0],["hot649-a531",22,2,29,12,2,0,71.5,0,1,0],["hot650-3237",22,2,29,12,2,1,32.3,1,1,0],["hot651-56cf",22,2,29,12,2,1,109.7,1,0,1],["hot652-17a2",22,2,29,12,2,1,104.6,1,0,1],["chol689-355a",23,11,8,5,1,0,76.6,0,1,0],["chol690-5ea5",23,11,8,5,1,0,69.1,0,1,0],["chol691-9a8d",23,11,8,5,1,0,79.6,0,1,0],["chol692-589f",23,11,8,5,1,1,24.8,1,1,0],["chol693-2c7c",23,11,8,5,1,1,19.4,1,1,0],["chol694-8a88",23,11,8,5,1,1,28.3,1,1,0],["hot641-a26b",23,11,8,5,2,0,72.0,0,1,0],["hot642-c1b7",23,11,8,5,2,0,97.2,0,1,0],["hot643-9c5e",23,11,8,5,2,0,68.9,0,1,0],["hot644-646a",23,11,8,5,2,1,26.5,1,1,0],["hot645-5cfb",23,11,8,5,2,1,25.2,1,1,0],["hot646-68b6",23,11,8,5,2,1,18.4,1,1,0],["chol859-0e52",24,11,6,3,1,0,78.2,0,1,0],["chol860-a58b",24,11,6,3,1,0,72.4,0,1,0],["chol861-934d",24,11,6,3,1,0,104.8,0,0,1],["chol862-42b5",24,11,6,3,1,1,32.9,1,1,0],["chol863-48bb",24,11,6,3,1,1,52.2,1,1,0],["chol864-01eb",24,11,6,3,1,1,53.2,1,1,0],["buty391-1d2c",25,11,9,5,0,0,81.5,0,1,0],["buty392-448d",25,11,9,5,0,0,83.7,0,1,0],["buty393-de8d",25,11,9,5,0,0,89.0,0,1,0],["buty394-3c1f",25,11,9,5,0,1,21.8,1,1,0],["buty395-66ec",25,11,9,5,0,1,19.0,1,1,0],["buty396-d47f",25,11,9,5,0,1,20.5,1,1,0],["chol385-e8c2",25,11,9,5,1,0,49.3,0,1,0],["chol386-4955",25,11,9,5,1,0,49.7,0,1,0],["chol387-9b3c",25,11,9,5,1,0,50.0,0,1,0],["chol388-fb95",25,11,9,5,1,1,8.8,1,1,0],["chol389-ab01",25,11,9,5,1,1,9.6,1,1,0],["chol390-5de4",25,11,9,5,1,1,9.6,1,1,0],["chol779-5f10",25,11,5,3,1,0,54.5,0,1,0],["chol780-5f11",25,11,5,3,1,0,53.3,0,1,0],["chol781-652e",25,11,5,3,1,0,59.8,0,1,0],["chol782-d642",25,11,5,3,1,1,11.5,1,1,0],["chol783-9964",25,11,5,3,1,1,10.5,1,1,0],["chol784-6a69",25,11,5,3,1,1,7.7,1,1,0],["hot397-f767",25,11,9,5,2,0,81.8,0,1,0],["hot398-e157",25,11,9,5,2,0,66.9,0,1,0],["hot399-6d76",25,11,9,5,2,0,73.0,0,1,0],["hot400-6e39",25,11,9,5,2,1,35.0,1,1,0],["hot401-3224",25,11,9,5,2,1,24.0,1,1,0],["hot402-42a5",25,11,9,5,2,1,20.9,1,1,0],["no p403-2497",25,11,9,5,3,0,16.8,0,1,0],["no p404-ac21",25,11,9,5,3,0,13.7,0,1,0],["no p405-0848",25,11,9,5,3,0,14.8,0,1,0],["no p406-ce09",25,11,9,5,3,1,9.8,1,1,0],["no p407-5429",25,11,9,5,3,1,7.4,1,1,0],["no p408-82fb",25,11,9,5,3,1,8.4,1,1,0],["buty343-3183",26,11,10,5,0,0,18.7,0,1,0],["buty344-9740",26,11,10,5,0,0,16.9,0,1,0],["buty345-a5bc",26,11,10,5,0,0,16.2,0,1,0],["buty346-f978",26,11,10,5,0,1,16.6,1,1,0],["buty347-8f10",26,11,10,5,0,1,16.0,1,1,0],["buty348-e7b5",26,11,10,5,0,1,16.7,1,1,0],["chol337-9361",26,11,10,5,1,0,54.5,0,1,0],["chol338-f021",26,11,10,5,1,0,52.9,0,1,0],["chol339-16ac",26,11,10,5,1,0,49.5,0,1,0],["chol340-3a85",26,11,10,5,1,1,54.0,1,1,0],["chol341-e110",26,11,10,5,1,1,55.8,1,1,0],["chol342-e95b",26,11,10,5,1,1,50.1,1,1,0],["hot349-01e7",26,11,10,5,2,0,21.2,0,1,0],["hot350-2a6b",26,11,10,5,2,0,24.5,0,1,0],["hot351-f4a3",26,11,10,5,2,0,18.0,0,1,0],["hot352-4e83",26,11,10,5,2,1,24.7,1,1,0],["hot353-76d9",26,11,10,5,2,1,27.7,1,1,0],["hot354-3157",26,11,10,5,2,1,20.0,1,1,0],["no p355-3dc3",26,11,10,5,3,0,30.4,0,1,0],["no p356-ebd0",26,11,10,5,3,0,28.9,0,1,0],["no p357-76c6",26,11,10,5,3,0,30.1,0,1,0],["no p358-378c",26,11,10,5,3,1,32.8,1,1,0],["no p359-04f0",26,11,10,5,3,1,32.2,1,1,0],["no p360-5ce7",26,11,10,5,3,1,31.8,1,1,0],["chol593-db29",27,12,40,16,1,0,52.8,0,1,0],["chol594-b244",27,12,40,16,1,0,34.8,0,1,0],["chol595-9b05",27,12,40,16,1,0,57.4,0,1,0],["chol596-4959",27,12,40,16,1,1,24.1,1,1,0],["chol597-0e21",27,12,40,16,1,1,14.0,1,1,0],["chol598-4749",27,12,40,16,1,1,28.9,1,1,0],["chol605-2922",27,12,60,25,1,0,56.2,0,1,0],["chol606-9627",27,12,60,25,1,0,37.1,0,1,0],["chol607-358c",27,12,60,25,1,0,34.8,0,1,0],["chol608-7d61",27,12,60,25,1,1,33.9,1,1,0],["chol609-6f86",27,12,60,25,1,1,18.0,1,1,0],["chol610-1cab",27,12,60,25,1,1,16.5,1,1,0],["chol809-617c",27,12,60,25,1,0,48.2,0,1,0],["chol810-f0f9",27,12,60,25,1,0,42.7,0,1,0],["chol811-0c6e",27,12,60,25,1,0,44.3,0,1,0],["chol812-416e",27,12,60,25,1,1,23.9,1,1,0],["chol813-649f",27,12,60,25,1,1,18.7,1,1,0],["chol814-d0fd",27,12,60,25,1,1,19.5,1,1,0],["hot545-5042",27,12,40,16,2,0,51.0,0,1,0],["hot546-75b0",27,12,40,16,2,0,44.8,0,1,0],["hot547-3e73",27,12,40,16,2,0,47.4,0,1,0],["hot548-deb4",27,12,40,16,2,1,26.0,1,1,0],["hot549-3ff9",27,12,40,16,2,1,25.2,1,1,0],["hot550-0725",27,12,40,16,2,1,21.1,1,1,0],["hot557-1176",27,12,60,25,2,0,49.9,0,1,0],["hot558-700b",27,12,60,25,2,0,51.3,0,1,0],["hot559-11c0",27,12,60,25,2,0,54.2,0,1,0],["hot560-1aab",27,12,60,25,2,1,37.4,1,1,0],["hot561-94c4",27,12,60,25,2,1,29.5,1,1,0],["hot562-c8d7",27,12,60,25,2,1,29.6,1,1,0]]};
+
+    // Decode dictionary-compressed dataset into full row objects with deterministic jitter
+    const D = PAYLOAD.d;
+    function seededRandom(seed) {
+      let x = Math.sin(seed) * 10000;
+      return x - Math.floor(x);
+    }
+
+    const ALL_ROWS = PAYLOAD.r.map((arr, idx) => {
+      const u1 = Math.max(1e-6, seededRandom(idx * 17 + 3));
+      const u2 = seededRandom(idx * 31 + 7);
+      const jitter = Math.max(-2.2, Math.min(2.2, Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2)));
+      const method = D.raw_pretreatment_method[arr[5]];
+      return {
+        record_id: arr[0],
+        resource_name: D.resource_name[arr[1]],
+        primary_ag_product: D.primary_ag_product[arr[2]],
+        prepared_sample_name: D.prepared_sample_name[arr[3]],
+        provider_code: D.provider_code[arr[4]],
+        raw_pretreatment_method: method,
+        pretreatment_method: method,
+        analysis_param: D.analysis_param[arr[6]],
+        value: arr[7],
+        unit: D.unit[arr[8]],
+        qc_pass: D.qc_pass[arr[9]],
+        data_status: D.data_status[arr[10]],
+        jitter: jitter
+      };
+    });
+
+    const METHOD_COLORS = {
+      cho10pc: '#00B5E2',
+      h2o140c: '#f59e0b',
+      butknt140c: '#10b981',
+      none20c: '#ec4899'
+    };
+
+    const SAMPLE_PALETTE = [
+      '#00B5E2', '#3b82f6', '#8b5cf6', '#ec4899', '#f43f5e',
+      '#f97316', '#eab308', '#10b981', '#14b8a6', '#06b6d4',
+      '#6366f1', '#a855f7', '#d946ef', '#ef4444', '#84cc16'
+    ];
+    const sampleColorMap = {};
+    D.prepared_sample_name.forEach((s, i) => {
+      sampleColorMap[s] = SAMPLE_PALETTE[i % SAMPLE_PALETTE.length];
+    });
+
+    let currentTab = 'scatter';
+    let currentTheme = 'dark';
+    let filteredRows = [...ALL_ROWS];
+    let renderedPoints = [];
+    let pinnedRecord = null;
+    let exportRows = [];
+
+    function toggleTheme() {
+      currentTheme = currentTheme === 'light' ? 'dark' : 'light';
+      const root = document.documentElement;
+      root.setAttribute('data-user-theme', currentTheme);
+      root.setAttribute('data-theme', currentTheme);
+      if (document.body) {
+        document.body.setAttribute('data-user-theme', currentTheme);
+      }
+      root.classList.toggle('light', currentTheme === 'light');
+      root.classList.toggle('dark', currentTheme === 'dark');
+      const btn = document.getElementById('theme-toggle');
+      if (btn) {
+        btn.textContent = currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark';
+      }
+      renderCurrentView();
+    }
+
+    function initDropdowns() {
+      const resCounts = {};
+      const samCounts = {};
+      ALL_ROWS.forEach(r => {
+        resCounts[r.resource_name] = (resCounts[r.resource_name] || 0) + 1;
+        samCounts[r.prepared_sample_name] = (samCounts[r.prepared_sample_name] || 0) + 1;
+      });
+
+      const resSelect = document.getElementById('filter-resource');
+      Object.entries(resCounts)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([name, count]) => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = `${name} (${count})`;
+          resSelect.appendChild(opt);
+        });
+
+      const samSelect = document.getElementById('filter-sample');
+      Object.entries(samCounts)
+        .sort((a, b) => b[1] - a[1])
+        .forEach(([name, count]) => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = `${name} (${count})`;
+          samSelect.appendChild(opt);
+        });
+    }
+
+    function matchSelectOption(selectEl, val) {
+      if (!val || !selectEl) return false;
+      const trimmed = val.trim();
+      const lower = trimmed.toLowerCase();
+      for (const opt of selectEl.options) {
+        if (opt.value === trimmed || opt.value.toLowerCase() === lower) {
+          selectEl.value = opt.value;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function applyUrlParams() {
+      const params = new URLSearchParams(window.location.search);
+      const statusParam = params.get('status') || params.get('qc');
+      if (statusParam) {
+        const sLower = statusParam.trim().toLowerCase();
+        const statusEl = document.getElementById('filter-status');
+        if (sLower === 'portal' || sLower === 'portal compliant' || sLower === 'compliant') {
+          statusEl.value = 'Portal Compliant';
+        } else if (sLower === 'raw' || sLower === 'excluded') {
+          statusEl.value = 'Raw';
+        } else if (sLower === 'pass' || sLower === 'qc_pass') {
+          statusEl.value = 'qc_pass';
+        } else if (sLower === 'fail' || sLower === 'qc_fail') {
+          statusEl.value = 'qc_fail';
+        } else if (sLower === 'all') {
+          statusEl.value = 'ALL';
+        } else {
+          matchSelectOption(statusEl, statusParam);
+        }
+      }
+      const resourceParam = params.get('resource');
+      if (resourceParam) {
+        matchSelectOption(document.getElementById('filter-resource'), resourceParam);
+      }
+      const sampleParam = params.get('sample');
+      if (sampleParam) {
+        matchSelectOption(document.getElementById('filter-sample'), sampleParam);
+      }
+      const methodParam = params.get('method');
+      if (methodParam) {
+        matchSelectOption(document.getElementById('filter-method'), methodParam);
+      }
+      const paramFilter = params.get('param') || params.get('parameter');
+      if (paramFilter) {
+        matchSelectOption(document.getElementById('filter-param'), paramFilter);
+      }
+      const tabParam = params.get('tab');
+      if (tabParam && ['scatter', 'strip', 'export'].includes(tabParam.toLowerCase())) {
+        currentTab = tabParam.toLowerCase();
+      }
+    }
+
+    function setTab(tab) {
+      currentTab = tab;
+      ['scatter', 'strip', 'export'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (t === tab) {
+          btn.className = 'text-xs px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)] transition-colors';
+        } else {
+          btn.className = 'text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors';
+        }
+      });
+
+      const viewCharts = document.getElementById('view-charts');
+      const viewExport = document.getElementById('view-export');
+      const stripControls = document.getElementById('strip-controls');
+      const methodLegend = document.getElementById('method-legend');
+      const chartTitle = document.getElementById('chart-title');
+
+      if (tab === 'export') {
+        viewCharts.classList.add('hidden');
+        viewExport.classList.remove('hidden');
+        renderExportTable();
+      } else {
+        viewCharts.classList.remove('hidden');
+        viewExport.classList.add('hidden');
+        if (tab === 'scatter') {
+          chartTitle.textContent = 'Pretreatment Variance by Sample & Method';
+          stripControls.classList.add('hidden');
+          methodLegend.classList.remove('hidden');
+        } else {
+          chartTitle.textContent = 'Variance within Sample / Method Replicates (Top 14)';
+          stripControls.classList.remove('hidden');
+          methodLegend.classList.add('hidden');
+        }
+        renderCurrentView();
+      }
+    }
+
+    function applyFilters() {
+      const status = document.getElementById('filter-status').value;
+      const param = document.getElementById('filter-param').value;
+      const method = document.getElementById('filter-method').value;
+      const resource = document.getElementById('filter-resource').value;
+      const sample = document.getElementById('filter-sample').value;
+
+      filteredRows = ALL_ROWS.filter(r => {
+        if (status === 'Portal Compliant' && r.data_status !== 'Portal Compliant') return false;
+        if (status === 'Raw' && r.data_status !== 'Raw') return false;
+        if (status === 'qc_pass' && r.qc_pass !== 'pass') return false;
+        if (status === 'qc_fail' && r.qc_pass !== 'fail') return false;
+        if (param !== 'ALL' && r.analysis_param !== param) return false;
+        if (method !== 'ALL' && r.pretreatment_method !== method) return false;
+        if (resource !== 'ALL' && r.resource_name !== resource) return false;
+        if (sample !== 'ALL' && r.prepared_sample_name !== sample) return false;
+        return true;
+      });
+
+      const uniqueSamples = new Set(filteredRows.map(r => r.prepared_sample_name)).size;
+      document.getElementById('badge-count').textContent = `${filteredRows.length} / ${ALL_ROWS.length} obs · ${uniqueSamples} samples`;
+
+      updateStats();
+      renderCurrentView();
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-status').value = 'ALL';
+      document.getElementById('filter-param').value = 'ALL';
+      document.getElementById('filter-method').value = 'ALL';
+      document.getElementById('filter-resource').value = 'ALL';
+      document.getElementById('filter-sample').value = 'ALL';
+      applyFilters();
+    }
+
+    function calcStats(vals) {
+      if (!vals.length) return { mean: null, sd: null, min: null, max: null };
+      const n = vals.length;
+      const mean = vals.reduce((a, b) => a + b, 0) / n;
+      const variance = vals.reduce((acc, v) => acc + (v - mean) ** 2, 0) / n;
+      return {
+        mean,
+        sd: Math.sqrt(variance),
+        min: Math.min(...vals),
+        max: Math.max(...vals),
+        n
+      };
+    }
+
+    function updateStats() {
+      const gluc = calcStats(filteredRows.filter(r => r.analysis_param === 'glucose_yld').map(r => r.value));
+      const xylo = calcStats(filteredRows.filter(r => r.analysis_param === 'xylose_yld').map(r => r.value));
+
+      document.getElementById('stat-glucose-mean').textContent = gluc.mean !== null ? `${gluc.mean.toFixed(1)}% (n=${gluc.n})` : '—';
+      document.getElementById('stat-glucose-sd').textContent = gluc.mean !== null ? `±${gluc.sd.toFixed(1)}% · [${gluc.min.toFixed(1)}–${gluc.max.toFixed(1)}]` : 'No data';
+
+      document.getElementById('stat-xylose-mean').textContent = xylo.mean !== null ? `${xylo.mean.toFixed(1)}% (n=${xylo.n})` : '—';
+      document.getElementById('stat-xylose-sd').textContent = xylo.mean !== null ? `±${xylo.sd.toFixed(1)}% · [${xylo.min.toFixed(1)}–${xylo.max.toFixed(1)}]` : 'No data';
+    }
+
+    function getThemeColors() {
+      const isLight = currentTheme !== 'dark';
+      return {
+        canvasBg: isLight ? '#f8fafc' : '#0f172a',
+        grid: isLight ? 'rgba(15, 23, 42, 0.1)' : 'rgba(248, 250, 252, 0.1)',
+        axisText: isLight ? '#475569' : '#94a3b8',
+        titleText: isLight ? '#0f172a' : '#f8fafc',
+        rangeBar: isLight ? 'rgba(15, 23, 42, 0.25)' : 'rgba(248, 250, 252, 0.28)',
+        pinnedStroke: isLight ? '#0f172a' : '#ffffff'
+      };
+    }
+
+    function drawShape(ctx, shape, x, y, r) {
+      ctx.beginPath();
+      if (shape === 'cho10pc') {
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+      } else if (shape === 'h2o140c') {
+        ctx.rect(x - r, y - r, r * 2, r * 2);
+      } else if (shape === 'butknt140c') {
+        ctx.moveTo(x, y - r * 1.25);
+        ctx.lineTo(x + r * 1.25, y);
+        ctx.lineTo(x, y + r * 1.25);
+        ctx.lineTo(x - r * 1.25, y);
+        ctx.closePath();
+      } else {
+        ctx.moveTo(x, y - r * 1.2);
+        ctx.lineTo(x + r * 1.2, y + r * 1.1);
+        ctx.lineTo(x - r * 1.2, y + r * 1.1);
+        ctx.closePath();
+      }
+      ctx.fill();
+      ctx.stroke();
+    }
+
+    function renderCurrentView() {
+      if (currentTab === 'scatter') {
+        renderScatter();
+      } else if (currentTab === 'strip') {
+        renderStrip();
+      }
+    }
+
+    function renderScatter() {
+      const canvas = document.getElementById('plot-canvas');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width || 540;
+      const height = 310;
+      canvas.style.height = height + 'px';
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const theme = getThemeColors();
+      ctx.fillStyle = theme.canvasBg;
+      ctx.fillRect(0, 0, width, height);
+
+      const pad = { top: 18, right: 20, bottom: 72, left: 46 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+
+      const maxVal = Math.max(105, ...filteredRows.map(r => r.value));
+      const yMax = Math.ceil(maxVal / 20) * 20;
+
+      // Y gridlines & labels
+      ctx.font = '12px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      const ySteps = 5;
+      for (let i = 0; i <= ySteps; i++) {
+        const val = (yMax / ySteps) * i;
+        const y = pad.top + plotH - (val / yMax) * plotH;
+        ctx.strokeStyle = theme.grid;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(pad.left, y);
+        ctx.lineTo(pad.left + plotW, y);
+        ctx.stroke();
+
+        ctx.fillStyle = theme.axisText;
+        ctx.fillText(`${Math.round(val)}%`, pad.left - 6, y);
+      }
+
+      // X-axis baseline
+      ctx.strokeStyle = theme.axisText;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, pad.top + plotH);
+      ctx.lineTo(pad.left + plotW, pad.top + plotH);
+      ctx.stroke();
+
+      // X categories (glucose_yld, xylose_yld) paired with method lanes
+      const params = ['glucose_yld', 'xylose_yld'];
+      const methodOffsets = { cho10pc: -0.24, h2o140c: -0.08, butknt140c: 0.08, none20c: 0.24 };
+
+      params.forEach((p, idx) => {
+        const cx = pad.left + plotW * (idx === 0 ? 0.27 : 0.73);
+        const label = p === 'glucose_yld' ? 'glucose_yld (% of glucan)' : 'xylose_yld (% of xylan)';
+
+        ctx.strokeStyle = theme.axisText;
+        ctx.beginPath();
+        ctx.moveTo(cx, pad.top + plotH);
+        ctx.lineTo(cx, pad.top + plotH + 4);
+        ctx.stroke();
+
+        ctx.fillStyle = theme.titleText;
+        ctx.font = '600 11.5px system-ui, -apple-system, sans-serif';
+        ctx.save();
+        ctx.translate(cx + 8, pad.top + plotH + 7);
+        ctx.rotate(-Math.PI / 8.5);
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'top';
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+
+        // Divider between parameters
+        if (idx === 0) {
+          ctx.strokeStyle = theme.grid;
+          ctx.beginPath();
+          ctx.moveTo(pad.left + plotW * 0.5, pad.top);
+          ctx.lineTo(pad.left + plotW * 0.5, pad.top + plotH);
+          ctx.stroke();
+        }
+      });
+
+      ctx.fillStyle = theme.axisText;
+      ctx.font = '600 10.5px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('Pretreatment Monomeric Yield Parameter', pad.left + plotW / 2, height - 3);
+
+      renderedPoints = [];
+      filteredRows.forEach(r => {
+        const pIdx = r.analysis_param === 'glucose_yld' ? 0 : 1;
+        const baseCx = pad.left + plotW * (pIdx === 0 ? 0.27 : 0.73);
+        const mOffset = (methodOffsets[r.pretreatment_method] || 0) * (plotW * 0.44);
+        const x = baseCx + mOffset + r.jitter * 6.5;
+        const y = pad.top + plotH - (r.value / yMax) * plotH;
+
+        const isPinned = pinnedRecord && pinnedRecord.record_id === r.record_id;
+        ctx.fillStyle = METHOD_COLORS[r.pretreatment_method] || '#00B5E2';
+        ctx.globalAlpha = isPinned ? 1.0 : 0.78;
+        ctx.strokeStyle = isPinned ? theme.pinnedStroke : 'rgba(0,0,0,0.25)';
+        ctx.lineWidth = isPinned ? 2 : 0.8;
+
+        drawShape(ctx, r.pretreatment_method, x, y, isPinned ? 6 : 4.2);
+        renderedPoints.push({ x, y, r });
+      });
+      ctx.globalAlpha = 1.0;
+    }
+
+    function renderStrip() {
+      const canvas = document.getElementById('plot-canvas');
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      const width = rect.width || 540;
+      const height = 310;
+      canvas.style.height = height + 'px';
+      canvas.width = width * dpr;
+      canvas.height = height * dpr;
+
+      const ctx = canvas.getContext('2d');
+      ctx.scale(dpr, dpr);
+
+      const theme = getThemeColors();
+      ctx.fillStyle = theme.canvasBg;
+      ctx.fillRect(0, 0, width, height);
+
+      const pad = { top: 14, right: 20, bottom: 46, left: 145 };
+      const plotW = width - pad.left - pad.right;
+      const plotH = height - pad.top - pad.bottom;
+
+      // Group replicates by (prepared_sample_name, pretreatment_method)
+      const groups = {};
+      filteredRows.forEach(r => {
+        const key = `${r.prepared_sample_name} · ${r.pretreatment_method}`;
+        if (!groups[key]) {
+          groups[key] = {
+            label: `${r.prepared_sample_name} (${r.pretreatment_method})`,
+            sample: r.prepared_sample_name,
+            method: r.pretreatment_method,
+            rows: []
+          };
+        }
+        groups[key].rows.push(r);
+      });
+
+      const groupList = Object.values(groups).map(g => {
+        const vals = g.rows.map(x => x.value);
+        const min = Math.min(...vals);
+        const max = Math.max(...vals);
+        const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+        return { ...g, min, max, spread: max - min, mean, count: vals.length };
+      });
+
+      const sortBy = document.getElementById('strip-sort').value;
+      groupList.sort((a, b) => b[sortBy] - a[sortBy]);
+      const topGroups = groupList.slice(0, 14);
+
+      const maxVal = Math.max(105, ...filteredRows.map(r => r.value));
+      const xMax = Math.ceil(maxVal / 20) * 20;
+
+      // X-axis baseline
+      ctx.strokeStyle = theme.axisText;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(pad.left, pad.top + plotH);
+      ctx.lineTo(pad.left + plotW, pad.top + plotH);
+      ctx.stroke();
+
+      // X gridlines
+      ctx.font = '600 11px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (let i = 0; i <= 5; i++) {
+        const val = (xMax / 5) * i;
+        const x = pad.left + (val / xMax) * plotW;
+        ctx.strokeStyle = theme.grid;
+        ctx.beginPath();
+        ctx.moveTo(x, pad.top);
+        ctx.lineTo(x, pad.top + plotH);
+        ctx.stroke();
+        ctx.strokeStyle = theme.axisText;
+        ctx.beginPath();
+        ctx.moveTo(x, pad.top + plotH);
+        ctx.lineTo(x, pad.top + plotH + 4);
+        ctx.stroke();
+        ctx.fillStyle = theme.titleText;
+        ctx.fillText(`${Math.round(val)}%`, x, pad.top + plotH + 7);
+      }
+
+      ctx.fillStyle = theme.axisText;
+      ctx.font = '600 10.5px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillText('Monomeric Sugar Yield (% Theoretical)', pad.left + plotW / 2, height - 3);
+
+      renderedPoints = [];
+      const rowStep = plotH / Math.max(1, topGroups.length);
+
+      topGroups.forEach((g, idx) => {
+        const y = pad.top + idx * rowStep + rowStep / 2;
+        ctx.fillStyle = theme.axisText;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        const shortLabel = g.label.length > 22 ? g.label.slice(0, 21) + '…' : g.label;
+        ctx.fillText(shortLabel, pad.left - 8, y);
+
+        // Min-max spread bar
+        const xMin = pad.left + (g.min / xMax) * plotW;
+        const xMaxBar = pad.left + (g.max / xMax) * plotW;
+        ctx.strokeStyle = theme.rangeBar;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(xMin, y);
+        ctx.lineTo(xMaxBar, y);
+        ctx.stroke();
+
+        // Individual replicate dots
+        g.rows.forEach(r => {
+          const x = pad.left + (r.value / xMax) * plotW;
+          const isPinned = pinnedRecord && pinnedRecord.record_id === r.record_id;
+          ctx.fillStyle = r.analysis_param === 'glucose_yld' ? '#00B5E2' : '#f59e0b';
+          ctx.strokeStyle = isPinned ? theme.pinnedStroke : 'rgba(0,0,0,0.3)';
+          ctx.lineWidth = isPinned ? 2 : 0.8;
+          ctx.beginPath();
+          ctx.arc(x, y, isPinned ? 5.5 : 4, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          renderedPoints.push({ x, y, r });
+        });
+      });
+    }
+
+    // Canvas hover & click interactions
+    const canvasEl = document.getElementById('plot-canvas');
+    const tooltipEl = document.getElementById('hover-tooltip');
+
+    function findNearestPoint(evt) {
+      const rect = canvasEl.getBoundingClientRect();
+      const mx = evt.clientX - rect.left;
+      const my = evt.clientY - rect.top;
+      let best = null;
+      let bestDist = 100;
+      for (const pt of renderedPoints) {
+        const d2 = (pt.x - mx) ** 2 + (pt.y - my) ** 2;
+        if (d2 < bestDist) {
+          bestDist = d2;
+          best = pt;
+        }
+      }
+      return best;
+    }
+
+    canvasEl.addEventListener('mousemove', evt => {
+      const hit = findNearestPoint(evt);
+      if (!hit) {
+        tooltipEl.classList.add('hidden');
+        return;
+      }
+      const r = hit.r;
+      tooltipEl.innerHTML = `
+        <div class="font-semibold text-[var(--foreground)]">${r.prepared_sample_name}</div>
+        <div class="text-[var(--muted-foreground)]">${r.resource_name} · ${r.pretreatment_method}</div>
+        <div class="mt-1 font-medium text-[#00B5E2]">${r.analysis_param}: ${r.value.toFixed(2)} ${r.unit}</div>
+        <div class="text-[var(--muted-foreground)]">ID: ${r.record_id} · QC: ${r.qc_pass}</div>
+      `;
+      tooltipEl.classList.remove('hidden');
+      const left = Math.min(hit.x + 12, canvasEl.clientWidth - 220);
+      const top = Math.max(8, hit.y - 56);
+      tooltipEl.style.left = `${left}px`;
+      tooltipEl.style.top = `${top}px`;
+    });
+
+    canvasEl.addEventListener('mouseleave', () => {
+      tooltipEl.classList.add('hidden');
+    });
+
+    canvasEl.addEventListener('click', evt => {
+      const hit = findNearestPoint(evt);
+      if (!hit) return;
+      pinRecord(hit.r);
+      if (evt.metaKey || evt.ctrlKey || evt.shiftKey) {
+        addRecordToExport(hit.r, '');
+      }
+      renderCurrentView();
+    });
+
+    function pinRecord(r) {
+      pinnedRecord = r;
+      document.getElementById('pin-status-badge').textContent = r.data_status;
+      document.getElementById('pinned-details').innerHTML = `
+        <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Record ID:</span><span class="font-mono font-semibold text-[#00B5E2]">${r.record_id}</span></div>
+        <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Sample:</span><span class="font-medium text-[var(--foreground)]">${r.prepared_sample_name}</span></div>
+        <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Resource:</span><span class="text-[var(--foreground)]">${r.resource_name}</span></div>
+        <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Method:</span><span class="text-[var(--foreground)]">${r.pretreatment_method}</span></div>
+        <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Parameter:</span><span class="text-[var(--foreground)]">${r.analysis_param}</span></div>
+        <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Measured:</span><span class="font-semibold text-[var(--foreground)]">${r.value.toFixed(2)} ${r.unit}</span></div>
+        <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Provider / QC:</span><span class="text-[var(--foreground)]">${r.provider_code} / ${r.qc_pass}</span></div>
+      `;
+      document.getElementById('pinned-actions').classList.remove('hidden');
+    }
+
+    function addPinnedToExport() {
+      if (!pinnedRecord) return;
+      const noteInput = document.getElementById('pin-note');
+      addRecordToExport(pinnedRecord, noteInput.value.trim());
+      noteInput.value = '';
+    }
+
+    function addRecordToExport(r, note) {
+      if (!exportRows.some(e => e.record_id === r.record_id)) {
+        exportRows.push({ ...r, note: note || '' });
+        document.getElementById('tray-count').textContent = exportRows.length;
+      }
+    }
+
+    function copyRecordId() {
+      if (!pinnedRecord) return;
+      navigator.clipboard.writeText(pinnedRecord.record_id);
+      const btn = document.getElementById('btn-copy-id');
+      btn.textContent = 'Copied!';
+      setTimeout(() => { btn.textContent = 'Copy ID'; }, 1200);
+    }
+
+    function renderExportTable() {
+      const tbody = document.getElementById('export-tbody');
+      if (!exportRows.length) {
+        tbody.innerHTML = `<tr><td colspan="8" class="py-8 text-center text-[var(--muted-foreground)]">No records added yet. Click points in the scatter or strip plot to inspect and add them.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = exportRows.map((r, i) => `
+        <tr>
+          <td class="py-1 px-1.5 font-mono text-[#00B5E2]">${r.record_id}</td>
+          <td class="py-1 px-1.5">${r.prepared_sample_name}</td>
+          <td class="py-1 px-1.5">${r.resource_name}</td>
+          <td class="py-1 px-1.5">${r.pretreatment_method}</td>
+          <td class="py-1 px-1.5">${r.analysis_param}</td>
+          <td class="py-1 px-1.5 font-semibold">${r.value.toFixed(2)}%</td>
+          <td class="py-1 px-1.5">${r.note || '—'}</td>
+          <td class="py-1 px-1 text-right"><button onclick="removeExportRow(${i})" class="text-xs text-rose-500 hover:underline">Remove</button></td>
+        </tr>
+      `).join('');
+    }
+
+    function removeExportRow(idx) {
+      exportRows.splice(idx, 1);
+      document.getElementById('tray-count').textContent = exportRows.length;
+      renderExportTable();
+    }
+
+    function clearExport() {
+      exportRows = [];
+      document.getElementById('tray-count').textContent = '0';
+      renderExportTable();
+    }
+
+    function copyExportTSV() {
+      if (!exportRows.length) return;
+      const cols = ['record_id', 'prepared_sample_name', 'resource_name', 'pretreatment_method', 'analysis_param', 'value', 'unit', 'qc_pass', 'data_status', 'note'];
+      const lines = [cols.join('\t')];
+      exportRows.forEach(r => {
+        lines.push(cols.map(c => r[c] ?? '').join('\t'));
+      });
+      navigator.clipboard.writeText(lines.join('\n'));
+      const btn = document.getElementById('btn-copy-tsv');
+      btn.textContent = 'Copied TSV!';
+      setTimeout(() => { btn.textContent = 'Copy TSV'; }, 1200);
+    }
+
+    function downloadExportCSV() {
+      if (!exportRows.length) return;
+      const cols = ['record_id', 'prepared_sample_name', 'resource_name', 'pretreatment_method', 'analysis_param', 'value', 'unit', 'qc_pass', 'data_status', 'note'];
+      const lines = [cols.join(',')];
+      exportRows.forEach(r => {
+        lines.push(cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(','));
+      });
+      const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'pretreatment_variance_export.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    window.addEventListener('resize', () => renderCurrentView());
+    initDropdowns();
+    applyUrlParams();
+    setTab(currentTab);
+    applyFilters();
+  </script>
+</body>
+</html>
