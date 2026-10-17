@@ -22,11 +22,11 @@ an interactive geospatial widget.
 > dataset. Always use the lightweight canonical static county assets in
 > `data/static/`:
 
-| File                                                                                                          | CRS / SRID                    | Size    | Purpose                                                                                                                                                                                                     |
-| :------------------------------------------------------------------------------------------------------------ | :---------------------------- | :------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`data/static/ca_counties.csv`](file:///Users/pjsmitty301/ca-biositing/data/static/ca_counties.csv)           | Tabular                       | ~3 KB   | Canonical 58-county lookup (`geoid`, `county_name`, `county_fips`, `state_fips`, `region_name`)                                                                                                             |
-| [`data/static/ca_counties.geojson`](file:///Users/pjsmitty301/ca-biositing/data/static/ca_counties.geojson)   | **`EPSG:4326`** (SRID `4326`) | ~274 KB | Canonical RFC 7946 GeoJSON with top-level `"id": geoid` and enriched properties (`area_sq_km`, `area_acres`, `centroid_lon`, `centroid_lat`, `region_name`) for GeoPandas, Plotly, Folium, and PostGIS      |
-| [`data/static/ca_counties_svg.json`](file:///Users/pjsmitty301/ca-biositing/data/static/ca_counties_svg.json) | **`EPSG:3310`** (SRID `3310`) | ~110 KB | Pre-projected California Albers equal-area SVG paths (`viewBox="0 0 800 920"`), interior label coordinates, and regional zoom `viewBox` presets for zero-dependency inline `<agent-embed>` HTML/SVG widgets |
+| File                                                                            | CRS / SRID                    | Size    | Purpose                                                                                                                                                                                                     |
+| :------------------------------------------------------------------------------ | :---------------------------- | :------ | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`data/static/ca_counties.csv`](../../../data/static/ca_counties.csv)           | Tabular                       | ~3 KB   | Canonical 58-county lookup (`geoid`, `county_name`, `county_fips`, `state_fips`, `region_name`)                                                                                                             |
+| [`data/static/ca_counties.geojson`](../../../data/static/ca_counties.geojson)   | **`EPSG:4326`** (SRID `4326`) | ~274 KB | Canonical RFC 7946 GeoJSON with top-level `"id": geoid` and enriched properties (`area_sq_km`, `area_acres`, `centroid_lon`, `centroid_lat`, `region_name`) for GeoPandas, Plotly, Folium, and PostGIS      |
+| [`data/static/ca_counties_svg.json`](../../../data/static/ca_counties_svg.json) | **`EPSG:3310`** (SRID `3310`) | ~110 KB | Pre-projected California Albers equal-area SVG paths (`viewBox="0 0 800 920"`), interior label coordinates, and regional zoom `viewBox` presets for zero-dependency inline `<agent-embed>` HTML/SVG widgets |
 
 To rebuild or refresh the static county geo assets from
 `data/static/ca_counties.csv`:
@@ -69,7 +69,7 @@ import geopandas as gpd
 Most biomass resources in `data_portal` do **not** have market pricing
 (`mv_biomass_pricing`) or 8-year direct production records
 (`public.resource_production_record`).
-[`scripts/viz/generate_ca_county_widget.py`](file:///Users/pjsmitty301/ca-biositing/scripts/viz/generate_ca_county_widget.py)
+[`scripts/viz/generate_ca_county_widget.py`](../../../scripts/viz/generate_ca_county_widget.py)
 automatically executes a **3-tier county volume waterfall + metadata
 enrichment** across all `data_portal` views so any resource works out of the
 box:
@@ -190,7 +190,7 @@ Because external JS CDNs (like `cdn.plot.ly` or `unpkg.com/leaflet`) are blocked
 by Content Security Policy (CSP) inside `<agent-embed>` iframes, use
 `data/static/ca_counties_svg.json` + Tailwind CSS
 (`https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js`) via
-[`scripts/viz/generate_ca_county_widget.py`](file:///Users/pjsmitty301/ca-biositing/scripts/viz/generate_ca_county_widget.py).
+[`scripts/viz/generate_ca_county_widget.py`](../../../scripts/viz/generate_ca_county_widget.py).
 
 **You do NOT need to write a separate exploratory SQL script first.** Running
 `generate_ca_county_widget.py` with `--resource "<resource_name>"` and
@@ -203,7 +203,7 @@ single step:
 ```bash
 # Single command to query PostgreSQL (requires BypassSandbox: true for localhost:5432 socket access),
 # save the structured JSON summary, and generate both standalone and inline HTML for ANY resource:
-/Users/pjsmitty301/ca-biositing/.pixi/envs/default/bin/python scripts/viz/generate_ca_county_widget.py \
+.pixi/envs/default/bin/python scripts/viz/generate_ca_county_widget.py \
   --resource "walnut hulls" \
   --save-data-json /tmp/nsjv_walnut_hull_data.json \
   --output exports/plots/geospatial/nsjv_walnut_hull_map.html \
@@ -214,8 +214,8 @@ single step:
 >
 > 1. In Standard Sandbox Mode (`BypassSandbox: false`), invoking `pixi`
 >    (`~/.pixi/bin/pixi`) or connecting to `localhost:5432` is blocked by macOS
->    Seatbelt. Always invoke
->    `/Users/pjsmitty301/ca-biositing/.pixi/envs/default/bin/python` directly.
+>    Seatbelt. Always invoke `.pixi/envs/default/bin/python` directly (from the
+>    repo root).
 > 2. Run the single command above (attempting `BypassSandbox: false` first per
 >    sandbox rules, then retrying the exact same command with
 >    `BypassSandbox: true` and identical `toolAction`/`toolSummary` when
