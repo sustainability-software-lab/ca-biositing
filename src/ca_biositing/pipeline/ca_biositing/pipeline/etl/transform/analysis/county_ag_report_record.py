@@ -138,22 +138,20 @@ def transform_county_ag_report_records(
         axis=1
     )
 
-    # 7. Data Source ID Mapping
-    # 001: Merced 2023, 002: SJ 2023, 003: Stan 2023
-    # 005: Merced 2024, 006: SJ 2024, 007: Stan 2024
-    county_ds_map = {
-        ("merced", 2023): 1,
-        ("san joaquin", 2023): 2,
-        ("stanislaus", 2023): 3,
-        ("merced", 2024): 5,
-        ("san joaquin", 2024): 6,
-        ("stanislaus", 2024): 7,
+    # 7. Data Source Name Mapping (resolved via normalize_dataframes to avoid hardcoded IDs)
+    county_ds_name_map = {
+        ("merced", 2023): "merced county 2023 report on agriculture",
+        ("san joaquin", 2023): "san joaquin county crop report, 2023",
+        ("stanislaus", 2023): "stanislaus county agricultural report, 2023",
+        ("merced", 2024): "merced county 2024 report on agriculture",
+        ("san joaquin", 2024): "san joaquin county crop report, 2024",
+        ("stanislaus", 2024): "stanislaus county agricultural report, 2024",
     }
 
-    def get_ds_id(row):
-        return county_ds_map.get((row["county"].lower(), row["data_year"]))
+    def get_ds_name(row):
+        return county_ds_name_map.get((row["county"].lower().strip(), int(row["data_year"])))
 
-    df_combined["data_source_id"] = df_combined.apply(get_ds_id, axis=1)
+    df_combined["data_source_name"] = df_combined.apply(get_ds_name, axis=1)
 
     # 8. Normalization (Foreign Keys)
     # Institutionalize geoid mapping based on county (lowercase to match database convention)
@@ -164,18 +162,20 @@ def transform_county_ag_report_records(
     }
     df_combined["geoid"] = df_combined["county"].str.lower().map(geoid_map)
 
-    # For PrimaryAgProduct, we still try normalize_dataframes
+    # Normalize PrimaryAgProduct and DataSource by name
     normalize_columns = {
         'primary_product': (PrimaryAgProduct, 'name'),
+        'data_source_name': (DataSource, 'name'),
     }
 
-    logger.info("Normalizing data (primary_ag_product_id)...")
+    logger.info("Normalizing data (primary_ag_product_id and data_source_id)...")
     normalized_dfs = normalize_dataframes(df_combined, normalize_columns)
     df_normalized = normalized_dfs[0]
 
     # Map the output of normalize_dataframes to the expected column names
     rename_map = {
-        "primary_product_id": "primary_ag_product_id"
+        "primary_product_id": "primary_ag_product_id",
+        "data_source_name_id": "data_source_id",
     }
     df_normalized = df_normalized.rename(columns=rename_map)
 
