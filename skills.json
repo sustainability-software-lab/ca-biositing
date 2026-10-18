@@ -13,7 +13,8 @@
         "docs",
         "merge-pr",
         "okf-memory",
-        "push"
+        "push",
+        "resource-analysis-dashboards"
       ]
     },
     {

@@ -1,376 +1,634 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CA Biositing - Analysis Gallery</title>
+    <title>BioCirV — Modular Analytics &amp; Drift Suite</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
-            background-color: #f8f9fa;
+            background-color: #0b1120;
+            color: #f8fafc;
             font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
         .hero {
             background: linear-gradient(135deg, #00313C 0%, #00B5E2 100%);
             color: white;
-            padding: 4rem 2rem;
-            margin-bottom: 3rem;
+            padding: 3.5rem 2rem;
+            margin-bottom: 2.5rem;
         }
         .category-section h2 {
-            color: #00313C;
+            color: #38bdf8;
             letter-spacing: -0.025em;
         }
         .card {
+            background-color: #111827;
+            border: 1px solid #1e293b;
             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-            border: none;
         }
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+            transform: translateY(-4px);
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.35) !important;
         }
         .btn-primary {
             background-color: #00B5E2;
             border-color: #00B5E2;
+            color: #0f172a;
+            font-weight: 600;
         }
         .btn-primary:hover {
             background-color: #0094b8;
             border-color: #0094b8;
+            color: #0f172a;
         }
     </style>
 </head>
 <body>
 
 <div class="hero text-center">
-    <h1 class="display-4 fw-bold">Analysis Visualization Gallery</h1>
-    <p class="lead">CA Biositing Geospatial Bioeconomy Project</p>
-    <div class="mt-4">
-        <span class="badge bg-light text-dark px-3 py-2">Updated: 2026-09-16 15:55</span>
+    <h1 class="display-5 fw-bold">BioCirV Modular Analytics &amp; Environment Drift Hub</h1>
+    <p class="lead mb-0">BioCirV Bioeconomy Analytics · Reproducible Agent-Skill Suite</p>
+    <div class="mt-3">
+        <span class="badge bg-light text-dark px-3 py-2">Updated: 2026-10-17 20:44</span>
     </div>
 </div>
 
-<div class="container mb-3">
-  <div class="alert" style="background:#e8f7fc; border-left:4px solid #00B5E2; border-radius:4px; padding:1rem">
-    <strong>💡 Click-to-Export:</strong> Click any data point in a dashboard
-    to pin its details and add it to an exportable table. Use the
-    <strong>⬇ Export CSV</strong> button to download flagged points for
-    tracking in a spreadsheet.
+<div class="container mb-4">
+  <div class="card shadow-sm border-0" style="background: linear-gradient(135deg, #0f172a 0%, #0369a1 100%); color: white;">
+    <div class="card-body p-4">
+      <div class="row align-items-center g-3">
+        <div class="col-lg-8">
+          <span class="badge bg-info text-dark fw-bold mb-2">MODULAR 3-PAGE RESOURCE SUITE + DB ENVIRONMENT DRIFT AUDIT</span>
+          <h3 class="fw-bold mb-1">BioCirV Feedstock Characterization, Statistical QC &amp; Multi-Resource Explorer</h3>
+          <p class="mb-2 text-light opacity-90 small">
+            Explore all <strong>127 cataloged resources</strong> (45 with active lab records), <strong>147 field samples</strong>,
+            <strong>384 prepared samples</strong>, and <strong>11,974 observations</strong> across all 10 Aim 1 &amp; Aim 2 tables via our
+            de-cluttered modular suite: <strong>Page 1 (Characterization &amp; AI Brief)</strong>,
+            <strong>Page 2 (Statistical Replicate Precision, Outlier Screening &amp; Lab Notes Audit)</strong>,
+            <strong>Page 3 (Multi-Select Checklist Side-by-Side Comparison Explorer)</strong>, and our
+            <strong>Local vs. Staging vs. Production DB Environment Drift Dashboard</strong>.
+          </p>
+          <div class="d-flex flex-wrap gap-2 mt-3">
+            <a href="metadata/resource_analysis_dashboard.html" class="btn btn-sm btn-info text-dark fw-bold" target="_blank">📊 1. Characterization &amp; AI Brief</a>
+            <a href="metadata/resource_qc_outlier_dashboard.html" class="btn btn-sm btn-warning text-dark fw-bold" target="_blank">🔬 2. Statistical QC &amp; Outlier Audit</a>
+            <a href="metadata/resource_explorer_dashboard.html" class="btn btn-sm btn-light text-dark fw-bold" target="_blank">⚖️ 3. Multi-Select Side-by-Side Explorer</a>
+            <a href="audit/db_environment_drift_dashboard.html" class="btn btn-sm btn-outline-light fw-bold" target="_blank">🔄 4. Local / Staging / Prod Drift Audit</a>
+          </div>
+        </div>
+        <div class="col-lg-4 text-lg-end d-flex flex-column gap-2">
+          <a href="metadata/resource_analysis_dashboard.html" class="btn btn-primary fw-bold px-4 py-2 shadow" target="_blank">
+            Open Page 1: Characterization &rarr;
+          </a>
+          <a href="metadata/resource_qc_outlier_dashboard.html" class="btn btn-outline-light fw-semibold px-3 py-2" target="_blank">
+            Open Page 2: Statistical QC &amp; Notes &rarr;
+          </a>
+          <a href="metadata/resource_explorer_dashboard.html" class="btn btn-outline-info text-white fw-semibold px-3 py-2" target="_blank">
+            Open Page 3: Multi-Select Comparison &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
 <div class="container mb-5">
-
+    
             <div class="category-section mb-5">
-                <h2 class="border-bottom pb-2 mb-4 text-dark fw-bold">Composition</h2>
+                <h2 class="border-bottom border-secondary pb-2 mb-4 fw-bold">Metadata</h2>
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-
+                    
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Compositional Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/compositional_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Database Analysis Type Dist</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="metadata/database_analysis_type_dist.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: compositional_distribution.html
+                        <div class="card-footer text-muted small font-monospace">
+                            metadata/database_analysis_type_dist.html
                         </div>
                     </div>
                 </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Icp Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/icp_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: icp_distribution.html
-                        </div>
-                    </div>
-                </div>
-
+            
 
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Moisture Vs Ash</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/moisture_vs_ash.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Database Resource Hierarchy</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="metadata/database_resource_hierarchy.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: moisture_vs_ash.html
+                        <div class="card-footer text-muted small font-monospace">
+                            metadata/database_resource_hierarchy.html
                         </div>
                     </div>
                 </div>
-
+            
 
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Portal Biomass Composition Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/portal_biomass_composition_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Database Resource Stats</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="metadata/database_resource_stats.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: portal_biomass_composition_distribution.html
+                        <div class="card-footer text-muted small font-monospace">
+                            metadata/database_resource_stats.html
                         </div>
                     </div>
                 </div>
-
+            
 
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Proximate Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/proximate_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Database Samples Over Time</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="metadata/database_samples_over_time.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: proximate_distribution.html
+                        <div class="card-footer text-muted small font-monospace">
+                            metadata/database_samples_over_time.html
                         </div>
                     </div>
                 </div>
-
+            
 
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Proximate Distribution Dashboard</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/proximate_distribution_dashboard.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Database Samples Over Time Ag</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="metadata/database_samples_over_time_ag.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: proximate_distribution_dashboard.html
+                        <div class="card-footer text-muted small font-monospace">
+                            metadata/database_samples_over_time_ag.html
                         </div>
                     </div>
                 </div>
-
+            
 
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Ultimate Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/ultimate_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Resource Analysis Dashboard</h5>
+                            <p class="card-text text-muted small flex-grow-1">Page 1 (Characterization & AI Brief): Streamlined single-resource analytical & bioconversion dashboard with compact 2-card Executive AI Brief, 4 KPI cards, and 5 focused domain tabs across all 45 active resources.</p>
+                            <a href="metadata/resource_analysis_dashboard.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: ultimate_distribution.html
+                        <div class="card-footer text-muted small font-monospace">
+                            metadata/resource_analysis_dashboard.html
                         </div>
                     </div>
                 </div>
-
+            
 
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Xrd Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/xrd_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Resource Explorer Dashboard</h5>
+                            <p class="card-text text-muted small flex-grow-1">Page 3 (Multi-Resource Side-by-Side Parameter Explorer): High-DPI HTML5 Canvas explorer with always-accessible Multi-Select Checklists (Resources, Parameters & Units, Samples, Methods/Preps) and a Compare By grouping selector for visual & numeric head-to-head comparison.</p>
+                            <a href="metadata/resource_explorer_dashboard.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: xrd_distribution.html
+                        <div class="card-footer text-muted small font-monospace">
+                            metadata/resource_explorer_dashboard.html
                         </div>
                     </div>
                 </div>
-
+            
 
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Xrf Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/xrf_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Resource Qc Outlier Dashboard</h5>
+                            <p class="card-text text-muted small flex-grow-1">Page 2 (Statistical QC & Lab Notes Audit): Dedicated replicate precision (RSD_within vs. RSD_between), 3-test candidate outlier screening (Dixon's Q, RSD > 20%, >3×SD_pooled with <100 ppm / <0.5% trace cutoffs), mined bench notes audit trail, and anonymized CSV export.</p>
+                            <a href="metadata/resource_qc_outlier_dashboard.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: xrf_distribution.html
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Xrf Variance Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="composition/xrf_variance_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: xrf_variance_distribution.html
+                        <div class="card-footer text-muted small font-monospace">
+                            metadata/resource_qc_outlier_dashboard.html
                         </div>
                     </div>
                 </div>
-
+            
                 </div>
             </div>
-
-
-            <div class="category-section mb-5">
-                <h2 class="border-bottom pb-2 mb-4 text-dark fw-bold">Conversion</h2>
-                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Fermentation Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="conversion/fermentation_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: fermentation_distribution.html
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Gasification Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="conversion/gasification_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: gasification_distribution.html
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Pretreatment Distribution</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="conversion/pretreatment_distribution.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: pretreatment_distribution.html
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Pretreatment Variance</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="conversion/pretreatment_variance.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: pretreatment_variance.html
-                        </div>
-                    </div>
-                </div>
-
-                </div>
-            </div>
-
+        
 
             <div class="category-section mb-5">
-                <h2 class="border-bottom pb-2 mb-4 text-dark fw-bold">Metadata</h2>
+                <h2 class="border-bottom border-secondary pb-2 mb-4 fw-bold">Audit</h2>
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-
+                    
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Database Analysis Type Dist</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="metadata/database_analysis_type_dist.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Db Environment Drift Dashboard</h5>
+                            <p class="card-text text-muted small flex-grow-1">Local vs. Staging vs. Production Database Drift Assessment Dashboard: 4-layer parity scorecard, data_portal & ca_biositing View Schema Guard, table & materialized view row deltas, Resource × Analysis-Type drift heatmap, lineage set-difference explorer, parameter value shift (>5%) detector, and filter funnel comparison.</p>
+                            <a href="audit/db_environment_drift_dashboard.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: database_analysis_type_dist.html
+                        <div class="card-footer text-muted small font-monospace">
+                            audit/db_environment_drift_dashboard.html
                         </div>
                     </div>
                 </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Database Resource Hierarchy</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="metadata/database_resource_hierarchy.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: database_resource_hierarchy.html
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Database Resource Stats</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="metadata/database_resource_stats.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: database_resource_stats.html
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Database Samples Over Time</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="metadata/database_samples_over_time.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: database_samples_over_time.html
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="col">
-                    <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Database Samples Over Time Ag</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="metadata/database_samples_over_time_ag.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
-                        </div>
-                        <div class="card-footer text-muted small">
-                            Filename: database_samples_over_time_ag.html
-                        </div>
-                    </div>
-                </div>
-
+            
                 </div>
             </div>
-
+        
 
             <div class="category-section mb-5">
-                <h2 class="border-bottom pb-2 mb-4 text-dark fw-bold">Lineage</h2>
+                <h2 class="border-bottom border-secondary pb-2 mb-4 fw-bold">Conversion</h2>
                 <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
-
+                    
                 <div class="col">
                     <div class="card h-100 shadow-sm">
-                        <div class="card-body">
-                            <h5 class="card-title">Sample Lineage Flow</h5>
-                            <p class="card-text text-muted small">Analysis type visualization.</p>
-                            <a href="lineage/sample_lineage_flow.html" class="btn btn-primary w-100" target="_blank">View Dashboard</a>
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Fermentation Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="conversion/fermentation_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
                         </div>
-                        <div class="card-footer text-muted small">
-                            Filename: sample_lineage_flow.html
+                        <div class="card-footer text-muted small font-monospace">
+                            conversion/fermentation_distribution.html
                         </div>
                     </div>
                 </div>
+            
 
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Gasification Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="conversion/gasification_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            conversion/gasification_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Pretreatment Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="conversion/pretreatment_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            conversion/pretreatment_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
                 </div>
             </div>
+        
 
+            <div class="category-section mb-5">
+                <h2 class="border-bottom border-secondary pb-2 mb-4 fw-bold">Composition</h2>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Compositional Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/compositional_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/compositional_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Icp Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/icp_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/icp_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Moisture Vs Ash</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/moisture_vs_ash.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/moisture_vs_ash.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Portal Biomass Composition Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/portal_biomass_composition_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/portal_biomass_composition_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Proximate Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/proximate_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/proximate_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Proximate Distribution Dashboard</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/proximate_distribution_dashboard.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/proximate_distribution_dashboard.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Ultimate Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/ultimate_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/ultimate_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Xrd Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/xrd_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/xrd_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Xrf Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/xrf_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/xrf_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Xrf Variance Distribution</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="composition/xrf_variance_distribution.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            composition/xrf_variance_distribution.html
+                        </div>
+                    </div>
+                </div>
+            
+                </div>
+            </div>
+        
+
+            <div class="category-section mb-5">
+                <h2 class="border-bottom border-secondary pb-2 mb-4 fw-bold">Geospatial</h2>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Almond Branches Map</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_almond_branches_map.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_almond_branches_map.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Almond Branches Map Inline</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_almond_branches_map_inline.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_almond_branches_map_inline.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Almond Hull Map</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_almond_hull_map.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_almond_hull_map.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Almond Shell Map</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_almond_shell_map.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_almond_shell_map.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Grape Pomace Map</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_grape_pomace_map.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_grape_pomace_map.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Grape Pomace Map Inline</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_grape_pomace_map_inline.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_grape_pomace_map_inline.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Pistachio Shell Map</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_pistachio_shell_map.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_pistachio_shell_map.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Pistachio Shell Map Inline</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_pistachio_shell_map_inline.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_pistachio_shell_map_inline.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Tomato Pomace Map</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_tomato_pomace_map.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_tomato_pomace_map.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Tomato Pomace Map Inline</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_tomato_pomace_map_inline.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_tomato_pomace_map_inline.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Walnut Hull Map</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_walnut_hull_map.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_walnut_hull_map.html
+                        </div>
+                    </div>
+                </div>
+            
+
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Nsjv Walnut Hull Map Inline</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="geospatial/nsjv_walnut_hull_map_inline.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            geospatial/nsjv_walnut_hull_map_inline.html
+                        </div>
+                    </div>
+                </div>
+            
+                </div>
+            </div>
+        
+
+            <div class="category-section mb-5">
+                <h2 class="border-bottom border-secondary pb-2 mb-4 fw-bold">Lineage</h2>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    
+                <div class="col">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">Sample Lineage Flow</h5>
+                            <p class="card-text text-muted small flex-grow-1">Interactive BioCirV analysis visualization.</p>
+                            <a href="lineage/sample_lineage_flow.html" class="btn btn-primary w-100 mt-2" target="_blank">View Dashboard</a>
+                        </div>
+                        <div class="card-footer text-muted small font-monospace">
+                            lineage/sample_lineage_flow.html
+                        </div>
+                    </div>
+                </div>
+            
+                </div>
+            </div>
+        
 </div>
 
-<footer class="py-4 bg-white border-top mt-auto">
-    <div class="container text-center text-muted">
-        <p class="mb-0">CA Bioscape Analysis Hub</p>
+<footer class="py-4 bg-dark border-top border-secondary mt-auto">
+    <div class="container text-center text-secondary">
+        <p class="mb-0">BioCirV Analysis Hub · Powered by Reproducible Agent Skills (<code>pixi run refresh-dashboards</code> &amp; <code>pixi run db-drift-compare</code>)</p>
     </div>
 </footer>
 

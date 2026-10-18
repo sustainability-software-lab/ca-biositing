@@ -42,8 +42,12 @@ class WebServiceConfig(BaseSettings):
     cors_origins: List[str] = [
         "http://localhost:3000",  # React default
         "http://localhost:5173",  # Vite default
+        "http://localhost:8000",  # Local FastAPI & dashboard host
+        "http://127.0.0.1:8000",  # Local FastAPI loopback
         "http://localhost:8080",  # Alternative frontend port
+        "null",  # Standalone file:// dashboard origin
     ]
+
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]
     cors_allow_headers: List[str] = ["*"]

@@ -92,6 +92,7 @@ pgschema
 !.agents/skills/merge-pr/
 !.agents/skills/okf-memory/
 !.agents/skills/push/
+!.agents/skills/resource-analysis-dashboards/
 .claude/*
 !.claude/skills/
 .claude/skills/*
@@ -104,6 +105,7 @@ pgschema
 !.claude/skills/merge-pr
 !.claude/skills/okf-memory
 !.claude/skills/push
+!.claude/skills/resource-analysis-dashboards
 .cline/
 .roo/
 

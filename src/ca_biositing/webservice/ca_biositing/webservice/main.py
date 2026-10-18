@@ -7,11 +7,15 @@ from __future__ import annotations
 
 import logging
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
+
 
 from ca_biositing.datamodels.database import get_engine
 
@@ -128,3 +132,14 @@ def health_check() -> JSONResponse:
 
 # Mount v1 router
 app.include_router(v1_router.router)
+
+# Mount interactive HTML dashboards under /dashboards when exports/plots exists
+_repo_root = Path(__file__).resolve().parents[5]
+_dashboards_dir = _repo_root / "exports" / "plots"
+if _dashboards_dir.is_dir():
+    app.mount(
+        "/dashboards",
+        StaticFiles(directory=str(_dashboards_dir), html=True),
+        name="dashboards",
+    )
+
