@@ -1,36 +1,35 @@
 #!/usr/bin/env python3
 """Multi-Environment PostgreSQL Drift Assessment & Interactive Dashboard Generator.
 
-Extracts 4-layer database environment fingerprints across `local` (:5432),
-`staging` (:5434 via Cloud SQL Auth Proxy), and `production` (:5435 via Cloud SQL
-Auth Proxy) using connection defaults from `resources/config/db_reset.yaml`, or
-seeds baseline fingerprints from repository snapshots when Cloud SQL tunnels are
-offline. Compares fingerprints across all 4 layers to generate:
+Extracts 4-layer database environment fingerprints directly from live PostgreSQL
+instances across `local` (:5432), `staging` (:5434 via Cloud SQL Auth Proxy), and
+`production` (:5435 via Cloud SQL Auth Proxy) using connection defaults from
+`resources/config/db_reset.yaml` and `.env`. When an environment tunnel is
+unreachable, records an explicit `unmeasured_offline` fingerprint (`is_measured:
+False`) without fabricating or simulating data. Compares fingerprints across all
+4 layers to generate:
   1. `exports/plots/audit/db_environment_drift_dashboard.html`
   2. `audit/output/drift_report.md`
 
 CLI Modes:
-  # Seed Local, Staging, and Production fingerprints from repo snapshots:
-  python3 analysis/audit/db_environment_drift.py --seed-from-snapshots
-
-  # Extract live fingerprint from a running PostgreSQL environment:
+  # Extract live fingerprints from running PostgreSQL environments and compare:
+  pixi run python analysis/audit/db_environment_drift.py --extract-env local staging production --compare
   pixi run python analysis/audit/db_environment_drift.py --extract-env local
   pixi run python analysis/audit/db_environment_drift.py --extract-env staging --port 5434
   pixi run python analysis/audit/db_environment_drift.py --extract-env production --port 5435
 
-  # Compare fingerprints and build HTML dashboard + Markdown drift report:
-  python3 analysis/audit/db_environment_drift.py --compare
+  # Compare existing fingerprints and build HTML dashboard + Markdown drift report:
+  pixi run python analysis/audit/db_environment_drift.py --compare
 """
 
 from __future__ import annotations
 
 import argparse
-from collections import Counter, defaultdict
+from collections import defaultdict
 from copy import deepcopy
 from datetime import datetime, timezone
 import hashlib
 import json
-import math
 import os
 from pathlib import Path
 import re
@@ -38,7 +37,6 @@ import statistics
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-WORKSPACE_FALLBACK = Path("/Users/pjsmitty301/ca-biositing")
 
 CORE_TABLE_METADATA: list[tuple[str, str, int, bool]] = [
     # (table_name, category, column_count, has_qc_pass)
@@ -119,7 +117,7 @@ ALL_19_VIEWS: list[tuple[str, str, int]] = [
 CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
     "ca_biositing.landiq_record_view": [
         ("record_id", "character varying"),
-        ("geom", "geometry(Geometry,4326)"),
+        ("geom", "geometry"),
         ("geoid", "character varying"),
         ("crop_name", "character varying"),
         ("acres", "double precision"),
@@ -129,7 +127,7 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
     ],
     "ca_biositing.landiq_tileset_view": [
         ("id", "integer"),
-        ("geom", "geometry(Geometry,4326)"),
+        ("geom", "geometry"),
         ("main_crop", "character varying"),
         ("acres", "double precision"),
         ("county", "character varying"),
@@ -210,14 +208,14 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("from_month", "integer"),
         ("to_month", "integer"),
         ("year_round", "boolean"),
-        ("dry_tons_per_acre", "numeric"),
-        ("wet_tons_per_acre", "numeric"),
+        ("dry_tons_per_acre", "double precision"),
+        ("wet_tons_per_acre", "double precision"),
     ],
     "data_portal.mv_biomass_composition": [
         ("id", "bigint"),
         ("resource_id", "integer"),
         ("resource_name", "character varying"),
-        ("analysis_type", "character varying"),
+        ("analysis_type", "text"),
         ("parameter_name", "character varying"),
         ("geoid", "character varying"),
         ("county", "character varying"),
@@ -226,7 +224,7 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("min_value", "numeric"),
         ("max_value", "numeric"),
         ("std_dev", "numeric"),
-        ("observation_count", "integer"),
+        ("observation_count", "bigint"),
     ],
     "data_portal.mv_biomass_county_production": [
         ("id", "bigint"),
@@ -249,10 +247,10 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
     "data_portal.mv_biomass_sample_stats": [
         ("resource_id", "integer"),
         ("resource_name", "character varying"),
-        ("sample_count", "integer"),
-        ("supplier_count", "integer"),
-        ("dataset_count", "integer"),
-        ("total_record_count", "integer"),
+        ("sample_count", "bigint"),
+        ("supplier_count", "bigint"),
+        ("dataset_count", "bigint"),
+        ("total_record_count", "bigint"),
     ],
     "data_portal.mv_biomass_fermentation": [
         ("id", "bigint"),
@@ -260,7 +258,7 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("resource_name", "character varying"),
         ("geoid", "character varying"),
         ("county", "character varying"),
-        ("strain_name", "character varying"),
+        ("strain_name", "text"),
         ("pretreatment_method", "character varying"),
         ("enzyme_name", "character varying"),
         ("bioconversion_method", "character varying"),
@@ -270,7 +268,7 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("min_value", "numeric"),
         ("max_value", "numeric"),
         ("std_dev", "numeric"),
-        ("observation_count", "integer"),
+        ("observation_count", "bigint"),
         ("unit", "character varying"),
     ],
     "data_portal.mv_biomass_gasification": [
@@ -278,13 +276,13 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("resource_id", "integer"),
         ("resource_name", "character varying"),
         ("reactor_type", "character varying"),
-        ("parameter_name", "character varying"),
+        ("parameter_name", "text"),
         ("geoid", "character varying"),
         ("avg_value", "numeric"),
         ("min_value", "numeric"),
         ("max_value", "numeric"),
         ("std_dev", "numeric"),
-        ("observation_count", "integer"),
+        ("observation_count", "bigint"),
         ("unit", "character varying"),
     ],
     "data_portal.mv_biomass_pricing": [
@@ -295,7 +293,7 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("county", "character varying"),
         ("county_fips", "character varying"),
         ("state", "character varying"),
-        ("report_date", "timestamp with time zone"),
+        ("report_date", "timestamp without time zone"),
         ("report_source", "character varying"),
         ("market_type_category", "character varying"),
         ("sale_type", "character varying"),
@@ -314,11 +312,11 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("state", "character varying"),
         ("dataset_year", "integer"),
         ("primary_product_volume", "numeric"),
-        ("volume_unit", "character varying"),
+        ("volume_unit", "text"),
         ("production_acres", "numeric"),
-        ("known_biomass_volume", "numeric"),
+        ("known_biomass_volume", "text"),
         ("calculated_estimate_volume", "double precision"),
-        ("biomass_unit", "character varying"),
+        ("biomass_unit", "text"),
     ],
     "data_portal.mv_biomass_search": [
         ("id", "integer"),
@@ -331,11 +329,11 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("image_url", "character varying"),
         ("literature_uri", "character varying"),
         ("total_annual_volume", "numeric"),
-        ("county_count", "integer"),
-        ("volume_unit", "character varying"),
+        ("county_count", "bigint"),
+        ("volume_unit", "text"),
         ("total_annual_volume_year", "integer"),
         ("moisture_percent", "numeric"),
-        ("sugar_content_percent", "integer"),
+        ("sugar_content_percent", "numeric"),
         ("glucan_percent", "numeric"),
         ("xylan_percent", "numeric"),
         ("ash_percent", "numeric"),
@@ -343,8 +341,8 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("carbon_percent", "numeric"),
         ("hydrogen_percent", "numeric"),
         ("cn_ratio", "numeric"),
-        ("transport_notes", "character varying"),
-        ("storage_notes", "character varying"),
+        ("transport_notes", "text"),
+        ("storage_notes", "text"),
         ("tags", "text[]"),
         ("season_from_month", "integer"),
         ("season_to_month", "integer"),
@@ -368,8 +366,8 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
         ("calculated_estimate_volume_max", "numeric"),
         ("calculated_estimate_volume_mid", "numeric"),
         ("volume_estimate_year", "integer"),
-        ("created_at", "timestamp with time zone"),
-        ("updated_at", "timestamp with time zone"),
+        ("created_at", "timestamp without time zone"),
+        ("updated_at", "timestamp without time zone"),
         ("search_vector", "tsvector"),
     ],
     "data_portal.mv_biomass_end_uses": [
@@ -410,7 +408,7 @@ CANONICAL_VIEW_SCHEMAS: dict[str, list[tuple[str, str]]] = {
 
 DEFAULT_ENV_CONFIGS = {
     "local": {
-        "host": os.environ.get("POSTGRES_HOST", "localhost"),
+        "host": os.environ.get("POSTGRES_HOST", "127.0.0.1"),
         "port": int(os.environ.get("POSTGRES_PORT", "5432")),
         "database": os.environ.get("POSTGRES_DB", "biocirv_db"),
         "user": os.environ.get("POSTGRES_USER", "biocirv_user"),
@@ -418,25 +416,39 @@ DEFAULT_ENV_CONFIGS = {
         "label": "Local Dev (Docker :5432)",
     },
     "staging": {
-        "host": os.environ.get("DB_HOST_STAGING", "localhost"),
+        "host": os.environ.get("DB_HOST_STAGING", "127.0.0.1"),
         "port": int(os.environ.get("DB_PORT_STAGING", "5434")),
         "database": os.environ.get("DB_NAME_STAGING", "biocirv-staging"),
-        "user": os.environ.get("DB_USER_STAGING", "postgres"),
+        "user": os.environ.get("DB_USER_STAGING", "biocirv_user"),
         "password": os.environ.get(
             "DB_PASSWORD_STAGING", os.environ.get("BIOCIRV_STAGING_USER_PW", "")
         ),
         "label": "Staging (Cloud SQL :5434)",
     },
     "production": {
-        "host": os.environ.get("DB_HOST_PROD", "localhost"),
+        "host": os.environ.get("DB_HOST_PROD", "127.0.0.1"),
         "port": int(os.environ.get("DB_PORT_PROD", "5435")),
         "database": os.environ.get("DB_NAME_PROD", "biocirv-production"),
-        "user": os.environ.get("DB_USER_PROD", "postgres"),
+        "user": os.environ.get("DB_USER_PROD", "biocirv_user"),
         "password": os.environ.get(
             "DB_PASSWORD_PROD", os.environ.get("BIOCIRV_PRODUCTION_USER_PW", "")
         ),
         "label": "Production (Cloud SQL :5435)",
     },
+}
+
+ANALYTICAL_TABLE_LABELS = {
+    "public.calorimetry_record": "Calorimetry",
+    "public.compositional_record": "Compositional Analysis",
+    "public.fermentation_record": "Fermentation (Bioconversion)",
+    "public.ftnir_record": "FT-NIR Spectroscopy",
+    "public.gasification_record": "Gasification",
+    "public.icp_record": "ICP Elemental Analysis",
+    "public.pretreatment_record": "Pretreatment & Hydrolysis",
+    "public.proximate_record": "Proximate Analysis",
+    "public.ultimate_record": "Ultimate Analysis",
+    "public.xrd_record": "XRD Crystallinity",
+    "public.xrf_record": "XRF Elemental Analysis",
 }
 
 
@@ -445,105 +457,147 @@ def _short_hash(text_val: str) -> str:
 
 
 def _resolve_reference_file(rel_path: str) -> Path:
-    """Resolve a reference file from REPO_ROOT or fallback to WORKSPACE_FALLBACK."""
-    candidate = REPO_ROOT / rel_path
-    if candidate.exists():
-        return candidate
-    fallback = WORKSPACE_FALLBACK / rel_path
-    if fallback.exists():
-        return fallback
-    return candidate
+    """Resolve a reference file relative to REPO_ROOT."""
+    return REPO_ROOT / rel_path
+
+
+def _parse_dotenv() -> dict[str, str]:
+    """Read key-value pairs from `.env` at REPO_ROOT without mutating os.environ."""
+    env_vals: dict[str, str] = {}
+    dotenv_path = REPO_ROOT / ".env"
+    if not dotenv_path.exists():
+        return env_vals
+    try:
+        for raw_line in dotenv_path.read_text(encoding="utf-8").splitlines():
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            k = k.strip()
+            v = v.strip()
+            if "#" in v and not (v.startswith('"') or v.startswith("'")):
+                v = v.split("#", 1)[0].strip()
+            v = v.strip('"').strip("'")
+            env_vals[k] = v
+    except Exception:
+        pass
+    return env_vals
 
 
 def load_db_reset_config() -> dict[str, dict[str, Any]]:
-    """Parse connection defaults from `resources/config/db_reset.yaml` with env fallback."""
+    """Parse connection defaults from `resources/config/db_reset.yaml` and `.env`."""
+    from sqlalchemy.engine import make_url
+
     configs = deepcopy(DEFAULT_ENV_CONFIGS)
+    dotenv_vals = _parse_dotenv()
+    env_map = {**dotenv_vals, **os.environ}
+
     yaml_path = _resolve_reference_file("resources/config/db_reset.yaml")
-    if not yaml_path.exists():
-        return configs
+    if yaml_path.exists():
+        try:
+            raw_text = yaml_path.read_text(encoding="utf-8")
+            current_env = None
+            env_pat = re.compile(r"^\s{2}(local|staging|production):\s*$")
+            kv_pat = re.compile(r"^\s{4}([a-z_]+):\s*(.+?)\s*$")
+            var_pat = re.compile(r"\$\{([A-Z0-9_]+):-([^}]+)\}")
 
-    try:
-        raw_text = yaml_path.read_text(encoding="utf-8")
-        current_env = None
-        env_pat = re.compile(r"^\s{2}(local|staging|production):\s*$")
-        kv_pat = re.compile(r"^\s{4}([a-z_]+):\s*(.+?)\s*$")
-        var_pat = re.compile(r"\$\{([A-Z0-9_]+):-([^}]+)\}")
+            for line in raw_text.splitlines():
+                m_env = env_pat.match(line)
+                if m_env:
+                    current_env = m_env.group(1)
+                    continue
+                if current_env:
+                    m_kv = kv_pat.match(line)
+                    if m_kv:
+                        k, v = m_kv.group(1), m_kv.group(2)
+                        m_var = var_pat.search(v)
+                        if m_var:
+                            env_name, default_val = m_var.group(1), m_var.group(2)
+                            resolved = env_map.get(env_name, default_val)
+                        else:
+                            resolved = v
+                        if k == "host":
+                            configs[current_env]["host"] = (
+                                "127.0.0.1"
+                                if resolved in ("db", "localhost", "${POSTGRES_HOST:-db}")
+                                else resolved
+                            )
+                        elif k == "port":
+                            try:
+                                configs[current_env]["port"] = int(resolved)
+                            except ValueError:
+                                pass
+                        elif k == "database":
+                            configs[current_env]["database"] = resolved
+                        elif k == "postgres_user":
+                            configs[current_env]["user"] = resolved
+        except Exception:
+            pass
 
-        for line in raw_text.splitlines():
-            m_env = env_pat.match(line)
-            if m_env:
-                current_env = m_env.group(1)
-                continue
-            if current_env:
-                m_kv = kv_pat.match(line)
-                if m_kv:
-                    k, v = m_kv.group(1), m_kv.group(2)
-                    m_var = var_pat.search(v)
-                    if m_var:
-                        env_name, default_val = m_var.group(1), m_var.group(2)
-                        resolved = os.environ.get(env_name, default_val)
-                    else:
-                        resolved = v
-                    if k == "host":
-                        configs[current_env]["host"] = resolved
-                    elif k == "port":
-                        try:
-                            configs[current_env]["port"] = int(resolved)
-                        except ValueError:
-                            pass
-                    elif k == "database":
-                        configs[current_env]["database"] = resolved
-                    elif k == "postgres_user":
-                        configs[current_env]["user"] = resolved
-    except Exception:
-        pass
+    # Apply .env / environment overrides for local, staging, and production
+    configs["local"]["host"] = "127.0.0.1"
+    if "POSTGRES_PORT" in env_map:
+        try:
+            configs["local"]["port"] = int(env_map["POSTGRES_PORT"])
+        except ValueError:
+            pass
+    if "POSTGRES_DB" in env_map:
+        configs["local"]["database"] = env_map["POSTGRES_DB"]
+    if "POSTGRES_USER" in env_map:
+        configs["local"]["user"] = env_map["POSTGRES_USER"]
+    if "POSTGRES_PASSWORD" in env_map:
+        configs["local"]["password"] = env_map["POSTGRES_PASSWORD"]
+
+    staging_url_str = env_map.get("AUDITOR_STAGING_DATABASE_URL") or env_map.get(
+        "STAGING_DATABASE_URL"
+    )
+    if staging_url_str:
+        try:
+            u = make_url(staging_url_str)
+            configs["staging"]["host"] = (
+                "127.0.0.1"
+                if (not u.host or u.host in ("localhost", "db"))
+                else u.host
+            )
+            configs["staging"]["port"] = int(u.port or 5434)
+            configs["staging"]["database"] = u.database or "biocirv-staging"
+            configs["staging"]["user"] = u.username or "biocirv_user"
+            configs["staging"]["password"] = u.password or ""
+        except Exception:
+            pass
+    else:
+        configs["staging"]["host"] = "127.0.0.1"
+
+    prod_url_str = env_map.get("AUDITOR_PRODUCTION_DATABASE_URL") or env_map.get(
+        "AUDITOR_PROD_DATABASE_URL"
+    )
+    if prod_url_str:
+        try:
+            u = make_url(prod_url_str)
+            configs["production"]["host"] = (
+                "127.0.0.1"
+                if (not u.host or u.host in ("localhost", "db"))
+                else u.host
+            )
+            configs["production"]["port"] = int(u.port or 5435)
+            configs["production"]["database"] = u.database or "biocirv-production"
+            configs["production"]["user"] = u.username or "biocirv_user"
+            configs["production"]["password"] = u.password or ""
+        except Exception:
+            pass
+    else:
+        configs["production"]["host"] = "127.0.0.1"
+        configs["production"]["port"] = int(env_map.get("DB_PORT_PROD", 5435))
+        configs["production"]["database"] = env_map.get(
+            "DB_NAME_PROD", "biocirv-production"
+        )
+        configs["production"]["user"] = env_map.get("DB_USER_PROD", "biocirv_user")
+        if "DB_PASSWORD_PROD" in env_map or "BIOCIRV_PRODUCTION_USER_PW" in env_map:
+            configs["production"]["password"] = env_map.get(
+                "DB_PASSWORD_PROD", env_map.get("BIOCIRV_PRODUCTION_USER_PW", "")
+            )
+
     return configs
-
-
-def _load_snapshot_bundle(custom_snapshot_path: str | None = None) -> dict[str, Any]:
-    """Load the full resource/sample/observation snapshot from JSON or embedded HTML."""
-    candidates: list[Path] = []
-    if custom_snapshot_path:
-        candidates.append(Path(custom_snapshot_path))
-    candidates.extend(
-        [
-            Path(
-                "/Users/pjsmitty301/.gemini/antigravity/brain/42a5010b-7235-40e6-8c99-569580ebe1ec/scratch/db_snapshot.json"
-            ),
-            REPO_ROOT / "data" / "snapshots" / "db_snapshot.json",
-            WORKSPACE_FALLBACK / "data" / "snapshots" / "db_snapshot.json",
-        ]
-    )
-    for p in candidates:
-        try:
-            if p.exists():
-                return json.loads(p.read_text(encoding="utf-8"))
-        except PermissionError:
-            continue
-        except Exception:
-            continue
-
-    # Fallback: extract `const BUNDLE = {...};` from `exports/resource_analysis_dashboard.html`
-    html_candidates = [
-        REPO_ROOT / "exports" / "resource_analysis_dashboard.html",
-        WORKSPACE_FALLBACK / "exports" / "resource_analysis_dashboard.html",
-        WORKSPACE_FALLBACK / "exports" / "plots" / "metadata" / "resource_analysis_dashboard.html",
-    ]
-    for hp in html_candidates:
-        try:
-            if hp.exists():
-                with hp.open("r", encoding="utf-8") as f:
-                    for line in f:
-                        s = line.strip()
-                        if s.startswith("const BUNDLE = "):
-                            raw_json = s[len("const BUNDLE = ") :].rstrip(";")
-                            return json.loads(raw_json)
-        except Exception:
-            continue
-
-    raise FileNotFoundError(
-        "Could not locate db_snapshot.json or exports/resource_analysis_dashboard.html"
-    )
 
 
 def _compute_stats_from_values(vals: list[float]) -> dict[str, Any]:
@@ -563,828 +617,162 @@ def _compute_stats_from_values(vals: list[float]) -> dict[str, Any]:
     }
 
 
-def build_seeded_fingerprints(
-    base_dir: Path, custom_snapshot_path: str | None = None
-) -> dict[str, dict[str, Any]]:
-    """Build rich, realistic 4-layer fingerprints for local, staging, and production."""
-    filter_snap_path = _resolve_reference_file(
-        "audit/output/filter_baseline/post_etl_rerun_snapshot.json"
-    )
-    filter_snap = json.loads(filter_snap_path.read_text(encoding="utf-8"))
-    bundle = _load_snapshot_bundle(custom_snapshot_path)
-    env_configs = load_db_reset_config()
+def _normalize_pg_type(raw_type: str) -> str:
+    """Normalize pg_catalog.format_type output to canonical SQL type strings."""
+    t = str(raw_type).strip().lower()
+    if t.startswith("character varying"):
+        return "character varying"
+    if t.startswith("numeric"):
+        return "numeric"
+    if t.endswith("geometry") or "geometry(" in t:
+        return "geometry"
+    if t.startswith("timestamp with time zone"):
+        return "timestamp with time zone"
+    if t.startswith("timestamp without time zone"):
+        return "timestamp without time zone"
+    return t
 
-    str_cols: list[str] = bundle["str_cols"]
-    dicts: dict[str, list[str]] = bundle["dicts"]
-    rows: list[list[Any]] = bundle["rows"]
-    resources_list: list[dict[str, Any]] = bundle.get("resources", [])
-    field_samples_list: list[dict[str, Any]] = bundle.get("field_samples", [])
-    prepared_samples_list: list[dict[str, Any]] = bundle.get("prepared_samples", [])
 
-    res_idx = str_cols.index("resource_name") + 1
-    at_idx = str_cols.index("analysis_type") + 1
-    ps_idx = str_cols.index("prepared_sample") + 1
-    fs_idx = str_cols.index("field_sample") + 1
-    prov_idx = str_cols.index("provider") + 1
-    exp_idx = str_cols.index("experiment") + 1
-    qc_idx = str_cols.index("qc_status") + 1
-    param_idx = str_cols.index("parameter") + 1
-    unit_idx = str_cols.index("unit") + 1
+def _alembic_migration_index(rev_id: str) -> tuple[int, str]:
+    """Resolve Alembic revision index and migration filename from alembic/versions."""
+    versions_dir = REPO_ROOT / "alembic" / "versions"
+    if not versions_dir.exists() or not rev_id or rev_id == "unknown":
+        return (0, "unknown")
+    files = sorted(versions_dir.glob("*.py"))
+    for idx, fpath in enumerate(files, start=1):
+        try:
+            txt = fpath.read_text(encoding="utf-8")
+            if f'revision: str = "{rev_id}"' in txt or f"revision = '{rev_id}'" in txt or f'revision = "{rev_id}"' in txt:
+                m_num = re.match(r"^(\d{4})_", fpath.stem)
+                mig_num = int(m_num.group(1)) if m_num else idx
+                return (mig_num, fpath.stem)
+        except Exception:
+            continue
+    m_rev = re.match(r"^(\d+)", str(rev_id).strip())
+    if m_rev:
+        return (int(m_rev.group(1)), rev_id)
+    return (len(files), rev_id)
 
-    # Build Local Resource x Analysis Type Matrix & Parameter stats from actual rows
-    local_matrix: dict[str, dict[str, Any]] = defaultdict(
-        lambda: defaultdict(
-            lambda: {
-                "count": 0,
-                "unique_records": set(),
-                "qc_pass": 0,
-                "qc_fail": 0,
-                "qc_other": 0,
-                "samples": set(),
-            }
-        )
-    )
-    local_param_vals: dict[tuple[str, str], list[tuple[float, str, str, str]]] = defaultdict(list)
-    param_units: dict[tuple[str, str], str] = {}
 
-    for r in rows:
-        rec_id = str(r[0])
-        res_name = dicts["resource_name"][r[res_idx]]
-        at_name = dicts["analysis_type"][r[at_idx]]
-        ps_name = dicts["prepared_sample"][r[ps_idx]]
-        qc_val = dicts["qc_status"][r[qc_idx]]
-        param_name = dicts["parameter"][r[param_idx]]
-        unit_name = dicts["unit"][r[unit_idx]]
-        num_val = r[-1]
-
-        cell = local_matrix[res_name][at_name]
-        cell["count"] += 1
-        cell["unique_records"].add(rec_id)
-        if qc_val == "pass":
-            cell["qc_pass"] += 1
-        elif qc_val == "fail":
-            cell["qc_fail"] += 1
-        else:
-            cell["qc_other"] += 1
-        if ps_name and ps_name != "Unassigned":
-            cell["samples"].add(ps_name)
-
-        if num_val is not None and param_name != "(metadata only)":
-            key = (at_name, param_name)
-            local_param_vals[key].append((float(num_val), qc_val, res_name, rec_id))
-            if key not in param_units and unit_name:
-                param_units[key] = unit_name
-
-    # Serialize local matrix
-    def _serialize_matrix(
-        raw_mat: dict[str, dict[str, Any]],
-        drop_cells: dict[tuple[str, str], int] | None = None,
-        drop_resources: set[str] | None = None,
-        scale_at: dict[str, float] | None = None,
-        ts_label: str = "2026-10-15T03:17:00Z",
-    ) -> dict[str, dict[str, Any]]:
-        out: dict[str, dict[str, Any]] = {}
-        for res_name in sorted(raw_mat.keys()):
-            if drop_resources and res_name in drop_resources:
-                continue
-            out[res_name] = {}
-            for at_name in sorted(raw_mat[res_name].keys()):
-                c = raw_mat[res_name][at_name]
-                cnt = c["count"]
-                if drop_cells and (res_name, at_name) in drop_cells:
-                    cnt = max(0, cnt - drop_cells[(res_name, at_name)])
-                elif scale_at and at_name in scale_at:
-                    cnt = int(round(cnt * scale_at[at_name]))
-                if cnt <= 0:
-                    continue
-                ratio = cnt / c["count"] if c["count"] > 0 else 1.0
-                qp = int(round(c["qc_pass"] * ratio))
-                qf = int(round(c["qc_fail"] * ratio))
-                qo = max(0, cnt - qp - qf)
-                rec_list = sorted(c["unique_records"])[: max(1, int(len(c["unique_records"]) * ratio))]
-                sample_list = sorted(c["samples"])[: max(1, int(len(c["samples"]) * ratio))]
-                out[res_name][at_name] = {
-                    "count": cnt,
-                    "unique_record_count": len(rec_list),
-                    "qc_pass": qp,
-                    "qc_fail": qf,
-                    "qc_other": qo,
-                    "record_ids_sample": rec_list[:8],
-                    "prepared_samples": sample_list[:6],
-                    "record_hash": _short_hash(f"{res_name}:{at_name}:{cnt}:{','.join(rec_list[:15])}"),
-                    "last_updated": ts_label,
-                }
-        return out
-
-    # Define specific Staging and Production drift rules grounded in repo history
-    staging_dropped_cells = {
-        ("tomato pomace", "Calorimetry"): 14,
-        ("almond shells", "Calorimetry"): 4,
-        ("wheat straw", "Calorimetry"): 4,
-        ("tomato pomace", "XRD Crystallinity"): 9,
-        ("tomato pomace", "Compositional Analysis"): 15,
-        ("wheat straw", "Compositional Analysis"): 10,
-        ("walnut shells", "Gasification"): 45,
-        ("cotton stem mix", "XRF Elemental Analysis"): 32,
-        ("sweet potato culls", "Proximate Analysis"): 6,
-    }
-    prod_missing_resources = {
-        "sweet potato culls",
-        "walnut shelling fines",
-        "olive prunings",
-        "peach screening waste",
-        "grape vine prunings",
-        "blend",
-    }
-    prod_scale_by_at = {
-        "Calorimetry": 0.0,  # Calorimetry had 0 records in prior prod release
-        "XRF Elemental Analysis": 390.0 / 2777.0,  # 390 vs 2777 XRF rows in prior release
-        "Gasification": 611.0 / 801.0,  # 611 vs 801 Gasification rows in prior release
-        "Compositional Analysis": 968.0 / 1043.0,  # 968 vs 1043 Compositional rows
-        "ICP Elemental Analysis": 1153.0 / 826.0,  # 1153 vs 826 ICP rows (Prod has un-deduplicated legacy rows!)
-    }
-
-    local_res_matrix = _serialize_matrix(local_matrix, ts_label="2026-10-15T03:17:00Z")
-    staging_res_matrix = _serialize_matrix(
-        local_matrix,
-        drop_cells=staging_dropped_cells,
-        ts_label="2026-10-12T18:40:00Z",
-    )
-    prod_res_matrix = _serialize_matrix(
-        local_matrix,
-        drop_resources=prod_missing_resources,
-        scale_at=prod_scale_by_at,
-        ts_label="2026-08-29T09:15:00Z",
-    )
-    # Also add ICP extra un-deduplicated rows in prod_res_matrix for almond hulls, tomato pomace, grape pomace
-    for r_extra, add_n in [("almond hulls", 112), ("tomato pomace", 108), ("grape pomace", 65), ("almond shells", 42)]:
-        if r_extra in prod_res_matrix and "ICP Elemental Analysis" in prod_res_matrix[r_extra]:
-            cell_p = prod_res_matrix[r_extra]["ICP Elemental Analysis"]
-            cell_p["count"] = local_res_matrix[r_extra]["ICP Elemental Analysis"]["count"] + add_n
-            cell_p["unique_record_count"] = cell_p["count"]
-            cell_p["qc_pass"] = int(cell_p["count"] * 0.85)
-            cell_p["qc_fail"] = cell_p["count"] - cell_p["qc_pass"]
-            cell_p["record_hash"] = _short_hash(f"prod:{r_extra}:ICP:{cell_p['count']}")
-
-    # Lineage sets (Resources, Field Samples, Prepared Samples, Experiments)
-    all_local_resources = sorted(r["name"] for r in resources_list)
-    all_staging_resources = list(all_local_resources)  # Staging has all 127 resources
-    all_prod_resources = [r for r in all_local_resources if r not in prod_missing_resources]  # 121 in Prod
-
-    all_local_fs = [
-        {
-            "name": fs["name"],
-            "resource_name": fs.get("resource_name", "Unassigned"),
-            "provider": fs.get("provider", "unknown"),
+def _build_unmeasured_fingerprint(
+    env_key: str, cfg: dict[str, Any], reason: str
+) -> dict[str, Any]:
+    """Return an honest, unmeasured fingerprint placeholder when an environment DB is unreachable."""
+    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    tables_schema = {
+        t_name: {
+            "category": cat,
+            "column_count": 0,
+            "columns": [],
+            "has_qc_pass": has_qc,
+            "schema_hash": "unmeasured",
         }
-        for fs in sorted(field_samples_list, key=lambda x: x["name"])
-    ]
-    staging_missing_fs_names = {"dod-spcul127", "dod-spcul128", "was-pihu137"}
-    all_staging_fs = [fs for fs in all_local_fs if fs["name"] not in staging_missing_fs_names]  # 144 in Staging
-    # Prod has 118 field samples (exclude prod_missing_resources + recent batch of 23 samples)
-    prod_Direct_fs = [
-        fs
-        for fs in all_staging_fs
-        if fs["resource_name"] not in prod_missing_resources
-    ]
-    all_prod_fs = prod_Direct_fs[:118]
-
-    all_local_ps = [
-        {
-            "name": ps["name"],
-            "resource_name": ps.get("resource_name", "Unassigned"),
-            "field_sample": ps.get("field_sample_name", "Unassigned"),
-            "prep_method": ps.get("prep_method", "N/A"),
-            "provider": ps.get("provider", "unknown"),
-        }
-        for ps in sorted(prepared_samples_list, key=lambda x: x["name"])
-    ]
-    staging_missing_ps_names = {
-        "dod-spcul127chop(98)",
-        "dod-spcul128chop(96)",
-        "was-pihu137a(9e)",
-        "boa-gpvn103chkm2(eb)",
-        "boa-gpvpr102chkm2(35)",
-        "thy-pchpr104chf(b3)",
-        "exc-olpr106chf(ab)",
-        "exc-olpr107chf(85)",
+        for t_name, cat, _, has_qc in CORE_TABLE_METADATA
     }
-    all_staging_ps = [ps for ps in all_local_ps if ps["name"] not in staging_missing_ps_names]  # 376 in Staging
-    # Prod has 296 prepared samples (matches historical `audit_data.json` total_prepared = 296!)
-    prod_candidate_ps = [
-        ps for ps in all_staging_ps if ps["resource_name"] not in prod_missing_resources
-    ]
-    all_prod_ps = prod_candidate_ps[:296]
-
-    local_exps = sorted(e for e in dicts.get("experiment", []) if e and e != "Unassigned")
-    # Ensure 109 experiments in local (matching base_counts.experiment = 109)
-    staging_missing_exps = {"cal80de", "cal81de", "cal82de"}
-    staging_exps = [e for e in local_exps if e not in staging_missing_exps]
-    prod_missing_exps = {
-        e for e in local_exps if e.startswith("cal") or e in {"xrf18xk", "xrf19xk", "xrf68jd", "cmp63jd", "cmp67jd", "prox65jd", "prox83en"}
-    }
-    prod_exps = [e for e in local_exps if e not in prod_missing_exps]
-
-    # Build Layer 4 Parameter Stats across Local, Staging, and Production
-    local_param_stats: dict[str, dict[str, Any]] = {}
-    staging_param_stats: dict[str, dict[str, Any]] = {}
-    prod_param_stats: dict[str, dict[str, Any]] = {}
-
-    for (at_name, param_name), entries in sorted(local_param_vals.items()):
-        key_str = f"{at_name}::{param_name}"
-        unit_str = param_units.get((at_name, param_name), "")
-        all_nums = [e[0] for e in entries]
-        pass_nums = [e[0] for e in entries if e[1] != "fail"]
-        base_st = _compute_stats_from_values(pass_nums if pass_nums else all_nums)
-        raw_st = _compute_stats_from_values(all_nums)
-
-        local_param_stats[key_str] = {
-            "analysis_type": at_name,
-            "parameter_name": param_name,
-            "unit": unit_str,
-            "n": base_st["n"],
-            "n_raw": raw_st["n"],
-            "mean": base_st["mean"],
-            "sd": base_st["sd"],
-            "median": base_st["median"],
-            "min": base_st["min"],
-            "max": base_st["max"],
-            "raw_mean": raw_st["mean"],
+    mvs_schema = {}
+    for v_name, v_cat, idx_cnt in ALL_19_VIEWS:
+        schema_part, short_v = v_name.split(".", 1)
+        mvs_schema[v_name] = {
+            "schema": schema_part,
+            "view_name": short_v,
+            "category": v_cat,
+            "definition_hash": "unmeasured",
+            "column_count": 0,
+            "columns": [],
+            "column_schema_hash": "unmeasured",
+            "is_populated": False,
+            "is_stale": False,
+            "stale_reason": f"Unmeasured ({reason})",
+            "last_refreshed_utc": "unmeasured",
+            "index_count": idx_cnt,
         }
 
-        # Staging parameter stats: reflect missing tomato pomace / wheat straw / walnut shells recent batch
-        st_entries = [
-            e
-            for e in entries
-            if not (
-                (e[2], at_name) in staging_dropped_cells
-                and entries.index(e) < staging_dropped_cells[(e[2], at_name)]
-            )
-        ]
-        st_pass = [e[0] for e in st_entries if e[1] != "fail"]
-        st_all = [e[0] for e in st_entries]
-        st_stat = _compute_stats_from_values(st_pass if st_pass else st_all)
-        staging_param_stats[key_str] = {
-            "analysis_type": at_name,
-            "parameter_name": param_name,
-            "unit": unit_str,
-            "n": st_stat["n"],
-            "n_raw": len(st_all),
-            "mean": st_stat["mean"],
-            "sd": st_stat["sd"],
-            "median": st_stat["median"],
-            "min": st_stat["min"],
-            "max": st_stat["max"],
-            "raw_mean": round(statistics.mean(st_all), 4) if st_all else 0.0,
-        }
-
-        # Production parameter stats: reflect prior release QC rules & un-normalized units
-        pr_entries = [e for e in entries if e[2] not in prod_missing_resources]
-        # In Production prior release:
-        # 1. `qc_pass == 'fail'` records in Ultimate (270% sulfur outlier), Proximate (oven-dried moisture),
-        #    and Fermentation (high triplicate variability) were still marked `pass`!
-        if at_name in ("Ultimate Analysis", "Proximate Analysis", "Fermentation (Bioconversion)", "XRD Crystallinity"):
-            pr_nums = [e[0] for e in pr_entries]  # Included records that Local now marks `fail`
-        else:
-            pr_nums = [e[0] for e in pr_entries if e[1] != "fail"]
-        if not pr_nums:
-            pr_nums = [e[0] for e in pr_entries]
-
-        # Specific documented historical value shifts in Production:
-        if at_name == "ICP Elemental Analysis" and param_name in ("ca", "k", "mg", "na", "p", "s", "si", "fe", "al"):
-            # Prior release had a subset of ICP entries entered in weight-% (pc) before multiplying by 10^4 to ppm
-            pr_nums = [v * 0.865 for v in pr_nums] + [v * 0.0001 for v in pr_nums[: max(1, len(pr_nums) // 8)]]
-        elif at_name == "XRF Elemental Analysis":
-            pr_nums = pr_nums[: max(3, int(len(pr_nums) * (390.0 / 2777.0)))]
-        elif at_name == "Gasification":
-            pr_nums = pr_nums[: max(3, int(len(pr_nums) * (611.0 / 801.0)))]
-
-        pr_stat = _compute_stats_from_values(pr_nums)
-        prod_param_stats[key_str] = {
-            "analysis_type": at_name,
-            "parameter_name": param_name,
-            "unit": unit_str,
-            "n": pr_stat["n"],
-            "n_raw": len(pr_nums),
-            "mean": pr_stat["mean"],
-            "sd": pr_stat["sd"],
-            "median": pr_stat["median"],
-            "min": pr_stat["min"],
-            "max": pr_stat["max"],
-            "raw_mean": pr_stat["mean"],
-        }
-
-    # Add synthetic Calorimetry HHV parameter stats (stored on calorimetry_record table)
-    local_param_stats["Calorimetry::hhv_dry"] = {
-        "analysis_type": "Calorimetry",
-        "parameter_name": "hhv_dry",
-        "unit": "mj/kg",
-        "n": 53,
-        "n_raw": 60,
-        "mean": 18.42,
-        "sd": 1.68,
-        "median": 18.55,
-        "min": 14.90,
-        "max": 21.84,
-        "raw_mean": 19.65,
-    }
-    staging_param_stats["Calorimetry::hhv_dry"] = {
-        "analysis_type": "Calorimetry",
-        "parameter_name": "hhv_dry",
-        "unit": "mj/kg",
-        "n": 33,
-        "n_raw": 38,
-        "mean": 19.78,
-        "sd": 2.41,
-        "median": 19.40,
-        "min": 15.10,
-        "max": 26.40,
-        "raw_mean": 21.12,
-    }
-    prod_param_stats["Calorimetry::hhv_dry"] = {
-        "analysis_type": "Calorimetry",
-        "parameter_name": "hhv_dry",
-        "unit": "mj/kg",
-        "n": 0,
-        "n_raw": 0,
-        "mean": 0.0,
-        "sd": 0.0,
-        "median": 0.0,
-        "min": 0.0,
-        "max": 0.0,
-        "raw_mean": 0.0,
-    }
-
-    # Layer 2 Core Table Counts for each environment
-    local_core_tables = {
-        "resource": 127,
-        "primary_ag_product": 29,
-        "provider": 51,
-        "field_sample": 147,
-        "prepared_sample": 384,
-        "experiment": 109,
-        "observation": 62600,
-        "compositional_record": 1043,
-        "proximate_record": 1348,
-        "ultimate_record": 84,
-        "xrf_record": 2777,
-        "icp_record": 826,
-        "calorimetry_record": 60,
-        "xrd_record": 28,
-        "ftnir_record": 0,
-        "fermentation_record": 4021,
-        "gasification_record": 801,
-        "pretreatment_record": 906,
-        "usda_market_record": 73,
-        "usda_census_record": 3386,
-        "resource_production_record": 73,
-    }
-
-    staging_core_tables = {
-        "resource": 127,
-        "primary_ag_product": 29,
-        "provider": 51,
-        "field_sample": 144,
-        "prepared_sample": 376,
-        "experiment": 106,
-        "observation": 62285,
-        "compositional_record": 1018,
-        "proximate_record": 1342,
-        "ultimate_record": 84,
-        "xrf_record": 2745,
-        "icp_record": 826,
-        "calorimetry_record": 38,
-        "xrd_record": 19,
-        "ftnir_record": 0,
-        "fermentation_record": 4021,
-        "gasification_record": 756,
-        "pretreatment_record": 906,
-        "usda_market_record": 73,
-        "usda_census_record": 3386,
-        "resource_production_record": 73,
-    }
-
-    prod_core_tables = {
-        "resource": 121,
-        "primary_ag_product": 27,
-        "provider": 50,
-        "field_sample": 118,
-        "prepared_sample": 296,
-        "experiment": 94,
-        "observation": 58420,
-        "compositional_record": 968,
-        "proximate_record": 1339,
-        "ultimate_record": 84,
-        "xrf_record": 390,
-        "icp_record": 1153,
-        "calorimetry_record": 0,
-        "xrd_record": 28,
-        "ftnir_record": 0,
-        "fermentation_record": 4021,
-        "gasification_record": 611,
-        "pretreatment_record": 906,
-        "usda_market_record": 61,
-        "usda_census_record": 3386,
-        "resource_production_record": 61,
-    }
-
-    # Layer 2 View Row Counts
-    local_views = dict(filter_snap["view_row_counts"])
-    staging_views = {
-        "ca_biositing.analysis_average_view": 1168,
-        "ca_biositing.analysis_data_view": 7312,
-        "ca_biositing.billion_ton_tileset_view": 0,
-        "ca_biositing.landiq_record_view": 0,
-        "ca_biositing.landiq_tileset_view": 0,
-        "ca_biositing.usda_census_view": 19893,
-        "ca_biositing.usda_resource_commodity_view": 84,
-        "ca_biositing.usda_survey_view": 30375,
-        "data_portal.mv_biomass_availability": 90,
-        "data_portal.mv_biomass_composition": 1064,  # Stale! Not refreshed after staging ETL load
-        "data_portal.mv_biomass_county_production": 0,
-        "data_portal.mv_biomass_end_uses": 34,
-        "data_portal.mv_biomass_fermentation": 408,
-        "data_portal.mv_biomass_gasification": 241,  # Stale! Missing 45 new gasification rows
-        "data_portal.mv_biomass_pricing": 73,
-        "data_portal.mv_biomass_sample_stats": 115,  # Stale!
-        "data_portal.mv_biomass_search": 121,
-        "data_portal.mv_biomass_volume_estimate": 150,
-        "data_portal.mv_usda_county_production": 6941,
-    }
-    prod_views = {
-        "ca_biositing.analysis_average_view": 1094,
-        "ca_biositing.analysis_data_view": 6485,
-        "ca_biositing.billion_ton_tileset_view": 0,
-        "ca_biositing.landiq_record_view": 0,
-        "ca_biositing.landiq_tileset_view": 0,
-        "ca_biositing.usda_census_view": 19893,
-        "ca_biositing.usda_resource_commodity_view": 82,
-        "ca_biositing.usda_survey_view": 30375,
-        "data_portal.mv_biomass_availability": 86,
-        "data_portal.mv_biomass_composition": 982,
-        "data_portal.mv_biomass_county_production": 0,
-        "data_portal.mv_biomass_end_uses": 34,
-        "data_portal.mv_biomass_fermentation": 442,  # Higher in Prod because Jaguar provider & QC fails were not excluded yet!
-        "data_portal.mv_biomass_gasification": 198,
-        "data_portal.mv_biomass_pricing": 61,
-        "data_portal.mv_biomass_sample_stats": 108,
-        "data_portal.mv_biomass_search": 115,
-        "data_portal.mv_biomass_volume_estimate": 168,  # Higher in Prod before 0021_remove_almond_meats migration!
-        "data_portal.mv_usda_county_production": 6941,
-    }
-
-    # Layer 3 QC Distributions
-    local_qc = deepcopy(filter_snap["qc_pass_distribution"])
-    staging_qc = deepcopy(local_qc)
-    staging_qc["calorimetry_record"] = {"pass": 28, "fail": 5, "other": 5}
-    staging_qc["xrd_record"] = {"pass": 0, "fail": 18, "other": 1}
-    staging_qc["compositional_record"] = {"pass": 787, "fail": 0, "other": 231}
-    staging_qc["proximate_record"] = {"pass": 1128, "fail": 209, "other": 5}
-    staging_qc["xrf_record"] = {"pass": 2218, "fail": 136, "other": 391}
-    staging_qc["gasification_record"] = {"pass": 491, "fail": 265, "other": 0}
-
-    # Production QC distribution grounded directly in historical `audit/output/audit_data.json`!
-    prod_qc = {
-        "compositional_record": {"pass": 737, "fail": 0, "other": 231},
-        "proximate_record": {"pass": 1223, "fail": 111, "other": 5},
-        "ultimate_record": {"pass": 66, "fail": 3, "other": 15},
-        "xrf_record": {"pass": 0, "fail": 0, "other": 390},
-        "icp_record": {"pass": 985, "fail": 168, "other": 0},
-        "calorimetry_record": {"pass": 0, "fail": 0, "other": 0},
-        "xrd_record": {"pass": 27, "fail": 0, "other": 1},
-        "ftnir_record": {"pass": 0, "fail": 0, "other": 0},
-        "fermentation_record": {"pass": 3736, "fail": 285, "other": 0},
-        "gasification_record": {"pass": 382, "fail": 194, "other": 35},
-        "pretreatment_record": {"pass": 835, "fail": 65, "other": 6},
-    }
-
-    # Filter Funnels
-    local_adv_funnel = deepcopy(filter_snap["analysis_data_view_funnel"])
-    local_mv_funnel = deepcopy(filter_snap["mv_biomass_composition_funnel"])
-
-    staging_adv_funnel = {
-        "candidate_pool": 11682,
-        "removed_by_qc_fail": 1344,
-        "removed_by_resource_blacklist": 958,
-        "removed_by_provider_blacklist": 665,
-        "removed_by_ultimate_whitelist": 42,
-        "removed_by_ultimate_value_gt_100": 0,
-        "removed_by_icp_non_ppm_unit": 0,
-        "unmapped_resource": 1212,
-        "final_row_count": 7312,  # Stale MV count (live query would yield 7,461)
-        "expected_live_row_count": 7461,
-        "retention_ratio": round(7312 / 11682, 6),
-    }
-    staging_mv_funnel = {
-        "candidate_pool_all_record_rows": sum(staging_core_tables[t] for t in AIM1_AIM2_TABLES),
-        "final_row_count": 1064,
-        "expected_live_row_count": 1109,
-        "retention_ratio": round(1064 / sum(staging_core_tables[t] for t in AIM1_AIM2_TABLES), 6),
-    }
-
-    prod_adv_funnel = {
-        "candidate_pool": 9480,
-        "removed_by_qc_fail": 698,  # Fewer QC fails before fermentation/proximate/xrd QC normalization
-        "removed_by_resource_blacklist": 712,
-        "removed_by_provider_blacklist": 0,  # Rev 0021 predates `0022_exclude_jaguar_provider`!
-        "removed_by_ultimate_whitelist": 42,
-        "removed_by_ultimate_value_gt_100": 0,
-        "removed_by_icp_non_ppm_unit": 148,  # Legacy ICP % rows removed or mismatched before unit cleanup
-        "unmapped_resource": 1395,
-        "final_row_count": 6485,
-        "retention_ratio": round(6485 / 9480, 6),
-    }
-    prod_mv_funnel = {
-        "candidate_pool_all_record_rows": sum(prod_core_tables[t] for t in AIM1_AIM2_TABLES),
-        "final_row_count": 982,
-        "retention_ratio": round(982 / sum(prod_core_tables[t] for t in AIM1_AIM2_TABLES), 6),
-    }
-
-    def _assemble_fingerprint(
-        env_key: str,
-        capture_mode: str,
-        capture_badge: str,
-        captured_at: str,
-        alembic_head: str,
-        alembic_rev: str,
-        alembic_name: str,
-        mig_idx: int,
-        table_count: int,
-        total_cols: int,
-        core_counts: dict[str, int],
-        view_counts: dict[str, int],
-        stale_views: dict[str, str],
-        view_def_drift: set[str],
-        last_mv_refresh: str,
-        mv_lag_hours: float,
-        res_matrix: dict[str, dict[str, Any]],
-        qc_dist: dict[str, dict[str, int]],
-        res_names: list[str],
-        fs_list: list[dict[str, str]],
-        ps_list: list[dict[str, str]],
-        exp_list: list[str],
-        param_stats: dict[str, dict[str, Any]],
-        adv_funnel: dict[str, Any],
-        mv_funnel: dict[str, Any],
-        joined_obs_rows: int,
-    ) -> dict[str, Any]:
-        tables_schema = {}
-        for t_name, cat, col_cnt, has_qc in CORE_TABLE_METADATA:
-            c_adj = col_cnt
-            if env_key == "production" and t_name == "gasification_record":
-                c_adj = col_cnt  # 0016 added reactor_name
-            if env_key == "production" and t_name == "fermentation_record":
-                c_adj = col_cnt - 1  # eh_method_id_new added in recent schema alignment
-            schema_seed = f"{t_name}:{c_adj}:{has_qc}"
-            tables_schema[t_name] = {
-                "category": cat,
-                "column_count": c_adj,
-                "has_qc_pass": has_qc,
-                "schema_hash": _short_hash(schema_seed),
-            }
-
-        mvs_schema = {}
-        for v_name, v_cat, idx_cnt in ALL_19_VIEWS:
-            schema_part, short_v = v_name.split(".", 1)
-            def_seed = f"{v_name}:v0024"
-            if v_name in view_def_drift:
-                def_seed = f"{v_name}:{alembic_rev}"
-            is_pop = view_counts.get(v_name, 0) > 0 or short_v in (
-                "billion_ton_tileset_view",
-                "landiq_record_view",
-                "landiq_tileset_view",
-                "mv_biomass_county_production",
-            )
-            is_stale = v_name in stale_views
-            canonical_cols = CANONICAL_VIEW_SCHEMAS.get(v_name, [])
-            col_objs = [
-                {
-                    "ordinal_position": idx + 1,
-                    "column_name": c_name,
-                    "data_type": c_type,
-                }
-                for idx, (c_name, c_type) in enumerate(canonical_cols)
-            ]
-            col_sig = "|".join(f"{c['column_name']}:{c['data_type']}" for c in col_objs)
-            mvs_schema[v_name] = {
-                "schema": schema_part,
-                "view_name": short_v,
-                "category": v_cat,
-                "definition_hash": _short_hash(def_seed),
-                "column_count": len(col_objs),
-                "columns": col_objs,
-                "column_schema_hash": _short_hash(f"{v_name}:cols:{col_sig}"),
-                "is_populated": is_pop,
-                "is_stale": is_stale,
-                "stale_reason": stale_views.get(v_name, ""),
-                "last_refreshed_utc": last_mv_refresh,
-                "index_count": idx_cnt,
-            }
-
-        qc_enriched = {}
-        for t_name, dist in qc_dist.items():
-            tot = dist["pass"] + dist["fail"] + dist["other"]
-            qc_enriched[t_name] = {
-                "pass": dist["pass"],
-                "fail": dist["fail"],
-                "other": dist["other"],
-                "total": tot,
-                "pass_rate_pct": round((dist["pass"] / tot) * 100.0, 2) if tot > 0 else 0.0,
-            }
-
-        aim_total = sum(core_counts[t] for t in AIM1_AIM2_TABLES)
-        return {
-            "environment": env_key,
-            "label": env_configs[env_key]["label"],
-            "capture_mode": capture_mode,
-            "capture_badge": capture_badge,
-            "captured_at": captured_at,
-            "connection": {
-                "host": env_configs[env_key]["host"],
-                "port": env_configs[env_key]["port"],
-                "database": env_configs[env_key]["database"],
-                "user": env_configs[env_key]["user"],
-                "schemas": ["public", "ca_biositing", "data_portal"],
+    return {
+        "environment": env_key,
+        "label": cfg.get("label", env_key),
+        "is_measured": False,
+        "capture_mode": "unmeasured_offline",
+        "capture_badge": f"Unmeasured — Proxy/DB Offline ({cfg['host']}:{cfg['port']}/{cfg['database']})",
+        "unmeasured_reason": reason,
+        "captured_at": now_iso,
+        "connection": {
+            "host": cfg["host"],
+            "port": cfg["port"],
+            "database": cfg["database"],
+            "user": cfg["user"],
+            "schemas": ["public", "ca_biositing", "data_portal"],
+        },
+        "layer1_schema": {
+            "alembic_head": "unmeasured (offline)",
+            "alembic_revision_id": "unmeasured",
+            "alembic_migration_name": "unmeasured",
+            "migration_index": 0,
+            "table_count": 0,
+            "total_columns": 0,
+            "tables": tables_schema,
+            "materialized_views": mvs_schema,
+            "mv_freshness_summary": {
+                "total_views": len(ALL_19_VIEWS),
+                "populated_views": 0,
+                "stale_views": 0,
+                "stale_view_names": [],
+                "definition_drifted_views": [],
+                "last_mv_refresh_utc": "unmeasured",
+                "refresh_lag_hours": 0.0,
+                "needs_refresh_views": False,
             },
-            "layer1_schema": {
-                "alembic_head": alembic_head,
-                "alembic_revision_id": alembic_rev,
-                "alembic_migration_name": alembic_name,
-                "migration_index": mig_idx,
-                "table_count": table_count,
-                "total_columns": total_cols,
-                "tables": tables_schema,
-                "materialized_views": mvs_schema,
-                "mv_freshness_summary": {
-                    "total_views": len(ALL_19_VIEWS),
-                    "populated_views": sum(1 for v in mvs_schema.values() if v["is_populated"]),
-                    "stale_views": len(stale_views),
-                    "stale_view_names": sorted(stale_views.keys()),
-                    "definition_drifted_views": sorted(view_def_drift),
-                    "last_mv_refresh_utc": last_mv_refresh,
-                    "refresh_lag_hours": mv_lag_hours,
-                    "needs_refresh_views": len(stale_views) > 0,
-                },
+        },
+        "layer2_row_counts": {
+            "core_tables": {t_name: 0 for t_name, _, _, _ in CORE_TABLE_METADATA},
+            "views": {v_name: 0 for v_name, _, _ in ALL_19_VIEWS},
+            "totals": {
+                "aim1_aim2_records": 0,
+                "aim1_aim2_joined_observations": 0,
+                "active_analytical_tables": 0,
+                "core_entities": 0,
+                "observations": 0,
+                "all_core_tables": 0,
+                "all_views": 0,
             },
-            "layer2_row_counts": {
-                "core_tables": core_counts,
-                "views": view_counts,
-                "totals": {
-                    "aim1_aim2_records": aim_total,
-                    "aim1_aim2_joined_observations": joined_obs_rows,
-                    "active_analytical_tables": sum(1 for t in AIM1_AIM2_TABLES if core_counts.get(t, 0) > 0),
-                    "core_entities": (
-                        core_counts["resource"]
-                        + core_counts["primary_ag_product"]
-                        + core_counts["provider"]
-                        + core_counts["field_sample"]
-                        + core_counts["prepared_sample"]
-                        + core_counts["experiment"]
-                    ),
-                    "observations": core_counts["observation"],
-                    "all_core_tables": sum(core_counts.values()),
-                    "all_views": sum(view_counts.values()),
-                },
+        },
+        "layer3_coverage_and_lineage": {
+            "resource_analysis_matrix": {},
+            "qc_pass_distribution": {
+                t_name: {"pass": 0, "fail": 0, "other": 0, "total": 0, "pass_rate_pct": 0.0}
+                for t_name in AIM1_AIM2_TABLES
             },
-            "layer3_coverage_and_lineage": {
-                "resource_analysis_matrix": res_matrix,
-                "qc_pass_distribution": qc_enriched,
-                "lineage_sets": {
-                    "resources": res_names,
-                    "active_analytical_resources": sorted(res_matrix.keys()),
-                    "field_samples": fs_list,
-                    "prepared_samples": ps_list,
-                    "experiments": exp_list,
-                },
+            "lineage_sets": {
+                "resources": [],
+                "active_analytical_resources": [],
+                "field_samples": [],
+                "prepared_samples": [],
+                "experiments": [],
             },
-            "layer4_parameters_and_funnels": {
-                "parameter_stats": param_stats,
-                "analysis_data_view_funnel": adv_funnel,
-                "mv_biomass_composition_funnel": mv_funnel,
+        },
+        "layer4_parameters_and_funnels": {
+            "parameter_stats": {},
+            "analysis_data_view_funnel": {
+                "candidate_pool": 0,
+                "removed_by_qc_fail": 0,
+                "removed_by_resource_blacklist": 0,
+                "removed_by_provider_blacklist": 0,
+                "removed_by_ultimate_whitelist": 0,
+                "removed_by_ultimate_value_gt_100": 0,
+                "removed_by_icp_non_ppm_unit": 0,
+                "unmapped_resource": 0,
+                "final_row_count": 0,
+                "expected_live_row_count": 0,
+                "retention_ratio": 0.0,
             },
-        }
-
-    local_fp = _assemble_fingerprint(
-        env_key="local",
-        capture_mode="baseline_snapshot",
-        capture_badge="Baseline Snapshot (post_etl_rerun + db_snapshot)",
-        captured_at="2026-10-15T03:17:00Z",
-        alembic_head="8f4b2c19a03d (head)",
-        alembic_rev="8f4b2c19a03d",
-        alembic_name="0024_centralize_qc_constants_across_data_portal_views",
-        mig_idx=24,
-        table_count=91,
-        total_cols=842,
-        core_counts=local_core_tables,
-        view_counts=local_views,
-        stale_views={},
-        view_def_drift=set(),
-        last_mv_refresh="2026-10-15T03:15:12Z",
-        mv_lag_hours=0.0,
-        res_matrix=local_res_matrix,
-        qc_dist=local_qc,
-        res_names=all_local_resources,
-        fs_list=all_local_fs,
-        ps_list=all_local_ps,
-        exp_list=local_exps,
-        param_stats=local_param_stats,
-        adv_funnel=local_adv_funnel,
-        mv_funnel=local_mv_funnel,
-        joined_obs_rows=11974,
-    )
-
-    staging_stale_views = {
-        "ca_biositing.analysis_data_view": "Base tables updated (+145 rows in compositional/xrf) 74.5h after last REFRESH MATERIALIZED VIEW",
-        "ca_biositing.analysis_average_view": "Derived from un-refreshed analysis_data_view (-39 rows vs expected live state)",
-        "data_portal.mv_biomass_composition": "Base tables updated without running `pixi run refresh-views` (1,064 cached vs 1,109 live candidate rows)",
-        "data_portal.mv_biomass_gasification": "Missing 45 gasification_record rows ingested after last MV refresh",
-        "data_portal.mv_biomass_sample_stats": "Prepared sample count updated (376) without refreshing sample stats MV",
-    }
-    staging_def_drift = {
-        "data_portal.mv_biomass_composition",
-        "data_portal.mv_biomass_fermentation",
-        "data_portal.mv_biomass_gasification",
-        "data_portal.mv_biomass_sample_stats",
+            "mv_biomass_composition_funnel": {
+                "candidate_pool_all_record_rows": 0,
+                "final_row_count": 0,
+                "expected_live_row_count": 0,
+                "retention_ratio": 0.0,
+            },
+        },
     }
 
-    staging_fp = _assemble_fingerprint(
-        env_key="staging",
-        capture_mode="simulated_staging_lag",
-        capture_badge="Staging Sync State (Proxy :5434 — Overwritable via --extract-env staging)",
-        captured_at="2026-10-15T03:17:00Z",
-        alembic_head="7c91e04b211a (0023_centralize_qc_analysis_data_view)",
-        alembic_rev="7c91e04b211a",
-        alembic_name="0023_centralize_qc_constants_and_fix_icp_ppm_cap_drift_in_analysis_data_view",
-        mig_idx=23,
-        table_count=91,
-        total_cols=842,
-        core_counts=staging_core_tables,
-        view_counts=staging_views,
-        stale_views=staging_stale_views,
-        view_def_drift=staging_def_drift,
-        last_mv_refresh="2026-10-09T16:10:00Z",
-        mv_lag_hours=74.5,
-        res_matrix=staging_res_matrix,
-        qc_dist=staging_qc,
-        res_names=all_staging_resources,
-        fs_list=all_staging_fs,
-        ps_list=all_staging_ps,
-        exp_list=staging_exps,
-        param_stats=staging_param_stats,
-        adv_funnel=staging_adv_funnel,
-        mv_funnel=staging_mv_funnel,
-        joined_obs_rows=11867,
-    )
-
-    prod_def_drift = {
-        "ca_biositing.analysis_data_view",
-        "ca_biositing.analysis_average_view",
-        "data_portal.mv_biomass_composition",
-        "data_portal.mv_biomass_fermentation",
-        "data_portal.mv_biomass_gasification",
-        "data_portal.mv_biomass_sample_stats",
-        "data_portal.mv_biomass_search",
-        "data_portal.mv_biomass_volume_estimate",
-    }
-
-    prod_fp = _assemble_fingerprint(
-        env_key="production",
-        capture_mode="simulated_prod_release",
-        capture_badge="Prior Release Snapshot (Proxy :5435 — Overwritable via --extract-env production)",
-        captured_at="2026-10-15T03:17:00Z",
-        alembic_head="4a18d93f05c2 (0021_remove_almond_meats_from_volume_estimate)",
-        alembic_rev="4a18d93f05c2",
-        alembic_name="0021_remove_almond_meats_from_volume_estimate",
-        mig_idx=21,
-        table_count=91,
-        total_cols=841,
-        core_counts=prod_core_tables,
-        view_counts=prod_views,
-        stale_views={},
-        view_def_drift=prod_def_drift,
-        last_mv_refresh="2026-08-29T09:30:00Z",
-        mv_lag_hours=0.0,
-        res_matrix=prod_res_matrix,
-        qc_dist=prod_qc,
-        res_names=all_prod_resources,
-        fs_list=all_prod_fs,
-        ps_list=all_prod_ps,
-        exp_list=prod_exps,
-        param_stats=prod_param_stats,
-        adv_funnel=prod_adv_funnel,
-        mv_funnel=prod_mv_funnel,
-        joined_obs_rows=9548,
-    )
-
-    fp_dir = base_dir / "audit" / "output" / "env_fingerprints"
-    fp_dir.mkdir(parents=True, exist_ok=True)
-    result = {"local": local_fp, "staging": staging_fp, "production": prod_fp}
-    for env_key, fp_data in result.items():
-        out_file = fp_dir / f"{env_key}_fingerprint.json"
-        out_file.write_text(json.dumps(fp_data, indent=2), encoding="utf-8")
-        print(f"[seed-from-snapshots] Wrote {out_file} ({out_file.stat().st_size:,} bytes)")
-
-    return result
 
 
 def extract_live_fingerprint(
@@ -1396,15 +784,16 @@ def extract_live_fingerprint(
     user: str | None = None,
     password: str | None = None,
 ) -> dict[str, Any]:
-    """Connect to a live PostgreSQL environment and extract its 4-layer fingerprint."""
+    """Connect to a live PostgreSQL environment and extract its 4-layer fingerprint directly from SQL."""
     from sqlalchemy import create_engine, text
+    from sqlalchemy.engine import URL
 
     configs = load_db_reset_config()
-    cfg = configs.get(env_key, deepcopy(DEFAULT_ENV_CONFIGS["local"]))
+    cfg = deepcopy(configs.get(env_key, DEFAULT_ENV_CONFIGS.get(env_key, DEFAULT_ENV_CONFIGS["local"])))
     if host:
         cfg["host"] = host
     if port:
-        cfg["port"] = port
+        cfg["port"] = int(port)
     if dbname:
         cfg["database"] = dbname
     if user:
@@ -1412,234 +801,580 @@ def extract_live_fingerprint(
     if password is not None:
         cfg["password"] = password
 
-    url = f"postgresql+psycopg2://{cfg['user']}:{cfg['password']}@{cfg['host']}:{cfg['port']}/{cfg['database']}"
-    print(f"[extract-env] Connecting to {env_key} ({cfg['host']}:{cfg['port']}/{cfg['database']})...")
-    engine = create_engine(url, pool_pre_ping=True)
-
-    with engine.connect() as conn:
-        # Layer 1: Alembic head & table/column counts
-        try:
-            alembic_ver = conn.execute(text("SELECT version_num FROM public.alembic_version LIMIT 1")).scalar() or "unknown"
-        except Exception:
-            alembic_ver = "unknown"
-
-        table_count = conn.execute(
-            text("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'")
-        ).scalar() or 0
-        total_cols = conn.execute(
-            text("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public'")
-        ).scalar() or 0
-
-        tables_schema = {}
-        core_counts = {}
-        for t_name, cat, default_cols, has_qc in CORE_TABLE_METADATA:
-            cols = conn.execute(
-                text(
-                    "SELECT column_name, data_type FROM information_schema.columns "
-                    "WHERE table_schema = 'public' AND table_name = :t ORDER BY ordinal_position"
-                ),
-                {"t": t_name},
-            ).all()
-            col_sig = ",".join(f"{c[0]}:{c[1]}" for c in cols)
-            tables_schema[t_name] = {
-                "category": cat,
-                "column_count": len(cols) or default_cols,
-                "has_qc_pass": has_qc,
-                "schema_hash": _short_hash(f"{t_name}:{col_sig}"),
-            }
-            try:
-                cnt = conn.execute(text(f"SELECT COUNT(*) FROM public.{t_name}")).scalar() or 0
-            except Exception:
-                cnt = 0
-            core_counts[t_name] = int(cnt)
-
-        # Views & Materialized Views + Column Schema Guard Introspection
-        view_cols_rows = conn.execute(
-            text(
-                "SELECT n.nspname AS schema_name, c.relname AS view_name, "
-                "a.attnum AS ordinal_position, a.attname AS column_name, "
-                "pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type "
-                "FROM pg_catalog.pg_attribute a "
-                "JOIN pg_catalog.pg_class c ON a.attrelid = c.oid "
-                "JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid "
-                "WHERE n.nspname IN ('ca_biositing', 'data_portal') "
-                "AND c.relkind IN ('v', 'm') "
-                "AND a.attnum > 0 AND NOT a.attisdropped "
-                "ORDER BY n.nspname, c.relname, a.attnum"
-            )
-        ).all()
-        live_view_cols: dict[str, list[dict[str, Any]]] = {}
-        for sch_n, vw_n, _, col_n, dtype in view_cols_rows:
-            qk = f"{sch_n}.{vw_n}"
-            lst = live_view_cols.setdefault(qk, [])
-            lst.append(
-                {
-                    "ordinal_position": len(lst) + 1,
-                    "column_name": str(col_n),
-                    "data_type": str(dtype),
-                }
-            )
-
-        mvs_rows = conn.execute(
-            text(
-                "SELECT schemaname, matviewname, ispopulated, definition "
-                "FROM pg_matviews WHERE schemaname IN ('ca_biositing', 'data_portal') "
-                "ORDER BY schemaname, matviewname"
-            )
-        ).all()
-        mvs_schema = {}
-        view_counts = {}
-        for sch, mv_name, is_pop, defn in mvs_rows:
-            qname = f"{sch}.{mv_name}"
-            cnt = conn.execute(text(f"SELECT COUNT(*) FROM {qname}")).scalar() or 0
-            view_counts[qname] = int(cnt)
-            col_objs = live_view_cols.get(qname) or [
-                {"ordinal_position": idx + 1, "column_name": cn, "data_type": dt}
-                for idx, (cn, dt) in enumerate(CANONICAL_VIEW_SCHEMAS.get(qname, []))
-            ]
-            col_sig = "|".join(f"{c['column_name']}:{c['data_type']}" for c in col_objs)
-            mvs_schema[qname] = {
-                "schema": sch,
-                "view_name": mv_name,
-                "category": f"{sch} Materialized View",
-                "definition_hash": _short_hash(defn or qname),
-                "column_count": len(col_objs),
-                "columns": col_objs,
-                "column_schema_hash": _short_hash(f"{qname}:cols:{col_sig}"),
-                "is_populated": bool(is_pop),
-                "is_stale": False,
-                "stale_reason": "",
-                "last_refreshed_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "index_count": 1,
-            }
-
-        # QC distribution
-        qc_enriched = {}
-        for t_name in AIM1_AIM2_TABLES:
-            rows_qc = conn.execute(
-                text(f"SELECT LOWER(COALESCE(qc_pass, 'other')), COUNT(*) FROM public.{t_name} GROUP BY 1")
-            ).all()
-            dist = {"pass": 0, "fail": 0, "other": 0}
-            for k_qc, c_qc in rows_qc:
-                if k_qc == "pass":
-                    dist["pass"] += int(c_qc)
-                elif k_qc == "fail":
-                    dist["fail"] += int(c_qc)
-                else:
-                    dist["other"] += int(c_qc)
-            tot = dist["pass"] + dist["fail"] + dist["other"]
-            qc_enriched[t_name] = {
-                **dist,
-                "total": tot,
-                "pass_rate_pct": round((dist["pass"] / tot) * 100.0, 2) if tot > 0 else 0.0,
-            }
-
-        # Lineage sets
-        res_names = [
-            r[0]
-            for r in conn.execute(text("SELECT name FROM public.resource ORDER BY name")).all()
-            if r[0]
-        ]
-        fs_list = [
-            dict(r)
-            for r in conn.execute(
-                text(
-                    "SELECT fs.name, COALESCE(r.name, 'Unassigned') AS resource_name, "
-                    "COALESCE(p.codename, 'unknown') AS provider "
-                    "FROM public.field_sample fs "
-                    "LEFT JOIN public.resource r ON fs.resource_id = r.id "
-                    "LEFT JOIN public.provider p ON fs.provider_id = p.id ORDER BY fs.name"
-                )
-            )
-            .mappings()
-            .all()
-        ]
-        ps_list = [
-            dict(r)
-            for r in conn.execute(
-                text(
-                    "SELECT ps.name, COALESCE(r.name, 'Unassigned') AS resource_name, "
-                    "COALESCE(fs.name, 'Unassigned') AS field_sample, "
-                    "COALESCE(pm.name, 'N/A') AS prep_method, "
-                    "COALESCE(p.codename, 'unknown') AS provider "
-                    "FROM public.prepared_sample ps "
-                    "LEFT JOIN public.field_sample fs ON ps.field_sample_id = fs.id "
-                    "LEFT JOIN public.resource r ON fs.resource_id = r.id "
-                    "LEFT JOIN public.provider p ON fs.provider_id = p.id "
-                    "LEFT JOIN public.preparation_method pm ON ps.prep_method_id = pm.id "
-                    "ORDER BY ps.name"
-                )
-            )
-            .mappings()
-            .all()
-        ]
-        exp_list = [
-            r[0]
-            for r in conn.execute(text("SELECT name FROM public.experiment ORDER BY name")).all()
-            if r[0]
-        ]
-
-    # Merge with seeded template for any deep matrix/funnel fields if needed
     fp_dir = base_dir / "audit" / "output" / "env_fingerprints"
     fp_dir.mkdir(parents=True, exist_ok=True)
-    existing_path = fp_dir / f"{env_key}_fingerprint.json"
-    if not existing_path.exists():
-        build_seeded_fingerprints(base_dir)
-    fp = json.loads(existing_path.read_text(encoding="utf-8"))
-    now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    fp["capture_mode"] = "live_db"
-    fp["capture_badge"] = f"Live DB Extracted ({cfg['host']}:{cfg['port']}/{cfg['database']})"
-    fp["captured_at"] = now_iso
-    fp["connection"].update(
-        {
-            "host": cfg["host"],
-            "port": cfg["port"],
-            "database": cfg["database"],
-            "user": cfg["user"],
-        }
-    )
-    fp["layer1_schema"]["alembic_head"] = f"{alembic_ver} (live)"
-    fp["layer1_schema"]["alembic_revision_id"] = alembic_ver
-    fp["layer1_schema"]["table_count"] = int(table_count)
-    fp["layer1_schema"]["total_columns"] = int(total_cols)
-    fp["layer1_schema"]["tables"] = tables_schema
-    fp["layer1_schema"]["materialized_views"].update(mvs_schema)
-    fp["layer2_row_counts"]["core_tables"] = core_counts
-    fp["layer2_row_counts"]["views"].update(view_counts)
-    fp["layer3_coverage_and_lineage"]["qc_pass_distribution"] = qc_enriched
-    fp["layer3_coverage_and_lineage"]["lineage_sets"]["resources"] = res_names
-    fp["layer3_coverage_and_lineage"]["lineage_sets"]["field_samples"] = fs_list
-    fp["layer3_coverage_and_lineage"]["lineage_sets"]["prepared_samples"] = ps_list
-    fp["layer3_coverage_and_lineage"]["lineage_sets"]["experiments"] = exp_list
+    out_path = fp_dir / f"{env_key}_fingerprint.json"
 
-    existing_path.write_text(json.dumps(fp, indent=2), encoding="utf-8")
-    print(f"[extract-env] Updated {existing_path} from live database.")
-    return fp
+    url_obj = URL.create(
+        drivername="postgresql+psycopg2",
+        username=str(cfg.get("user") or "biocirv_user"),
+        password=str(cfg.get("password") or ""),
+        host=str(cfg.get("host") or "127.0.0.1"),
+        port=int(cfg.get("port") or 5432),
+        database=str(cfg.get("database") or "biocirv_db"),
+    )
+    print(f"[extract-env] Connecting to {env_key} ({cfg['host']}:{cfg['port']}/{cfg['database']})...")
+
+    try:
+        engine = create_engine(url_obj, pool_pre_ping=True, connect_args={"connect_timeout": 10})
+        with engine.connect() as conn:
+            try:
+                alembic_ver = (
+                    conn.execute(text("SELECT version_num FROM public.alembic_version LIMIT 1")).scalar()
+                    or "unknown"
+                )
+            except Exception:
+                conn.rollback()
+                alembic_ver = "unknown"
+
+            table_count = (
+                conn.execute(
+                    text(
+                        "SELECT COUNT(*) FROM information_schema.tables "
+                        "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
+                    )
+                ).scalar()
+                or 0
+            )
+            total_cols = (
+                conn.execute(
+                    text("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public'")
+                ).scalar()
+                or 0
+            )
+
+            tables_schema: dict[str, Any] = {}
+            core_counts: dict[str, int] = {}
+            table_columns_map: dict[str, set[str]] = {}
+            for t_name, cat, default_cols, has_qc in CORE_TABLE_METADATA:
+                cols = conn.execute(
+                    text(
+                        "SELECT column_name, data_type FROM information_schema.columns "
+                        "WHERE table_schema = 'public' AND table_name = :t ORDER BY ordinal_position"
+                    ),
+                    {"t": t_name},
+                ).all()
+                col_names = [str(c[0]) for c in cols]
+                table_columns_map[t_name] = set(col_names)
+                col_sig = ",".join(f"{c[0]}:{c[1]}" for c in cols)
+                tables_schema[t_name] = {
+                    "category": cat,
+                    "column_count": len(cols) or default_cols,
+                    "columns": col_names,
+                    "has_qc_pass": "qc_pass" in table_columns_map[t_name] if cols else has_qc,
+                    "schema_hash": _short_hash(f"{t_name}:{col_sig}"),
+                }
+                try:
+                    cnt = conn.execute(text(f"SELECT COUNT(*) FROM public.{t_name}")).scalar() or 0
+                except Exception:
+                    conn.rollback()
+                    cnt = 0
+                core_counts[t_name] = int(cnt)
+
+            # Views & Materialized Views + Column Schema Guard Introspection
+            view_cols_rows = conn.execute(
+                text(
+                    "SELECT n.nspname AS schema_name, c.relname AS view_name, "
+                    "a.attnum AS ordinal_position, a.attname AS column_name, "
+                    "pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type "
+                    "FROM pg_catalog.pg_attribute a "
+                    "JOIN pg_catalog.pg_class c ON a.attrelid = c.oid "
+                    "JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid "
+                    "WHERE n.nspname IN ('ca_biositing', 'data_portal') "
+                    "AND c.relkind IN ('v', 'm') "
+                    "AND a.attnum > 0 AND NOT a.attisdropped "
+                    "ORDER BY n.nspname, c.relname, a.attnum"
+                )
+            ).all()
+            live_view_cols: dict[str, list[dict[str, Any]]] = {}
+            for sch_n, vw_n, _, col_n, dtype in view_cols_rows:
+                qk = f"{sch_n}.{vw_n}"
+                lst = live_view_cols.setdefault(qk, [])
+                lst.append(
+                    {
+                        "ordinal_position": len(lst) + 1,
+                        "column_name": str(col_n),
+                        "data_type": _normalize_pg_type(str(dtype)),
+                    }
+                )
+
+            mvs_rows = conn.execute(
+                text(
+                    "SELECT schemaname, matviewname, ispopulated, definition "
+                    "FROM pg_matviews WHERE schemaname IN ('ca_biositing', 'data_portal') "
+                    "ORDER BY schemaname, matviewname"
+                )
+            ).all()
+            mvs_by_qname = {f"{r[0]}.{r[1]}": (r[0], r[1], bool(r[2]), str(r[3] or "")) for r in mvs_rows}
+
+            mvs_schema: dict[str, Any] = {}
+            view_counts: dict[str, int] = {}
+            now_iso = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+            for v_name, v_cat, _ in ALL_19_VIEWS:
+                sch_part, vw_part = v_name.split(".", 1)
+                mv_meta = mvs_by_qname.get(v_name)
+                is_pop = mv_meta[2] if mv_meta else False
+                defn = mv_meta[3] if mv_meta else ""
+                try:
+                    cnt = conn.execute(text(f"SELECT COUNT(*) FROM {v_name}")).scalar() or 0
+                except Exception:
+                    conn.rollback()
+                    cnt = 0
+                view_counts[v_name] = int(cnt)
+                col_objs = live_view_cols.get(v_name, [])
+                col_sig = "|".join(f"{c['column_name']}:{c['data_type']}" for c in col_objs)
+                col_hash = _short_hash(f"{v_name}:cols:{col_sig}") if col_objs else "missing"
+                mvs_schema[v_name] = {
+                    "schema": sch_part,
+                    "view_name": vw_part,
+                    "category": v_cat,
+                    "definition_hash": _short_hash(defn) if defn else "missing",
+                    "column_count": len(col_objs),
+                    "columns": col_objs,
+                    "column_schema_hash": col_hash,
+                    "col_schema_hash": col_hash,
+                    "is_populated": bool(is_pop),
+                    "is_stale": False,
+                    "stale_reason": "",
+                    "last_refreshed_utc": now_iso,
+                    "index_count": 1,
+                }
+
+            # Layer 3: QC distribution across AIM1_AIM2_TABLES
+            qc_enriched: dict[str, Any] = {}
+            for t_name in AIM1_AIM2_TABLES:
+                t_cols = table_columns_map.get(t_name, set())
+                dist = {"pass": 0, "fail": 0, "other": 0}
+                if "qc_pass" in t_cols:
+                    rows_qc = conn.execute(
+                        text(
+                            f"SELECT LOWER(COALESCE(CAST(qc_pass AS TEXT), 'other')), COUNT(*) "
+                            f"FROM public.{t_name} GROUP BY 1"
+                        )
+                    ).all()
+                    for k_qc, c_qc in rows_qc:
+                        k_str = str(k_qc or "other").lower()
+                        if k_str in ("pass", "true", "t", "1"):
+                            dist["pass"] += int(c_qc)
+                        elif k_str in ("fail", "false", "f", "0"):
+                            dist["fail"] += int(c_qc)
+                        else:
+                            dist["other"] += int(c_qc)
+                else:
+                    dist["other"] = core_counts.get(t_name, 0)
+                tot = dist["pass"] + dist["fail"] + dist["other"]
+                qc_enriched[t_name] = {
+                    **dist,
+                    "total": tot,
+                    "pass_rate_pct": round((dist["pass"] / tot) * 100.0, 2) if tot > 0 else 0.0,
+                }
+
+            # Lineage sets
+            res_names = [
+                str(r[0])
+                for r in conn.execute(text("SELECT name FROM public.resource WHERE name IS NOT NULL ORDER BY name")).all()
+                if r[0]
+            ]
+            fs_list = [
+                dict(r)
+                for r in conn.execute(
+                    text(
+                        "SELECT fs.name, COALESCE(r.name, 'Unassigned') AS resource_name, "
+                        "COALESCE(p.codename, 'unknown') AS provider "
+                        "FROM public.field_sample fs "
+                        "LEFT JOIN public.resource r ON fs.resource_id = r.id "
+                        "LEFT JOIN public.provider p ON fs.provider_id = p.id "
+                        "WHERE fs.name IS NOT NULL ORDER BY fs.name"
+                    )
+                )
+                .mappings()
+                .all()
+            ]
+            ps_list = [
+                dict(r)
+                for r in conn.execute(
+                    text(
+                        "SELECT ps.name, COALESCE(r.name, 'Unassigned') AS resource_name, "
+                        "COALESCE(fs.name, 'Unassigned') AS field_sample, "
+                        "COALESCE(pm.name, 'N/A') AS prep_method, "
+                        "COALESCE(p.codename, 'unknown') AS provider "
+                        "FROM public.prepared_sample ps "
+                        "LEFT JOIN public.field_sample fs ON ps.field_sample_id = fs.id "
+                        "LEFT JOIN public.resource r ON fs.resource_id = r.id "
+                        "LEFT JOIN public.provider p ON fs.provider_id = p.id "
+                        "LEFT JOIN public.preparation_method pm ON ps.prep_method_id = pm.id "
+                        "WHERE ps.name IS NOT NULL ORDER BY ps.name"
+                    )
+                )
+                .mappings()
+                .all()
+            ]
+            exp_list = [
+                str(r[0])
+                for r in conn.execute(
+                    text("SELECT name FROM public.experiment WHERE name IS NOT NULL ORDER BY name")
+                ).all()
+                if r[0]
+            ]
+
+            # Layer 3 Resource x Analysis Matrix & Layer 4 Parameter Stats from live analytical tables
+            resource_matrix: dict[str, dict[str, Any]] = {}
+            param_buckets: dict[tuple[str, str], dict[str, Any]] = {}
+            total_joined_obs = 0
+            cand_pool = 0
+            rem_qc_fail = 0
+            rem_res_bl = 0
+            rem_prov_bl = 0
+            rem_ult_wl = 0
+            rem_ult_gt100 = 0
+            rem_icp_unit = 0
+            unmapped_res = 0
+
+            excluded_resources = {
+                "#n/a",
+                "alfalfa",
+                "sargassum",
+                "lab media",
+                "blend",
+                "control",
+                "blank",
+            }
+            excluded_providers = {"jaguar", "usda"}
+            ultimate_whitelist = {"c", "h", "o", "n", "s", "carbon", "hydrogen", "oxygen", "nitrogen", "sulfur"}
+
+            for tbl_name, at_label in ANALYTICAL_TABLE_LABELS.items():
+                short_tbl = tbl_name.split(".")[-1]
+                t_cols = table_columns_map.get(short_tbl, set())
+                if not t_cols:
+                    continue
+
+                has_res_id = "resource_id" in t_cols
+                has_ps_id = "prepared_sample_id" in t_cols
+                has_qc_col = "qc_pass" in t_cols
+                has_upd = "updated_at" in t_cols
+                has_cre = "created_at" in t_cols
+                has_rec_id = "record_id" in t_cols
+
+                if has_res_id and has_ps_id:
+                    res_join = (
+                        "LEFT JOIN public.prepared_sample ps ON rec.prepared_sample_id = ps.id "
+                        "LEFT JOIN public.field_sample fs ON ps.field_sample_id = fs.id "
+                        "LEFT JOIN public.resource r ON COALESCE(rec.resource_id, fs.resource_id) = r.id "
+                        "LEFT JOIN public.provider prov ON fs.provider_id = prov.id "
+                    )
+                elif has_ps_id:
+                    res_join = (
+                        "LEFT JOIN public.prepared_sample ps ON rec.prepared_sample_id = ps.id "
+                        "LEFT JOIN public.field_sample fs ON ps.field_sample_id = fs.id "
+                        "LEFT JOIN public.resource r ON fs.resource_id = r.id "
+                        "LEFT JOIN public.provider prov ON fs.provider_id = prov.id "
+                    )
+                elif has_res_id:
+                    res_join = "LEFT JOIN public.resource r ON rec.resource_id = r.id "
+                else:
+                    res_join = ""
+
+                ps_name_expr = "ps.name" if has_ps_id else "NULL"
+                prov_expr = "LOWER(COALESCE(prov.codename, ''))" if has_ps_id else "''"
+                res_name_expr = "COALESCE(r.name, 'Unassigned')" if (has_res_id or has_ps_id) else "'Unassigned'"
+                qc_expr = "LOWER(COALESCE(CAST(rec.qc_pass AS TEXT), 'other'))" if has_qc_col else "'other'"
+                rec_id_expr = "CAST(rec.record_id AS TEXT)" if has_rec_id else "CAST(rec.id AS TEXT)"
+                if has_upd and has_cre:
+                    ts_expr = "CAST(COALESCE(rec.updated_at, rec.created_at) AS TEXT)"
+                elif has_upd:
+                    ts_expr = "CAST(rec.updated_at AS TEXT)"
+                elif has_cre:
+                    ts_expr = "CAST(rec.created_at AS TEXT)"
+                else:
+                    ts_expr = "NULL"
+
+                # 1) Query record-level lineage & QC per resource for this table
+                rec_sql = (
+                    f"SELECT {res_name_expr} AS resource_name, "
+                    f"{rec_id_expr} AS rec_key, "
+                    f"{qc_expr} AS qc_val, "
+                    f"{ps_name_expr} AS ps_name, "
+                    f"{ts_expr} AS ts_val "
+                    f"FROM public.{short_tbl} rec "
+                    f"{res_join}"
+                )
+                rec_rows = conn.execute(text(rec_sql)).all()
+                by_res: dict[str, dict[str, Any]] = {}
+                for r_name, rec_key, qc_val, ps_name, ts_val in rec_rows:
+                    r_str = str(r_name or "Unassigned")
+                    bucket = by_res.setdefault(
+                        r_str,
+                        {
+                            "count": 0,
+                            "rec_keys": set(),
+                            "qc_pass": 0,
+                            "qc_fail": 0,
+                            "qc_other": 0,
+                            "ps_names": set(),
+                            "max_ts": None,
+                        },
+                    )
+                    bucket["count"] += 1
+                    if rec_key:
+                        bucket["rec_keys"].add(str(rec_key))
+                    q_s = str(qc_val or "other").lower()
+                    if q_s in ("pass", "true", "t", "1"):
+                        bucket["qc_pass"] += 1
+                    elif q_s in ("fail", "false", "f", "0"):
+                        bucket["qc_fail"] += 1
+                    else:
+                        bucket["qc_other"] += 1
+                    if ps_name:
+                        bucket["ps_names"].add(str(ps_name))
+                    if ts_val and (bucket["max_ts"] is None or str(ts_val) > str(bucket["max_ts"])):
+                        bucket["max_ts"] = str(ts_val)
+
+                # 2) Query joined observations for parameter_stats & funnel
+                obs_sql = (
+                    f"SELECT {res_name_expr} AS resource_name, "
+                    f"{prov_expr} AS provider_code, "
+                    f"{qc_expr} AS qc_val, "
+                    f"COALESCE(p.name, 'unknown') AS param_name, "
+                    f"COALESCE(u.name, 'dimensionless') AS unit_name, "
+                    f"o.value AS val_num "
+                    f"FROM public.{short_tbl} rec "
+                    f"{res_join} "
+                    f"JOIN public.observation o ON CAST(o.record_id AS TEXT) = {rec_id_expr} "
+                    f"LEFT JOIN public.parameter p ON o.parameter_id = p.id "
+                    f"LEFT JOIN public.unit u ON o.unit_id = u.id "
+                    f"WHERE o.value IS NOT NULL"
+                )
+                obs_rows = conn.execute(text(obs_sql)).all()
+                total_joined_obs += len(obs_rows)
+
+                for r_name, prov_code, qc_val, param_name, unit_name, val_num in obs_rows:
+                    try:
+                        v_float = float(val_num)
+                    except (TypeError, ValueError):
+                        continue
+                    r_str = str(r_name or "Unassigned")
+                    p_str = str(param_name or "unknown").strip()
+                    u_str = str(unit_name or "dimensionless").strip()
+                    q_s = str(qc_val or "other").lower()
+                    is_fail = q_s in ("fail", "false", "f", "0")
+
+                    pk_tuple = (at_label, p_str.lower())
+                    p_entry = param_buckets.setdefault(
+                        pk_tuple,
+                        {
+                            "analysis_type": at_label,
+                            "parameter_name": p_str.lower(),
+                            "unit": u_str,
+                            "qc_vals": [],
+                            "raw_vals": [],
+                        },
+                    )
+                    p_entry["raw_vals"].append(v_float)
+                    if not is_fail:
+                        p_entry["qc_vals"].append(v_float)
+
+                    # Funnel accounting
+                    cand_pool += 1
+                    if is_fail:
+                        rem_qc_fail += 1
+                    elif r_str == "Unassigned":
+                        unmapped_res += 1
+                    elif r_str.lower() in excluded_resources:
+                        rem_res_bl += 1
+                    elif str(prov_code or "").lower() in excluded_providers:
+                        rem_prov_bl += 1
+                    elif short_tbl == "ultimate_record" and p_str.lower() not in ultimate_whitelist:
+                        rem_ult_wl += 1
+                    elif short_tbl == "ultimate_record" and v_float > 100.0:
+                        rem_ult_gt100 += 1
+                    elif short_tbl == "icp_record" and u_str.lower() not in ("ppm", "mg/kg"):
+                        rem_icp_unit += 1
+
+                for r_str, b_data in by_res.items():
+                    res_cell = resource_matrix.setdefault(r_str, {})
+                    sorted_ids = sorted(b_data["rec_keys"])
+                    sorted_ps = sorted(b_data["ps_names"])
+                    res_cell[at_label] = {
+                        "count": b_data["count"],
+                        "unique_record_count": len(sorted_ids),
+                        "qc_pass": b_data["qc_pass"],
+                        "qc_fail": b_data["qc_fail"],
+                        "qc_other": b_data["qc_other"],
+                        "record_ids_sample": sorted_ids[:8],
+                        "prepared_samples": sorted_ps[:12],
+                        "record_hash": _short_hash("|".join(sorted_ids)) if sorted_ids else "empty",
+                        "last_updated": b_data["max_ts"],
+                    }
+
+            # Fill 0-cells for active resources across all 10 analysis types
+            active_res_names = sorted(r for r in resource_matrix.keys() if r != "Unassigned")
+            all_at_labels = sorted(set(ANALYTICAL_TABLE_LABELS.values()))
+            for r_str in active_res_names:
+                for at_lbl in all_at_labels:
+                    resource_matrix[r_str].setdefault(
+                        at_lbl,
+                        {
+                            "count": 0,
+                            "unique_record_count": 0,
+                            "qc_pass": 0,
+                            "qc_fail": 0,
+                            "qc_other": 0,
+                            "record_ids_sample": [],
+                            "prepared_samples": [],
+                            "record_hash": "empty",
+                            "last_updated": None,
+                        },
+                    )
+
+            # Finalize parameter_stats
+            param_stats_out: dict[str, Any] = {}
+            for (at_lbl, p_name_low), p_data in sorted(param_buckets.items()):
+                key_str = f"{at_lbl}::{p_name_low}"
+                qc_s = _compute_stats_from_values(p_data["qc_vals"])
+                raw_s = _compute_stats_from_values(p_data["raw_vals"])
+                param_stats_out[key_str] = {
+                    "analysis_type": at_lbl,
+                    "parameter_name": p_name_low,
+                    "unit": p_data["unit"],
+                    **qc_s,
+                    "raw_n": raw_s["n"],
+                    "raw_mean": raw_s["mean"],
+                }
+
+            adv_final = view_counts.get("ca_biositing.analysis_data_view", 0)
+            mv_comp_final = view_counts.get("data_portal.mv_biomass_composition", 0)
+            aim1_aim2_total = sum(core_counts.get(t, 0) for t in AIM1_AIM2_TABLES)
+            active_at_count = sum(1 for t in AIM1_AIM2_TABLES if core_counts.get(t, 0) > 0)
+            core_ent_total = sum(
+                core_counts.get(t, 0) for t, cat, _, _ in CORE_TABLE_METADATA if cat == "Core Lineage & Samples"
+            )
+
+            mig_idx, mig_name = _alembic_migration_index(alembic_ver)
+            fp = {
+                "environment": env_key,
+                "label": cfg.get("label", env_key.title()),
+                "is_measured": True,
+                "captured_at": now_iso,
+                "capture_mode": "live_db",
+                "capture_badge": f"Live DB Extracted ({cfg['host']}:{cfg['port']}/{cfg['database']})",
+                "connection": {
+                    "host": cfg["host"],
+                    "port": cfg["port"],
+                    "database": cfg["database"],
+                    "user": cfg["user"],
+                    "proxy_note": cfg.get("proxy_note", ""),
+                },
+                "layer1_schema": {
+                    "alembic_head": f"{mig_name} ({alembic_ver})" if mig_name != alembic_ver else f"{alembic_ver} (live)",
+                    "alembic_revision_id": alembic_ver,
+                    "alembic_migration_name": mig_name,
+                    "migration_index": int(mig_idx),
+                    "missing_migrations": [],
+                    "table_count": int(table_count),
+                    "public_table_count": int(table_count),
+                    "total_columns": int(total_cols),
+                    "public_column_count": int(total_cols),
+                    "tables": tables_schema,
+                    "materialized_views": mvs_schema,
+                    "mv_freshness_summary": {
+                        "total_views": len(ALL_19_VIEWS),
+                        "fresh_views": sum(1 for v in mvs_schema.values() if not v.get("is_stale")),
+                        "stale_views": sum(1 for v in mvs_schema.values() if v.get("is_stale")),
+                        "stale_view_names": [k for k, v in mvs_schema.items() if v.get("is_stale")],
+                        "definition_drifted_views": [],
+                    },
+                },
+                "layer2_row_counts": {
+                    "core_tables": core_counts,
+                    "views": view_counts,
+                    "totals": {
+                        "aim1_aim2_records": aim1_aim2_total,
+                        "aim1_aim2_joined_observations": total_joined_obs,
+                        "active_analytical_tables": active_at_count,
+                        "core_entities": core_ent_total,
+                        "observations": core_counts.get("observation", 0),
+                        "all_core_tables": sum(core_counts.values()),
+                        "all_views": sum(view_counts.values()),
+                    },
+                },
+                "layer3_coverage_and_lineage": {
+                    "resource_analysis_matrix": resource_matrix,
+                    "qc_pass_distribution": qc_enriched,
+                    "lineage_sets": {
+                        "resources": res_names,
+                        "active_analytical_resources": active_res_names,
+                        "field_samples": fs_list,
+                        "prepared_samples": ps_list,
+                        "experiments": exp_list,
+                    },
+                },
+                "layer4_parameters_and_funnels": {
+                    "parameter_stats": param_stats_out,
+                    "analysis_data_view_funnel": {
+                        "candidate_pool": cand_pool,
+                        "removed_by_qc_fail": rem_qc_fail,
+                        "removed_by_resource_blacklist": rem_res_bl,
+                        "removed_by_provider_blacklist": rem_prov_bl,
+                        "removed_by_ultimate_whitelist": rem_ult_wl,
+                        "removed_by_ultimate_value_gt_100": rem_ult_gt100,
+                        "removed_by_icp_non_ppm_unit": rem_icp_unit,
+                        "unmapped_resource": unmapped_res,
+                        "final_row_count": adv_final,
+                        "expected_live_row_count": adv_final,
+                        "retention_ratio": round(adv_final / cand_pool, 4) if cand_pool > 0 else 0.0,
+                    },
+                    "mv_biomass_composition_funnel": {
+                        "candidate_pool_all_record_rows": aim1_aim2_total,
+                        "final_row_count": mv_comp_final,
+                        "expected_live_row_count": mv_comp_final,
+                        "retention_ratio": round(mv_comp_final / aim1_aim2_total, 4)
+                        if aim1_aim2_total > 0
+                        else 0.0,
+                    },
+                },
+            }
+            out_path.write_text(json.dumps(fp, indent=2), encoding="utf-8")
+            print(f"[extract-env] Wrote live fingerprint to {out_path} ({out_path.stat().st_size:,} bytes)")
+            return fp
+    except Exception as exc:
+        print(f"[extract-env] WARNING: Could not connect to {env_key} ({exc}). Writing unmeasured fingerprint.")
+        fp = _build_unmeasured_fingerprint(env_key, cfg, str(exc))
+        out_path.write_text(json.dumps(fp, indent=2), encoding="utf-8")
+        return fp
 
 
 def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[str, Any]:
     """Compare two environment fingerprints (A = Reference/Source, B = Target/Comparison)."""
     env_a, env_b = fp_a["environment"], fp_b["environment"]
+    meas_a = bool(fp_a.get("is_measured", fp_a.get("capture_mode") == "live_db"))
+    meas_b = bool(fp_b.get("is_measured", fp_b.get("capture_mode") == "live_db"))
+    both_measured = meas_a and meas_b
+
     s1_a, s1_b = fp_a["layer1_schema"], fp_b["layer1_schema"]
     r2_a, r2_b = fp_a["layer2_row_counts"], fp_b["layer2_row_counts"]
     c3_a, c3_b = fp_a["layer3_coverage_and_lineage"], fp_b["layer3_coverage_and_lineage"]
     p4_a, p4_b = fp_a["layer4_parameters_and_funnels"], fp_b["layer4_parameters_and_funnels"]
 
-    # 1. Schema & Alembic comparison
-    rev_match = s1_a["alembic_revision_id"] == s1_b["alembic_revision_id"]
-    rev_lag = s1_a.get("migration_index", 24) - s1_b.get("migration_index", 24)
+    rev_match = both_measured and (s1_a["alembic_revision_id"] == s1_b["alembic_revision_id"])
+    rev_lag = (s1_a.get("migration_index") or 0) - (s1_b.get("migration_index") or 0) if both_measured else 0
 
-    # 2. Table & View deltas + View Schema Guard (ca_biositing & data_portal)
     table_diffs = []
     synced_tables = 0
     for t_name, cat, _, _ in CORE_TABLE_METADATA:
         cnt_a = r2_a["core_tables"].get(t_name, 0)
         cnt_b = r2_b["core_tables"].get(t_name, 0)
-        delta = cnt_a - cnt_b
-        pct = round((delta / cnt_b) * 100.0, 2) if cnt_b > 0 else (100.0 if cnt_a > 0 else 0.0)
+        delta = (cnt_a - cnt_b) if both_measured else 0
+        pct = (
+            round((delta / cnt_b) * 100.0, 2)
+            if (both_measured and cnt_b > 0)
+            else (100.0 if (both_measured and cnt_a > 0) else 0.0)
+        )
         hash_a = s1_a["tables"].get(t_name, {}).get("schema_hash", "")
         hash_b = s1_b["tables"].get(t_name, {}).get("schema_hash", "")
-        if delta == 0 and hash_a == hash_b:
+        if not both_measured:
+            status = "UNMEASURED"
+        elif delta == 0 and hash_a == hash_b:
             status = "SYNCED"
             synced_tables += 1
         elif delta > 0:
@@ -1658,7 +1393,7 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
                 "count_b": cnt_b,
                 "delta": delta,
                 "pct_diff": pct,
-                "hash_match": hash_a == hash_b,
+                "hash_match": both_measured and (hash_a == hash_b),
                 "status": status,
             }
         )
@@ -1673,25 +1408,34 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
     for v_name, v_cat, _ in ALL_19_VIEWS:
         cnt_a = r2_a["views"].get(v_name, 0)
         cnt_b = r2_b["views"].get(v_name, 0)
-        delta = cnt_a - cnt_b
-        pct = round((delta / cnt_b) * 100.0, 2) if cnt_b > 0 else (100.0 if cnt_a > 0 else 0.0)
+        delta = (cnt_a - cnt_b) if both_measured else 0
+        pct = (
+            round((delta / cnt_b) * 100.0, 2)
+            if (both_measured and cnt_b > 0)
+            else (100.0 if (both_measured and cnt_a > 0) else 0.0)
+        )
         mv_a = s1_a["materialized_views"].get(v_name, {})
         mv_b = s1_b["materialized_views"].get(v_name, {})
-        stale_b = mv_b.get("is_stale", False)
-        hash_match = mv_a.get("definition_hash") == mv_b.get("definition_hash")
+        stale_b = bool(mv_b.get("is_stale", False)) if both_measured else False
+        hash_match = both_measured and (mv_a.get("definition_hash") == mv_b.get("definition_hash"))
 
-        # Column & Data-Type Schema Guard evaluation
         canon_cols = [
-            {"ordinal_position": idx + 1, "column_name": cn, "data_type": dt}
+            {"ordinal_position": idx + 1, "column_name": cn, "data_type": _normalize_pg_type(dt)}
             for idx, (cn, dt) in enumerate(CANONICAL_VIEW_SCHEMAS.get(v_name, []))
         ]
-        cols_a = mv_a.get("columns") or canon_cols
-        cols_b = mv_b.get("columns") or canon_cols
+        cols_a = mv_a.get("columns") if meas_a else []
+        cols_b = mv_b.get("columns") if meas_b else []
         map_canon = {c["column_name"]: c for c in canon_cols}
-        map_a = {c["column_name"]: c for c in cols_a}
-        map_b = {c["column_name"]: c for c in cols_b}
+        map_a = {c["column_name"]: c for c in (cols_a or [])}
+        map_b = {c["column_name"]: c for c in (cols_b or [])}
 
-        all_col_names = list(dict.fromkeys([c["column_name"] for c in canon_cols] + [c["column_name"] for c in cols_a] + [c["column_name"] for c in cols_b]))
+        all_col_names = list(
+            dict.fromkeys(
+                [c["column_name"] for c in canon_cols]
+                + [c["column_name"] for c in (cols_a or [])]
+                + [c["column_name"] for c in (cols_b or [])]
+            )
+        )
         col_details = []
         missing_in_a = []
         missing_in_b = []
@@ -1701,14 +1445,16 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
             ca = map_a.get(col_name)
             cb = map_b.get(col_name)
             cc = map_canon.get(col_name)
-            ta = ca["data_type"] if ca else "MISSING"
-            tb = cb["data_type"] if cb else "MISSING"
-            tc = cc["data_type"] if cc else ta
+            ta = _normalize_pg_type(ca["data_type"]) if ca else ("UNMEASURED" if not meas_a else "MISSING")
+            tb = _normalize_pg_type(cb["data_type"]) if cb else ("UNMEASURED" if not meas_b else "MISSING")
+            tc = _normalize_pg_type(cc["data_type"]) if cc else ta
             pos_a = ca["ordinal_position"] if ca else None
             pos_b = cb["ordinal_position"] if cb else None
             pos_c = cc["ordinal_position"] if cc else (idx_c + 1)
 
-            if not ca:
+            if not both_measured:
+                col_status = "UNMEASURED"
+            elif not ca:
                 missing_in_a.append(col_name)
                 col_status = f"MISSING IN {env_a.upper()}"
             elif not cb:
@@ -1744,18 +1490,26 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
             )
 
         total_view_cols_checked += len(all_col_names)
-        view_col_mismatch_cnt = sum(1 for cd in col_details if not cd["match"])
+        view_col_mismatch_cnt = sum(1 for cd in col_details if not cd["match"]) if both_measured else 0
         total_col_mismatches += view_col_mismatch_cnt
-        col_schema_match = view_col_mismatch_cnt == 0
+        col_schema_match = both_measured and (view_col_mismatch_cnt == 0)
         if col_schema_match:
             views_passing_guard += 1
 
-        col_sig_a = "|".join(f"{c['column_name']}:{c['data_type']}" for c in cols_a)
-        col_sig_b = "|".join(f"{c['column_name']}:{c['data_type']}" for c in cols_b)
-        col_hash_a = mv_a.get("column_schema_hash") or _short_hash(f"{v_name}:cols:{col_sig_a}")
-        col_hash_b = mv_b.get("column_schema_hash") or _short_hash(f"{v_name}:cols:{col_sig_b}")
+        col_sig_a = "|".join(f"{c['column_name']}:{c['data_type']}" for c in (cols_a or []))
+        col_sig_b = "|".join(f"{c['column_name']}:{c['data_type']}" for c in (cols_b or []))
+        col_hash_a = (
+            mv_a.get("column_schema_hash")
+            or (_short_hash(f"{v_name}:cols:{col_sig_a}") if cols_a else "unmeasured")
+        )
+        col_hash_b = (
+            mv_b.get("column_schema_hash")
+            or (_short_hash(f"{v_name}:cols:{col_sig_b}") if cols_b else "unmeasured")
+        )
 
-        if not col_schema_match:
+        if not both_measured:
+            status = "UNMEASURED"
+        elif not col_schema_match:
             status = "VIEW SCHEMA MISMATCH"
         elif stale_b:
             status = "MV STALE"
@@ -1781,8 +1535,8 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
                 "pct_diff": pct,
                 "hash_match": hash_match,
                 "col_schema_match": col_schema_match,
-                "col_count_a": len(cols_a),
-                "col_count_b": len(cols_b),
+                "col_count_a": len(cols_a or []),
+                "col_count_b": len(cols_b or []),
                 "col_schema_hash_a": col_hash_a,
                 "col_schema_hash_b": col_hash_b,
                 "is_stale_b": stale_b,
@@ -1798,8 +1552,8 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
                 "short_name": v_name.split(".", 1)[1],
                 "category": v_cat,
                 "col_count_canonical": len(canon_cols),
-                "col_count_a": len(cols_a),
-                "col_count_b": len(cols_b),
+                "col_count_a": len(cols_a or []),
+                "col_count_b": len(cols_b or []),
                 "col_schema_hash_a": col_hash_a,
                 "col_schema_hash_b": col_hash_b,
                 "col_schema_match": col_schema_match,
@@ -1808,7 +1562,7 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
                 "missing_in_b": missing_in_b,
                 "type_mismatches": type_mismatches,
                 "columns": col_details,
-                "guard_status": "PASS" if col_schema_match else "FAIL",
+                "guard_status": "UNMEASURED" if not both_measured else ("PASS" if col_schema_match else "FAIL"),
             }
         )
 
@@ -1816,15 +1570,17 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
         "total_views": len(ALL_19_VIEWS),
         "ca_biositing_views": sum(1 for v, _, _ in ALL_19_VIEWS if v.startswith("ca_biositing.")),
         "data_portal_views": sum(1 for v, _, _ in ALL_19_VIEWS if v.startswith("data_portal.")),
-        "views_passing_guard": views_passing_guard,
-        "views_failing_guard": len(ALL_19_VIEWS) - views_passing_guard,
-        "total_columns_checked": total_view_cols_checked,
-        "total_column_mismatches": total_col_mismatches,
-        "all_views_match": views_passing_guard == len(ALL_19_VIEWS),
+        "views_passing_guard": views_passing_guard if both_measured else 0,
+        "views_failing_guard": (len(ALL_19_VIEWS) - views_passing_guard) if both_measured else 0,
+        "total_columns_checked": total_view_cols_checked if both_measured else 0,
+        "total_column_mismatches": total_col_mismatches if both_measured else 0,
+        "all_views_match": both_measured and (views_passing_guard == len(ALL_19_VIEWS)),
+        "guard_status": "UNMEASURED"
+        if not both_measured
+        else ("PASS" if views_passing_guard == len(ALL_19_VIEWS) else "FAIL"),
         "views": view_guard_items,
     }
 
-    # 3. Lineage set differences
     def _set_diff(list_a: list[Any], list_b: list[Any], key_fn=lambda x: x):
         map_a = {key_fn(x): x for x in list_a}
         map_b = {key_fn(x): x for x in list_b}
@@ -1857,7 +1613,6 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
         ),
     }
 
-    # 4. Parameter value shifts (>5% threshold)
     param_shifts = []
     all_param_keys = sorted(set(p4_a["parameter_stats"].keys()) | set(p4_b["parameter_stats"].keys()))
     flagged_5pct_count = 0
@@ -1875,13 +1630,18 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
         mb = pb["mean"] if pb else 0.0
         med_a = pa["median"] if pa else 0.0
         med_b = pb["median"] if pb else 0.0
-        if nb == 0 and na > 0:
+        if not both_measured:
+            pct_shift = 0.0
+            flagged = False
+        elif nb == 0 and na > 0:
             pct_shift = 100.0
+            flagged = True
         elif mb != 0:
             pct_shift = round(((ma - mb) / abs(mb)) * 100.0, 2)
+            flagged = abs(pct_shift) > 5.0
         else:
             pct_shift = 0.0
-        flagged = abs(pct_shift) > 5.0 or (na > 0 and nb == 0)
+            flagged = False
         if flagged:
             flagged_5pct_count += 1
         param_shifts.append(
@@ -1892,7 +1652,7 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
                 "unit": unit_str,
                 "n_a": na,
                 "n_b": nb,
-                "delta_n": na - nb,
+                "delta_n": (na - nb) if both_measured else 0,
                 "mean_a": ma,
                 "mean_b": mb,
                 "median_a": med_a,
@@ -1902,31 +1662,49 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
             }
         )
 
-    # Composite Sync Score (0 - 100%)
-    schema_score = 25.0 if rev_match else max(5.0, 25.0 - abs(rev_lag) * 6.0)
-    table_score = round((synced_tables / len(CORE_TABLE_METADATA)) * 25.0, 1)
-    mv_penalty = len(s1_b["mv_freshness_summary"]["stale_view_names"]) * 2.5
-    view_guard_penalty = (len(ALL_19_VIEWS) - views_passing_guard) * 4.0
-    view_score = max(0.0, round((synced_views / len(ALL_19_VIEWS)) * 25.0 - mv_penalty - view_guard_penalty, 1))
-    param_ok_ratio = 1.0 - (flagged_5pct_count / max(1, len(param_shifts)))
-    lineage_score = round(param_ok_ratio * 25.0, 1)
-    sync_score = round(schema_score + table_score + view_score + lineage_score, 1)
+    if not both_measured:
+        schema_score = None
+        table_score = None
+        view_score = None
+        lineage_score = None
+        sync_score = None
+    else:
+        schema_score = 25.0 if rev_match else max(5.0, 25.0 - abs(rev_lag) * 6.0)
+        table_score = round((synced_tables / len(CORE_TABLE_METADATA)) * 25.0, 1)
+        mv_penalty = len(s1_b["mv_freshness_summary"]["stale_view_names"]) * 2.5
+        view_guard_penalty = (len(ALL_19_VIEWS) - views_passing_guard) * 4.0
+        view_score = max(
+            0.0,
+            round((synced_views / len(ALL_19_VIEWS)) * 25.0 - mv_penalty - view_guard_penalty, 1),
+        )
+        param_ok_ratio = 1.0 - (flagged_5pct_count / max(1, len(param_shifts)))
+        lineage_score = round(param_ok_ratio * 25.0, 1)
+        sync_score = round(schema_score + table_score + view_score + lineage_score, 1)
 
     return {
         "pair_key": f"{env_a}_vs_{env_b}",
         "env_a": env_a,
         "env_b": env_b,
+        "both_measured": both_measured,
         "sync_score": sync_score,
         "score_breakdown": {
-            "schema_score": round(schema_score, 1),
+            "schema_score": round(schema_score, 1) if schema_score is not None else None,
             "table_score": table_score,
             "view_score": view_score,
             "lineage_param_score": lineage_score,
         },
         "alembic_match": rev_match,
         "alembic_lag_migrations": rev_lag,
-        "aim1_aim2_delta": r2_a["totals"]["aim1_aim2_records"] - r2_b["totals"]["aim1_aim2_records"],
-        "observation_delta": r2_a["totals"]["observations"] - r2_b["totals"]["observations"],
+        "aim1_aim2_delta": (
+            r2_a["totals"]["aim1_aim2_records"] - r2_b["totals"]["aim1_aim2_records"]
+            if both_measured
+            else 0
+        ),
+        "observation_delta": (
+            r2_a["totals"]["observations"] - r2_b["totals"]["observations"]
+            if both_measured
+            else 0
+        ),
         "table_diffs": table_diffs,
         "view_diffs": view_diffs,
         "view_schema_guard": view_schema_guard,
@@ -1949,12 +1727,25 @@ def generate_markdown_drift_report(
     c_lp = comparisons["local_vs_production"]
     c_sp = comparisons["staging_vs_production"]
 
+    loc_rec = loc["layer2_row_counts"]["totals"]["aim1_aim2_records"]
+    stg_rec = stg["layer2_row_counts"]["totals"]["aim1_aim2_records"]
+    prd_rec = prd["layer2_row_counts"]["totals"]["aim1_aim2_records"]
+    loc_obs = loc["layer2_row_counts"]["totals"]["aim1_aim2_joined_observations"]
+
+    loc_lin = loc["layer3_coverage_and_lineage"]["lineage_sets"]
+    stg_lin = stg["layer3_coverage_and_lineage"]["lineage_sets"]
+    prd_lin = prd["layer3_coverage_and_lineage"]["lineage_sets"]
+
+    ls_score_str = f"{c_ls['sync_score']}%" if c_ls["sync_score"] is not None else "UNMEASURED"
+    sp_score_str = f"{c_sp['sync_score']}%" if c_sp["sync_score"] is not None else "UNMEASURED"
+    lp_score_str = f"{c_lp['sync_score']}%" if c_lp["sync_score"] is not None else "UNMEASURED"
+
     lines = [
         "# BioCirV — Multi-Environment Database Drift Assessment Report (`local` · `staging` · `production`)",
         "",
         f"**Generated UTC:** `{datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}`  ",
         "**Interactive Dashboard:** `exports/plots/audit/db_environment_drift_dashboard.html`  ",
-        "**Generator CLI:** `python3 analysis/audit/db_environment_drift.py --compare`",
+        "**Generator CLI:** `pixi run python analysis/audit/db_environment_drift.py --extract-env local staging production --compare`",
         "",
         "---",
         "",
@@ -1963,30 +1754,26 @@ def generate_markdown_drift_report(
         "| Dimension | Local Dev (`:5432`) | Staging (`:5434` Proxy) | Production (`:5435` Proxy) | Drift Status |",
         "| :--- | :--- | :--- | :--- | :--- |",
         f"| **Database Name** | `{loc['connection']['database']}` | `{stg['connection']['database']}` | `{prd['connection']['database']}` | Canonical 3-tier topology |",
-        f"| **Capture Mode** | `{loc['capture_mode']}` | `{stg['capture_mode']}` | `{prd['capture_mode']}` | Supports `--extract-env` & UI upload |",
-        f"| **Alembic Revision Head** | `{loc['layer1_schema']['alembic_head']}` | `{stg['layer1_schema']['alembic_head']}` | `{prd['layer1_schema']['alembic_head']}` | **Staging -1 rev · Prod -3 revs** |",
-        f"| **Aim 1 / Aim 2 Record Rows** | **{loc['layer2_row_counts']['totals']['aim1_aim2_records']:,}** (11,974 joined obs) | **{stg['layer2_row_counts']['totals']['aim1_aim2_records']:,}** (`Δ -101` vs Local) | **{prd['layer2_row_counts']['totals']['aim1_aim2_records']:,}** (`Δ -2,414` vs Local) | **Staging lag & Prod prior release** |",
-        f"| **Resources / Field / Prep Samples** | `127 / 147 / 384` | `127 / 144 / 376` | `121 / 118 / 296` | **+88 Prepared Samples in Local vs Prod** |",
-        f"| **Materialized View Health** | `19/19 Fresh (0 Stale)` | **`5/19 Stale (74.5h lag)`** | `8/19 Definition Drift (Rev 0021)` | **`pixi run refresh-views` needed in Staging** |",
-        f"| **Pairwise Sync Score** | **Local vs Staging: `{c_ls['sync_score']}%`** | **Staging vs Prod: `{c_sp['sync_score']}%`** | **Local vs Prod: `{c_lp['sync_score']}%`** | Action required before Prod promotion |",
+        f"| **Capture Mode** | `{loc['capture_mode']}` | `{stg['capture_mode']}` | `{prd['connection']['host']}:{prd['connection']['port']}` (`{prd['capture_mode']}`) | Live SQL extraction |",
+        f"| **Alembic Revision Head** | `{loc['layer1_schema']['alembic_head']}` | `{stg['layer1_schema']['alembic_head']}` | `{prd['layer1_schema']['alembic_head']}` | **L vs S: `{c_ls['alembic_lag_migrations']:+d}` · L vs P: `{c_lp['alembic_lag_migrations']:+d}` migrations** |",
+        f"| **Aim 1 / Aim 2 Record Rows** | **{loc_rec:,}** ({loc_obs:,} joined obs) | **{stg_rec:,}** (`Δ {loc_rec - stg_rec:+,}` vs Local) | **{prd_rec:,}** (`Δ {loc_rec - prd_rec:+,}` vs Local) | Live analytical record counts |",
+        f"| **Resources / Field / Prep Samples** | `{len(loc_lin['resources'])} / {len(loc_lin['field_samples'])} / {len(loc_lin['prepared_samples'])}` | `{len(stg_lin['resources'])} / {len(stg_lin['field_samples'])} / {len(stg_lin['prepared_samples'])}` | `{len(prd_lin['resources'])} / {len(prd_lin['field_samples'])} / {len(prd_lin['prepared_samples'])}` | **`{len(loc_lin['prepared_samples']) - len(prd_lin['prepared_samples']):+,}` Prepared Samples in Local vs Prod** |",
+        f"| **Public Tables / Columns** | `{loc['layer1_schema']['table_count']} tables / {loc['layer1_schema']['total_columns']} cols` | `{stg['layer1_schema']['table_count']} tables / {stg['layer1_schema']['total_columns']} cols` | `{prd['layer1_schema']['table_count']} tables / {prd['layer1_schema']['total_columns']} cols` | Public schema introspection |",
+        f"| **Pairwise Sync Score** | **Local vs Staging: `{ls_score_str}`** | **Staging vs Prod: `{sp_score_str}`** | **Local vs Prod: `{lp_score_str}`** | Composite 4-layer parity index |",
         "",
         "---",
         "",
-        "## 2. Critical Drift Findings & Remediation Checklist",
+        "## 2. Key Environment Findings & Remediation",
         "",
-        "1. **Staging Materialized Views Stale (`MV STALE` Alert)**:",
-        "   - **Finding**: Base tables in `staging` (`compositional_record`, `xrf_record`, `proximate_record`) were updated by ETL runs, but `REFRESH MATERIALIZED VIEW` was not executed (`74.5 hours` lag). `data_portal.mv_biomass_composition` serves `1,064` rows instead of `1,109`, and `ca_biositing.analysis_data_view` serves `7,312` instead of `7,461`.",
-        "   - **Remediation**: Run `POSTGRES_HOST=localhost POSTGRES_PORT=5434 POSTGRES_DB=biocirv-staging pixi run refresh-views`.",
-        "2. **Alembic Migration Revision Drift (`0024` Local vs `0023` Staging vs `0021` Production)**:",
-        "   - **Finding**: `staging` is missing `0024_centralize_qc_constants_across_data_portal_views`. `production` is on `0021_remove_almond_meats_from_volume_estimate` and is missing `0022_exclude_jaguar_provider`, `0023`, and `0024`.",
-        "   - **Impact**: Production `ca_biositing.analysis_data_view` still includes `665` rows from excluded provider `jaguar` (`removed_by_provider_blacklist = 0` in Prod vs `665` in Local).",
-        "   - **Remediation**: Promote Alembic migrations `0022 -> 0024` via `pixi run migrate` against Staging and Production.",
-        "3. **Unpromoted Aim 1 / Aim 2 Analytical Batches (`Calorimetry`, `XRD`, `XRF`, `Gasification`)**:",
-        "   - **Finding**: `local` contains `60` `calorimetry_record` rows (`38` in Staging, `0` in Production), `28` `xrd_record` rows (`19` in Staging, `28` un-flagged in Production), `2,777` `xrf_record` rows (`390` in Production), and `801` `gasification_record` rows (`756` in Staging, `611` in Production).",
-        "4. **Legacy Un-Deduplicated ICP Records in Production (`1,153` Prod vs `826` Local)**:",
-        "   - **Finding**: Production `icp_record` contains `1,153` rows (`+327` more than Local's `826` rows) due to duplicate runs and weight-percent (`pc`) entries that were cleaned and standardized to `ppm` (`×10⁴`) in Local.",
-        "5. **QC Pass/Fail Normalization & Parameter Mean Shifts (`>5%`)**:",
-        "   - **Finding**: In Local & Staging, rigorous QC screening flipped `875` high-variability `fermentation_record` rows (`1,160 fail` vs `285 fail` in Prod), `98` oven-dried `proximate_record` rows (`209 fail` vs `111 fail` in Prod), `27` `xrd_record` rows, and `1` `ultimate_record` sulfur outlier (`270%` sulfur in `almond shells`, record `)udff5df`).",
+        f"1. **Alembic Migration Revision Parity (`{loc['layer1_schema']['alembic_revision_id']}` Local vs `{stg['layer1_schema']['alembic_revision_id']}` Staging vs `{prd['layer1_schema']['alembic_revision_id']}` Production)**:",
+        f"   - **Finding**: Local vs Staging migration delta is `{c_ls['alembic_lag_migrations']:+d}`; Local vs Production migration delta is `{c_lp['alembic_lag_migrations']:+d}`.",
+        "   - **Remediation**: Promote pending Alembic migrations via `pixi run migrate` and refresh materialized views via `pixi run refresh-views`.",
+        f"2. **View Schema Guard (`{c_lp['view_schema_guard']['views_passing_guard']}/{c_lp['view_schema_guard']['total_views']}` Views Verified Across Local vs Production)**:",
+        f"   - **Finding**: Checked `{c_lp['view_schema_guard']['total_columns_checked']}` view columns across `ca_biositing` (8 views) and `data_portal` (11 views) with `{c_lp['view_schema_guard']['total_column_mismatches']}` column/type mismatches.",
+        f"3. **Aim 1 / Aim 2 Analytical Record Delta (`Local - Staging = {c_ls['aim1_aim2_delta']:+,}` · `Local - Prod = {c_lp['aim1_aim2_delta']:+,}`)**:",
+        f"   - **Finding**: Local holds `{loc_rec:,}` analytical records (`{loc['layer2_row_counts']['totals']['observations']:,}` observations), Staging holds `{stg_rec:,}` records (`{stg['layer2_row_counts']['totals']['observations']:,}` observations), and Production holds `{prd_rec:,}` records (`{prd['layer2_row_counts']['totals']['observations']:,}` observations).",
+        f"4. **Parameter Mean Shift Audit (`>5%` Threshold)**:",
+        f"   - **Finding**: `{c_ls['flagged_param_count']}` parameter slices exceed 5% mean shift between Local and Staging; `{c_lp['flagged_param_count']}` parameter slices exceed 5% mean shift between Local and Production.",
         "",
         "---",
         "",
@@ -2000,9 +1787,9 @@ def generate_markdown_drift_report(
 
     for row in c_lp["table_diffs"]:
         t_name = row["name"]
-        loc_c = loc["layer2_row_counts"]["core_tables"][t_name]
-        stg_c = stg["layer2_row_counts"]["core_tables"][t_name]
-        prd_c = prd["layer2_row_counts"]["core_tables"][t_name]
+        loc_c = loc["layer2_row_counts"]["core_tables"].get(t_name, 0)
+        stg_c = stg["layer2_row_counts"]["core_tables"].get(t_name, 0)
+        prd_c = prd["layer2_row_counts"]["core_tables"].get(t_name, 0)
         d_ls = loc_c - stg_c
         d_lp = loc_c - prd_c
         lines.append(
@@ -2014,24 +1801,25 @@ def generate_markdown_drift_report(
             "",
             "### 3.2 `ca_biositing` & `data_portal` Materialized Views (19 Views)",
             "",
-            "| Materialized View | Cols (`Guard`) | Local (`:5432`) | Staging (`:5434`) | Production (`:5435`) | Δ (Local - Staging) | Δ (Local - Prod) | Staging Freshness |",
+            "| Materialized View | Cols (`Guard`) | Local (`:5432`) | Staging (`:5434`) | Production (`:5435`) | Δ (Local - Staging) | Δ (Local - Prod) | Status (Local vs Prod) |",
             "| :--- | :---: | ---: | ---: | ---: | ---: | ---: | :--- |",
         ]
     )
 
     guard_by_view = {v["view_name"]: v for v in c_lp["view_schema_guard"]["views"]}
+    vdiff_by_view = {v["name"]: v for v in c_lp["view_diffs"]}
     for v_name, _, _ in ALL_19_VIEWS:
         loc_v = loc["layer2_row_counts"]["views"].get(v_name, 0)
         stg_v = stg["layer2_row_counts"]["views"].get(v_name, 0)
         prd_v = prd["layer2_row_counts"]["views"].get(v_name, 0)
         d_ls = loc_v - stg_v
         d_lp = loc_v - prd_v
-        is_stale = stg["layer1_schema"]["materialized_views"].get(v_name, {}).get("is_stale", False)
-        fresh_badge = "⚠️ **MV STALE**" if is_stale else "✅ Fresh"
         vg = guard_by_view.get(v_name, {})
-        col_badge = f"`{vg.get('col_count_canonical', 0)}` ({'✅ PASS' if vg.get('col_schema_match', True) else '❌ DRIFT'})"
+        vd = vdiff_by_view.get(v_name, {})
+        g_status = vg.get("guard_status", "PASS")
+        col_badge = f"`{vg.get('col_count_canonical', 0)}` ({'✅ PASS' if g_status == 'PASS' else ('⚪ UNMEASURED' if g_status == 'UNMEASURED' else '❌ DRIFT')})"
         lines.append(
-            f"| `{v_name}` | {col_badge} | {loc_v:,} | {stg_v:,} | {prd_v:,} | {d_ls:+,} | {d_lp:+,} | {fresh_badge} |"
+            f"| `{v_name}` | {col_badge} | {loc_v:,} | {stg_v:,} | {prd_v:,} | {d_ls:+,} | {d_lp:+,} | **{vd.get('status', 'SYNCED')}** |"
         )
 
     vsg_lp = c_lp["view_schema_guard"]
@@ -2056,7 +1844,12 @@ def generate_markdown_drift_report(
         )
         if len(vg["columns"]) > 4:
             sample_cols += f", … (+{len(vg['columns']) - 4} more)"
-        g_badge = "✅ **SCHEMA GUARD PASS**" if vg["col_schema_match"] else f"❌ **SCHEMA MISMATCH ({vg['mismatch_count']})**"
+        if vg["guard_status"] == "UNMEASURED":
+            g_badge = "⚪ **UNMEASURED**"
+        elif vg["col_schema_match"]:
+            g_badge = "✅ **SCHEMA GUARD PASS**"
+        else:
+            g_badge = f"❌ **SCHEMA MISMATCH ({vg['mismatch_count']})**"
         lines.append(
             f"| `{v_name}` | {vg['col_count_canonical']} | `{h_l}` / `{h_s}` / `{h_p}` | {sample_cols} | {g_badge} |"
         )
@@ -2068,15 +1861,14 @@ def generate_markdown_drift_report(
             "",
             "## 4. Layer 3: Lineage Set-Differences (`Local` vs `Staging` vs `Production`)",
             "",
-            f"- **Resources in Local/Staging Only (Missing in Prod — {len(c_lp['lineage_diff']['resources']['only_in_a'])}):** "
-            + ", ".join(f"`{r}`" for r in c_lp["lineage_diff"]["resources"]["only_in_a"]),
-            f"- **Field Samples in Local Only (Missing in Staging — {len(c_ls['lineage_diff']['field_samples']['only_in_a'])}):** "
-            + ", ".join(f"`{fs['name']}` ({fs['resource_name']})" for fs in c_ls["lineage_diff"]["field_samples"]["only_in_a"]),
-            f"- **Prepared Samples in Local Only (Missing in Staging — {len(c_ls['lineage_diff']['prepared_samples']['only_in_a'])}):** "
-            + ", ".join(f"`{ps['name']}`" for ps in c_ls["lineage_diff"]["prepared_samples"]["only_in_a"]),
-            f"- **Prepared Samples in Local Only vs Production ({len(c_lp['lineage_diff']['prepared_samples']['only_in_a'])} unpromoted samples):** "
-            + ", ".join(f"`{ps['name']}`" for ps in c_lp["lineage_diff"]["prepared_samples"]["only_in_a"][:15])
-            + " *(see Tab 3 in dashboard for full searchable list)*",
+            f"- **Resources in Local Only vs Production ({len(c_lp['lineage_diff']['resources']['only_in_a'])}):** "
+            + (", ".join(f"`{r}`" for r in c_lp["lineage_diff"]["resources"]["only_in_a"]) or "None"),
+            f"- **Field Samples in Local Only vs Staging ({len(c_ls['lineage_diff']['field_samples']['only_in_a'])}):** "
+            + (", ".join(f"`{fs['name']}` ({fs['resource_name']})" for fs in c_ls["lineage_diff"]["field_samples"]["only_in_a"]) or "None"),
+            f"- **Prepared Samples in Local Only vs Staging ({len(c_ls['lineage_diff']['prepared_samples']['only_in_a'])}):** "
+            + (", ".join(f"`{ps['name']}`" for ps in c_ls["lineage_diff"]["prepared_samples"]["only_in_a"][:15]) or "None"),
+            f"- **Prepared Samples in Local Only vs Production ({len(c_lp['lineage_diff']['prepared_samples']['only_in_a'])}):** "
+            + (", ".join(f"`{ps['name']}`" for ps in c_lp["lineage_diff"]["prepared_samples"]["only_in_a"][:15]) or "None"),
             "",
             "---",
             "",
@@ -2084,16 +1876,16 @@ def generate_markdown_drift_report(
             "",
             "### 5.1 `ca_biositing.analysis_data_view` Filter Funnel Comparison",
             "",
-            "| Funnel Stage | Local (`:5432`) | Staging (`:5434`) | Production (`:5435`) | Notes |",
-            "| :--- | ---: | ---: | ---: | :--- |",
-            f"| **1. Raw Candidate Pool** | {loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['candidate_pool']:,} | {stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['candidate_pool']:,} | {prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['candidate_pool']:,} | All Aim1/Aim2 observations excluding USDA |",
-            f"| **2. Removed by `qc_pass = 'fail'`** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_qc_fail']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_qc_fail']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_qc_fail']:,} | Local/Staging reflect stricter QC pass/fail curation |",
-            f"| **3. Removed by `EXCLUDED_RESOURCES`** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_resource_blacklist']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_resource_blacklist']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_resource_blacklist']:,} | `#n/a`, `alfalfa`, `sargassum`, `lab media`, mixes |",
-            f"| **4. Removed by `EXCLUDED_PROVIDERS`** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_provider_blacklist']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_provider_blacklist']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_provider_blacklist']:,} | Prod rev `0021` lacks `0022_exclude_jaguar_provider` (`665` rows) |",
-            f"| **5. Removed by `ULTIMATE_PARAMETERS`** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_ultimate_whitelist']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_ultimate_whitelist']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_ultimate_whitelist']:,} | Filters non-CHONS parameters (`cf`, `dm`, `adf-r`) |",
-            f"| **6. Unmapped Resource (`resource_id IS NULL`)** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['unmapped_resource']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['unmapped_resource']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['unmapped_resource']:,} | Control/blank wells without feedstock mapping |",
-            f"| **7. Final Materialized View Rows** | **{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['final_row_count']:,}** | **{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['final_row_count']:,}** | **{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['final_row_count']:,}** | Staging MV stale (`7,312` cached vs `7,461` live) |",
-            f"| **Retention Ratio** | **{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['retention_ratio']*100:.2f}%** | **{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['retention_ratio']*100:.2f}%** | **{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['retention_ratio']*100:.2f}%** | Portal retention guard |",
+            "| Funnel Stage | Local (`:5432`) | Staging (`:5434`) | Production (`:5435`) |",
+            "| :--- | ---: | ---: | ---: |",
+            f"| **1. Raw Candidate Pool** | {loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['candidate_pool']:,} | {stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['candidate_pool']:,} | {prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['candidate_pool']:,} |",
+            f"| **2. Removed by `qc_pass = 'fail'`** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_qc_fail']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_qc_fail']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_qc_fail']:,} |",
+            f"| **3. Removed by `EXCLUDED_RESOURCES`** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_resource_blacklist']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_resource_blacklist']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_resource_blacklist']:,} |",
+            f"| **4. Removed by `EXCLUDED_PROVIDERS`** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_provider_blacklist']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_provider_blacklist']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_provider_blacklist']:,} |",
+            f"| **5. Removed by `ULTIMATE_PARAMETERS`** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_ultimate_whitelist']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_ultimate_whitelist']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['removed_by_ultimate_whitelist']:,} |",
+            f"| **6. Unmapped Resource (`resource_id IS NULL`)** | -{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['unmapped_resource']:,} | -{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['unmapped_resource']:,} | -{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['unmapped_resource']:,} |",
+            f"| **7. Final Materialized View Rows** | **{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['final_row_count']:,}** | **{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['final_row_count']:,}** | **{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['final_row_count']:,}** |",
+            f"| **Retention Ratio** | **{loc['layer4_parameters_and_funnels']['analysis_data_view_funnel']['retention_ratio']*100:.2f}%** | **{stg['layer4_parameters_and_funnels']['analysis_data_view_funnel']['retention_ratio']*100:.2f}%** | **{prd['layer4_parameters_and_funnels']['analysis_data_view_funnel']['retention_ratio']*100:.2f}%** |",
             "",
             f"### 5.2 Flagged Parameter Mean Shifts (`>5%` Local vs Production — {c_lp['flagged_param_count']} Flagged Slices)",
             "",
@@ -2130,23 +1922,12 @@ def build_drift_dashboard_html(
         "comparisons": comparisons,
         "canonical_view_schemas": {
             k: [
-                {"ordinal_position": idx + 1, "column_name": c_name, "data_type": c_type}
+                {"ordinal_position": idx + 1, "column_name": c_name, "data_type": _normalize_pg_type(c_type)}
                 for idx, (c_name, c_type) in enumerate(cols)
             ]
             for k, cols in CANONICAL_VIEW_SCHEMAS.items()
         },
-        "analysis_types": [
-            "Calorimetry",
-            "Compositional Analysis",
-            "Fermentation (Bioconversion)",
-            "Gasification",
-            "ICP Elemental Analysis",
-            "Pretreatment & Hydrolysis",
-            "Proximate Analysis",
-            "Ultimate Analysis",
-            "XRD Crystallinity",
-            "XRF Elemental Analysis",
-        ],
+        "analysis_types": sorted(set(ANALYTICAL_TABLE_LABELS.values())),
     }
     payload_json = json.dumps(payload, separators=(",", ":"))
 
@@ -2950,12 +2731,12 @@ def build_drift_dashboard_html(
             </span>
           </div>
           <div class="my-2 space-y-1 text-xs font-mono">
-            <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Local:</span> <strong class="text-emerald-600 dark:text-emerald-400">${loc.layer1_schema.alembic_revision_id} (0024 head)</strong></div>
-            <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Staging:</span> <strong class="text-amber-600 dark:text-amber-400">${stg.layer1_schema.alembic_revision_id} (0023, -1)</strong></div>
-            <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Prod:</span> <strong class="text-rose-600 dark:text-rose-400">${prd.layer1_schema.alembic_revision_id} (0021, -3)</strong></div>
+            <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Local:</span> <strong class="text-emerald-600 dark:text-emerald-400">${loc.layer1_schema.alembic_revision_id}</strong></div>
+            <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Staging:</span> <strong class="text-amber-600 dark:text-amber-400">${stg.layer1_schema.alembic_revision_id}</strong></div>
+            <div class="flex justify-between"><span class="text-[var(--muted-foreground)]">Prod:</span> <strong class="text-rose-600 dark:text-rose-400">${prd.layer1_schema.alembic_revision_id}</strong></div>
           </div>
           <div class="text-[11px] text-[var(--muted-foreground)] pt-2 border-t border-[var(--border)]">
-            Public Tables: <strong>91</strong> &middot; Columns: <strong>842 Local / 841 Prod</strong>
+            Public Tables: <strong>${loc.layer1_schema.public_table_count} L / ${stg.layer1_schema.public_table_count} S / ${prd.layer1_schema.public_table_count} P</strong> &middot; Cols: <strong>${loc.layer1_schema.public_column_count} L / ${stg.layer1_schema.public_column_count} S / ${prd.layer1_schema.public_column_count} P</strong>
           </div>
         </div>
 
@@ -2969,20 +2750,20 @@ def build_drift_dashboard_html(
           </div>
           <div class="my-2 space-y-1 text-xs">
             <div class="flex justify-between">
-              <span class="text-[var(--muted-foreground)]"><code>data_portal</code> (11):</span>
-              <strong class="font-mono text-emerald-500">139/139 Cols &amp; Types</strong>
+              <span class="text-[var(--muted-foreground)]"><code>data_portal</code> (${vsg.data_portal_views}):</span>
+              <strong class="font-mono text-emerald-500">Live Catalog Verified</strong>
             </div>
             <div class="flex justify-between">
-              <span class="text-[var(--muted-foreground)]"><code>ca_biositing</code> (8):</span>
-              <strong class="font-mono text-emerald-500">100/100 Cols &amp; Types</strong>
+              <span class="text-[var(--muted-foreground)]"><code>ca_biositing</code> (${vsg.ca_biositing_views}):</span>
+              <strong class="font-mono text-emerald-500">Live Catalog Verified</strong>
             </div>
             <div class="flex justify-between">
-              <span class="text-[var(--muted-foreground)]">Type Mismatches:</span>
+              <span class="text-[var(--muted-foreground)]">Col / Type Mismatches:</span>
               <strong class="font-mono ${vsg.total_column_mismatches === 0 ? 'text-emerald-500' : 'text-rose-400'}">${vsg.total_column_mismatches} / ${vsg.total_columns_checked} cols</strong>
             </div>
           </div>
           <div class="text-[11px] text-[var(--primary)] pt-2 border-t border-[var(--border)] font-semibold cursor-pointer hover:underline" onclick="document.getElementById('view-schema-guard-section').scrollIntoView({behavior:'smooth'})">
-            Inspect 239 View Columns &amp; Types &darr;
+            Inspect ${vsg.total_columns_checked} View Columns &amp; Types &darr;
           </div>
         </div>
 
@@ -2993,12 +2774,12 @@ def build_drift_dashboard_html(
             <span class="px-2 py-0.5 text-[11px] font-bold rounded-full badge-info">${fmtSigned(comp.aim1_aim2_delta)} rows</span>
           </div>
           <div class="my-2 space-y-1 text-xs">
-            <div class="flex justify-between"><span>Local Aim1/Aim2:</span> <strong>${fmtInt(loc.layer2_row_counts.totals.aim1_aim2_records)} records (11,974 obs)</strong></div>
-            <div class="flex justify-between"><span>Staging Aim1/Aim2:</span> <strong>${fmtInt(stg.layer2_row_counts.totals.aim1_aim2_records)} (&Delta; -101)</strong></div>
-            <div class="flex justify-between"><span>Prod Aim1/Aim2:</span> <strong>${fmtInt(prd.layer2_row_counts.totals.aim1_aim2_records)} (&Delta; -2,414)</strong></div>
+            <div class="flex justify-between"><span>Local Aim1/Aim2:</span> <strong>${fmtInt(loc.layer2_row_counts.totals.aim1_aim2_records)} (${fmtInt(loc.layer2_row_counts.core_tables.observation)} obs)</strong></div>
+            <div class="flex justify-between"><span>Staging Aim1/Aim2:</span> <strong>${fmtInt(stg.layer2_row_counts.totals.aim1_aim2_records)} (${fmtSigned(stg.layer2_row_counts.totals.aim1_aim2_records - loc.layer2_row_counts.totals.aim1_aim2_records)} vs L)</strong></div>
+            <div class="flex justify-between"><span>Prod Aim1/Aim2:</span> <strong>${fmtInt(prd.layer2_row_counts.totals.aim1_aim2_records)} (${fmtSigned(prd.layer2_row_counts.totals.aim1_aim2_records - loc.layer2_row_counts.totals.aim1_aim2_records)} vs L)</strong></div>
           </div>
           <div class="text-[11px] text-[var(--muted-foreground)] pt-2 border-t border-[var(--border)]">
-            Prepared Samples: <strong>384 L</strong> &middot; <strong>376 S</strong> &middot; <strong>296 P (+88)</strong>
+            Prepared Samples: <strong>${fmtInt(loc.layer2_row_counts.core_tables.prepared_sample)} L</strong> &middot; <strong>${fmtInt(stg.layer2_row_counts.core_tables.prepared_sample)} S</strong> &middot; <strong>${fmtInt(prd.layer2_row_counts.core_tables.prepared_sample)} P</strong>
           </div>
         </div>
 
@@ -3006,53 +2787,50 @@ def build_drift_dashboard_html(
         <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm flex flex-col justify-between">
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">MV Freshness &amp; Def Alert</span>
-            <span class="px-2 py-0.5 text-[11px] font-bold rounded-full badge-fail">⚠️ ${staleStg} STALE IN STAGING</span>
+            <span class="px-2 py-0.5 text-[11px] font-bold rounded-full ${defPrd > 0 || staleStg > 0 ? 'badge-warn' : 'badge-pass'}">${defPrd > 0 ? defPrd + ' DEF DRIFT' : (staleStg > 0 ? staleStg + ' STALE' : 'POPULATED')}</span>
           </div>
           <div class="my-2 space-y-1 text-xs">
-            <div class="text-amber-700 dark:text-amber-300 font-semibold">
-              Staging base tables updated <strong>74.5h</strong> after last MV refresh!
-            </div>
             <div class="text-[11px] text-[var(--muted-foreground)]">
-              <code>mv_biomass_composition</code>: <strong>1,064</strong> cached vs <strong>1,109</strong> live rows.<br>
-              Prod has <strong>${defPrd} views</strong> compiled at rev <code>0021</code> (missing <code>jaguar</code> filter).
+              <code>analysis_data_view</code>: <strong>${fmtInt(loc.layer2_row_counts.views['ca_biositing.analysis_data_view'])} L</strong> / <strong>${fmtInt(stg.layer2_row_counts.views['ca_biositing.analysis_data_view'])} S</strong> / <strong>${fmtInt(prd.layer2_row_counts.views['ca_biositing.analysis_data_view'])} P</strong><br>
+              <code>mv_biomass_composition</code>: <strong>${fmtInt(loc.layer2_row_counts.views['data_portal.mv_biomass_composition'])} L</strong> / <strong>${fmtInt(stg.layer2_row_counts.views['data_portal.mv_biomass_composition'])} S</strong> / <strong>${fmtInt(prd.layer2_row_counts.views['data_portal.mv_biomass_composition'])} P</strong>
             </div>
           </div>
           <div class="text-[11px] font-mono pt-2 border-t border-[var(--border)] text-[var(--primary)]">
-            Fix: pixi run refresh-views
+            pixi run migrate &amp;&amp; pixi run refresh-views
           </div>
         </div>
       `;
 
-      // Critical Drift Findings Banner
+      // Critical Drift Findings Banner (100% live data-driven)
       const findingsBox = document.getElementById("critical-findings-box");
       findingsBox.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-2">
           <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 text-xs font-bold rounded badge-fail">ACTIONABLE DRIFT FINDINGS</span>
+            <span class="px-2 py-0.5 text-xs font-bold rounded badge-info">LIVE MEASURED DRIFT FINDINGS</span>
             <span class="text-xs font-bold text-[var(--foreground)]">Key Environment Divergences &amp; Remediation Commands</span>
           </div>
-          <span class="text-xs text-[var(--muted-foreground)]">Showing diagnostics for <strong>${envs.label}</strong></span>
+          <span class="text-xs text-[var(--muted-foreground)]">Showing live diagnostics for <strong>${envs.label}</strong></span>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
           <div class="p-2.5 rounded-lg bg-[var(--content)] border border-[var(--border)] space-y-1">
-            <div class="font-bold text-amber-700 dark:text-amber-400">1. Staging Materialized Views Stale (74.5h lag)</div>
-            <p class="text-[11px] text-[var(--muted-foreground)]">Staging ETL updated <code>compositional_record</code> &amp; <code>xrf_record</code> without refreshing MVs. 5 views serve stale counts.</p>
+            <div class="font-bold text-amber-700 dark:text-amber-400">1. Alembic Migration Revisions</div>
+            <p class="text-[11px] text-[var(--muted-foreground)]">Local is at <code>${loc.layer1_schema.alembic_revision_id}</code>, Staging at <code>${stg.layer1_schema.alembic_revision_id}</code>, and Production at <code>${prd.layer1_schema.alembic_revision_id}</code>.</p>
+            <code class="block text-[10px] p-1 rounded bg-[var(--card)] border border-[var(--border)]">pixi run migrate</code>
+          </div>
+          <div class="p-2.5 rounded-lg bg-[var(--content)] border border-[var(--border)] space-y-1">
+            <div class="font-bold text-rose-700 dark:text-rose-400">2. Aim 1 / Aim 2 Analytical Record Volume</div>
+            <p class="text-[11px] text-[var(--muted-foreground)]">Local has <strong>${fmtInt(loc.layer2_row_counts.totals.aim1_aim2_records)}</strong> Aim1/Aim2 rows vs <strong>${fmtInt(stg.layer2_row_counts.totals.aim1_aim2_records)}</strong> in Staging and <strong>${fmtInt(prd.layer2_row_counts.totals.aim1_aim2_records)}</strong> in Production.</p>
             <code class="block text-[10px] p-1 rounded bg-[var(--card)] border border-[var(--border)]">pixi run refresh-views</code>
           </div>
           <div class="p-2.5 rounded-lg bg-[var(--content)] border border-[var(--border)] space-y-1">
-            <div class="font-bold text-rose-700 dark:text-rose-400">2. Unpromoted Calorimetry (60) &amp; XRD (28)</div>
-            <p class="text-[11px] text-[var(--muted-foreground)]">Local has <strong>60</strong> <code>calorimetry_record</code> rows vs <strong>38</strong> in Staging and <strong>0</strong> in Prod; <code>xrf_record</code> is <strong>2,777</strong> vs <strong>390</strong> in Prod.</p>
-            <code class="block text-[10px] p-1 rounded bg-[var(--card)] border border-[var(--border)]">pixi run run-single-flow aim1_etl</code>
-          </div>
-          <div class="p-2.5 rounded-lg bg-[var(--content)] border border-[var(--border)] space-y-1">
-            <div class="font-bold text-purple-700 dark:text-purple-400">3. Prod ICP Legacy Duplicates (+327 in Prod)</div>
-            <p class="text-[11px] text-[var(--muted-foreground)]">Prod has <strong>1,153</strong> <code>icp_record</code> rows vs <strong>826</strong> in Local due to un-deduplicated weight-% (<code>pc</code>) entries prior to <code>ppm</code> cleanup.</p>
+            <div class="font-bold text-purple-700 dark:text-purple-400">3. View Schema Guard (${vsg.views_passing_guard}/${vsg.total_views} Passing)</div>
+            <p class="text-[11px] text-[var(--muted-foreground)]">Active comparison has <strong>${vsg.total_column_mismatches}</strong> column/type mismatches across <strong>${vsg.total_columns_checked}</strong> checked view columns.</p>
             <code class="block text-[10px] p-1 rounded bg-[var(--card)] border border-[var(--border)]">pixi run migrate &amp;&amp; pixi run refresh-views</code>
           </div>
           <div class="p-2.5 rounded-lg bg-[var(--content)] border border-[var(--border)] space-y-1">
-            <div class="font-bold text-sky-700 dark:text-sky-400">4. QC Pass/Fail &amp; Jaguar Provider Filter Drift</div>
-            <p class="text-[11px] text-[var(--muted-foreground)]">Prod rev <code>0021</code> lacks <code>0022_exclude_jaguar_provider</code> (665 rows) and <code>875</code> fermentation + <code>1</code> 270% sulfur QC fail rulings.</p>
-            <code class="block text-[10px] p-1 rounded bg-[var(--card)] border border-[var(--border)]">pixi run compile-mv-fixes &amp;&amp; pixi run migrate</code>
+            <div class="font-bold text-sky-700 dark:text-sky-400">4. Portal Funnel &amp; QC Pass Filtering</div>
+            <p class="text-[11px] text-[var(--muted-foreground)]"><code>analysis_data_view</code> retains <strong>${fmtInt(loc.layer4_parameters_and_funnels.analysis_data_view_funnel.final_row_count)}</strong> rows in Local vs <strong>${fmtInt(stg.layer4_parameters_and_funnels.analysis_data_view_funnel.final_row_count)}</strong> in Staging and <strong>${fmtInt(prd.layer4_parameters_and_funnels.analysis_data_view_funnel.final_row_count)}</strong> in Prod.</p>
+            <code class="block text-[10px] p-1 rounded bg-[var(--card)] border border-[var(--border)]">pixi run refresh-views</code>
           </div>
         </div>
       `;
@@ -3335,8 +3113,8 @@ def build_drift_dashboard_html(
       const locMat = DRIFT_BUNDLE.fingerprints.local.layer3_coverage_and_lineage.resource_analysis_matrix;
       const stgMat = DRIFT_BUNDLE.fingerprints.staging.layer3_coverage_and_lineage.resource_analysis_matrix;
       const prdMat = DRIFT_BUNDLE.fingerprints.production.layer3_coverage_and_lineage.resource_analysis_matrix;
-      const matA = DRIFT_BUNDLE.fingerprints[envs.a].layer3_coverage_and_lineage.resource_analysis_matrix;
-      const matB = DRIFT_BUNDLE.fingerprints[envs.b].layer3_coverage_and_lineage.resource_analysis_matrix;
+      const matrixA = DRIFT_BUNDLE.fingerprints[envs.a].layer3_coverage_and_lineage.resource_analysis_matrix;
+      const matrixB = DRIFT_BUNDLE.fingerprints[envs.b].layer3_coverage_and_lineage.resource_analysis_matrix;
       const ats = DRIFT_BUNDLE.analysis_types;
 
       const prodResSet = new Set(DRIFT_BUNDLE.fingerprints.production.layer3_coverage_and_lineage.lineage_sets.resources);
@@ -3348,8 +3126,8 @@ def build_drift_dashboard_html(
         if (state.heatFilter === "missing_prod" && prodResSet.has(res)) return false;
         if (state.heatFilter === "drifted") {
           const hasDrift = ats.some(at => {
-            const cA = ((matA[res] || {})[at] || {}).count || 0;
-            const cB = ((matB[res] || {})[at] || {}).count || 0;
+            const cA = ((matrixA[res] || {})[at] || {}).count || 0;
+            const cB = ((matrixB[res] || {})[at] || {}).count || 0;
             return cA !== cB;
           });
           if (!hasDrift) return false;
@@ -3392,8 +3170,8 @@ def build_drift_dashboard_html(
           const cL = ((locMat[res] || {})[at] || {}).count || 0;
           const cS = ((stgMat[res] || {})[at] || {}).count || 0;
           const cP = ((prdMat[res] || {})[at] || {}).count || 0;
-          const cellA = ((matA[res] || {})[at] || {});
-          const cellB = ((matB[res] || {})[at] || {});
+          const cellA = ((matrixA[res] || {})[at] || {});
+          const cellB = ((matrixB[res] || {})[at] || {});
           const cA = cellA.count || 0;
           const cB = cellB.count || 0;
           const delta = cA - cB;
@@ -3549,14 +3327,14 @@ def build_drift_dashboard_html(
       const getKey = item => (typeof item === "string" ? item : item.name);
       const mapL = new Map(locSet.map(x => [getKey(x), x]));
       const mapS = new Map(stgSet.map(x => [getKey(x), x]));
-      const mapP = new Map(prdSet.map(x => [getKey(x), x]));
+      const mapPrd = new Map(prdSet.map(x => [getKey(x), x]));
 
-      const allKeys = Array.from(new Set([...mapL.keys(), ...mapS.keys(), ...mapP.keys()])).sort();
+      const allKeys = Array.from(new Set([...mapL.keys(), ...mapS.keys(), ...mapPrd.keys()])).sort();
       const rows = allKeys.map(k => {
-        const obj = mapL.get(k) || mapS.get(k) || mapP.get(k);
+        const obj = mapL.get(k) || mapS.get(k) || mapPrd.get(k);
         const inL = mapL.has(k);
         const inS = mapS.has(k);
-        const inP = mapP.has(k);
+        const inP = mapPrd.has(k);
         let bucket = "synced_all_3";
         let statusLabel = "SYNCED (ALL 3)";
         let badgeCls = "badge-pass";
@@ -3651,14 +3429,14 @@ def build_drift_dashboard_html(
       const prdF = DRIFT_BUNDLE.fingerprints.production.layer4_parameters_and_funnels.analysis_data_view_funnel;
 
       const stages = [
-        { key: "candidate_pool", label: "1. Raw Candidate Pool", diag: "Base Aim1/Aim2 observations (+2,367 in Local vs Prod)" },
-        { key: "removed_by_qc_fail", label: "2. Removed by QC Fail", diag: "875 fermentation + 98 proximate + 27 XRD + 1 sulfur flipped to fail" },
-        { key: "removed_by_resource_blacklist", label: "3. Removed by EXCLUDED_RESOURCES", diag: "Excludes #n/a, alfalfa, sargassum, lab media, mixes" },
-        { key: "removed_by_provider_blacklist", label: "4. Removed by EXCLUDED_PROVIDERS", diag: "Prod rev 0021 lacks 0022_exclude_jaguar_provider (665 rows)" },
-        { key: "removed_by_ultimate_whitelist", label: "5. Removed by ULTIMATE_PARAMETERS", diag: "Filters non-CHONS parameters (cf, dm, adf-r)" },
-        { key: "removed_by_icp_non_ppm_unit", label: "6. Removed by ICP Non-PPM Unit", diag: "Prod had 148 un-normalized weight-% ICP rows" },
-        { key: "unmapped_resource", label: "7. Unmapped Resource (NULL)", diag: "Blank/control wells without feedstock mapping" },
-        { key: "final_row_count", label: "8. Final Materialized View Rows", diag: "Staging MV stale (7,312 cached vs 7,461 expected live)" }
+        { key: "candidate_pool", label: "1. Raw Candidate Pool", diag: "Joined Aim 1 analytical observations (compositional, proximate, ultimate, icp, xrf, calorimetry, xrd)" },
+        { key: "removed_by_qc_fail", label: "2. Removed by QC Fail", diag: "Observations where record.qc_pass = 'fail'" },
+        { key: "removed_by_resource_blacklist", label: "3. Removed by EXCLUDED_RESOURCES", diag: "Excludes #n/a, alfalfa, sargassum, lab media, and mixtures" },
+        { key: "removed_by_provider_blacklist", label: "4. Removed by EXCLUDED_PROVIDERS", diag: "Excludes provider codes 'legacy' and 'jaguar' (added in migration 0022)" },
+        { key: "removed_by_ultimate_whitelist", label: "5. Removed by ULTIMATE_PARAMETERS", diag: "Restricts ultimate_record to canonical CHONS parameters" },
+        { key: "removed_by_icp_non_ppm_unit", label: "6. Removed by ICP Non-PPM Unit", diag: "Excludes non-ppm ICP units" },
+        { key: "unmapped_resource", label: "7. Unmapped Resource (NULL)", diag: "Blank/control records without resource_id mapping" },
+        { key: "final_row_count", label: "8. Final Materialized View Rows", diag: "Live row count in ca_biositing.analysis_data_view" }
       ];
 
       const tbodyF = document.getElementById("tbody-funnel-stages");
@@ -3678,7 +3456,7 @@ def build_drift_dashboard_html(
         <tr class="bg-[var(--content)] font-bold border-t-2 border-[var(--border)]">
           <td class="py-2 px-3">Portal Retention Ratio</td>
           <td class="py-2 px-3 text-right font-mono text-emerald-600 dark:text-emerald-400">${(locF.retention_ratio * 100).toFixed(2)}%</td>
-          <td class="py-2 px-3 text-right font-mono text-amber-600 dark:text-amber-400">${(stgF.retention_ratio * 100).toFixed(2)}% (Stale)</td>
+          <td class="py-2 px-3 text-right font-mono text-amber-600 dark:text-amber-400">${(stgF.retention_ratio * 100).toFixed(2)}%</td>
           <td class="py-2 px-3 text-right font-mono text-rose-600 dark:text-rose-400">${(prdF.retention_ratio * 100).toFixed(2)}%</td>
           <td class="py-2 px-3 text-[11px] text-[var(--muted-foreground)]">Ratio guard across ETL &amp; view migrations</td>
         </tr>
@@ -3953,10 +3731,10 @@ def run_compare(base_dir: Path) -> None:
     for env_key in required:
         p = fp_dir / f"{env_key}_fingerprint.json"
         if not p.exists():
-            print(f"[compare] Missing {p}, seeding from snapshots first...")
-            fingerprints = build_seeded_fingerprints(base_dir)
-            break
-        fingerprints[env_key] = json.loads(p.read_text(encoding="utf-8"))
+            print(f"[compare] Missing {p}, extracting live fingerprint for {env_key}...")
+            fingerprints[env_key] = extract_live_fingerprint(env_key=env_key, base_dir=base_dir)
+        else:
+            fingerprints[env_key] = json.loads(p.read_text(encoding="utf-8"))
 
     comparisons = {
         "local_vs_staging": compute_pair_comparison(fingerprints["local"], fingerprints["staging"]),
@@ -3984,9 +3762,9 @@ def main() -> None:
         help="Connect to a live PostgreSQL environment and extract its 4-layer fingerprint JSON",
     )
     parser.add_argument(
-        "--seed-from-snapshots",
+        "--extract-all",
         action="store_true",
-        help="Seed local, staging, and production fingerprints from repository baseline snapshots",
+        help="Extract live 4-layer fingerprints from all 3 environments (local, staging, production)",
     )
     parser.add_argument(
         "--compare",
@@ -4002,21 +3780,16 @@ def main() -> None:
         "--base-dir",
         help="Optional root directory override for output files (defaults to repository root)",
     )
-    parser.add_argument(
-        "--snapshot-path",
-        help="Optional path to db_snapshot.json for --seed-from-snapshots",
-    )
 
     args = parser.parse_args()
     base_dir = Path(args.base_dir).resolve() if args.base_dir else REPO_ROOT
 
-    if not (args.extract_env or args.seed_from_snapshots or args.compare):
-        # Default action: seed if missing and compare
-        args.seed_from_snapshots = True
+    if not (args.extract_env or args.extract_all or args.compare):
         args.compare = True
 
-    if args.seed_from_snapshots:
-        build_seeded_fingerprints(base_dir, custom_snapshot_path=args.snapshot_path)
+    if args.extract_all:
+        for env_k in ("local", "staging", "production"):
+            extract_live_fingerprint(env_key=env_k, base_dir=base_dir)
 
     if args.extract_env:
         extract_live_fingerprint(
