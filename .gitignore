@@ -87,6 +87,7 @@ pgschema
 !.agents/skills/commit/
 !.agents/skills/create-issue/
 !.agents/skills/create-pr/
+!.agents/skills/db-drift-assessment/
 !.agents/skills/docs/
 !.agents/skills/merge-pr/
 !.agents/skills/okf-memory/
@@ -98,6 +99,7 @@ pgschema
 !.claude/skills/commit
 !.claude/skills/create-issue
 !.claude/skills/create-pr
+!.claude/skills/db-drift-assessment
 !.claude/skills/docs
 !.claude/skills/merge-pr
 !.claude/skills/okf-memory
