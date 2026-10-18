@@ -376,25 +376,25 @@ census_production_based_volumes = select(
     UsdaCensusRecord.year.label("dataset_year"),
     cast(UsdaCensusRecord.id, String).label("record_id"),
     # Aggregate observations for production volume (preferring tons)
-    func.avg(case((and_(func.lower(Parameter.name) == "production", func.lower(Unit.name) == "tons"), Observation.value), else_=None)).label("primary_product_volume"),
-    # Harvested acres for the crop
-    func.avg(case((func.lower(Parameter.name).in_(["area harvested", "harvested acres"]), Observation.value), else_=None)).label("county_crop_acres"),
+    func.avg(case((and_(func.lower(Parameter.name) == "production", func.lower(ObsUnit.name) == "tons"), Observation.value), else_=None)).label("primary_product_volume"),
+    # Harvested acres for the crop (census parameter is 'area harvested' in 'acres')
+    _harvested_acres_expr.label("county_crop_acres"),
     # Capture unit from observations
-    func.max(case((and_(func.lower(Parameter.name) == "production", func.lower(Unit.name) == "tons"), Unit.name), else_=None)).label("volume_unit"),
+    func.max(case((and_(func.lower(Parameter.name) == "production", func.lower(ObsUnit.name) == "tons"), ObsUnit.name), else_=None)).label("volume_unit"),
     # Residue factor values
     ResidueFactor.factor_min,
     ResidueFactor.factor_mid,
     ResidueFactor.factor_max,
     # Calculated volumes (min, mid, max)
-    (func.avg(case((and_(func.lower(Parameter.name) == "production", func.lower(Unit.name) == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_min).label("estimated_residue_volume_min"),
-    (func.avg(case((and_(func.lower(Parameter.name) == "production", func.lower(Unit.name) == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_mid).label("estimated_residue_volume_mid"),
-    (func.avg(case((and_(func.lower(Parameter.name) == "production", func.lower(Unit.name) == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_max).label("estimated_residue_volume_max"),
+    (func.avg(case((and_(func.lower(Parameter.name) == "production", func.lower(ObsUnit.name) == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_min).label("estimated_residue_volume_min"),
+    (func.avg(case((and_(func.lower(Parameter.name) == "production", func.lower(ObsUnit.name) == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_mid).label("estimated_residue_volume_mid"),
+    (func.avg(case((and_(func.lower(Parameter.name) == "production", func.lower(ObsUnit.name) == "tons"), Observation.value), else_=None)) * ResidueFactor.factor_max).label("estimated_residue_volume_max"),
     literal("census_production_based").label("volume_source"),
     literal("dry_tons").label("biomass_unit")
 ).select_from(UsdaCensusRecord) .join(ResourceUsdaCommodityMap, ResourceUsdaCommodityMap.usda_commodity_id == UsdaCensusRecord.commodity_code) .join(Resource, Resource.id == ResourceUsdaCommodityMap.resource_id) .join(ResidueFactor, ResidueFactor.resource_id == Resource.id) .join(Place, UsdaCensusRecord.geoid == Place.geoid) .outerjoin(Observation, and_(
      Observation.record_id == cast(UsdaCensusRecord.id, String),
      Observation.record_type == "usda_census_record"
- )) .outerjoin(Parameter, Observation.parameter_id == Parameter.id) .outerjoin(Unit, Observation.unit_id == Unit.id) .where(and_(
+ )) .outerjoin(Parameter, Observation.parameter_id == Parameter.id) .outerjoin(ObsUnit, Observation.unit_id == ObsUnit.id) .where(and_(
      ResidueFactor.factor_type == "weight",
      get_min_year_filter(UsdaCensusRecord.year),
      get_resource_filter(Resource),

@@ -135,11 +135,12 @@ def test_mv_biomass_volume_estimate_uses_name_joins_for_units_and_parameters():
     'area bearing' in Path D's acreage fallback."""
     sql = compile_sql(mv_biomass_volume_estimate)
     assert "lower(obs_unit.name) = 'acres'" in sql
-    assert "lower(unit.name) = 'tons'" in sql
+    assert "lower(obs_unit.name) = 'tons'" in sql
     assert "yield_unit.name" in sql
     assert "'area bearing & non-bearing'" in sql
     assert "'area bearing'" in sql
     assert "'area harvested'" in sql
+    assert "in ('area harvested', 'harvested acres')" not in sql.lower()
     assert "unit_id = 18" not in sql
     assert "parameter_id = 5" not in sql
     assert "parameter_id = 7" not in sql
