@@ -5345,23 +5345,10 @@ def main() -> None:
 
     if args.from_snapshot:
         snap_path = Path(args.from_snapshot)
-        fallback_snaps = [
-            Path("/Users/pjsmitty301/.gemini/antigravity/brain/42a5010b-7235-40e6-8c99-569580ebe1ec/scratch/db_snapshot.json"),
-            Path("/Users/pjsmitty301/.gemini/antigravity/brain/cdc7a3ec-4997-4e2e-ba3d-df9a384b16fe/scratch/db_snapshot.json"),
-            Path("/Users/pjsmitty301/.gemini/antigravity/brain/15a53a73-9236-4423-9235-fd92d0ccc4f9/scratch/db_snapshot.json"),
-        ]
-        loaded = False
-        for candidate in [snap_path, *fallback_snaps]:
-            try:
-                if candidate.exists():
-                    payload = json.loads(candidate.read_text(encoding="utf-8"))
-                    print(f"Loaded snapshot from {candidate}")
-                    loaded = True
-                    break
-            except PermissionError:
-                continue
-        if not loaded:
+        if not snap_path.exists():
             raise FileNotFoundError(f"Could not read snapshot from {snap_path}")
+        payload = json.loads(snap_path.read_text(encoding="utf-8"))
+        print(f"Loaded snapshot from {snap_path}")
     else:
         print("Querying PostgreSQL across all resources and 10 analysis record tables...")
         payload = fetch_all_resource_data()
@@ -5384,15 +5371,9 @@ def main() -> None:
             dash_body = dash_body[: -len("</html>")].rstrip() + "\n"
 
         art_dir = Path(args.artifact_dir)
-        try:
-            art_dir.mkdir(parents=True, exist_ok=True)
-            (art_dir / "resource_explorer_dashboard.html").write_text(dash_body, encoding="utf-8")
-            print(f"Mirrored artifact body to {art_dir}")
-        except PermissionError:
-            fallback_art = Path("/Users/pjsmitty301/.gemini/antigravity/brain/cdc7a3ec-4997-4e2e-ba3d-df9a384b16fe")
-            fallback_art.mkdir(parents=True, exist_ok=True)
-            (fallback_art / "resource_explorer_dashboard.html").write_text(dash_body, encoding="utf-8")
-            print(f"Mirrored artifact body to sandbox artifact dir {fallback_art}")
+        art_dir.mkdir(parents=True, exist_ok=True)
+        (art_dir / "resource_explorer_dashboard.html").write_text(dash_body, encoding="utf-8")
+        print(f"Mirrored artifact body to {art_dir}")
 
 
 if __name__ == "__main__":

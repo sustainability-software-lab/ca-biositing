@@ -128,7 +128,6 @@ def load_ca_counties_lookup() -> dict[str, str]:
     lookup: dict[str, str] = {"06000": "California (Statewide)"}
     candidates = [
         REPO_ROOT / "data" / "static" / "ca_counties.geojson",
-        Path("/Users/pjsmitty301/ca-biositing/data/static/ca_counties.geojson"),
     ]
     for p in candidates:
         if p.exists():
@@ -3053,9 +3052,9 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         openFindingBtn.addEventListener("click", () => openSubmitFindingModal({}));
       }
 
-      const openGithubFromFindingBtn = document.getElementById("btn-finding-open-github");
-      if (openGithubFromFindingBtn) {
-        openGithubFromFindingBtn.addEventListener("click", () => {
+      const openGitHubFromFindingBtn = document.getElementById("btn-finding-open-github");
+      if (openGitHubFromFindingBtn) {
+        openGitHubFromFindingBtn.addEventListener("click", () => {
           const resVal = (document.getElementById("finding-modal-resource") || {}).value || currentFindingContext.resource_name || "resource";
           const scopeVal = (document.getElementById("finding-modal-scope") || {}).value || currentFindingContext.choice || "group";
           const domVal = (document.getElementById("finding-modal-domain") || {}).value || "proximate";

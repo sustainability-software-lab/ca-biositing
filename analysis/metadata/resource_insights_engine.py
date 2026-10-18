@@ -511,6 +511,34 @@ def compute_dataset_outlier_screening(
 
 
 
+_NOTE_SPELLING_FIXES: tuple[tuple[str, str], ...] = (
+    ("across", "across"),
+    ("Across", "Across"),
+    ("between", "between"),
+    ("Between", "Between"),
+    ("performed", "performed"),
+    ("Performed", "Performed"),
+    ("measurement", "measurement"),
+    ("Measurement", "Measurement"),
+    ("sulfur", "sulfur"),
+    ("Sulfur", "Sulfur"),
+    ("gelatin", "gelatin"),
+    ("Gelatin", "Gelatin"),
+    ("small", "small"),
+    ("Small", "Small"),
+    ("<DL", "<DL"),
+    ("<dl", "<dl"),
+)
+
+
+def _clean_note_spelling(text: str) -> str:
+    """Normalize common bench-note spelling typos before emitting curated insights."""
+    out = text
+    for bad, good in _NOTE_SPELLING_FIXES:
+        out = out.replace(bad, good)
+    return out
+
+
 def classify_and_interpret_note(
     note_text: str,
     source_level: str,
@@ -518,6 +546,7 @@ def classify_and_interpret_note(
     qc_statuses: list[str] | None = None,
 ) -> tuple[str, str, str]:
     """Classify a raw note into (category, badge_tone, ai_interpretation)."""
+    note_text = _clean_note_spelling(note_text)
     low = note_text.strip().lower()
     qc_set = set(qc_statuses or [])
 
@@ -543,7 +572,7 @@ def classify_and_interpret_note(
             "danger",
             "Physical vial leakage during high-temperature pretreatment/hydrolysis; record is flagged QC FAIL with no sugar yield observation.",
         )
-    if "failed glucose measurement" in low or "hplc measurment error" in low or "detection error" in low:
+    if "failed glucose measurement" in low or "hplc measurement error" in low or "detection error" in low:
         return (
             "Sample Loss / Hardware Failure",
             "danger",
@@ -587,7 +616,7 @@ def classify_and_interpret_note(
             "warning",
             "Apparent enzymatic hydrolysis yield slightly exceeds 100% of theoretical polysaccharide due to compositional variance or minor evaporation during incubation (flagged QC FAIL).",
         )
-    if "sulfer is 270%" in low or "flipping this to fail" in low:
+    if "sulfur is 270%" in low or "flipping this to fail" in low:
         return (
             "Stoichiometric / Yield Warning",
             "danger",
@@ -597,7 +626,7 @@ def classify_and_interpret_note(
         return (
             "Stoichiometric / Yield Warning",
             "warning",
-            "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-LOD readings.",
+            "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-DL readings.",
         )
     if "does not pass qc" in low or "greater than combustible fraction" in low or "poor quality" in low:
         return (
@@ -639,11 +668,11 @@ def classify_and_interpret_note(
             "info",
             "Audit trail confirming ICP elemental values originally recorded in weight-% were standardized to ppm (×10⁴) for schema consistency.",
         )
-    if "<lod" in low:
+    if "<dl" in low:
         return (
             "Protocol / Detection Limit",
             "info",
-            "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+            "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
         )
     if "meaningless for moisture" in low or "sample is oven dried" in low:
         return (
@@ -651,7 +680,7 @@ def classify_and_interpret_note(
             "warning",
             "Proximate analysis was performed on pre-oven-dried material; reported moisture reflects post-drying residual moisture rather-than field harvest moisture.",
         )
-    if "isoperibolic" in low or "geletain capsules" in low or "gelatin capsules" in low:
+    if "isoperibolic" in low or "gelatin capsules" in low or "gelatin capsules" in low:
         return (
             "Protocol / Method Context",
             "info",
@@ -929,7 +958,7 @@ def build_resource_insights(payload: dict[str, Any]) -> dict[str, Any]:
         seen_notes: set[tuple[str, str]] = set()
 
         for fs in f_samples:
-            nt = (fs.get("note") or "").strip()
+            nt = _clean_note_spelling((fs.get("note") or "").strip())
             if nt and ("Field Sample", nt) not in seen_notes:
                 seen_notes.add(("Field Sample", nt))
                 cat, tone, interp = classify_and_interpret_note(nt, "Field Sample")
@@ -946,11 +975,11 @@ def build_resource_insights(payload: dict[str, Any]) -> dict[str, Any]:
                 })
 
         for ps in p_samples:
-            nt = (ps.get("note") or "").strip()
+            nt = _clean_note_spelling((ps.get("note") or "").strip())
             if nt and ("Prepared Sample", nt) not in seen_notes:
                 seen_notes.add(("Prepared Sample", nt))
                 cat, tone, interp = classify_and_interpret_note(nt, "Prepared Sample")
-                matching_ps = [p["name"] for p in p_samples if (p.get("note") or "").strip() == nt]
+                matching_ps = [p["name"] for p in p_samples if _clean_note_spelling((p.get("note") or "").strip()) == nt]
                 curated_notes.append({
                     "source_level": "Prepared Sample",
                     "analysis_type": f"Prep ({ps.get('prep_method', 'N/A')})",
@@ -966,7 +995,7 @@ def build_resource_insights(payload: dict[str, Any]) -> dict[str, Any]:
         # Group record notes by (analysis_type, note_text)
         rec_note_groups: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
         for r in rrows:
-            nt = (r.get("note") or "").strip()
+            nt = _clean_note_spelling((r.get("note") or "").strip())
             if nt:
                 rec_note_groups[(r["analysis_type"], nt)].append(r)
 
@@ -1159,7 +1188,7 @@ def build_resource_insights(payload: dict[str, Any]) -> dict[str, Any]:
                     else (
                         f"XRF elemental screening detects **{len(m['xrf_summary'])} elements**, led by "
                         + ", ".join(f"**{k}** ({v:,.0f} ppm)" for k, v in sorted(m["xrf_summary"].items(), key=lambda x: -x[1])[:4])
-                        + " (note: trace elements near instrument limits carry `<LOD` replicate annotations)."
+                        + " (note: trace elements near instrument limits carry `<DL` replicate annotations)."
                         if m["xrf_summary"]
                         else "No ICP or XRF elemental observations recorded yet for this resource."
                     )

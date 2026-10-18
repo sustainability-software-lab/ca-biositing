@@ -142,4 +142,3 @@ if _dashboards_dir.is_dir():
         StaticFiles(directory=str(_dashboards_dir), html=True),
         name="dashboards",
     )
-

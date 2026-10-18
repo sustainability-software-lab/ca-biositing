@@ -135,8 +135,7 @@ jobs:
               --output-dir exports/plots/metadata
           fi
 
-      - name:
-          Build Multi-Resource Side-by-Side Parameter Explorer (Page 3)
+      - name: Build Multi-Resource Side-by-Side Parameter Explorer (Page 3)
         run: |
           if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
             pixi run python analysis/metadata/resource_explorer_dashboard.py \

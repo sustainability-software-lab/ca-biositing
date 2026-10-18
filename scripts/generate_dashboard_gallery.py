@@ -29,22 +29,10 @@ def generate_gallery(base_dir: str = "."):
             "Multi-Select Checklists (Resources, Parameters & Units, Samples, Methods/Preps) and a Compare By grouping "
             "selector for visual & numeric head-to-head comparison."
         ),
-        "resource_analysis_dashboard_v1_monolith.html": (
-            "Preserved Legacy v1 Monolith: Original 7-tab all-in-one Resource Analysis & AI Insights dashboard "
-            "retained for side-by-side comparison and historical reference."
-        ),
-        "resource_quick_widget.html": (
-            "Compact HTML5 Canvas quick-explorer widget (~360px) with resource selector, prepared sample filter, "
-            "QC status toggle, and interactive scatter/strip canvas."
-        ),
         "db_environment_drift_dashboard.html": (
             "Local vs. Staging vs. Production Database Drift Assessment Dashboard: 4-layer parity scorecard, "
             "data_portal & ca_biositing View Schema Guard, table & materialized view row deltas, Resource × Analysis-Type "
             "drift heatmap, lineage set-difference explorer, parameter value shift (>5%) detector, and filter funnel comparison."
-        ),
-        "pretreatment_variance_dashboard.html": (
-            "Dedicated 12-column HTML5 Canvas Pretreatment Explorer featuring Scatter by Method, "
-            "Replicate Strip Plot, Pinned Point Inspector, and Export Tray."
         ),
     }
 

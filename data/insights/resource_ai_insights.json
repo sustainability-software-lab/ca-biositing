@@ -758,7 +758,7 @@
           "overview": "**Alfalfa** (`alf`, *agricultural land resource*) comprises **382 database records** across **3 field sample(s)** and **6 prepared sample(s)** (possessive). Cell-wall characterization shows **26.9% glucan** (61st percentile statewide), **12.3% xylan**, and **21.3% lignin** (structural polymer sum **60.5% dw**). Proximate analysis averages **7.7% ash** (75th percentile) and **82.3% volatile solids**. In Aim 2 deconstruction, **`cho10pc`** achieves the highest monomeric glucose release at **89.9% of theoretical glucan** and **62.4% xylose yield**. Bioconversion with engineered *R. toruloides* yields **6.51 g/L 3-HP** (23.9% g/g yield) with **27.9% sugar consumption**.",
           "proximate": "Proximate analysis for **Alfalfa** spans **36 observations** (Wet-basis closure: **100.0%**). Mean moisture is **10.0%**, volatile solids **82.3%**, and ash **7.7%**.",
           "compositional": "Compositional & structural characterization (**45 Compositional**, **0 Ultimate**, **0 XRD** obs) shows **26.9% glucan**, **12.3% xylan**, and **21.3% lignin** (total structural polymers: **60.5% dw**).",
-          "elemental": "Elemental characterization includes **0 ICP** and **180 XRF** observations. XRF elemental screening detects **22 elements**, led by **Ca** (25,322 ppm), **K** (14,889 ppm), **Mg** (11,314 ppm), **S** (4,657 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **180 XRF** observations. XRF elemental screening detects **22 elements**, led by **Ca** (25,322 ppm), **K** (14,889 ppm), **Mg** (11,314 ppm), **S** (4,657 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**18 observations**) demonstrates peak monomeric glucose yield under **`cho10pc`** at **89.9% of glucan** and peak xylose yield under **`cho10pc`** at **62.4% of xylan**.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**99 Fermentation**, **0 Gasification** obs): Fermentation achieves **6.51 g/L 3-HP** (**23.9% g/g yield**) with **27.9% total sugar consumption**. "
         }
@@ -769,8 +769,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": [
             "pos-alf033km2(3c)",
             "pos-alf037km2(b8)",
@@ -791,7 +791,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["pos-alf037km2(b8)", "pos-alf035km2(ed)"],
           "record_ids": ["(b8)c3fd", "(b8)f05a", "(ed)7991", "(ed)d7ec"],
@@ -802,8 +802,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "replicate 2 and 3 are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "replicate 2 and 3 are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["pos-alf033km2(3c)"],
           "record_ids": ["(3c)5a58"],
           "count": 1
@@ -4801,8 +4801,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["hum-almbr068km2(4c)", "cap-almbr077km2(7e)"],
           "record_ids": [
             "(4c)649f",
@@ -4819,7 +4819,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["hum-almbr024km2(a0)", "vib-almbr013a(b5)"],
           "record_ids": ["(a0)1748", "(a0)f4fe", "(b5)341d"],
@@ -9605,8 +9605,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": [
             "tin-almhu067km2(27)",
             "hum-almhu069km2(86)",
@@ -9690,7 +9690,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["vib-almhu012km2(31)"],
           "record_ids": ["(31)3702", "(31)3947"],
@@ -17638,8 +17638,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": [
             "cap-almsh075km2(04)",
             "hum-almsh070km2(71)",
@@ -17661,7 +17661,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": [
             "hum-almsh022km2(13)",
@@ -17750,7 +17750,7 @@
           "analysis_type": "Ultimate Analysis",
           "category": "Stoichiometric / Yield Warning",
           "tone": "danger",
-          "note_text": "peter flipping this to fail as this suggests sulfer is 270%",
+          "note_text": "peter flipping this to fail as this suggests sulfur is 270%",
           "interpretation": "Manual reviewer QC override: elemental sulfur entry implied an unphysical 270% mass fraction and was quarantined as QC FAIL.",
           "sample_names": ["hum-almsh022km2(13)"],
           "record_ids": [")udff5df"],
@@ -26199,7 +26199,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["tin-almix016km2(7e)"],
           "record_ids": ["(7e)c2da"],
@@ -34307,7 +34307,7 @@
           "analysis_type": "Fermentation (Bioconversion)",
           "category": "Sample Loss / Hardware Failure",
           "tone": "danger",
-          "note_text": "HPLC measurment error",
+          "note_text": "HPLC measurement error",
           "interpretation": "Analytical HPLC/glucose assay drop-out at initial or final timepoint; artificially skews apparent sugar consumption and % yield calculations (flagged QC FAIL).",
           "sample_names": ["cat-cnsc029km2(28)"],
           "record_ids": [
@@ -34952,7 +34952,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 2.325,
                 "max_abs_dev": 11.1,
                 "sd3x_candidate_ids": ["proco33-d446"],
@@ -35183,7 +35183,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 6.441,
                 "max_abs_dev": 11.237,
                 "sd3x_candidate_ids": [],
@@ -35236,7 +35236,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 2.164,
                 "max_abs_dev": 3.82,
                 "sd3x_candidate_ids": [],
@@ -35289,7 +35289,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 6.298,
                 "max_abs_dev": 5.913,
                 "sd3x_candidate_ids": [],
@@ -35342,7 +35342,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 1.556,
                 "max_abs_dev": 3.423,
                 "sd3x_candidate_ids": [],
@@ -35395,7 +35395,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 7.014,
                 "max_abs_dev": 17.017,
                 "sd3x_candidate_ids": [],
@@ -35448,7 +35448,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 33.887,
                 "max_abs_dev": 10.127,
                 "sd3x_candidate_ids": [],
@@ -35963,7 +35963,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 5.166,
                 "max_abs_dev": 9.677,
                 "sd3x_candidate_ids": [],
@@ -36016,7 +36016,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 30.903,
                 "max_abs_dev": 32.26,
                 "sd3x_candidate_ids": [],
@@ -36069,7 +36069,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 1.396,
                 "max_abs_dev": 1.347,
                 "sd3x_candidate_ids": [],
@@ -36122,7 +36122,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "HPLC measurment error",
+                "note": "HPLC measurement error",
                 "pooled_sd": 7.006,
                 "max_abs_dev": 12.397,
                 "sd3x_candidate_ids": [],
@@ -36290,7 +36290,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["cat-cnsh028km2(72)"],
           "record_ids": ["(72)9192", "(72)e9cb"],
@@ -38521,7 +38521,7 @@
           "overview": "**Corn Stover Whole** (`cnsw`, *agricultural land resource*) comprises **120 database records** across **1 field sample(s)** and **3 prepared sample(s)** (possessive). Proximate analysis averages **9.6% ash** (80th percentile) and **82.4% volatile solids**. Bioconversion with engineered *R. toruloides* yields **0.00 g/L 3-HP** (0.0% g/g yield) with **22.2% sugar consumption**.",
           "proximate": "Proximate analysis for **Corn Stover Whole** spans **12 observations** (Wet-basis closure: **100.0%**). Mean moisture is **8.0%**, volatile solids **82.4%**, and ash **9.6%**.",
           "compositional": "Compositional & structural characterization (**0 Compositional**, **0 Ultimate**, **0 XRD** obs) provides elemental and structural fiber baselines for stoichiometric conversion modeling.",
-          "elemental": "Elemental characterization includes **0 ICP** and **69 XRF** observations. XRF elemental screening detects **23 elements**, led by **Si** (39,400 ppm), **K** (27,933 ppm), **Mg** (11,767 ppm), **Al** (11,067 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **69 XRF** observations. XRF elemental screening detects **23 elements**, led by **Si** (39,400 ppm), **K** (27,933 ppm), **Mg** (11,767 ppm), **Al** (11,067 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**6 observations**) has no enzymatic hydrolysis observations recorded for this resource.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**33 Fermentation**, **0 Gasification** obs): Fermentation achieves **0.00 g/L 3-HP** (**0.0% g/g yield**) with **22.2% total sugar consumption**. "
         }
@@ -38554,8 +38554,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["pos-cnsw084km2(be)"],
           "record_ids": ["(be)adea"],
           "count": 1
@@ -40383,7 +40383,7 @@
           "overview": "**Cotton Stem Mix** (`cotsm`, *agricultural land resource*) comprises **323 database records** across **4 field sample(s)** and **14 prepared sample(s)** (schooner). Proximate analysis averages **9.2% ash** (78th percentile) and **81.2% volatile solids**. Thermochemical gasification was evaluated across **43 observations** (mean combustible gas fraction **0.0%** vs. LFL **5.6%**).",
           "proximate": "Proximate analysis for **Cotton Stem Mix** spans **48 observations** (Wet-basis closure: **100.0%**). Mean moisture is **9.6%**, volatile solids **81.2%**, and ash **9.2%**.",
           "compositional": "Compositional & structural characterization (**0 Compositional**, **0 Ultimate**, **0 XRD** obs) provides elemental and structural fiber baselines for stoichiometric conversion modeling.",
-          "elemental": "Elemental characterization includes **0 ICP** and **232 XRF** observations. XRF elemental screening detects **23 elements**, led by **K** (28,175 ppm), **Ca** (19,483 ppm), **Mg** (8,882 ppm), **Si** (8,540 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **232 XRF** observations. XRF elemental screening detects **23 elements**, led by **K** (28,175 ppm), **Ca** (19,483 ppm), **Mg** (8,882 ppm), **Si** (8,540 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**0 observations**) has no enzymatic hydrolysis observations recorded for this resource.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**0 Fermentation**, **43 Gasification** obs): Gasification testing (43 obs) recorded mean syngas $\\text{H}_2 = 14,947\\text{ ppm}$, $\\text{CO} = 11,186\\text{ ppm}$, and combustible fraction **0.0%** (LFL **5.6%**)."
         }
@@ -40478,8 +40478,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": [
             "sch-cotsm080km2(62)",
             "sch-cotsm086km2(91)",
@@ -44218,8 +44218,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": [
             "boa-gppm052okm2(24)",
             "rig-gppm055okm2(65)",
@@ -44277,7 +44277,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["ebo-gppm010okm2(1b)", "map-gppm04okm2(fe)"],
           "record_ids": ["(1b)12f8", "(1b)18d4", "(fe)7222", "(fe)9420"],
@@ -47063,7 +47063,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "other two replicates are <lod",
+                "note": "other two replicates are <dl",
                 "pooled_sd": null,
                 "max_abs_dev": 0.667,
                 "sd3x_candidate_ids": [],
@@ -50553,8 +50553,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["rig-gpst072okm2(87)"],
           "record_ids": ["(87)891b", "(87)e2c4"],
           "count": 2
@@ -57337,7 +57337,7 @@
           "overview": "**Olive Pomace** (`olpm`, *agricultural land resource*) comprises **875 database records** across **2 field sample(s)** and **3 prepared sample(s)** (excellent, jaguar). Cell-wall characterization shows **11.5% glucan** (20th percentile statewide), **14.3% xylan**, and **46.7% lignin** (structural polymer sum **72.5% dw**). Proximate analysis averages **2.1% ash** (20th percentile) and **25.7% volatile solids**. In Aim 2 deconstruction, **`cho10pc`** achieves the highest monomeric glucose release at **49.9% of theoretical glucan** (a **1.56\u00d7 lift** over untreated `none20c` at 32.1%) and **40.6% xylose yield**. Bioconversion with engineered *R. toruloides* yields **3.27 g/L 3-HP** (2.5% g/g yield) with **75.0% sugar consumption**.",
           "proximate": "Proximate analysis for **Olive Pomace** spans **24 observations** (Wet-basis closure: **100.0%**). Comparing `as is` (72.2% moisture) against dried/milled preps (0.8% moisture) highlights the importance of normalizing volatile solids and ash to dry weight.",
           "compositional": "Compositional & structural characterization (**21 Compositional**, **0 Ultimate**, **0 XRD** obs) shows **11.5% glucan**, **14.3% xylan**, and **46.7% lignin** (total structural polymers: **72.5% dw**).",
-          "elemental": "Elemental characterization includes **0 ICP** and **48 XRF** observations. XRF elemental screening detects **16 elements**, led by **K** (35,700 ppm), **Mg** (8,093 ppm), **Si** (7,120 ppm), **P** (3,167 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **48 XRF** observations. XRF elemental screening detects **16 elements**, led by **K** (35,700 ppm), **Mg** (8,093 ppm), **Si** (7,120 ppm), **P** (3,167 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**56 observations**) demonstrates peak monomeric glucose yield under **`cho10pc`** at **49.9% of glucan** and peak xylose yield under **`cho10pc`** at **40.6% of xylan** (**1.56\u00d7 lift** over untreated control `none20c` at 32.1%).",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**726 Fermentation**, **0 Gasification** obs): Fermentation achieves **3.27 g/L 3-HP** (**2.5% g/g yield**) with **75.0% total sugar consumption**. "
         }
@@ -57423,8 +57423,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["exc-olpm091okm2(ba)"],
           "record_ids": ["(ba)4c81", "(ba)86e1"],
           "count": 2
@@ -64279,7 +64279,7 @@
           "overview": "**Olive Stems / Leaves** (`olst`, *agricultural land resource*) comprises **656 database records** across **2 field sample(s)** and **3 prepared sample(s)** (excellent, jaguar). Cell-wall characterization shows **14.1% glucan** (28th percentile statewide), **12.0% xylan**, and **51.2% lignin** (structural polymer sum **77.4% dw**). Proximate analysis averages **2.5% ash** (33rd percentile) and **47.7% volatile solids**. In Aim 2 deconstruction, **`butknt140c`** achieves the highest monomeric glucose release at **30.5% of theoretical glucan** (a **2.13\u00d7 lift** over untreated `none20c` at 14.3%) and **23.7% xylose yield**. Bioconversion with engineered *R. toruloides* yields **3.00 g/L 3-HP** (0.1% g/g yield) with **75.1% sugar consumption**.",
           "proximate": "Proximate analysis for **Olive Stems / Leaves** spans **24 observations** (Wet-basis closure: **100.0%**). Comparing `as is` (49.8% moisture) against dried/milled preps (1.0% moisture) highlights the importance of normalizing volatile solids and ash to dry weight.",
           "compositional": "Compositional & structural characterization (**15 Compositional**, **0 Ultimate**, **0 XRD** obs) shows **14.1% glucan**, **12.0% xylan**, and **51.2% lignin** (total structural polymers: **77.4% dw**).",
-          "elemental": "Elemental characterization includes **0 ICP** and **57 XRF** observations. XRF elemental screening detects **19 elements**, led by **K** (13,833 ppm), **Ca** (6,810 ppm), **Mg** (4,177 ppm), **Si** (1,630 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **57 XRF** observations. XRF elemental screening detects **19 elements**, led by **K** (13,833 ppm), **Ca** (6,810 ppm), **Mg** (4,177 ppm), **Si** (1,630 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**32 observations**) demonstrates peak monomeric glucose yield under **`butknt140c`** at **30.5% of glucan** and peak xylose yield under **`butknt140c`** at **23.7% of xylan** (**2.13\u00d7 lift** over untreated control `none20c` at 14.3%).",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**528 Fermentation**, **0 Gasification** obs): Fermentation achieves **3.00 g/L 3-HP** (**0.1% g/g yield**) with **75.1% total sugar consumption**. "
         }
@@ -64348,8 +64348,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["exc-olst092okm2(a0)"],
           "record_ids": ["(a0)d828", "(a0)dfc6", "(a0)e445"],
           "count": 3
@@ -69162,7 +69162,7 @@
           "overview": "**Peach Pomace** (`pchpo`, *agricultural land resource*) comprises **65 database records** across **2 field sample(s)** and **4 prepared sample(s)** (rushes). Proximate analysis averages **0.3% ash** (7th percentile) and **2.5% volatile solids**.",
           "proximate": "Proximate analysis for **Peach Pomace** spans **12 observations** (Wet-basis closure: **100.0%**). Mean moisture is **97.1%**, volatile solids **2.5%**, and ash **0.3%**.",
           "compositional": "Compositional & structural characterization (**0 Compositional**, **0 Ultimate**, **0 XRD** obs) provides elemental and structural fiber baselines for stoichiometric conversion modeling.",
-          "elemental": "Elemental characterization includes **0 ICP** and **53 XRF** observations. XRF elemental screening detects **17 elements**, led by **K** (48,900 ppm), **Mg** (5,010 ppm), **P** (4,957 ppm), **Ca** (3,377 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **53 XRF** observations. XRF elemental screening detects **17 elements**, led by **K** (48,900 ppm), **Mg** (5,010 ppm), **P** (4,957 ppm), **Ca** (3,377 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**0 observations**) has no enzymatic hydrolysis observations recorded for this resource.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**0 Fermentation**, **0 Gasification** obs): "
         }
@@ -69184,8 +69184,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["rus-pchpo040okm2(78)"],
           "record_ids": ["(78)296e", "(78)6934", "(78)e75a", "(78)ec3d"],
           "count": 4
@@ -70367,7 +70367,7 @@
           "overview": "**Peach Screening Waste** (`pchsw`, *agricultural land resource*) comprises **68 database records** across **1 field sample(s)** and **3 prepared sample(s)** (rushes). Proximate analysis averages **0.2% ash** (4th percentile) and **2.5% volatile solids**.",
           "proximate": "Proximate analysis for **Peach Screening Waste** spans **12 observations** (Wet-basis closure: **100.0%**). Mean moisture is **97.3%**, volatile solids **2.5%**, and ash **0.2%**.",
           "compositional": "Compositional & structural characterization (**0 Compositional**, **0 Ultimate**, **0 XRD** obs) provides elemental and structural fiber baselines for stoichiometric conversion modeling.",
-          "elemental": "Elemental characterization includes **0 ICP** and **56 XRF** observations. XRF elemental screening detects **19 elements**, led by **K** (61,767 ppm), **Ca** (5,310 ppm), **P** (4,047 ppm), **Al** (3,150 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **56 XRF** observations. XRF elemental screening detects **19 elements**, led by **K** (61,767 ppm), **Ca** (5,310 ppm), **P** (4,047 ppm), **Al** (3,150 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**0 observations**) has no enzymatic hydrolysis observations recorded for this resource.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**0 Fermentation**, **0 Gasification** obs): "
         }
@@ -70378,8 +70378,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["rus-pchsw041okm2(8f)"],
           "record_ids": ["(8f)121b", "(8f)86e0"],
           "count": 2
@@ -71623,7 +71623,7 @@
           "overview": "**Peach Seeds** (`pchsd`, *agricultural land resource*) comprises **214 database records** across **3 field sample(s)** and **8 prepared sample(s)** (rushes). In Aim 2 deconstruction, **`h2o140c`** achieves the highest monomeric glucose release at **80.5% of theoretical glucan** and **12.4% xylose yield**. Bioconversion with engineered *R. toruloides* yields **3.67 g/L 3-HP** (24.6% g/g yield) with **15.4% sugar consumption**. Thermochemical gasification was evaluated across **71 observations** (mean combustible gas fraction **14.9%** vs. LFL **7.2%**).",
           "proximate": "Proximate analysis for **Peach Seeds** spans **0 observations** (Wet-basis closure: **N/A%**). Mean moisture is **0.0%**, volatile solids **0.0%**, and ash **0.0%**.",
           "compositional": "Compositional & structural characterization (**21 Compositional**, **0 Ultimate**, **0 XRD** obs) provides elemental and structural fiber baselines for stoichiometric conversion modeling.",
-          "elemental": "Elemental characterization includes **0 ICP** and **44 XRF** observations. XRF elemental screening detects **14 elements**, led by **K** (7,147 ppm), **P** (1,683 ppm), **S** (717 ppm), **Ca** (611 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **44 XRF** observations. XRF elemental screening detects **14 elements**, led by **K** (7,147 ppm), **P** (1,683 ppm), **S** (717 ppm), **Ca** (611 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**12 observations**) demonstrates peak monomeric glucose yield under **`h2o140c`** at **80.5% of glucan** and peak xylose yield under **`h2o140c`** at **12.4% of xylan**.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**66 Fermentation**, **71 Gasification** obs): Fermentation achieves **3.67 g/L 3-HP** (**24.6% g/g yield**) with **15.4% total sugar consumption**. Gasification testing (71 obs) recorded mean syngas $\\text{H}_2 = 45,860\\text{ ppm}$, $\\text{CO} = 90,336\\text{ ppm}$, and combustible fraction **14.9%** (LFL **7.2%**)."
         }
@@ -71688,8 +71688,8 @@
           "analysis_type": "Fermentation (Bioconversion)",
           "category": "Stoichiometric / Yield Warning",
           "tone": "warning",
-          "note_text": "Too much variability accross triplicates. Possible measurement error",
-          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-LOD readings.",
+          "note_text": "Too much variability across triplicates. Possible measurement error",
+          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-DL readings.",
           "sample_names": ["rus-pchsd039okm2(f6)"],
           "record_ids": [
             "proco27-0219",
@@ -71706,8 +71706,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["rus-pchsd039okm2(f6)"],
           "record_ids": [
             "(f6)401b",
@@ -72496,7 +72496,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "other two replicates are <lod",
+                "note": "other two replicates are <dl",
                 "pooled_sd": null,
                 "max_abs_dev": 1.333,
                 "sd3x_candidate_ids": [],
@@ -73646,7 +73646,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 6.298,
                 "max_abs_dev": 1.443,
                 "sd3x_candidate_ids": [],
@@ -73752,7 +73752,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 7.014,
                 "max_abs_dev": 1.543,
                 "sd3x_candidate_ids": [],
@@ -73899,7 +73899,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 30.903,
                 "max_abs_dev": 25.003,
                 "sd3x_candidate_ids": [],
@@ -73952,7 +73952,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 1.396,
                 "max_abs_dev": 1.043,
                 "sd3x_candidate_ids": [],
@@ -74158,7 +74158,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 2.325,
                 "max_abs_dev": 0.533,
                 "sd3x_candidate_ids": [],
@@ -74211,7 +74211,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 1.556,
                 "max_abs_dev": 0.66,
                 "sd3x_candidate_ids": [],
@@ -74264,7 +74264,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 33.887,
                 "max_abs_dev": 10.263,
                 "sd3x_candidate_ids": [],
@@ -74470,7 +74470,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 2.164,
                 "max_abs_dev": 0.29,
                 "sd3x_candidate_ids": [],
@@ -74635,7 +74635,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 7.006,
                 "max_abs_dev": 2.11,
                 "sd3x_candidate_ids": [],
@@ -74688,7 +74688,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 5.166,
                 "max_abs_dev": 1.823,
                 "sd3x_candidate_ids": [],
@@ -74953,7 +74953,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 6.441,
                 "max_abs_dev": 0.813,
                 "sd3x_candidate_ids": [],
@@ -75134,7 +75134,7 @@
           "overview": "**Peach Stems / Leaves** (`pchst`, *agricultural land resource*) comprises **131 database records** across **1 field sample(s)** and **3 prepared sample(s)** (rushes). Proximate analysis averages **5.3% ash** (64th percentile) and **25.4% volatile solids**. In Aim 2 deconstruction, **`cho10pc`** achieves the highest monomeric glucose release at **75.5% of theoretical glucan** and **29.9% xylose yield**. Bioconversion with engineered *R. toruloides* yields **3.88 g/L 3-HP** (25.2% g/g yield) with **15.5% sugar consumption**.",
           "proximate": "Proximate analysis for **Peach Stems / Leaves** spans **12 observations** (Wet-basis closure: **100.0%**). Mean moisture is **69.3%**, volatile solids **25.4%**, and ash **5.3%**.",
           "compositional": "Compositional & structural characterization (**21 Compositional**, **0 Ultimate**, **0 XRD** obs) provides elemental and structural fiber baselines for stoichiometric conversion modeling.",
-          "elemental": "Elemental characterization includes **0 ICP** and **57 XRF** observations. XRF elemental screening detects **19 elements**, led by **K** (38,700 ppm), **Ca** (35,967 ppm), **Si** (8,683 ppm), **Mg** (8,173 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **57 XRF** observations. XRF elemental screening detects **19 elements**, led by **K** (38,700 ppm), **Ca** (35,967 ppm), **Si** (8,683 ppm), **Mg** (8,173 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**6 observations**) demonstrates peak monomeric glucose yield under **`cho10pc`** at **75.5% of glucan** and peak xylose yield under **`cho10pc`** at **29.9% of xylan**.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**33 Fermentation**, **0 Gasification** obs): Fermentation achieves **3.88 g/L 3-HP** (**25.2% g/g yield**) with **15.5% total sugar consumption**. "
         }
@@ -75145,7 +75145,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["rus-pchst042a(f6)"],
           "record_ids": ["(f6)2ed9", "(f6)ec48"],
@@ -75156,8 +75156,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["rus-pchst042okm2(f7)"],
           "record_ids": ["(f7)b3ad", "(f7)fab9"],
           "count": 2
@@ -77178,7 +77178,7 @@
           "overview": "**Pistachio Hulls** (`pihu`, *agricultural land resource*) comprises **236 database records** across **5 field sample(s)** and **16 prepared sample(s)** (stuntman, tripod, wasp). Cell-wall characterization shows **11.4% glucan** (17th percentile statewide), **7.9% xylan**, and **42.8% lignin** (structural polymer sum **62.2% dw**). Proximate analysis averages **3.0% ash** (43rd percentile) and **12.8% volatile solids**. In Aim 2 deconstruction, **`cho10pc`** achieves the highest monomeric glucose release at **60.5% of theoretical glucan** and **16.0% xylose yield**. Bioconversion with engineered *R. toruloides* yields **0.82 g/L 3-HP** (3.4% g/g yield) with **10.6% sugar consumption**.",
           "proximate": "Proximate analysis for **Pistachio Hulls** spans **27 observations** (Wet-basis closure: **100.0%**). Mean moisture is **83.5%**, volatile solids **12.8%**, and ash **3.0%**.",
           "compositional": "Compositional & structural characterization (**36 Compositional**, **0 Ultimate**, **0 XRD** obs) shows **11.4% glucan**, **7.9% xylan**, and **42.8% lignin** (total structural polymers: **62.2% dw**).",
-          "elemental": "Elemental characterization includes **0 ICP** and **95 XRF** observations. XRF elemental screening detects **19 elements**, led by **K** (55,817 ppm), **Ca** (5,755 ppm), **S** (2,475 ppm), **P** (1,533 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **95 XRF** observations. XRF elemental screening detects **19 elements**, led by **K** (55,817 ppm), **Ca** (5,755 ppm), **S** (2,475 ppm), **P** (1,533 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**12 observations**) demonstrates peak monomeric glucose yield under **`cho10pc`** at **60.5% of glucan** and peak xylose yield under **`cho10pc`** at **16.0% of xylan**.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**66 Fermentation**, **0 Gasification** obs): Fermentation achieves **0.82 g/L 3-HP** (**3.4% g/g yield**) with **10.6% total sugar consumption**. "
         }
@@ -77237,7 +77237,7 @@
           "analysis_type": "Fermentation (Bioconversion)",
           "category": "Sample Loss / Hardware Failure",
           "tone": "warning",
-          "note_text": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit",
+          "note_text": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit",
           "interpretation": "Biological fermentation run produced near-zero 3-HP titer due to strain instability or product concentration below HPLC detection limit.",
           "sample_names": ["tri-pihu062okm2(f2)"],
           "record_ids": [
@@ -77255,8 +77255,8 @@
           "analysis_type": "Fermentation (Bioconversion)",
           "category": "Stoichiometric / Yield Warning",
           "tone": "warning",
-          "note_text": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
-          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-LOD readings.",
+          "note_text": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
+          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-DL readings.",
           "sample_names": ["tri-pihu062okm2(f2)"],
           "record_ids": [
             "proco24-1414",
@@ -77273,8 +77273,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["stu-pihu063okm2(c0)", "tri-pihu062okm2(f2)"],
           "record_ids": [
             "(c0)2d8d",
@@ -79282,7 +79282,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 1.556,
                 "max_abs_dev": 3.273,
                 "sd3x_candidate_ids": [],
@@ -79335,7 +79335,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 33.887,
                 "max_abs_dev": 13.673,
                 "sd3x_candidate_ids": [],
@@ -79388,7 +79388,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 2.164,
                 "max_abs_dev": 1.857,
                 "sd3x_candidate_ids": [],
@@ -79441,7 +79441,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 2.325,
                 "max_abs_dev": 0.627,
                 "sd3x_candidate_ids": [],
@@ -79494,7 +79494,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 30.903,
                 "max_abs_dev": 39.317,
                 "sd3x_candidate_ids": [],
@@ -79547,7 +79547,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 1.396,
                 "max_abs_dev": 1.643,
                 "sd3x_candidate_ids": [],
@@ -79600,7 +79600,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L); Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxyge",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L); Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxyge",
                 "pooled_sd": 6.298,
                 "max_abs_dev": 2.913,
                 "sd3x_candidate_ids": [],
@@ -79653,7 +79653,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L); Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxyge",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L); Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxyge",
                 "pooled_sd": 7.014,
                 "max_abs_dev": 2.28,
                 "sd3x_candidate_ids": [],
@@ -79706,7 +79706,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 6.441,
                 "max_abs_dev": 8.147,
                 "sd3x_candidate_ids": [],
@@ -79759,7 +79759,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 7.006,
                 "max_abs_dev": 5.933,
                 "sd3x_candidate_ids": [],
@@ -79865,7 +79865,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L). 3HP below detection limit; Too much variability accross triplicates. Possible causes could be unev",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L). 3HP below detection limit; Too much variability across triplicates. Possible causes could be unev",
                 "pooled_sd": 5.166,
                 "max_abs_dev": 4.08,
                 "sd3x_candidate_ids": [],
@@ -80109,7 +80109,7 @@
           "overview": "**Pistachio Shells** (`pis`, *agricultural land resource*) comprises **178 database records** across **2 field sample(s)** and **5 prepared sample(s)** (stuntman, tripod). Cell-wall characterization shows **21.8% glucan** (39th percentile statewide), **37.2% xylan**, and **32.9% lignin** (structural polymer sum **91.9% dw**). Proximate analysis averages **1.3% ash** (17th percentile) and **86.4% volatile solids**. Thermochemical gasification was evaluated across **90 observations** (mean combustible gas fraction **11.2%** vs. LFL **5.3%**).",
           "proximate": "Proximate analysis for **Pistachio Shells** spans **24 observations** (Wet-basis closure: **100.0%**). Comparing `as is` (15.8% moisture) against dried/milled preps (8.8% moisture) highlights the importance of normalizing volatile solids and ash to dry weight.",
           "compositional": "Compositional & structural characterization (**15 Compositional**, **0 Ultimate**, **0 XRD** obs) shows **21.8% glucan**, **37.2% xylan**, and **32.9% lignin** (total structural polymers: **91.9% dw**).",
-          "elemental": "Elemental characterization includes **0 ICP** and **49 XRF** observations. XRF elemental screening detects **17 elements**, led by **K** (3,063 ppm), **S** (1,353 ppm), **Si** (624 ppm), **Ca** (554 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **49 XRF** observations. XRF elemental screening detects **17 elements**, led by **K** (3,063 ppm), **S** (1,353 ppm), **Si** (624 ppm), **Ca** (554 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**0 observations**) has no enzymatic hydrolysis observations recorded for this resource.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**0 Fermentation**, **90 Gasification** obs): Gasification testing (90 obs) recorded mean syngas $\\text{H}_2 = 61,389\\text{ ppm}$, $\\text{CO} = 30,341\\text{ ppm}$, and combustible fraction **11.2%** (LFL **5.3%**)."
         }
@@ -80216,8 +80216,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["tri-pis081km2(da)"],
           "record_ids": ["(da)abcf", "(da)dc1d", "(da)f9ef"],
           "count": 3
@@ -83357,7 +83357,7 @@
           "overview": "**Pistachio Stems & Leaves** (`pisl`, *agricultural land resource*) comprises **128 database records** across **1 field sample(s)** and **2 prepared sample(s)** (tripod). Proximate analysis averages **6.3% ash** (67th percentile) and **32.3% volatile solids**. In Aim 2 deconstruction, **`cho10pc`** achieves the highest monomeric glucose release at **75.0% of theoretical glucan** and **31.7% xylose yield**. Bioconversion with engineered *R. toruloides* yields **2.57 g/L 3-HP** (13.3% g/g yield) with **14.5% sugar consumption**.",
           "proximate": "Proximate analysis for **Pistachio Stems & Leaves** spans **12 observations** (Wet-basis closure: **100.0%**). Mean moisture is **61.4%**, volatile solids **32.3%**, and ash **6.3%**.",
           "compositional": "Compositional & structural characterization (**21 Compositional**, **0 Ultimate**, **0 XRD** obs) provides elemental and structural fiber baselines for stoichiometric conversion modeling.",
-          "elemental": "Elemental characterization includes **0 ICP** and **56 XRF** observations. XRF elemental screening detects **18 elements**, led by **K** (29,733 ppm), **Ca** (20,500 ppm), **Mg** (7,253 ppm), **P** (2,693 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **56 XRF** observations. XRF elemental screening detects **18 elements**, led by **K** (29,733 ppm), **Ca** (20,500 ppm), **Mg** (7,253 ppm), **P** (2,693 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**6 observations**) demonstrates peak monomeric glucose yield under **`cho10pc`** at **75.0% of glucan** and peak xylose yield under **`cho10pc`** at **31.7% of xylan**.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**33 Fermentation**, **0 Gasification** obs): Fermentation achieves **2.57 g/L 3-HP** (**13.3% g/g yield**) with **14.5% total sugar consumption**. "
         }
@@ -83379,8 +83379,8 @@
           "analysis_type": "Fermentation (Bioconversion)",
           "category": "Stoichiometric / Yield Warning",
           "tone": "warning",
-          "note_text": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
-          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-LOD readings.",
+          "note_text": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
+          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-DL readings.",
           "sample_names": ["tri-pisl061okm2(d4)"],
           "record_ids": [
             "proco24-0633",
@@ -83397,8 +83397,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["tri-pisl061okm2(d4)"],
           "record_ids": ["(d4)50e0", "(d4)866a", "(d4)ff39"],
           "count": 3
@@ -85265,7 +85265,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 6.298,
                 "max_abs_dev": 4.917,
                 "sd3x_candidate_ids": [],
@@ -85318,7 +85318,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 7.014,
                 "max_abs_dev": 4.917,
                 "sd3x_candidate_ids": [],
@@ -85371,7 +85371,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 1.396,
                 "max_abs_dev": 6.16,
                 "sd3x_candidate_ids": ["proco24-09e1", "proco24-561a"],
@@ -85424,7 +85424,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 30.903,
                 "max_abs_dev": 147.34,
                 "sd3x_candidate_ids": ["proco24-2fa0", "proco24-bb6d"],
@@ -85477,7 +85477,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 33.887,
                 "max_abs_dev": 13.337,
                 "sd3x_candidate_ids": [],
@@ -85530,7 +85530,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 1.556,
                 "max_abs_dev": 2.567,
                 "sd3x_candidate_ids": [],
@@ -85583,7 +85583,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 2.164,
                 "max_abs_dev": 2.937,
                 "sd3x_candidate_ids": [],
@@ -85636,7 +85636,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 6.441,
                 "max_abs_dev": 10.767,
                 "sd3x_candidate_ids": [],
@@ -85689,7 +85689,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 7.006,
                 "max_abs_dev": 6.8,
                 "sd3x_candidate_ids": [],
@@ -85742,7 +85742,7 @@
                     "qc": "pass"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such emall volume (250 \u00b5L)",
+                "note": "Too much variability across triplicates. Possible causes could be uneven inoculum mixing or oxygen diffusion for such small volume (250 \u00b5L)",
                 "pooled_sd": 5.166,
                 "max_abs_dev": 4.027,
                 "sd3x_candidate_ids": [],
@@ -85825,7 +85825,7 @@
           "overview": "**Rice Hulls** (`rihu`, *agricultural land resource*) comprises **60 database records** across **2 field sample(s)** and **4 prepared sample(s)** (sextant). Proximate analysis averages **19.3% ash** (96th percentile) and **71.8% volatile solids**.",
           "proximate": "Proximate analysis for **Rice Hulls** spans **12 observations** (Wet-basis closure: **100.0%**). Mean moisture is **8.9%**, volatile solids **71.8%**, and ash **19.3%**.",
           "compositional": "Compositional & structural characterization (**0 Compositional**, **0 Ultimate**, **0 XRD** obs) provides elemental and structural fiber baselines for stoichiometric conversion modeling.",
-          "elemental": "Elemental characterization includes **0 ICP** and **48 XRF** observations. XRF elemental screening detects **15 elements**, led by **Si** (157,667 ppm), **K** (7,937 ppm), **Ca** (1,173 ppm), **P** (941 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **48 XRF** observations. XRF elemental screening detects **15 elements**, led by **Si** (157,667 ppm), **K** (7,937 ppm), **Ca** (1,173 ppm), **P** (941 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**0 observations**) has no enzymatic hydrolysis observations recorded for this resource.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**0 Fermentation**, **0 Gasification** obs): "
         }
@@ -85847,8 +85847,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["sex-rihu079km2(96)"],
           "record_ids": [
             "(96)07e9",
@@ -86707,7 +86707,7 @@
           "overview": "**Rice Straw** (`rist`, *agricultural land resource*) comprises **293 database records** across **2 field sample(s)** and **7 prepared sample(s)** (possessive). Cell-wall characterization shows **32.3% glucan** (72nd percentile statewide), **16.3% xylan**, and **17.9% lignin** (structural polymer sum **66.6% dw**). Proximate analysis averages **12.5% ash** (91st percentile) and **80.0% volatile solids**. In Aim 2 deconstruction, **`cho10pc`** achieves the highest monomeric glucose release at **68.9% of theoretical glucan** and **38.3% xylose yield**. Bioconversion with engineered *R. toruloides* yields **3.11 g/L 3-HP** (14.1% g/g yield) with **23.2% sugar consumption**.",
           "proximate": "Proximate analysis for **Rice Straw** spans **24 observations** (Wet-basis closure: **100.0%**). Mean moisture is **7.5%**, volatile solids **80.0%**, and ash **12.5%**.",
           "compositional": "Compositional & structural characterization (**36 Compositional**, **0 Ultimate**, **0 XRD** obs) shows **32.3% glucan**, **16.3% xylan**, and **17.9% lignin** (total structural polymers: **66.6% dw**).",
-          "elemental": "Elemental characterization includes **0 ICP** and **116 XRF** observations. XRF elemental screening detects **21 elements**, led by **Si** (88,750 ppm), **K** (32,533 ppm), **Ca** (8,530 ppm), **Al** (8,517 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **116 XRF** observations. XRF elemental screening detects **21 elements**, led by **Si** (88,750 ppm), **K** (32,533 ppm), **Ca** (8,530 ppm), **Al** (8,517 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**18 observations**) demonstrates peak monomeric glucose yield under **`cho10pc`** at **68.9% of glucan** and peak xylose yield under **`cho10pc`** at **38.3% of xylan**.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**99 Fermentation**, **0 Gasification** obs): Fermentation achieves **3.11 g/L 3-HP** (**14.1% g/g yield**) with **23.2% total sugar consumption**. "
         }
@@ -86762,8 +86762,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["pos-rist083km2(ca)"],
           "record_ids": [
             "(ca)6f9b",
@@ -92806,8 +92806,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": [
             "rig-spok059okm2(48)",
             "rig-spok057okm2(65)",
@@ -92914,7 +92914,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["map-spok07km2(c5)"],
           "record_ids": ["(c5)abb1", "(c5)d4c4"],
@@ -106899,8 +106899,8 @@
           "analysis_type": "Fermentation (Bioconversion)",
           "category": "Stoichiometric / Yield Warning",
           "tone": "warning",
-          "note_text": "Too much variability accross triplicates. Possible measurement error",
-          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-LOD readings.",
+          "note_text": "Too much variability across triplicates. Possible measurement error",
+          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-DL readings.",
           "sample_names": ["pin-tmpm048okm2(0a)", "gos-tmpm049okm2(d0)"],
           "record_ids": [
             "proco27-02f9",
@@ -107042,7 +107042,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": [
             "oak-tmpm01okm2(26)",
@@ -110650,7 +110650,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 6.298,
                 "max_abs_dev": 2.233,
                 "sd3x_candidate_ids": [],
@@ -110703,7 +110703,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 7.014,
                 "max_abs_dev": 4.62,
                 "sd3x_candidate_ids": [],
@@ -110756,7 +110756,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 2.325,
                 "max_abs_dev": 2.387,
                 "sd3x_candidate_ids": [],
@@ -111127,7 +111127,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 2.164,
                 "max_abs_dev": 0.253,
                 "sd3x_candidate_ids": [],
@@ -111445,7 +111445,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 5.166,
                 "max_abs_dev": 8.777,
                 "sd3x_candidate_ids": [],
@@ -111498,7 +111498,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 1.556,
                 "max_abs_dev": 2.21,
                 "sd3x_candidate_ids": [],
@@ -111604,7 +111604,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 7.006,
                 "max_abs_dev": 9.477,
                 "sd3x_candidate_ids": [],
@@ -111710,7 +111710,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 6.441,
                 "max_abs_dev": 7.167,
                 "sd3x_candidate_ids": [],
@@ -111763,7 +111763,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 33.887,
                 "max_abs_dev": 41.4,
                 "sd3x_candidate_ids": [],
@@ -111869,7 +111869,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 33.887,
                 "max_abs_dev": 17.073,
                 "sd3x_candidate_ids": [],
@@ -112028,7 +112028,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 2.164,
                 "max_abs_dev": 0.99,
                 "sd3x_candidate_ids": [],
@@ -112611,7 +112611,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 1.556,
                 "max_abs_dev": 1.663,
                 "sd3x_candidate_ids": [],
@@ -113247,7 +113247,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 5.166,
                 "max_abs_dev": 3.233,
                 "sd3x_candidate_ids": [],
@@ -113300,7 +113300,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 7.006,
                 "max_abs_dev": 3.487,
                 "sd3x_candidate_ids": [],
@@ -113565,7 +113565,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 6.441,
                 "max_abs_dev": 3.22,
                 "sd3x_candidate_ids": [],
@@ -114148,7 +114148,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 1.396,
                 "max_abs_dev": 1.553,
                 "sd3x_candidate_ids": [],
@@ -114201,7 +114201,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error",
+                "note": "Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 30.903,
                 "max_abs_dev": 37.107,
                 "sd3x_candidate_ids": [],
@@ -115049,7 +115049,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error; 3HP below detection limit",
+                "note": "Too much variability across triplicates. Possible measurement error; 3HP below detection limit",
                 "pooled_sd": 1.396,
                 "max_abs_dev": 0.813,
                 "sd3x_candidate_ids": [],
@@ -115155,7 +115155,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "Too much variability accross triplicates. Possible measurement error; 3HP below detection limit",
+                "note": "Too much variability across triplicates. Possible measurement error; 3HP below detection limit",
                 "pooled_sd": 30.903,
                 "max_abs_dev": 19.347,
                 "sd3x_candidate_ids": [],
@@ -115950,7 +115950,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 6.298,
                 "max_abs_dev": 0.533,
                 "sd3x_candidate_ids": [],
@@ -116003,7 +116003,7 @@
                     "qc": "fail"
                   }
                 ],
-                "note": "3HP below detection limit; Too much variability accross triplicates. Possible measurement error",
+                "note": "3HP below detection limit; Too much variability across triplicates. Possible measurement error",
                 "pooled_sd": 7.014,
                 "max_abs_dev": 0.533,
                 "sd3x_candidate_ids": [],
@@ -116326,7 +116326,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["map-unok08km2(c4)"],
           "record_ids": ["(c4)5cda", "(c4)8af4"],
@@ -116348,7 +116348,7 @@
           "analysis_type": "Calorimetry",
           "category": "Experimental Context",
           "tone": "warning",
-          "note_text": "incredibly large coefficient of variation bettween samples, requiring  third or fourth trial. though to have been caused by low sample mass.",
+          "note_text": "incredibly large coefficient of variation between samples, requiring  third or fourth trial. though to have been caused by low sample mass.",
           "interpretation": "Analyst bench note recorded during Calorimetry execution.",
           "sample_names": ["map-unok08km2(c4)"],
           "record_ids": ["(c4)9c6e"],
@@ -116359,7 +116359,7 @@
           "analysis_type": "Calorimetry",
           "category": "Experimental Context",
           "tone": "warning",
-          "note_text": "incredibly large coefficient of variation bettween samples, requiring  third or fourth trial at a later date. though to have been caused by low sample mass.",
+          "note_text": "incredibly large coefficient of variation between samples, requiring  third or fourth trial at a later date. though to have been caused by low sample mass.",
           "interpretation": "Analyst bench note recorded during Calorimetry execution.",
           "sample_names": ["map-unok08km2(c4)"],
           "record_ids": ["(c4)b9f2"],
@@ -119363,7 +119363,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["ene-wahu018okm2(e7)"],
           "record_ids": ["(e7)8804", "(e7)b0bd"],
@@ -123138,7 +123138,7 @@
           "category": "Stoichiometric / Yield Warning",
           "tone": "warning",
           "note_text": "High variation across triplicates after low detection limit in one of the replicates",
-          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-LOD readings.",
+          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-DL readings.",
           "sample_names": ["ene-wash017okm2(82)"],
           "record_ids": [
             "proco33-01ce",
@@ -123209,7 +123209,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["ene-wash017a(29)", "ene-wash017okm2(82)"],
           "record_ids": ["(29)2193", "(29)4f19", "(82)1fe6", "(82)d7a6"],
@@ -123242,8 +123242,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["cut-wash088km2(15)"],
           "record_ids": ["(15)5971", "(15)698e"],
           "count": 2
@@ -128503,7 +128503,7 @@
           "category": "Stoichiometric / Yield Warning",
           "tone": "warning",
           "note_text": "High variation across triplicates after low detection limit in one of the replicates",
-          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-LOD readings.",
+          "interpretation": "Elevated biological replicate spread (CV%) across microplate wells, attributed to heterogeneous inoculum mixing, dissolved oxygen gradients, or near-DL readings.",
           "sample_names": ["ene-watrst019okm2(4d)"],
           "record_ids": [
             "proco32-12df",
@@ -131660,7 +131660,7 @@
           "overview": "**Wheat Straw** (`wst`, *agricultural land resource*) comprises **390 database records** across **3 field sample(s)** and **5 prepared sample(s)** (possessive, wardrobe). Cell-wall characterization shows **33.8% glucan** (76th percentile statewide), **19.9% xylan**, and **18.4% lignin** (structural polymer sum **72.1% dw**). Proximate analysis averages **11.8% ash** (88th percentile) and **82.1% volatile solids**. In Aim 2 deconstruction, **`h2o140c`** achieves the highest monomeric glucose release at **49.8% of theoretical glucan** and **28.1% xylose yield**. Bioconversion with engineered *R. toruloides* yields **3.64 g/L 3-HP** (18.7% g/g yield) with **16.9% sugar consumption**.",
           "proximate": "Proximate analysis for **Wheat Straw** spans **25 observations** (Wet-basis closure: **100.0%**). Mean moisture is **6.1%**, volatile solids **82.1%**, and ash **11.8%**.",
           "compositional": "Compositional & structural characterization (**57 Compositional**, **0 Ultimate**, **0 XRD** obs) shows **33.8% glucan**, **19.9% xylan**, and **18.4% lignin** (total structural polymers: **72.1% dw**).",
-          "elemental": "Elemental characterization includes **0 ICP** and **109 XRF** observations. XRF elemental screening detects **19 elements**, led by **Si** (78,183 ppm), **K** (41,767 ppm), **Mg** (8,400 ppm), **Ca** (5,543 ppm) (note: trace elements near instrument limits carry `<LOD` replicate annotations).",
+          "elemental": "Elemental characterization includes **0 ICP** and **109 XRF** observations. XRF elemental screening detects **19 elements**, led by **Si** (78,183 ppm), **K** (41,767 ppm), **Mg** (8,400 ppm), **Ca** (5,543 ppm) (note: trace elements near instrument limits carry `<DL` replicate annotations).",
           "pretreatment": "Aim 2 Pretreatment & Enzymatic Hydrolysis (**30 observations**) demonstrates peak monomeric glucose yield under **`h2o140c`** at **49.8% of glucan** and peak xylose yield under **`h2o140c`** at **28.1% of xylan**.",
           "fermentation": "Aim 2 Bioconversion & Thermochemical Conversion (**165 Fermentation**, **0 Gasification** obs): Fermentation achieves **3.64 g/L 3-HP** (**18.7% g/g yield**) with **16.9% total sugar consumption**. "
         }
@@ -131671,8 +131671,8 @@
           "analysis_type": "XRF Elemental Analysis",
           "category": "Protocol / Detection Limit",
           "tone": "info",
-          "note_text": "other two replicates are <lod",
-          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<LOD); reported statistics reflect the quantifiable replicate(s).",
+          "note_text": "other two replicates are <dl",
+          "interpretation": "One or two technical XRF replicates fell below the instrument Limit of Detection (<DL); reported statistics reflect the quantifiable replicate(s).",
           "sample_names": ["pos-wst034km2(62)", "war-wst038km2(da)"],
           "record_ids": [
             "(62)beab",
@@ -131689,7 +131689,7 @@
           "analysis_type": "Calorimetry",
           "category": "Protocol / Method Context",
           "tone": "info",
-          "note_text": "preformed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. geletain capsules used were fully packed with powder.",
+          "note_text": "performed isoperibolic, 25c, moisture analysis conducted and used to calculate dry hhv value on raw data document. gelatin capsules used were fully packed with powder.",
           "interpretation": "Bomb calorimetry performed isoperibolically at 25\u00b0C using powder-packed gelatin capsules with co-measured moisture correction for dry-basis HHV.",
           "sample_names": ["pos-wst034km2(62)"],
           "record_ids": ["(62)00ca", "(62)1300"],

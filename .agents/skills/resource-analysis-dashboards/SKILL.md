@@ -21,21 +21,22 @@ All dashboards in the suite are generated reproducibly by standalone Python CLI
 scripts that query the PostgreSQL database (`ca_biositing.datamodels.database`)
 or an offline snapshot (`--from-snapshot`), compute statistical & AI insights
 into a versioned JSON sidecar (`data/insights/resource_ai_insights.json`), and
-embed a compressed dictionary-encoded payload directly into self-contained `.html`
-files that open in any browser (Safari, Chrome, Edge, Firefox) via `file://` or
-HTTP without a backend server.
+embed a compressed dictionary-encoded payload directly into self-contained
+`.html` files that open in any browser (Safari, Chrome, Edge, Firefox) via
+`file://` or HTTP without a backend server.
 
-| Suite Page / Asset | Generator Script | Output HTML / File Path | Purpose |
-| :--- | :--- | :--- | :--- |
-| **AI & Statistical Insights Sidecar** | `analysis/metadata/resource_insights_engine.py` | `data/insights/resource_ai_insights.json` | Mines free-text bench notes (`observation.note`, `experiment.note`, `prepared_sample.note`, `field_sample.note`), computes within-group ($\text{RSD}_{\text{within}}$) vs. between-group ($\text{RSD}_{\text{between}}$) replicate precision, runs 3-test outlier screening with trace-element cutoffs (`<100 ppm` ICP / `<0.5%` XRF), and generates per-resource executive synthesis briefs. |
-| **Page 1: Resource Characterization & AI Brief** | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_analysis_dashboard.html` | Clean, focused single-resource characterization dashboard with compact 2-card Executive AI Brief, 4 KPI cards, and 5 domain visualization tabs (`Proximate & Mass Balance`, `Compositional & Ultimate`, `Calorimetry & XRD`, `Elemental (ICP & XRF)`, `Conversion: Pretreatment, Ferm & Gasification`). |
-| **Page 2: Statistical QC, Outlier Screening & Lab Notes Audit** | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_qc_outlier_dashboard.html` | Dedicated statistical quality control & audit workspace featuring within-group vs. between-group RSD scatter/ratio charts, interactive outlier screening table (`Dixon's Q`, `RSD > 20%`, `>3×SD_pooled` with trace-level suppression toggle), mined bench notes audit trail, and full anonymized CSV export. |
-| **Page 3: Multi-Resource Side-by-Side Comparison Explorer** | `analysis/metadata/resource_explorer_dashboard.py` | `exports/plots/metadata/resource_explorer_dashboard.html` | High-DPI HTML5 `<canvas>` explorer with searchable **Multi-Select Checklist Popovers** (`Resources`, `Prepared Samples`, `Parameters`, `Methods / Preps / Strains`) and a `Compare By:` grouping selector (`Resource`, `Prepared Sample`, `Field Sample`, `Experiment`, `Method / Prep`) for side-by-side visual and numeric comparison. |
-| **Unified Suite Landing Gallery** | `scripts/generate_dashboard_gallery.py` | `exports/plots/index.html` | Single entry-point landing page linking the 4 core products (`resource_analysis_dashboard.html`, `resource_qc_outlier_dashboard.html`, `resource_explorer_dashboard.html`, and `db_environment_drift_dashboard.html`). |
+| Suite Page / Asset                                              | Generator Script                                   | Output HTML / File Path                                     | Purpose                                                                                                                                                                                                                                                                                                                                                                                       |
+| :-------------------------------------------------------------- | :------------------------------------------------- | :---------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AI & Statistical Insights Sidecar**                           | `analysis/metadata/resource_insights_engine.py`    | `data/insights/resource_ai_insights.json`                   | Mines free-text bench notes (`observation.note`, `experiment.note`, `prepared_sample.note`, `field_sample.note`), computes within-group ($\text{RSD}_{\text{within}}$) vs. between-group ($\text{RSD}_{\text{between}}$) replicate precision, runs 3-test outlier screening with trace-element cutoffs (`<100 ppm` ICP / `<0.5%` XRF), and generates per-resource executive synthesis briefs. |
+| **Page 1: Resource Characterization & AI Brief**                | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_analysis_dashboard.html`   | Clean, focused single-resource characterization dashboard with compact 2-card Executive AI Brief, 4 KPI cards, and 5 domain visualization tabs (`Proximate & Mass Balance`, `Compositional & Ultimate`, `Calorimetry & XRD`, `Elemental (ICP & XRF)`, `Conversion: Pretreatment, Ferm & Gasification`).                                                                                       |
+| **Page 2: Statistical QC, Outlier Screening & Lab Notes Audit** | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_qc_outlier_dashboard.html` | Dedicated statistical quality control & audit workspace featuring within-group vs. between-group RSD scatter/ratio charts, interactive outlier screening table (`Dixon's Q`, `RSD > 20%`, `>3×SD_pooled` with trace-level suppression toggle), mined bench notes audit trail, and full anonymized CSV export.                                                                                 |
+| **Page 3: Multi-Resource Side-by-Side Comparison Explorer**     | `analysis/metadata/resource_explorer_dashboard.py` | `exports/plots/metadata/resource_explorer_dashboard.html`   | High-DPI HTML5 `<canvas>` explorer with searchable **Multi-Select Checklist Popovers** (`Resources`, `Prepared Samples`, `Parameters`, `Methods / Preps / Strains`) and a `Compare By:` grouping selector (`Resource`, `Prepared Sample`, `Field Sample`, `Experiment`, `Method / Prep`) for side-by-side visual and numeric comparison.                                                      |
+| **Unified Suite Landing Gallery**                               | `scripts/generate_dashboard_gallery.py`            | `exports/plots/index.html`                                  | Single entry-point landing page linking the 4 core products (`resource_analysis_dashboard.html`, `resource_qc_outlier_dashboard.html`, `resource_explorer_dashboard.html`, and `db_environment_drift_dashboard.html`).                                                                                                                                                                        |
 
 ## 2. One-Command Workflow (Pixi Tasks)
 
-To refresh the entire suite from the live local PostgreSQL database (`localhost:5432`):
+To refresh the entire suite from the live local PostgreSQL database
+(`localhost:5432`):
 
 ```bash
 # Refresh AI insights sidecar + all modular HTML dashboards + gallery index
@@ -85,8 +86,8 @@ python3 analysis/metadata/resource_explorer_dashboard.py \
 
 ## 4. Multi-Resource Collaborator Slice `.html` & `.csv` Exporter
 
-You can export a physically isolated, standalone single- or multi-resource `.html`
-dashboard and accompanying `.csv` data slice for external collaborators
+You can export a physically isolated, standalone single- or multi-resource
+`.html` dashboard and accompanying `.csv` data slice for external collaborators
 (containing zero rows, zero dictionary entries, and zero AI insights from
 unselected resources in `window.__BIOCIRV_DATA__`, while preserving anonymous
 provider codenames and masking analyst emails by default):
@@ -110,29 +111,32 @@ pixi run python analysis/metadata/resource_analysis_dashboard.py \
 ```
 
 ### In-App Modal Export
-- Click **"📤 Export Slice (.html)"** in the header of Page 1, Page 2, or Page 3,
-  select one or more target resources, choose which dashboard pages (`Page 1`,
-  `Page 2`, `Page 3`) and active parameter/sample/method/date filters to include,
-  and download the self-contained `.html` slice and `.csv` bundle directly in the
-  browser.
+
+- Click **"📤 Export Slice (.html)"** in the header of Page 1, Page 2, or Page
+  3, select one or more target resources, choose which dashboard pages
+  (`Page 1`, `Page 2`, `Page 3`) and active parameter/sample/method/date filters
+  to include, and download the self-contained `.html` slice and `.csv` bundle
+  directly in the browser.
 
 ## 5. Interactive QC Filtering, Replicate Mean ± SD & Issue Reporting
 
-- **Default `qc_pass = pass`**: All dashboards (Page 1, Page 2, and Page 3) default their initial load and reset state
-  to `qc_pass = pass`.
+- **Default `qc_pass = pass`**: All dashboards (Page 1, Page 2, and Page 3)
+  default their initial load and reset state to `qc_pass = pass`.
 - **Replicate Mean ± SD & Field Sample / Experiment Grouping**:
-  - Toggle between `Individual Points` and `Replicate Mean ± SD` error bars, and group by `Field Sample` or `Experiment / Run` to compare replicate cohorts.
+  - Toggle between `Individual Points` and `Replicate Mean ± SD` error bars, and
+    group by `Field Sample` or `Experiment / Run` to compare replicate cohorts.
 - **Report a Bug (`🐛 Report a Bug`)**:
   - Every dashboard header includes a **"🐛 Report a Bug"** modal that captures
-    active page/resource/filter context and opens a pre-populated GitHub
-    Issue URL.
+    active page/resource/filter context and opens a pre-populated GitHub Issue
+    URL.
 
 ## 6. Key Domain Rules & Guardrails
 
 1. **All 10 Aim 1 & Aim 2 Analytical Record Tables Included**:
-   - Always include `compositional_record`, `proximate_record`, `ultimate_record`,
-     `xrf_record`, `icp_record`, `calorimetry_record`, `xrd_record`,
-     `pretreatment_record`, `fermentation_record`, and `gasification_record`.
+   - Always include `compositional_record`, `proximate_record`,
+     `ultimate_record`, `xrf_record`, `icp_record`, `calorimetry_record`,
+     `xrd_record`, `pretreatment_record`, `fermentation_record`, and
+     `gasification_record`.
 2. **Standard Chemical Element Symbol Capitalization (`ICP` & `XRF`)**:
    - Raw database parameter strings store element symbols in lowercase (`ca`,
      `fe`, `mg`, `si`, `na`, `k`, `zn`, `cu`, `mn`, `al`, `p`, `s`, `cl`, `ti`,
@@ -142,14 +146,14 @@ pixi run python analysis/metadata/resource_analysis_dashboard.py \
 3. **Statistical Outlier Screening & Low-Abundance Trace Cutoffs**:
    - **Within-Group vs. Between-Group RSD**:
      - $\text{RSD}_{\text{within}}$ measures analytical repeatability across
-       technical replicates of the same `(resource, analysis_type, parameter,
-       prepared_sample, method_or_strain)`.
+       technical replicates of the same
+       `(resource, analysis_type, parameter, prepared_sample, method_or_strain)`.
      - $\text{RSD}_{\text{between}}$ measures sample-to-sample heterogeneity
-       across distinct prepared samples/methods of the same `(resource,
-       analysis_type, parameter)`.
+       across distinct prepared samples/methods of the same
+       `(resource, analysis_type, parameter)`.
    - **Trace-Level Minimum Cutoffs**:
-     - For `icp analysis`: groups with $|\bar{x}| < 100\text{ ppm}$ (`mg/kg`) are
-       marked `below_cutoff = True` so near-detection-limit noise does not
+     - For `icp analysis`: groups with $|\bar{x}| < 100\text{ ppm}$ (`mg/kg`)
+       are marked `below_cutoff = True` so near-detection-limit noise does not
        trigger false-positive high-RSD or Dixon's Q flags.
      - For `xrf analysis`: groups with $|\bar{x}| < 0.5\%$ are marked
        `below_cutoff = True`.
