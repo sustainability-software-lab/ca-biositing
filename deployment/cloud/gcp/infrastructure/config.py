@@ -65,8 +65,8 @@ SA_MIGRATE = f"biocirv-{_sa_env}-cr-migrate"
 SA_DEPLOYER = f"biocirv-{_sa_env}-gh-deploy"
 SA_OAUTH2_PROXY = f"biocirv-{_sa_env}-cr-pfct-auth"
 SA_FRONTEND = f"biocirv-{_sa_env}-cr-frontend"
-SA_DASHBOARDS_PUBLISHER = f"biocirv-{STACK_NAME}-dash-pub"
-SA_DASHBOARDS_READER = f"biocirv-{STACK_NAME}-dash-read"
+SA_DASHBOARDS_PUBLISHER = f"biocirv-{_sa_env}-dash-pub"
+SA_DASHBOARDS_READER = f"biocirv-{_sa_env}-dash-read"
 
 # Workload Identity Federation IDs
 WIF_POOL_ID = f"github-actions-{STACK_NAME}"

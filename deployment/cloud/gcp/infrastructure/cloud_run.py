@@ -122,10 +122,6 @@ def create_cloud_run_resources(
                             name="BIOSITING_GSHEET_CREDENTIALS_PATH",
                             value="/app/gsheets-credentials/credentials.json",
                         ),
-                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
-                            name="CREDENTIALS_PATH",
-                            value="/app/gsheets-credentials/credentials.json",
-                        ),
                         *(
                             [gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                                 name="API_CORS_ORIGINS",
