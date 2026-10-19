@@ -390,3 +390,58 @@ def test_webservice_has_zero_pipeline_imports() -> None:
                     offending.append(f"{py_file.name}: from {mod} import ...")
 
     assert offending == [], f"Forbidden pipeline imports in webservice: {offending}"
+
+
+def test_portal_auth_public_config_and_rest_gcs_adapter(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify GET /v1/qc/auth/config returns google_client_id and _RestBucket/_RestBlob works without google-cloud-storage."""
+    monkeypatch.setattr(
+        config,
+        "google_client_id",
+        "123456789-mock.apps.googleusercontent.com",
+    )
+    cfg_resp = client.get("/v1/qc/auth/config")
+    assert cfg_resp.status_code == 200
+    payload = cfg_resp.json()
+    assert payload["google_client_id"] == "123456789-mock.apps.googleusercontent.com"
+    assert "lbl.gov" in payload["allowed_domains"]
+
+    from ca_biositing.webservice.services.dashboard_loader import _RestBucket
+
+    class _FakeResp:
+        def __init__(
+            self,
+            status_code: int,
+            json_data: dict | None = None,
+            content: bytes = b"",
+        ) -> None:
+            self.status_code = status_code
+            self._json = json_data or {}
+            self.content = content
+            self.headers = {"ETag": "etag-rest-1"}
+
+        def json(self) -> dict:
+            return self._json
+
+        def raise_for_status(self) -> None:
+            if self.status_code >= 400:
+                raise RuntimeError(f"HTTP {self.status_code}")
+
+    class _FakeSession:
+        def get(self, url: str, timeout: int = 10) -> _FakeResp:
+            if "alt=media" in url:
+                return _FakeResp(200, content=b"<html>REST GCS Content</html>")
+            if "missing.html" in url:
+                return _FakeResp(404)
+            return _FakeResp(200, json_data={"etag": "etag-rest-1"})
+
+    bucket = _RestBucket(_FakeSession(), "biocirv-staging-dashboards")
+    blob = bucket.blob("dashboards/staging/latest/index.html")
+    assert blob.exists() is True
+    assert blob.etag == "etag-rest-1"
+    assert blob.download_as_bytes() == b"<html>REST GCS Content</html>"
+
+    missing_blob = bucket.blob("dashboards/staging/latest/missing.html")
+    assert missing_blob.exists() is False
