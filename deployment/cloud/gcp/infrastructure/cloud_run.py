@@ -8,6 +8,8 @@ import pulumi_gcp as gcp
 
 from config import (
     GCP_REGION,
+    STACK_NAME,
+    DASHBOARDS_BUCKET_NAME,
     WEBSERVICE_IMAGE,
     PIPELINE_IMAGE,
     PREFECT_SERVER_IMAGE,
@@ -103,6 +105,14 @@ def create_cloud_run_resources(
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="API_JWT_COOKIE_SECURE",
                             value="true",
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="DASHBOARDS_BUCKET_NAME",
+                            value=DASHBOARDS_BUCKET_NAME,
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="DASHBOARDS_GCS_PREFIX",
+                            value=f"dashboards/{STACK_NAME}/latest",
                         ),
                         *(
                             [gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(

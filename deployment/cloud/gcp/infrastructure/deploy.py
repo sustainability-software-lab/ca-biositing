@@ -31,9 +31,17 @@ def pulumi_program():
     # 1. Enable required GCP APIs — downstream resources depend on these.
     api_services = enable_apis()
 
+    # 1.4. IAM: service accounts and role bindings
+    iam = create_service_accounts(
+        depends_on=[api_services["iam"], api_services["cloudresourcemanager"]]
+    )
+
     # 1.5. Workload Identity Federation for GitHub Actions CI/CD
     # (must be created before AR so the deployer SA has artifactregistry.admin)
-    wif = create_wif(depends_on=[api_services["iam"]])
+    wif = create_wif(
+        depends_on=[api_services["iam"]],
+        service_accounts=iam.service_accounts,
+    )
 
     # 1.6. Artifact Registry: remote repo proxying GHCR for Cloud Run
     # Depends on the deployer SA's AR admin grant (CI runs as this SA)
@@ -57,11 +65,6 @@ def pulumi_program():
     # 3. Secrets: DB password, GSheets credentials, read-only user passwords
     secret_resources = create_secrets(
         sql, depends_on=[api_services["secretmanager"]]
-    )
-
-    # 4. IAM: service accounts and role bindings
-    iam = create_service_accounts(
-        depends_on=[api_services["iam"], api_services["cloudresourcemanager"]]
     )
 
     # 4.5. Storage: GCS buckets
@@ -126,6 +129,7 @@ def pulumi_program():
     pulumi.export("image_bucket_name", storage.bucket.name)
     pulumi.export("backup_bucket_name", storage.backup_bucket.name)
     pulumi.export("gasification_bucket_name", storage.gasification_bucket.name)
+    pulumi.export("dashboards_bucket_name", storage.dashboards_bucket.name)
 
 
 def get_stack() -> auto.Stack:

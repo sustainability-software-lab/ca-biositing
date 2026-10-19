@@ -6,7 +6,14 @@ from typing import Sequence
 import pulumi
 import pulumi_gcp as gcp
 
-from config import IMAGE_BUCKET_NAME, BACKUP_BUCKET_NAME, GASIFICATION_BUCKET_NAME, GCP_REGION
+from config import (
+    IMAGE_BUCKET_NAME,
+    BACKUP_BUCKET_NAME,
+    GASIFICATION_BUCKET_NAME,
+    DASHBOARDS_BUCKET_NAME,
+    GCP_REGION,
+    STACK_NAME,
+)
 
 
 @dataclass
@@ -14,6 +21,7 @@ class StorageResources:
     bucket: gcp.storage.Bucket
     backup_bucket: gcp.storage.Bucket
     gasification_bucket: gcp.storage.Bucket
+    dashboards_bucket: gcp.storage.Bucket
 
 
 def create_storage_resources(
@@ -98,6 +106,61 @@ def create_storage_resources(
             opts=opts,
         )
 
+    # Create the dashboards and snapshots artifact bucket (not public)
+    dashboards_bucket = gcp.storage.Bucket(
+        "dashboards-bucket",
+        name=DASHBOARDS_BUCKET_NAME,
+        location=GCP_REGION,
+        uniform_bucket_level_access=True,
+        force_destroy=(STACK_NAME == "staging"),
+        lifecycle_rules=[
+            gcp.storage.BucketLifecycleRuleArgs(
+                action=gcp.storage.BucketLifecycleRuleActionArgs(type="Delete"),
+                condition=gcp.storage.BucketLifecycleRuleConditionArgs(
+                    age=90,
+                    matches_prefixes=[f"dashboards/{STACK_NAME}/20"],
+                ),
+            )
+        ],
+        opts=opts,
+    )
+
+    if "dashboards-publisher" in service_accounts:
+        gcp.storage.BucketIAMMember(
+            "dashboards-bucket-publisher-admin",
+            bucket=dashboards_bucket.name,
+            role="roles/storage.objectAdmin",
+            member=service_accounts["dashboards-publisher"].email.apply(
+                lambda email: f"serviceAccount:{email}"
+            ),
+            opts=opts,
+        )
+
+    if "dashboards-reader" in service_accounts:
+        gcp.storage.BucketIAMMember(
+            "dashboards-bucket-reader-viewer",
+            bucket=dashboards_bucket.name,
+            role="roles/storage.objectViewer",
+            member=service_accounts["dashboards-reader"].email.apply(
+                lambda email: f"serviceAccount:{email}"
+            ),
+            opts=opts,
+        )
+
+    if "webservice" in service_accounts:
+        gcp.storage.BucketIAMMember(
+            "dashboards-bucket-webservice-viewer",
+            bucket=dashboards_bucket.name,
+            role="roles/storage.objectViewer",
+            member=service_accounts["webservice"].email.apply(
+                lambda email: f"serviceAccount:{email}"
+            ),
+            opts=opts,
+        )
+
     return StorageResources(
-        bucket=bucket, backup_bucket=backup_bucket, gasification_bucket=gasification_bucket
+        bucket=bucket,
+        backup_bucket=backup_bucket,
+        gasification_bucket=gasification_bucket,
+        dashboards_bucket=dashboards_bucket,
     )
