@@ -24,9 +24,19 @@ def load_proximate_record(df: pd.DataFrame):
         table_columns = {c.name for c in ProximateRecord.__table__.columns}
         records = df.replace({np.nan: None}).to_dict(orient='records')
 
+        from ca_biositing.pipeline.utils.qc_protected_records import (
+            build_qc_aware_update_dict,
+            get_unsynced_qc_protected_record_ids,
+        )
+
         engine = get_engine()
         with engine.connect() as conn:
             with Session(bind=conn) as session:
+                protected_record_ids = get_unsynced_qc_protected_record_ids(
+                    session,
+                    ProximateRecord.__tablename__,
+                    [str(r["record_id"]) for r in records if r.get("record_id") is not None],
+                )
                 for record in records:
                     clean_record = {k: v for k, v in record.items() if k in table_columns}
                     clean_record['updated_at'] = now
@@ -34,11 +44,12 @@ def load_proximate_record(df: pd.DataFrame):
                         clean_record['created_at'] = now
 
                     stmt = insert(ProximateRecord).values(clean_record)
-                    update_dict = {
-                        c.name: stmt.excluded[c.name]
-                        for c in ProximateRecord.__table__.columns
-                        if c.name not in ['id', 'created_at', 'record_id']
-                    }
+                    update_dict = build_qc_aware_update_dict(
+                        ProximateRecord,
+                        stmt,
+                        protected_record_ids,
+                        record_id=str(clean_record.get("record_id") or ""),
+                    )
                     upsert_stmt = stmt.on_conflict_do_update(
                         index_elements=['record_id'],
                         set_=update_dict

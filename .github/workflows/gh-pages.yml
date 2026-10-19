@@ -7,7 +7,6 @@ on:
       - "resources/assets/resource_info.csv"
       - "resources/assets/resource_info_header_mapping.json"
       - "resources/assets/index.html"
-      - "exports/plots/**"
       - "scripts/validate_headers.py"
       - "scripts/csv_to_json.py"
       - "scripts/generate_dashboard_gallery.py"
@@ -16,6 +15,13 @@ on:
     branches:
       - main
     paths: *asset-paths
+  workflow_run:
+    workflows:
+      - "Build & Export BioCirV Dashboards & Drift Audit"
+    types:
+      - completed
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -26,9 +32,23 @@ concurrency:
   group: pages-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  GCP_PROJECT_ID: "biocirv-470318"
+  DASHBOARDS_ENV: "staging"
+  DASHBOARDS_BUCKET: "biocirv-staging-dashboards"
+  GCP_WIF_PROVIDER: "projects/194468397458/locations/global/workloadIdentityPools/github-actions-staging/providers/github-oidc-staging"
+  DASHBOARDS_READER_SA: "biocirv-staging-dash-read@biocirv-470318.iam.gserviceaccount.com"
+  # Checkpoint §2.1: Default to public overview/redacted subset on GitHub Pages,
+  # excluding internal QC Audit Workbench, QC Outlier, Multi-Resource Explorer,
+  # and DB Environment Drift pages. Override via repository variable GH_PAGES_GALLERY_GLOB.
+  GH_PAGES_GALLERY_GLOB: "index.html metadata/resource_analysis_dashboard.html"
+
 jobs:
   validate:
     name: Validate resource info assets
+    if: >-
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -39,7 +59,9 @@ jobs:
   build-and-deploy:
     name: Build and deploy to GitHub Pages
     needs: validate
-    if: github.ref == 'refs/heads/main'
+    if: >-
+      (github.ref == 'refs/heads/main') && (github.event_name != 'workflow_run'
+      || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -47,18 +69,79 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Authenticate to GCP for Dashboard Gallery Fetch
+        id: gcp_auth
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DASHBOARDS_READER_SA }}
+
+      - name: Set up Google Cloud SDK
+        if: steps.gcp_auth.outcome == 'success'
+        uses: google-github-actions/setup-gcloud@v3
+
       - name: Convert CSV to JSON
         run: python scripts/csv_to_json.py
 
-      - name: Build site
+      - name: Build site and pull public gallery subset from GCS
+        env:
+          GALLERY_GLOB:
+            ${{ vars.GH_PAGES_GALLERY_GLOB || env.GH_PAGES_GALLERY_GLOB }}
         run: |
-          mkdir -p _site
+          mkdir -p _site _site/gallery /tmp/gcs_gallery
           cp resources/assets/resource_info.json _site/
           cp resources/assets/resource_info_header_mapping.json _site/
           cp resources/assets/index.html _site/
-          # Deploy dashboard gallery to /gallery subdirectory
-          mkdir -p _site/gallery
-          cp -r exports/plots/* _site/gallery/
+
+          if [ "${{ steps.gcp_auth.outcome }}" = "success" ]; then
+            echo "Fetching latest dashboard bundle from gs://${DASHBOARDS_BUCKET}/dashboards/${DASHBOARDS_ENV}/latest/ ..."
+            gcloud storage cp -r "gs://${DASHBOARDS_BUCKET}/dashboards/${DASHBOARDS_ENV}/latest/*" /tmp/gcs_gallery/ 2>/dev/null || true
+          fi
+
+          # Copy only the allowlisted public overview subset (GALLERY_GLOB) into _site/gallery/
+          for rel_pattern in $GALLERY_GLOB; do
+            for src_file in /tmp/gcs_gallery/$rel_pattern; do
+              if [ -f "$src_file" ]; then
+                rel_path="${src_file#/tmp/gcs_gallery/}"
+                case "$rel_path" in
+                  metadata/resource_audit_workbench.html|metadata/resource_qc_outlier_dashboard.html|metadata/resource_explorer_dashboard.html|audit/db_environment_drift_dashboard.html)
+                    echo "Skipping internal-only dashboard on public GitHub Pages: $rel_path"
+                    continue
+                    ;;
+                esac
+                mkdir -p "_site/gallery/$(dirname "$rel_path")"
+                cp "$src_file" "_site/gallery/$rel_path"
+                echo "Staged gallery asset: _site/gallery/$rel_path"
+              fi
+            done
+          done
+
+          if [ ! -f "_site/gallery/index.html" ]; then
+            cat << 'EOF' > _site/gallery/index.html
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="UTF-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <title>BioCirV Analytics Gallery</title>
+            <style>
+              body { font-family: system-ui, -apple-system, sans-serif; background: #0b1120; color: #f8fafc; margin: 0; padding: 3rem 1.5rem; text-align: center; }
+              .banner { max-width: 680px; margin: 4rem auto; background: #111827; border: 1px solid #1e293b; border-radius: 12px; padding: 2rem; }
+              h1 { color: #38bdf8; margin-top: 0; }
+              p { color: #94a3b8; line-height: 1.6; }
+            </style>
+          </head>
+          <body>
+            <div class="banner">
+              <h1>BioCirV Analytics Gallery</h1>
+              <p>Public overview dashboards are published from the BioCirV GCS artifact store after each pipeline build. Full interactive QC and environment audit workbenches are served via the authenticated BioCirV Portal (<code>/v1/dashboards/</code>).</p>
+            </div>
+          </body>
+          </html>
+          EOF
+            echo "Rendered fallback placeholder _site/gallery/index.html"
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

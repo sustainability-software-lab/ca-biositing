@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends
 
 from ca_biositing.webservice.dependencies import get_current_user
 from ca_biositing.webservice.v1.auth.router import router as auth_router
+from ca_biositing.webservice.v1.endpoints import qc_review
 from ca_biositing.webservice.v1.feedstocks import router as feedstocks_router
 
 # Create the main v1 router
@@ -30,3 +31,6 @@ router.include_router(auth_router)
 
 # Data endpoints require a valid JWT
 router.include_router(feedstocks_router, dependencies=[Depends(get_current_user)])
+
+# BioCirV Portal & QC Audit Workbench endpoints (isolated portal auth)
+router.include_router(qc_review.router)

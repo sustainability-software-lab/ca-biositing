@@ -54,6 +54,8 @@ data/landiq/*.sbx
 !resources/assets/*.csv
 !data/static/*.csv
 !audit/references/*.csv
+!data/qc/
+!data/qc/qc_review_decisions_seed.csv
 *.pdf
 src/ca_biositing/webservice/ca_biositing/webservice/_version.py
 

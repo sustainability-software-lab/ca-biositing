@@ -9,7 +9,7 @@ from typing import List
 
 from ca_biositing.webservice._version import __version__ as _pkg_version
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -65,6 +65,63 @@ class WebServiceConfig(BaseSettings):
     # Defaults to False for local HTTP dev. Cloud Run must set API_JWT_COOKIE_SECURE=true.
     jwt_cookie_secure: bool = False
 
+    # Isolated BioCirV Portal Auth, 2-Role RBAC & GCS Dashboard configuration
+    google_client_id: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "google_client_id", "API_GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_ID"
+        ),
+    )
+    dashboard_allowed_domains: list[str] = Field(
+        default=["lbl.gov", "ucdavis.edu", "beamcircular.org"],
+        validation_alias=AliasChoices(
+            "dashboard_allowed_domains",
+            "API_DASHBOARD_ALLOWED_DOMAINS",
+            "DASHBOARD_ALLOWED_DOMAINS",
+        ),
+    )
+    dashboard_allowed_emails: list[str] = Field(
+        default=[],
+        validation_alias=AliasChoices(
+            "dashboard_allowed_emails",
+            "API_DASHBOARD_ALLOWED_EMAILS",
+            "DASHBOARD_ALLOWED_EMAILS",
+        ),
+    )
+    dashboard_admin_emails: list[str] = Field(
+        default=["petersmith@lbl.gov"],
+        validation_alias=AliasChoices(
+            "dashboard_admin_emails",
+            "API_DASHBOARD_ADMIN_EMAILS",
+            "DASHBOARD_ADMIN_EMAILS",
+        ),
+    )
+    require_dashboard_auth: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "require_dashboard_auth",
+            "API_REQUIRE_DASHBOARD_AUTH",
+            "REQUIRE_DASHBOARD_AUTH",
+        ),
+    )
+    dashboards_bucket_name: str = Field(
+        default="",
+        validation_alias=AliasChoices(
+            "dashboards_bucket_name",
+            "API_DASHBOARDS_BUCKET_NAME",
+            "DASHBOARDS_BUCKET_NAME",
+        ),
+    )
+    dashboards_gcs_prefix: str = Field(
+        default="dashboards/staging/latest",
+        validation_alias=AliasChoices(
+            "dashboards_gcs_prefix",
+            "API_DASHBOARDS_GCS_PREFIX",
+            "DASHBOARDS_GCS_PREFIX",
+        ),
+    )
+
 
 # Global configuration instance
 config = WebServiceConfig()
+settings = config
