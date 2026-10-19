@@ -89,6 +89,137 @@ def resolve_worksheet_target(
     return (AIM1_GSHEET_NAME, "03.1-Proximate")
 
 
+def _col_to_letter(col_idx_1based: int) -> str:
+    """Convert a 1-based column index to an A1 column letter (e.g. 1 -> A, 27 -> AA)."""
+    result = ""
+    n = col_idx_1based
+    while n > 0:
+        n, rem = divmod(n - 1, 26)
+        result = chr(65 + rem) + result
+    return result
+
+
+def _sync_via_googleapiclient(
+    creds_path: Path,
+    sheet_name: str,
+    worksheet_name: str,
+    record_id: str,
+    qc_result: str,
+    decision_id: int | str,
+    resolved_by_email: str,
+    review_note: str,
+    resolved_at: datetime | None,
+    rationale_chips: str | None,
+) -> bool:
+    """Perform live Google Sheets writeback using `google-api-python-client` (installed in `webservice`)."""
+    try:
+        from google.oauth2 import service_account
+        from googleapiclient.discovery import build
+    except ImportError:
+        return False
+
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive.readonly",
+    ]
+    creds = service_account.Credentials.from_service_account_file(
+        str(creds_path), scopes=scopes
+    )
+    drive_svc = build("drive", "v3", credentials=creds, cache_discovery=False)
+    escaped_name = sheet_name.replace("'", "\\'")
+    q = (
+        f"name = '{escaped_name}' and "
+        "mimeType = 'application/vnd.google-apps.spreadsheet' and trashed = false"
+    )
+    files_resp = (
+        drive_svc.files()
+        .list(
+            q=q,
+            spaces="drive",
+            fields="files(id, name)",
+            pageSize=5,
+            supportsAllDrives=True,
+            includeItemsFromAllDrives=True,
+        )
+        .execute()
+    )
+    files = files_resp.get("files") or []
+    if not files:
+        return False
+    spreadsheet_id = files[0]["id"]
+
+    sheets_svc = build("sheets", "v4", credentials=creds, cache_discovery=False)
+    range_name = f"'{worksheet_name}'"
+    val_resp = (
+        sheets_svc.spreadsheets()
+        .values()
+        .get(spreadsheetId=spreadsheet_id, range=range_name)
+        .execute()
+    )
+    all_values = val_resp.get("values") or []
+    if not all_values:
+        return False
+
+    headers = [
+        re.sub(r"[^a-z0-9]+", "_", h.strip().lower()).strip("_")
+        for h in all_values[0]
+    ]
+    rec_col = next(
+        (i + 1 for i, h in enumerate(headers) if h in {"record_id", "id", "observation_id"}),
+        None,
+    )
+    qc_col = next(
+        (i + 1 for i, h in enumerate(headers) if h in {"qc_result", "qc_pass", "qc_status"}),
+        None,
+    )
+    note_col = next(
+        (i + 1 for i, h in enumerate(headers) if h in {"note", "notes", "lab_note"}),
+        None,
+    )
+    if rec_col is None:
+        return False
+
+    data_updates: list[dict[str, Any]] = []
+    for row_idx, row in enumerate(all_values[1:], start=2):
+        cell_val = row[rec_col - 1].strip() if (rec_col - 1) < len(row) else ""
+        if cell_val == record_id:
+            if qc_col is not None and qc_result:
+                col_let = _col_to_letter(qc_col)
+                data_updates.append(
+                    {
+                        "range": f"'{worksheet_name}'!{col_let}{row_idx}",
+                        "values": [[qc_result]],
+                    }
+                )
+            if note_col is not None:
+                existing_cell_note = (
+                    row[note_col - 1].strip() if (note_col - 1) < len(row) else ""
+                )
+                merged_cell_note = format_qc_audit_note(
+                    existing_note=existing_cell_note,
+                    decision_id=decision_id,
+                    new_qc_pass=qc_result,
+                    resolved_by_email=resolved_by_email,
+                    review_note=review_note,
+                    resolved_at=resolved_at,
+                    rationale_chips=rationale_chips,
+                )
+                col_let = _col_to_letter(note_col)
+                data_updates.append(
+                    {
+                        "range": f"'{worksheet_name}'!{col_let}{row_idx}",
+                        "values": [[merged_cell_note]],
+                    }
+                )
+    if data_updates:
+        sheets_svc.spreadsheets().values().batchUpdate(
+            spreadsheetId=spreadsheet_id,
+            body={"valueInputOption": "USER_ENTERED", "data": data_updates},
+        ).execute()
+        return True
+    return False
+
+
 def _sync_via_gspread_if_configured(
     sheet_name: str,
     worksheet_name: str,
@@ -114,7 +245,21 @@ def _sync_via_gspread_if_configured(
         import gspread  # type: ignore[import-untyped]
         from gspread.utils import rowcol_to_a1  # type: ignore[import-untyped]
     except ImportError:
-        return False
+        try:
+            return _sync_via_googleapiclient(
+                creds_path=creds_path,
+                sheet_name=sheet_name,
+                worksheet_name=worksheet_name,
+                record_id=record_id,
+                qc_result=qc_result,
+                decision_id=decision_id,
+                resolved_by_email=resolved_by_email,
+                review_note=review_note,
+                resolved_at=resolved_at,
+                rationale_chips=rationale_chips,
+            )
+        except Exception:
+            return False
 
     gc = gspread.service_account(filename=str(creds_path))
     sh = gc.open(sheet_name)

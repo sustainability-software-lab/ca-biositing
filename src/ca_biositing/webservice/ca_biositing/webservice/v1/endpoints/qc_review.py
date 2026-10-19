@@ -17,6 +17,7 @@ from sqlmodel import Session, select
 
 from ca_biositing.datamodels.database import get_session
 from ca_biositing.datamodels.models.qc.qc_review_decision import QcReviewDecision
+from ca_biositing.webservice.config import config
 from ca_biositing.webservice.services.gsheet_sync_service import (
     sync_pending_decisions_batch_to_gsheet,
     sync_single_decision_to_gsheet,
@@ -154,6 +155,17 @@ def _count_assigned_open(session: Session, email: str) -> int:
         ).all()
     )
     return len(rows)
+
+
+@router.get("/auth/config")
+def get_portal_auth_public_config() -> dict[str, Any]:
+    """Return public OIDC configuration (`google_client_id`, `allowed_domains`) for `login.html`."""
+    return {
+        "status": "ok",
+        "google_client_id": (config.google_client_id or "").strip(),
+        "allowed_domains": list(config.dashboard_allowed_domains or []),
+        "require_dashboard_auth": bool(config.require_dashboard_auth),
+    }
 
 
 @router.post("/auth/google")

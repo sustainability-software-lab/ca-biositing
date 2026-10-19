@@ -46,6 +46,7 @@ def render_login_html(timestamp_str: str) -> str:
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>BioCirV Portal Login — Google OAuth &amp; Role Session Manager</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
   <style>
     body {{
       background-color: #0b1120;
@@ -94,43 +95,56 @@ def render_login_html(timestamp_str: str) -> str:
     <div class="row g-4">
       <div class="col-md-6">
         <div class="auth-card p-4 h-100 shadow">
-          <h4 class="fw-bold mb-2">1. Google Identity Sign-In (Production / Cloud Run)</h4>
+          <h4 class="fw-bold mb-2">1. Google Identity Sign-In (Staging &amp; Production)</h4>
           <p class="text-secondary small mb-3">
             Sign in with your organizational Google account. Accounts in
             <code>@lbl.gov</code>, <code>@ucdavis.edu</code>, and <code>@beamcircular.org</code>
             receive <strong>analyst</strong> access to Products 1–4; emails listed in
-            <code>QC_ADMIN_EMAILS</code> receive <strong>admin</strong> access (unlocking
+            <code>DASHBOARD_ADMIN_EMAILS</code> receive <strong>admin</strong> access (unlocking
             Stage 2 Google Sheets write-back and Product 5 DB Drift Audit).
           </p>
 
-          <form id="google-token-form" class="mb-3">
-            <label for="input-google-id-token" class="form-label small fw-semibold">
-              Google ID Token / Credential (<code>POST /v1/qc/auth/google</code>)
-            </label>
-            <input
-              type="password"
-              id="input-google-id-token"
-              class="form-control form-control-sm mb-2"
-              placeholder="Paste Google ID token or use GIS button..."
-            />
-            <button type="submit" class="btn btn-info text-dark fw-bold w-100" id="btn-google-login">
-              🔐 Verify Google ID Token
-            </button>
-          </form>
+          <div class="mb-3 p-3 rounded bg-dark border border-secondary text-center">
+            <div class="small fw-semibold text-info mb-2">Sign in with Google Workspace</div>
+            <div id="google-gsi-button" class="d-flex justify-content-center my-2"></div>
+            <div id="google-gsi-status" class="small text-secondary">
+              Loading Google Sign-In configuration...
+            </div>
+          </div>
+
+          <details class="mb-3">
+            <summary class="small text-secondary" style="cursor: pointer;">
+              Advanced: Paste Google OIDC ID Token Manually (<code>POST /v1/qc/auth/google</code>)
+            </summary>
+            <form id="google-token-form" class="mt-2">
+              <label for="input-google-id-token" class="form-label small fw-semibold">
+                Google ID Token / Credential
+              </label>
+              <input
+                type="password"
+                id="input-google-id-token"
+                class="form-control form-control-sm mb-2"
+                placeholder="Paste Google ID token..."
+              />
+              <button type="submit" class="btn btn-info text-dark fw-bold w-100" id="btn-google-login">
+                🔐 Verify Google ID Token
+              </button>
+            </form>
+          </details>
 
           <hr class="border-secondary" />
 
           <h5 class="fw-bold mb-2">Current Portal Session (<code>GET /v1/qc/auth/me</code>)</h5>
           <div class="p-3 rounded bg-dark border border-secondary small mb-3" id="session-status-box">
             <div><strong>Status:</strong> <span id="session-auth-state">Checking...</span></div>
-            <div><strong>Email:</strong> <code id="session-user-email">analyst@lbl.gov</code></div>
-            <div><strong>Role:</strong> <span class="badge bg-info text-dark" id="session-user-role">analyst</span></div>
+            <div><strong>Email:</strong> <code id="session-user-email">unauthenticated</code></div>
+            <div><strong>Role:</strong> <span class="badge bg-info text-dark" id="session-user-role">none</span></div>
             <div><strong>Assigned Open QC Items:</strong> <span id="session-assigned-count">0</span></div>
           </div>
 
           <div class="d-flex gap-2">
             <a href="index.html" class="btn btn-outline-light btn-sm flex-grow-1">
-              ← Return to 5-Product Gallery
+              ← Open 5-Product Gallery
             </a>
             <a href="metadata/resource_audit_workbench.html" class="btn btn-primary btn-sm flex-grow-1">
               Open Product 4 Workbench →
@@ -146,7 +160,7 @@ def render_login_html(timestamp_str: str) -> str:
         <div class="auth-card p-4 h-100 shadow">
           <h4 class="fw-bold mb-2">2. Localhost Dev Session Switcher</h4>
           <p class="text-secondary small mb-3">
-            When running locally with <code>QC_AUTH_DEV_BYPASS=true</code>, switch between
+            When running locally on <code>localhost</code> / <code>127.0.0.1</code>, switch between
             <strong>Analyst</strong> and <strong>Admin</strong> personas via
             <code>POST /v1/qc/auth/dev-login</code> to test role-gated UI controls.
           </p>
@@ -218,6 +232,17 @@ def render_login_html(timestamp_str: str) -> str:
     (function () {{
       "use strict";
 
+      function getNextRedirectTarget() {{
+        try {{
+          var params = new URLSearchParams(window.location.search);
+          var next = params.get("next");
+          if (next && next.startsWith("/") && !next.startsWith("//")) {{
+            return next;
+          }}
+        }} catch (e) {{}}
+        return null;
+      }}
+
       function showFeedback(msg, isErr) {{
         var el = document.getElementById("login-feedback");
         if (!el) return;
@@ -230,7 +255,10 @@ def render_login_html(timestamp_str: str) -> str:
         fetch("/v1/qc/auth/me", {{ credentials: "same-origin" }})
           .then(function (r) {{ return r.ok ? r.json() : null; }})
           .then(function (data) {{
-            if (!data) return;
+            if (!data) {{
+              document.getElementById("session-auth-state").textContent = "Not Signed In";
+              return;
+            }}
             document.getElementById("session-auth-state").textContent =
               data.authenticated ? "Authenticated (" + (data.auth_mode || "cookie") + ")" : "Unauthenticated";
             document.getElementById("session-user-email").textContent = data.email || "anonymous";
@@ -239,6 +267,88 @@ def render_login_html(timestamp_str: str) -> str:
           }})
           .catch(function () {{
             document.getElementById("session-auth-state").textContent = "Offline / Static Preview";
+          }});
+      }}
+
+      function verifyGoogleIdToken(tok) {{
+        if (!tok) {{
+          showFeedback("Missing Google ID token.", true);
+          return;
+        }}
+        fetch("/v1/qc/auth/google", {{
+          method: "POST",
+          headers: {{ "Content-Type": "application/json" }},
+          credentials: "same-origin",
+          body: JSON.stringify({{ id_token: tok, credential: tok }})
+        }})
+          .then(function (r) {{ return r.json(); }})
+          .then(function (res) {{
+            if (res && res.authenticated) {{
+              showFeedback("Google OAuth verified for " + res.email + " (" + res.role + ")", false);
+              refreshMe();
+              var nextUrl = getNextRedirectTarget() || "/v1/dashboards/index.html";
+              setTimeout(function () {{
+                window.location.href = nextUrl;
+              }}, 350);
+            }} else {{
+              showFeedback((res && res.detail) || "Google token verification failed.", true);
+            }}
+          }})
+          .catch(function () {{
+            showFeedback("Could not reach /v1/qc/auth/google endpoint.", true);
+          }});
+      }}
+
+      function initGoogleSignInButton() {{
+        var statusEl = document.getElementById("google-gsi-status");
+        var btnContainer = document.getElementById("google-gsi-button");
+        fetch("/v1/qc/auth/config", {{ credentials: "same-origin" }})
+          .then(function (r) {{ return r.ok ? r.json() : null; }})
+          .then(function (cfg) {{
+            var clientId = cfg && cfg.google_client_id ? String(cfg.google_client_id).trim() : "";
+            if (!clientId) {{
+              if (statusEl) {{
+                statusEl.textContent = "GOOGLE_CLIENT_ID not configured on this server (use Localhost Dev Switcher or manual token).";
+              }}
+              return;
+            }}
+            var attempts = 0;
+            var timer = setInterval(function () {{
+              attempts += 1;
+              if (window.google && window.google.accounts && window.google.accounts.id) {{
+                clearInterval(timer);
+                window.google.accounts.id.initialize({{
+                  client_id: clientId,
+                  callback: function (response) {{
+                    if (response && response.credential) {{
+                      verifyGoogleIdToken(response.credential);
+                    }}
+                  }}
+                }});
+                if (btnContainer) {{
+                  window.google.accounts.id.renderButton(btnContainer, {{
+                    theme: "filled_blue",
+                    size: "large",
+                    text: "signin_with",
+                    shape: "pill",
+                    width: 280
+                  }});
+                }}
+                if (statusEl) {{
+                  statusEl.textContent = "Click 'Sign in with Google' using your @lbl.gov, @ucdavis.edu, or @beamcircular.org account.";
+                }}
+              }} else if (attempts > 40) {{
+                clearInterval(timer);
+                if (statusEl) {{
+                  statusEl.textContent = "Google Identity script blocked or unavailable. Use manual token below.";
+                }}
+              }}
+            }}, 150);
+          }})
+          .catch(function () {{
+            if (statusEl) {{
+              statusEl.textContent = "Static preview mode (no backend /v1/qc/auth/config).";
+            }}
           }});
       }}
 
@@ -261,10 +371,18 @@ def render_login_html(timestamp_str: str) -> str:
           credentials: "same-origin",
           body: JSON.stringify({{ email: email, name: name }})
         }})
-          .then(function (r) {{ return r.json(); }})
+          .then(function (r) {{ return r.json().then(function (d) {{ return {{ ok: r.ok, data: d }}; }}); }})
           .then(function (res) {{
-            showFeedback("Active session set to " + (res.email || email) + " (" + (res.role || "analyst") + ")", false);
+            if (!res.ok) {{
+              showFeedback((res.data && res.data.detail) || "Dev login disabled on this host.", true);
+              return;
+            }}
+            showFeedback("Active session set to " + (res.data.email || email) + " (" + (res.data.role || "analyst") + ")", false);
             refreshMe();
+            var nextUrl = getNextRedirectTarget();
+            if (nextUrl) {{
+              setTimeout(function () {{ window.location.href = nextUrl; }}, 350);
+            }}
           }})
           .catch(function () {{
             showFeedback("Local preview session set to " + email, false);
@@ -287,24 +405,7 @@ def render_login_html(timestamp_str: str) -> str:
         googleForm.addEventListener("submit", function (ev) {{
           ev.preventDefault();
           var tok = document.getElementById("input-google-id-token").value.trim();
-          fetch("/v1/qc/auth/google", {{
-            method: "POST",
-            headers: {{ "Content-Type": "application/json" }},
-            credentials: "same-origin",
-            body: JSON.stringify({{ id_token: tok, credential: tok }})
-          }})
-            .then(function (r) {{ return r.json(); }})
-            .then(function (res) {{
-              if (res && res.authenticated) {{
-                showFeedback("Google OAuth verified for " + res.email + " (" + res.role + ")", false);
-                refreshMe();
-              }} else {{
-                showFeedback((res && res.detail) || "Google token verification failed.", true);
-              }}
-            }})
-            .catch(function () {{
-              showFeedback("Could not reach /v1/qc/auth/google endpoint.", true);
-            }});
+          verifyGoogleIdToken(tok);
         }});
       }}
 
@@ -319,6 +420,7 @@ def render_login_html(timestamp_str: str) -> str:
         }});
       }}
 
+      initGoogleSignInButton();
       refreshMe();
     }})();
   </script>
