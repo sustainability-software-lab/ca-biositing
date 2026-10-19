@@ -596,6 +596,85 @@ could improve query performance and make it easier for researchers to explore
 the data without writing raw SQL. The existing `ca_biositing` materialized view
 schema is the first step in this direction.
 
+## BioCirV 5-Product Analytical & Two-Stage QC Audit Workbench Architecture
+
+The internal BioCirV analytical suite comprises five interactive HTML products
+generated from PostgreSQL or an offline snapshot, stored in a dedicated Google
+Cloud Storage bucket (`gs://biocirv-{env}-dashboards/`), and served behind an
+isolated FastAPI portal authentication layer with a two-stage Quality Control
+(QC) review workflow.
+
+| Product                                             | File Path                                     | Purpose                                                                                                                                                                                                                                         |
+| :-------------------------------------------------- | :-------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Product 1: Resource Characterization & AI Brief** | `metadata/resource_analysis_dashboard.html`   | Single-resource characterization dashboard with executive synthesis brief, KPI cards, and 5 analytical domain tabs (`Proximate`, `Compositional & Ultimate`, `Calorimetry & XRD`, `Elemental ICP & XRF`, `Conversion`).                         |
+| **Product 2: Statistical QC & Outlier Screening**   | `metadata/resource_qc_outlier_dashboard.html` | Within-group ($\text{RSD}_{\text{within}}$) vs. between-group ($\text{RSD}_{\text{between}}$) replicate precision scatter/ratio charts, 3-test outlier screening (`Dixon's Q`, `RSD > 20%`, `>3×SD_pooled`), and mined bench notes audit trail. |
+| **Product 3: Multi-Resource Side-by-Side Explorer** | `metadata/resource_explorer_dashboard.html`   | High-DPI HTML5 `<canvas>` explorer with multi-select checklist popovers, replicate-group-default point selection, and unified Selection & Export Tray.                                                                                          |
+| **Product 4: QC Audit Workbench**                   | `metadata/resource_audit_workbench.html`      | Interactive two-stage QC triage and governance workspace (`Approve Pass`, `Reject / Fail`, `Revert to Pass`, analyst assignment, rationale tags, and admin-only Stage 2 Google Sheets writeback).                                               |
+| **Product 5: Environment & Schema Drift Monitor**   | `db_environment_drift_dashboard.html`         | Database schema, table row count, and environment drift verification dashboard.                                                                                                                                                                 |
+
+```mermaid
+graph TD
+    subgraph CI_GCS["1. CI BUILD & GCS ARTIFACT STORE"]
+        SNAP["Cloud SQL / Snapshot JSON"] -->|Python Generators| HTML["5 HTML Dashboards + AI Insights Sidecar"]
+        HTML -->|Keyless WIF Upload| GCS["gs://biocirv-{env}-dashboards/<br/>dashboards/{env}/latest/ & {YYYY-MM-DD}-{sha}/"]
+    end
+
+    subgraph PORTAL["2. FASTAPI PORTAL AUTH & RBAC"]
+        USER["Browser Analyst / Admin"] -->|GET /v1/dashboards/login| OIDC["Google OIDC / Dev Token Login"]
+        OIDC -->|HttpOnly Cookie: biocirv_portal_token| LOADER["GET /v1/dashboards/{subpath}<br/>(Local-first or GCS Fallback)"]
+        GCS -->|Storage Object Viewer| LOADER
+    end
+
+    subgraph STAGE1["3. STAGE 1: IMMEDIATE POSTGRESQL + LIVE OVERLAY"]
+        TRAY["Pages 2 & 3 Selection Tray"] -->|POST /v1/qc/tray-to-workbench| QC_API["FastAPI /v1/qc/* Endpoints<br/>(Role: analyst or admin)"]
+        WB["Product 4: QC Audit Workbench"] -->|POST /v1/qc/decisions| QC_API
+        QC_API -->|Upsert Ledger + Update Record| PG["PostgreSQL:<br/>qc_review_decision (synced_to_gsheet=False)<br/>+ 10 Aim 1/Aim 2 *_record tables"]
+        PG -->|GET /v1/qc/decisions + BroadcastChannel| OVERLAY["Live In-Memory QC Overlay<br/>(Pages 1, 2, 3 & Product 4)"]
+        ETL_PROTECT["Prefect ETL Loaders<br/>(qc_protected_records.py)"] -.->|Preserve qc_pass where synced_to_gsheet=False| PG
+    end
+
+    subgraph STAGE2["4. STAGE 2: IDEMPOTENT GOOGLE SHEETS WRITEBACK"]
+        ADMIN["Portal Admin (Role: admin)"] -->|POST /v1/qc/sync-gsheet| SYNC["gsheet_qc_writeback.py"]
+        PG -->|Read unsynced decisions| SYNC
+        SYNC -->|Append Audit Tab + Update Source Tab qc_pass| GSHEET["Staging / Production Google Sheets<br/>(qc_Waiting_Decisions + Source Tabs)"]
+        SYNC -->|Mark synced_to_gsheet=True + Refresh Views| PG
+    end
+```
+
+!!! note "Same-Browser `BroadcastChannel` vs. Cross-Analyst Refresh"
+`BroadcastChannel("biocirv_qc_decisions")` synchronizes open dashboard tabs
+within the **same browser** immediately when a Stage 1 QC decision or tray
+export is saved. Cross-analyst updates made by another user on a different
+machine or browser are fetched on initial page load or on-demand via the
+explicit **`↻ Refresh QC State`** header button, with zero background
+`setInterval` polling.
+
+## Architecture Decisions
+
+### 2026-10-19: GCS Dashboard Artifact Store, Isolated Portal Auth & Two-Stage QC Governance (Accepted)
+
+- **Decision:** Move generated HTML dashboards (Products 1–5) and large
+  database/insights JSON snapshots out of Git tracking into a dedicated,
+  lifecycle-managed GCS bucket (`gs://biocirv-{env}-dashboards/`); gate internal
+  dashboard and QC routes behind an isolated portal cookie
+  (`biocirv_portal_token`) with 2-role RBAC (`analyst` and `admin`); and
+  decouple QC governance into Stage 1 (immediate PostgreSQL persistence + ETL
+  upsert protection + live browser overlay) and Stage 2 (admin-only idempotent
+  Google Sheets writeback).
+- **Why:** Committing multi-megabyte generated HTML/JSON artifacts bloated
+  repository history and risked leaking internal provider data to public GitHub
+  Pages. At the same time, analysts needed sub-second QC flagging and cross-tab
+  visual feedback without waiting for static HTML rebuilds or risking routine
+  Google Sheets ETL runs overwriting their in-progress PostgreSQL `qc_pass`
+  overrides before source worksheets were updated.
+- **Result:** Git history remains free of generated artifact bloat (enforced by
+  `scripts/check_no_generated_artifacts.py` in CI), internal dashboards are
+  served securely via `/v1/dashboards/*` from local files or GCS without
+  colliding with CalBioScape's `access_token` cookie, ETL upserts preserve
+  unsynced Stage 1 `qc_pass` decisions (`synced_to_gsheet = False`) across all
+  10 Aim 1/Aim 2 record loaders, and admins can batch-promote verified decisions
+  back to Google Sheets and refresh materialized views on demand.
+
 This architecture supports the project's mission of providing a robust,
 maintainable platform for California bioeconomy data management, with clear
 extension points for future growth.
