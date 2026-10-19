@@ -20,6 +20,7 @@ class WIFResources:
 
 def create_wif(
     depends_on: Sequence[pulumi.Resource] | None = None,
+    service_accounts: dict[str, gcp.serviceaccount.Account] | None = None,
 ) -> WIFResources:
     """Create Workload Identity Federation resources for GitHub Actions.
 
@@ -120,21 +121,32 @@ def create_wif(
         ),
     )
 
+    wif_principal_set = pulumi.Output.concat(
+        "principalSet://iam.googleapis.com/projects/",
+        project_number,
+        "/locations/global/workloadIdentityPools/",
+        pool.workload_identity_pool_id,
+        f"/attribute.repository/{GITHUB_REPO}",
+    )
+
     # Allow WIF pool to impersonate the deployer SA
     gcp.serviceaccount.IAMBinding(
         "gh-deploy-wif-binding",
         service_account_id=deployer_sa.name,
         role="roles/iam.workloadIdentityUser",
-        members=[
-            pulumi.Output.concat(
-                "principalSet://iam.googleapis.com/projects/",
-                project_number,
-                "/locations/global/workloadIdentityPools/",
-                pool.workload_identity_pool_id,
-                f"/attribute.repository/{GITHUB_REPO}",
-            )
-        ],
+        members=[wif_principal_set],
     )
+
+    # Allow WIF pool to impersonate the scoped dashboards publisher and reader SAs
+    for sa_key in ("dashboards-publisher", "dashboards-reader"):
+        if service_accounts and sa_key in service_accounts:
+            gcp.serviceaccount.IAMBinding(
+                f"{sa_key}-wif-binding",
+                service_account_id=service_accounts[sa_key].name,
+                role="roles/iam.workloadIdentityUser",
+                members=[wif_principal_set],
+                opts=pulumi.ResourceOptions(depends_on=[service_accounts[sa_key]]),
+            )
 
     return WIFResources(
         pool=pool,
