@@ -984,3 +984,72 @@ Force a new revision:
 gcloud run services update biocirv-prefect-worker \
   --image=us-west1-docker.pkg.dev/biocirv-470318/ghcr-proxy/sustainability-software-lab/ca-biositing/pipeline:latest --region=us-west1
 ```
+
+---
+
+## GCS Dashboard Artifact Store & GitHub Pages Privacy Gate
+
+Generated analytical HTML dashboards (Products 1–5), AI insights sidecars, and
+database snapshots are published to a dedicated per-environment Google Cloud
+Storage bucket rather than committed to Git.
+
+### Bucket Layout (`gs://biocirv-{STACK_NAME}-dashboards/`)
+
+Provisioned in `deployment/cloud/gcp/infrastructure/storage.py` with uniform
+bucket-level access (`uniform_bucket_level_access=True`) and public access
+prevention (`public_access_prevention="enforced"`):
+
+```text
+gs://biocirv-{env}-dashboards/
+├── dashboards/{env}/{YYYY-MM-DD}-{short_sha}/   # Immutable dated build artifacts (auto-pruned after 90 days)
+│   ├── index.html                               # 5-Product Suite Gallery
+│   ├── login.html                               # Portal Login Page
+│   ├── db_environment_drift_dashboard.html      # Product 5: Drift Monitor
+│   └── metadata/
+│       ├── resource_analysis_dashboard.html     # Product 1: Characterization & AI Brief
+│       ├── resource_qc_outlier_dashboard.html   # Product 2: Statistical QC & Outlier Screening
+│       ├── resource_explorer_dashboard.html     # Product 3: Multi-Resource Explorer
+│       └── resource_audit_workbench.html        # Product 4: QC Audit Workbench
+├── dashboards/{env}/latest/                     # Rolling pointer read by FastAPI /v1/dashboards/*
+└── snapshots/{env}/latest/                      # Latest DB snapshot & AI insights JSON sidecar
+```
+
+### 90-Day Dated-Prefix Lifecycle Rule
+
+To bound storage costs while keeping `dashboards/{env}/latest/` and
+`snapshots/{env}/latest/` permanently available:
+
+- Objects matching prefix `dashboards/{STACK_NAME}/20` (dated build folders such
+  as `dashboards/staging/2026-10-19-a1b2c3d/`) are automatically deleted when
+  `age >= 90` days.
+- The `dashboards/{STACK_NAME}/latest/` and `snapshots/{STACK_NAME}/latest/`
+  prefixes do not match `dashboards/{STACK_NAME}/20` and are never expired by
+  the lifecycle rule.
+
+### Scoped Workload Identity Federation (WIF) Service Accounts
+
+Provisioned in `deployment/cloud/gcp/infrastructure/iam.py` and bound in
+`wif.py`:
+
+| Service Account                | Account ID                | Bucket IAM Role                              | Purpose                                                                                                                                                                                                                       |
+| :----------------------------- | :------------------------ | :------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Dashboard Publisher (CI)**   | `biocirv-{env}-dash-pub`  | `roles/storage.objectAdmin` (bucket-scoped)  | Used by `.github/workflows/dashboard-artifacts.yml` via keyless GitHub Actions WIF to upload generated HTML dashboards and snapshots to `gs://biocirv-{env}-dashboards/`.                                                     |
+| **Dashboard Reader (Runtime)** | `biocirv-{env}-dash-read` | `roles/storage.objectViewer` (bucket-scoped) | Dedicated read-only service account for fetching dashboard artifacts from `gs://biocirv-{env}-dashboards/`. The Cloud Run webservice (`biocirv-{env}-webservice`) is also granted `roles/storage.objectViewer` on the bucket. |
+
+### GitHub Pages Privacy Gate (`GH_PAGES_GALLERY_GLOB`)
+
+To prevent accidental publication of internal laboratory dashboards, raw
+snapshots, or unmasked provider records to the public GitHub Pages site
+(`https://sustainability-software-lab.github.io/ca-biositing/`),
+`.github/workflows/gh-pages.yml` enforces a two-layer privacy gate:
+
+1. **Opt-In Repository Variable (`GH_PAGES_GALLERY_GLOB`)**: Gallery artifacts
+   are copied into the MkDocs `site/` build only when the repository variable
+   `GH_PAGES_GALLERY_GLOB` is explicitly configured (for example,
+   `exports/slices/*_public_slice.html`).
+2. **Unconditional Denylist**: Even if a glob is configured, the workflow
+   unconditionally rejects and removes any path matching `db_snapshot*.json`,
+   `env_fingerprint*.json`, `resource_ai_insights*.json`,
+   `resource_analysis_dashboard.html`, `resource_qc_outlier_dashboard.html`,
+   `resource_explorer_dashboard.html`, `resource_audit_workbench.html`, or
+   `db_environment_drift_dashboard.html` before publishing to `gh-pages`.
