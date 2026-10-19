@@ -64,8 +64,36 @@ ANALYSIS_TABLE_MAP: dict[str, str] = {
 
 
 def load_snapshot(snapshot_path: Path) -> dict[str, Any]:
-    """Load a dashboard data snapshot JSON file from disk."""
+    """Load a dashboard data snapshot JSON file from disk, or fetch live from PostgreSQL."""
     resolved = snapshot_path.expanduser().resolve()
+    if not resolved.exists() and snapshot_path == DEFAULT_SNAPSHOT_PATH:
+        import sys as _sys
+
+        _sys.path.insert(0, str(Path(__file__).resolve().parent))
+        try:
+            from resource_explorer_dashboard import (  # type: ignore[import-not-found]
+                fetch_all_resource_data,
+            )
+
+            print(
+                "Snapshot not found on disk; querying PostgreSQL for Product 4 QC Audit Workbench..."
+            )
+            live_data = fetch_all_resource_data()
+            resolved.parent.mkdir(parents=True, exist_ok=True)
+            resolved.write_text(
+                json.dumps(live_data, separators=(",", ":")),
+                encoding="utf-8",
+            )
+            return live_data
+        except Exception:
+            fallback_fixture = (
+                Path(__file__).resolve().parents[2]
+                / "tests"
+                / "fixtures"
+                / "dashboard_data_snapshot.json"
+            )
+            if fallback_fixture.exists():
+                resolved = fallback_fixture
     if not resolved.exists():
         raise FileNotFoundError(f"Dashboard snapshot not found: {resolved}")
     with resolved.open("r", encoding="utf-8") as handle:

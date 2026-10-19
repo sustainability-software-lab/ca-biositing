@@ -5417,10 +5417,23 @@ def main() -> None:
     if args.output:
         dashboard_path = Path(args.output)
         dashboard_path.parent.mkdir(parents=True, exist_ok=True)
+        snap_out_dir = dashboard_path.parent
     else:
         out_dir = Path(args.output_dir)
         out_dir.mkdir(parents=True, exist_ok=True)
         dashboard_path = out_dir / "resource_explorer_dashboard.html"
+        snap_out_dir = out_dir
+
+    if not args.from_snapshot:
+        snap_out_path = snap_out_dir / "dashboard_data_snapshot.json"
+        snap_out_path.write_text(
+            json.dumps(payload, separators=(",", ":")),
+            encoding="utf-8",
+        )
+        print(
+            f"Wrote data snapshot: {snap_out_path} ({snap_out_path.stat().st_size / 1024:.1f} KB)"
+        )
+
     dashboard_path.write_text(dashboard_html, encoding="utf-8")
     print(f"Wrote full dashboard: {dashboard_path} ({dashboard_path.stat().st_size / 1024:.1f} KB)")
 
