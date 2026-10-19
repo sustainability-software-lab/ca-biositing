@@ -31,6 +31,7 @@ on:
       - "analysis/metadata/resource_insights_engine.py"
       - "analysis/metadata/resource_analysis_dashboard.py"
       - "analysis/metadata/resource_explorer_dashboard.py"
+      - "analysis/metadata/resource_audit_workbench.py"
       - "scripts/generate_dashboard_gallery.py"
       - "tests/fixtures/minimal_dashboard_snapshot.json"
       - "tests/fixtures/minimal_env_fingerprint.json"
@@ -44,6 +45,7 @@ on:
       - "analysis/metadata/resource_insights_engine.py"
       - "analysis/metadata/resource_analysis_dashboard.py"
       - "analysis/metadata/resource_explorer_dashboard.py"
+      - "analysis/metadata/resource_audit_workbench.py"
       - "scripts/generate_dashboard_gallery.py"
       - "tests/fixtures/minimal_dashboard_snapshot.json"
       - "tests/fixtures/minimal_env_fingerprint.json"
@@ -220,7 +222,21 @@ jobs:
             echo "analysis/metadata/resource_explorer_dashboard.py not present on this branch; skipping Page 3."
           fi
 
-      - name: Generate Dashboard Gallery Index
+      - name: Build Resource QC & Data Audit Workbench (Product 4)
+        run: |
+          if [ -f "analysis/metadata/resource_audit_workbench.py" ]; then
+            WORKBENCH_SNAP="$SNAPSHOT_PATH"
+            if [ -f "exports/plots/metadata/dashboard_data_snapshot.json" ]; then
+              WORKBENCH_SNAP="exports/plots/metadata/dashboard_data_snapshot.json"
+            fi
+            pixi run python analysis/metadata/resource_audit_workbench.py \
+              --from-snapshot "$WORKBENCH_SNAP" \
+              --output exports/plots/metadata/resource_audit_workbench.html
+          else
+            echo "analysis/metadata/resource_audit_workbench.py not present on this branch; skipping Product 4."
+          fi
+
+      - name: Generate 5-Product Dashboard Gallery Index & Login Portal
         run: |
           pixi run python scripts/generate_dashboard_gallery.py
 
@@ -229,7 +245,10 @@ jobs:
           pixi run python -c '
           import os, re, subprocess, tempfile
 
-          expected = [("scripts/generate_dashboard_gallery.py", "exports/plots/index.html", 1.0)]
+          expected = [
+              ("scripts/generate_dashboard_gallery.py", "exports/plots/index.html", 1.0),
+              ("scripts/generate_dashboard_gallery.py", "exports/plots/login.html", 1.0),
+          ]
           if os.path.exists("analysis/audit/db_environment_drift.py"):
               expected.append(("analysis/audit/db_environment_drift.py", "exports/plots/audit/db_environment_drift_dashboard.html", 20.0))
           if os.path.exists("analysis/metadata/resource_analysis_dashboard.py"):
@@ -237,6 +256,8 @@ jobs:
               expected.append(("analysis/metadata/resource_analysis_dashboard.py", "exports/plots/metadata/resource_qc_outlier_dashboard.html", 20.0))
           if os.path.exists("analysis/metadata/resource_explorer_dashboard.py"):
               expected.append(("analysis/metadata/resource_explorer_dashboard.py", "exports/plots/metadata/resource_explorer_dashboard.html", 20.0))
+          if os.path.exists("analysis/metadata/resource_audit_workbench.py"):
+              expected.append(("analysis/metadata/resource_audit_workbench.py", "exports/plots/metadata/resource_audit_workbench.html", 20.0))
 
           for _, path, min_kb in expected:
               assert os.path.exists(path), f"Missing generated dashboard: {path}"
@@ -245,7 +266,7 @@ jobs:
               with open(path, "r", encoding="utf-8") as f:
                   html = f.read()
               scripts = [
-                  s for s in re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S | re.I)
+                  s for s in re.findall(r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>", html, re.S | re.I)
                   if s.strip()
               ]
               for idx, block in enumerate(scripts):
@@ -293,9 +314,11 @@ jobs:
           if-no-files-found: error
           path: |
             exports/plots/index.html
+            exports/plots/login.html
             exports/plots/audit/db_environment_drift_dashboard.html
             exports/plots/metadata/resource_analysis_dashboard.html
             exports/plots/metadata/resource_qc_outlier_dashboard.html
             exports/plots/metadata/resource_explorer_dashboard.html
+            exports/plots/metadata/resource_audit_workbench.html
             audit/output/drift_report.md
             audit/output/env_fingerprints/*_fingerprint.json
