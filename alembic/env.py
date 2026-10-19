@@ -3,6 +3,10 @@ Alembic environment configuration for SQLModel-based migrations.
 
 This module configures Alembic to generate and apply database migrations
 based on SQLModel model definitions.
+
+Database connection is read exclusively from the DATABASE_URL environment
+variable. No credentials are stored in this file. Set DATABASE_URL before
+running Alembic (e.g. via the pixi migrate task which loads resources/docker/.env).
 """
 
 import os
@@ -10,15 +14,6 @@ from logging.config import fileConfig
 from sqlalchemy import engine_from_config, pool
 from sqlmodel import SQLModel
 from alembic import context
-from pathlib import Path
-from dotenv import load_dotenv
-
-# Path configuration
-HERE = Path(__file__).parent.resolve()
-PROJECT_ROOT = HERE.parent.resolve()
-
-# Load environment variables from .env
-load_dotenv(dotenv_path=PROJECT_ROOT / ".env")
 
 # Import all models to register them with SQLModel.metadata
 # No sys.path.insert — package is installed via pixi
@@ -27,13 +22,16 @@ import ca_biositing.datamodels.models  # noqa: F401
 # Alembic Config object
 config = context.config
 
-# Configure database URL from environment variables.
-# Priority: DATABASE_URL env var → Settings (handles Cloud Run Unix socket via
-# INSTANCE_CONNECTION_NAME, as well as local dev defaults).
-DATABASE_URL = os.getenv("DATABASE_URL")
+# Read the database URL from the environment.  The pixi 'migrate' task is
+# responsible for exporting DATABASE_URL before invoking alembic.
+DATABASE_URL = os.environ.get("DATABASE_URL")
 if not DATABASE_URL:
-    from ca_biositing.datamodels.config import settings
-    DATABASE_URL = settings.database_url
+    raise RuntimeError(
+        "DATABASE_URL environment variable is not set. "
+        "Run migrations via 'pixi run migrate' which loads the correct .env file, "
+        "or export DATABASE_URL manually before calling alembic."
+    )
+
 config.set_main_option("sqlalchemy.url", DATABASE_URL.replace("%", "%%"))
 
 # Setup Python logging

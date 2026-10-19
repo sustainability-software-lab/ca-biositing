@@ -1,4 +1,4 @@
-"""updated biodiesel plants and added petroleum pipelines
+"""updated biodiesel plants and added petroleum pipelines; normalized infrastructure address columns
 
 Revision ID: 0006
 Revises: 0005
@@ -67,6 +67,153 @@ def upgrade() -> None:
     )
     # ### end Alembic commands ###
 
+    # -------------------------------------------------------------------------
+    # Infrastructure address normalization:
+    # Drop raw address string columns, add address_id FK + timestamps
+    # to all infrastructure tables that lacked them.
+    # -------------------------------------------------------------------------
+
+    # -- infrastructure_biosolids_facilities --
+    op.drop_column('infrastructure_biosolids_facilities', 'facility_address')
+    op.drop_column('infrastructure_biosolids_facilities', 'facility_city')
+    op.drop_column('infrastructure_biosolids_facilities', 'state')
+    op.drop_column('infrastructure_biosolids_facilities', 'facility_zip')
+    op.drop_column('infrastructure_biosolids_facilities', 'facility_county')
+    op.drop_column('infrastructure_biosolids_facilities', 'mailing_street_1')
+    op.drop_column('infrastructure_biosolids_facilities', 'mailing_city')
+    op.drop_column('infrastructure_biosolids_facilities', 'mailing_state')
+    op.drop_column('infrastructure_biosolids_facilities', 'mailing_zip')
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_cafo_manure_locations --
+    op.drop_column('infrastructure_cafo_manure_locations', 'address')
+    op.drop_column('infrastructure_cafo_manure_locations', 'town')
+    op.drop_column('infrastructure_cafo_manure_locations', 'state')
+    op.drop_column('infrastructure_cafo_manure_locations', 'zip')
+    op.add_column('infrastructure_cafo_manure_locations',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_cafo_manure_locations',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_cafo_manure_locations',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_combustion_plants --
+    op.drop_column('infrastructure_combustion_plants', 'city')
+    op.drop_column('infrastructure_combustion_plants', 'county')
+    op.add_column('infrastructure_combustion_plants',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_combustion_plants',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_combustion_plants',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_district_energy_systems --
+    op.drop_column('infrastructure_district_energy_systems', 'city')
+    op.drop_column('infrastructure_district_energy_systems', 'state')
+    op.add_column('infrastructure_district_energy_systems',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_district_energy_systems',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_district_energy_systems',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_ethanol_biorefineries --
+    op.drop_column('infrastructure_ethanol_biorefineries', 'address')
+    op.drop_column('infrastructure_ethanol_biorefineries', 'city')
+    op.drop_column('infrastructure_ethanol_biorefineries', 'state')
+    op.add_column('infrastructure_ethanol_biorefineries',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_ethanol_biorefineries',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_ethanol_biorefineries',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_food_processing_facilities --
+    op.drop_column('infrastructure_food_processing_facilities', 'address')
+    op.drop_column('infrastructure_food_processing_facilities', 'county')
+    op.drop_column('infrastructure_food_processing_facilities', 'city')
+    op.drop_column('infrastructure_food_processing_facilities', 'state')
+    op.drop_column('infrastructure_food_processing_facilities', 'zip')
+    op.add_column('infrastructure_food_processing_facilities',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_food_processing_facilities',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_food_processing_facilities',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_landfills --
+    op.drop_column('infrastructure_landfills', 'physical_address')
+    op.drop_column('infrastructure_landfills', 'city')
+    op.drop_column('infrastructure_landfills', 'county')
+    op.drop_column('infrastructure_landfills', 'state')
+    op.drop_column('infrastructure_landfills', 'zip_code')
+    op.add_column('infrastructure_landfills',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_landfills',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_landfills',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_livestock_anaerobic_digesters --
+    op.drop_column('infrastructure_livestock_anaerobic_digesters', 'city')
+    op.drop_column('infrastructure_livestock_anaerobic_digesters', 'state')
+    op.add_column('infrastructure_livestock_anaerobic_digesters',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_livestock_anaerobic_digesters',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_livestock_anaerobic_digesters',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_msw_to_energy_anaerobic_digesters --
+    op.drop_column('infrastructure_msw_to_energy_anaerobic_digesters', 'city')
+    op.drop_column('infrastructure_msw_to_energy_anaerobic_digesters', 'county')
+    op.add_column('infrastructure_msw_to_energy_anaerobic_digesters',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_msw_to_energy_anaerobic_digesters',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_msw_to_energy_anaerobic_digesters',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_saf_and_renewable_diesel_plants --
+    op.drop_column('infrastructure_saf_and_renewable_diesel_plants', 'address')
+    op.drop_column('infrastructure_saf_and_renewable_diesel_plants', 'city')
+    op.drop_column('infrastructure_saf_and_renewable_diesel_plants', 'state')
+    op.drop_column('infrastructure_saf_and_renewable_diesel_plants', 'country')
+    op.add_column('infrastructure_saf_and_renewable_diesel_plants',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_saf_and_renewable_diesel_plants',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_saf_and_renewable_diesel_plants',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
+    # -- infrastructure_wastewater_treatment_plants --
+    op.drop_column('infrastructure_wastewater_treatment_plants', 'city')
+    op.drop_column('infrastructure_wastewater_treatment_plants', 'county')
+    op.drop_column('infrastructure_wastewater_treatment_plants', 'state')
+    op.drop_column('infrastructure_wastewater_treatment_plants', 'zipcode')
+    op.add_column('infrastructure_wastewater_treatment_plants',
+                  sa.Column('address_id', sa.Integer(),
+                            sa.ForeignKey('location_address.id'), nullable=True))
+    op.add_column('infrastructure_wastewater_treatment_plants',
+                  sa.Column('created_at', sa.DateTime(), nullable=True))
+    op.add_column('infrastructure_wastewater_treatment_plants',
+                  sa.Column('updated_at', sa.DateTime(), nullable=True))
+
 
 def downgrade() -> None:
     """Downgrade schema."""
@@ -80,3 +227,144 @@ def downgrade() -> None:
     op.drop_column('infrastructure_biodiesel_plants', 'updated_at')
     op.drop_column('infrastructure_biodiesel_plants', 'created_at')
     # ### end Alembic commands ###
+
+    # -------------------------------------------------------------------------
+    # Reverse infrastructure address normalization
+    # -------------------------------------------------------------------------
+
+    # -- infrastructure_biosolids_facilities --
+    op.drop_column('infrastructure_biosolids_facilities', 'address_id')
+    op.drop_column('infrastructure_biosolids_facilities', 'created_at')
+    op.drop_column('infrastructure_biosolids_facilities', 'updated_at')
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('facility_address', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('facility_city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('facility_zip', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('facility_county', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('mailing_street_1', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('mailing_city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('mailing_state', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_biosolids_facilities',
+                  sa.Column('mailing_zip', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_cafo_manure_locations --
+    op.drop_column('infrastructure_cafo_manure_locations', 'address_id')
+    op.drop_column('infrastructure_cafo_manure_locations', 'created_at')
+    op.drop_column('infrastructure_cafo_manure_locations', 'updated_at')
+    op.add_column('infrastructure_cafo_manure_locations',
+                  sa.Column('address', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_cafo_manure_locations',
+                  sa.Column('town', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_cafo_manure_locations',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_cafo_manure_locations',
+                  sa.Column('zip', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_combustion_plants --
+    op.drop_column('infrastructure_combustion_plants', 'address_id')
+    op.drop_column('infrastructure_combustion_plants', 'created_at')
+    op.drop_column('infrastructure_combustion_plants', 'updated_at')
+    op.add_column('infrastructure_combustion_plants',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_combustion_plants',
+                  sa.Column('county', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_district_energy_systems --
+    op.drop_column('infrastructure_district_energy_systems', 'address_id')
+    op.drop_column('infrastructure_district_energy_systems', 'created_at')
+    op.drop_column('infrastructure_district_energy_systems', 'updated_at')
+    op.add_column('infrastructure_district_energy_systems',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_district_energy_systems',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_ethanol_biorefineries --
+    op.drop_column('infrastructure_ethanol_biorefineries', 'address_id')
+    op.drop_column('infrastructure_ethanol_biorefineries', 'created_at')
+    op.drop_column('infrastructure_ethanol_biorefineries', 'updated_at')
+    op.add_column('infrastructure_ethanol_biorefineries',
+                  sa.Column('address', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_ethanol_biorefineries',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_ethanol_biorefineries',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_food_processing_facilities --
+    op.drop_column('infrastructure_food_processing_facilities', 'address_id')
+    op.drop_column('infrastructure_food_processing_facilities', 'created_at')
+    op.drop_column('infrastructure_food_processing_facilities', 'updated_at')
+    op.add_column('infrastructure_food_processing_facilities',
+                  sa.Column('address', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_food_processing_facilities',
+                  sa.Column('county', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_food_processing_facilities',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_food_processing_facilities',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_landfills --
+    op.drop_column('infrastructure_landfills', 'address_id')
+    op.drop_column('infrastructure_landfills', 'created_at')
+    op.drop_column('infrastructure_landfills', 'updated_at')
+    op.add_column('infrastructure_landfills',
+                  sa.Column('physical_address', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_landfills',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_landfills',
+                  sa.Column('county', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_landfills',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_landfills',
+                  sa.Column('zip_code', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_livestock_anaerobic_digesters --
+    op.drop_column('infrastructure_livestock_anaerobic_digesters', 'address_id')
+    op.drop_column('infrastructure_livestock_anaerobic_digesters', 'created_at')
+    op.drop_column('infrastructure_livestock_anaerobic_digesters', 'updated_at')
+    op.add_column('infrastructure_livestock_anaerobic_digesters',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_livestock_anaerobic_digesters',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_msw_to_energy_anaerobic_digesters --
+    op.drop_column('infrastructure_msw_to_energy_anaerobic_digesters', 'address_id')
+    op.drop_column('infrastructure_msw_to_energy_anaerobic_digesters', 'created_at')
+    op.drop_column('infrastructure_msw_to_energy_anaerobic_digesters', 'updated_at')
+    op.add_column('infrastructure_msw_to_energy_anaerobic_digesters',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_msw_to_energy_anaerobic_digesters',
+                  sa.Column('county', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_saf_and_renewable_diesel_plants --
+    op.drop_column('infrastructure_saf_and_renewable_diesel_plants', 'address_id')
+    op.drop_column('infrastructure_saf_and_renewable_diesel_plants', 'created_at')
+    op.drop_column('infrastructure_saf_and_renewable_diesel_plants', 'updated_at')
+    op.add_column('infrastructure_saf_and_renewable_diesel_plants',
+                  sa.Column('address', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_saf_and_renewable_diesel_plants',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_saf_and_renewable_diesel_plants',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_saf_and_renewable_diesel_plants',
+                  sa.Column('country', sa.VARCHAR(), nullable=True))
+
+    # -- infrastructure_wastewater_treatment_plants --
+    op.drop_column('infrastructure_wastewater_treatment_plants', 'address_id')
+    op.drop_column('infrastructure_wastewater_treatment_plants', 'created_at')
+    op.drop_column('infrastructure_wastewater_treatment_plants', 'updated_at')
+    op.add_column('infrastructure_wastewater_treatment_plants',
+                  sa.Column('city', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_wastewater_treatment_plants',
+                  sa.Column('county', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_wastewater_treatment_plants',
+                  sa.Column('state', sa.VARCHAR(), nullable=True))
+    op.add_column('infrastructure_wastewater_treatment_plants',
+                  sa.Column('zipcode', sa.VARCHAR(), nullable=True))
