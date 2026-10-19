@@ -33,14 +33,24 @@ def load_xrf_record(df: pd.DataFrame):
             clean_records.append(clean_record)
 
         if clean_records:
+            from ca_biositing.pipeline.utils.qc_protected_records import (
+                build_qc_aware_update_dict,
+                get_unsynced_qc_protected_record_ids,
+            )
+
             with engine.connect() as conn:
                 with Session(bind=conn) as session:
+                    protected_record_ids = get_unsynced_qc_protected_record_ids(
+                        session,
+                        XrfRecord.__tablename__,
+                        [str(r["record_id"]) for r in clean_records if r.get("record_id") is not None],
+                    )
                     stmt = insert(XrfRecord).values(clean_records)
-                    update_dict = {
-                        c.name: stmt.excluded[c.name]
-                        for c in XrfRecord.__table__.columns
-                        if c.name not in ['id', 'created_at', 'record_id']
-                    }
+                    update_dict = build_qc_aware_update_dict(
+                        XrfRecord,
+                        stmt,
+                        protected_record_ids,
+                    )
                     upsert_stmt = stmt.on_conflict_do_update(
                         index_elements=['record_id'],
                         set_=update_dict
