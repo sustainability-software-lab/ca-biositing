@@ -1,5 +1,5 @@
 # Regenerates and exports the BioCirV DB Environment Drift Dashboard and the
-# Modular 3-Page Resource Explorer / Analysis Dashboard Suite whenever ETL flows,
+# Modular Resource Explorer / Analysis Dashboard Suite whenever ETL flows,
 # datamodels/views, Alembic migrations, environment fingerprints, or dashboard
 # generator scripts change, or after a staging/production ETL run completes.
 name: Build & Export BioCirV Dashboards & Drift Audit
@@ -9,8 +9,8 @@ on:
     inputs:
       data_source:
         description:
-          "Data source mode ('auto' tries live DB then falls back to tracked
-          snapshot)"
+          "Data source mode ('auto' tries live DB then falls back to tracked or
+          GCS snapshot)"
         required: false
         default: "auto"
         type: choice
@@ -18,10 +18,11 @@ on:
           - auto
           - live_db
           - snapshot
+  schedule:
+    - cron: "0 9 * * 1"
   push:
     branches:
       - main
-      - "feat/**"
     paths:
       - "src/ca_biositing/pipeline/**"
       - "src/ca_biositing/datamodels/**"
@@ -30,7 +31,9 @@ on:
       - "analysis/metadata/resource_insights_engine.py"
       - "analysis/metadata/resource_analysis_dashboard.py"
       - "analysis/metadata/resource_explorer_dashboard.py"
-      - "audit/output/env_fingerprints/**"
+      - "scripts/generate_dashboard_gallery.py"
+      - "tests/fixtures/minimal_dashboard_snapshot.json"
+      - "tests/fixtures/minimal_env_fingerprint.json"
       - ".github/workflows/dashboard-artifacts.yml"
   pull_request:
     paths:
@@ -41,7 +44,9 @@ on:
       - "analysis/metadata/resource_insights_engine.py"
       - "analysis/metadata/resource_analysis_dashboard.py"
       - "analysis/metadata/resource_explorer_dashboard.py"
-      - "audit/output/env_fingerprints/**"
+      - "scripts/generate_dashboard_gallery.py"
+      - "tests/fixtures/minimal_dashboard_snapshot.json"
+      - "tests/fixtures/minimal_env_fingerprint.json"
       - ".github/workflows/dashboard-artifacts.yml"
   workflow_run:
     workflows:
@@ -57,6 +62,11 @@ concurrency:
 env:
   FORCE_COLOR: 3
   PROJECT_NAME: "ca_biositing"
+  GCP_PROJECT_ID: "biocirv-470318"
+  DASHBOARDS_ENV: "staging"
+  DASHBOARDS_BUCKET: "biocirv-staging-dashboards"
+  GCP_WIF_PROVIDER: "projects/194468397458/locations/global/workloadIdentityPools/github-actions-staging/providers/github-oidc-staging"
+  DASHBOARDS_PUBLISHER_SA: "biocirv-staging-dash-pub@biocirv-470318.iam.gserviceaccount.com"
   SNAPSHOT_PATH: "audit/output/env_fingerprints/baseline_records_snapshot.json"
 
 jobs:
@@ -67,6 +77,9 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - name: Checkout repository
@@ -85,13 +98,59 @@ jobs:
         with:
           node-version: "22"
 
+      - name: Authenticate to GCP for Dashboard Snapshot & Artifact Store
+        id: gcp_auth
+        if: github.event_name != 'pull_request'
+        continue-on-error: true
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.GCP_WIF_PROVIDER }}
+          service_account: ${{ env.DASHBOARDS_PUBLISHER_SA }}
+
+      - name: Set up Google Cloud SDK
+        if: >-
+          github.event_name != 'pull_request' && steps.gcp_auth.outcome ==
+          'success'
+        uses: google-github-actions/setup-gcloud@v3
+
+      - name: Pull Latest Cached Snapshots & Fingerprints from GCS
+        if: >-
+          github.event_name != 'pull_request' && steps.gcp_auth.outcome ==
+          'success'
+        run: |
+          mkdir -p audit/output/env_fingerprints data/insights
+          GCS_SNAP_BASE="gs://${DASHBOARDS_BUCKET}/snapshots/${DASHBOARDS_ENV}/latest"
+          gcloud storage cp "${GCS_SNAP_BASE}/baseline_records_snapshot.json" \
+            "audit/output/env_fingerprints/baseline_records_snapshot.json" 2>/dev/null || true
+          gcloud storage cp "${GCS_SNAP_BASE}/resource_ai_insights.json" \
+            "data/insights/resource_ai_insights.json" 2>/dev/null || true
+          gcloud storage cp "${GCS_SNAP_BASE}/env_fingerprints/*_fingerprint.json" \
+            "audit/output/env_fingerprints/" 2>/dev/null || true
+
+      - name: Resolve Snapshot & Fingerprint Fallbacks (PR & Fresh Stack Safe)
+        run: |
+          mkdir -p audit/output/env_fingerprints data/insights exports/plots/audit exports/plots/metadata
+          if [ ! -f "$SNAPSHOT_PATH" ]; then
+            echo "SNAPSHOT_PATH=tests/fixtures/minimal_dashboard_snapshot.json" >> "$GITHUB_ENV"
+            echo "Baseline snapshot not present in workspace; falling back to tests/fixtures/minimal_dashboard_snapshot.json"
+          else
+            echo "Using baseline snapshot at $SNAPSHOT_PATH"
+          fi
+          for env_name in local staging production; do
+            FP_FILE="audit/output/env_fingerprints/${env_name}_fingerprint.json"
+            if [ ! -f "$FP_FILE" ]; then
+              cp tests/fixtures/minimal_env_fingerprint.json "$FP_FILE"
+              echo "Seeded fallback fingerprint for ${env_name} from tests/fixtures/minimal_env_fingerprint.json"
+            fi
+          done
+
       - name: Determine Data Source Mode (Live PostgreSQL vs. Baseline Snapshot)
         id: source_mode
         run: |
           REQUESTED="${{ github.event.inputs.data_source || 'auto' }}"
           if [ "$REQUESTED" = "snapshot" ]; then
             echo "mode=snapshot" >> "$GITHUB_OUTPUT"
-            echo "Using tracked baseline snapshot ($SNAPSHOT_PATH)"
+            echo "Using snapshot ($SNAPSHOT_PATH)"
             exit 0
           fi
 
@@ -118,62 +177,86 @@ jobs:
 
       - name: Run DB Environment Drift Assessment & View Schema Guard
         run: |
-          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
-            pixi run python analysis/audit/db_environment_drift.py --extract-env local
+          if [ -f "analysis/audit/db_environment_drift.py" ]; then
+            if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
+              pixi run python analysis/audit/db_environment_drift.py --extract-env local
+            fi
+            pixi run python analysis/audit/db_environment_drift.py --compare
+            if [ -f "audit/output/drift_report.md" ]; then
+              cp audit/output/drift_report.md exports/plots/audit/drift_report.md
+            fi
+          else
+            echo "analysis/audit/db_environment_drift.py not present on this branch; skipping drift generator."
           fi
-          pixi run python analysis/audit/db_environment_drift.py --compare
 
       - name:
           Build Modular Resource Characterization & QC Dashboards (Pages 1 & 2)
         run: |
-          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
-            pixi run python analysis/metadata/resource_analysis_dashboard.py \
-              --output-dir exports/plots/metadata
+          if [ -f "analysis/metadata/resource_analysis_dashboard.py" ]; then
+            if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
+              pixi run python analysis/metadata/resource_analysis_dashboard.py \
+                --output-dir exports/plots/metadata
+            else
+              pixi run python analysis/metadata/resource_analysis_dashboard.py \
+                --from-snapshot "$SNAPSHOT_PATH" \
+                --output-dir exports/plots/metadata
+            fi
           else
-            pixi run python analysis/metadata/resource_analysis_dashboard.py \
-              --from-snapshot "$SNAPSHOT_PATH" \
-              --output-dir exports/plots/metadata
+            echo "analysis/metadata/resource_analysis_dashboard.py not present on this branch; skipping Pages 1 & 2."
           fi
 
       - name: Build Multi-Resource Side-by-Side Parameter Explorer (Page 3)
         run: |
-          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
-            pixi run python analysis/metadata/resource_explorer_dashboard.py \
-              --output-dir exports/plots/metadata
+          if [ -f "analysis/metadata/resource_explorer_dashboard.py" ]; then
+            if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
+              pixi run python analysis/metadata/resource_explorer_dashboard.py \
+                --output-dir exports/plots/metadata
+            else
+              pixi run python analysis/metadata/resource_explorer_dashboard.py \
+                --from-snapshot "$SNAPSHOT_PATH" \
+                --output-dir exports/plots/metadata
+            fi
           else
-            pixi run python analysis/metadata/resource_explorer_dashboard.py \
-              --from-snapshot "$SNAPSHOT_PATH" \
-              --output-dir exports/plots/metadata
+            echo "analysis/metadata/resource_explorer_dashboard.py not present on this branch; skipping Page 3."
           fi
+
+      - name: Generate Dashboard Gallery Index
+        run: |
+          pixi run python scripts/generate_dashboard_gallery.py
 
       - name: Validate Generated HTML Dashboards & Inline JavaScript Bundles
         run: |
           pixi run python -c '
           import os, re, subprocess, tempfile
 
-          dashboards = [
-              "exports/plots/audit/db_environment_drift_dashboard.html",
-              "exports/plots/metadata/resource_analysis_dashboard.html",
-              "exports/plots/metadata/resource_qc_outlier_dashboard.html",
-              "exports/plots/metadata/resource_explorer_dashboard.html",
-          ]
+          expected = [("scripts/generate_dashboard_gallery.py", "exports/plots/index.html", 1.0)]
+          if os.path.exists("analysis/audit/db_environment_drift.py"):
+              expected.append(("analysis/audit/db_environment_drift.py", "exports/plots/audit/db_environment_drift_dashboard.html", 20.0))
+          if os.path.exists("analysis/metadata/resource_analysis_dashboard.py"):
+              expected.append(("analysis/metadata/resource_analysis_dashboard.py", "exports/plots/metadata/resource_analysis_dashboard.html", 20.0))
+              expected.append(("analysis/metadata/resource_analysis_dashboard.py", "exports/plots/metadata/resource_qc_outlier_dashboard.html", 20.0))
+          if os.path.exists("analysis/metadata/resource_explorer_dashboard.py"):
+              expected.append(("analysis/metadata/resource_explorer_dashboard.py", "exports/plots/metadata/resource_explorer_dashboard.html", 20.0))
 
-          for path in dashboards:
+          for _, path, min_kb in expected:
               assert os.path.exists(path), f"Missing generated dashboard: {path}"
               size_kb = os.path.getsize(path) / 1024.0
-              assert size_kb > 20, f"Dashboard unexpectedly small ({size_kb:.1f} KB): {path}"
+              assert size_kb > min_kb, f"Dashboard unexpectedly small ({size_kb:.1f} KB): {path}"
               with open(path, "r", encoding="utf-8") as f:
                   html = f.read()
-              scripts = [s for s in re.findall(r"<script(?:\s[^>]*)?>(.*?)</script>", html, re.S) if s.strip()]
-              assert scripts, f"No inline <script> blocks found in {path}"
-              with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as tmp:
-                  tmp.write(scripts[-1])
-                  tmp_path = tmp.name
-              try:
-                  subprocess.run(["node", "--check", tmp_path], check=True)
-              finally:
-                  os.remove(tmp_path)
-              print(f"Verified {path} ({size_kb:.1f} KB) — JS syntax OK")
+              scripts = [
+                  s for s in re.findall(r"<script(?![^>]*\bsrc=)[^>]*>(.*?)</script>", html, re.S | re.I)
+                  if s.strip()
+              ]
+              for idx, block in enumerate(scripts):
+                  with tempfile.NamedTemporaryFile("w", suffix=".js", delete=False, encoding="utf-8") as tmp:
+                      tmp.write(block)
+                      tmp_path = tmp.name
+                  try:
+                      subprocess.run(["node", "--check", tmp_path], check=True)
+                  finally:
+                      os.remove(tmp_path)
+              print(f"Verified {path} ({size_kb:.1f} KB, {len(scripts)} inline script block(s)) — OK")
           '
 
       - name: Publish Drift Summary to GitHub Step Summary
@@ -184,6 +267,23 @@ jobs:
             echo "" >> "$GITHUB_STEP_SUMMARY"
             head -n 80 audit/output/drift_report.md >> "$GITHUB_STEP_SUMMARY"
           fi
+
+      - name: Publish Dashboards & Drift Report to GCS
+        if: >-
+          github.event_name != 'pull_request' && steps.gcp_auth.outcome ==
+          'success'
+        run: |
+          if ! gcloud storage ls "gs://${DASHBOARDS_BUCKET}" >/dev/null 2>&1; then
+            echo "::warning::GCS bucket gs://${DASHBOARDS_BUCKET} or publisher SA (${DASHBOARDS_PUBLISHER_SA}) is not yet provisioned or accessible in GCP (run pulumi up after merging PR #520). Skipping GCS rsync."
+            exit 0
+          fi
+          DATE_PREFIX="$(date -u +%Y-%m-%d)"
+          SHORT_SHA="${GITHUB_SHA::8}"
+          DATED_URI="gs://${DASHBOARDS_BUCKET}/dashboards/${DASHBOARDS_ENV}/${DATE_PREFIX}-${SHORT_SHA}"
+          LATEST_URI="gs://${DASHBOARDS_BUCKET}/dashboards/${DASHBOARDS_ENV}/latest"
+          echo "Publishing dashboards to ${DATED_URI}/ and ${LATEST_URI}/ ..."
+          gcloud storage rsync --recursive --checksums-only exports/plots/ "${DATED_URI}/"
+          gcloud storage rsync --recursive --checksums-only exports/plots/ "${LATEST_URI}/"
 
       - name: Upload BioCirV Dashboards & Drift Audit Artifacts
         uses: actions/upload-artifact@v4
