@@ -9,6 +9,7 @@
         "create-pr",
         "data-visualization",
         "database-query",
+        "db-drift-assessment",
         "docs",
         "merge-pr",
         "okf-memory",
