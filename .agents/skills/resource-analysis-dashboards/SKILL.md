@@ -123,15 +123,39 @@ pixi run python analysis/metadata/resource_analysis_dashboard.py \
 - **Default `qc_pass = pass`**: All dashboards (Page 1, Page 2, and Page 3)
   default their initial load and reset state to `qc_pass = pass`.
 - **Replicate-Group-Default Selection**:
-  - Clicking an outlier candidate or point in Page 2 (`resource_qc_outlier_dashboard.html`) or Page 3 (`resource_explorer_dashboard.html`) defaults the selection scope to **`Entire Replicate Group`** (`scope = "group"`, highlighting all sibling replicates sharing `(resource, analysis_type, parameter, prepared_sample, method_or_strain)`), with a 1-click toggle to **`Single Point Only`** (`scope = "single"`).
-- **Unified Export Tray & Audit Workbench Handoff (`⚖️ Export to Audit Workbench`)**:
+  - Clicking an outlier candidate or point in Page 2
+    (`resource_qc_outlier_dashboard.html`) or Page 3
+    (`resource_explorer_dashboard.html`) defaults the selection scope to
+    **`Entire Replicate Group`** (`scope = "group"`, highlighting all sibling
+    replicates sharing
+    `(resource, analysis_type, parameter, prepared_sample, method_or_strain)`),
+    with a 1-click toggle to **`Single Point Only`** (`scope = "single"`).
+- **Unified Export Tray & Audit Workbench Handoff
+  (`⚖️ Export to Audit Workbench`)**:
   - Both Page 2 and Page 3 provide a unified selection tray with three actions:
     1. `⬇ Export Tray (.CSV)` — downloads the selected records/groups as CSV.
-    2. `📤 Export Slice (.HTML)` — opens the leak-free collaborator slice modal pre-populated with the selected resources.
-    3. `⚖️ Export to Audit Workbench` — dispatches `POST /v1/qc/tray-to-workbench` (and mirrors to `localStorage["biocirv_qc_audit_tray_v1"]` for offline `file://` mode) so selected replicate groups or individual records appear immediately in the Product 4 **QC Audit Workbench** (`resource_audit_workbench.html`).
-- **Live QC State Overlay (`GET /v1/qc/decisions`) & Cross-Tab `BroadcastChannel` (`FINAL_DECISION.md` §2.2)**:
-  - On page load and whenever the user clicks **`↻ Refresh QC State`** (`#btn-refresh-qc-state`), Pages 1, 2, and 3 fetch `GET /v1/qc/decisions` (with `localStorage` fallback), patch `row.qc_status` / `row.qc_pass` in memory (`window.__BIOCIRV_DATA__.rows`, `ALL_RECORDS`, and `ALL_ROWS`), and re-render all charts, KPIs, and tables without regenerating static `.html` files.
-  - **Same-Browser vs. Cross-Analyst Synchronization Caveat**: `BroadcastChannel("biocirv_qc_decisions")` synchronizes open tabs in the **same browser** immediately when a Stage 1 QC decision or tray export is saved in Product 4 or Pages 2/3. **Cross-analyst updates** (decisions made by another user on a different machine or browser) are fetched on initial page load or on-demand via the explicit **`↻ Refresh QC State`** header button, with zero background `setInterval` polling.
+    2. `📤 Export Slice (.HTML)` — opens the leak-free collaborator slice modal
+       pre-populated with the selected resources.
+    3. `⚖️ Export to Audit Workbench` — dispatches
+       `POST /v1/qc/tray-to-workbench` (and mirrors to
+       `localStorage["biocirv_qc_audit_tray_v1"]` for offline `file://` mode) so
+       selected replicate groups or individual records appear immediately in the
+       Product 4 **QC Audit Workbench** (`resource_audit_workbench.html`).
+- **Live QC State Overlay (`GET /v1/qc/decisions`) & Cross-Tab
+  `BroadcastChannel` (`FINAL_DECISION.md` §2.2)**:
+  - On page load and whenever the user clicks **`↻ Refresh QC State`**
+    (`#btn-refresh-qc-state`), Pages 1, 2, and 3 fetch `GET /v1/qc/decisions`
+    (with `localStorage` fallback), patch `row.qc_status` / `row.qc_pass` in
+    memory (`window.__BIOCIRV_DATA__.rows`, `ALL_RECORDS`, and `ALL_ROWS`), and
+    re-render all charts, KPIs, and tables without regenerating static `.html`
+    files.
+  - **Same-Browser vs. Cross-Analyst Synchronization Caveat**:
+    `BroadcastChannel("biocirv_qc_decisions")` synchronizes open tabs in the
+    **same browser** immediately when a Stage 1 QC decision or tray export is
+    saved in Product 4 or Pages 2/3. **Cross-analyst updates** (decisions made
+    by another user on a different machine or browser) are fetched on initial
+    page load or on-demand via the explicit **`↻ Refresh QC State`** header
+    button, with zero background `setInterval` polling.
 - **Replicate Mean ± SD & Field Sample / Experiment Grouping**:
   - Toggle between `Individual Points` and `Replicate Mean ± SD` error bars, and
     group by `Field Sample` or `Experiment / Run` to compare replicate cohorts.
@@ -172,7 +196,11 @@ pixi run python analysis/metadata/resource_analysis_dashboard.py \
      TSV, collaborator `.html` slices (by default), or `.xlsx` files. Provider
      codenames are already anonymous and are preserved as-is.
 5. **No Implicit Sidecar Writes During HTML Build**:
-   - `resource_analysis_dashboard.py` does not write to `data/insights/resource_ai_insights.json` unless `--write-sidecar` is explicitly passed, and both `resource_analysis_dashboard.py` and `resource_explorer_dashboard.py` accept `--output <file.html>` for clean single-file/temporary generation.
+   - `resource_analysis_dashboard.py` does not write to
+     `data/insights/resource_ai_insights.json` unless `--write-sidecar` is
+     explicitly passed, and both `resource_analysis_dashboard.py` and
+     `resource_explorer_dashboard.py` accept `--output <file.html>` for clean
+     single-file/temporary generation.
 6. **JavaScript Validation**:
    - Whenever modifying inline `<script>` templates in the Python generators,
      always extract the generated `<script>` block and run `node --check` to
