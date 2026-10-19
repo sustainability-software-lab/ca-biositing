@@ -54,6 +54,8 @@ data/landiq/*.sbx
 !resources/assets/*.csv
 !data/static/*.csv
 !audit/references/*.csv
+!data/qc/
+!data/qc/qc_review_decisions_seed.csv
 *.pdf
 src/ca_biositing/webservice/ca_biositing/webservice/_version.py
 
@@ -147,3 +149,4 @@ audit/output/*/llm_synthesis_*.json
 audit/output/*/report_*.md
 audit/output/env_fingerprints/*.json
 audit/output/drift_report.md
+data/insights/resource_ai_insights.json

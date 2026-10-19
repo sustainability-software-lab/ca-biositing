@@ -1,0 +1,1 @@
+id,record_table,record_id,replicate_group_key,resource_name,analysis_type,parameter_name,flag_type,flag_trigger_value,old_qc_pass,new_qc_pass,decision_status,decision_action,rationale_chips,review_note,submitted_by_email,assigned_to_email,resolved_by_email,resolved_at,synced_to_gsheet,gsheet_synced_at,gsheet_writeback_target,created_at,updated_at

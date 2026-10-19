@@ -76,3 +76,6 @@ from .resource_information import (
 
 # Sample Preparation
 from .sample_preparation import PreparationMethod, PreparationMethodAbbreviation, PreparedSample
+
+# QC Review
+from .qc import QcReviewDecision
