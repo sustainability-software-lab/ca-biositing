@@ -952,9 +952,14 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-[var(--border)]">
-        <button id="btn-finding-open-github" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)]">
-          🚀 Open GitHub Issue
-        </button>
+        <div class="flex flex-wrap items-center gap-2">
+          <button id="btn-finding-open-github" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)]">
+            🚀 Open GitHub Issue
+          </button>
+          <button id="btn-finding-export-workbench" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90">
+            ⚖️ Export to Audit Workbench
+          </button>
+        </div>
         <div class="flex flex-wrap items-center gap-2">
           <button id="btn-cancel-finding-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">
             Cancel
@@ -2595,14 +2600,457 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           found.updated_at = new Date().toISOString();
           this.saveLocalDecisions(list);
           this.mirrorToPage2DecisionsStore(found);
+          this.broadcastQcUpdate(found);
           window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: found }));
           window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: found }));
           return { ok: true, source: "local", status: "reverted_offline", decision: found };
         }
         return { ok: false, source: "local", status: "not_found" };
+      },
+
+      broadcastQcUpdate(detail) {
+        try {
+          if (typeof BroadcastChannel !== "undefined") {
+            const bc = new BroadcastChannel("biocirv_qc_decisions");
+            bc.postMessage({
+              type: "qc_decision_saved",
+              timestamp: Date.now(),
+              detail: detail || null
+            });
+            bc.close();
+          }
+        } catch (_e) {}
+      },
+
+      resolveRecordTable(analysisTypeOrDomain) {
+        const raw = String(analysisTypeOrDomain || "").trim().toLowerCase();
+        if (raw.endsWith("_record")) return raw;
+        if (raw.includes("ult")) return "ultimate_record";
+        if (raw.includes("comp")) return "compositional_record";
+        if (raw.includes("icp") || raw.includes("elem")) return "icp_record";
+        if (raw.includes("xrd")) return "xrd_record";
+        if (raw.includes("xrf") || raw === "ash") return "xrf_record";
+        if (raw.includes("calor")) return "calorimetry_record";
+        if (raw.includes("ferm")) return "fermentation_record";
+        if (raw.includes("pretreat") || raw.includes("hydro") || raw.includes("conv")) return "pretreatment_record";
+        if (raw.includes("gasif")) return "gasification_record";
+        return "proximate_record";
+      },
+
+      normalizeTrayWorkbenchItem(item, sourceLabel) {
+        const it = item || {};
+        const rawScope = String(it.selection_scope || it.scope || it.triage_scope || "replicate_group").toLowerCase();
+        const selectionScope = (rawScope === "single" || rawScope === "single_record")
+          ? "single_record"
+          : "replicate_group";
+        const targetIds = Array.isArray(it.target_record_ids)
+          ? it.target_record_ids.map(x => String(x).trim()).filter(Boolean)
+          : (Array.isArray(it.record_ids)
+              ? it.record_ids.map(x => String(x).trim()).filter(Boolean)
+              : String(it.record_ids || it.record_id || "")
+                  .split(/[|,]/g)
+                  .map(x => x.trim())
+                  .filter(Boolean));
+        const primaryRecordId = String(it.record_id || targetIds[0] || "").trim() || null;
+        const effectiveIds = selectionScope === "single_record" && primaryRecordId
+          ? [primaryRecordId]
+          : (targetIds.length ? targetIds : (primaryRecordId ? [primaryRecordId] : []));
+        const analysisType = String(it.analysis_type || it.domain || "proximate").trim().toLowerCase();
+        const recordTable = this.resolveRecordTable(it.record_table || analysisType);
+        const reviewNote = String(
+          it.review_note || it.note || it.audit_note ||
+          (sourceLabel ? `Flagged from ${sourceLabel}` : "Flagged from Selection & Export Tray")
+        ).trim();
+        const repGroupKey = it.replicate_group_key || it.group_key || (
+          (it.resource_name || it.prepared_sample_name || it.prepared_sample || it.parameter_name || it.parameter)
+            ? `${String(it.resource_name || "unknown").trim().toLowerCase()}::${String(it.prepared_sample_name || it.prepared_sample || "all").trim()}::${String(it.parameter_name || it.parameter || "Observation").trim()}`
+            : null
+        );
+        return {
+          record_table: recordTable,
+          record_id: primaryRecordId,
+          record_ids: effectiveIds,
+          target_record_ids: effectiveIds,
+          replicate_group_key: repGroupKey,
+          selection_scope: selectionScope,
+          resource_name: String(it.resource_name || "unknown").trim().toLowerCase(),
+          analysis_type: analysisType,
+          parameter_name: String(it.parameter_name || it.parameter || "Observation").trim(),
+          prepared_sample: it.prepared_sample || it.prepared_sample_name || null,
+          field_sample: it.field_sample || it.field_sample_name || null,
+          experiment: it.experiment || it.experiment_name || null,
+          flag_type: String(it.flag_type || "analyst_flagged"),
+          flag_trigger_value: it.flag_trigger_value != null ? String(it.flag_trigger_value) : null,
+          old_qc_pass: String(it.old_qc_pass || it.previous_qc_status || "pass"),
+          recommended_qc_status: it.recommended_qc_status || it.new_qc_status || "fail",
+          assigned_to_email: it.assigned_to_email || null,
+          review_note: reviewNote,
+          note: reviewNote
+        };
+      },
+
+      async exportTrayToWorkbench(payload, sourceLabel) {
+        const id = this.getAnalystIdentity();
+        const rawItems = Array.isArray(payload)
+          ? payload
+          : (payload && Array.isArray(payload.items) ? payload.items : [payload || {}]);
+        const normalizedItems = rawItems
+          .map(it => this.normalizeTrayWorkbenchItem(it, sourceLabel))
+          .filter(it => it.record_id || (Array.isArray(it.record_ids) && it.record_ids.length > 0));
+        const primaryItem = normalizedItems[0] || this.normalizeTrayWorkbenchItem(
+          Array.isArray(payload) ? (payload[0] || {}) : (payload || {}),
+          sourceLabel
+        );
+        const openWorkbench = (payload && !Array.isArray(payload) && payload.open_workbench === false) ? false : true;
+
+        const reqBody = {
+          ...primaryItem,
+          items: normalizedItems.length ? normalizedItems : [primaryItem]
+        };
+
+        const candidateUrls = [];
+        if (window.location.protocol === "http:" || window.location.protocol === "https:") {
+          candidateUrls.push("/v1/qc/tray-to-workbench");
+        }
+        if (id.apiBase) {
+          candidateUrls.push(`${id.apiBase}/v1/qc/tray-to-workbench`);
+        }
+
+        for (const url of candidateUrls) {
+          try {
+            const resp = await fetch(url, {
+              method: "POST",
+              headers: this.getHeaders(),
+              credentials: "include",
+              body: JSON.stringify(reqBody)
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              if (Array.isArray(data.decisions)) {
+                data.decisions.forEach(d => this.upsertLocalDecision(d));
+              } else if (data.decision) {
+                this.upsertLocalDecision(data.decision);
+              }
+              const broadcastTarget = data.decisions || data.decision || reqBody;
+              this.broadcastQcUpdate(broadcastTarget);
+              window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: broadcastTarget }));
+              if (openWorkbench && data.workbench_url) {
+                window.location.href = data.workbench_url;
+              }
+              const persistedCount = data.created_count || (Array.isArray(data.decisions) ? data.decisions.length : 1);
+              return { ok: true, source: "api", persisted: persistedCount, ...data };
+            }
+          } catch (_e) {}
+        }
+
+        const fallbackDecisions = [];
+        for (const normIt of reqBody.items) {
+          const fb = await this.submitFinding({
+            scope: normIt.selection_scope,
+            triage_scope: normIt.selection_scope === "single_record" ? "single" : "group",
+            resource_name: normIt.resource_name,
+            analysis_type: normIt.analysis_type,
+            parameter_name: normIt.parameter_name,
+            prepared_sample: normIt.prepared_sample,
+            field_sample: normIt.field_sample,
+            experiment: normIt.experiment,
+            record_id: normIt.record_id,
+            target_record_ids: normIt.target_record_ids,
+            new_qc_status: normIt.recommended_qc_status,
+            assigned_to_email: normIt.assigned_to_email,
+            audit_note: normIt.review_note,
+            sync_to_gsheet: false
+          });
+          if (fb && fb.decision) fallbackDecisions.push(fb.decision);
+        }
+        this.broadcastQcUpdate(fallbackDecisions.length ? fallbackDecisions : reqBody);
+        const fallbackUrl = `/v1/dashboards/metadata/resource_audit_workbench.html?resource=${encodeURIComponent(primaryItem.resource_name)}&scope=${encodeURIComponent(primaryItem.selection_scope)}`;
+        return {
+          ok: true,
+          source: "local",
+          persisted: fallbackDecisions.length || reqBody.items.length,
+          workbench_url: fallbackUrl,
+          decision: fallbackDecisions[0] || null,
+          decisions: fallbackDecisions
+        };
       }
     };
     window.BioCirvQcClient = BioCirvQcClient;
+
+    function resolveEffectiveStage1QcStatus(d) {
+      if (!d || typeof d !== "object") return null;
+      const revStatus = String(d.review_status || d.status || "").toLowerCase();
+      const decStatus = String(d.decision_status || d.decision_action || "").toLowerCase();
+      const decCode = String(d.decision || "").toLowerCase();
+      const newQc = String(d.new_qc_pass || d.new_qc_status || "").toLowerCase();
+      if (revStatus === "reverted" || decStatus === "revert" || decStatus === "approve_pass" || decCode === "keep" || newQc === "pass") {
+        return "pass";
+      }
+      if (newQc === "fail" || decStatus === "reject_fail" || decCode === "exclude_qc_fail") {
+        return "fail";
+      }
+      return null;
+    }
+
+    function extractDecisionTargetIds(d) {
+      const out = [];
+      if (!d || typeof d !== "object") return out;
+      if (Array.isArray(d.target_record_ids)) {
+        d.target_record_ids.forEach(id => {
+          const clean = String(id || "").trim();
+          if (clean) out.push(clean);
+        });
+      }
+      if (Array.isArray(d.record_ids)) {
+        d.record_ids.forEach(id => {
+          const clean = String(id || "").trim();
+          if (clean) out.push(clean);
+        });
+      } else if (d.record_ids) {
+        String(d.record_ids).split(/[|,]/g).forEach(id => {
+          const clean = String(id || "").trim();
+          if (clean) out.push(clean);
+        });
+      }
+      if (d.record_id) {
+        String(d.record_id).split(/[|,]/g).forEach(id => {
+          const clean = String(id || "").trim();
+          if (clean) out.push(clean);
+        });
+      }
+      return Array.from(new Set(out));
+    }
+
+    function applyLiveQcDecisionsOverlay(decisionsInput) {
+      let decisions = [];
+      if (Array.isArray(decisionsInput)) {
+        decisions = decisionsInput;
+      } else if (decisionsInput && typeof decisionsInput === "object") {
+        decisions = Object.entries(decisionsInput).map(([rid, val]) => {
+          if (val && typeof val === "object") {
+            return { ...val, record_id: val.record_id || rid };
+          }
+          return { record_id: rid, new_qc_pass: String(val || "") };
+        });
+      } else {
+        return { overlaidCount: 0, failCount: 0, totalDecisions: 0 };
+      }
+
+      const sorted = [...decisions].sort((a, b) => {
+        const ta = String((a && (a.updated_at || a.reviewed_at || a.created_at)) || "");
+        const tb = String((b && (b.updated_at || b.reviewed_at || b.created_at)) || "");
+        return ta.localeCompare(tb);
+      });
+
+      const recordQcOverlay = new Map();
+      sorted.forEach(d => {
+        const effQc = resolveEffectiveStage1QcStatus(d);
+        if (!effQc) return;
+        const recIds = extractDecisionTargetIds(d);
+        recIds.forEach(rid => {
+          recordQcOverlay.set(rid, effQc);
+        });
+      });
+
+      let overlaidCount = 0;
+      let failCount = 0;
+
+      if (typeof ALL_RECORDS !== "undefined" && Array.isArray(ALL_RECORDS)) {
+        ALL_RECORDS.forEach(r => {
+          if (!r || !r.record_id) return;
+          if (!r._baseline_qc_status) {
+            r._baseline_qc_status = r.qc_status || "pass";
+          }
+          const overQc = recordQcOverlay.get(String(r.record_id));
+          if (!overQc) return;
+          overlaidCount += 1;
+          if (overQc === "fail") failCount += 1;
+          r.qc_status = overQc;
+          r.qc_pass = overQc;
+          r.portal_compliant = (overQc === "pass" && !r.resource_portal_excluded);
+        });
+      }
+
+      if (typeof ALL_ROWS !== "undefined" && Array.isArray(ALL_ROWS)) {
+        let explorerChanged = 0;
+        ALL_ROWS.forEach(r => {
+          if (!r || !r.record_id) return;
+          if (!r._baseline_qc_status) {
+            r._baseline_qc_status = r.qc_pass || r.qc_status || "pass";
+          }
+          if (!r._baseline_data_status) {
+            r._baseline_data_status = r.data_status || "Portal Compliant";
+          }
+          const overQc = recordQcOverlay.get(String(r.record_id));
+          if (!overQc) return;
+          overlaidCount += 1;
+          if (overQc === "fail") failCount += 1;
+          const nextDataStatus = overQc === "fail" ? "Raw" : (overQc === "pass" ? "Portal Compliant" : r._baseline_data_status);
+          if (r.qc_pass !== overQc || r.qc_status !== overQc || r.data_status !== nextDataStatus) {
+            r.qc_pass = overQc;
+            r.qc_status = overQc;
+            r.data_status = nextDataStatus;
+            explorerChanged += 1;
+          }
+        });
+        if (explorerChanged > 0 && typeof applyFilters === "function") {
+          try { applyFilters(); } catch (_e) {}
+        }
+      }
+
+      if (typeof BUNDLE !== "undefined" && BUNDLE && Array.isArray(BUNDLE.rows)) {
+        BUNDLE.rows.forEach(row => {
+          if (!Array.isArray(row) || row.length < 17) return;
+          const rid = String(row[2] || "");
+          if (!rid) return;
+          const overQc = recordQcOverlay.get(rid);
+          if (overQc) {
+            row[15] = overQc;
+            row[16] = (overQc === "pass");
+          }
+        });
+      }
+
+      if (typeof BUNDLE !== "undefined" && BUNDLE && BUNDLE.insights && typeof BUNDLE.insights === "object") {
+        Object.values(BUNDLE.insights).forEach(ins => {
+          const byTab = ins && ins.outlier_screening && ins.outlier_screening.by_tab;
+          if (!byTab || typeof byTab !== "object") return;
+          Object.values(byTab).forEach(tabObj => {
+            const groups = tabObj && tabObj.groups;
+            if (!Array.isArray(groups)) return;
+            groups.forEach(g => {
+              if (!Array.isArray(g.replicates)) return;
+              let passCnt = 0;
+              let failCnt = 0;
+              const passVals = [];
+              const allVals = [];
+              g.replicates.forEach(rep => {
+                if (!rep._baseline_qc) rep._baseline_qc = rep.qc || "pass";
+                const overQc = recordQcOverlay.get(String(rep.id || ""));
+                rep.qc = overQc || rep._baseline_qc;
+                if (rep.qc === "fail") {
+                  failCnt += 1;
+                } else {
+                  passCnt += 1;
+                  if (typeof rep.val === "number" && !Number.isNaN(rep.val)) passVals.push(rep.val);
+                }
+                if (typeof rep.val === "number" && !Number.isNaN(rep.val)) allVals.push(rep.val);
+              });
+              g.qc_pass_count = passCnt;
+              g.qc_fail_count = failCnt;
+              g.qc_mixed = passCnt > 0 && failCnt > 0;
+              const activeVals = passVals.length > 0 ? passVals : allVals;
+              if (activeVals.length > 0) {
+                const meanVal = activeVals.reduce((s, v) => s + v, 0) / activeVals.length;
+                g.mean = meanVal;
+                if (activeVals.length > 1) {
+                  const variance = activeVals.reduce((s, v) => s + Math.pow(v - meanVal, 2), 0) / (activeVals.length - 1);
+                  g.sd = Math.sqrt(variance);
+                  g.rsd_within_pct = Math.abs(meanVal) > 1e-9 ? (g.sd / Math.abs(meanVal)) * 100.0 : 0.0;
+                } else {
+                  g.sd = 0.0;
+                  g.rsd_within_pct = 0.0;
+                }
+              }
+            });
+          });
+        });
+      }
+
+      const badgeEl = document.getElementById("live-qc-overlay-badge");
+      if (badgeEl) {
+        if (recordQcOverlay.size > 0) {
+          badgeEl.classList.remove("hidden");
+          badgeEl.textContent = `⚡ Stage 1 Live Overlay: ${recordQcOverlay.size} rec(s) (${failCount} fail)`;
+        } else {
+          badgeEl.classList.add("hidden");
+        }
+      }
+
+      if (typeof render === "function") {
+        try { render(); } catch (_e) {}
+      }
+      return { overlaidCount, failCount, totalDecisions: recordQcOverlay.size };
+    }
+    window.applyLiveQcDecisionsOverlay = applyLiveQcDecisionsOverlay;
+
+    async function refreshLiveQcOverlay(showFeedback) {
+      const isSliceMode = typeof BUNDLE !== "undefined" && BUNDLE && Boolean(BUNDLE.collaborator_slice_mode);
+      const isFileProtocol = typeof window !== "undefined" && window.location && window.location.protocol === "file:";
+      if (isSliceMode) {
+        ["btn-refresh-qc-state", "btn-tray-to-workbench", "btn-finding-export-workbench", "nav-page-workbench"].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.classList.add("hidden");
+        });
+        return { ok: false, skipped: "collaborator_slice_mode" };
+      }
+      if (isFileProtocol) {
+        try {
+          const localDecisions = BioCirvQcClient.getLocalDecisions();
+          if (localDecisions && localDecisions.length) {
+            applyLiveQcDecisionsOverlay(localDecisions);
+          }
+        } catch (_e) {}
+        return { ok: false, skipped: "file_protocol" };
+      }
+
+      const refreshBtn = document.getElementById("btn-refresh-qc-state");
+      if (refreshBtn && showFeedback) {
+        refreshBtn.textContent = "↻ Syncing QC...";
+      }
+
+      const id = BioCirvQcClient.getAnalystIdentity();
+      const candidateUrls = ["/v1/qc/decisions?limit=500"];
+      if (id.apiBase) {
+        candidateUrls.push(`${id.apiBase}/v1/qc/decisions?limit=500`);
+      }
+
+      for (const url of candidateUrls) {
+        try {
+          const resp = await fetch(url, {
+            method: "GET",
+            headers: BioCirvQcClient.getHeaders(),
+            credentials: "include"
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const apiDecisions = Array.isArray(data.decisions) ? data.decisions : [];
+            apiDecisions.forEach(d => BioCirvQcClient.upsertLocalDecision(d));
+            const merged = BioCirvQcClient.getLocalDecisions();
+            const stats = applyLiveQcDecisionsOverlay(merged.length ? merged : apiDecisions);
+            if (refreshBtn) {
+              refreshBtn.textContent = showFeedback ? `✓ QC Synced (${stats.totalDecisions})` : "↻ Refresh QC State";
+              if (showFeedback) {
+                setTimeout(() => { refreshBtn.textContent = "↻ Refresh QC State"; }, 2000);
+              }
+            }
+            return { ok: true, source: "api", ...stats };
+          }
+        } catch (_e) {}
+      }
+
+      try {
+        const localDecisions = BioCirvQcClient.getLocalDecisions();
+        const stats = applyLiveQcDecisionsOverlay(localDecisions);
+        if (refreshBtn) refreshBtn.textContent = "↻ Refresh QC State";
+        return { ok: true, source: "local", ...stats };
+      } catch (_e) {
+        if (refreshBtn) refreshBtn.textContent = "↻ Refresh QC State";
+        return { ok: false, source: "none" };
+      }
+    }
+    window.refreshLiveQcOverlay = refreshLiveQcOverlay;
+
+    try {
+      if (typeof BroadcastChannel !== "undefined") {
+        const qcDecisionChannel = new BroadcastChannel("biocirv_qc_decisions");
+        qcDecisionChannel.onmessage = (evt) => {
+          if (evt && evt.data && evt.data.type === "qc_decision_saved") {
+            window.refreshLiveQcOverlay(false);
+          }
+        };
+      }
+    } catch (_e) {}
 
     function initAnalystSignInBar() {
       const bugBtn = document.getElementById("btn-open-bug-modal");
@@ -2995,15 +3443,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const discovered = discoverSiblingReplicates(pf, defaultRes);
         const rawScope = String(pf.scope || pf.triage_scope || "").toLowerCase();
         let initialChoice = "group";
-        if (rawScope === "single" || rawScope === "single_record") {
-          initialChoice = "single";
-        } else if (rawScope === "group" || rawScope === "replicate_group") {
-          initialChoice = "group";
-        } else if (pf.record_id && discovered.groupRecordIds.length <= 1) {
-          initialChoice = "single";
-        } else if (discovered.groupRecordIds.length > 1) {
-          initialChoice = pf.prefer_single ? "single" : "group";
-        } else if (pf.record_id) {
+        if (rawScope === "single" || rawScope === "single_record" || pf.prefer_single === true) {
           initialChoice = "single";
         } else {
           initialChoice = "group";
@@ -3089,6 +3529,59 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         });
       }
 
+      const exportFindingWorkbenchBtn = document.getElementById("btn-finding-export-workbench");
+      if (exportFindingWorkbenchBtn && findingModal) {
+        exportFindingWorkbenchBtn.addEventListener("click", async () => {
+          const resVal = (document.getElementById("finding-modal-resource") || {}).value || (activeResourcesList && activeResourcesList[0]) || "resource";
+          const scopeVal = (document.getElementById("finding-modal-scope") || {}).value || currentFindingContext.choice || "group";
+          const domVal = (document.getElementById("finding-modal-domain") || {}).value || "proximate";
+          const paramVal = ((document.getElementById("finding-modal-parameter") || {}).value || "").trim() || "Observation";
+          const recVal = ((document.getElementById("finding-modal-record-id") || {}).value || "").trim() || null;
+          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "fail";
+          const assignVal = ((document.getElementById("finding-modal-assigned-email") || {}).value || "").trim() || null;
+          const noteVal = ((document.getElementById("finding-modal-note") || {}).value || "").trim();
+
+          const rawIdsFromInput = recVal ? recVal.split("|").map(s => s.trim()).filter(Boolean) : [];
+          const targetIds = scopeVal === "group"
+            ? (currentFindingContext.groupRecordIds.length ? currentFindingContext.groupRecordIds : rawIdsFromInput)
+            : (rawIdsFromInput.length ? [rawIdsFromInput[0]] : (currentFindingContext.singleRecordId ? [currentFindingContext.singleRecordId] : []));
+          const primaryRecId = scopeVal === "single"
+            ? (targetIds[0] || recVal)
+            : (currentFindingContext.singleRecordId || targetIds[0] || recVal);
+
+          const res = await BioCirvQcClient.exportTrayToWorkbench({
+            selection_scope: scopeVal === "single" ? "single_record" : "replicate_group",
+            resource_name: resVal,
+            analysis_type: domVal,
+            parameter_name: paramVal,
+            prepared_sample: currentFindingContext.prepared_sample || "",
+            field_sample: currentFindingContext.field_sample || "",
+            experiment: currentFindingContext.experiment || "",
+            record_id: primaryRecId,
+            target_record_ids: targetIds,
+            recommended_qc_status: qcVal,
+            assigned_to_email: assignVal,
+            note: noteVal || Array.from(selectedFindingChips).join("; "),
+            open_workbench: window.location.protocol === "http:" || window.location.protocol === "https:"
+          });
+          const statusEl = document.getElementById("finding-modal-status");
+          if (statusEl) {
+            const wbUrl = res.workbench_url || "/v1/dashboards/metadata/resource_audit_workbench.html";
+            statusEl.className = "p-2.5 rounded-lg text-xs font-mono badge-pass";
+            statusEl.innerHTML = `✓ Exported to <a href="${wbUrl}" class="underline font-bold">⚖️ QC Audit Workbench</a> (${scopeVal === "single" ? "Single Point Only" : "Entire Replicate Group"}).`;
+            statusEl.classList.remove("hidden");
+          }
+          window.refreshLiveQcOverlay(false);
+        });
+      }
+
+      const refreshQcBtn = document.getElementById("btn-refresh-qc-state");
+      if (refreshQcBtn) {
+        refreshQcBtn.addEventListener("click", () => {
+          window.refreshLiveQcOverlay(true);
+        });
+      }
+
       ["btn-close-finding-modal", "btn-cancel-finding-modal"].forEach(id => {
         const el = document.getElementById(id);
         if (el && findingModal) el.addEventListener("click", () => findingModal.classList.add("hidden"));
@@ -3133,6 +3626,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             assigned_to_email: assignVal,
             gsheet_writeback_requested: gsheetSync
           });
+          BioCirvQcClient.broadcastQcUpdate(result.decision);
+          window.refreshLiveQcOverlay(false);
 
           if (typeof upsertDecisionEntry === "function") {
             const localKey = scopeVal === "single" && primaryRecId
@@ -3166,7 +3661,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             const assignMsg = assignVal ? ` · Assigned to ${assignVal}` : "";
             const scopeMsg = scopeVal === "group" ? `Entire Replicate Group (${targetIds.length || 1} recs)` : `Single Point (${primaryRecId || '1 rec'})`;
             statusEl.className = "p-2.5 rounded-lg text-xs font-mono badge-pass";
-            statusEl.innerHTML = `✓ Queued <strong>${scopeMsg}</strong> (${result.source === "api" ? "API + Seed CSV" : "Browser Local Queue"})${assignMsg}. View &amp; triage in <a href="resource_qc_outlier_dashboard.html?subtab=review_queue" class="underline font-bold">Page 2 Review Queue</a>.`;
+            statusEl.innerHTML = `✓ Queued <strong>${scopeMsg}</strong> (${result.source === "api" ? "API + Seed CSV" : "Browser Local Queue"})${assignMsg}. View &amp; triage in <a href="resource_qc_outlier_dashboard.html?subtab=review_queue" class="underline font-bold">Page 2 Review Queue</a> or <a href="/v1/dashboards/metadata/resource_audit_workbench.html" class="underline font-bold">QC Audit Workbench</a>.`;
             statusEl.classList.remove("hidden");
           }
           setTimeout(() => {
@@ -3233,6 +3728,9 @@ def build_analysis_dashboard_html(
         <a id="nav-page-drift" href="../audit/db_environment_drift_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
           4. DB Environment Drift
         </a>
+        <a id="nav-page-workbench" href="/v1/dashboards/metadata/resource_audit_workbench.html" class="px-3 py-1.5 rounded-lg font-semibold badge-warn hover:opacity-90 transition">
+          ⚖️ QC Audit Workbench
+        </a>
       </div>
     </nav>
 
@@ -3246,11 +3744,15 @@ def build_analysis_dashboard_html(
             <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
             <span id="hdr-class-badge" class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]"></span>
             <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
+            <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
           </div>
           <p id="hdr-desc" class="text-xs sm:text-sm text-[var(--muted-foreground)]"></p>
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+          <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
+            ↻ Refresh QC State
+          </button>
           <button id="btn-toggle-ai" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
             ✨ Hide AI Brief
           </button>
@@ -4880,6 +5382,7 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
     initResourceSwitcher();
     initFiltersForResource();
     render();
+    window.refreshLiveQcOverlay(false);
   </script>
 </body>
 </html>
@@ -4948,6 +5451,9 @@ def build_qc_outlier_dashboard_html(
         <a id="nav-page-drift" href="../audit/db_environment_drift_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
           4. DB Environment Drift
         </a>
+        <a id="nav-page-workbench" href="/v1/dashboards/metadata/resource_audit_workbench.html" class="px-3 py-1.5 rounded-lg font-semibold badge-warn hover:opacity-90 transition">
+          ⚖️ QC Audit Workbench
+        </a>
       </div>
     </nav>
 
@@ -4960,6 +5466,7 @@ def build_qc_outlier_dashboard_html(
             <h1 id="hdr-title" class="text-lg sm:text-xl font-bold text-[var(--foreground)]">BioCirV — Statistical Replicate Precision &amp; Candidate Outlier Audit</h1>
             <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
             <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
+            <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
           </div>
           <p id="hdr-desc" class="text-xs text-[var(--muted-foreground)]">
             Two-sided Dixon's Q (&alpha;=0.05, n&ge;3), Within-Group vs. Between-Group RSD, &gt;3&times;SD<sub>pooled</sub> replicate screening, Portal/QC status filtering, and Analyst QC Decision-Making Workbench.
@@ -4967,6 +5474,9 @@ def build_qc_outlier_dashboard_html(
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+          <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
+            ↻ Refresh QC State
+          </button>
           <button id="btn-anon-analyst" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
             🔒 Hide Analysts
           </button>
@@ -5048,6 +5558,9 @@ def build_qc_outlier_dashboard_html(
 
     <!-- 5-Card Statistical Precision & QC KPI Strip -->
     <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="qc-kpi-strip"></section>
+
+    <!-- Selection & Export Tray (Replicate Group Default + 1-Click Toggle to Single Point Only) -->
+    <section id="qc-selection-export-tray" class="bg-[var(--card)] border border-amber-500/40 rounded-xl p-3.5 shadow-sm"></section>
 
     <!-- Analyst QC Decision-Making & Export Workbench Banner -->
     <section id="qc-decision-banner" class="bg-[var(--card)] border border-[var(--primary)]/50 rounded-xl p-3.5 shadow-sm"></section>
@@ -5695,13 +6208,15 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                       experiment: g.experiment,
                       parameter: g.parameter,
                       record_id: rep.id,
+                      dixon_candidate_id: rep.id,
                       record_ids: candRecIds,
                       all_group_record_ids: candRecIds,
-                      scope: "single_record",
-                      triage_scope: "single",
+                      n: g.n,
+                      scope: "replicate_group",
+                      triage_scope: "group",
                       note: `Clicked replicate ${rep.id} (val=${fmtNum(rep.val, 2)} ${g.unit || ''}, n=${g.n}, group mean=${fmtNum(g.mean, 2)} ± ${fmtNum(g.sd, 2)})`
                     }));
-                    return `<span class="inline-flex items-center gap-0.5"><button type="button" onclick="window.auditPage2PointOrGroup('${chipAuditPayload}')" title="Click to flag Record ${rep.id} or Entire Replicate Group (n=${g.n}) · Rep ${rep.rep}, QC: ${rep.qc}" class="px-1.5 py-0.5 rounded font-mono text-xs transition ${isCand ? 'badge-warn ring-1 ring-amber-500 font-bold' : 'bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]'}">⚑ ${isCand ? '★ ' : ''}${fmtNum(rep.val, 2)}${qcTag}</button><button type="button" onclick="jumpToRecord('${rep.id}')" title="Jump to Record ${rep.id} in Explorer" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">🔍</button></span>`;
+                    return `<span class="inline-flex items-center gap-0.5"><button type="button" onclick="window.auditPage2PointOrGroup('${chipAuditPayload}')" title="Click to select Entire Replicate Group (n=${g.n}, default) or Single Point Only (${rep.id}) · Rep ${rep.rep}, QC: ${rep.qc}" class="px-1.5 py-0.5 rounded font-mono text-xs transition ${isCand ? 'badge-warn ring-1 ring-amber-500 font-bold' : 'bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]'}">⚑ ${isCand ? '★ ' : ''}${fmtNum(rep.val, 2)}${qcTag}</button><button type="button" onclick="window.addSelectionToTray('${chipAuditPayload}')" title="Add Replicate Group (default) or Single Point (${rep.id}) to Selection &amp; Export Tray" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">📌</button><button type="button" onclick="jumpToRecord('${rep.id}')" title="Jump to Record ${rep.id} in Explorer" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">🔍</button></span>`;
                   }).join(" ");
 
                   const badges = [];
@@ -5723,7 +6238,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   const dKey = makeGroupDecisionKey(state.resource, g);
                   const dEntry = getDecisionEntry(dKey);
                   const safeKeyAttr = dKey.replace(/"/g, "&quot;").replace(/'/g, "\\'");
-                  const defaultTriageScope = (g.raw_rsd20 && !g.raw_dixon) ? "group" : (singleCandId ? "single" : "group");
+                  const defaultTriageScope = "group";
                   const currentTriageScope = dEntry.triage_scope || defaultTriageScope;
                   const metaPayload = encodeURIComponent(JSON.stringify({
                     scope: currentTriageScope === "single" ? "single_record" : "replicate_group",
@@ -5744,7 +6259,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                     rsd_within_pct: g.rsd_within_pct,
                     dixon_q: g.dixon_q,
                     dixon_candidate_id: singleCandId,
-                    record_id: currentTriageScope === "single" ? singleCandId : "",
+                    record_id: currentTriageScope === "single" ? singleCandId : singleCandId,
                     record_ids: currentTriageScope === "single" ? singleCandId : candRecIds,
                     all_group_record_ids: candRecIds,
                     target_label: `${g.prepared_sample} (${g.experiment})`
@@ -5770,6 +6285,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         ${pLabel} <span class="font-mono text-[11px] font-normal text-[var(--muted-foreground)]">(${g.unit || '—'})</span>
                         <div class="mt-1 flex flex-wrap gap-1">
                           <button onclick="inspectSampleParam('${g.prepared_sample}', '${g.parameter}')" class="px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] text-[10px] font-semibold hover:border-[var(--primary)]">Inspect Records &rarr;</button>
+                          <button type="button" onclick="window.addSelectionToTray('${metaPayload}')" class="px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] text-[10px] font-semibold hover:border-[var(--primary)]">📌 Add to Tray</button>
                           <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" class="px-2 py-0.5 rounded badge-warn text-[10px] font-semibold hover:opacity-90">⚑ Audit Modal</button>
                         </div>
                       </td>
@@ -5787,10 +6303,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                       </td>
                       <td class="py-2.5 px-3 space-y-1.5 min-w-[300px]">
                         <div class="flex items-center gap-1 text-[10px]">
-                          <span class="font-semibold text-[var(--muted-foreground)]">Flip Scope:</span>
+                          <span class="font-semibold text-[var(--muted-foreground)]">Selection Scope:</span>
                           <select onchange="handleDecisionScope('${safeKeyAttr}', this.value, '${metaPayload}')" class="flex-1 rounded px-1.5 py-0.5 text-[11px] font-mono font-semibold border border-[var(--border)] bg-[var(--background)]">
-                            <option value="group" ${currentTriageScope === 'group' ? 'selected' : ''}>Whole Replicate Group (n=${g.n} recs)</option>
-                            <option value="single" ${currentTriageScope === 'single' ? 'selected' : ''}>Single Candidate Outlier (${singleCandId || 'rec'})</option>
+                            <option value="group" ${currentTriageScope === 'group' ? 'selected' : ''}>Entire Replicate Group (n=${g.n} recs)</option>
+                            <option value="single" ${currentTriageScope === 'single' ? 'selected' : ''}>Single Point Only (${singleCandId || 'rec'})</option>
                           </select>
                         </div>
                         <select onchange="handleDecisionChange('${safeKeyAttr}', this.value, '${metaPayload}')" class="w-full rounded px-2 py-1 text-xs font-semibold border border-[var(--border)]">
@@ -6086,6 +6602,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         { id: "reviewed", label: `⚖️ Reviewed (${revCnt})` }
       ];
 
+      const groupSiblingsMap = {};
+      getResourceRecords().forEach(rec => {
+        const gKey = `${rec.analysis_type || ''}||${rec.prepared_sample || ''}||${rec.experiment || ''}||${rec.parameter || ''}`;
+        if (!groupSiblingsMap[gKey]) groupSiblingsMap[gKey] = [];
+        groupSiblingsMap[gKey].push(rec.record_id);
+      });
+
       const rowsHtml = flagFiltered.slice(0, 600).map(r => {
         const info = outlierMap[r.record_id];
         let statCell = '<span class="text-[var(--muted-foreground)]">—</span>';
@@ -6108,12 +6631,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const recKey = makeRecordDecisionKey(r.record_id);
         const dEntry = getDecisionEntry(recKey);
         const safeKeyAttr = recKey.replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const gKey = `${r.analysis_type || ''}||${r.prepared_sample || ''}||${r.experiment || ''}||${r.parameter || ''}`;
+        const groupRecIdsArr = groupSiblingsMap[gKey] || [r.record_id];
+        const groupRecIdsStr = groupRecIdsArr.join("|");
         const metaPayload = encodeURIComponent(JSON.stringify({
-          scope: "single_record",
-          triage_scope: "single",
+          scope: "replicate_group",
+          triage_scope: "group",
           resource_name: r.resource_name,
           record_id: r.record_id,
-          record_ids: r.record_id,
+          dixon_candidate_id: r.record_id,
+          record_ids: groupRecIdsStr,
+          all_group_record_ids: groupRecIdsStr,
+          n: groupRecIdsArr.length,
           analysis_type: r.analysis_type,
           prepared_sample: r.prepared_sample,
           field_sample: r.field_sample || "",
@@ -6126,12 +6655,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           value: r.value,
           unit: r.unit || "",
           qc_status: r.qc_status,
-          target_label: `Rec ${r.record_id} (${r.prepared_sample})`
+          target_label: `${r.prepared_sample} (${r.experiment})`
         }));
 
         return `
           <tr class="border-t border-[var(--border)] hover:bg-[var(--background)] text-xs align-top">
-            <td class="py-2 px-2.5 font-mono font-semibold"><button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Click to flag Record ${r.record_id} or its Replicate Group" class="hover:text-[var(--primary)] underline decoration-dotted">⚑ ${r.record_id}</button></td>
+            <td class="py-2 px-2.5 font-mono font-semibold"><div class="flex items-center gap-1"><button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Click to select Entire Replicate Group (default) or Single Point Only (${r.record_id})" class="hover:text-[var(--primary)] underline decoration-dotted">⚑ ${r.record_id}</button><button type="button" onclick="window.addSelectionToTray('${metaPayload}')" title="Add to Selection &amp; Export Tray" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">📌</button></div></td>
             <td class="py-2 px-2.5">${r.analysis_type}</td>
             <td class="py-2 px-2.5 font-mono">
               <div class="font-semibold text-[var(--primary)]">${r.prepared_sample}</div>
@@ -6158,7 +6687,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <input type="text" value="${(dEntry.note || '').replace(/"/g, '&quot;')}" onchange="handleDecisionNote('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Reviewer note..." class="w-full rounded px-1.5 py-1 text-[11px] border border-[var(--border)] font-mono" />
               <div class="flex items-center gap-1">
                 <input type="email" value="${(dEntry.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email..." class="flex-1 rounded px-1.5 py-0.5 text-[10px] border border-[var(--border)] font-mono" />
-                <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Open Audit Finding Modal (Single Record vs Entire Replicate Group)" class="px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-90">⚑ Audit</button>
+                <button type="button" onclick="window.addSelectionToTray('${metaPayload}')" title="Add Replicate Group to Selection &amp; Export Tray" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📌 Tray</button>
+                <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Open Audit Finding Modal (Entire Replicate Group default vs Single Point Only)" class="px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-90">⚑ Audit</button>
                 <button type="button" onclick="approveAndSyncDecision('${safeKeyAttr}', '${metaPayload}')" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚡ Sync</button>
               </div>
             </td>
@@ -6425,10 +6955,170 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       } catch (_) {}
     }
 
+    const SELECTION_TRAY_KEY = "biocirv_qc_selection_tray_v1";
+    function loadSelectionTray() {
+      try {
+        const raw = localStorage.getItem(SELECTION_TRAY_KEY);
+        return raw ? JSON.parse(raw) : [];
+      } catch (_) {
+        return [];
+      }
+    }
+    function saveSelectionTray(items) {
+      try {
+        localStorage.setItem(SELECTION_TRAY_KEY, JSON.stringify(items));
+      } catch (_) {}
+    }
+    let SELECTION_TRAY = loadSelectionTray();
+
+    window.addSelectionToTray = function(encodedPayload) {
+      let meta = {};
+      try { meta = JSON.parse(decodeURIComponent(encodedPayload)); } catch (_) { return; }
+      const itemKey = `${meta.resource_name || state.resource}||${meta.analysis_type || ''}||${meta.prepared_sample || ''}||${meta.experiment || ''}||${meta.parameter || ''}||${meta.record_id || ''}`;
+      const existingIdx = SELECTION_TRAY.findIndex(x => x.tray_key === itemKey);
+      const item = {
+        tray_key: itemKey,
+        resource_name: meta.resource_name || state.resource,
+        analysis_type: meta.analysis_type || "",
+        prepared_sample: meta.prepared_sample || "",
+        experiment: meta.experiment || "",
+        parameter: meta.parameter || "",
+        record_id: meta.record_id || meta.dixon_candidate_id || "",
+        all_group_record_ids: meta.all_group_record_ids || meta.record_ids || meta.record_id || "",
+        triage_scope: meta.triage_scope === "single" ? "single" : "group",
+        scope: meta.triage_scope === "single" ? "single_record" : "replicate_group",
+        record_ids: meta.triage_scope === "single"
+          ? (meta.record_id || meta.dixon_candidate_id || "")
+          : (meta.all_group_record_ids || meta.record_ids || meta.record_id || ""),
+        note: meta.note || ""
+      };
+      if (existingIdx >= 0) {
+        SELECTION_TRAY[existingIdx] = item;
+      } else {
+        SELECTION_TRAY.push(item);
+      }
+      saveSelectionTray(SELECTION_TRAY);
+      if (window.showQcToast) {
+        window.showQcToast(`📌 Added ${item.prepared_sample || item.record_id} (${item.triage_scope === 'group' ? 'Entire Replicate Group' : 'Single Point Only'}) to Selection & Export Tray`, "info");
+      }
+      renderSelectionExportTray();
+    };
+
+    window.toggleTrayItemScope = function(idx, scopeVal) {
+      const item = SELECTION_TRAY[idx];
+      if (!item) return;
+      item.triage_scope = scopeVal === "single" ? "single" : "group";
+      item.scope = item.triage_scope === "single" ? "single_record" : "replicate_group";
+      item.record_ids = item.triage_scope === "single"
+        ? (item.record_id || String(item.all_group_record_ids || "").split("|")[0] || "")
+        : (item.all_group_record_ids || item.record_id || "");
+      saveSelectionTray(SELECTION_TRAY);
+      renderSelectionExportTray();
+    };
+
+    window.removeTrayItem = function(idx) {
+      SELECTION_TRAY.splice(idx, 1);
+      saveSelectionTray(SELECTION_TRAY);
+      renderSelectionExportTray();
+    };
+
+    window.clearSelectionTray = function() {
+      SELECTION_TRAY = [];
+      saveSelectionTray(SELECTION_TRAY);
+      renderSelectionExportTray();
+    };
+
+    window.exportSelectionTrayCsv = function() {
+      if (!SELECTION_TRAY.length) return;
+      const cols = ["resource_name", "analysis_type", "prepared_sample", "experiment", "parameter", "scope", "record_id", "record_ids", "note"];
+      const csv = [
+        cols.join(","),
+        ...SELECTION_TRAY.map(it => cols.map(c => `"${String(it[c] ?? '').replace(/"/g, '""')}"`).join(","))
+      ].join("\\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `biocirv_selection_tray_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    };
+
+    window.sendSelectionTrayToWorkbench = async function(defaultDecision) {
+      if (!SELECTION_TRAY.length || !window.BioCirvQcClient) return;
+      const items = SELECTION_TRAY.map(it => ({
+        scope: it.scope || (it.triage_scope === "single" ? "single_record" : "replicate_group"),
+        resource_name: it.resource_name || state.resource,
+        analysis_type: it.analysis_type || "",
+        prepared_sample_name: it.prepared_sample || "",
+        experiment_name: it.experiment || "",
+        parameter_name: it.parameter || "",
+        record_id: it.triage_scope === "single" ? (it.record_id || "") : "",
+        target_record_ids: String(it.record_ids || it.all_group_record_ids || it.record_id || "").split(/[|,\\s]+/).map(s => s.trim()).filter(Boolean),
+        decision: defaultDecision || "pending",
+        rationale_note: it.note || "Exported from Page 2 Selection & Export Tray"
+      }));
+      await window.BioCirvQcClient.exportTrayToWorkbench(items, defaultDecision || "pending", "Exported from Page 2 Selection & Export Tray");
+      await window.syncReviewQueueWithApi();
+    };
+
+    function renderSelectionExportTray() {
+      const trayEl = document.getElementById("qc-selection-export-tray");
+      if (!trayEl) return;
+      if (!SELECTION_TRAY.length) {
+        trayEl.className = "bg-[var(--card)] border border-[var(--border)] rounded-xl p-3 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs";
+        trayEl.innerHTML = `
+          <div class="flex items-center gap-2 text-[var(--muted-foreground)]">
+            <span class="font-bold text-[var(--foreground)]">📌 Selection &amp; Export Tray (0 selected):</span>
+            <span>Click <strong>📌 Add to Tray</strong> or <strong>⚑</strong> on any replicate point/group to stage its <strong>Entire Replicate Group</strong> (default) or <strong>Single Point Only</strong>.</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="window.openSliceExportModal({ resource: state.resource })" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📤 Export Slice (.HTML)</button>
+            <button type="button" id="btn-tray-to-workbench" onclick="window.openReviewQueueSubtab()" class="px-2.5 py-1 rounded text-[11px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚖️ Export to Audit Workbench</button>
+          </div>
+        `;
+        return;
+      }
+      trayEl.className = "bg-[var(--card)] border-2 border-[var(--primary)] rounded-xl p-3.5 shadow-sm space-y-2.5 text-xs";
+      trayEl.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 rounded font-mono font-bold bg-[var(--primary)] text-[var(--primary-foreground)]">${SELECTION_TRAY.length} Selected</span>
+            <span class="font-bold text-[var(--foreground)]">Selection &amp; Export Tray (Replicate-Group Default with 1-Click Single-Point Toggle)</span>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="window.exportSelectionTrayCsv()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]">⬇ Export Tray (.CSV)</button>
+            <button type="button" onclick="window.openSliceExportModal({ resource: state.resource })" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📤 Export Slice (.HTML)</button>
+            <button type="button" id="btn-tray-to-workbench" onclick="window.sendSelectionTrayToWorkbench('pending')" class="px-2.5 py-1 rounded text-[11px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚖️ Export to Audit Workbench</button>
+            <button type="button" onclick="window.clearSelectionTray()" class="px-2 py-1 rounded text-[11px] text-[var(--muted-foreground)] hover:text-red-500">✕ Clear</button>
+          </div>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          ${SELECTION_TRAY.map((it, idx) => {
+            const grpCnt = String(it.all_group_record_ids || "").split("|").filter(Boolean).length || 1;
+            return `
+              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--background)] border border-[var(--border)] font-mono text-[11px]">
+                <strong class="text-[var(--primary)]">${it.prepared_sample || it.record_id}</strong>
+                <span class="text-[var(--muted-foreground)]">${it.parameter || ''}</span>
+                <select onchange="window.toggleTrayItemScope(${idx}, this.value)" class="rounded px-1.5 py-0.5 text-[10px] font-semibold border border-[var(--border)] bg-[var(--card)]">
+                  <option value="group" ${it.triage_scope !== 'single' ? 'selected' : ''}>Entire Replicate Group (${grpCnt} recs)</option>
+                  <option value="single" ${it.triage_scope === 'single' ? 'selected' : ''}>Single Point Only (${it.record_id || '1 rec'})</option>
+                </select>
+                <button type="button" onclick="window.removeTrayItem(${idx})" class="text-[var(--muted-foreground)] hover:text-red-500 font-bold">&times;</button>
+              </div>
+            `;
+          }).join("")}
+        </div>
+      `;
+    }
+
     function render() {
       renderDomainPills();
       renderHeaderAndKpis();
       renderDecisionBanner();
+      renderSelectionExportTray();
       const container = document.getElementById("qc-content");
       if (state.subtab === "outliers") container.innerHTML = renderOutliersSubtab();
       else if (state.subtab === "rsd") container.innerHTML = renderRsdSubtab();
@@ -6927,11 +7617,44 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     });
 
 __SHARED_SLICE_AND_BUG_MODALS_JS__
+    const _origApplyOverlayP2 = window.applyLiveQcDecisionsOverlay;
+    window.applyLiveQcDecisionsOverlay = function(decisions) {
+      const count = _origApplyOverlayP2 ? _origApplyOverlayP2(decisions) : 0;
+      const byRecord = new Map();
+      (decisions || []).forEach(d => {
+        if (!d || d.status === "reverted") return;
+        const decVal = String(d.decision || "").toLowerCase();
+        if (!decVal || decVal === "pending") return;
+        const nextQc = (decVal === "exclude_qc_fail" || decVal === "fail") ? "fail" : (decVal === "keep" || decVal === "pass" ? "pass" : null);
+        if (!nextQc) return;
+        const targets = [];
+        if (d.record_id) targets.push(String(d.record_id).trim());
+        if (Array.isArray(d.target_record_ids)) d.target_record_ids.forEach(t => targets.push(String(t).trim()));
+        targets.filter(Boolean).forEach(rid => byRecord.set(rid, { qc: nextQc, decision: decVal, reviewer: d.reviewer_email || "" }));
+      });
+      if (byRecord.size > 0) {
+        Object.values(RECORDS_BY_RESOURCE || {}).forEach(recs => {
+          (recs || []).forEach(r => {
+            const ov = byRecord.get(String(r.record_id));
+            if (ov) {
+              r.qc_status = ov.qc;
+              r.portal_compliant = ov.qc === "pass";
+              r.live_qc_decision = ov.decision;
+            }
+          });
+        });
+      }
+      render();
+      return count;
+    };
     initSliceAndBugModals("Page 2 — Statistical QC & Lab Notes Audit");
     initResourceSwitcher();
     initFiltersForResource();
     render();
     window.syncReviewQueueWithApi();
+    if (window.refreshLiveQcOverlay) {
+      window.refreshLiveQcOverlay(false);
+    }
   </script>
 </body>
 </html>
@@ -7021,6 +7744,17 @@ def main() -> None:
         help="Path to resource_ai_insights.json sidecar (computed on the fly if missing).",
     )
     parser.add_argument(
+        "--write-sidecar",
+        action="store_true",
+        help="Persist computed sidecar JSON to --sidecar path when missing.",
+    )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        default=None,
+        help="Optional explicit output file path for Page 1 HTML (Page 2 written alongside it).",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         default=DEFAULT_OUTPUT_DIR,
@@ -7076,10 +7810,12 @@ def main() -> None:
         insights_sidecar = json.loads(args.sidecar.read_text(encoding="utf-8"))
     else:
         insights_sidecar = build_resource_insights(raw_payload)
-        args.sidecar.parent.mkdir(parents=True, exist_ok=True)
-        args.sidecar.write_text(json.dumps(insights_sidecar, indent=2), encoding="utf-8")
+        if args.write_sidecar:
+            args.sidecar.parent.mkdir(parents=True, exist_ok=True)
+            args.sidecar.write_text(json.dumps(insights_sidecar, indent=2), encoding="utf-8")
 
-    args.output_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = args.output.parent if args.output is not None else args.output_dir
+    out_dir.mkdir(parents=True, exist_ok=True)
 
     if args.slice_resource:
         qc_spec = args.slice_qc_status if args.slice_qc_status is not None else "pass"
@@ -7091,7 +7827,7 @@ def main() -> None:
             exclude_analyst=True,
         )
         slug = args.slice_resource.strip().lower().replace(" ", "_")
-        slice_file = args.slice_output or (args.output_dir / f"{slug}_collaborator_slice.html")
+        slice_file = args.slice_output or args.output or (out_dir / f"{slug}_collaborator_slice.html")
         slice_file.parent.mkdir(parents=True, exist_ok=True)
         slice_file.write_text(slice_html, encoding="utf-8")
         print(f"Wrote Collaborator Slice HTML ({args.slice_resource}, qc={qc_spec}): {slice_file} ({slice_file.stat().st_size / 1024:.1f} KB)")
@@ -7107,17 +7843,17 @@ def main() -> None:
 
     if args.single_resource:
         slug = args.single_resource.strip().lower().replace(" ", "_")
-        char_name = f"{slug}_analysis_dashboard.html"
+        char_name = args.output.name if args.output is not None else f"{slug}_analysis_dashboard.html"
         qc_name = f"{slug}_qc_outlier_dashboard.html"
     else:
-        char_name = "resource_analysis_dashboard.html"
+        char_name = args.output.name if args.output is not None else "resource_analysis_dashboard.html"
         qc_name = "resource_qc_outlier_dashboard.html"
 
     char_html = build_analysis_dashboard_html(bundle, qc_page_filename=qc_name)
     qc_html = build_qc_outlier_dashboard_html(bundle, char_page_filename=char_name)
 
-    char_file = args.output_dir / char_name
-    qc_file = args.output_dir / qc_name
+    char_file = args.output if args.output is not None else (out_dir / char_name)
+    qc_file = out_dir / qc_name
     char_file.write_text(char_html, encoding="utf-8")
     qc_file.write_text(qc_html, encoding="utf-8")
 

@@ -453,6 +453,9 @@ def build_full_dashboard_html(payload: dict) -> str:
         <a id="suite-link-2" href="resource_qc_outlier_dashboard.html" class="px-2.5 py-1 rounded-md border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#00B5E2] transition-colors font-medium">
           2. Statistical QC &amp; Lab Notes Audit
         </a>
+        <a id="nav-page-workbench" href="/v1/dashboards/metadata/resource_audit_workbench.html" class="px-2.5 py-1 rounded-md border border-emerald-500/40 bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-emerald-400 transition-colors font-medium">
+          ⚖️ 2B. QC Audit Workbench
+        </a>
         <a id="suite-link-3" href="resource_explorer_dashboard.html" class="px-2.5 py-1 rounded-md bg-[#00B5E2] text-slate-950 font-semibold transition-colors shadow-sm">
           3. Multi-Resource Side-by-Side Explorer
         </a>
@@ -474,6 +477,7 @@ def build_full_dashboard_html(payload: dict) -> str:
         <h2 id="dashboard-title" class="text-[var(--foreground)] font-semibold text-base tracking-tight">BioCirV Multi-Resource Side-by-Side Parameter Explorer</h2>
         <span id="badge-count" class="text-xs px-2 py-0.5 rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] font-medium">11,974 obs</span>
         <span id="badge-resource-meta" class="hidden sm:inline-block text-xs px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--muted-foreground)] font-mono">127 resources</span>
+        <span id="live-qc-overlay-badge" class="hidden text-[11px] px-2 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-mono"></span>
       </div>
       <div class="flex items-center gap-1.5">
         <div class="flex items-center gap-1 bg-[var(--background)] p-1 rounded-lg border border-[var(--border)]">
@@ -487,6 +491,9 @@ def build_full_dashboard_html(payload: dict) -> str:
             Export Tray (<span id="tray-count">0</span>)
           </button>
         </div>
+        <button type="button" id="btn-refresh-qc-state" onclick="window.refreshLiveQcOverlay && window.refreshLiveQcOverlay(true)" class="text-xs px-2.5 py-1 rounded-md border border-emerald-500/50 bg-[var(--background)] text-[var(--foreground)] hover:border-emerald-400 transition-colors font-semibold" title="Fetch latest QC decisions from API without regenerating HTML">
+          ↻ Refresh QC State
+        </button>
         <button type="button" id="btn-open-slice-modal" class="text-xs px-2.5 py-1 rounded-md border border-[#00B5E2]/50 bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] transition-colors font-semibold">
           📤 Export Slice (.html)
         </button>
@@ -909,7 +916,7 @@ def build_full_dashboard_html(payload: dict) -> str:
       <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 h-[340px] flex flex-col justify-between">
         <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border)]">
           <span class="text-xs font-semibold text-[var(--foreground)]">Selected Records for Audit / CSV Export</span>
-          <div class="flex items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2">
             <button onclick="addFilteredSliceToExport()" class="text-xs px-2.5 py-1 rounded bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] font-medium hover:border-[#00B5E2]">
               + Add Current Slice (max 250)
             </button>
@@ -917,7 +924,13 @@ def build_full_dashboard_html(payload: dict) -> str:
               Copy TSV
             </button>
             <button onclick="downloadExportCSV()" class="text-xs px-2.5 py-1 rounded bg-[#00B5E2] text-slate-950 font-semibold">
-              Download CSV
+              ⬇ Export Tray (.CSV)
+            </button>
+            <button onclick="document.getElementById('btn-open-slice-modal') && document.getElementById('btn-open-slice-modal').click()" class="text-xs px-2.5 py-1 rounded border border-[#00B5E2]/50 bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-semibold">
+              📤 Export Slice (.HTML)
+            </button>
+            <button id="btn-tray-to-workbench" onclick="exportExplorerTrayToWorkbench()" class="text-xs px-2.5 py-1 rounded bg-emerald-500 text-slate-950 font-semibold hover:opacity-90">
+              ⚖️ Export to Audit Workbench
             </button>
             <button onclick="clearExport()" class="text-xs px-2 py-1 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
               Clear
@@ -4833,10 +4846,48 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
 __SHARED_SLICE_AND_BUG_MODALS_JS__
+
+    async function exportExplorerTrayToWorkbench() {
+      if (!exportRows || !exportRows.length) return;
+      const items = exportRows.map(r => ({
+        scope: 'replicate_group',
+        resource_name: r.resource_name || '',
+        analysis_type: r.analysis_type || currentDomain || '',
+        parameter: r.parameter || '',
+        parameter_name: r.parameter || '',
+        prepared_sample_name: r.prepared_sample_name || r.prepared_sample || '',
+        field_sample_name: r.field_sample_name || '',
+        method_or_strain: getSeriesValue(r, r.domain || currentDomain) || '',
+        experiment_name: r.experiment || '',
+        record_id: String(r.record_id || ''),
+        record_ids: [String(r.record_id || '')],
+        replicates: [{
+          record_id: String(r.record_id || ''),
+          value: r.value,
+          unit: r.unit || '',
+          qc_status: r.qc_pass || 'pass'
+        }],
+        review_note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer tray',
+        note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer tray'
+      }));
+      if (window.BioCirvQcClient && typeof window.BioCirvQcClient.exportTrayToWorkbench === 'function') {
+        const res = await window.BioCirvQcClient.exportTrayToWorkbench(items, 'Page 3 — Multi-Resource Side-by-Side Explorer');
+        const btn = document.getElementById('btn-tray-to-workbench');
+        if (btn) {
+          const orig = btn.textContent;
+          btn.textContent = `✓ Sent (${res.persisted || items.length}) to Audit Workbench`;
+          setTimeout(() => { btn.textContent = orig; }, 2200);
+        }
+      }
+    }
+
     initSliceAndBugModals("Page 3 — Multi-Resource Side-by-Side Explorer");
     window.addEventListener('resize', () => renderCurrentView());
     initFromUrlParams();
     onResourceOrDomainChange(true);
+    if (typeof window.refreshLiveQcOverlay === 'function') {
+      window.refreshLiveQcOverlay(false);
+    }
   </script>
 </body>
 </html>
@@ -5329,6 +5380,11 @@ def main() -> None:
         help="Target directory for generated HTML dashboards (default: exports/plots/metadata).",
     )
     parser.add_argument(
+        "--output",
+        default=None,
+        help="Optional explicit file path for the generated Explorer HTML dashboard (overrides --output-dir).",
+    )
+    parser.add_argument(
         "--artifact-dir",
         default=None,
         help="Optional conversation artifact directory to mirror generated HTML files (without final </html> for write_to_file append).",
@@ -5339,9 +5395,6 @@ def main() -> None:
         help="Load pre-fetched JSON payload from a snapshot file instead of querying PostgreSQL.",
     )
     args = parser.parse_args()
-
-    out_dir = Path(args.output_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
 
     if args.from_snapshot:
         snap_path = Path(args.from_snapshot)
@@ -5361,7 +5414,13 @@ def main() -> None:
     )
 
     dashboard_html = build_full_dashboard_html(payload)
-    dashboard_path = out_dir / "resource_explorer_dashboard.html"
+    if args.output:
+        dashboard_path = Path(args.output)
+        dashboard_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        out_dir = Path(args.output_dir)
+        out_dir.mkdir(parents=True, exist_ok=True)
+        dashboard_path = out_dir / "resource_explorer_dashboard.html"
     dashboard_path.write_text(dashboard_html, encoding="utf-8")
     print(f"Wrote full dashboard: {dashboard_path} ({dashboard_path.stat().st_size / 1024:.1f} KB)")
 
