@@ -47,6 +47,7 @@ class WebServiceConfig(BaseSettings):
         "http://localhost:8080",  # Alternative frontend port
         "null",  # Standalone file:// dashboard origin
     ]
+
     cors_allow_credentials: bool = True
     cors_allow_methods: List[str] = ["*"]
     cors_allow_headers: List[str] = ["*"]

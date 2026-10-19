@@ -15,6 +15,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import text
 
+
 from ca_biositing.datamodels.database import get_engine
 
 from ca_biositing.webservice.config import config
