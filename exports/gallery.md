@@ -1,5 +1,28 @@
 # Visualization Gallery
 
+## Multi-Resource Analytical & Bioconversion Explorer Suite
+
+[1. Resource Characterization & AI Brief](plots/metadata/resource_analysis_dashboard.html)
+|
+[2. Statistical QC & Lab Notes Audit](plots/metadata/resource_qc_outlier_dashboard.html)
+|
+[3. Multi-Resource Side-by-Side Explorer](plots/metadata/resource_explorer_dashboard.html)
+|
+[4. Multi-Environment DB Drift & Schema Guard](plots/audit/db_environment_drift_dashboard.html)
+
+_Unified 4-product analytical, statistical QC, multi-resource exploration, and
+database drift dashboard suite covering all 127 cataloged resources (45 with
+active lab records), 147 field samples, 384 prepared samples, and 11,974
+record-observation rows across all 10 Aim 1 and Aim 2 database tables
+(Proximate, Compositional, Ultimate, XRD, Calorimetry, ICP, XRF, Pretreatment,
+Fermentation, and Gasification)._
+
+> **Sources:**
+> [`analysis/metadata/resource_insights_engine.py`](analysis/metadata/resource_insights_engine.py),
+> [`analysis/metadata/resource_analysis_dashboard.py`](analysis/metadata/resource_analysis_dashboard.py),
+> [`analysis/metadata/resource_explorer_dashboard.py`](analysis/metadata/resource_explorer_dashboard.py),
+> [`analysis/audit/db_environment_drift.py`](analysis/audit/db_environment_drift.py)
+
 ## Aim 1: Analytical Record Counts
 
 ![Aim 1 Record Counts](plots/metadata/aim1_record_counts.png) _Distribution of

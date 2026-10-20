@@ -54,6 +54,8 @@ data/landiq/*.sbx
 !resources/assets/*.csv
 !data/static/*.csv
 !audit/references/*.csv
+!data/qc/
+!data/qc/qc_review_decisions_seed.csv
 *.pdf
 src/ca_biositing/webservice/ca_biositing/webservice/_version.py
 
@@ -87,10 +89,12 @@ pgschema
 !.agents/skills/commit/
 !.agents/skills/create-issue/
 !.agents/skills/create-pr/
+!.agents/skills/db-drift-assessment/
 !.agents/skills/docs/
 !.agents/skills/merge-pr/
 !.agents/skills/okf-memory/
 !.agents/skills/push/
+!.agents/skills/resource-analysis-dashboards/
 .claude/*
 !.claude/skills/
 .claude/skills/*
@@ -98,10 +102,12 @@ pgschema
 !.claude/skills/commit
 !.claude/skills/create-issue
 !.claude/skills/create-pr
+!.claude/skills/db-drift-assessment
 !.claude/skills/docs
 !.claude/skills/merge-pr
 !.claude/skills/okf-memory
 !.claude/skills/push
+!.claude/skills/resource-analysis-dashboards
 .cline/
 .roo/
 
@@ -143,3 +149,6 @@ audit/portal/.quarto/
 audit/output/*/evidently/
 audit/output/*/llm_synthesis_*.json
 audit/output/*/report_*.md
+audit/output/env_fingerprints/*.json
+audit/output/drift_report.md
+data/insights/resource_ai_insights.json

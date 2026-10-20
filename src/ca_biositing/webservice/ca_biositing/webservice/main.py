@@ -7,15 +7,23 @@ from __future__ import annotations
 
 import logging
 
-from fastapi import FastAPI, Request, status
+from urllib.parse import quote
+
+from fastapi import FastAPI, HTTPException, Request, Response, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
 from sqlalchemy import text
 
+
 from ca_biositing.datamodels.database import get_engine
 
 from ca_biositing.webservice.config import config
+from ca_biositing.webservice.services.dashboard_loader import (
+    load_dashboard_asset,
+    sanitize_dashboard_subpath,
+)
+from ca_biositing.webservice.services.portal_auth import get_optional_portal_user
 from ca_biositing.webservice.v1 import router as v1_router
 
 logger = logging.getLogger(__name__)
@@ -128,3 +136,77 @@ def health_check() -> JSONResponse:
 
 # Mount v1 router
 app.include_router(v1_router.router)
+
+
+def _serve_authenticated_dashboard(request: Request, subpath: str) -> Response:
+    """Serve BioCirV dashboard assets with isolated portal OIDC auth and 2-role RBAC."""
+    clean_subpath = sanitize_dashboard_subpath(subpath)
+    if clean_subpath == "login":
+        clean_subpath = "login.html"
+
+    if clean_subpath != "login.html":
+        user = get_optional_portal_user(request)
+        if user is None:
+            next_path = request.url.path
+            if request.url.query:
+                next_path = f"{next_path}?{request.url.query}"
+            encoded_next = quote(next_path, safe="/?:=&")
+            return RedirectResponse(
+                url=f"/v1/dashboards/login.html?next={encoded_next}",
+                status_code=status.HTTP_302_FOUND,
+            )
+
+        is_admin_only = clean_subpath.startswith("audit/") or (
+            clean_subpath == "db_environment_drift_dashboard.html"
+        )
+        if is_admin_only and user.role != "admin":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Portal administrator privileges required for schema and drift audit dashboards.",
+            )
+
+    content, media_type, source = load_dashboard_asset(clean_subpath)
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={"X-Dashboard-Source": source},
+    )
+
+
+@app.get("/v1/dashboards", tags=["dashboards"], include_in_schema=False)
+def get_dashboards_root(request: Request) -> Response:
+    """Serve the BioCirV dashboards gallery landing page (`index.html`)."""
+    return _serve_authenticated_dashboard(request, "index.html")
+
+
+@app.get("/v1/dashboards/{subpath:path}", tags=["dashboards"])
+def get_dashboard_asset(subpath: str, request: Request) -> Response:
+    """Serve an authenticated BioCirV dashboard asset from local disk or GCS."""
+    return _serve_authenticated_dashboard(request, subpath)
+
+
+@app.get("/dashboards", tags=["dashboards"], include_in_schema=False)
+def redirect_legacy_dashboards_root(request: Request) -> RedirectResponse:
+    """Redirect legacy `/dashboards` root to `/v1/dashboards/index.html` (`307`)."""
+    target = "/v1/dashboards/index.html"
+    if request.url.query:
+        target = f"{target}?{request.url.query}"
+    return RedirectResponse(
+        url=target,
+        status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    )
+
+
+@app.get("/dashboards/{subpath:path}", tags=["dashboards"], include_in_schema=False)
+def redirect_legacy_dashboards_subpath(
+    subpath: str, request: Request
+) -> RedirectResponse:
+    """Redirect legacy `/dashboards/{subpath:path}` to `/v1/dashboards/{subpath:path}` (`307`)."""
+    clean = subpath.lstrip("/") or "index.html"
+    target = f"/v1/dashboards/{clean}"
+    if request.url.query:
+        target = f"{target}?{request.url.query}"
+    return RedirectResponse(
+        url=target,
+        status_code=status.HTTP_307_TEMPORARY_REDIRECT,
+    )

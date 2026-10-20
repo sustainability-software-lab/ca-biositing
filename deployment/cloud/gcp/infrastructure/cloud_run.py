@@ -8,6 +8,8 @@ import pulumi_gcp as gcp
 
 from config import (
     GCP_REGION,
+    STACK_NAME,
+    DASHBOARDS_BUCKET_NAME,
     WEBSERVICE_IMAGE,
     PIPELINE_IMAGE,
     PREFECT_SERVER_IMAGE,
@@ -75,6 +77,7 @@ def create_cloud_run_resources(
                         "sh", "-c",
                         "export DB_PASS=$(cat /secrets/db-password/value) "
                         "&& export API_JWT_SECRET_KEY=$(cat /secrets/jwt-secret/value) "
+                        "&& export GOOGLE_CLIENT_ID=$(cat /secrets/oauth2-client-id/value) "
                         "&& exec uvicorn ca_biositing.webservice.main:app "
                         "--host 0.0.0.0 --port 8080",
                     ],
@@ -104,6 +107,21 @@ def create_cloud_run_resources(
                             name="API_JWT_COOKIE_SECURE",
                             value="true",
                         ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="DASHBOARDS_BUCKET_NAME",
+                            value=DASHBOARDS_BUCKET_NAME,
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="DASHBOARDS_GCS_PREFIX",
+                            value=f"dashboards/{STACK_NAME}/latest",
+                        ),
+                        # Path to GSheets service account credentials file (mounted via Secret Manager volume).
+                        # Note: Do NOT set GOOGLE_APPLICATION_CREDENTIALS here so google-cloud-storage
+                        # continues to use the attached Cloud Run service account (webservice SA) via ADC.
+                        gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
+                            name="BIOSITING_GSHEET_CREDENTIALS_PATH",
+                            value="/app/gsheets-credentials/credentials.json",
+                        ),
                         *(
                             [gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                                 name="API_CORS_ORIGINS",
@@ -125,6 +143,14 @@ def create_cloud_run_resources(
                         gcp.cloudrunv2.ServiceTemplateContainerVolumeMountArgs(
                             name="jwt-secret",
                             mount_path="/secrets/jwt-secret",
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerVolumeMountArgs(
+                            name="oauth2-client-id",
+                            mount_path="/secrets/oauth2-client-id",
+                        ),
+                        gcp.cloudrunv2.ServiceTemplateContainerVolumeMountArgs(
+                            name="gsheets-credentials",
+                            mount_path="/app/gsheets-credentials",
                         ),
                     ],
                     # Cloud Run v2 supports startup_probe and liveness_probe only.
@@ -173,6 +199,24 @@ def create_cloud_run_resources(
                         secret=secrets.jwt_secret_sm.name,
                         items=[gcp.cloudrunv2.ServiceTemplateVolumeSecretItemArgs(
                             version="latest", path="value",
+                        )],
+                    ),
+                ),
+                gcp.cloudrunv2.ServiceTemplateVolumeArgs(
+                    name="oauth2-client-id",
+                    secret=gcp.cloudrunv2.ServiceTemplateVolumeSecretArgs(
+                        secret=secrets.oauth2_client_id_secret.name,
+                        items=[gcp.cloudrunv2.ServiceTemplateVolumeSecretItemArgs(
+                            version="latest", path="value",
+                        )],
+                    ),
+                ),
+                gcp.cloudrunv2.ServiceTemplateVolumeArgs(
+                    name="gsheets-credentials",
+                    secret=gcp.cloudrunv2.ServiceTemplateVolumeSecretArgs(
+                        secret=secrets.gsheets_secret.name,
+                        items=[gcp.cloudrunv2.ServiceTemplateVolumeSecretItemArgs(
+                            version="latest", path="credentials.json",
                         )],
                     ),
                 ),
