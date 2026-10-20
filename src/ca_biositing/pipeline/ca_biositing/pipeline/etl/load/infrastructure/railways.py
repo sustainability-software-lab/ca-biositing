@@ -50,11 +50,16 @@ def load(df: pd.DataFrame) -> bool:
                     if clean_record.get("created_at") is None:
                         clean_record["created_at"] = now
 
-                    stmt1 = select(InfrastructureRailways).where(
-                        InfrastructureRailways.name == clean_record.get('name'),
-                        InfrastructureRailways.state == clean_record.get('state'),
-                        InfrastructureRailways.link_type == clean_record.get('link_type')
-                    )
+                    if clean_record.get("object_id") is not None:
+                        stmt1 = select(InfrastructureRailways).where(
+                            InfrastructureRailways.object_id == clean_record.get("object_id")
+                        )
+                    else:
+                        stmt1 = select(InfrastructureRailways).where(
+                            InfrastructureRailways.name == clean_record.get('name'),
+                            InfrastructureRailways.state == clean_record.get('state'),
+                            InfrastructureRailways.link_type == clean_record.get('link_type')
+                        )
                     existing_record = session.scalars(stmt1).first()
 
                     if existing_record:

@@ -50,11 +50,16 @@ def load(df: pd.DataFrame) -> bool:
                     if clean_record.get("created_at") is None:
                         clean_record["created_at"] = now
 
-                    stmt1 = select(InfrastructureCrudeOilPipelines).where(
-                        InfrastructureCrudeOilPipelines.pipeline_name == clean_record.get('pipeline_name'),
-                        InfrastructureCrudeOilPipelines.operator_name == clean_record.get('operator_name'),
-                        InfrastructureCrudeOilPipelines.master_oid == clean_record.get('master_oid'),
-                    )
+                    if clean_record.get("object_id") is not None:
+                        stmt1 = select(InfrastructureCrudeOilPipelines).where(
+                            InfrastructureCrudeOilPipelines.object_id == clean_record.get("object_id")
+                        )
+                    else:
+                        stmt1 = select(InfrastructureCrudeOilPipelines).where(
+                            InfrastructureCrudeOilPipelines.pipeline_name == clean_record.get('pipeline_name'),
+                            InfrastructureCrudeOilPipelines.operator_name == clean_record.get('operator_name'),
+                            InfrastructureCrudeOilPipelines.master_oid == clean_record.get('master_oid'),
+                        )
                     existing_record = session.scalars(stmt1).first()
 
                     if existing_record:
