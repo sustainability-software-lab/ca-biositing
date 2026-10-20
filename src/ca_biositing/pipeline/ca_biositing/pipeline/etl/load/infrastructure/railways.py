@@ -51,13 +51,17 @@ def load(df: pd.DataFrame) -> bool:
                         clean_record["created_at"] = now
 
                     stmt1 = select(InfrastructureRailways).where(
-                        InfrastructureRailways.name == clean_record['name'],
-                        InfrastructureRailways.state == clean_record['state'],
-                        InfrastructureRailways.link_type == clean_record['link_type']
+                        InfrastructureRailways.name == clean_record.get('name'),
+                        InfrastructureRailways.state == clean_record.get('state'),
+                        InfrastructureRailways.link_type == clean_record.get('link_type')
                     )
-                    existing_record = session.execute(stmt1).first()
+                    existing_record = session.scalars(stmt1).first()
 
-                    if not existing_record:
+                    if existing_record:
+                        for k, v in clean_record.items():
+                            if k not in ["object_id", "created_at", "record_id"]:
+                                setattr(existing_record, k, v)
+                    else:
 
                         stmt = insert(InfrastructureRailways).values(clean_record)
                         update_dict = {

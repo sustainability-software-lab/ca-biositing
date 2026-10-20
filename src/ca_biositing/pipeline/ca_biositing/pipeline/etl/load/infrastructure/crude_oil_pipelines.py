@@ -51,13 +51,17 @@ def load(df: pd.DataFrame) -> bool:
                         clean_record["created_at"] = now
 
                     stmt1 = select(InfrastructureCrudeOilPipelines).where(
-                        InfrastructureCrudeOilPipelines.pipeline_name == clean_record['pipeline_name'],
-                        InfrastructureCrudeOilPipelines.operator_name == clean_record['operator_name'],
-                        InfrastructureCrudeOilPipelines.master_oid == clean_record['master_oid'],
+                        InfrastructureCrudeOilPipelines.pipeline_name == clean_record.get('pipeline_name'),
+                        InfrastructureCrudeOilPipelines.operator_name == clean_record.get('operator_name'),
+                        InfrastructureCrudeOilPipelines.master_oid == clean_record.get('master_oid'),
                     )
-                    existing_record = session.execute(stmt1).first()
+                    existing_record = session.scalars(stmt1).first()
 
-                    if not existing_record:
+                    if existing_record:
+                        for k, v in clean_record.items():
+                            if k not in ["object_id", "created_at", "record_id"]:
+                                setattr(existing_record, k, v)
+                    else:
 
                         stmt2 = insert(InfrastructureCrudeOilPipelines).values(clean_record)
                         update_dict = {

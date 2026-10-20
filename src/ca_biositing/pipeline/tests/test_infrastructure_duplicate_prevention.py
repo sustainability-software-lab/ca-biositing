@@ -75,24 +75,24 @@ def get_mock_data_for_dataset(dataset_name: str) -> pd.DataFrame:
 
     # Dataset-specific fields that are commonly used for duplicate detection
     dataset_specific = {
-        "petroleum_pipelines": {"name": "Test Pipeline 1", "status": "Operational"},
-        "biosolids_facilities": {"facility_name": "Test Biosolids Facility", "facility_type": "Treatment Plant"},
-        "cafo_manure_locations": {"facility_name": "Test CAFO", "permit_number": "CA-12345"},
-        "combustion_plants": {"facility_name": "Test Combustion Plant", "plant_type": "Biomass"},
-        "district_energy_systems": {"system_name": "Test District Energy", "system_type": "Heating"},
-        "ethanol_biorefineries": {"name": "Test Ethanol Plant", "capacity": 50},
-        "food_processing_facilities": {"facility_name": "Test Food Processing", "facility_type": "Meat Processing"},
+        "petroleum_pipelines": {"pipeline_name": "Test Pipeline 1", "operator_name": "Test Operator", "master_oid": 101},
+        "biosolids_facilities": {"facility": "Test Biosolids Facility", "plant_type": "Treatment Plant"},
+        "cafo_manure_locations": {"facility_name": "Test CAFO", "owner_name": "Test Owner"},
+        "combustion_plants": {"name": "Test Combustion Plant", "type": "Biomass"},
+        "district_energy_systems": {"name": "Test District Energy", "system": "Heating"},
+        "ethanol_biorefineries": {"name": "Test Ethanol Plant", "capacity_mgy": 50},
+        "food_processing_facilities": {"company": "Test Food Processing", "processing_type": "Meat Processing"},
         "landfills": {"landfill_name": "Test Landfill", "project_id": "TEST-LF-001"},
-        "livestock_anaerobic_digesters": {"facility_name": "Test Digester", "digester_type": "Complete Mix"},
-        "msw_to_energy_anaerobic_digesters": {"facility_name": "Test MSW Digester", "technology": "Anaerobic Digestion"},
-        "saf_and_renewable_diesel_plants": {"company": "Test SAF Company", "plant_name": "Test SAF Plant"},
-        "wastewater_treatment_plants": {"facility_name": "Test WWTP", "design_flow_mgd": 10.0},
-        "crude_oil_pipelines": {"name": "Test Crude Pipeline", "status": "Active"},
-        "railways": {"name": "Test Railway", "railway_type": "Freight"},
+        "livestock_anaerobic_digesters": {"project_name": "Test Digester", "digester_type": "Complete Mix"},
+        "msw_to_energy_anaerobic_digesters": {"facility_type": "Test MSW Digester", "feedstock": "MSW"},
+        "saf_and_renewable_diesel_plants": {"company": "Test SAF Company", "status": "Active"},
+        "wastewater_treatment_plants": {"name": "Test WWTP", "facility_type": "WWTP"},
+        "crude_oil_pipelines": {"pipeline_name": "Test Crude Pipeline", "operator_name": "Test Operator", "master_oid": 202},
+        "railways": {"name": "Test Railway", "state": "CA", "link_type": "RR"},
         "biodiesel_plants": {"company": "Test Biodiesel Company", "capacity_mmg_per_y": 50},
         "tomato_processors": {"name": "Test Tomato Processor", "processing_capacity_for_tomato_paste_tons_hr": 100},
-        "food_manufacturers_epa": {"facility_name": "Test EPA Food Manufacturer", "sic_code": "2000"},
-        "food_manufacturers_carb": {"facility_name": "Test CARB Food Manufacturer", "facility_id": "CARB-001"},
+        "food_manufacturers_epa": {"name": "Test EPA Food Manufacturer", "naics_code": "311"},
+        "food_manufacturers_carb": {"name": "Test CARB Food Manufacturer", "carb_facility_id": 1001},
     }
 
     data = {**base_data, **dataset_specific.get(dataset_name, {})}
@@ -179,7 +179,7 @@ def test_load_prevents_duplicates_on_rerun(dataset_name, session, engine):
     mock_data = get_mock_data_for_dataset(dataset_name)
 
     # Mock get_engine to return our test engine
-    with patch("ca_biositing.pipeline.utils.engine.get_engine", return_value=engine):
+    with patch.object(load_module, "get_engine", return_value=engine):
         # First load - should create a new record
         first_timestamp = datetime.now(timezone.utc)
         result1 = load_fn(mock_data.copy())
@@ -187,15 +187,15 @@ def test_load_prevents_duplicates_on_rerun(dataset_name, session, engine):
 
         # Check record count after first load
         with Session(engine) as check_session:
-            count1 = check_session.exec(
+            count1 = check_session.scalar(
                 select(func.count()).select_from(model_class)
-            ).one()
+            )
             assert count1 == 1, (
                 f"Expected 1 record after first load for {dataset_name}, got {count1}"
             )
 
             # Get the record and its updated_at timestamp
-            record1 = check_session.exec(select(model_class)).first()
+            record1 = check_session.scalars(select(model_class)).first()
             assert record1 is not None
             first_updated_at = record1.updated_at
 
@@ -209,23 +209,21 @@ def test_load_prevents_duplicates_on_rerun(dataset_name, session, engine):
 
         # Verify no duplicates were created
         with Session(engine) as check_session:
-            count2 = check_session.exec(
+            count2 = check_session.scalar(
                 select(func.count()).select_from(model_class)
-            ).one()
+            )
             assert count2 == 1, (
                 f"DUPLICATE DETECTED: Expected 1 record after second load for {dataset_name}, "
                 f"got {count2}. This indicates the upsert logic is not working correctly!"
             )
 
             # Verify the record was updated (not just left alone)
-            record2 = check_session.exec(select(model_class)).first()
+            record2 = check_session.scalars(select(model_class)).first()
             assert record2 is not None
             second_updated_at = record2.updated_at
 
             # The updated_at timestamp should have changed
-            # (Some implementations might not update if data is identical,
-            # but the important thing is NO DUPLICATE was created)
-            assert count2 == 1, (
+            assert second_updated_at >= first_updated_at, (
                 f"Duplicate prevention verification failed for {dataset_name}"
             )
 
@@ -260,7 +258,7 @@ def test_load_with_multiple_unique_records(dataset_name, session, engine):
         record = mock_data.copy()
         # Modify fields that would make records unique
         for col in record.columns:
-            if "name" in col.lower() or "id" in col.lower():
+            if any(k in col.lower() for k in ("name", "id", "facility", "company")):
                 if record[col].dtype == 'object':
                     record.loc[0, col] = f"{record.loc[0, col]}_{i}"
         records.append(record)
@@ -268,15 +266,15 @@ def test_load_with_multiple_unique_records(dataset_name, session, engine):
     combined_data = pd.concat(records, ignore_index=True)
 
     # Mock get_engine
-    with patch("ca_biositing.pipeline.utils.engine.get_engine", return_value=engine):
+    with patch.object(load_module, "get_engine", return_value=engine):
         # First load - should create 3 records
         result1 = load_fn(combined_data.copy())
         assert result1 is True, f"First load failed for {dataset_name}"
 
         with Session(engine) as check_session:
-            count1 = check_session.exec(
+            count1 = check_session.scalar(
                 select(func.count()).select_from(model_class)
-            ).one()
+            )
             assert count1 == 3, (
                 f"Expected 3 records after first load for {dataset_name}, got {count1}"
             )
@@ -286,9 +284,9 @@ def test_load_with_multiple_unique_records(dataset_name, session, engine):
         assert result2 is True, f"Second load failed for {dataset_name}"
 
         with Session(engine) as check_session:
-            count2 = check_session.exec(
+            count2 = check_session.scalar(
                 select(func.count()).select_from(model_class)
-            ).one()
+            )
             assert count2 == 3, (
                 f"DUPLICATES DETECTED: Expected 3 records after second load for {dataset_name}, "
                 f"got {count2}. The upsert logic created duplicates!"
@@ -318,7 +316,7 @@ def test_load_handles_null_values_without_duplicates(dataset_name, session, engi
     mock_data.loc[0, "latitude"] = None
     mock_data.loc[0, "longitude"] = None
 
-    with patch("ca_biositing.pipeline.utils.engine.get_engine", return_value=engine):
+    with patch.object(load_module, "get_engine", return_value=engine):
         # Load twice
         result1 = load_fn(mock_data.copy())
         assert result1 is True
@@ -328,9 +326,9 @@ def test_load_handles_null_values_without_duplicates(dataset_name, session, engi
 
         # Verify no duplicates
         with Session(engine) as check_session:
-            count = check_session.exec(
+            count = check_session.scalar(
                 select(func.count()).select_from(model_class)
-            ).one()
+            )
             assert count == 1, (
                 f"NULL value handling created duplicates for {dataset_name}: "
                 f"expected 1 record, got {count}"

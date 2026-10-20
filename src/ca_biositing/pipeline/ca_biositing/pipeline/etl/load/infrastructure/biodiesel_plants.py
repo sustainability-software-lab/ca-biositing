@@ -14,7 +14,11 @@ def load(df: pd.DataFrame) -> bool:
     Upserts BiodieselPlant records into the database.
     Returns True on success, False on failure.
     """
-    logger = get_run_logger()
+    try:
+        logger = get_run_logger()
+    except Exception:
+        import logging
+        logger = logging.getLogger(__name__)
 
     if df is None or df.empty:
         logger.info("No data to load.")
@@ -49,12 +53,16 @@ def load(df: pd.DataFrame) -> bool:
                         clean_record['created_at'] = now
 
                     stmt1 = select(InfrastructureBiodieselPlants).where(
-                        InfrastructureBiodieselPlants.company == clean_record['company'],
-                        InfrastructureBiodieselPlants.address_id == clean_record['address_id']
+                        InfrastructureBiodieselPlants.company == clean_record.get('company'),
+                        InfrastructureBiodieselPlants.address_id == clean_record.get('address_id')
                     )
-                    existing_record = session.execute(stmt1).first()
+                    existing_record = session.scalars(stmt1).first()
 
-                    if not existing_record:
+                    if existing_record:
+                        for k, v in clean_record.items():
+                            if k not in ['biodiesel_plant_id', "created_at", "record_id"]:
+                                setattr(existing_record, k, v)
+                    else:
 
                         # Build Upsert Statement (PostgreSQL specific)
                         stmt2 = insert(InfrastructureBiodieselPlants).values(clean_record)

@@ -48,12 +48,16 @@ def load(df: pd.DataFrame) -> bool:
                         clean_record['created_at'] = now
 
                     stmt1 = select(InfrastructureMswToEnergyAnaerobicDigesters).where(
-                        InfrastructureMswToEnergyAnaerobicDigesters.facility_type == clean_record['facility_type'],
-                        InfrastructureMswToEnergyAnaerobicDigesters.address_id == clean_record['address_id']
+                        InfrastructureMswToEnergyAnaerobicDigesters.facility_type == clean_record.get('facility_type'),
+                        InfrastructureMswToEnergyAnaerobicDigesters.address_id == clean_record.get('address_id')
                     )
-                    existing_record = session.execute(stmt1).first()
+                    existing_record = session.scalars(stmt1).first()
 
-                    if not existing_record:
+                    if existing_record:
+                        for k, v in clean_record.items():
+                            if k not in ["wte_id", "created_at", "record_id"]:
+                                setattr(existing_record, k, v)
+                    else:
 
                         stmt = insert(InfrastructureMswToEnergyAnaerobicDigesters).values(clean_record)
                         update_dict = {
