@@ -141,7 +141,7 @@ def transform(
                 lat = row.get("latitude") if to_none_if_na(row.get("latitude")) != None else to_none_if_na(row.get("closest_latitude"))
                 lon = row.get("longitude") if to_none_if_na(row.get("longitude")) != None else to_none_if_na(row.get("closest_longitude"))
                 geoid = to_none_if_na(row.get("closest_geoid"))
-                if geoid is not pd.NA and geoid is not None and geoid != "" and geoid != "00000":
+                if lat is not None and lon is not None and geoid is not pd.NA and geoid is not None and geoid != "" and geoid != "00000":
                     stmt1 = select(Place).where(Place.geoid == geoid)
                     place = session.exec(stmt1).first()
 

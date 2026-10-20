@@ -144,6 +144,9 @@ def transform(
                 if not geoid or geoid == "00000":
                     continue
 
+                if lat is None or lon is None:
+                    continue
+
                 stmt1 = select(Place).where(Place.geoid == geoid)
                 place = session.exec(stmt1).first()
 

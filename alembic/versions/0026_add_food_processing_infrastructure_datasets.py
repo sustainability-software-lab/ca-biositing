@@ -178,12 +178,12 @@ def upgrade() -> None:
                existing_type=sa.DATE(),
                type_=sa.Integer(),
                existing_nullable=True,
-               postgresql_using="landfill_opened_year::text::integer")
+               postgresql_using="EXTRACT(YEAR FROM landfill_opened_year)::integer")
     op.alter_column('infrastructure_landfills', 'landfill_closure_year',
                existing_type=sa.DATE(),
                type_=sa.Integer(),
                existing_nullable=True,
-               postgresql_using="landfill_closure_year::text::integer")
+               postgresql_using="EXTRACT(YEAR FROM landfill_closure_year)::integer")
 
     # -- infrastructure_livestock_anaerobic_digesters --
     op.drop_column('infrastructure_livestock_anaerobic_digesters', 'city')
