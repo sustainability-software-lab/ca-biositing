@@ -63,34 +63,56 @@ ANALYSIS_TABLE_MAP: dict[str, str] = {
 }
 
 
+def _fetch_live_resource_data() -> dict[str, Any]:
+    """Import and invoke fetch_all_resource_data without permanently mutating sys.path."""
+    try:
+        from analysis.metadata.resource_explorer_dashboard import (
+            fetch_all_resource_data,
+        )
+    except ImportError:
+        import sys as _sys
+
+        parent_dir = str(Path(__file__).resolve().parent)
+        added = parent_dir not in _sys.path
+        if added:
+            _sys.path.insert(0, parent_dir)
+        try:
+            from resource_explorer_dashboard import (  # type: ignore[import-not-found,no-redef]
+                fetch_all_resource_data,
+            )
+        finally:
+            if added and parent_dir in _sys.path:
+                _sys.path.remove(parent_dir)
+    return fetch_all_resource_data()
+
+
 def load_snapshot(snapshot_path: Path) -> dict[str, Any]:
     """Load a dashboard data snapshot JSON file from disk, or fetch live from PostgreSQL."""
     resolved = snapshot_path.expanduser().resolve()
-    if not resolved.exists() and snapshot_path == DEFAULT_SNAPSHOT_PATH:
-        import sys as _sys
-
-        _sys.path.insert(0, str(Path(__file__).resolve().parent))
+    default_resolved = DEFAULT_SNAPSHOT_PATH.expanduser().resolve()
+    if not resolved.exists() and (
+        snapshot_path == DEFAULT_SNAPSHOT_PATH or resolved == default_resolved
+    ):
         try:
-            from resource_explorer_dashboard import (  # type: ignore[import-not-found]
-                fetch_all_resource_data,
-            )
-
             print(
                 "Snapshot not found on disk; querying PostgreSQL for Product 4 QC Audit Workbench..."
             )
-            live_data = fetch_all_resource_data()
+            live_data = _fetch_live_resource_data()
             resolved.parent.mkdir(parents=True, exist_ok=True)
             resolved.write_text(
                 json.dumps(live_data, separators=(",", ":")),
                 encoding="utf-8",
             )
             return live_data
-        except Exception:
+        except Exception as exc:
             fallback_fixture = (
                 Path(__file__).resolve().parents[2]
                 / "tests"
                 / "fixtures"
-                / "dashboard_data_snapshot.json"
+                / "minimal_dashboard_snapshot.json"
+            )
+            print(
+                f"Warning: could not fetch live data ({exc}); falling back to {fallback_fixture}."
             )
             if fallback_fixture.exists():
                 resolved = fallback_fixture
