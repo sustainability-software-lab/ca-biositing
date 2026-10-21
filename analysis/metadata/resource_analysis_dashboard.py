@@ -3049,6 +3049,9 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             window.refreshLiveQcOverlay(false);
           }
         };
+        if (typeof qcDecisionChannel.unref === "function") {
+          qcDecisionChannel.unref();
+        }
       }
     } catch (_e) {}
 

@@ -532,6 +532,7 @@ process.stdout.write(JSON.stringify({
         text=True,
         capture_output=True,
         check=False,
+        timeout=15,
     )
     assert proc.returncode == 0, f"Node harness failed: {proc.stderr}"
     res = json.loads(proc.stdout)
@@ -642,7 +643,13 @@ process.stdout.write(JSON.stringify(results));
     )
     script_file = tmp_path / "date_test.js"
     script_file.write_text(js_test, encoding="utf-8")
-    proc = subprocess.run([node_bin, str(script_file)], text=True, capture_output=True, check=False)
+    proc = subprocess.run(
+        [node_bin, str(script_file)],
+        text=True,
+        capture_output=True,
+        check=False,
+        timeout=15,
+    )
     assert proc.returncode == 0, f"Node date test failed: {proc.stderr}"
     out = json.loads(proc.stdout)
     assert out["defaultStart"] == "2024-01-01"
