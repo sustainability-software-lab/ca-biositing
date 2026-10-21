@@ -247,3 +247,38 @@ def test_generate_dashboard_gallery_and_login_portal(tmp_path: Path) -> None:
 
     _validate_inline_js_blocks(index_path)
     _validate_inline_js_blocks(login_path)
+
+
+def test_load_snapshot_fallbacks_and_custom_path_guard(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Verify load_snapshot() 3-tier fallback for DEFAULT_SNAPSHOT_PATH and FileNotFoundError for custom paths."""
+    import analysis.metadata.resource_audit_workbench as wb_mod
+
+    fake_default_snap = tmp_path / "exports" / "plots" / "metadata" / "dashboard_data_snapshot.json"
+    monkeypatch.setattr(wb_mod, "DEFAULT_SNAPSHOT_PATH", fake_default_snap)
+
+    # 1. Custom missing path must still raise FileNotFoundError without querying live DB
+    custom_missing = tmp_path / "does_not_exist.json"
+    with pytest.raises(FileNotFoundError, match="Dashboard snapshot not found"):
+        load_snapshot(custom_missing)
+
+    # 2. Missing default snapshot falls back to minimal_dashboard_snapshot.json when live DB raises
+    def _raise_db_err() -> dict[str, object]:
+        raise RuntimeError("Simulated PostgreSQL connection refused")
+
+    monkeypatch.setattr(wb_mod, "_fetch_live_resource_data", _raise_db_err)
+    fallback_data = load_snapshot(fake_default_snap)
+    captured = capsys.readouterr().out
+    assert "Warning: could not fetch live data (Simulated PostgreSQL connection refused)" in captured
+    assert len(fallback_data["rows"]) == 37
+    assert not fake_default_snap.exists()
+
+    # 3. Missing default snapshot caches and returns live DB payload when PostgreSQL succeeds
+    synthetic_live = load_snapshot(MINIMAL_SNAPSHOT)
+    monkeypatch.setattr(wb_mod, "_fetch_live_resource_data", lambda: synthetic_live)
+    cached_data = load_snapshot(fake_default_snap)
+    assert cached_data["rows"] == synthetic_live["rows"]
+    assert fake_default_snap.exists()
