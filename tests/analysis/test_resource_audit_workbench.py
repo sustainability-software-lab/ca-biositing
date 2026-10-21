@@ -282,3 +282,13 @@ def test_load_snapshot_fallbacks_and_custom_path_guard(
     cached_data = load_snapshot(fake_default_snap)
     assert cached_data["rows"] == synthetic_live["rows"]
     assert fake_default_snap.exists()
+
+
+def test_dashboard_artifacts_workflow_never_publishes_minimal_fixture_to_gcs() -> None:
+    """Ensure dashboard-artifacts.yml tracks USED_MINIMAL_FIXTURE and blocks overwriting GCS latest/ with seed data."""
+    workflow_path = REPO_ROOT / ".github" / "workflows" / "dashboard-artifacts.yml"
+    content = workflow_path.read_text(encoding="utf-8")
+    assert 'USED_MINIMAL_FIXTURE="true"' in content
+    assert 'echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}" >> "$GITHUB_ENV"' in content
+    assert 'if [ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]' in content
+    assert "dashboards/${DASHBOARDS_ENV}/latest/metadata/dashboard_data_snapshot.json" in content

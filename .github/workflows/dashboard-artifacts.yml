@@ -124,6 +124,10 @@ jobs:
           GCS_SNAP_BASE="gs://${DASHBOARDS_BUCKET}/snapshots/${DASHBOARDS_ENV}/latest"
           gcloud storage cp "${GCS_SNAP_BASE}/baseline_records_snapshot.json" \
             "audit/output/env_fingerprints/baseline_records_snapshot.json" 2>/dev/null || true
+          if [ ! -f "audit/output/env_fingerprints/baseline_records_snapshot.json" ]; then
+            gcloud storage cp "gs://${DASHBOARDS_BUCKET}/dashboards/${DASHBOARDS_ENV}/latest/metadata/dashboard_data_snapshot.json" \
+              "audit/output/env_fingerprints/baseline_records_snapshot.json" 2>/dev/null || true
+          fi
           gcloud storage cp "${GCS_SNAP_BASE}/resource_ai_insights.json" \
             "data/insights/resource_ai_insights.json" 2>/dev/null || true
           gcloud storage cp "${GCS_SNAP_BASE}/env_fingerprints/*_fingerprint.json" \
@@ -132,8 +136,10 @@ jobs:
       - name: Resolve Snapshot & Fingerprint Fallbacks (PR & Fresh Stack Safe)
         run: |
           mkdir -p audit/output/env_fingerprints data/insights exports/plots/audit exports/plots/metadata
+          USED_MINIMAL_FIXTURE="false"
           if [ ! -f "$SNAPSHOT_PATH" ]; then
             echo "SNAPSHOT_PATH=tests/fixtures/minimal_dashboard_snapshot.json" >> "$GITHUB_ENV"
+            USED_MINIMAL_FIXTURE="true"
             echo "Baseline snapshot not present in workspace; falling back to tests/fixtures/minimal_dashboard_snapshot.json"
           else
             echo "Using baseline snapshot at $SNAPSHOT_PATH"
@@ -142,9 +148,11 @@ jobs:
             FP_FILE="audit/output/env_fingerprints/${env_name}_fingerprint.json"
             if [ ! -f "$FP_FILE" ]; then
               cp tests/fixtures/minimal_env_fingerprint.json "$FP_FILE"
+              USED_MINIMAL_FIXTURE="true"
               echo "Seeded fallback fingerprint for ${env_name} from tests/fixtures/minimal_env_fingerprint.json"
             fi
           done
+          echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}" >> "$GITHUB_ENV"
 
       - name: Determine Data Source Mode (Live PostgreSQL vs. Baseline Snapshot)
         id: source_mode
@@ -294,6 +302,10 @@ jobs:
           github.event_name != 'pull_request' && steps.gcp_auth.outcome ==
           'success'
         run: |
+          if [ "${USED_MINIMAL_FIXTURE:-false}" = "true" ] && [ "${{ steps.source_mode.outputs.mode }}" != "live_db" ]; then
+            echo "::warning::Dashboards were built from minimal CI fallback fixtures (snapshot or fingerprint missing from GCS); skipping GCS publish to protect gs://${DASHBOARDS_BUCKET}/dashboards/${DASHBOARDS_ENV}/latest/ from being overwritten with seed data."
+            exit 0
+          fi
           if ! gcloud storage ls "gs://${DASHBOARDS_BUCKET}" >/dev/null 2>&1; then
             echo "::warning::GCS bucket gs://${DASHBOARDS_BUCKET} or publisher SA (${DASHBOARDS_PUBLISHER_SA}) is not yet provisioned or accessible in GCP (run pulumi up after merging PR #520). Skipping GCS rsync."
             exit 0
@@ -305,6 +317,14 @@ jobs:
           echo "Publishing dashboards to ${DATED_URI}/ and ${LATEST_URI}/ ..."
           gcloud storage rsync --recursive --checksums-only exports/plots/ "${DATED_URI}/"
           gcloud storage rsync --recursive --checksums-only exports/plots/ "${LATEST_URI}/"
+          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ] && [ -f "exports/plots/metadata/dashboard_data_snapshot.json" ]; then
+            GCS_SNAP_BASE="gs://${DASHBOARDS_BUCKET}/snapshots/${DASHBOARDS_ENV}/latest"
+            gcloud storage cp exports/plots/metadata/dashboard_data_snapshot.json "${GCS_SNAP_BASE}/baseline_records_snapshot.json"
+            if [ -f "data/insights/resource_ai_insights.json" ]; then
+              gcloud storage cp data/insights/resource_ai_insights.json "${GCS_SNAP_BASE}/resource_ai_insights.json"
+            fi
+            gcloud storage cp audit/output/env_fingerprints/*_fingerprint.json "${GCS_SNAP_BASE}/env_fingerprints/" 2>/dev/null || true
+          fi
 
       - name: Upload BioCirV Dashboards & Drift Audit Artifacts
         uses: actions/upload-artifact@v4
