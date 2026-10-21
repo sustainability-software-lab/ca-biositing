@@ -191,6 +191,25 @@ def test_domain_and_email_allowlist_and_role_resolution(
     assert r_oidc.json()["role"] == "admin"
     assert r_oidc.json()["email"] == "petersmith@lbl.gov"
 
+    # 8. Default WebServiceConfig admin emails (including external admin domain) resolve to admin
+    from ca_biositing.webservice.config import WebServiceConfig
+    from ca_biositing.webservice.services.portal_auth import (
+        is_email_allowed,
+        resolve_portal_role,
+    )
+
+    default_cfg = WebServiceConfig(_env_file=None)
+    for expected_admin in (
+        "petersmith@lbl.gov",
+        "rebecca@bexodim.com",
+        "meiligong@lbl.gov",
+    ):
+        assert expected_admin in default_cfg.dashboard_admin_emails
+        assert is_email_allowed(expected_admin, current_config=default_cfg) is True
+        assert (
+            resolve_portal_role(expected_admin, current_config=default_cfg) == "admin"
+        )
+
 
 def test_dashboard_routes_auth_redirect_and_rbac_for_products_1_to_5(
     client: TestClient,

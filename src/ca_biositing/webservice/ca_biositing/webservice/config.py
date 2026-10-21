@@ -89,7 +89,11 @@ class WebServiceConfig(BaseSettings):
         ),
     )
     dashboard_admin_emails: list[str] = Field(
-        default=["petersmith@lbl.gov"],
+        default=[
+            "petersmith@lbl.gov",
+            "rebecca@bexodim.com",
+            "meiligong@lbl.gov",
+        ],
         validation_alias=AliasChoices(
             "dashboard_admin_emails",
             "API_DASHBOARD_ADMIN_EMAILS",
