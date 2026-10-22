@@ -981,7 +981,7 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
             var data = await resp.json();
             if (data.created_via_api) {{
               if (statusEl) {{
-                statusEl.textContent = "✓ GitHub Issue #" + (data.issue_number || "") + " created!";
+                statusEl.textContent = "✓ GitHub Issue #" + (data.issue_number ?? "") + " created!";
                 statusEl.classList.remove("hidden");
               }}
               return;

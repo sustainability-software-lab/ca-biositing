@@ -3784,6 +3784,14 @@ def build_drift_dashboard_html(
     (function initDriftBugModal() {
       const bugModal = document.getElementById("modal-report-bug");
       const openBugBtn = document.getElementById("btn-open-bug-modal");
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
       function getBugDiagnosticsObject() {
         return {
           page: "Page 5 — DB Environment Drift Assessment",
@@ -3885,7 +3893,7 @@ def build_drift_dashboard_html(
               if (data.created_via_api) {
                 if (statusEl) {
                   statusEl.className = "text-xs font-mono p-2.5 rounded-lg badge-pass";
-                  statusEl.innerHTML = `✓ GitHub Issue #${data.issue_number || ""} created! <a href="${data.issue_url}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue &rarr;</a>`;
+                  statusEl.innerHTML = `✓ GitHub Issue #${escapeHtml(data.issue_number ?? "")} created! <a href="${escapeHtml(data.issue_url ?? "")}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue &rarr;</a>`;
                   statusEl.classList.remove("hidden");
                 }
                 return;

@@ -3449,7 +3449,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 var data = await resp.json();
                 if (data.created_via_api) {
                   if (statusEl) {
-                    statusEl.innerHTML = "✓ GitHub Issue #" + (data.issue_number || "") + " created! <a href=\\"" + escapeHtml(data.issue_url || "") + "\\" target=\\"_blank\\" rel=\\"noopener\\">View Issue &rarr;</a>";
+                    statusEl.innerHTML = "✓ GitHub Issue #" + escapeHtml(data.issue_number ?? "") + " created! <a href=\\"" + escapeHtml(data.issue_url ?? "") + "\\" target=\\"_blank\\" rel=\\"noopener\\">View Issue &rarr;</a>";
                     statusEl.classList.remove("hidden");
                   }
                   return;

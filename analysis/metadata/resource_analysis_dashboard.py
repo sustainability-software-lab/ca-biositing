@@ -2137,20 +2137,26 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             });
             if (resp.ok) {
               const data = await resp.json();
+              const escBugHtml = (s) => String(s ?? "")
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#39;");
               if (data.created_via_api) {
                 if (statusEl) {
                   statusEl.className = "text-xs font-mono p-2.5 rounded-lg badge-pass";
-                  statusEl.innerHTML = `✓ GitHub Issue #${data.issue_number || ""} created directly via API! <a href="${data.issue_url}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue on GitHub &rarr;</a>`;
+                  statusEl.innerHTML = `✓ GitHub Issue #${escBugHtml(data.issue_number ?? "")} created directly via API! <a href="${escBugHtml(data.issue_url ?? "")}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue on GitHub &rarr;</a>`;
                   statusEl.classList.remove("hidden");
                 }
                 if (window.showQcToast) {
-                  window.showQcToast(`Created GitHub Issue #${data.issue_number || ""} directly via API`, "pass");
+                  window.showQcToast(`Created GitHub Issue #${data.issue_number ?? ""} directly via API`, "pass");
                 }
                 return;
               }
               if (statusEl) {
                 statusEl.className = "text-xs font-mono p-2.5 rounded-lg badge-warn";
-                statusEl.innerHTML = `ℹ️ No server GITHUB_TOKEN configured (${data.api_error || "using pre-filled URL fallback"}). Opened pre-filled GitHub issue form in a new tab.`;
+                statusEl.textContent = `ℹ️ No server GITHUB_TOKEN configured (${data.api_error ?? "using pre-filled URL fallback"}). Opened pre-filled GitHub issue form in a new tab.`;
                 statusEl.classList.remove("hidden");
               }
               if (data.issue_url) window.open(data.issue_url, "_blank", "noopener");
