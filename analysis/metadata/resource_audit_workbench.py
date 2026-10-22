@@ -1212,6 +1212,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       <button type="button" class="btn" id="btn-export-client-json">
         📥 Export JSON
       </button>
+      <button type="button" class="btn" id="btn-open-bug-modal" title="Report a Bug or QC Issue on GitHub">
+        🐛 Report a Bug
+      </button>
     </div>
   </header>
 
@@ -1588,6 +1591,113 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       </section>
     </div>
   </main>
+
+  <style>
+    .hidden { display: none !important; }
+    .bug-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.72);
+      padding: 16px;
+    }
+    .bug-modal-card {
+      background: var(--bg-card, #ffffff);
+      border: 1px solid var(--border-color, #cbd5e1);
+      border-radius: 14px;
+      max-width: 560px;
+      width: 100%;
+      padding: 20px;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      color: var(--text-main, #0f172a);
+    }
+    .bug-modal-card input,
+    .bug-modal-card select,
+    .bug-modal-card textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color, #cbd5e1);
+      background: var(--bg-drawer, #f8fafc);
+      color: var(--text-main, #0f172a);
+      font-size: 0.82rem;
+      font-family: inherit;
+    }
+    .bug-modal-diag {
+      background: var(--bg-drawer, #f8fafc);
+      border: 1px solid var(--border-color, #cbd5e1);
+      border-radius: 8px;
+      padding: 10px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: 0.75rem;
+      color: var(--text-muted, #475569);
+      white-space: pre-wrap;
+    }
+  </style>
+
+  <!-- Pre-populated GitHub Bug Report Modal -->
+  <div id="modal-report-bug" class="bug-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="bug-modal-heading">
+    <div class="bug-modal-card">
+      <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+        <div>
+          <h3 id="bug-modal-heading" style="font-size: 1rem; font-weight: 700;">🐛 Report a Dashboard or Data QC Issue</h3>
+          <p style="font-size: 0.76rem; color: var(--text-muted); margin-top: 3px;">
+            Automatically attaches your active page, queue tab, resource filter, and selected decision context to a GitHub Issue.
+          </p>
+        </div>
+        <button id="btn-close-bug-modal" type="button" class="btn">✕</button>
+      </div>
+
+      <div>
+        <label style="font-size: 0.76rem; font-weight: 600; display: block; margin-bottom: 4px;">Issue Summary Title</label>
+        <input id="bug-modal-title" type="text" placeholder="e.g., Audit Workbench replicate group IQR whisker mismatch" />
+      </div>
+
+      <div>
+        <label style="font-size: 0.76rem; font-weight: 600; display: block; margin-bottom: 4px;">Issue Category</label>
+        <select id="bug-modal-category">
+          <option value="UI / Chart Rendering Bug">UI / Chart Rendering Bug</option>
+          <option value="Statistical Outlier / Suspect Value">Statistical Outlier / Suspect Value</option>
+          <option value="Unit / Basis Normalization Issue">Unit / Basis Normalization Issue</option>
+          <option value="Missing Metadata / Provenance Gap">Missing Metadata / Provenance Gap</option>
+          <option value="Feature / Export Request">Feature / Export Request</option>
+        </select>
+      </div>
+
+      <div>
+        <label style="font-size: 0.76rem; font-weight: 600; display: block; margin-bottom: 4px;">What happened / Steps to reproduce</label>
+        <textarea id="bug-modal-desc" rows="3" placeholder="Describe the unexpected value, chart behavior, or missing data..."></textarea>
+      </div>
+
+      <div>
+        <label style="font-size: 0.76rem; font-weight: 600; display: block; margin-bottom: 4px;">Expected behavior (optional)</label>
+        <textarea id="bug-modal-expected" rows="2" placeholder="What should be displayed or how should this record be handled?"></textarea>
+      </div>
+
+      <div class="bug-modal-diag">
+        <div style="font-weight: 700; color: var(--text); margin-bottom: 4px;">Auto-Captured Diagnostic Context:</div>
+        <div id="bug-modal-diagnostics">Loading current view state...</div>
+      </div>
+
+      <div id="bug-modal-status" class="hidden" style="font-size: 0.75rem; font-family: var(--mono); padding: 8px; border-radius: 6px; border: 1px solid var(--border);"></div>
+
+      <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px;">
+        <button id="btn-cancel-bug-modal" type="button" class="btn">Cancel</button>
+        <button id="btn-submit-github-api" type="button" class="btn" title="Create GitHub Issue directly via /v1/qc/github-issue when server GITHUB_TOKEN is configured">
+          ⚡ Submit via API
+        </button>
+        <button id="btn-submit-github-url" type="button" class="btn btn-primary">
+          ↗ Open Pre-Filled GitHub Issue
+        </button>
+      </div>
+    </div>
+  </div>
 
   <script>
     (function () {
@@ -3219,6 +3329,154 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             a.download = "qc_audit_decisions_snapshot.json";
             a.click();
             URL.revokeObjectURL(url);
+          });
+        }
+
+        var bugModal = document.getElementById("modal-report-bug");
+        var openBugBtn = document.getElementById("btn-open-bug-modal");
+        function getBugDiagnosticsObject() {
+          return {
+            page: "Page 4 — Resource QC & Data Audit Workbench",
+            resource: state.filters.resource || "all",
+            domainTab: state.activeQueueTab || "all_open",
+            qcFilter: state.filters.flagType || "all",
+            selectedDecisionId: state.selectedDecisionId || "(none)",
+            queryString: window.location.search || "(none)"
+          };
+        }
+        function buildGitHubBugIssueUrl(opts) {
+          var repoUrl = "https://github.com/uw-ssec/ca-biositing/issues/new";
+          var title = (opts.title || "").trim() || ("[Dashboard Bug] " + (opts.category || "Issue") + " on " + (opts.page || "Page 4"));
+          var bodyLines = [
+            "### Dashboard Bug / Data QC Report",
+            "",
+            "- **Category:** " + (opts.category || "UI / Chart Rendering Bug"),
+            "- **Dashboard Page:** " + (opts.page || "Page 4 — Resource QC & Data Audit Workbench"),
+            "- **Active Resource:** `" + (opts.resource || "all") + "`",
+            "- **Active Tab / Queue:** `" + (opts.domainTab || "all_open") + "`",
+            "- **Active Flag Filter:** `" + (opts.qcFilter || "all") + "`",
+            "- **Selected Decision ID:** `" + (opts.selectedDecisionId || "(none)") + "`",
+            "- **URL Query State:** `" + (opts.queryString || "(none)") + "`",
+            "- **Timestamp (UTC):** `" + new Date().toISOString() + "`",
+            "",
+            "### Observed Behavior / Steps to Reproduce",
+            opts.description || "_Please describe what happened..._",
+            "",
+            "### Expected Behavior",
+            opts.expectedBehavior || "_Optional: describe what you expected to see._"
+          ];
+          var params = new URLSearchParams();
+          params.set("title", title);
+          params.set("body", bodyLines.join("\\n"));
+          params.set("labels", "bug,dashboard");
+          return repoUrl + "?" + params.toString();
+        }
+        if (openBugBtn && bugModal) {
+          openBugBtn.addEventListener("click", function () {
+            var diag = getBugDiagnosticsObject();
+            var diagEl = document.getElementById("bug-modal-diagnostics");
+            if (diagEl) {
+              diagEl.textContent =
+                "Page: " + diag.page +
+                "\\nResource: " + diag.resource +
+                "\\nActive Queue Tab: " + diag.domainTab +
+                "\\nFlag Filter: " + diag.qcFilter +
+                "\\nSelected Decision: " + diag.selectedDecisionId +
+                "\\nQuery: " + diag.queryString;
+            }
+            var statusEl = document.getElementById("bug-modal-status");
+            if (statusEl) statusEl.classList.add("hidden");
+            bugModal.classList.remove("hidden");
+          });
+        }
+        ["btn-close-bug-modal", "btn-cancel-bug-modal"].forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el && bugModal) {
+            el.addEventListener("click", function () {
+              bugModal.classList.add("hidden");
+            });
+          }
+        });
+        var submitUrlBtn = document.getElementById("btn-submit-github-url");
+        if (submitUrlBtn) {
+          submitUrlBtn.addEventListener("click", function () {
+            var diag = getBugDiagnosticsObject();
+            var issueUrl = buildGitHubBugIssueUrl({
+              title: (document.getElementById("bug-modal-title") || {}).value || "",
+              category: (document.getElementById("bug-modal-category") || {}).value || "UI / Chart Rendering Bug",
+              description: (document.getElementById("bug-modal-desc") || {}).value || "",
+              expectedBehavior: (document.getElementById("bug-modal-expected") || {}).value || "",
+              page: diag.page,
+              resource: diag.resource,
+              domainTab: diag.domainTab,
+              qcFilter: diag.qcFilter,
+              selectedDecisionId: diag.selectedDecisionId,
+              queryString: diag.queryString
+            });
+            window.open(issueUrl, "_blank", "noopener");
+            if (bugModal) bugModal.classList.add("hidden");
+          });
+        }
+        var submitApiBtn = document.getElementById("btn-submit-github-api");
+        if (submitApiBtn) {
+          submitApiBtn.addEventListener("click", async function () {
+            var diag = getBugDiagnosticsObject();
+            var payload = {
+              title: (document.getElementById("bug-modal-title") || {}).value || "BioCirV Dashboard Bug Report",
+              category: (document.getElementById("bug-modal-category") || {}).value || "UI / Chart Rendering Bug",
+              description: (document.getElementById("bug-modal-desc") || {}).value || "",
+              expected_behavior: (document.getElementById("bug-modal-expected") || {}).value || "",
+              page: diag.page,
+              resource: diag.resource,
+              domain_tab: diag.domainTab,
+              qc_filter: diag.qcFilter,
+              query_string: diag.queryString,
+              create_via_api: true
+            };
+            var statusEl = document.getElementById("bug-modal-status");
+            if (statusEl) {
+              statusEl.textContent = "⏳ Submitting issue via /v1/qc/github-issue...";
+              statusEl.classList.remove("hidden");
+            }
+            try {
+              var apiBase = window.BIOCIRV_API_BASE || "http://localhost:8000";
+              var resp = await fetch(apiBase + "/v1/qc/github-issue", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+              });
+              if (resp.ok) {
+                var data = await resp.json();
+                if (data.created_via_api) {
+                  if (statusEl) {
+                    statusEl.innerHTML = "✓ GitHub Issue #" + (data.issue_number || "") + " created! <a href=\\"" + escapeHtml(data.issue_url || "") + "\\" target=\\"_blank\\" rel=\\"noopener\\">View Issue &rarr;</a>";
+                    statusEl.classList.remove("hidden");
+                  }
+                  return;
+                }
+                if (data.issue_url) {
+                  window.open(data.issue_url, "_blank", "noopener");
+                  if (bugModal) bugModal.classList.add("hidden");
+                  return;
+                }
+              }
+            } catch (_err) {
+              // Offline fallback
+            }
+            var fallbackUrl = buildGitHubBugIssueUrl({
+              title: payload.title,
+              category: payload.category,
+              description: payload.description,
+              expectedBehavior: payload.expected_behavior,
+              page: diag.page,
+              resource: diag.resource,
+              domainTab: diag.domainTab,
+              qcFilter: diag.qcFilter,
+              selectedDecisionId: diag.selectedDecisionId,
+              queryString: diag.queryString
+            });
+            window.open(fallbackUrl, "_blank", "noopener");
+            if (bugModal) bugModal.classList.add("hidden");
           });
         }
       }

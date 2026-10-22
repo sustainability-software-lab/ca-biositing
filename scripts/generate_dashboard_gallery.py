@@ -561,6 +561,9 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
             <button type="button" class="btn btn-sm btn-outline-light" id="btn-gallery-toggle-role">
                 ⇄ Preview Admin/Analyst Role
             </button>
+            <button type="button" class="btn btn-sm btn-warning fw-bold text-dark" id="btn-open-bug-modal">
+                🐛 Report a Bug
+            </button>
         </div>
     </div>
     <h1 class="display-5 fw-bold">BioCirV 5-Product Analytics, QC Audit &amp; Drift Suite</h1>
@@ -707,6 +710,75 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
     </div>
 </footer>
 
+<style>
+  .hidden {{ display: none !important; }}
+  .gallery-bug-backdrop {{
+    position: fixed;
+    inset: 0;
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.72);
+    padding: 16px;
+  }}
+  .gallery-bug-card {{
+    background: #0f172a;
+    color: #f8fafc;
+    border: 1px solid #334155;
+    border-radius: 14px;
+    max-width: 540px;
+    width: 100%;
+    padding: 20px;
+    box-shadow: 0 20px 45px rgba(0, 0, 0, 0.55);
+  }}
+</style>
+
+<!-- Pre-populated GitHub Bug Report Modal -->
+<div id="modal-report-bug" class="gallery-bug-backdrop hidden" role="dialog" aria-modal="true">
+  <div class="gallery-bug-card">
+    <div class="d-flex justify-content-between align-items-start border-bottom border-secondary pb-2 mb-3">
+      <div>
+        <h5 class="fw-bold mb-1">🐛 Report a Dashboard or Data QC Issue</h5>
+        <p class="small text-secondary mb-0">Automatically attaches your active portal page and role context to a GitHub Issue.</p>
+      </div>
+      <button id="btn-close-bug-modal" type="button" class="btn btn-sm btn-outline-light">✕</button>
+    </div>
+    <div class="mb-2">
+      <label class="form-label small fw-bold mb-1">Issue Summary Title</label>
+      <input id="bug-modal-title" type="text" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="e.g., Broken dashboard link or unexpected metric" />
+    </div>
+    <div class="mb-2">
+      <label class="form-label small fw-bold mb-1">Issue Category</label>
+      <select id="bug-modal-category" class="form-select form-select-sm bg-dark text-light border-secondary">
+        <option value="UI / Chart Rendering Bug">UI / Chart Rendering Bug</option>
+        <option value="Statistical Outlier / Suspect Value">Statistical Outlier / Suspect Value</option>
+        <option value="Unit / Basis Normalization Issue">Unit / Basis Normalization Issue</option>
+        <option value="Missing Metadata / Provenance Gap">Missing Metadata / Provenance Gap</option>
+        <option value="Feature / Export Request">Feature / Export Request</option>
+      </select>
+    </div>
+    <div class="mb-2">
+      <label class="form-label small fw-bold mb-1">What happened / Steps to reproduce</label>
+      <textarea id="bug-modal-desc" rows="3" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="Describe the unexpected behavior or missing data..."></textarea>
+    </div>
+    <div class="mb-2">
+      <label class="form-label small fw-bold mb-1">Expected behavior (optional)</label>
+      <textarea id="bug-modal-expected" rows="2" class="form-control form-control-sm bg-dark text-light border-secondary" placeholder="What should be displayed?"></textarea>
+    </div>
+    <div class="p-2 rounded bg-dark border border-secondary small font-monospace text-secondary mb-2">
+      <div class="fw-bold text-light">Auto-Captured Diagnostic Context:</div>
+      <div id="bug-modal-diagnostics" style="white-space: pre-wrap;">Loading current view state...</div>
+    </div>
+    <div id="bug-modal-status" class="hidden small font-monospace p-2 rounded border border-secondary mb-2"></div>
+    <div class="d-flex justify-content-end gap-2 border-top border-secondary pt-2">
+      <button id="btn-cancel-bug-modal" type="button" class="btn btn-sm btn-outline-light">Cancel</button>
+      <button id="btn-submit-github-api" type="button" class="btn btn-sm btn-outline-info">⚡ Submit via API</button>
+      <button id="btn-submit-github-url" type="button" class="btn btn-sm btn-warning fw-bold text-dark">↗ Open Pre-Filled GitHub Issue</button>
+    </div>
+  </div>
+</div>
+
 <script>
   (function () {{
     "use strict";
@@ -798,6 +870,144 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
 
     applyGalleryRoleUI();
     fetchPortalSession();
+
+    var bugModal = document.getElementById("modal-report-bug");
+    var openBugBtn = document.getElementById("btn-open-bug-modal");
+    function getBugDiagnosticsObject() {{
+      return {{
+        page: "BioCirV 5-Product Portal Gallery",
+        resource: "all",
+        domainTab: "portal_gallery (" + (galleryState.role || "analyst") + ")",
+        qcFilter: "pass",
+        queryString: window.location.search || "(none)"
+      }};
+    }}
+    function buildGitHubBugIssueUrl(opts) {{
+      var repoUrl = "https://github.com/uw-ssec/ca-biositing/issues/new";
+      var title = (opts.title || "").trim() || ("[Dashboard Bug] " + (opts.category || "Issue") + " on " + (opts.page || "Portal Gallery"));
+      var bodyLines = [
+        "### Dashboard Bug / Data QC Report",
+        "",
+        "- **Category:** " + (opts.category || "UI / Chart Rendering Bug"),
+        "- **Dashboard Page:** " + (opts.page || "BioCirV 5-Product Portal Gallery"),
+        "- **Active Resource:** `" + (opts.resource || "all") + "`",
+        "- **Active Tab / Role:** `" + (opts.domainTab || "portal_gallery") + "`",
+        "- **URL Query State:** `" + (opts.queryString || "(none)") + "`",
+        "- **Timestamp (UTC):** `" + new Date().toISOString() + "`",
+        "",
+        "### Observed Behavior / Steps to Reproduce",
+        opts.description || "_Please describe what happened..._",
+        "",
+        "### Expected Behavior",
+        opts.expectedBehavior || "_Optional: describe what you expected to see._"
+      ];
+      var params = new URLSearchParams();
+      params.set("title", title);
+      params.set("body", bodyLines.join("\\n"));
+      params.set("labels", "bug,dashboard");
+      return repoUrl + "?" + params.toString();
+    }}
+    if (openBugBtn && bugModal) {{
+      openBugBtn.addEventListener("click", function () {{
+        var diag = getBugDiagnosticsObject();
+        var diagEl = document.getElementById("bug-modal-diagnostics");
+        if (diagEl) {{
+          diagEl.textContent =
+            "Page: " + diag.page +
+            "\\nRole: " + galleryState.role + " (" + galleryState.email + ")" +
+            "\\nQuery: " + diag.queryString;
+        }}
+        var statusEl = document.getElementById("bug-modal-status");
+        if (statusEl) statusEl.classList.add("hidden");
+        bugModal.classList.remove("hidden");
+      }});
+    }}
+    ["btn-close-bug-modal", "btn-cancel-bug-modal"].forEach(function (id) {{
+      var el = document.getElementById(id);
+      if (el && bugModal) {{
+        el.addEventListener("click", function () {{
+          bugModal.classList.add("hidden");
+        }});
+      }}
+    }});
+    var submitUrlBtn = document.getElementById("btn-submit-github-url");
+    if (submitUrlBtn) {{
+      submitUrlBtn.addEventListener("click", function () {{
+        var diag = getBugDiagnosticsObject();
+        var issueUrl = buildGitHubBugIssueUrl({{
+          title: (document.getElementById("bug-modal-title") || {{}}).value || "",
+          category: (document.getElementById("bug-modal-category") || {{}}).value || "UI / Chart Rendering Bug",
+          description: (document.getElementById("bug-modal-desc") || {{}}).value || "",
+          expectedBehavior: (document.getElementById("bug-modal-expected") || {{}}).value || "",
+          page: diag.page,
+          resource: diag.resource,
+          domainTab: diag.domainTab,
+          qcFilter: diag.qcFilter,
+          queryString: diag.queryString
+        }});
+        window.open(issueUrl, "_blank", "noopener");
+        if (bugModal) bugModal.classList.add("hidden");
+      }});
+    }}
+    var submitApiBtn = document.getElementById("btn-submit-github-api");
+    if (submitApiBtn) {{
+      submitApiBtn.addEventListener("click", async function () {{
+        var diag = getBugDiagnosticsObject();
+        var payload = {{
+          title: (document.getElementById("bug-modal-title") || {{}}).value || "BioCirV Dashboard Bug Report",
+          category: (document.getElementById("bug-modal-category") || {{}}).value || "UI / Chart Rendering Bug",
+          description: (document.getElementById("bug-modal-desc") || {{}}).value || "",
+          expected_behavior: (document.getElementById("bug-modal-expected") || {{}}).value || "",
+          page: diag.page,
+          resource: diag.resource,
+          domain_tab: diag.domainTab,
+          qc_filter: diag.qcFilter,
+          query_string: diag.queryString,
+          create_via_api: true
+        }};
+        var statusEl = document.getElementById("bug-modal-status");
+        if (statusEl) {{
+          statusEl.textContent = "⏳ Submitting issue via /v1/qc/github-issue...";
+          statusEl.classList.remove("hidden");
+        }}
+        try {{
+          var apiBase = window.BIOCIRV_API_BASE || "http://localhost:8000";
+          var resp = await fetch(apiBase + "/v1/qc/github-issue", {{
+            method: "POST",
+            headers: {{ "Content-Type": "application/json" }},
+            body: JSON.stringify(payload)
+          }});
+          if (resp.ok) {{
+            var data = await resp.json();
+            if (data.created_via_api) {{
+              if (statusEl) {{
+                statusEl.textContent = "✓ GitHub Issue #" + (data.issue_number || "") + " created!";
+                statusEl.classList.remove("hidden");
+              }}
+              return;
+            }}
+            if (data.issue_url) {{
+              window.open(data.issue_url, "_blank", "noopener");
+              if (bugModal) bugModal.classList.add("hidden");
+              return;
+            }}
+          }}
+        }} catch (_err) {{}}
+        var fallbackUrl = buildGitHubBugIssueUrl({{
+          title: payload.title,
+          category: payload.category,
+          description: payload.description,
+          expectedBehavior: payload.expected_behavior,
+          page: diag.page,
+          resource: diag.resource,
+          domainTab: diag.domainTab,
+          qcFilter: diag.qcFilter,
+          queryString: diag.queryString
+        }});
+        window.open(fallbackUrl, "_blank", "noopener");
+        if (bugModal) bugModal.classList.add("hidden");
+      }});
+    }}
   }})();
 </script>
 </body>

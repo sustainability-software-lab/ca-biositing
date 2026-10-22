@@ -577,7 +577,7 @@ SHARED_CSS = """
       color: var(--foreground) !important;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    select, input {
+    select, input, textarea {
       background-color: var(--card) !important;
       color: var(--foreground) !important;
       border-color: var(--border) !important;
@@ -586,6 +586,16 @@ SHARED_CSS = """
       background-color: var(--card);
       color: var(--foreground);
     }
+    .hidden { display: none !important; }
+    .bg-\\[var\\(--card\\)\\] { background-color: var(--card); }
+    .bg-\\[var\\(--background\\)\\] { background-color: var(--background); }
+    .bg-\\[var\\(--primary\\)\\] { background-color: var(--primary); }
+    .bg-\\[var\\(--secondary\\)\\] { background-color: var(--secondary); }
+    .text-\\[var\\(--foreground\\)\\] { color: var(--foreground); }
+    .text-\\[var\\(--muted-foreground\\)\\] { color: var(--muted-foreground); }
+    .text-\\[var\\(--primary-foreground\\)\\] { color: var(--primary-foreground); }
+    .text-\\[var\\(--secondary-foreground\\)\\] { color: var(--secondary-foreground); }
+    .border-\\[var\\(--border\\)\\] { border-color: var(--border); }
     .badge-pass { background-color: var(--pass-bg); color: var(--pass-fg); border: 1px solid var(--pass-border); }
     .badge-fail { background-color: var(--fail-bg); color: var(--fail-fg); border: 1px solid var(--fail-border); }
     .badge-info { background-color: var(--info-bg); color: var(--info-fg); border: 1px solid var(--info-border); }
@@ -974,9 +984,10 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
 """
 
 SHARED_SLICE_AND_BUG_MODALS_JS = """
-    const GITHUB_ISSUES_NEW_URL = "https://github.com/sustainability-software-lab/ca-biositing/issues/new";
+    var GITHUB_ISSUES_NEW_URL = "https://github.com/sustainability-software-lab/ca-biositing/issues/new";
 
     function buildGitHubBugIssueUrl(opts) {
+      const repoNewUrl = GITHUB_ISSUES_NEW_URL || "https://github.com/sustainability-software-lab/ca-biositing/issues/new";
       const o = opts || {};
       const cat = o.category || "UI / Chart Rendering Bug";
       const res = o.resource || (typeof state !== "undefined" && state.resource) || "all resources";
@@ -1009,7 +1020,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         labels: "bug,dashboard-qc",
         body: bodyLines.join("\\n")
       });
-      return `${GITHUB_ISSUES_NEW_URL}?${params.toString()}`;
+      return `${repoNewUrl}?${params.toString()}`;
     }
     window.buildGitHubBugIssueUrl = buildGitHubBugIssueUrl;
 
@@ -1029,7 +1040,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       return out;
     }
 
-    const DEFAULT_FILTER_START_DATE = "2024-01-01";
+    var DEFAULT_FILTER_START_DATE = "2024-01-01";
     window.DEFAULT_FILTER_START_DATE = DEFAULT_FILTER_START_DATE;
     window.DEFAULT_PICKER_START_DATE = DEFAULT_FILTER_START_DATE;
 
@@ -1072,8 +1083,26 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
     window.recordMatchesDateFilter = recordMatchesDateFilter;
 
     function initDateFilterInputs(fromEl, toEl, typeEl, clearBtnEl, onChangeFn) {
+      if (typeof clearBtnEl === "function" && onChangeFn === undefined) {
+        onChangeFn = clearBtnEl;
+        clearBtnEl = typeEl;
+        typeEl = null;
+      }
+      const resolveEl = (el) => (typeof el === "string" ? document.getElementById(el) : el);
+      fromEl = resolveEl(fromEl);
+      toEl = resolveEl(toEl);
+      typeEl = resolveEl(typeEl);
+      clearBtnEl = resolveEl(clearBtnEl);
+
       let lastClearedAt = 0;
+      const syncClearBtnVisibility = () => {
+        if (clearBtnEl && clearBtnEl.classList) {
+          const hasDate = Boolean((fromEl && fromEl.value) || (toEl && toEl.value));
+          clearBtnEl.classList.toggle("hidden", !hasDate);
+        }
+      };
       const fireChange = () => {
+        syncClearBtnVisibility();
         if (typeof onChangeFn === "function") {
           onChangeFn(
             fromEl ? (fromEl.value || "") : "",
@@ -1082,12 +1111,13 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           );
         }
       };
-      if (fromEl) {
+      if (fromEl && typeof fromEl.setAttribute === "function") {
+        const defaultStartDate = DEFAULT_FILTER_START_DATE || "2024-01-01";
         fromEl.setAttribute("min", "2020-01-01");
-        fromEl.setAttribute("placeholder", DEFAULT_FILTER_START_DATE);
+        fromEl.setAttribute("placeholder", defaultStartDate);
         const seedDefaultStartDate = () => {
           if (!fromEl.value && (Date.now() - lastClearedAt > 350)) {
-            fromEl.value = DEFAULT_FILTER_START_DATE;
+            fromEl.value = defaultStartDate;
             fireChange();
           }
         };
@@ -1096,16 +1126,16 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         fromEl.addEventListener("input", fireChange);
         fromEl.addEventListener("change", fireChange);
       }
-      if (toEl) {
+      if (toEl && typeof toEl.setAttribute === "function") {
         toEl.setAttribute("min", "2020-01-01");
         toEl.addEventListener("input", fireChange);
         toEl.addEventListener("change", fireChange);
       }
-      if (typeEl) {
+      if (typeEl && typeof typeEl.addEventListener === "function") {
         typeEl.addEventListener("input", fireChange);
         typeEl.addEventListener("change", fireChange);
       }
-      if (clearBtnEl) {
+      if (clearBtnEl && typeof clearBtnEl.addEventListener === "function") {
         clearBtnEl.addEventListener("click", (e) => {
           e.preventDefault();
           lastClearedAt = Date.now();
@@ -1115,6 +1145,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           fireChange();
         });
       }
+      syncClearBtnVisibility();
     }
     window.initDateFilterInputs = initDateFilterInputs;
 
@@ -2018,6 +2049,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
 
       function getBugDiagnosticsObject() {
         const activeRes = (typeof state !== "undefined" && (state.resource || state.primaryResource))
+          || (typeof selectedFilters !== "undefined" && selectedFilters.resources && selectedFilters.resources.size ? Array.from(selectedFilters.resources).slice(0, 4).join(", ") : "")
           || (typeof checkedSet !== "undefined" && checkedSet.resources && checkedSet.resources.size ? Array.from(checkedSet.resources).slice(0, 4).join(", ") : "all");
         const activeDomain = (typeof state !== "undefined" && (state.tab || state.domain || state.subtab))
           || (typeof currentDomain !== "undefined" ? currentDomain : "overview");
@@ -2032,19 +2064,25 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           queryString: window.location.search || "(none)"
         };
       }
+      window.getBugDiagnosticsObject = getBugDiagnosticsObject;
+
+      function openBugReportModal() {
+        const modalEl = bugModal || document.getElementById("modal-report-bug");
+        if (!modalEl) return;
+        const diag = getBugDiagnosticsObject();
+        const diagEl = document.getElementById("bug-modal-diagnostics");
+        if (diagEl) {
+          diagEl.textContent =
+            `Page: ${diag.page}\\nResource: ${diag.resource}\\nActive Tab/Domain: ${diag.domainTab}\\nActive QC Filter: ${diag.qcFilter}\\nQuery: ${diag.queryString}`;
+        }
+        const statusEl = document.getElementById("bug-modal-status");
+        if (statusEl) statusEl.classList.add("hidden");
+        modalEl.classList.remove("hidden");
+      }
+      window.openBugReportModal = openBugReportModal;
 
       if (openBugBtn && bugModal) {
-        openBugBtn.addEventListener("click", () => {
-          const diag = getBugDiagnosticsObject();
-          const diagEl = document.getElementById("bug-modal-diagnostics");
-          if (diagEl) {
-            diagEl.textContent =
-              `Page: ${diag.page}\\nResource: ${diag.resource}\\nActive Tab/Domain: ${diag.domainTab}\\nActive QC Filter: ${diag.qcFilter}\\nQuery: ${diag.queryString}`;
-          }
-          const statusEl = document.getElementById("bug-modal-status");
-          if (statusEl) statusEl.classList.add("hidden");
-          bugModal.classList.remove("hidden");
-        });
+        openBugBtn.addEventListener("click", openBugReportModal);
       }
 
       ["btn-close-bug-modal", "btn-cancel-bug-modal"].forEach(id => {
@@ -4278,7 +4316,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <!-- Card 1: Feedstock Meaning & Conversion Profile -->
           <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-3">
             <div class="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">1. Feedstock Meaning &amp; Conversion Profile</div>
-            <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">${formatMdInline(ins.ai_narratives.feedstock_profile)}</p>
+            <p class="text-xs text-[var(--muted-foreground)] leading-relaxed">${formatMdInline((ins.ai_narratives && ins.ai_narratives.feedstock_profile) || ins.executive_summary || "")}</p>
             ${pctBadges.length ? `
               <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 border-t border-[var(--border)]">
                 ${pctBadges.map(b => `
@@ -5285,9 +5323,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     if (fltFromDateEl) fltFromDateEl.value = state.from_date || "";
     if (fltToDateEl) fltToDateEl.value = state.to_date || "";
     if (window.initDateFilterInputs) {
-      window.initDateFilterInputs("flt-from-date", "flt-to-date", "flt-date-clear", (fromVal, toVal) => {
+      window.initDateFilterInputs("flt-from-date", "flt-to-date", "flt-date-type", "flt-date-clear", (fromVal, toVal, typeVal) => {
         state.from_date = fromVal;
         state.to_date = toVal;
+        if (typeVal) state.date_type = typeVal;
         render();
       });
     }
@@ -7489,9 +7528,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       });
     }
     if (window.initDateFilterInputs) {
-      window.initDateFilterInputs("flt-from-date", "flt-to-date", "flt-date-clear", (fromVal, toVal) => {
+      window.initDateFilterInputs("flt-from-date", "flt-to-date", "flt-date-type", "flt-date-clear", (fromVal, toVal, typeVal) => {
         state.from_date = fromVal;
         state.to_date = toVal;
+        if (typeVal) state.date_type = typeVal;
         render();
       });
     } else {

@@ -418,7 +418,7 @@ def build_full_dashboard_html(payload: dict) -> str:
       color: var(--foreground) !important;
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    select, input {
+    select, input, textarea {
       background-color: var(--background) !important;
       color: var(--foreground) !important;
       border-color: var(--border) !important;
@@ -427,6 +427,7 @@ def build_full_dashboard_html(payload: dict) -> str:
       background-color: var(--card) !important;
       color: var(--foreground) !important;
     }
+    .hidden { display: none !important; }
     .bg-\\[var\\(--card\\)\\] { background-color: var(--card) !important; }
     .bg-\\[var\\(--background\\)\\] { background-color: var(--background) !important; }
     .bg-\\[var\\(--secondary\\)\\] { background-color: var(--secondary) !important; }
