@@ -14,7 +14,11 @@ def load(df: pd.DataFrame) -> bool:
     Upserts BiodieselPlant records into the database.
     Returns True on success, False on failure.
     """
-    logger = get_run_logger()
+    try:
+        logger = get_run_logger()
+    except Exception:
+        import logging
+        logger = logging.getLogger(__name__)
 
     if df is None or df.empty:
         logger.info("No data to load.")
@@ -48,23 +52,35 @@ def load(df: pd.DataFrame) -> bool:
                     if clean_record.get('created_at') is None:
                         clean_record['created_at'] = now
 
-                    # Build Upsert Statement (PostgreSQL specific)
-                    stmt = insert(InfrastructureBiodieselPlants).values(clean_record)
-
-                    # Define columns to update on conflict
-                    # Exclude primary keys and creation timestamps
-                    update_dict = {
-                        c.name: stmt.excluded[c.name]
-                        for c in InfrastructureBiodieselPlants.__table__.columns
-                        if c.name not in ['biodiesel_plant_id', 'created_at', 'record_id']
-                    }
-
-                    upsert_stmt = stmt.on_conflict_do_update(
-                        index_elements=['biodiesel_plant_id'], # Replace with your unique constraint column
-                        set_=update_dict
+                    stmt1 = select(InfrastructureBiodieselPlants).where(
+                        InfrastructureBiodieselPlants.company == clean_record.get('company'),
+                        InfrastructureBiodieselPlants.address_id == clean_record.get('address_id')
                     )
+                    existing_record = session.scalars(stmt1).first()
 
-                    session.execute(upsert_stmt)
+                    if existing_record:
+                        for k, v in clean_record.items():
+                            if k not in ['biodiesel_plant_id', "created_at", "record_id"]:
+                                setattr(existing_record, k, v)
+                    else:
+
+                        # Build Upsert Statement (PostgreSQL specific)
+                        stmt2 = insert(InfrastructureBiodieselPlants).values(clean_record)
+
+                        # Define columns to update on conflict
+                        # Exclude primary keys and creation timestamps
+                        update_dict = {
+                            c.name: stmt2.excluded[c.name]
+                            for c in InfrastructureBiodieselPlants.__table__.columns
+                            if c.name not in ['biodiesel_plant_id', 'created_at', 'record_id']
+                        }
+
+                        upsert_stmt = stmt2.on_conflict_do_update(
+                            index_elements=['biodiesel_plant_id'], # Replace with your unique constraint column
+                            set_=update_dict
+                        )
+
+                        session.execute(upsert_stmt)
 
                 session.commit()
         logger.info("Successfully upserted records.")
