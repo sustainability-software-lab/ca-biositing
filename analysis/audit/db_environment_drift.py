@@ -2001,11 +2001,12 @@ def build_drift_dashboard_html(
       color: var(--foreground) !important;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
-    select, input[type="text"], input[type="search"] {
+    select, input[type="text"], input[type="search"], textarea {
       background-color: var(--card) !important;
       color: var(--foreground) !important;
       border-color: var(--border) !important;
     }
+    .hidden { display: none !important; }
     .badge-pass { background-color: var(--pass-bg); color: var(--pass-fg); border: 1px solid var(--pass-border); }
     .badge-fail { background-color: var(--fail-bg); color: var(--fail-fg); border: 1px solid var(--fail-border); }
     .badge-info { background-color: var(--info-bg); color: var(--info-fg); border: 1px solid var(--info-border); }
@@ -2069,6 +2070,9 @@ def build_drift_dashboard_html(
           </button>
           <button id="btn-export-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
             ⬇ Export Active Diff CSV
+          </button>
+          <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition" title="Report a Bug or Drift Issue on GitHub">
+            🐛 Report a Bug
           </button>
           <button id="btn-theme-toggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
             ☀️ Light Mode
@@ -2397,6 +2401,71 @@ def build_drift_dashboard_html(
       </div>
     </section>
 
+  </div>
+
+  <!-- Pre-populated GitHub Bug Report Modal -->
+  <div id="modal-report-bug" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/70 p-4">
+    <div class="bg-[var(--card)] border border-[var(--border)] rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-start justify-between gap-3 border-b border-[var(--border)] pb-3">
+        <div>
+          <h3 class="text-base font-bold text-[var(--foreground)]">🐛 Report a Dashboard or Drift Issue</h3>
+          <p class="text-xs text-[var(--muted-foreground)] mt-0.5">
+            Automatically attaches your active environment pair, tab, and filter context to a GitHub Issue.
+          </p>
+        </div>
+        <button id="btn-close-bug-modal" class="text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-lg font-bold leading-none">✕</button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-semibold text-[var(--foreground)] block mb-1">Issue Summary Title</label>
+          <input id="bug-modal-title" type="text" placeholder="e.g., View schema drift column type mismatch on data_portal_analysis"
+            class="w-full rounded-lg border px-3 py-2 text-xs" />
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-[var(--foreground)] block mb-1">Issue Category</label>
+          <select id="bug-modal-category" class="w-full rounded-lg border px-3 py-2 text-xs">
+            <option value="UI / Chart Rendering Bug">UI / Chart Rendering Bug</option>
+            <option value="Statistical Outlier / Suspect Value">Database Drift / Schema Parity Issue</option>
+            <option value="Unit / Basis Normalization Issue">Unit / Basis Normalization Issue</option>
+            <option value="Missing Metadata / Provenance Gap">Missing Metadata / Provenance Gap</option>
+            <option value="Feature / Export Request">Feature / Export Request</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-[var(--foreground)] block mb-1">What happened / Steps to reproduce</label>
+          <textarea id="bug-modal-desc" rows="3" placeholder="Describe the unexpected drift metric, chart behavior, or missing data..."
+            class="w-full rounded-lg border px-3 py-2 text-xs bg-[var(--card)] text-[var(--foreground)] border-[var(--border)]"></textarea>
+        </div>
+
+        <div>
+          <label class="text-xs font-semibold text-[var(--foreground)] block mb-1">Expected behavior (optional)</label>
+          <textarea id="bug-modal-expected" rows="2" placeholder="What should be displayed or how should this environment pair compare?"
+            class="w-full rounded-lg border px-3 py-2 text-xs bg-[var(--card)] text-[var(--foreground)] border-[var(--border)]"></textarea>
+        </div>
+
+        <div class="rounded-lg bg-[var(--background)] border border-[var(--border)] p-2.5 text-[11px] font-mono text-[var(--muted-foreground)] space-y-0.5">
+          <div class="font-bold text-[var(--foreground)]">Auto-Captured Diagnostic Context:</div>
+          <div id="bug-modal-diagnostics">Loading current view state...</div>
+        </div>
+      </div>
+
+      <div id="bug-modal-status" class="hidden text-xs font-mono p-2 rounded-lg"></div>
+
+      <div class="flex flex-wrap items-center justify-end gap-2 pt-2 border-t border-[var(--border)]">
+        <button id="btn-cancel-bug-modal" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">
+          Cancel
+        </button>
+        <button id="btn-submit-github-api" class="px-3.5 py-2 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:opacity-90 transition" title="Create GitHub Issue directly via /v1/qc/github-issue when server GITHUB_TOKEN is configured">
+          ⚡ Submit via API
+        </button>
+        <button id="btn-submit-github-url" class="px-4 py-2 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition shadow-sm">
+          ↗ Open Pre-Filled GitHub Issue
+        </button>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -3711,6 +3780,145 @@ def build_drift_dashboard_html(
       a.click();
       URL.revokeObjectURL(url);
     });
+
+    (function initDriftBugModal() {
+      const bugModal = document.getElementById("modal-report-bug");
+      const openBugBtn = document.getElementById("btn-open-bug-modal");
+      function escapeHtml(s) {
+        return String(s ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+      function getBugDiagnosticsObject() {
+        return {
+          page: "Page 5 — DB Environment Drift Assessment",
+          resource: state.selectedCell ? `${state.selectedCell.resource} (${state.selectedCell.analysisType})` : "all",
+          domainTab: `${state.activeTab} (${state.mode})`,
+          qcFilter: state.vsgSchema || "all",
+          queryString: window.location.search || "(none)"
+        };
+      }
+      function buildGitHubBugIssueUrl(opts) {
+        const repoUrl = "https://github.com/uw-ssec/ca-biositing/issues/new";
+        const title = (opts.title || "").trim() || `[Dashboard Bug] ${opts.category || "Issue"} on ${opts.page || "Page 5"}`;
+        const bodyLines = [
+          "### Dashboard Bug / Data QC Report",
+          "",
+          `- **Category:** ${opts.category || "UI / Chart Rendering Bug"}`,
+          `- **Dashboard Page:** ${opts.page || "Page 5 — DB Environment Drift Assessment"}`,
+          `- **Active Resource / Cell:** \\`${opts.resource || "all"}\\``,
+          `- **Active Tab / Compare Mode:** \\`${opts.domainTab || "tab-parity"}\\``,
+          `- **Active Filter:** \\`${opts.qcFilter || "all"}\\``,
+          `- **URL Query State:** \\`${opts.queryString || "(none)"}\\``,
+          `- **Timestamp (UTC):** \\`${new Date().toISOString()}\\``,
+          "",
+          "### Observed Behavior / Steps to Reproduce",
+          opts.description || "_Please describe what happened..._",
+          "",
+          "### Expected Behavior",
+          opts.expectedBehavior || "_Optional: describe what you expected to see._"
+        ];
+        const params = new URLSearchParams();
+        params.set("title", title);
+        params.set("body", bodyLines.join("\\n"));
+        params.set("labels", "bug,dashboard");
+        return `${repoUrl}?${params.toString()}`;
+      }
+      if (openBugBtn && bugModal) {
+        openBugBtn.addEventListener("click", () => {
+          const diag = getBugDiagnosticsObject();
+          const diagEl = document.getElementById("bug-modal-diagnostics");
+          if (diagEl) {
+            diagEl.textContent =
+              `Page: ${diag.page}\\nResource/Cell: ${diag.resource}\\nActive Tab/Mode: ${diag.domainTab}\\nFilter: ${diag.qcFilter}\\nQuery: ${diag.queryString}`;
+          }
+          const statusEl = document.getElementById("bug-modal-status");
+          if (statusEl) statusEl.classList.add("hidden");
+          bugModal.classList.remove("hidden");
+        });
+      }
+      ["btn-close-bug-modal", "btn-cancel-bug-modal"].forEach(id => {
+        const el = document.getElementById(id);
+        if (el && bugModal) el.addEventListener("click", () => bugModal.classList.add("hidden"));
+      });
+      const submitUrlBtn = document.getElementById("btn-submit-github-url");
+      if (submitUrlBtn) {
+        submitUrlBtn.addEventListener("click", () => {
+          const diag = getBugDiagnosticsObject();
+          const issueUrl = buildGitHubBugIssueUrl({
+            title: (document.getElementById("bug-modal-title") || {}).value || "",
+            category: (document.getElementById("bug-modal-category") || {}).value || "UI / Chart Rendering Bug",
+            description: (document.getElementById("bug-modal-desc") || {}).value || "",
+            expectedBehavior: (document.getElementById("bug-modal-expected") || {}).value || "",
+            ...diag
+          });
+          window.open(issueUrl, "_blank", "noopener");
+          if (bugModal) bugModal.classList.add("hidden");
+        });
+      }
+      const submitApiBtn = document.getElementById("btn-submit-github-api");
+      if (submitApiBtn) {
+        submitApiBtn.addEventListener("click", async () => {
+          const diag = getBugDiagnosticsObject();
+          const payload = {
+            title: (document.getElementById("bug-modal-title") || {}).value || "BioCirV Dashboard Bug Report",
+            category: (document.getElementById("bug-modal-category") || {}).value || "UI / Chart Rendering Bug",
+            description: (document.getElementById("bug-modal-desc") || {}).value || "",
+            expected_behavior: (document.getElementById("bug-modal-expected") || {}).value || "",
+            page: diag.page,
+            resource: diag.resource,
+            domain_tab: diag.domainTab,
+            qc_filter: diag.qcFilter,
+            query_string: diag.queryString,
+            create_via_api: true
+          };
+          const statusEl = document.getElementById("bug-modal-status");
+          if (statusEl) {
+            statusEl.className = "text-xs font-mono p-2 rounded-lg badge-info";
+            statusEl.textContent = "⏳ Submitting issue via /v1/qc/github-issue...";
+            statusEl.classList.remove("hidden");
+          }
+          try {
+            const apiBase = window.BIOCIRV_API_BASE || "http://localhost:8000";
+            const resp = await fetch(`${apiBase}/v1/qc/github-issue`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            if (resp.ok) {
+              const data = await resp.json();
+              if (data.created_via_api) {
+                if (statusEl) {
+                  statusEl.className = "text-xs font-mono p-2.5 rounded-lg badge-pass";
+                  statusEl.innerHTML = `✓ GitHub Issue #${escapeHtml(data.issue_number ?? "")} created! <a href="${escapeHtml(data.issue_url ?? "")}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue &rarr;</a>`;
+                  statusEl.classList.remove("hidden");
+                }
+                return;
+              }
+              if (data.issue_url) {
+                window.open(data.issue_url, "_blank", "noopener");
+                if (bugModal) bugModal.classList.add("hidden");
+                return;
+              }
+            }
+          } catch (_err) {
+            // Offline fallback
+          }
+          const fallbackUrl = buildGitHubBugIssueUrl({
+            title: payload.title,
+            category: payload.category,
+            description: payload.description,
+            expectedBehavior: payload.expected_behavior,
+            ...diag
+          });
+          window.open(fallbackUrl, "_blank", "noopener");
+          if (bugModal) bugModal.classList.add("hidden");
+        });
+      }
+    })();
 
     renderAll();
   </script>

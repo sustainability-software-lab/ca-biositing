@@ -701,3 +701,168 @@ def test_click_point_audit_tooltip_and_replicate_mean_sd_controls(
     assert 'id="btn-xlayout-by_field_sample"' in p3_html
     assert 'id="btn-xlayout-by_experiment"' in p3_html
     assert "function buildReplicateGroupsMap(" in p3_html
+
+
+def test_report_a_bug_modal_executes_and_opens_across_dashboard_suite(
+    sample_raw_payload: dict,
+    sample_insights_sidecar: dict,
+    tmp_path: Path,
+) -> None:
+    """Verify the full page <script> executes without TDZ/DOM errors and opens #modal-report-bug across pages."""
+    import re
+    import shutil
+    import subprocess
+
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node not available")
+
+    from analysis.metadata.resource_audit_workbench import (
+        build_workbench_payload,
+        render_workbench_html,
+    )
+    from scripts.generate_dashboard_gallery import generate_gallery
+
+    base_bundle = prepare_dashboard_payload(sample_raw_payload, sample_insights_sidecar)
+    p1_html = build_analysis_dashboard_html(base_bundle)
+    p2_html = build_qc_outlier_dashboard_html(base_bundle)
+    p3_html = build_full_dashboard_html(base_bundle)
+    p4_html = render_workbench_html(build_workbench_payload(sample_raw_payload))
+    gallery_path, _ = generate_gallery(base_dir=str(tmp_path), output_dir=str(tmp_path))
+    gallery_html = Path(gallery_path).read_text(encoding="utf-8")
+
+    dom_harness = """
+const elements = {};
+function makeEl(id) {
+  return {
+    id,
+    value: "",
+    textContent: "",
+    innerHTML: "",
+    className: id === "modal-report-bug" ? "hidden" : "",
+    style: {},
+    dataset: {},
+    checked: false,
+    disabled: false,
+    options: Array.from({ length: 8 }, () => ({ textContent: "" })),
+    listeners: {},
+    classList: {
+      _set: new Set(id === "modal-report-bug" ? ["hidden"] : []),
+      add(...cls) { cls.forEach(c => this._set.add(c)); },
+      remove(...cls) { cls.forEach(c => this._set.delete(c)); },
+      toggle(c, force) {
+        if (force === undefined) {
+          if (this._set.has(c)) { this._set.delete(c); return false; }
+          this._set.add(c); return true;
+        }
+        if (force) this._set.add(c); else this._set.delete(c);
+        return !!force;
+      },
+      contains(c) { return this._set.has(c); }
+    },
+    addEventListener(evt, fn) {
+      if (!this.listeners[evt]) this.listeners[evt] = [];
+      this.listeners[evt].push(fn);
+    },
+    setAttribute(k, v) { this[k] = v; },
+    getAttribute(k) { return this[k] || null; },
+    appendChild() {},
+    removeChild() {},
+    insertBefore() {},
+    querySelector() { return makeEl("qs"); },
+    querySelectorAll() { return []; },
+    closest() { return null; },
+    parentElement: { clientWidth: 800, clientHeight: 400, getBoundingClientRect() { return { width: 800, height: 400, top: 0, left: 0 }; } },
+    getContext() {
+      return new Proxy({}, {
+        get(_t, prop) {
+          if (prop === "measureText") return () => ({ width: 50 });
+          if (prop === "createLinearGradient") return () => ({ addColorStop() {} });
+          return () => {};
+        }
+      });
+    },
+    getBoundingClientRect() { return { width: 800, height: 400, top: 0, left: 0 }; },
+    click() {
+      (this.listeners["click"] || []).forEach(fn => fn({ preventDefault(){}, stopPropagation(){}, target: this }));
+    }
+  };
+}
+let openedUrls = [];
+global.window = global;
+window.addEventListener = () => {};
+window.dispatchEvent = () => {};
+window.CustomEvent = class { constructor(t, o) { this.type = t; this.detail = o && o.detail; } };
+window.location = { search: "?resource=Almond+hulls", href: "http://localhost:8000/test", pathname: "/test", origin: "http://localhost:8000" };
+window.history = { replaceState() {}, pushState() {} };
+window.open = (url) => { openedUrls.push(url); };
+window.localStorage = { getItem() { return null; }, setItem() {}, removeItem() {} };
+window.matchMedia = () => ({ matches: false, addEventListener() {} });
+window.requestAnimationFrame = (cb) => cb();
+window.URL = { createObjectURL() { return "blob:test"; }, revokeObjectURL() {} };
+global.Blob = class {};
+global.BroadcastChannel = class { postMessage() {} close() {} };
+global.Plotly = { newPlot() {}, react() {}, purge() {}, Plots: { resize() {} }, downloadImage() {} };
+global.fetch = async () => ({ ok: false, status: 503, json: async () => ({}) });
+global.document = {
+  documentElement: makeEl("html"),
+  body: makeEl("body"),
+  head: makeEl("head"),
+  getElementById(id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelector() { return makeEl("qs"); },
+  querySelectorAll() { return []; },
+  createElement(tag) { return makeEl(tag); },
+  addEventListener() {}
+};
+global.navigator = { clipboard: { writeText: async () => {} } };
+"""
+    verify_tail = """
+const openBtn = document.getElementById("btn-open-bug-modal");
+const bugModal = document.getElementById("modal-report-bug");
+const submitUrlBtn = document.getElementById("btn-submit-github-url");
+const hasClickListener = Boolean(openBtn.listeners["click"] && openBtn.listeners["click"].length > 0);
+openBtn.click();
+const openedModal = !bugModal.classList.contains("hidden");
+const diagText = document.getElementById("bug-modal-diagnostics").textContent;
+submitUrlBtn.click();
+const closedModal = bugModal.classList.contains("hidden");
+process.stdout.write(JSON.stringify({
+  hasClickListener,
+  openedModal,
+  closedModal,
+  diagText,
+  openedUrl: openedUrls[0] || ""
+}));
+"""
+
+    pages = [
+        ("Page 1", p1_html),
+        ("Page 2", p2_html),
+        ("Page 3", p3_html),
+        ("Page 4", p4_html),
+        ("5-Product Portal Gallery", gallery_html),
+    ]
+    for expected_label, html_doc in pages:
+        assert 'id="btn-open-bug-modal"' in html_doc
+        assert 'id="modal-report-bug"' in html_doc
+        assert ".hidden { display: none !important; }" in html_doc
+        scripts = re.findall(r"<script(?![^>]*src=)[^>]*>(.*?)</script>", html_doc, flags=re.S)
+        assert scripts, f"{expected_label} missing inline script"
+        proc = subprocess.run(
+            [node_bin, "-"],
+            input=dom_harness + "\n" + scripts[-1] + "\n" + verify_tail,
+            text=True,
+            capture_output=True,
+            check=False,
+            timeout=20,
+        )
+        assert proc.returncode == 0, f"{expected_label} script crashed in Node: {proc.stderr}"
+        out = json.loads(proc.stdout.strip().splitlines()[-1])
+        assert out["hasClickListener"] is True, f"{expected_label} #btn-open-bug-modal listener not bound"
+        assert out["openedModal"] is True, f"{expected_label} #modal-report-bug did not open on click"
+        assert out["closedModal"] is True, f"{expected_label} #modal-report-bug did not close on submit"
+        assert expected_label in out["diagText"]
+        assert "/issues/new?" in out["openedUrl"]

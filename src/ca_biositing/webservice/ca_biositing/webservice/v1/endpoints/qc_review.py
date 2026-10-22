@@ -7,8 +7,11 @@ coupling to CalBioScape endpoints or `ca_biositing.pipeline`.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 import os
 from typing import Annotated, Any
+from urllib.parse import urlencode
+import urllib.request
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, Response, status
 from fastapi.responses import PlainTextResponse
@@ -711,3 +714,97 @@ def sync_pending_decisions_batch_endpoint(
         admin_email=admin.email,
         decision_ids=decision_ids,
     )
+
+
+class GitHubIssueRequest(BaseModel):
+    """Request payload for `/v1/qc/github-issue` from the dashboard Report a Bug modal."""
+
+    title: str = Field(default="BioCirV Dashboard Bug Report")
+    category: str = Field(default="UI / Chart Rendering Bug")
+    description: str = Field(default="")
+    expected_behavior: str = Field(default="")
+    page: str = Field(default="Dashboard")
+    resource: str = Field(default="all")
+    domain_tab: str = Field(default="overview")
+    qc_filter: str = Field(default="pass")
+    query_string: str = Field(default="(none)")
+    create_via_api: bool = Field(default=True)
+
+
+@router.post("/github-issue")
+def create_github_bug_issue(payload: GitHubIssueRequest) -> dict[str, Any]:
+    """Create a GitHub issue via REST API when `GITHUB_TOKEN` is set, or return a pre-filled issue URL."""
+    repo = os.getenv("GITHUB_REPO", "uw-ssec/ca-biositing").strip() or "uw-ssec/ca-biositing"
+    clean_title = payload.title.strip() or f"[Dashboard Bug] {payload.category} on {payload.page}"
+    now_iso = datetime.now(timezone.utc).isoformat()
+    body_lines = [
+        "### Dashboard Bug / Data QC Report",
+        "",
+        f"- **Category:** {payload.category}",
+        f"- **Dashboard Page:** {payload.page}",
+        f"- **Active Resource:** `{payload.resource}`",
+        f"- **Active Tab / Domain:** `{payload.domain_tab}`",
+        f"- **Active QC Filter:** `{payload.qc_filter}`",
+        f"- **URL Query State:** `{payload.query_string}`",
+        f"- **Timestamp (UTC):** `{now_iso}`",
+        "",
+        "### Observed Behavior / Steps to Reproduce",
+        payload.description.strip() or "_Please describe what happened..._",
+        "",
+        "### Expected Behavior",
+        payload.expected_behavior.strip() or "_Optional: describe what you expected to see._",
+    ]
+    body_markdown = "\n".join(body_lines)
+    query = urlencode(
+        {
+            "title": clean_title,
+            "body": body_markdown,
+            "labels": "bug,dashboard",
+        }
+    )
+    fallback_url = f"https://github.com/{repo}/issues/new?{query}"
+
+    github_token = (os.getenv("GITHUB_TOKEN") or "").strip()
+    if not payload.create_via_api or not github_token:
+        return {
+            "status": "ok",
+            "created_via_api": False,
+            "issue_url": fallback_url,
+            "api_error": "GITHUB_TOKEN not configured" if not github_token else "create_via_api disabled",
+        }
+
+    api_url = f"https://api.github.com/repos/{repo}/issues"
+    req_data = json.dumps(
+        {
+            "title": clean_title,
+            "body": body_markdown,
+            "labels": ["bug", "dashboard"],
+        }
+    ).encode("utf-8")
+    req = urllib.request.Request(
+        api_url,
+        data=req_data,
+        headers={
+            "Authorization": f"Bearer {github_token}",
+            "Accept": "application/vnd.github+json",
+            "Content-Type": "application/json",
+            "User-Agent": "ca-biositing-qc-portal",
+        },
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+            resp_payload = json.loads(resp.read().decode("utf-8"))
+            return {
+                "status": "ok",
+                "created_via_api": True,
+                "issue_number": resp_payload.get("number"),
+                "issue_url": resp_payload.get("html_url") or fallback_url,
+            }
+    except Exception as exc:
+        return {
+            "status": "ok",
+            "created_via_api": False,
+            "issue_url": fallback_url,
+            "api_error": str(exc),
+        }

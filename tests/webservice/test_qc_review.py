@@ -405,3 +405,33 @@ def test_stage2_gsheet_sync_rbac_idempotency_and_re_edit_reset(
     assert backslash_sync_body["synced_to_gsheet"] is True
     assert backslash_sync_body["sheet_note"].count(f"[QC_AUDIT id={decision_id}") == 1
     assert backslash_note in backslash_sync_body["sheet_note"]
+
+
+def test_github_issue_endpoint_fallback_and_api(
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify POST /v1/qc/github-issue returns pre-populated fallback URL when GITHUB_TOKEN is unset."""
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+
+    resp = client.post(
+        "/v1/qc/github-issue",
+        json={
+            "title": "Ash outlier whisker clipping",
+            "category": "UI / Chart Rendering Bug",
+            "description": "Box whisker is clipped on Page 1",
+            "expected_behavior": "Full whisker visible",
+            "page": "Page 1 — Characterization & AI Brief",
+            "resource": "Almond hulls",
+            "domain_tab": "proximate",
+            "qc_filter": "pass",
+            "query_string": "?resource=Almond+hulls",
+            "create_via_api": True,
+        },
+    )
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["status"] == "ok"
+    assert data["created_via_api"] is False
+    assert "issues/new?" in data["issue_url"]
+    assert "Ash+outlier+whisker+clipping" in data["issue_url"]
