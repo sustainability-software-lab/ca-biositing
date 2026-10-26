@@ -125,6 +125,27 @@ class WebServiceConfig(BaseSettings):
         ),
     )
 
+    # Open public dataset (/v1/public) IP rate limit (requests per 60-second window)
+    public_rate_limit_per_minute: int = Field(
+        default=120,
+        ge=1,
+        validation_alias=AliasChoices(
+            "public_rate_limit_per_minute",
+            "API_PUBLIC_RATE_LIMIT_PER_MINUTE",
+            "PUBLIC_RATE_LIMIT_PER_MINUTE",
+        ),
+    )
+    # Only trust X-Forwarded-For when deployed behind a trusted reverse proxy
+    # (e.g. Cloud Run / GFE) that appends the real client IP as the rightmost hop.
+    public_rate_limit_trust_x_forwarded_for: bool = Field(
+        default=False,
+        validation_alias=AliasChoices(
+            "public_rate_limit_trust_x_forwarded_for",
+            "API_PUBLIC_RATE_LIMIT_TRUST_X_FORWARDED_FOR",
+            "PUBLIC_RATE_LIMIT_TRUST_X_FORWARDED_FOR",
+        ),
+    )
+
 
 # Global configuration instance
 config = WebServiceConfig()
