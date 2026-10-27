@@ -52,13 +52,13 @@ class TestCountyAgReportTransform:
         })
 
         with patch('ca_biositing.pipeline.etl.transform.analysis.county_ag_report_record.normalize_dataframes') as mock_normalize:
-            # Create a normalized DataFrame
+            # Create a normalized DataFrame matching normalize_dataframes output (*_id suffix)
             normalized_df = pd.DataFrame({
                 'record_id': ['pc-001-merced-2023', 'pc-001-merced-2024'],
                 'geoid': ['06047', '06047'],
-                'primary_ag_product_id': [1, 1],
+                'primary_product_id': [1, 1],
                 'data_year': [2023, 2024],
-                'data_source_id': [1, 5],
+                'data_source_name_id': [1, 5],
                 'produced_nsjv': [True, True],
                 'processed_nsjv': [True, True],
             })
@@ -73,45 +73,64 @@ class TestCountyAgReportTransform:
                 lineage_group_id=1
             )
 
+            # Verify name-based normalization input
+            call_df, call_cols = mock_normalize.call_args[0]
+            assert "data_source_name" in call_cols
+            assert list(call_df["data_source_name"]) == [
+                "merced county 2023 report on agriculture",
+                "merced county 2024 report on agriculture",
+            ]
+
             assert result is not None
             assert not result.empty
             assert 'record_id' in result.columns
+            assert 'data_source_id' in result.columns
+            assert list(result['data_source_id']) == [1, 5]
             assert result.iloc[0]['record_id'] == 'pc-001-merced-2023'
             assert bool(result.iloc[0]['produced_nsjv']) is True
 
     def test_transform_observations_returns_dataframe(self):
-        """Test that observation transform correctly melts wide data."""
+        """Test that observation transform correctly melts wide data and resolves dataset_name by name."""
         from ca_biositing.pipeline.etl.transform.analysis import county_ag_report_observation
 
         metrics_data = pd.DataFrame({
             'Prod_Nbr': ['pc-001'],
             'Data_Year': [2023],
             'Prodn_Merced': [100],
-            'Value_$M_Merced': [50],
+            'Value_M_Merced': [50],
+            'Prodn_SanJoaquin': [200],
         })
 
         with patch('ca_biositing.pipeline.etl.transform.analysis.county_ag_report_observation.normalize_dataframes') as mock_normalize:
-            # Resulting melted data should have 2 observations (production and value)
+            # Resulting melted data should have 3 observations (Merced prodn + value, San Joaquin prodn)
             normalized_df = pd.DataFrame({
-                'record_id': ['pc-001-merced-2023', 'pc-001-merced-2023'],
-                'parameter_id': [79, 80],
-                'unit_id': [1, 2],
-                'value': [100.0, 50.0],
+                'record_id': ['pc-001-merced-2023', 'pc-001-merced-2023', 'pc-001-sanjoaquin-2023'],
+                'parameter_name_id': [79, 80, 79],
+                'unit_name_id': [1, 2, 1],
+                'dataset_name_id': [1, 1, 2],
+                'value': [100.0, 50.0, 200.0],
             })
             mock_normalize.return_value = [normalized_df]
 
-            # Mock database lookup for datasets
-            with patch('ca_biositing.pipeline.utils.engine.get_engine'):
-                with patch('sqlalchemy.text'):
-                    result = county_ag_report_observation.transform_county_ag_report_observations.fn(
-                        data_sources={"pp_production_value": metrics_data},
-                        etl_run_id="test-run",
-                        lineage_group_id=1
-                    )
+            result = county_ag_report_observation.transform_county_ag_report_observations.fn(
+                data_sources={"pp_production_value": metrics_data},
+                etl_run_id="test-run",
+                lineage_group_id=1
+            )
+
+            call_df, call_cols = mock_normalize.call_args[0]
+            assert "dataset_name" in call_cols
+            assert list(call_df["dataset_name"]) == [
+                "MERCED_COUNTY_2023_REPORT_ON_AGRICULTURE",
+                "MERCED_COUNTY_2023_REPORT_ON_AGRICULTURE",
+                "SAN_JOAQUIN_COUNTY_CROP_REPORT_2023",
+            ]
 
             assert result is not None
-            assert len(result) == 2
+            assert len(result) == 3
             assert 'record_id' in result.columns
+            assert 'dataset_id' in result.columns
+            assert list(result['dataset_id']) == [1, 1, 2]
             assert 'value' in result.columns
 
     def test_transform_data_sources_filters_placeholder_rows(self):

@@ -64,7 +64,9 @@ def pulumi_program():
 
     # 3. Secrets: DB password, GSheets credentials, read-only user passwords
     secret_resources = create_secrets(
-        sql, depends_on=[api_services["secretmanager"]]
+        sql,
+        depends_on=[api_services["secretmanager"]],
+        service_accounts=iam.service_accounts,
     )
 
     # 4.5. Storage: GCS buckets

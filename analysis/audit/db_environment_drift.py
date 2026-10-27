@@ -34,6 +34,7 @@ import os
 from pathlib import Path
 import re
 import statistics
+import sys
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -431,7 +432,11 @@ DEFAULT_ENV_CONFIGS = {
         "database": os.environ.get("DB_NAME_PROD", "biocirv-production"),
         "user": os.environ.get("DB_USER_PROD", "biocirv_user"),
         "password": os.environ.get(
-            "DB_PASSWORD_PROD", os.environ.get("BIOCIRV_PRODUCTION_USER_PW", "")
+            "DB_PASSWORD_PROD",
+            os.environ.get(
+                "BIOCIRV_PROD_USER_PW",
+                os.environ.get("BIOCIRV_PRODUCTION_USER_PW", ""),
+            ),
         ),
         "label": "Production (Cloud SQL :5435)",
     },
@@ -567,6 +572,27 @@ def load_db_reset_config() -> dict[str, dict[str, Any]]:
             pass
     else:
         configs["staging"]["host"] = "127.0.0.1"
+        if not configs["staging"].get("user"):
+            configs["staging"]["user"] = "biocirv_user"
+
+    if "DB_HOST_STAGING" in env_map and env_map["DB_HOST_STAGING"]:
+        raw_stg_host = env_map["DB_HOST_STAGING"]
+        configs["staging"]["host"] = (
+            "127.0.0.1" if raw_stg_host in ("db", "localhost") else raw_stg_host
+        )
+    if "DB_PORT_STAGING" in env_map:
+        try:
+            configs["staging"]["port"] = int(env_map["DB_PORT_STAGING"])
+        except ValueError:
+            pass
+    if "DB_NAME_STAGING" in env_map and env_map["DB_NAME_STAGING"]:
+        configs["staging"]["database"] = env_map["DB_NAME_STAGING"]
+    if "DB_USER_STAGING" in env_map and env_map["DB_USER_STAGING"]:
+        configs["staging"]["user"] = env_map["DB_USER_STAGING"]
+    if "DB_PASSWORD_STAGING" in env_map and env_map["DB_PASSWORD_STAGING"] != "":
+        configs["staging"]["password"] = env_map["DB_PASSWORD_STAGING"]
+    elif "BIOCIRV_STAGING_USER_PW" in env_map and env_map["BIOCIRV_STAGING_USER_PW"] != "":
+        configs["staging"]["password"] = env_map["BIOCIRV_STAGING_USER_PW"]
 
     prod_url_str = env_map.get("AUDITOR_PRODUCTION_DATABASE_URL") or env_map.get(
         "AUDITOR_PROD_DATABASE_URL"
@@ -587,15 +613,29 @@ def load_db_reset_config() -> dict[str, dict[str, Any]]:
             pass
     else:
         configs["production"]["host"] = "127.0.0.1"
-        configs["production"]["port"] = int(env_map.get("DB_PORT_PROD", 5435))
-        configs["production"]["database"] = env_map.get(
-            "DB_NAME_PROD", "biocirv-production"
+        if not configs["production"].get("user"):
+            configs["production"]["user"] = "biocirv_user"
+
+    if "DB_HOST_PROD" in env_map and env_map["DB_HOST_PROD"]:
+        raw_prod_host = env_map["DB_HOST_PROD"]
+        configs["production"]["host"] = (
+            "127.0.0.1" if raw_prod_host in ("db", "localhost") else raw_prod_host
         )
-        configs["production"]["user"] = env_map.get("DB_USER_PROD", "biocirv_user")
-        if "DB_PASSWORD_PROD" in env_map or "BIOCIRV_PRODUCTION_USER_PW" in env_map:
-            configs["production"]["password"] = env_map.get(
-                "DB_PASSWORD_PROD", env_map.get("BIOCIRV_PRODUCTION_USER_PW", "")
-            )
+    if "DB_PORT_PROD" in env_map:
+        try:
+            configs["production"]["port"] = int(env_map["DB_PORT_PROD"])
+        except ValueError:
+            pass
+    if "DB_NAME_PROD" in env_map and env_map["DB_NAME_PROD"]:
+        configs["production"]["database"] = env_map["DB_NAME_PROD"]
+    if "DB_USER_PROD" in env_map and env_map["DB_USER_PROD"]:
+        configs["production"]["user"] = env_map["DB_USER_PROD"]
+    if "DB_PASSWORD_PROD" in env_map and env_map["DB_PASSWORD_PROD"] != "":
+        configs["production"]["password"] = env_map["DB_PASSWORD_PROD"]
+    elif "BIOCIRV_PROD_USER_PW" in env_map and env_map["BIOCIRV_PROD_USER_PW"] != "":
+        configs["production"]["password"] = env_map["BIOCIRV_PROD_USER_PW"]
+    elif "BIOCIRV_PRODUCTION_USER_PW" in env_map and env_map["BIOCIRV_PRODUCTION_USER_PW"] != "":
+        configs["production"]["password"] = env_map["BIOCIRV_PRODUCTION_USER_PW"]
 
     return configs
 
@@ -691,6 +731,7 @@ def _build_unmeasured_fingerprint(
         "environment": env_key,
         "label": cfg.get("label", env_key),
         "is_measured": False,
+        "query_errors": [],
         "capture_mode": "unmeasured_offline",
         "capture_badge": f"Unmeasured — Proxy/DB Offline ({cfg['host']}:{cfg['port']}/{cfg['database']})",
         "unmeasured_reason": reason,
@@ -818,6 +859,7 @@ def extract_live_fingerprint(
     try:
         engine = create_engine(url_obj, pool_pre_ping=True, connect_args={"connect_timeout": 10})
         with engine.connect() as conn:
+            query_errors: list[str] = []
             try:
                 alembic_ver = (
                     conn.execute(text("SELECT version_num FROM public.alembic_version LIMIT 1")).scalar()
@@ -827,33 +869,49 @@ def extract_live_fingerprint(
                 conn.rollback()
                 alembic_ver = "unknown"
 
-            table_count = (
-                conn.execute(
-                    text(
-                        "SELECT COUNT(*) FROM information_schema.tables "
-                        "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
-                    )
-                ).scalar()
-                or 0
-            )
-            total_cols = (
-                conn.execute(
-                    text("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public'")
-                ).scalar()
-                or 0
-            )
+            try:
+                table_count = (
+                    conn.execute(
+                        text(
+                            "SELECT COUNT(*) FROM information_schema.tables "
+                            "WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
+                        )
+                    ).scalar()
+                    or 0
+                )
+            except Exception as exc:
+                conn.rollback()
+                table_count = 0
+                query_errors.append(f"layer1:information_schema.tables: {exc}")
+
+            try:
+                total_cols = (
+                    conn.execute(
+                        text("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = 'public'")
+                    ).scalar()
+                    or 0
+                )
+            except Exception as exc:
+                conn.rollback()
+                total_cols = 0
+                query_errors.append(f"layer1:information_schema.columns: {exc}")
 
             tables_schema: dict[str, Any] = {}
             core_counts: dict[str, int] = {}
             table_columns_map: dict[str, set[str]] = {}
             for t_name, cat, default_cols, has_qc in CORE_TABLE_METADATA:
-                cols = conn.execute(
-                    text(
-                        "SELECT column_name, data_type FROM information_schema.columns "
-                        "WHERE table_schema = 'public' AND table_name = :t ORDER BY ordinal_position"
-                    ),
-                    {"t": t_name},
-                ).all()
+                try:
+                    cols = conn.execute(
+                        text(
+                            "SELECT column_name, data_type FROM information_schema.columns "
+                            "WHERE table_schema = 'public' AND table_name = :t ORDER BY ordinal_position"
+                        ),
+                        {"t": t_name},
+                    ).all()
+                except Exception as exc:
+                    conn.rollback()
+                    cols = []
+                    query_errors.append(f"layer1:columns:{t_name}: {exc}")
                 col_names = [str(c[0]) for c in cols]
                 table_columns_map[t_name] = set(col_names)
                 col_sig = ",".join(f"{c[0]}:{c[1]}" for c in cols)
@@ -865,27 +923,35 @@ def extract_live_fingerprint(
                     "schema_hash": _short_hash(f"{t_name}:{col_sig}"),
                 }
                 try:
-                    cnt = conn.execute(text(f"SELECT COUNT(*) FROM public.{t_name}")).scalar() or 0
-                except Exception:
+                    raw_cnt = conn.execute(text(f"SELECT COUNT(*) FROM public.{t_name}")).scalar()
+                    cnt = int(raw_cnt) if raw_cnt is not None else 0
+                except Exception as exc:
                     conn.rollback()
-                    cnt = 0
+                    cnt = -1
+                    query_errors.append(f"table:{t_name}: {exc}")
+                    tables_schema[t_name]["query_error"] = str(exc)
                 core_counts[t_name] = int(cnt)
 
             # Views & Materialized Views + Column Schema Guard Introspection
-            view_cols_rows = conn.execute(
-                text(
-                    "SELECT n.nspname AS schema_name, c.relname AS view_name, "
-                    "a.attnum AS ordinal_position, a.attname AS column_name, "
-                    "pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type "
-                    "FROM pg_catalog.pg_attribute a "
-                    "JOIN pg_catalog.pg_class c ON a.attrelid = c.oid "
-                    "JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid "
-                    "WHERE n.nspname IN ('ca_biositing', 'data_portal') "
-                    "AND c.relkind IN ('v', 'm') "
-                    "AND a.attnum > 0 AND NOT a.attisdropped "
-                    "ORDER BY n.nspname, c.relname, a.attnum"
-                )
-            ).all()
+            try:
+                view_cols_rows = conn.execute(
+                    text(
+                        "SELECT n.nspname AS schema_name, c.relname AS view_name, "
+                        "a.attnum AS ordinal_position, a.attname AS column_name, "
+                        "pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type "
+                        "FROM pg_catalog.pg_attribute a "
+                        "JOIN pg_catalog.pg_class c ON a.attrelid = c.oid "
+                        "JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid "
+                        "WHERE n.nspname IN ('ca_biositing', 'data_portal') "
+                        "AND c.relkind IN ('v', 'm') "
+                        "AND a.attnum > 0 AND NOT a.attisdropped "
+                        "ORDER BY n.nspname, c.relname, a.attnum"
+                    )
+                ).all()
+            except Exception as exc:
+                conn.rollback()
+                view_cols_rows = []
+                query_errors.append(f"layer1:view_columns: {exc}")
             live_view_cols: dict[str, list[dict[str, Any]]] = {}
             for sch_n, vw_n, _, col_n, dtype in view_cols_rows:
                 qk = f"{sch_n}.{vw_n}"
@@ -898,13 +964,18 @@ def extract_live_fingerprint(
                     }
                 )
 
-            mvs_rows = conn.execute(
-                text(
-                    "SELECT schemaname, matviewname, ispopulated, definition "
-                    "FROM pg_matviews WHERE schemaname IN ('ca_biositing', 'data_portal') "
-                    "ORDER BY schemaname, matviewname"
-                )
-            ).all()
+            try:
+                mvs_rows = conn.execute(
+                    text(
+                        "SELECT schemaname, matviewname, ispopulated, definition "
+                        "FROM pg_matviews WHERE schemaname IN ('ca_biositing', 'data_portal') "
+                        "ORDER BY schemaname, matviewname"
+                    )
+                ).all()
+            except Exception as exc:
+                conn.rollback()
+                mvs_rows = []
+                query_errors.append(f"layer1:pg_matviews: {exc}")
             mvs_by_qname = {f"{r[0]}.{r[1]}": (r[0], r[1], bool(r[2]), str(r[3] or "")) for r in mvs_rows}
 
             mvs_schema: dict[str, Any] = {}
@@ -916,16 +987,20 @@ def extract_live_fingerprint(
                 mv_meta = mvs_by_qname.get(v_name)
                 is_pop = mv_meta[2] if mv_meta else False
                 defn = mv_meta[3] if mv_meta else ""
+                view_err: str | None = None
                 try:
-                    cnt = conn.execute(text(f"SELECT COUNT(*) FROM {v_name}")).scalar() or 0
-                except Exception:
+                    raw_v_cnt = conn.execute(text(f"SELECT COUNT(*) FROM {v_name}")).scalar()
+                    cnt = int(raw_v_cnt) if raw_v_cnt is not None else 0
+                except Exception as exc:
                     conn.rollback()
-                    cnt = 0
+                    cnt = -1
+                    view_err = str(exc)
+                    query_errors.append(f"view:{v_name}: {exc}")
                 view_counts[v_name] = int(cnt)
                 col_objs = live_view_cols.get(v_name, [])
                 col_sig = "|".join(f"{c['column_name']}:{c['data_type']}" for c in col_objs)
                 col_hash = _short_hash(f"{v_name}:cols:{col_sig}") if col_objs else "missing"
-                mvs_schema[v_name] = {
+                mv_entry: dict[str, Any] = {
                     "schema": sch_part,
                     "view_name": vw_part,
                     "category": v_cat,
@@ -940,6 +1015,9 @@ def extract_live_fingerprint(
                     "last_refreshed_utc": now_iso,
                     "index_count": 1,
                 }
+                if view_err is not None:
+                    mv_entry["query_error"] = view_err
+                mvs_schema[v_name] = mv_entry
 
             # Layer 3: QC distribution across AIM1_AIM2_TABLES
             qc_enriched: dict[str, Any] = {}
@@ -947,22 +1025,26 @@ def extract_live_fingerprint(
                 t_cols = table_columns_map.get(t_name, set())
                 dist = {"pass": 0, "fail": 0, "other": 0}
                 if "qc_pass" in t_cols:
-                    rows_qc = conn.execute(
-                        text(
-                            f"SELECT LOWER(COALESCE(CAST(qc_pass AS TEXT), 'other')), COUNT(*) "
-                            f"FROM public.{t_name} GROUP BY 1"
-                        )
-                    ).all()
-                    for k_qc, c_qc in rows_qc:
-                        k_str = str(k_qc or "other").lower()
-                        if k_str in ("pass", "true", "t", "1"):
-                            dist["pass"] += int(c_qc)
-                        elif k_str in ("fail", "false", "f", "0"):
-                            dist["fail"] += int(c_qc)
-                        else:
-                            dist["other"] += int(c_qc)
+                    try:
+                        rows_qc = conn.execute(
+                            text(
+                                f"SELECT LOWER(COALESCE(CAST(qc_pass AS TEXT), 'other')), COUNT(*) "
+                                f"FROM public.{t_name} GROUP BY 1"
+                            )
+                        ).all()
+                        for k_qc, c_qc in rows_qc:
+                            k_str = str(k_qc or "other").lower()
+                            if k_str in ("pass", "true", "t", "1"):
+                                dist["pass"] += int(c_qc)
+                            elif k_str in ("fail", "false", "f", "0"):
+                                dist["fail"] += int(c_qc)
+                            else:
+                                dist["other"] += int(c_qc)
+                    except Exception as exc:
+                        conn.rollback()
+                        query_errors.append(f"layer3:qc_pass:{t_name}: {exc}")
                 else:
-                    dist["other"] = core_counts.get(t_name, 0)
+                    dist["other"] = max(core_counts.get(t_name, 0), 0)
                 tot = dist["pass"] + dist["fail"] + dist["other"]
                 qc_enriched[t_name] = {
                     **dist,
@@ -971,52 +1053,77 @@ def extract_live_fingerprint(
                 }
 
             # Lineage sets
-            res_names = [
-                str(r[0])
-                for r in conn.execute(text("SELECT name FROM public.resource WHERE name IS NOT NULL ORDER BY name")).all()
-                if r[0]
-            ]
-            fs_list = [
-                dict(r)
-                for r in conn.execute(
-                    text(
-                        "SELECT fs.name, COALESCE(r.name, 'Unassigned') AS resource_name, "
-                        "COALESCE(p.codename, 'unknown') AS provider "
-                        "FROM public.field_sample fs "
-                        "LEFT JOIN public.resource r ON fs.resource_id = r.id "
-                        "LEFT JOIN public.provider p ON fs.provider_id = p.id "
-                        "WHERE fs.name IS NOT NULL ORDER BY fs.name"
+            try:
+                res_names = [
+                    str(r[0])
+                    for r in conn.execute(
+                        text("SELECT name FROM public.resource WHERE name IS NOT NULL ORDER BY name")
+                    ).all()
+                    if r[0]
+                ]
+            except Exception as exc:
+                conn.rollback()
+                res_names = []
+                query_errors.append(f"layer3:lineage:resource: {exc}")
+
+            try:
+                fs_list = [
+                    dict(r)
+                    for r in conn.execute(
+                        text(
+                            "SELECT fs.name, COALESCE(r.name, 'Unassigned') AS resource_name, "
+                            "COALESCE(p.codename, 'unknown') AS provider "
+                            "FROM public.field_sample fs "
+                            "LEFT JOIN public.resource r ON fs.resource_id = r.id "
+                            "LEFT JOIN public.provider p ON fs.provider_id = p.id "
+                            "WHERE fs.name IS NOT NULL ORDER BY fs.name"
+                        )
                     )
-                )
-                .mappings()
-                .all()
-            ]
-            ps_list = [
-                dict(r)
-                for r in conn.execute(
-                    text(
-                        "SELECT ps.name, COALESCE(r.name, 'Unassigned') AS resource_name, "
-                        "COALESCE(fs.name, 'Unassigned') AS field_sample, "
-                        "COALESCE(pm.name, 'N/A') AS prep_method, "
-                        "COALESCE(p.codename, 'unknown') AS provider "
-                        "FROM public.prepared_sample ps "
-                        "LEFT JOIN public.field_sample fs ON ps.field_sample_id = fs.id "
-                        "LEFT JOIN public.resource r ON fs.resource_id = r.id "
-                        "LEFT JOIN public.provider p ON fs.provider_id = p.id "
-                        "LEFT JOIN public.preparation_method pm ON ps.prep_method_id = pm.id "
-                        "WHERE ps.name IS NOT NULL ORDER BY ps.name"
+                    .mappings()
+                    .all()
+                ]
+            except Exception as exc:
+                conn.rollback()
+                fs_list = []
+                query_errors.append(f"layer3:lineage:field_sample: {exc}")
+
+            try:
+                ps_list = [
+                    dict(r)
+                    for r in conn.execute(
+                        text(
+                            "SELECT ps.name, COALESCE(r.name, 'Unassigned') AS resource_name, "
+                            "COALESCE(fs.name, 'Unassigned') AS field_sample, "
+                            "COALESCE(pm.name, 'N/A') AS prep_method, "
+                            "COALESCE(p.codename, 'unknown') AS provider "
+                            "FROM public.prepared_sample ps "
+                            "LEFT JOIN public.field_sample fs ON ps.field_sample_id = fs.id "
+                            "LEFT JOIN public.resource r ON fs.resource_id = r.id "
+                            "LEFT JOIN public.provider p ON fs.provider_id = p.id "
+                            "LEFT JOIN public.preparation_method pm ON ps.prep_method_id = pm.id "
+                            "WHERE ps.name IS NOT NULL ORDER BY ps.name"
+                        )
                     )
-                )
-                .mappings()
-                .all()
-            ]
-            exp_list = [
-                str(r[0])
-                for r in conn.execute(
-                    text("SELECT name FROM public.experiment WHERE name IS NOT NULL ORDER BY name")
-                ).all()
-                if r[0]
-            ]
+                    .mappings()
+                    .all()
+                ]
+            except Exception as exc:
+                conn.rollback()
+                ps_list = []
+                query_errors.append(f"layer3:lineage:prepared_sample: {exc}")
+
+            try:
+                exp_list = [
+                    str(r[0])
+                    for r in conn.execute(
+                        text("SELECT name FROM public.experiment WHERE name IS NOT NULL ORDER BY name")
+                    ).all()
+                    if r[0]
+                ]
+            except Exception as exc:
+                conn.rollback()
+                exp_list = []
+                query_errors.append(f"layer3:lineage:experiment: {exc}")
 
             # Layer 3 Resource x Analysis Matrix & Layer 4 Parameter Stats from live analytical tables
             resource_matrix: dict[str, dict[str, Any]] = {}
@@ -1099,7 +1206,12 @@ def extract_live_fingerprint(
                     f"FROM public.{short_tbl} rec "
                     f"{res_join}"
                 )
-                rec_rows = conn.execute(text(rec_sql)).all()
+                try:
+                    rec_rows = conn.execute(text(rec_sql)).all()
+                except Exception as exc:
+                    conn.rollback()
+                    rec_rows = []
+                    query_errors.append(f"record_lineage:{short_tbl}: {exc}")
                 by_res: dict[str, dict[str, Any]] = {}
                 for r_name, rec_key, qc_val, ps_name, ts_val in rec_rows:
                     r_str = str(r_name or "Unassigned")
@@ -1145,7 +1257,12 @@ def extract_live_fingerprint(
                     f"LEFT JOIN public.unit u ON o.unit_id = u.id "
                     f"WHERE o.value IS NOT NULL"
                 )
-                obs_rows = conn.execute(text(obs_sql)).all()
+                try:
+                    obs_rows = conn.execute(text(obs_sql)).all()
+                except Exception as exc:
+                    conn.rollback()
+                    obs_rows = []
+                    query_errors.append(f"observation_join:{short_tbl}: {exc}")
                 total_joined_obs += len(obs_rows)
 
                 for r_name, prov_code, qc_val, param_name, unit_name, val_num in obs_rows:
@@ -1242,12 +1359,14 @@ def extract_live_fingerprint(
                     "raw_mean": raw_s["mean"],
                 }
 
-            adv_final = view_counts.get("ca_biositing.analysis_data_view", 0)
-            mv_comp_final = view_counts.get("data_portal.mv_biomass_composition", 0)
-            aim1_aim2_total = sum(core_counts.get(t, 0) for t in AIM1_AIM2_TABLES)
+            adv_final = max(view_counts.get("ca_biositing.analysis_data_view", 0), 0)
+            mv_comp_final = max(view_counts.get("data_portal.mv_biomass_composition", 0), 0)
+            aim1_aim2_total = sum(max(core_counts.get(t, 0), 0) for t in AIM1_AIM2_TABLES)
             active_at_count = sum(1 for t in AIM1_AIM2_TABLES if core_counts.get(t, 0) > 0)
             core_ent_total = sum(
-                core_counts.get(t, 0) for t, cat, _, _ in CORE_TABLE_METADATA if cat == "Core Lineage & Samples"
+                max(core_counts.get(t, 0), 0)
+                for t, cat, _, _ in CORE_TABLE_METADATA
+                if cat == "Core Lineage & Samples"
             )
 
             mig_idx, mig_name = _alembic_migration_index(alembic_ver)
@@ -1258,6 +1377,7 @@ def extract_live_fingerprint(
                 "captured_at": now_iso,
                 "capture_mode": "live_db",
                 "capture_badge": f"Live DB Extracted ({cfg['host']}:{cfg['port']}/{cfg['database']})",
+                "query_errors": query_errors,
                 "connection": {
                     "host": cfg["host"],
                     "port": cfg["port"],
@@ -1293,9 +1413,9 @@ def extract_live_fingerprint(
                         "aim1_aim2_joined_observations": total_joined_obs,
                         "active_analytical_tables": active_at_count,
                         "core_entities": core_ent_total,
-                        "observations": core_counts.get("observation", 0),
-                        "all_core_tables": sum(core_counts.values()),
-                        "all_views": sum(view_counts.values()),
+                        "observations": max(core_counts.get("observation", 0), 0),
+                        "all_core_tables": sum(max(v, 0) for v in core_counts.values()),
+                        "all_views": sum(max(v, 0) for v in view_counts.values()),
                     },
                 },
                 "layer3_coverage_and_lineage": {
@@ -1364,16 +1484,19 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
     for t_name, cat, _, _ in CORE_TABLE_METADATA:
         cnt_a = r2_a["core_tables"].get(t_name, 0)
         cnt_b = r2_b["core_tables"].get(t_name, 0)
-        delta = (cnt_a - cnt_b) if both_measured else 0
+        has_count_err = cnt_a < 0 or cnt_b < 0
+        delta = (cnt_a - cnt_b) if (both_measured and not has_count_err) else 0
         pct = (
             round((delta / cnt_b) * 100.0, 2)
-            if (both_measured and cnt_b > 0)
-            else (100.0 if (both_measured and cnt_a > 0) else 0.0)
+            if (both_measured and not has_count_err and cnt_b > 0)
+            else (100.0 if (both_measured and not has_count_err and cnt_a > 0) else 0.0)
         )
         hash_a = s1_a["tables"].get(t_name, {}).get("schema_hash", "")
         hash_b = s1_b["tables"].get(t_name, {}).get("schema_hash", "")
         if not both_measured:
             status = "UNMEASURED"
+        elif has_count_err:
+            status = "QUERY ERROR"
         elif delta == 0 and hash_a == hash_b:
             status = "SYNCED"
             synced_tables += 1
@@ -1408,11 +1531,12 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
     for v_name, v_cat, _ in ALL_19_VIEWS:
         cnt_a = r2_a["views"].get(v_name, 0)
         cnt_b = r2_b["views"].get(v_name, 0)
-        delta = (cnt_a - cnt_b) if both_measured else 0
+        has_view_count_err = cnt_a < 0 or cnt_b < 0
+        delta = (cnt_a - cnt_b) if (both_measured and not has_view_count_err) else 0
         pct = (
             round((delta / cnt_b) * 100.0, 2)
-            if (both_measured and cnt_b > 0)
-            else (100.0 if (both_measured and cnt_a > 0) else 0.0)
+            if (both_measured and not has_view_count_err and cnt_b > 0)
+            else (100.0 if (both_measured and not has_view_count_err and cnt_a > 0) else 0.0)
         )
         mv_a = s1_a["materialized_views"].get(v_name, {})
         mv_b = s1_b["materialized_views"].get(v_name, {})
@@ -1509,6 +1633,8 @@ def compute_pair_comparison(fp_a: dict[str, Any], fp_b: dict[str, Any]) -> dict[
 
         if not both_measured:
             status = "UNMEASURED"
+        elif has_view_count_err:
+            status = "QUERY ERROR"
         elif not col_schema_match:
             status = "VIEW SCHEMA MISMATCH"
         elif stale_b:
@@ -3931,7 +4057,7 @@ def build_drift_dashboard_html(
     print(f"[compare] Wrote interactive HTML drift dashboard to {output_path} ({output_path.stat().st_size:,} bytes)")
 
 
-def run_compare(base_dir: Path) -> None:
+def run_compare(base_dir: Path) -> dict[str, dict[str, Any]]:
     """Load the 3 environment fingerprints, compute pairwise diffs, and write report + dashboard."""
     fp_dir = base_dir / "audit" / "output" / "env_fingerprints"
     required = ["local", "staging", "production"]
@@ -3958,9 +4084,75 @@ def run_compare(base_dir: Path) -> None:
     dashboard_path = base_dir / "exports" / "plots" / "audit" / "db_environment_drift_dashboard.html"
     generate_markdown_drift_report(fingerprints, comparisons, report_path)
     build_drift_dashboard_html(fingerprints, comparisons, dashboard_path)
+    return fingerprints
 
 
-def main() -> None:
+def _check_readonly_grant_failures(fingerprints: dict[str, dict[str, Any]]) -> list[str]:
+    """Inspect extracted fingerprints for missing SELECT privileges (cnt < 0) or query errors."""
+    failures: list[str] = []
+    expected_tables = [t_name for t_name, _, _, _ in CORE_TABLE_METADATA]
+    for env_key, fp in fingerprints.items():
+        if not fp.get("is_measured", False):
+            err = fp.get("unmeasured_reason") or fp.get("connection_error") or "environment is unmeasured"
+            failures.append(f"[{env_key}] unmeasured: {err}")
+            continue
+        q_errors = fp.get("query_errors") or []
+        for q_err in q_errors:
+            failures.append(f"[{env_key}] query_error: {q_err}")
+        r2 = fp.get("layer2_row_counts") or {}
+        core_tables = r2.get("core_tables") or {}
+        views = r2.get("views") or {}
+        for t_name in expected_tables:
+            cnt = core_tables.get(t_name, -1)
+            if cnt < 0:
+                failures.append(f"[{env_key}] missing SELECT privilege or error on table public.{t_name} (count={cnt})")
+        for v_name, _, _ in ALL_19_VIEWS:
+            cnt = views.get(v_name, -1)
+            if cnt < 0:
+                failures.append(f"[{env_key}] missing SELECT privilege or error on view {v_name} (count={cnt})")
+    return failures
+
+
+def _enforce_cli_verification_gates(args: argparse.Namespace, evaluated_fps: dict[str, dict[str, Any]]) -> None:
+    if not evaluated_fps:
+        return
+    if args.fail_on_unmeasured:
+        unmeasured_envs = [
+            env_k for env_k, fp in evaluated_fps.items() if not fp.get("is_measured", False)
+        ]
+        envs_with_errors = {
+            env_k: fp.get("query_errors", [])
+            for env_k, fp in evaluated_fps.items()
+            if fp.get("query_errors")
+        }
+        if unmeasured_envs or envs_with_errors:
+            if unmeasured_envs:
+                print(
+                    f"[fail-on-unmeasured] ERROR: Unmeasured environments detected: {', '.join(unmeasured_envs)}",
+                    file=sys.stderr,
+                )
+            for env_k, errs in envs_with_errors.items():
+                print(
+                    f"[fail-on-unmeasured] ERROR: Environment '{env_k}' recorded {len(errs)} query error(s):",
+                    file=sys.stderr,
+                )
+                for err in errs:
+                    print(f"  - {err}", file=sys.stderr)
+            sys.exit(2)
+
+    if args.verify_readonly_grants:
+        grant_failures = _check_readonly_grant_failures(evaluated_fps)
+        if grant_failures:
+            print(
+                f"[verify-readonly-grants] ERROR: Readonly grant verification failed ({len(grant_failures)} issue(s)):",
+                file=sys.stderr,
+            )
+            for failure in grant_failures:
+                print(f"  - {failure}", file=sys.stderr)
+            sys.exit(2)
+
+
+def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
         description="BioCirV Multi-Environment PostgreSQL Drift Assessment & Dashboard Generator"
     )
@@ -3968,6 +4160,11 @@ def main() -> None:
         "--extract-env",
         choices=["local", "staging", "production"],
         help="Connect to a live PostgreSQL environment and extract its 4-layer fingerprint JSON",
+    )
+    parser.add_argument(
+        "--extract-envs",
+        nargs="+",
+        help="Connect to one or more live PostgreSQL environments (space- or comma-separated: local, staging, production)",
     )
     parser.add_argument(
         "--extract-all",
@@ -3979,6 +4176,16 @@ def main() -> None:
         action="store_true",
         help="Compare environment fingerprints and generate drift_report.md + db_environment_drift_dashboard.html",
     )
+    parser.add_argument(
+        "--fail-on-unmeasured",
+        action="store_true",
+        help="Exit non-zero (code 2) if any evaluated environment is unmeasured or recorded query_errors",
+    )
+    parser.add_argument(
+        "--verify-readonly-grants",
+        action="store_true",
+        help="Exit non-zero (code 2) if any expected table or view is missing SELECT privilege (cnt < 0) or produced a query error",
+    )
     parser.add_argument("--host", help="Override PostgreSQL host for --extract-env")
     parser.add_argument("--port", type=int, help="Override PostgreSQL port for --extract-env")
     parser.add_argument("--dbname", help="Override PostgreSQL database name for --extract-env")
@@ -3989,18 +4196,40 @@ def main() -> None:
         help="Optional root directory override for output files (defaults to repository root)",
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
     base_dir = Path(args.base_dir).resolve() if args.base_dir else REPO_ROOT
 
-    if not (args.extract_env or args.extract_all or args.compare):
+    if not (args.extract_env or args.extract_envs or args.extract_all or args.compare):
         args.compare = True
+
+    evaluated_fps: dict[str, dict[str, Any]] = {}
 
     if args.extract_all:
         for env_k in ("local", "staging", "production"):
-            extract_live_fingerprint(env_key=env_k, base_dir=base_dir)
+            evaluated_fps[env_k] = extract_live_fingerprint(env_key=env_k, base_dir=base_dir)
+
+    if args.extract_envs:
+        target_envs = [
+            e.strip()
+            for raw_arg in args.extract_envs
+            for e in raw_arg.split(",")
+            if e.strip()
+        ]
+        for env_k in target_envs:
+            if env_k not in ("local", "staging", "production"):
+                parser.error(f"argument --extract-envs: invalid choice: '{env_k}' (choose from 'local', 'staging', 'production')")
+            evaluated_fps[env_k] = extract_live_fingerprint(
+                env_key=env_k,
+                base_dir=base_dir,
+                host=args.host,
+                port=args.port,
+                dbname=args.dbname,
+                user=args.user,
+                password=args.password,
+            )
 
     if args.extract_env:
-        extract_live_fingerprint(
+        evaluated_fps[args.extract_env] = extract_live_fingerprint(
             env_key=args.extract_env,
             base_dir=base_dir,
             host=args.host,
@@ -4010,8 +4239,13 @@ def main() -> None:
             password=args.password,
         )
 
+    if evaluated_fps:
+        _enforce_cli_verification_gates(args, evaluated_fps)
+
     if args.compare:
-        run_compare(base_dir)
+        compare_fps = run_compare(base_dir)
+        evaluated_fps.update(compare_fps)
+        _enforce_cli_verification_gates(args, evaluated_fps)
 
 
 if __name__ == "__main__":

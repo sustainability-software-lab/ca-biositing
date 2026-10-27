@@ -59,23 +59,14 @@ def transform_county_ag_report_observations(
     # 3. Melting Wide Format to Long Format
     counties = ["Merced", "San Joaquin", "Stanislaus"]
 
-    # Mapping for dataset_id (lookup from database)
-    from ca_biositing.pipeline.utils.engine import get_engine
-    from sqlalchemy import text
-    engine = get_engine()
-    dataset_map = {}
-    with engine.connect() as conn:
-        res = conn.execute(text("SELECT id, source_id FROM dataset WHERE record_type = 'county_ag_report_record'"))
-        dataset_map = {row[1]: row[0] for row in res.fetchall() if row[1] is not None}
-
-    # Data source mapping logic (same as record transform)
-    county_ds_map = {
-        ("merced", 2023): 1,
-        ("san joaquin", 2023): 2,
-        ("stanislaus", 2023): 3,
-        ("merced", 2024): 5,
-        ("san joaquin", 2024): 6,
-        ("stanislaus", 2024): 7,
+    # Dataset name mapping (resolved via normalize_dataframes to avoid hardcoded IDs)
+    county_dataset_name_map = {
+        ("merced", 2023): "MERCED_COUNTY_2023_REPORT_ON_AGRICULTURE",
+        ("san joaquin", 2023): "SAN_JOAQUIN_COUNTY_CROP_REPORT_2023",
+        ("stanislaus", 2023): "STANISLAUS_COUNTY_AGRICULTURAL_REPORT_2023",
+        ("merced", 2024): "MERCED_COUNTY_2024_REPORT_ON_AGRICULTURE",
+        ("san joaquin", 2024): "SAN_JOAQUIN_COUNTY_CROP_REPORT_2024",
+        ("stanislaus", 2024): "STANISLAUS_COUNTY_AGRICULTURAL_REPORT_2024",
     }
 
     observations = []
@@ -88,14 +79,14 @@ def transform_county_ag_report_observations(
             continue
 
         for county in counties:
-            county_slug = county.lower().replace(' ', '')
+            county_lower = county.lower().strip()
+            county_slug = county_lower.replace(' ', '')
 
             # Parent record_id matches the one generated in county_ag_report_record transform
             parent_record_id = f"{prod_nbr}-{county_slug}-{int(data_year)}"
 
-            # Determine dataset_id
-            ds_id = county_ds_map.get((county_slug, int(data_year)))
-            dataset_id = dataset_map.get(ds_id)
+            # Determine canonical dataset_name by (county_lower, int(data_year))
+            dataset_name = county_dataset_name_map.get((county_lower, int(data_year)))
 
             # --- Production Observation ---
             prodn_col = f"prodn_{county_slug}"
@@ -113,7 +104,7 @@ def transform_county_ag_report_observations(
                             "parameter_name": "production",
                             "unit_name": "tons",
                             "value": float(val_str),
-                            "dataset_id": dataset_id,
+                            "dataset_name": dataset_name,
                             "note": row.get("prodn_value_note")
                         })
                 except ValueError:
@@ -133,7 +124,7 @@ def transform_county_ag_report_observations(
                             "parameter_name": "value",
                             "unit_name": "$M",
                             "value": float(val_str),
-                            "dataset_id": dataset_id,
+                            "dataset_name": dataset_name,
                             "note": row.get("prodn_value_note")
                         })
                 except ValueError:
@@ -145,20 +136,22 @@ def transform_county_ag_report_observations(
         logger.warning("No observations found after melting wide metrics.")
         return pd.DataFrame()
 
-    # 4. Normalization (Parameter and Unit IDs)
+    # 4. Normalization (Parameter, Unit, and Dataset IDs by name)
     normalize_columns = {
         'parameter_name': (Parameter, 'name'),
         'unit_name': (Unit, 'name'),
+        'dataset_name': (Dataset, 'name'),
     }
 
-    logger.info("Normalizing observations (parameter_id and unit_id)...")
+    logger.info("Normalizing observations (parameter_id, unit_id, and dataset_id)...")
     normalized_dfs = normalize_dataframes(df_obs, normalize_columns)
     df_normalized = normalized_dfs[0]
 
     # Map the output of normalize_dataframes to the expected column names
     rename_map = {
         "parameter_name_id": "parameter_id",
-        "unit_name_id": "unit_id"
+        "unit_name_id": "unit_id",
+        "dataset_name_id": "dataset_id",
     }
     df_normalized = df_normalized.rename(columns=rename_map)
 

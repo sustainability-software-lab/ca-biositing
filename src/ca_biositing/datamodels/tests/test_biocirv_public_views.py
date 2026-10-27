@@ -16,7 +16,7 @@ Covers:
    - `COUNT(DISTINCT ...)` entity counts in `mv_resources` (including `replicate_record_count`).
    - Technical replicate `mean_value` and `std_dev` in `mv_sample_summary` and
      `mv_analytical_summary`.
-4. Alembic migration `0027` isolation (never drops pre-existing `data_portal` or `ca_biositing` views).
+4. Alembic migration `0028` isolation (never drops pre-existing `data_portal` or `ca_biositing` views).
 """
 
 from __future__ import annotations
@@ -166,14 +166,14 @@ def test_mv_samples_compiles_deterministic_ordered_string_agg_on_postgres():
     )
 
 
-def test_migration_0027_is_scoped_exclusively_to_biocirv_public():
-    """Verify migration 0027 does not drop or recreate pre-existing data_portal/ca_biositing views."""
+def test_migration_0028_is_scoped_exclusively_to_biocirv_public():
+    """Verify migration 0028 does not drop or recreate pre-existing data_portal/ca_biositing views."""
     repo_root = Path(__file__).resolve().parents[4]
     migration_path = (
         repo_root
         / "alembic"
         / "versions"
-        / "0027_create_biocirv_public_schema_and_views.py"
+        / "0028_create_biocirv_public_schema_and_views.py"
     )
     content = migration_path.read_text(encoding="utf-8")
 
@@ -194,7 +194,7 @@ def test_migration_0027_is_scoped_exclusively_to_biocirv_public():
     ]
     for view_name in unrelated_views:
         assert view_name not in content, (
-            f"Migration 0027 must not touch unrelated view {view_name}"
+            f"Migration 0028 must not touch unrelated view {view_name}"
         )
     assert "CREATE SCHEMA IF NOT EXISTS biocirv_public" in content
     assert "DROP SCHEMA IF EXISTS biocirv_public" in content

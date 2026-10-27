@@ -19,7 +19,7 @@ on:
           - live_db
           - snapshot
   schedule:
-    - cron: "0 9 * * 1"
+    - cron: "0 9 * * *"
   push:
     branches:
       - main
@@ -58,8 +58,16 @@ on:
       - completed
 
 concurrency:
-  group: dashboard-artifacts-${{ github.ref }}
-  cancel-in-progress: true
+  group: >-
+    dashboard-artifacts-${{ github.ref }}-${{
+      (github.event_name == 'schedule' ||
+       github.event_name == 'workflow_run' ||
+       (github.event_name == 'workflow_dispatch' && inputs.data_source !=
+    'snapshot'))
+      && 'live' || 'snapshot'
+    }}
+  cancel-in-progress:
+    ${{ github.event_name == 'pull_request' || github.event_name == 'push' }}
 
 env:
   FORCE_COLOR: 3
@@ -78,7 +86,7 @@ jobs:
       github.event_name != 'workflow_run' ||
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     permissions:
       contents: read
       id-token: write
@@ -147,18 +155,99 @@ jobs:
           for env_name in local staging production; do
             FP_FILE="audit/output/env_fingerprints/${env_name}_fingerprint.json"
             if [ ! -f "$FP_FILE" ]; then
-              cp tests/fixtures/minimal_env_fingerprint.json "$FP_FILE"
+              pixi run python -c '
+          import json, sys
+          env_name, src_path, dst_path = sys.argv[1], sys.argv[2], sys.argv[3]
+          meta = {
+              "local": ("Local Dev (:5432)", 5432, "biocirv_db"),
+              "staging": ("Staging (Cloud SQL :5434)", 5434, "biocirv-staging"),
+              "production": ("Production (Cloud SQL :5435)", 5435, "biocirv-production"),
+          }[env_name]
+          with open(src_path, "r", encoding="utf-8") as f:
+              fp = json.load(f)
+          fp["environment"] = env_name
+          fp["label"] = meta[0]
+          fp["capture_badge"] = f"Unmeasured \u2014 Proxy/DB Offline (127.0.0.1:{meta[1]}/{meta[2]})"
+          if isinstance(fp.get("connection"), dict):
+              fp["connection"]["port"] = meta[1]
+              fp["connection"]["database"] = meta[2]
+          with open(dst_path, "w", encoding="utf-8") as f:
+              json.dump(fp, f, indent=2)
+          ' "$env_name" "tests/fixtures/minimal_env_fingerprint.json" "$FP_FILE"
               USED_MINIMAL_FIXTURE="true"
               echo "Seeded fallback fingerprint for ${env_name} from tests/fixtures/minimal_env_fingerprint.json"
             fi
           done
-          echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}" >> "$GITHUB_ENV"
+          {
+            echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}"
+            echo "LIVE_SNAPSHOT_EXTRACTED=false"
+            echo "LIVE_STAGING_FP_OK=false"
+            echo "LIVE_PROD_FP_OK=false"
+            echo "DRIFT_EXTRACT_FAILED=false"
+          } >> "$GITHUB_ENV"
+
+      - name: Start Cloud SQL Auth Proxies (live_db mode)
+        if: >-
+          steps.gcp_auth.outcome == 'success' && (github.event_name ==
+          'schedule' ||
+           github.event_name == 'workflow_run' ||
+           (github.event_name == 'workflow_dispatch' && inputs.data_source !=
+          'snapshot'))
+        run: |
+          STAGING_RO_PW="$(gcloud secrets versions access latest --secret=biocirv-staging-ro-biocirv_readonly --project="${GCP_PROJECT_ID}")"
+          PROD_RO_PW="$(gcloud secrets versions access latest --secret=biocirv-production-ro-biocirv_readonly --project="${GCP_PROJECT_ID}")"
+          echo "::add-mask::${STAGING_RO_PW}"
+          echo "::add-mask::${PROD_RO_PW}"
+
+          curl -fsSL -o /tmp/cloud-sql-proxy \
+            https://storage.googleapis.com/cloud-sql-connectors/cloud-sql-proxy/v2.14.3/cloud-sql-proxy.linux.amd64
+          chmod +x /tmp/cloud-sql-proxy
+          /tmp/cloud-sql-proxy --address 127.0.0.1 \
+            "${GCP_PROJECT_ID}:us-west1:biocirv-staging?port=5434" \
+            "${GCP_PROJECT_ID}:us-west1:biocirv-production?port=5435" \
+            >/tmp/cloud-sql-proxy.log 2>&1 &
+          PROXY_PID=$!
+          echo "CLOUDSQL_PROXY_PID=${PROXY_PID}" >> "$GITHUB_ENV"
+
+          for port in 5434 5435; do
+            ready=0
+            for _ in $(seq 1 30); do
+              if nc -z 127.0.0.1 "$port" 2>/dev/null; then
+                ready=1
+                break
+              fi
+              sleep 1
+            done
+            if [ "$ready" -ne 1 ]; then
+              echo "::error::Cloud SQL Auth Proxy failed to listen on 127.0.0.1:${port} within 30s"
+              cat /tmp/cloud-sql-proxy.log || true
+              exit 1
+            fi
+          done
+
+          {
+            echo "POSTGRES_HOST=127.0.0.1"
+            echo "POSTGRES_PORT=5434"
+            echo "POSTGRES_DB=biocirv-staging"
+            echo "POSTGRES_USER=biocirv_readonly"
+            echo "POSTGRES_PASSWORD=${STAGING_RO_PW}"
+            echo "DB_HOST_STAGING=127.0.0.1"
+            echo "DB_PORT_STAGING=5434"
+            echo "DB_NAME_STAGING=biocirv-staging"
+            echo "DB_USER_STAGING=biocirv_readonly"
+            echo "DB_PASSWORD_STAGING=${STAGING_RO_PW}"
+            echo "DB_HOST_PROD=127.0.0.1"
+            echo "DB_PORT_PROD=5435"
+            echo "DB_NAME_PROD=biocirv-production"
+            echo "DB_USER_PROD=biocirv_readonly"
+            echo "DB_PASSWORD_PROD=${PROD_RO_PW}"
+          } >> "$GITHUB_ENV"
 
       - name: Determine Data Source Mode (Live PostgreSQL vs. Baseline Snapshot)
         id: source_mode
         run: |
-          REQUESTED="${{ github.event.inputs.data_source || 'auto' }}"
-          if [ "$REQUESTED" = "snapshot" ]; then
+          REQUESTED="${{ inputs.data_source || github.event.inputs.data_source || 'auto' }}"
+          if [ "$REQUESTED" = "snapshot" ] || [ "${{ github.event_name }}" = "pull_request" ] || [ "${{ github.event_name }}" = "push" ]; then
             echo "mode=snapshot" >> "$GITHUB_OUTPUT"
             echo "Using snapshot ($SNAPSHOT_PATH)"
             exit 0
@@ -175,44 +264,15 @@ jobs:
           s.close()
           " 2>/dev/null; then
             echo "mode=live_db" >> "$GITHUB_OUTPUT"
+            rm -f data/insights/resource_ai_insights.json
             echo "Live PostgreSQL detected — extracting fresh fingerprints and querying live DB."
           else
-            if [ "$REQUESTED" = "live_db" ]; then
-              echo "::error::live_db mode was explicitly requested, but PostgreSQL is not reachable."
+            if [ "$REQUESTED" = "live_db" ] || [ "${{ github.event_name }}" = "schedule" ] || [ "${{ github.event_name }}" = "workflow_run" ]; then
+              echo "::error::live_db mode is required for ${{ github.event_name }} (requested=${REQUESTED}), but PostgreSQL is not reachable at ${POSTGRES_HOST:-localhost}:${POSTGRES_PORT:-5432}."
               exit 1
             fi
             echo "mode=snapshot" >> "$GITHUB_OUTPUT"
             echo "No live PostgreSQL tunnel detected in runner — building reproducibly from $SNAPSHOT_PATH."
-          fi
-
-      - name: Run DB Environment Drift Assessment & View Schema Guard
-        run: |
-          if [ -f "analysis/audit/db_environment_drift.py" ]; then
-            if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
-              pixi run python analysis/audit/db_environment_drift.py --extract-env local
-            fi
-            pixi run python analysis/audit/db_environment_drift.py --compare
-            if [ -f "audit/output/drift_report.md" ]; then
-              cp audit/output/drift_report.md exports/plots/audit/drift_report.md
-            fi
-          else
-            echo "analysis/audit/db_environment_drift.py not present on this branch; skipping drift generator."
-          fi
-
-      - name:
-          Build Modular Resource Characterization & QC Dashboards (Pages 1 & 2)
-        run: |
-          if [ -f "analysis/metadata/resource_analysis_dashboard.py" ]; then
-            if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
-              pixi run python analysis/metadata/resource_analysis_dashboard.py \
-                --output-dir exports/plots/metadata
-            else
-              pixi run python analysis/metadata/resource_analysis_dashboard.py \
-                --from-snapshot "$SNAPSHOT_PATH" \
-                --output-dir exports/plots/metadata
-            fi
-          else
-            echo "analysis/metadata/resource_analysis_dashboard.py not present on this branch; skipping Pages 1 & 2."
           fi
 
       - name: Build Multi-Resource Side-by-Side Parameter Explorer (Page 3)
@@ -221,6 +281,15 @@ jobs:
             if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
               pixi run python analysis/metadata/resource_explorer_dashboard.py \
                 --output-dir exports/plots/metadata
+              if [ ! -s "exports/plots/metadata/dashboard_data_snapshot.json" ]; then
+                echo "::error::Expected live_db extraction to write non-empty exports/plots/metadata/dashboard_data_snapshot.json"
+                exit 1
+              fi
+              cp exports/plots/metadata/dashboard_data_snapshot.json audit/output/env_fingerprints/baseline_records_snapshot.json
+              {
+                echo "SNAPSHOT_PATH=audit/output/env_fingerprints/baseline_records_snapshot.json"
+                echo "LIVE_SNAPSHOT_EXTRACTED=true"
+              } >> "$GITHUB_ENV"
             else
               pixi run python analysis/metadata/resource_explorer_dashboard.py \
                 --from-snapshot "$SNAPSHOT_PATH" \
@@ -230,11 +299,36 @@ jobs:
             echo "analysis/metadata/resource_explorer_dashboard.py not present on this branch; skipping Page 3."
           fi
 
+      - name: Recompute Deterministic Resource AI Insights Sidecar
+        run: |
+          if [ -f "analysis/metadata/resource_insights_engine.py" ]; then
+            if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ] || [ ! -s "data/insights/resource_ai_insights.json" ]; then
+              pixi run python analysis/metadata/resource_insights_engine.py \
+                --from-snapshot "$SNAPSHOT_PATH" \
+                --output data/insights/resource_ai_insights.json
+            fi
+          else
+            echo "analysis/metadata/resource_insights_engine.py not present on this branch; skipping sidecar synthesis."
+          fi
+
+      - name:
+          Build Modular Resource Characterization & QC Dashboards (Pages 1 & 2)
+        run: |
+          if [ -f "analysis/metadata/resource_analysis_dashboard.py" ]; then
+            pixi run python analysis/metadata/resource_analysis_dashboard.py \
+              --from-snapshot "$SNAPSHOT_PATH" \
+              --sidecar data/insights/resource_ai_insights.json \
+              --write-sidecar \
+              --output-dir exports/plots/metadata
+          else
+            echo "analysis/metadata/resource_analysis_dashboard.py not present on this branch; skipping Pages 1 & 2."
+          fi
+
       - name: Build Resource QC & Data Audit Workbench (Product 4)
         run: |
           if [ -f "analysis/metadata/resource_audit_workbench.py" ]; then
             WORKBENCH_SNAP="$SNAPSHOT_PATH"
-            if [ -f "exports/plots/metadata/dashboard_data_snapshot.json" ]; then
+            if [ -s "exports/plots/metadata/dashboard_data_snapshot.json" ]; then
               WORKBENCH_SNAP="exports/plots/metadata/dashboard_data_snapshot.json"
             fi
             pixi run python analysis/metadata/resource_audit_workbench.py \
@@ -242,6 +336,44 @@ jobs:
               --output exports/plots/metadata/resource_audit_workbench.html
           else
             echo "analysis/metadata/resource_audit_workbench.py not present on this branch; skipping Product 4."
+          fi
+
+      - name: Run DB Environment Drift Assessment & View Schema Guard
+        run: |
+          if [ -f "analysis/audit/db_environment_drift.py" ]; then
+            if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
+              cp audit/output/env_fingerprints/staging_fingerprint.json audit/output/env_fingerprints/staging_fingerprint.json.bak 2>/dev/null || true
+              if pixi run python analysis/audit/db_environment_drift.py \
+                --extract-env staging \
+                --verify-readonly-grants \
+                --fail-on-unmeasured; then
+                echo "LIVE_STAGING_FP_OK=true" >> "$GITHUB_ENV"
+              else
+                echo "::error::Live drift extraction or readonly grant check failed for staging; restoring previous staging_fingerprint.json so dashboard suite and GCS publish can complete."
+                mv -f audit/output/env_fingerprints/staging_fingerprint.json.bak audit/output/env_fingerprints/staging_fingerprint.json 2>/dev/null || true
+                echo "DRIFT_EXTRACT_FAILED=true" >> "$GITHUB_ENV"
+              fi
+              rm -f audit/output/env_fingerprints/staging_fingerprint.json.bak
+
+              cp audit/output/env_fingerprints/production_fingerprint.json audit/output/env_fingerprints/production_fingerprint.json.bak 2>/dev/null || true
+              if pixi run python analysis/audit/db_environment_drift.py \
+                --extract-env production \
+                --verify-readonly-grants \
+                --fail-on-unmeasured; then
+                echo "LIVE_PROD_FP_OK=true" >> "$GITHUB_ENV"
+              else
+                echo "::error::Live drift extraction or readonly grant check failed for production; restoring previous production_fingerprint.json so dashboard suite and GCS publish can complete."
+                mv -f audit/output/env_fingerprints/production_fingerprint.json.bak audit/output/env_fingerprints/production_fingerprint.json 2>/dev/null || true
+                echo "DRIFT_EXTRACT_FAILED=true" >> "$GITHUB_ENV"
+              fi
+              rm -f audit/output/env_fingerprints/production_fingerprint.json.bak
+            fi
+            pixi run python analysis/audit/db_environment_drift.py --compare
+            if [ -f "audit/output/drift_report.md" ]; then
+              cp audit/output/drift_report.md exports/plots/audit/drift_report.md
+            fi
+          else
+            echo "analysis/audit/db_environment_drift.py not present on this branch; skipping drift generator."
           fi
 
       - name: Generate 5-Product Dashboard Gallery Index & Login Portal
@@ -302,8 +434,12 @@ jobs:
           github.event_name != 'pull_request' && steps.gcp_auth.outcome ==
           'success'
         run: |
-          if [ "${USED_MINIMAL_FIXTURE:-false}" = "true" ] && [ "${{ steps.source_mode.outputs.mode }}" != "live_db" ]; then
+          if [ "${{ steps.source_mode.outputs.mode }}" != "live_db" ] && [ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]; then
             echo "::warning::Dashboards were built from minimal CI fallback fixtures (snapshot or fingerprint missing from GCS); skipping GCS publish to protect gs://${DASHBOARDS_BUCKET}/dashboards/${DASHBOARDS_ENV}/latest/ from being overwritten with seed data."
+            exit 0
+          fi
+          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ] && [ "${LIVE_SNAPSHOT_EXTRACTED:-false}" != "true" ]; then
+            echo "::warning::live_db mode did not produce a fresh baseline snapshot; skipping GCS publish."
             exit 0
           fi
           if ! gcloud storage ls "gs://${DASHBOARDS_BUCKET}" >/dev/null 2>&1; then
@@ -317,16 +453,34 @@ jobs:
           echo "Publishing dashboards to ${DATED_URI}/ and ${LATEST_URI}/ ..."
           gcloud storage rsync --recursive --checksums-only exports/plots/ "${DATED_URI}/"
           gcloud storage rsync --recursive --checksums-only exports/plots/ "${LATEST_URI}/"
-          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ] && [ -f "exports/plots/metadata/dashboard_data_snapshot.json" ]; then
+          if [ "${{ steps.source_mode.outputs.mode }}" = "live_db" ]; then
             GCS_SNAP_BASE="gs://${DASHBOARDS_BUCKET}/snapshots/${DASHBOARDS_ENV}/latest"
-            gcloud storage cp exports/plots/metadata/dashboard_data_snapshot.json "${GCS_SNAP_BASE}/baseline_records_snapshot.json"
-            if [ -f "data/insights/resource_ai_insights.json" ]; then
-              gcloud storage cp data/insights/resource_ai_insights.json "${GCS_SNAP_BASE}/resource_ai_insights.json"
+            if [ "${LIVE_SNAPSHOT_EXTRACTED:-false}" = "true" ] && [ -s "exports/plots/metadata/dashboard_data_snapshot.json" ]; then
+              gcloud storage cp exports/plots/metadata/dashboard_data_snapshot.json "${GCS_SNAP_BASE}/baseline_records_snapshot.json"
+              if [ -s "data/insights/resource_ai_insights.json" ]; then
+                gcloud storage cp data/insights/resource_ai_insights.json "${GCS_SNAP_BASE}/resource_ai_insights.json"
+              fi
             fi
-            gcloud storage cp audit/output/env_fingerprints/*_fingerprint.json "${GCS_SNAP_BASE}/env_fingerprints/" 2>/dev/null || true
+            if [ "${LIVE_STAGING_FP_OK:-false}" = "true" ] && [ -s "audit/output/env_fingerprints/staging_fingerprint.json" ]; then
+              gcloud storage cp audit/output/env_fingerprints/staging_fingerprint.json "${GCS_SNAP_BASE}/env_fingerprints/staging_fingerprint.json"
+            fi
+            if [ "${LIVE_PROD_FP_OK:-false}" = "true" ] && [ -s "audit/output/env_fingerprints/production_fingerprint.json" ]; then
+              gcloud storage cp audit/output/env_fingerprints/production_fingerprint.json "${GCS_SNAP_BASE}/env_fingerprints/production_fingerprint.json"
+            fi
           fi
 
+      - name: Stop Cloud SQL Auth Proxy
+        if:
+          always() && (steps.source_mode.outputs.mode == 'live_db' ||
+          env.CLOUDSQL_PROXY_PID != '')
+        run: |
+          if [ -n "${CLOUDSQL_PROXY_PID:-}" ]; then
+            kill "${CLOUDSQL_PROXY_PID}" 2>/dev/null || true
+          fi
+          pkill -f cloud-sql-proxy 2>/dev/null || true
+
       - name: Upload BioCirV Dashboards & Drift Audit Artifacts
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: biocirv-dashboards-and-drift-suite
@@ -342,3 +496,9 @@ jobs:
             exports/plots/metadata/resource_audit_workbench.html
             audit/output/drift_report.md
             audit/output/env_fingerprints/*_fingerprint.json
+
+      - name: Fail workflow if live drift extraction reported errors
+        if: always() && env.DRIFT_EXTRACT_FAILED == 'true'
+        run: |
+          echo "::error::One or more live drift fingerprint extractions or readonly grant checks failed during this run (see 'Run DB Environment Drift Assessment & View Schema Guard' logs above)."
+          exit 1
