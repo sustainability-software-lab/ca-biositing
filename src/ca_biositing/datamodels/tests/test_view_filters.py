@@ -15,6 +15,7 @@ from ca_biositing.datamodels.data_portal_views import (
     mv_biomass_fermentation,
     mv_biomass_gasification,
     mv_biomass_sample_stats,
+    mv_biomass_volume_estimate,
     mv_usda_county_production,
 )
 from ca_biositing.datamodels.data_portal_views.common import EXCLUDED_PROVIDERS, EXCLUDED_RESOURCES
@@ -126,3 +127,21 @@ def test_mv_usda_county_production_has_no_resource_or_qc_filter():
     sql = compile_sql(mv_usda_county_production)
     assert "sargassum" not in sql
     assert "jaguar" not in sql
+
+
+def test_mv_biomass_volume_estimate_uses_name_joins_for_units_and_parameters():
+    """Sub-Issue #1 (#506): mv_biomass_volume_estimate must join Unit and Parameter
+    by name (never hardcoded primary key IDs like unit_id = 18) and include
+    'area bearing' in Path D's acreage fallback."""
+    sql = compile_sql(mv_biomass_volume_estimate)
+    assert "lower(obs_unit.name) = 'acres'" in sql
+    assert "lower(obs_unit.name) = 'tons'" in sql
+    assert "yield_unit.name" in sql
+    assert "'area bearing & non-bearing'" in sql
+    assert "'area bearing'" in sql
+    assert "'area harvested'" in sql
+    assert "in ('area harvested', 'harvested acres')" not in sql.lower()
+    assert "unit_id = 18" not in sql
+    assert "parameter_id = 5" not in sql
+    assert "parameter_id = 7" not in sql
+    assert "parameter_id = 3" not in sql

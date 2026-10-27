@@ -59,6 +59,7 @@ def transform_pretreatment_record(
     logger.info(f"PretreatmentRecord: after coerce_columns columns: {coerced_df.columns.tolist()}")
 
     df = coerced_df
+    df['dataset'] = 'biocirv'
 
     # 2. Normalization
     normalize_columns = {
@@ -72,6 +73,7 @@ def transform_pretreatment_record(
         'raw_data_url': (FileObjectMetadata, "uri"),
         'resource': (Resource, 'name'),
         'prepared_sample': (PreparedSample, 'name'),
+        'dataset': (Dataset, 'name'),
     }
 
     normalized_dfs = normalize_dataframes(df, normalize_columns)
@@ -90,7 +92,8 @@ def transform_pretreatment_record(
         'lineage_group_id': 'lineage_group_id',
         'reaction_block_id': 'reaction_block_id',
         'resource_id': 'resource_id',
-        'prepared_sample_id': 'prepared_sample_id'
+        'prepared_sample_id': 'prepared_sample_id',
+        'dataset_id': 'dataset_id',
     }
 
     # Handle normalized columns
@@ -106,7 +109,8 @@ def transform_pretreatment_record(
                           'vessel_id' if col == 'vessel_id' else \
                           'raw_data_id' if col == 'raw_data_url' else \
                           'resource_id' if col == 'resource' else \
-                          'prepared_sample_id' if col == 'prepared_sample' else norm_col
+                          'prepared_sample_id' if col == 'prepared_sample' else \
+                          'dataset_id' if col == 'dataset' else norm_col
             rename_map[norm_col] = target_name
 
     available_cols = [c for c in rename_map.keys() if c in normalized_df.columns]
@@ -117,9 +121,6 @@ def transform_pretreatment_record(
     try:
         record_df = normalized_df[available_cols].rename(columns=final_rename).copy()
         logger.info(f"PretreatmentRecord: record_df columns after rename: {record_df.columns.tolist()}")
-
-        # Set dataset_id = 1 (biocirv) for all records
-        record_df['dataset_id'] = 1
 
         # Add replicate_no as well if technical_replicate_no exists
         if 'technical_replicate_no' in record_df.columns:
