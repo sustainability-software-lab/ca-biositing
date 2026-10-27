@@ -337,3 +337,330 @@ def test_cli_output_flag_leaves_repo_clean(tmp_path: Path) -> None:
     )
     assert res_explorer.returncode == 0, res_explorer.stderr
     assert out_explorer.exists()
+
+
+def test_card3_page2_kpi_labels_and_sd_display(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    assert "${outSummary.flaggedActive || 0}</strong> active outlier group(s)" in page1
+    assert "outSummary.suppressedTrace ? `(${outSummary.suppressedTrace} trace" in page1
+    assert "${out.flagged_active_groups" not in page1
+    assert "${out.suppressed_low_abundance_groups" not in page1
+    assert "Flag Counts (" in page2
+    assert "Within-Replicate RSD & SD" in page2
+    assert "Between-Sample RSD & SD (Method-Stratified)" in page2
+    assert "N/A (n=1 method group)" in page2
+    assert "Identical Replicates (SD=0)" in page2
+    assert "Collection & Prep Dates" not in page2
+
+
+def test_card3_get_outlier_summary_and_live_overlay_replicate_groups(
+    tmp_path: Path,
+) -> None:
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    harness = (
+        """
+global.window = global;
+global.window.location = { protocol: "http:", search: "", href: "" };
+global.BroadcastChannel = class BroadcastChannel { constructor(name) { this.name = name; } postMessage() {} close() {} };
+global.CustomEvent = class CustomEvent { constructor(name, opts) { this.type = name; this.detail = opts && opts.detail; } };
+global.window.dispatchEvent = () => {};
+global.window.addEventListener = () => {};
+global.localStorage = {
+  _s: {},
+  getItem(k) { return this._s[k] || null; },
+  setItem(k, v) { this._s[k] = String(v); }
+};
+global.document = {
+  title: "Test",
+  readyState: "complete",
+  getElementById() { return null; },
+  querySelectorAll() { return []; },
+  createElement() { return { style: {}, classList: { add(){}, remove(){} }, appendChild(){} }; },
+  body: { appendChild(){} }
+};
+global.BUNDLE = {
+  insights: {
+    "almond hulls": {
+      outlier_screening: {
+        summary: {
+          flagged_replicate_groups: 2,
+          overall_within_rsd_median: 14.2,
+          overall_within_sd_median: 1.05,
+          overall_between_rsd_median: 8.6,
+          overall_between_sd_median: 0.72,
+          rsd_defined_groups: 5,
+          suppressed_low_abundance_groups: 1
+        },
+        by_tab: {
+          proximate: {
+            flagged_active: 1,
+            replicate_groups: [
+              {
+                analysis_type: "Proximate Analysis",
+                prepared_sample: "AH-PS-01",
+                prep_method: "Dried 60C",
+                experiment: "EXP-01",
+                parameter: "Ash",
+                n: 3,
+                mean: 10.0,
+                sd: 3.5,
+                within_sd: 3.5,
+                rsd_within_pct: 35.0,
+                raw_dixon: true,
+                dixon_candidate_id: "prox-3",
+                raw_rsd20: true,
+                raw_rsd10: true,
+                raw_sd3x: false,
+                below_cutoff: false,
+                raw_flagged: true,
+                active_flagged: true,
+                flagged_active: true,
+                qc_pass_count: 3,
+                qc_fail_count: 0,
+                replicates: [
+                  { id: "prox-1", rep: 1, val: 8.0, qc: "pass" },
+                  { id: "prox-2", rep: 2, val: 8.2, qc: "pass" },
+                  { id: "prox-3", rep: 3, val: 13.8, qc: "pass" }
+                ]
+              },
+              {
+                analysis_type: "Proximate Analysis",
+                prepared_sample: "AH-PS-02",
+                prep_method: "Dried 60C",
+                experiment: "EXP-01",
+                parameter: "Volatile Matter",
+                n: 3,
+                mean: 70.0,
+                sd: 8.5,
+                within_sd: 8.5,
+                rsd_within_pct: 12.14,
+                raw_dixon: true,
+                dixon_candidate_id: null,
+                raw_rsd20: false,
+                raw_rsd10: true,
+                raw_sd3x: false,
+                below_cutoff: false,
+                raw_flagged: true,
+                active_flagged: true,
+                flagged_active: true,
+                qc_pass_count: 3,
+                qc_fail_count: 0,
+                replicates: [
+                  { id: "prox-vm-1", rep: 1, val: 65.0, qc: "pass" },
+                  { id: "prox-vm-2", rep: 2, val: 65.4, qc: "pass" },
+                  { id: "prox-vm-3", rep: 3, val: 79.6, qc: "pass" }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+};
+"""
+        + SHARED_SLICE_AND_BUG_MODALS_JS
+        + """
+const sumNested = window.getOutlierSummary(global.BUNDLE.insights["almond hulls"]);
+
+// Fallback when summary block is absent and only by_tab.replicate_groups + param_rsd_table exist
+const sumFallback = window.getOutlierSummary({
+  outlier_screening: {
+    by_tab: {
+      proximate: {
+        replicate_groups: [
+          { n: 3, rsd_within_pct: 4.0, within_sd: 0.25, active_flagged: true, raw_flagged: true, below_cutoff: false },
+          { n: 3, rsd_within_pct: 6.0, within_sd: 0.45, active_flagged: false, raw_flagged: true, below_cutoff: true }
+        ],
+        param_rsd_table: [
+          { between_rsd_pct: 11.5, between_sd: 0.88, below_cutoff: false }
+        ]
+      }
+    }
+  }
+});
+
+// Verify 6-part replicate_group_key alignment with pt_method-first for Pretreatment and Ash->xrf
+const ptKey = window.normalizeReplicateGroupKey({
+  resource_name: "Almond Hulls",
+  prepared_sample: "AH-PS-01",
+  analysis_type: "Pretreatment",
+  parameter: "Glucose",
+  pt_method: "Dilute Acid",
+  prep_method: "Wiley Milled",
+  eh_method: "CTec3",
+  experiment: "EXP-PT-1"
+});
+const ashItem = window.BioCirvQcClient.normalizeTrayWorkbenchItem({
+  resource_name: "Almond Hulls",
+  prepared_sample: "AH-PS-01",
+  analysis_type: "Ash",
+  parameter: "CaO",
+  prep_method: "600C Ashing",
+  experiment: "EXP-XRF-1",
+  record_id: "xrf-1"
+});
+const fermNoPtKey = window.normalizeReplicateGroupKey({
+  resource_name: "Corn Stover",
+  prepared_sample: "CS-PREP-01",
+  analysis_type: "Fermentation (Bioconversion)",
+  parameter: "Ethanol",
+  prep_method: "Wiley Milled",
+  strain: "S. cerevisiae",
+  time_h: 48,
+  experiment: "EXP-FERM-01"
+});
+
+// Apply live QC overlay to quarantine outliers prox-3 and prox-vm-3 -> active_flagged and raw_dixon should drop to false
+const overlayRes = window.applyLiveQcDecisionsOverlay([
+  { record_id: "prox-3", new_qc_pass: "fail", decision_status: "reject_fail" },
+  { record_id: "prox-vm-3", new_qc_pass: "fail", decision_status: "reject_fail" }
+]);
+const grpAfter = global.BUNDLE.insights["almond hulls"].outlier_screening.by_tab.proximate.replicate_groups[0];
+const grpNoCandAfter = global.BUNDLE.insights["almond hulls"].outlier_screening.by_tab.proximate.replicate_groups[1];
+const sumAfter = window.getOutlierSummary(global.BUNDLE.insights["almond hulls"]);
+
+console.log(JSON.stringify({
+  sumNested,
+  sumFallback,
+  ptKey,
+  ashKey: ashItem.replicate_group_key,
+  fermNoPtKey,
+  overlayRes,
+  grpAfter: {
+    qc_pass_count: grpAfter.qc_pass_count,
+    qc_fail_count: grpAfter.qc_fail_count,
+    within_sd: grpAfter.within_sd,
+    rsd_within_pct: grpAfter.rsd_within_pct,
+    raw_dixon: grpAfter.raw_dixon,
+    active_flagged: grpAfter.active_flagged,
+    flagged_active: grpAfter.flagged_active
+  },
+  grpNoCandAfter: {
+    qc_pass_count: grpNoCandAfter.qc_pass_count,
+    qc_fail_count: grpNoCandAfter.qc_fail_count,
+    within_sd: grpNoCandAfter.within_sd,
+    rsd_within_pct: grpNoCandAfter.rsd_within_pct,
+    raw_dixon: grpNoCandAfter.raw_dixon,
+    active_flagged: grpNoCandAfter.active_flagged,
+    flagged_active: grpNoCandAfter.flagged_active
+  },
+  sumAfter
+}));
+"""
+    )
+    harness_path = tmp_path / "run_card3_test.js"
+    harness_path.write_text(harness, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_path)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    # Nested summary schema compatibility
+    assert out["sumNested"]["flaggedActive"] == 2
+    assert out["sumNested"]["withinRsdMedian"] == 14.2
+    assert out["sumNested"]["withinSdMedian"] == 1.05
+    assert out["sumNested"]["betweenRsdMedian"] == 8.6
+    assert out["sumNested"]["betweenSdMedian"] == 0.72
+    assert out["sumNested"]["rsdDefinedGroups"] == 5
+    assert out["sumNested"]["suppressedTrace"] == 1
+
+    # Fallback computation from by_tab
+    assert out["sumFallback"]["flaggedActive"] == 1
+    assert out["sumFallback"]["suppressedTrace"] == 1
+    assert out["sumFallback"]["withinRsdMedian"] == 5.0
+    assert out["sumFallback"]["withinSdMedian"] == 0.35
+    assert out["sumFallback"]["betweenRsdMedian"] == 11.5
+    assert out["sumFallback"]["betweenSdMedian"] == 0.88
+
+    # 6-part key parity across Card 1, Card 2, and Card 3 (pt_method first for Pretreatment; Ash -> xrf)
+    from analysis.metadata.resource_audit_workbench import (
+        normalize_replicate_group_key as card2_normalize_key,
+    )
+    from analysis.metadata.resource_insights_engine import (
+        compute_dataset_outlier_screening,
+    )
+
+    pt_row = {
+        "record_id": "pt-1",
+        "resource_name": "Almond Hulls",
+        "prepared_sample": "AH-PS-01",
+        "analysis_type": "Pretreatment",
+        "parameter": "Glucose",
+        "unit": "g/L",
+        "value": 12.4,
+        "qc_status": "pass",
+        "pt_method": "Dilute Acid",
+        "prep_method": "Wiley Milled",
+        "eh_method": "CTec3",
+        "experiment": "EXP-PT-1",
+    }
+    ash_row = {
+        "record_id": "xrf-1",
+        "resource_name": "Almond Hulls",
+        "prepared_sample": "AH-PS-01",
+        "analysis_type": "Ash",
+        "parameter": "CaO",
+        "unit": "%",
+        "value": 4.2,
+        "qc_status": "pass",
+        "prep_method": "600C Ashing",
+        "experiment": "EXP-XRF-1",
+    }
+    card1_screening = compute_dataset_outlier_screening(
+        {"Almond Hulls": [pt_row, ash_row]}
+    )["Almond Hulls"]
+    card1_pt_key = card1_screening["by_tab"]["pretreatment"]["replicate_groups"][0][
+        "replicate_group_key"
+    ]
+    card1_ash_key = card1_screening["by_tab"]["elemental"]["replicate_groups"][0][
+        "replicate_group_key"
+    ]
+    card2_pt_key = card2_normalize_key(pt_row)
+    card2_ash_key = card2_normalize_key(ash_row)
+
+    expected_pt_key = "almond hulls::ah-ps-01::pretreatment::glucose::dilute acid · ctec3::exp-pt-1"
+    expected_ash_key = "almond hulls::ah-ps-01::xrf::cao::600c ashing::exp-xrf-1"
+    expected_ferm_no_pt_key = "corn stover::cs-prep-01::fermentation::ethanol::s. cerevisiae @ 48h::exp-ferm-01"
+    ferm_no_pt_row = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Fermentation (Bioconversion)",
+        "parameter": "Ethanol",
+        "prep_method": "Wiley Milled",
+        "strain": "S. cerevisiae",
+        "time_h": 48,
+        "experiment": "EXP-FERM-01",
+    }
+    assert out["ptKey"] == expected_pt_key == card1_pt_key == card2_pt_key
+    assert out["ashKey"] == expected_ash_key == card1_ash_key == card2_ash_key
+    assert out["fermNoPtKey"] == expected_ferm_no_pt_key == card2_normalize_key(ferm_no_pt_row)
+
+    # Live overlay on replicate_groups recomputes within_sd, rsd_within_pct, raw_dixon, and active_flagged
+    assert out["grpAfter"]["qc_pass_count"] == 2
+    assert out["grpAfter"]["qc_fail_count"] == 1
+    assert out["grpAfter"]["rsd_within_pct"] < 5.0
+    assert out["grpAfter"]["within_sd"] < 0.2
+    assert out["grpAfter"]["raw_dixon"] is False
+    assert out["grpAfter"]["active_flagged"] is False
+    assert out["grpAfter"]["flagged_active"] is False
+
+    # Even when dixon_candidate_id is null, dropping rsd_within_pct < 10% clears raw_dixon and active_flagged
+    assert out["grpNoCandAfter"]["qc_pass_count"] == 2
+    assert out["grpNoCandAfter"]["qc_fail_count"] == 1
+    assert out["grpNoCandAfter"]["rsd_within_pct"] < 1.0
+    assert out["grpNoCandAfter"]["raw_dixon"] is False
+    assert out["grpNoCandAfter"]["active_flagged"] is False
+    assert out["grpNoCandAfter"]["flagged_active"] is False
+    assert out["sumAfter"]["flaggedActive"] == 0
