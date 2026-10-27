@@ -1732,10 +1732,48 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
     <div class="workbench-layout">
       <section class="queue-table-card" aria-label="Flagged Replicate Queue">
+        <div
+          id="qc-bulk-assign-bar"
+          class="bulk-assign-bar"
+          style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); background: rgba(15, 23, 42, 0.55);"
+        >
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+            <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--text); cursor: pointer;">
+              <input type="checkbox" id="chk-select-all-filtered" onchange="window.toggleSelectAllFiltered && window.toggleSelectAllFiltered(this.checked)" />
+              <span>Select All Filtered</span>
+            </label>
+            <span
+              id="bulk-selected-count"
+              style="padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 700; background: rgba(56, 189, 248, 0.16); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.35);"
+            >0 selected</span>
+            <button type="button" class="btn" id="btn-select-all-filtered" onclick="window.selectAllFilteredRows && window.selectAllFilteredRows()">Select All Filtered</button>
+            <button type="button" class="btn" id="btn-clear-selection" onclick="window.clearRowSelection && window.clearRowSelection()">Clear</button>
+          </div>
+          <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px;">
+            <label for="bulk-assign-email" style="font-size: 11px; font-weight: 600; color: var(--muted);">Assign Selected To:</label>
+            <input
+              type="email"
+              id="bulk-assign-email"
+              list="AnalystDirectoryList"
+              placeholder="analyst@institution.edu"
+              style="background: #0f172a; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 5px 10px; font-size: 12px; min-width: 210px;"
+            />
+            <datalist id="AnalystDirectoryList"></datalist>
+            <button type="button" class="btn" id="btn-bulk-assign-my-email" onclick="window.fillBulkAssignMyEmail && window.fillBulkAssignMyEmail()">
+              Use My Email
+            </button>
+            <button type="button" class="btn btn-primary" id="btn-bulk-assign-apply" onclick="window.bulkAssignSelected && window.bulkAssignSelected()">
+              👤 Bulk Assign Selected
+            </button>
+          </div>
+        </div>
         <div class="table-scroll">
           <table id="qc-queue-table">
             <thead>
               <tr>
+                <th style="width: 34px; text-align: center;">
+                  <input type="checkbox" id="chk-select-all-header" title="Select all filtered rows" onchange="window.toggleSelectAllFiltered && window.toggleSelectAllFiltered(this.checked)" />
+                </th>
                 <th>Decision ID</th>
                 <th>Resource</th>
                 <th>Prepared Sample</th>
@@ -2127,8 +2165,47 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         groupBy: "field_sample",
         scopeMode: "group",
         selectedReplicateIds: {},
-        selectedChips: {}
+        selectedChips: {},
+        selectedIds: new Set()
       };
+
+      function getDefaultAssigneeEmail(existingEmail) {
+        var cleanExisting = String(existingEmail || "").trim();
+        if (
+          cleanExisting &&
+          ["unassigned", "none", "null", "anonymous", "guest"].indexOf(
+            cleanExisting.toLowerCase()
+          ) === -1
+        ) {
+          return cleanExisting;
+        }
+        var userEmail = String((state.user && state.user.email) || "").trim();
+        if (
+          userEmail &&
+          ["unassigned", "none", "null", "anonymous", "guest"].indexOf(
+            userEmail.toLowerCase()
+          ) === -1
+        ) {
+          return userEmail;
+        }
+        try {
+          var storedEmail = String(
+            localStorage.getItem("biocirv_analyst_email") || ""
+          ).trim();
+          if (
+            storedEmail &&
+            ["unassigned", "none", "null", "anonymous", "guest"].indexOf(
+              storedEmail.toLowerCase()
+            ) === -1
+          ) {
+            return storedEmail;
+          }
+        } catch (_e) {}
+        return "";
+      }
+      if (typeof window !== "undefined") {
+        window.getDefaultAssigneeEmail = getDefaultAssigneeEmail;
+      }
 
       // Initialize cross-tab BroadcastChannel("biocirv_qc_decisions")
       var qcBroadcastChannel = null;
@@ -2510,6 +2587,31 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           sel.appendChild(o);
         }
         sel.value = currentVal;
+
+        var dataListEl = document.getElementById("AnalystDirectoryList");
+        if (dataListEl) {
+          dataListEl.innerHTML = "";
+          var dlEmails = {};
+          if (state.user && state.user.email) {
+            dlEmails[state.user.email] = true;
+          }
+          for (var m = 0; m < sorted.length; m++) {
+            dlEmails[sorted[m]] = true;
+          }
+          var dlSorted = Object.keys(dlEmails).sort();
+          for (var n = 0; n < dlSorted.length; n++) {
+            var dOpt = document.createElement("option");
+            dOpt.value = dlSorted[n];
+            dataListEl.appendChild(dOpt);
+          }
+        }
+        var bulkEmailInput = document.getElementById("bulk-assign-email");
+        if (
+          bulkEmailInput &&
+          (!bulkEmailInput.value || bulkEmailInput.value === "analyst@lbl.gov")
+        ) {
+          bulkEmailInput.value = getDefaultAssigneeEmail("");
+        }
       }
 
       function updateRoleUI() {
@@ -2645,12 +2747,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (el) el.textContent = String(val);
       }
 
-      function renderQueueTable() {
-        computeQueueCounts();
-        var tbody = document.getElementById("qc-queue-tbody");
-        if (!tbody) return;
-        tbody.innerHTML = "";
-
+      function getVisibleQueueDecisionIds() {
         var visibleIds = [];
         for (var i = 0; i < state.decisionsOrder.length; i++) {
           var id = state.decisionsOrder[i];
@@ -2660,22 +2757,294 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           if (!matchesFacetFilters(dec)) continue;
           visibleIds.push(id);
         }
+        return visibleIds;
+      }
+
+      function updateBulkAssignBar(visibleIdsOpt) {
+        var visibleIds = Array.isArray(visibleIdsOpt)
+          ? visibleIdsOpt
+          : getVisibleQueueDecisionIds();
+        var selectedCount = state.selectedIds ? state.selectedIds.size : 0;
+        setText("bulk-selected-count", selectedCount + " selected");
+
+        var allVisibleSelected =
+          visibleIds.length > 0 &&
+          visibleIds.every(function (id) {
+            return state.selectedIds && state.selectedIds.has(id);
+          });
+        var chkBar = document.getElementById("chk-select-all-filtered");
+        if (chkBar) chkBar.checked = allVisibleSelected;
+        var chkHeader = document.getElementById("chk-select-all-header");
+        if (chkHeader) chkHeader.checked = allVisibleSelected;
+
+        var bulkEmailEl = document.getElementById("bulk-assign-email");
+        if (bulkEmailEl && !bulkEmailEl.value) {
+          bulkEmailEl.value = getDefaultAssigneeEmail("");
+        }
+        var applyBtn = document.getElementById("btn-bulk-assign-apply");
+        if (applyBtn) applyBtn.disabled = selectedCount === 0;
+        var clearBtn =
+          document.getElementById("btn-clear-selection") ||
+          document.getElementById("btn-bulk-clear-selection");
+        if (clearBtn) clearBtn.disabled = selectedCount === 0;
+      }
+
+      function fillBulkAssignMyEmail() {
+        var bulkEmailEl = document.getElementById("bulk-assign-email");
+        var myEmail = getDefaultAssigneeEmail("");
+        if (bulkEmailEl) {
+          bulkEmailEl.value = myEmail;
+        }
+        return myEmail;
+      }
+
+      function toggleRowSelection(decisionId, checked) {
+        if (!decisionId) return;
+        if (!state.selectedIds) state.selectedIds = new Set();
+        var shouldSelect =
+          checked !== undefined
+            ? Boolean(checked)
+            : !state.selectedIds.has(decisionId);
+        if (shouldSelect) {
+          state.selectedIds.add(decisionId);
+        } else {
+          state.selectedIds.delete(decisionId);
+        }
+        var chks = document.querySelectorAll(".qc-row-select-chk");
+        for (var i = 0; i < chks.length; i++) {
+          if (chks[i].getAttribute("data-decision-id") === decisionId) {
+            chks[i].checked = shouldSelect;
+          }
+        }
+        updateBulkAssignBar();
+      }
+
+      function toggleSelectAllFiltered(checked) {
+        if (!state.selectedIds) state.selectedIds = new Set();
+        var visibleIds = getVisibleQueueDecisionIds();
+        var shouldSelect = Boolean(checked);
+        for (var i = 0; i < visibleIds.length; i++) {
+          if (shouldSelect) {
+            state.selectedIds.add(visibleIds[i]);
+          } else {
+            state.selectedIds.delete(visibleIds[i]);
+          }
+        }
+        renderQueueTable();
+      }
+
+      function selectAllFilteredRows() {
+        toggleSelectAllFiltered(true);
+      }
+
+      function clearRowSelection() {
+        if (state.selectedIds) state.selectedIds.clear();
+        renderQueueTable();
+      }
+
+      function bulkAssignSelected(overrideEmail) {
+        var bulkEmailEl = document.getElementById("bulk-assign-email");
+        var rawEmail =
+          overrideEmail !== undefined && overrideEmail !== null
+            ? String(overrideEmail)
+            : (bulkEmailEl && bulkEmailEl.value) || getDefaultAssigneeEmail("");
+        var targetEmail = String(rawEmail || "").trim().toLowerCase();
+        var selectedIdsList = state.selectedIds
+          ? Array.from(state.selectedIds)
+          : [];
+        if (selectedIdsList.length === 0) {
+          showToast("Select at least one QC queue row to bulk-assign.", true);
+          return Promise.resolve({ ok: false, assigned_count: 0 });
+        }
+        if (!targetEmail) {
+          showToast(
+            "Enter a target analyst email address for bulk assignment.",
+            true
+          );
+          return Promise.resolve({ ok: false, assigned_count: 0 });
+        }
+        if (bulkEmailEl) bulkEmailEl.value = targetEmail;
+
+        var actorEmail =
+          (state.user && state.user.email) ||
+          getDefaultAssigneeEmail("") ||
+          "local.analyst@lbl.gov";
+        var nowIso = new Date().toISOString();
+        var itemsPayload = [];
+        var selectedDecisions = [];
+        for (var i = 0; i < selectedIdsList.length; i++) {
+          var d = state.decisionsById[selectedIdsList[i]];
+          if (!d) continue;
+          selectedDecisions.push(d);
+          d.assigned_to_email = targetEmail;
+          d.assigned_by_email = actorEmail;
+          var curSt = String(d.decision_status || "open").toLowerCase();
+          if (!curSt || curSt === "open" || curSt === "pending") {
+            d.decision_status = "in_review";
+          }
+          if (!Array.isArray(d.audit_history)) {
+            d.audit_history = [];
+          }
+          d.audit_history.push({
+            action: "bulk_assign",
+            assigned_to_email: targetEmail,
+            assigned_by_email: actorEmail,
+            actor_email: actorEmail,
+            timestamp: nowIso
+          });
+          itemsPayload.push({
+            decision_id:
+              typeof d.db_id === "number" && Number.isInteger(d.db_id)
+                ? d.db_id
+                : d.decision_id,
+            record_table: d.record_table || "proximate_record",
+            record_id: d.record_id ? String(d.record_id) : null,
+            record_ids: Array.isArray(d.record_ids)
+              ? d.record_ids
+              : d.record_id
+                ? [String(d.record_id)]
+                : [],
+            replicate_group_key: d.replicate_group_key || null,
+            resource_name: d.resource_name || "unknown",
+            analysis_type: d.analysis_type || null,
+            parameter_name: d.parameter_name || null,
+            flag_type:
+              d.flag_type ||
+              (Array.isArray(d.flag_types) && d.flag_types[0]) ||
+              "statistical_outlier",
+            flag_trigger_value: d.flag_trigger_value || null,
+            old_qc_pass: d.old_qc_pass || "pass",
+            review_note: d.review_note || ""
+          });
+        }
+
+        var syncedOnline = false;
+        return fetch("/v1/qc/decisions/assign-batch", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "same-origin",
+          body: JSON.stringify({
+            assigned_to_email: targetEmail,
+            assigned_by_email: actorEmail,
+            items: itemsPayload
+          })
+        })
+          .then(function (resp) {
+            if (resp && resp.ok) {
+              return resp.json().then(function (data) {
+                syncedOnline = true;
+                return data;
+              });
+            }
+            return null;
+          })
+          .then(function (resData) {
+            if (resData && Array.isArray(resData.decisions)) {
+              for (var k = 0; k < resData.decisions.length; k++) {
+                var apiDec = resData.decisions[k];
+                var localDec = selectedDecisions[k];
+                if (apiDec && localDec) {
+                  if (apiDec.id != null) {
+                    localDec.db_id = Number(apiDec.id);
+                  }
+                  if (apiDec.assigned_to_email) {
+                    localDec.assigned_to_email = apiDec.assigned_to_email;
+                  }
+                  if (apiDec.decision_status) {
+                    localDec.decision_status = apiDec.decision_status;
+                  }
+                }
+              }
+            }
+          })
+          .catch(function () {
+            syncedOnline = false;
+          })
+          .finally(function () {
+            if (qcBroadcastChannel) {
+              try {
+                qcBroadcastChannel.postMessage({
+                  type: "qc_decision_saved",
+                  decision_id: selectedIdsList[0] || "batch",
+                  assigned_to_email: targetEmail,
+                  updated_at: new Date().toISOString()
+                });
+              } catch (_e) {}
+            }
+            if (state.selectedIds) {
+              state.selectedIds.clear();
+            }
+            if (syncedOnline) {
+              showToast(
+                "Bulk-assigned " +
+                  selectedDecisions.length +
+                  " QC item(s) to " +
+                  targetEmail +
+                  ".",
+                false
+              );
+            } else {
+              showToast(
+                "Bulk-assigned " +
+                  selectedDecisions.length +
+                  " QC item(s) locally to " +
+                  targetEmail +
+                  " (offline fallback — API unreachable).",
+                true
+              );
+            }
+            refreshAnalystFilterOptions();
+            renderQueueTable();
+            renderContextualDrawer();
+          })
+          .then(function () {
+            return {
+              ok: true,
+              online: syncedOnline,
+              status: syncedOnline ? "assigned" : "assigned_offline",
+              assigned_count: selectedDecisions.length,
+              assigned_to_email: targetEmail
+            };
+          });
+      }
+
+      if (typeof window !== "undefined") {
+        window.getVisibleQueueDecisionIds = getVisibleQueueDecisionIds;
+        window.toggleRowSelection = toggleRowSelection;
+        window.toggleSelectAllFiltered = toggleSelectAllFiltered;
+        window.selectAllFilteredRows = selectAllFilteredRows;
+        window.clearRowSelection = clearRowSelection;
+        window.fillBulkAssignMyEmail = fillBulkAssignMyEmail;
+        window.bulkAssignSelected = bulkAssignSelected;
+        window.updateBulkAssignBar = updateBulkAssignBar;
+      }
+
+      function renderQueueTable() {
+        computeQueueCounts();
+        var tbody = document.getElementById("qc-queue-tbody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+
+        var visibleIds = getVisibleQueueDecisionIds();
 
         if (visibleIds.length === 0) {
           var emptyTr = document.createElement("tr");
           var emptyTd = document.createElement("td");
-          emptyTd.colSpan = 11;
+          emptyTd.colSpan = 12;
           emptyTd.style.textAlign = "center";
           emptyTd.style.padding = "20px";
           emptyTd.style.color = "#64748b";
           emptyTd.textContent = "No QC items match the current queue tab and facet filters.";
           emptyTr.appendChild(emptyTd);
           tbody.appendChild(emptyTr);
+          updateBulkAssignBar(visibleIds);
           return;
         }
 
         for (var j = 0; j < visibleIds.length; j++) {
           var decItem = state.decisionsById[visibleIds[j]];
+          var isRowChecked =
+            state.selectedIds && state.selectedIds.has(decItem.decision_id);
           var tr = document.createElement("tr");
           tr.className =
             "queue-row" +
@@ -2700,6 +3069,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           }
 
           tr.innerHTML =
+            "<td style='text-align:center;' class='qc-row-select-cell'><input type='checkbox' class='qc-row-select-chk' data-decision-id='" +
+            escapeHtml(decItem.decision_id) +
+            "'" +
+            (isRowChecked ? " checked" : "") +
+            " onclick='event.stopPropagation(); window.toggleRowSelection && window.toggleRowSelection(this.dataset.decisionId, this.checked);' /></td>" +
             "<td><code>" +
             escapeHtml(decItem.decision_id) +
             "</code></td>" +
@@ -2750,6 +3124,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
           tbody.appendChild(tr);
         }
+        updateBulkAssignBar(visibleIds);
       }
 
       function selectDecision(decisionId, updateUrl) {
@@ -2886,7 +3261,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         }
         var assignedInput = document.getElementById("input-assigned-to");
         if (assignedInput) {
-          assignedInput.value = dec.assigned_to_email || "";
+          assignedInput.value = getDefaultAssigneeEmail(dec.assigned_to_email);
         }
         var noteInput = document.getElementById("input-review-note");
         if (noteInput) {
@@ -3428,6 +3803,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               state.user.role = meData.role || "analyst";
               state.user.authenticated = Boolean(meData.authenticated);
               updateRoleUI();
+              refreshAnalystFilterOptions();
+              renderContextualDrawer();
             }
           })
           .catch(function () {
@@ -4444,7 +4821,16 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           selectDecision: selectDecision,
           matchesFacetFilters: matchesFacetFilters,
           DOMAIN_DEFS: DOMAIN_DEFS,
-          normalizeDomainKey: normalizeDomainKey
+          normalizeDomainKey: normalizeDomainKey,
+          getDefaultAssigneeEmail: getDefaultAssigneeEmail,
+          getVisibleQueueDecisionIds: getVisibleQueueDecisionIds,
+          toggleRowSelection: toggleRowSelection,
+          toggleSelectAllFiltered: toggleSelectAllFiltered,
+          selectAllFilteredRows: selectAllFilteredRows,
+          clearRowSelection: clearRowSelection,
+          fillBulkAssignMyEmail: fillBulkAssignMyEmail,
+          bulkAssignSelected: bulkAssignSelected,
+          updateBulkAssignBar: updateBulkAssignBar
         };
       }
 

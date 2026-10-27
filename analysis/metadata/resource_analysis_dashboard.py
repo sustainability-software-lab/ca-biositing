@@ -2653,12 +2653,39 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       };
     }
 
+    function getDefaultAssigneeEmail(existingEmail) {
+      const cleanExisting = String(existingEmail || "").trim();
+      if (
+        cleanExisting &&
+        !["unassigned", "none", "null", "anonymous", "guest"].includes(cleanExisting.toLowerCase())
+      ) {
+        return cleanExisting;
+      }
+      try {
+        if (typeof BioCirvQcClient !== "undefined" && typeof BioCirvQcClient.getAnalystIdentity === "function") {
+          const id = BioCirvQcClient.getAnalystIdentity();
+          const email = String((id && id.email) || "").trim();
+          if (email && !["unassigned", "none", "null", "anonymous", "guest"].includes(email.toLowerCase())) {
+            return email;
+          }
+        }
+      } catch (_e) {}
+      try {
+        const stored = String(localStorage.getItem("biocirv_analyst_email") || "").trim();
+        if (stored && !["unassigned", "none", "null", "anonymous", "guest"].includes(stored.toLowerCase())) {
+          return stored;
+        }
+      } catch (_e) {}
+      return "";
+    }
+
     window.canonicalDomainSlug = canonicalDomainSlug;
     window.groupContextLabel = groupContextLabel;
     window.normalizeReplicateGroupKey = normalizeReplicateGroupKey;
     window.matchesReplicateGroupKey = matchesReplicateGroupKey;
     window.computeMedianNumeric = computeMedianNumeric;
     window.getOutlierSummary = getOutlierSummary;
+    window.getDefaultAssigneeEmail = getDefaultAssigneeEmail;
 
     const BioCirvQcClient = {
       canonicalDomainSlug,
@@ -2666,6 +2693,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       normalizeReplicateGroupKey,
       matchesReplicateGroupKey,
       getOutlierSummary,
+      getDefaultAssigneeEmail,
       _pendingSignInCallback: null,
 
       hasConfirmedIdentity() {
@@ -3074,6 +3102,99 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
 
       async assignDecision(decisionId, assignedToEmail, note) {
         return this.assignTask(decisionId, assignedToEmail, note);
+      },
+
+      async assignBatch(items, assignedToEmail, reviewNote) {
+        const id = this.getAnalystIdentity();
+        const cleanEmail = getDefaultAssigneeEmail(assignedToEmail).toLowerCase();
+        const normalizedItems = (Array.isArray(items) ? items : []).map(it => {
+          const repGroupKey = it.replicate_group_key || it.group_key || (
+            (it.resource_name || it.prepared_sample_name || it.prepared_sample || it.parameter_name || it.parameter)
+              ? normalizeReplicateGroupKey(it, it.resource_name)
+              : null
+          );
+          return {
+            decision_id: it.api_decision_id || it.db_id || it.decision_id || it.id || null,
+            record_table: it.record_table || `${canonicalDomainSlug(it.analysis_type || "proximate")}_record`,
+            record_id: it.record_id ? String(it.record_id) : null,
+            record_ids: Array.isArray(it.record_ids)
+              ? it.record_ids.map(String)
+              : (it.record_ids ? String(it.record_ids).split(/[|,\\s]+/).map(s => s.trim()).filter(Boolean) : (it.record_id ? [String(it.record_id)] : [])),
+            replicate_group_key: repGroupKey,
+            resource_name: it.resource_name || "unknown",
+            analysis_type: it.analysis_type || null,
+            parameter_name: it.parameter_name || it.parameter || null,
+            flag_type: it.flag_type || "statistical_outlier",
+            flag_trigger_value: it.flag_trigger_value || null,
+            old_qc_pass: it.old_qc_pass || null,
+            review_note: it.review_note || reviewNote || null
+          };
+        });
+        const actorEmail = ((id && id.email) || getDefaultAssigneeEmail("") || "local.analyst@lbl.gov").toLowerCase();
+        const nowIso = new Date().toISOString();
+        const requestBody = {
+          assigned_to_email: cleanEmail,
+          assigned_by_email: actorEmail,
+          review_note: reviewNote || null,
+          items: normalizedItems
+        };
+        try {
+          const resp = await fetch(`${id.apiBase}/v1/qc/decisions/assign-batch`, {
+            method: "POST",
+            headers: this.getHeaders(),
+            body: JSON.stringify(requestBody)
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const decisionsList = data.decisions || [];
+            decisionsList.forEach(d => this.upsertLocalDecision(d));
+            window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: data }));
+            window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: data }));
+            return { ok: true, source: "api", ...data };
+          }
+        } catch (_e) {}
+
+        const localAssigned = normalizedItems.map(it => {
+          const localEntry = {
+            id: it.decision_id || (Date.now() + Math.floor(Math.random() * 1000)),
+            decision_id: it.decision_id,
+            record_table: it.record_table,
+            record_id: it.record_id,
+            record_ids: it.record_ids,
+            replicate_group_key: it.replicate_group_key,
+            resource_name: it.resource_name,
+            analysis_type: it.analysis_type,
+            parameter_name: it.parameter_name,
+            flag_type: it.flag_type,
+            assigned_to_email: cleanEmail,
+            assigned_by_email: actorEmail,
+            decision_status: "in_review",
+            status: "in_review",
+            review_note: it.review_note || `Bulk-assigned to ${cleanEmail}`,
+            audit_history: [
+              {
+                action: "bulk_assign",
+                assigned_to_email: cleanEmail,
+                assigned_by_email: actorEmail,
+                actor_email: actorEmail,
+                timestamp: nowIso
+              }
+            ],
+            updated_at: nowIso
+          };
+          this.upsertLocalDecision(localEntry);
+          return localEntry;
+        });
+        window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: localAssigned }));
+        window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: localAssigned }));
+        return {
+          ok: true,
+          source: "local",
+          status: "assigned",
+          assigned_count: localAssigned.length,
+          assigned_to_email: cleanEmail,
+          decisions: localAssigned
+        };
       },
 
       async approveDecisions(itemsOrPayload, syncToGsheet = true) {
@@ -4127,7 +4248,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const qcSel = document.getElementById("finding-modal-qc-status");
         if (qcSel) qcSel.value = pf.default_qc_status || pf.new_qc_status || "provisional";
         const assignInput = document.getElementById("finding-modal-assigned-email");
-        if (assignInput) assignInput.value = pf.assigned_to_email || "";
+        if (assignInput) assignInput.value = getDefaultAssigneeEmail(pf.assigned_to_email);
         const noteInput = document.getElementById("finding-modal-note");
         if (noteInput) noteInput.value = pf.audit_note || pf.note || "";
         const statusEl = document.getElementById("finding-modal-status");
@@ -6716,11 +6837,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         });
         if (matched) return matched;
       }
-      return { decision: "pending", note: "", updated_at: "" };
+      return {
+        decision: "pending",
+        note: "",
+        assigned_to_email: window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail("") : "",
+        updated_at: ""
+      };
     }
 
     function upsertDecisionEntry(key, patch, meta) {
-      const existing = DECISIONS_STORE[key] || { decision: "pending", note: "", updated_at: "" };
+      const existing = DECISIONS_STORE[key] || {
+        decision: "pending",
+        note: "",
+        assigned_to_email: window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail("") : "",
+        updated_at: ""
+      };
       const merged = {
         ...existing,
         ...meta,
@@ -7354,7 +7485,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         </select>
                         <input type="text" value="${(dEntry.note || '').replace(/"/g, '&quot;')}" onchange="handleDecisionNote('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Add reviewer rationale / action note..." class="w-full rounded px-2 py-1 text-xs border border-[var(--border)] font-mono" />
                         <div class="flex items-center gap-1">
-                          <input type="email" value="${(dEntry.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email (e.g. reviewer@lbl.gov)..." class="flex-1 rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
+                          <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(dEntry.assigned_to_email) : (dEntry.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email (e.g. reviewer@lbl.gov)..." class="flex-1 rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
                           <button type="button" onclick="approveAndSyncDecision('${safeKeyAttr}', '${metaPayload}')" title="Approve decision &amp; sync to Google Sheets + Postgres" class="px-2 py-1 rounded text-[10px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 whitespace-nowrap">⚡ Approve &amp; Sync</button>
                         </div>
                         <div class="flex flex-wrap gap-1">
@@ -7740,7 +7871,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               </select>
               <input type="text" value="${(dEntry.note || '').replace(/"/g, '&quot;')}" onchange="handleDecisionNote('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Reviewer note..." class="w-full rounded px-1.5 py-1 text-[11px] border border-[var(--border)] font-mono" />
               <div class="flex items-center gap-1">
-                <input type="email" value="${(dEntry.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email..." class="flex-1 rounded px-1.5 py-0.5 text-[10px] border border-[var(--border)] font-mono" />
+                <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(dEntry.assigned_to_email) : (dEntry.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email..." class="flex-1 rounded px-1.5 py-0.5 text-[10px] border border-[var(--border)] font-mono" />
                 <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Open Audit Finding Modal (Entire Replicate Group default vs Single Point Only)" class="px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-90">⚑ Audit</button>
                 <button type="button" onclick="approveAndSyncDecision('${safeKeyAttr}', '${metaPayload}')" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚡ Sync</button>
               </div>
@@ -7887,7 +8018,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         <div class="font-mono text-[11px] text-[var(--muted-foreground)]">${e.parameter || '—'}</div>
                       </td>
                       <td class="py-2.5 px-3 space-y-1 min-w-[200px]">
-                        <input type="email" value="${(e.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="assignQueueEntryEmail('${safeKeyAttr}', this.value)" placeholder="Assign to email..." class="w-full rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
+                        <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(e.assigned_to_email) : (e.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="assignQueueEntryEmail('${safeKeyAttr}', this.value)" placeholder="Assign to email..." class="w-full rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
                         ${currentAnalystEmail ? `<button type="button" onclick="assignQueueEntryEmail('${safeKeyAttr}', '${currentAnalystEmail.replace(/'/g, "\\'")}')" class="px-1.5 py-0.5 rounded text-[10px] bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">👤 Assign to Me</button>` : ''}
                       </td>
                       <td class="py-2.5 px-3 space-y-1 min-w-[250px]">

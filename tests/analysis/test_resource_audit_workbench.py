@@ -204,8 +204,21 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     assert "Refresh QC State" in html
     assert "/v1/qc/decisions" in html
     assert "/v1/qc/decisions/sync-gsheet-batch" in html
+    assert "/v1/qc/decisions/assign-batch" in html
     assert "/sync-gsheet" in html
     assert "/assign" in html
+    assert 'id="qc-bulk-assign-bar"' in html
+    assert 'id="chk-select-all-filtered"' in html
+    assert 'id="chk-select-all-header"' in html
+    assert 'id="bulk-selected-count"' in html
+    assert 'id="btn-select-all-filtered"' in html
+    assert 'id="btn-clear-selection"' in html
+    assert 'id="bulk-assign-email"' in html
+    assert 'id="AnalystDirectoryList"' in html
+    assert 'id="btn-bulk-assign-apply"' in html
+    assert "qc-row-select-chk" in html
+    assert "bulkAssignSelected" in html
+    assert "getDefaultAssigneeEmail" in html
 
     # 5. Complete 4-step Audit Provenance & Timestamp Timeline + role-aware Stage 2 controls
     assert 'id="audit-provenance-timeline"' in html
@@ -598,6 +611,8 @@ def test_js_refresh_qc_state_non_colliding_ids_and_drawer_fallback(
         output_path=output_html,
     )
     html_text = output_html.read_text(encoding="utf-8")
+    assert 'id="btn-bulk-assign-my-email"' in html_text
+    assert 'id="btn-clear-selection"' in html_text
     blocks = [
         block
         for block in re.findall(
@@ -984,3 +999,215 @@ def test_proximate_sum_portal_parity_and_fc_fallback() -> None:
     assert strata["Almond Hulls::EXP-A::Milled 2mm"]["out_of_bounds"] is True
     assert strata["Walnut Shells::EXP-B::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(90.0)
     assert strata["Walnut Shells::EXP-B::Milled 2mm"]["out_of_bounds"] is True
+
+
+def test_card12_default_assignee_and_bulk_assign_selected(tmp_path: Path) -> None:
+    """Verify Card 12: getDefaultAssigneeEmail auto-fill in drawer/bulk bar and bulkAssignSelected batch POST."""
+    node_bin = shutil.which("node")
+    if node_bin is None:
+        pytest.skip("node binary not available in PATH")
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html_text = output_html.read_text(encoding="utf-8")
+    assert 'id="btn-bulk-assign-my-email"' in html_text
+    assert 'id="btn-clear-selection"' in html_text
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html_text,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+
+    harness_js = tmp_path / "run_card12_workbench_checks.js"
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  return {
+    id: id,
+    value: "",
+    textContent: "",
+    innerHTML: "",
+    style: {},
+    className: "",
+    checked: false,
+    indeterminate: false,
+    disabled: false,
+    classList: {
+      add: function () {},
+      remove: function () {},
+      toggle: function () {}
+    },
+    appendChild: function () {},
+    addEventListener: function () {},
+    getAttribute: function () { return ""; },
+    setAttribute: function () {},
+    querySelectorAll: function () { return []; }
+  };
+}
+global.document = {
+  getElementById: function (id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll: function () { return []; },
+  createElement: function (tag) { return makeEl(tag); }
+};
+global.window = {
+  location: { pathname: "/v1/dashboards/metadata/resource_audit_workbench.html", search: "" },
+  history: { replaceState: function () {} },
+  open: function () {}
+};
+let batchRequests = [];
+global.fetch = function (url, opts) {
+  if (String(url).indexOf("/v1/qc/auth/me") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          email: "qa.analyst@lbl.gov",
+          name: "QA Analyst",
+          role: "analyst",
+          authenticated: true
+        });
+      }
+    });
+  }
+  if (String(url).indexOf("/v1/qc/decisions/assign-batch") !== -1) {
+    const body = opts && opts.body ? JSON.parse(opts.body) : {};
+    batchRequests.push(body);
+    const assignedEmail = String(body.assigned_to_email || "").trim().toLowerCase();
+    const outDecisions = (body.items || []).map(function (it, idx) {
+      return {
+        id: it.id || (200 + idx),
+        decision_id: it.decision_id,
+        record_table: it.record_table,
+        record_id: it.record_id,
+        replicate_group_key: it.replicate_group_key,
+        resource_name: it.resource_name,
+        analysis_type: it.analysis_type,
+        parameter_name: it.parameter_name,
+        decision_status: "in_review",
+        decision_action: "in_review",
+        assigned_to_email: assignedEmail,
+        assigned_by_email: "qa.analyst@lbl.gov",
+        assigned_at: "2026-04-20T12:00:00Z"
+      };
+    });
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          status: "ok",
+          assigned_count: outDecisions.length,
+          assigned_to_email: assignedEmail,
+          assigned_by_email: "qa.analyst@lbl.gov",
+          decisions: outDecisions
+        });
+      }
+    });
+  }
+  if (String(url).indexOf("/v1/qc/decisions") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({ decisions: [] });
+      }
+    });
+  }
+  return Promise.resolve({ ok: false, json: function () { return Promise.resolve(null); } });
+};
+"""
+        + blocks[0]
+        + """
+(async function () {
+  await new Promise((r) => setTimeout(r, 30));
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+
+  // 1. Verify getDefaultAssigneeEmail returns authenticated user email, preserves existing assignment on QC-0001, and auto-fills unassigned #input-assigned-to and #bulk-assign-email
+  assert.strictEqual(hooks.getDefaultAssigneeEmail(), "qa.analyst@lbl.gov");
+  assert.strictEqual(hooks.getDefaultAssigneeEmail("analyst@lbl.gov"), "analyst@lbl.gov");
+  assert.strictEqual(elements["input-assigned-to"].value, "qa.analyst@lbl.gov");
+  hooks.state.decisionsById["QC-0001"].assigned_to_email = "explicit.owner@lbl.gov";
+  hooks.selectDecision("QC-0001", false);
+  assert.strictEqual(elements["input-assigned-to"].value, "explicit.owner@lbl.gov");
+  hooks.state.decisionsById["QC-0001"].assigned_to_email = "";
+  hooks.selectDecision("QC-0001", false);
+  assert.strictEqual(elements["input-assigned-to"].value, "qa.analyst@lbl.gov");
+  assert.strictEqual(elements["bulk-assign-email"].value, "qa.analyst@lbl.gov");
+
+  // 2. Verify selectAllFilteredRows selects all visible queue decisions and updates #bulk-selected-count
+  const visibleIds = hooks.getVisibleQueueDecisionIds();
+  assert.ok(visibleIds.length >= 2, "Expected at least 2 visible queue decisions");
+  hooks.selectAllFilteredRows();
+  assert.strictEqual(hooks.state.selectedIds.size, visibleIds.length);
+  assert.strictEqual(elements["bulk-selected-count"].textContent, visibleIds.length + " selected");
+  assert.strictEqual(elements["btn-bulk-assign-apply"].disabled, false);
+  assert.strictEqual(elements["btn-clear-selection"].disabled, false);
+
+  // 3. Toggle off all except first 2 rows, test fillBulkAssignMyEmail, and run bulkAssignSelected
+  hooks.clearRowSelection();
+  assert.strictEqual(hooks.state.selectedIds.size, 0);
+  assert.strictEqual(elements["btn-clear-selection"].disabled, true);
+  elements["bulk-assign-email"].value = "other@lbl.gov";
+  assert.strictEqual(hooks.fillBulkAssignMyEmail(), "qa.analyst@lbl.gov");
+  assert.strictEqual(elements["bulk-assign-email"].value, "qa.analyst@lbl.gov");
+
+  hooks.toggleRowSelection(visibleIds[0], true);
+  hooks.toggleRowSelection(visibleIds[1], true);
+  assert.strictEqual(hooks.state.selectedIds.size, 2);
+
+  elements["bulk-assign-email"].value = "Lead.Reviewer@lbl.gov";
+  const onlineRes = await hooks.bulkAssignSelected();
+  assert.strictEqual(onlineRes.online, true);
+
+  assert.strictEqual(batchRequests.length, 1);
+  assert.strictEqual(batchRequests[0].assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(batchRequests[0].items.length, 2);
+  assert.strictEqual(hooks.state.selectedIds.size, 0, "Expected selection to clear after bulk assign");
+
+  const d0 = hooks.state.decisionsById[visibleIds[0]];
+  const d1 = hooks.state.decisionsById[visibleIds[1]];
+  assert.strictEqual(d0.assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(d1.assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(d0.decision_status, "in_review");
+  assert.strictEqual(d1.decision_status, "in_review");
+  assert.ok(d0.db_id >= 200);
+  assert.ok(d1.db_id >= 200);
+
+  // 4. Verify offline / failed POST fallback sets online=false and updates local state cleanly
+  global.fetch = function () {
+    return Promise.resolve({ ok: false, status: 503, json: function () { return Promise.resolve(null); } });
+  };
+  hooks.toggleRowSelection(visibleIds[0], true);
+  elements["bulk-assign-email"].value = "Offline.Reviewer@lbl.gov";
+  const offlineRes = await hooks.bulkAssignSelected();
+  assert.strictEqual(offlineRes.ok, true);
+  assert.strictEqual(offlineRes.online, false);
+  assert.strictEqual(offlineRes.status, "assigned_offline");
+  assert.strictEqual(hooks.state.decisionsById[visibleIds[0]].assigned_to_email, "offline.reviewer@lbl.gov");
+  assert.ok(String(elements["decision-toast"].textContent || "").indexOf("offline fallback") !== -1);
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"Card 12 JS harness failed: {proc.stderr}\n{proc.stdout}"

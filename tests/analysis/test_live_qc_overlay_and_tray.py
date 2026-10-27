@@ -1591,3 +1591,165 @@ def test_card11_proximate_sum_portal_parity_and_data_visualizer_rename(
     assert '<option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>' in page3
     assert "Proximate Closure (Moisture + VS + Ash):" in page3
     assert "out_of_bounds: sumPct > 0.0 && (sumPct < 95.0 || sumPct > 105.0)" in page3
+
+
+def test_card12_default_assignee_email_and_assign_batch(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Card 12: Verify window.getDefaultAssigneeEmail auto-fill across Pages 1–3 and BioCirvQcClient.assignBatch."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    assert "function getDefaultAssigneeEmail(" in page1
+    assert "function getDefaultAssigneeEmail(" in page2
+    assert "function getDefaultAssigneeEmail(" in page3
+    assert "getDefaultAssigneeEmail(pf.assigned_to_email)" in page1
+    assert "window.getDefaultAssigneeEmail(dEntry.assigned_to_email)" in page2
+    assert "window.getDefaultAssigneeEmail(" in page3
+    assert "async assignBatch(" in page1
+
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    harness = tmp_path / "run_card12_overlay_checks.js"
+    harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    addEventListener(){}, removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+const storage = {};
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 2",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+const apiCalls = [];
+global.fetch = async (url, opts) => {
+  const method = (opts && opts.method) || "GET";
+  const body = (opts && opts.body) ? JSON.parse(opts.body) : null;
+  apiCalls.push({ url, method, body });
+  if (String(url).includes("/v1/qc/auth/me")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ email: "Auto.Analyst@lbl.gov", name: "Auto Analyst", role: "analyst", authenticated: true })
+    };
+  }
+  if (String(url).endsWith("/v1/qc/decisions/assign-batch") && method === "POST") {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "ok",
+        assigned_count: (body.items || []).length,
+        assigned_to_email: body.assigned_to_email,
+        decisions: (body.items || []).map((it, idx) => ({
+          id: it.id || (700 + idx),
+          record_table: it.record_table,
+          record_id: it.record_id,
+          replicate_group_key: it.replicate_group_key,
+          assigned_to_email: body.assigned_to_email,
+          decision_status: "in_review",
+          decision_action: "in_review"
+        }))
+      })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + p2_script
+        + """
+(async () => {
+  window.BioCirvQcClient.setAnalystIdentity({
+    email: "Auto.Analyst@lbl.gov",
+    name: "Auto Analyst",
+    role: "analyst",
+    confirmed: true
+  });
+
+  // 1. Verify getDefaultAssigneeEmail falls back to currentUser.email when empty, and preserves explicit email
+  const fallbackEmail = window.getDefaultAssigneeEmail("");
+  const explicitEmail = window.getDefaultAssigneeEmail("custom.reviewer@lbl.gov");
+
+  // 2. Open Submit Finding modal with no assigned_to_email -> auto-fills #finding-modal-assigned-email
+  window.openSubmitFindingModal({ resource_name: "almond hulls", parameter_name: "Ash", record_id: "rec-101" });
+  const modalAssignedVal = document.getElementById("finding-modal-assigned-email").value;
+
+  // 3. Verify Page 2 getDecisionEntry defaults assigned_to_email to current analyst
+  const defaultEntry = getDecisionEntry("grp::almond hulls::ah-01::proximate::ash::oven::exp-1");
+
+  // 4. Verify BioCirvQcClient.assignBatch posts to /v1/qc/decisions/assign-batch and updates live decisions cache
+  const batchRes = await window.BioCirvQcClient.assignBatch(
+    [
+      { record_table: "proximate_record", record_id: "rec-101", resource_name: "almond hulls", analysis_type: "proximate", parameter_name: "Ash" },
+      { record_table: "proximate_record", record_id: "rec-102", resource_name: "almond hulls", analysis_type: "proximate", parameter_name: "Moisture" }
+    ],
+    "Team.Lead@lbl.gov",
+    "Batch review note"
+  );
+
+  console.log(JSON.stringify({
+    fallbackEmail,
+    explicitEmail,
+    modalAssignedVal,
+    defaultEntryAssignee: defaultEntry.assigned_to_email,
+    batchRes,
+    batchApiCalls: apiCalls.filter(c => String(c.url).endsWith("/v1/qc/decisions/assign-batch"))
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Card 12 overlay Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert out["fallbackEmail"] == "auto.analyst@lbl.gov"
+    assert out["explicitEmail"] == "custom.reviewer@lbl.gov"
+    assert out["modalAssignedVal"] == "auto.analyst@lbl.gov"
+    assert out["defaultEntryAssignee"] == "auto.analyst@lbl.gov"
+    assert out["batchRes"]["ok"] is True
+    assert out["batchRes"]["assigned_count"] == 2
+    assert len(out["batchApiCalls"]) == 1
+    assert out["batchApiCalls"][0]["body"]["assigned_to_email"] == "team.lead@lbl.gov"
+    assert out["batchApiCalls"][0]["body"]["review_note"] == "Batch review note"
+    assert len(out["batchApiCalls"][0]["body"]["items"]) == 2

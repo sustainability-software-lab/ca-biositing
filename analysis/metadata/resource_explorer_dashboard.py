@@ -4423,6 +4423,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       setAuditPopoverScope(gRows.length > 1 ? 'group' : 'single');
       const popActionSel = document.getElementById('click-popover-action');
       if (popActionSel) popActionSel.value = 'keep_note';
+      const popAssigneeEl = document.getElementById('click-popover-assignee');
+      if (popAssigneeEl) {
+        popAssigneeEl.value = window.getDefaultAssigneeEmail
+          ? window.getDefaultAssigneeEmail(r.assigned_to_email || '')
+          : (r.assigned_to_email || '');
+      }
 
       const fb = document.getElementById('click-popover-feedback');
       if (fb) { fb.classList.add('hidden'); fb.textContent = ''; }
@@ -4568,7 +4574,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         unit: pinnedRecord.unit || '',
         value: pinnedRecord.value,
         default_qc_status: 'provisional',
-        assigned_to_email: String(assignedToEmail || '').trim(),
+        assigned_to_email: window.getDefaultAssigneeEmail
+          ? window.getDefaultAssigneeEmail(assignedToEmail)
+          : String(assignedToEmail || '').trim(),
         title: `[${currentDomain.toUpperCase()}] ${pinnedRecord.resource_name} — ${formatParamName(pinnedRecord.parameter, currentDomain)} (${scopeMode === 'group' ? `Replicate Group n=${allGrpRows.length}` : pinnedRecord.record_id})`,
         category: 'Replicate Outlier / Interactive Plot Audit',
         severity: 'high',
@@ -4654,6 +4662,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (pinScopeSel) {
         pinScopeSel.options[0].text = `Audit Scope: Replicate Group (${pinnedGroupRows.length} pt${pinnedGroupRows.length === 1 ? '' : 's'})`;
         pinScopeSel.options[1].text = `Audit Scope: Single Point Only (${r.record_id.slice(0, 14)})`;
+      }
+      const pinAssigneeEl = document.getElementById('pin-audit-assignee');
+      if (pinAssigneeEl) {
+        pinAssigneeEl.value = window.getDefaultAssigneeEmail
+          ? window.getDefaultAssigneeEmail(r.assigned_to_email || pinAssigneeEl.value || '')
+          : (r.assigned_to_email || pinAssigneeEl.value || '');
       }
       document.getElementById('pinned-actions').classList.remove('hidden');
     }
