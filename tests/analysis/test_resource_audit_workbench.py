@@ -116,12 +116,22 @@ def test_build_workbench_payload_detects_all_four_qc_flag_types() -> None:
     assert "proximate_sum" in all_flags
     assert "analyst_flagged" in all_flags
 
-    # Verify AH-PREP-02 proximate closure violation (>105%) is captured
+    # Verify AH-PREP-02 proximate closure violation (outside 95-105% via Data Portal formula:
+    # COALESCE(avg_moisture, 0) + COALESCE(avg_ash, 0) + COALESCE(avg_vs, 100 - COALESCE(avg_fc, 0))
+    # = 0.0 + 5.9 + 82.0 = 87.9%) is captured at both sample and stratum levels
     closure_map = payload["proximate_closure_by_sample"]
     assert "Almond Hulls::AH-PREP-02" in closure_map
     ah_prep_02 = closure_map["Almond Hulls::AH-PREP-02"]
     assert ah_prep_02["out_of_bounds"] is True
-    assert ah_prep_02["closure_sum_pct"] == pytest.approx(112.4, abs=0.2)
+    assert ah_prep_02["closure_sum_pct"] == pytest.approx(87.9, abs=0.2)
+    assert ah_prep_02["proximate_sum_pct"] == pytest.approx(87.9, abs=0.2)
+
+    stratum_map = payload["proximate_closure_by_stratum"]
+    assert "Almond Hulls::EXP-PROX-02::Milled 2mm" in stratum_map
+    assert stratum_map["Almond Hulls::EXP-PROX-02::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(
+        87.9, abs=0.2
+    )
+    assert stratum_map["Almond Hulls::EXP-PROX-02::Milled 2mm"]["out_of_bounds"] is True
 
     # Verify co-measured parameters on Almond Hulls::AH-PREP-01 include multiple parameters
     co_measured = payload["co_measured_by_sample"].get("Almond Hulls::AH-PREP-01", [])
@@ -205,6 +215,7 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     assert "Google Sheets Sync Status" in html
     assert "Sync This Decision to Google Sheets" in html
     assert 'id="badge-analyst-gsheet-readonly"' in html
+    assert "3. Data Visualizer" in html
 
     # 6. Validate inline JS syntax via node --check
     script_count = _validate_inline_js_blocks(output_html)
@@ -239,6 +250,7 @@ def test_generate_dashboard_gallery_and_login_portal(tmp_path: Path) -> None:
     assert "audit/db_environment_drift_dashboard.html" in index_html
     assert 'id="badge-my-assigned-reviews"' in index_html
     assert "My Assigned Reviews" in index_html
+    assert "Interactive Data Visualizer" in index_html
     assert 'id="product-card-5-drift"' in index_html
     assert 'data-admin-only="true"' in index_html
     assert "/v1/qc/auth/me" in index_html
@@ -294,9 +306,9 @@ def test_dashboard_artifacts_workflow_never_publishes_minimal_fixture_to_gcs() -
     workflow_path = REPO_ROOT / ".github" / "workflows" / "dashboard-artifacts.yml"
     content = workflow_path.read_text(encoding="utf-8")
     assert 'USED_MINIMAL_FIXTURE="true"' in content
-    assert 'echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}" >> "$GITHUB_ENV"' in content
-    assert 'if [ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]' in content
-    assert "dashboards/${DASHBOARDS_ENV}/latest/metadata/dashboard_data_snapshot.json" in content
+    assert 'echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}"' in content
+    assert '[ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]' in content
+    assert "metadata/dashboard_data_snapshot.json" in content
 
 
 def test_canonical_6_part_replicate_group_key_and_4_part_fallback() -> None:
@@ -906,3 +918,69 @@ global.fetch = function (url) {
         check=False,
     )
     assert proc.returncode == 0, f"JS unit harness failed: {proc.stderr}\n{proc.stdout}"
+
+
+def test_proximate_sum_portal_parity_and_fc_fallback() -> None:
+    """Verify build_workbench_payload computes Data Portal proximate_sum with VS priority and (100 - FC) fallback."""
+    snapshot = {
+        "str_cols": [
+            "resource_name",
+            "analysis_type",
+            "prepared_sample",
+            "field_sample",
+            "provider",
+            "prep_method",
+            "experiment",
+            "analyst",
+            "qc_status",
+            "pt_method",
+            "eh_method",
+            "vessel",
+            "strain",
+            "bioconv",
+            "well_or_block",
+            "parameter",
+            "unit",
+            "note",
+        ],
+        "dicts": {
+            "resource_name": ["Almond Hulls", "Walnut Shells"],
+            "analysis_type": ["Proximate Analysis"],
+            "prepared_sample": ["AH-S1", "WS-S1"],
+            "field_sample": ["AH-F1", "WS-F1"],
+            "provider": ["lbl"],
+            "prep_method": ["Milled 2mm"],
+            "experiment": ["EXP-A", "EXP-B"],
+            "analyst": ["QA"],
+            "qc_status": ["pass"],
+            "pt_method": [""],
+            "eh_method": [""],
+            "vessel": [""],
+            "strain": [""],
+            "bioconv": [""],
+            "well_or_block": [""],
+            "parameter": ["Moisture", "Ash", "Volatile Solids", "Fixed Carbon"],
+            "unit": ["%"],
+            "note": [""],
+        },
+        # Row format: [record_id] + 18 str_cols indices + [replicate, value, exp_date]
+        "rows": [
+            # Stratum 1 (Almond Hulls::EXP-A::Milled 2mm): Moisture=8.0, Ash=5.0, VS=75.0, FC=12.0
+            # Portal formula uses Moisture + Ash + VS = 8.0 + 5.0 + 75.0 = 88.0% (<95% -> flagged, FC ignored when VS present)
+            ["R-M1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8.0, "2026-01-01"],
+            ["R-A1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 5.0, "2026-01-01"],
+            ["R-V1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1, 75.0, "2026-01-01"],
+            ["R-F1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 12.0, "2026-01-01"],
+            # Stratum 2 (Walnut Shells::EXP-B::Milled 2mm): Moisture=6.0, Ash=2.0, NO VS, FC=18.0
+            # Portal formula uses Moisture + Ash + (100 - FC) = 6.0 + 2.0 + 82.0 = 90.0% (<95% -> flagged)
+            ["R-M2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6.0, "2026-01-02"],
+            ["R-A2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 2.0, "2026-01-02"],
+            ["R-F2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 18.0, "2026-01-02"],
+        ],
+    }
+    payload = build_workbench_payload(snapshot)
+    strata = payload["proximate_closure_by_stratum"]
+    assert strata["Almond Hulls::EXP-A::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(88.0)
+    assert strata["Almond Hulls::EXP-A::Milled 2mm"]["out_of_bounds"] is True
+    assert strata["Walnut Shells::EXP-B::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(90.0)
+    assert strata["Walnut Shells::EXP-B::Milled 2mm"]["out_of_bounds"] is True

@@ -44,10 +44,28 @@ DEFAULT_OUTPUT_PATH = Path(
 
 PROXIMATE_CLOSURE_PARAMETERS = {
     "ash",
+    "ash solids",
+    "volatile solids",
     "volatile matter",
     "fixed carbon",
     "moisture",
 }
+
+PROXIMATE_COMPONENT_BUCKET_MAP: dict[str, str] = {
+    "moisture": "moisture",
+    "ash": "ash",
+    "ash solids": "ash",
+    "volatile solids": "volatile_solids",
+    "volatile matter": "volatile_solids",
+    "fixed carbon": "fixed_carbon",
+}
+
+
+def proximate_component_bucket(param_name: str | None) -> str | None:
+    """Map a parameter name to its canonical Data Portal proximate component bucket."""
+    return PROXIMATE_COMPONENT_BUCKET_MAP.get(
+        str(param_name or "").strip().lower()
+    )
 
 ANALYSIS_TABLE_MAP: dict[str, str] = {
     "Proximate Analysis": "proximate_record",
@@ -561,43 +579,82 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
         for key, vals in param_values_global.items()
     }
 
-    # 2. Compute Proximate closure totals per (resource_name, prepared_sample)
-    proximate_param_means: dict[tuple[str, str], dict[str, float]] = defaultdict(
-        dict
-    )
-    for group_key, group_recs in groups_map.items():
-        first = group_recs[0]
-        param_lower = str(first.get("parameter", "")).strip().lower()
-        analysis_lower = str(first.get("analysis_type", "")).strip().lower()
-        if (
-            "proximate" in analysis_lower
-            and param_lower in PROXIMATE_CLOSURE_PARAMETERS
-        ):
-            vals = [
-                float(r["value"])
-                for r in group_recs
-                if r.get("value") is not None
-            ]
-            if vals:
-                sample_key = (
-                    str(first.get("resource_name", "")),
-                    str(first.get("prepared_sample", "")),
-                )
-                proximate_param_means[sample_key][first["parameter"]] = round(
-                    statistics.fmean(vals), 3
-                )
+    # 2. Compute Proximate closure totals per (resource_name, experiment, prep_method) stratum
+    #    using the exact Data Portal formula:
+    #    COALESCE(avg_moisture, 0) + COALESCE(avg_ash, 0) + COALESCE(avg_vs, 100 - COALESCE(avg_fc, 0))
+    proximate_stratum_vals: dict[
+        tuple[str, str, str], dict[str, list[float]]
+    ] = defaultdict(lambda: defaultdict(list))
+    stratum_samples: dict[tuple[str, str, str], set[str]] = defaultdict(set)
+    for rec in records:
+        if canonical_domain_slug(rec.get("analysis_type", "")) != "proximate":
+            continue
+        if str(rec.get("qc_status") or "pass").strip().lower() == "fail":
+            continue
+        bucket = proximate_component_bucket(rec.get("parameter"))
+        if bucket is None:
+            continue
+        val = rec.get("value")
+        if val is None or (isinstance(val, float) and math.isnan(val)):
+            continue
+        stratum_key = (
+            str(rec.get("resource_name", "")),
+            str(rec.get("experiment") or "unassigned"),
+            str(rec.get("group_context_label") or group_context_label(rec) or "unassigned"),
+        )
+        proximate_stratum_vals[stratum_key][bucket].append(float(val))
+        stratum_samples[stratum_key].add(str(rec.get("prepared_sample", "")))
 
+    proximate_closure_by_stratum: dict[str, dict[str, Any]] = {}
     proximate_closure_by_sample: dict[str, dict[str, Any]] = {}
-    for (res_name, prep_sample), comp_map in proximate_param_means.items():
-        total_pct = round(sum(comp_map.values()), 2)
-        out_of_bounds = total_pct < 95.0 or total_pct > 105.0
-        proximate_closure_by_sample[f"{res_name}::{prep_sample}"] = {
+    for (
+        res_name,
+        exp_name,
+        prep_method,
+    ), bucket_vals in proximate_stratum_vals.items():
+        comp_map: dict[str, float] = {
+            bucket: round(statistics.fmean(vals), 3)
+            for bucket, vals in bucket_vals.items()
+            if vals
+        }
+        avg_m = comp_map.get("moisture")
+        avg_a = comp_map.get("ash")
+        avg_vs = comp_map.get("volatile_solids")
+        avg_fc = comp_map.get("fixed_carbon")
+        has_closure_pair = (avg_vs is not None or avg_fc is not None) and (
+            avg_m is not None or avg_a is not None
+        )
+        if avg_vs is not None:
+            vs_or_fc = avg_vs
+        elif avg_fc is not None:
+            vs_or_fc = 100.0 - avg_fc
+        else:
+            vs_or_fc = 0.0
+        total_pct = round((avg_m or 0.0) + (avg_a or 0.0) + vs_or_fc, 2)
+        out_of_bounds = bool(
+            has_closure_pair
+            and total_pct > 0.0
+            and (total_pct < 95.0 or total_pct > 105.0)
+        )
+        stratum_id = f"{res_name}::{exp_name}::{prep_method}"
+        entry = {
             "resource_name": res_name,
-            "prepared_sample": prep_sample,
+            "experiment": exp_name,
+            "prep_method": prep_method,
             "components": comp_map,
             "closure_sum_pct": total_pct,
+            "proximate_sum_pct": total_pct,
             "out_of_bounds": out_of_bounds,
         }
+        proximate_closure_by_stratum[stratum_id] = entry
+        for prep_sample in sorted(
+            stratum_samples[(res_name, exp_name, prep_method)]
+        ):
+            sample_entry = dict(entry)
+            sample_entry["prepared_sample"] = prep_sample
+            proximate_closure_by_sample[f"{res_name}::{prep_sample}"] = (
+                sample_entry
+            )
 
     # 3. Build replicate groups and candidate QC decisions
     replicate_groups: dict[str, dict[str, Any]] = {}
@@ -721,13 +778,21 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
         sample_closure_key = (
             f"{first.get('resource_name', '')}::{first.get('prepared_sample', '')}"
         )
-        closure_info = proximate_closure_by_sample.get(sample_closure_key)
+        stratum_closure_key = (
+            f"{first.get('resource_name', '')}::"
+            f"{first.get('experiment') or 'unassigned'}::"
+            f"{first.get('group_context_label') or group_context_label(first) or 'unassigned'}"
+        )
+        closure_info = proximate_closure_by_stratum.get(
+            stratum_closure_key
+        ) or proximate_closure_by_sample.get(sample_closure_key)
         is_proximate_violation = bool(
             closure_info
             and closure_info.get("out_of_bounds")
-            and "proximate" in str(first.get("analysis_type", "")).lower()
-            and str(first.get("parameter", "")).strip().lower()
-            in PROXIMATE_CLOSURE_PARAMETERS
+            and canonical_domain_slug(first.get("analysis_type", ""))
+            == "proximate"
+            and proximate_component_bucket(first.get("parameter", ""))
+            is not None
         )
 
         flag_types: list[str] = []
@@ -784,6 +849,20 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
             "records": replicate_rows,
             "flag_types": flag_types,
             "proximate_closure": closure_info,
+            "proximate_sum_pct": (
+                closure_info["proximate_sum_pct"]
+                if closure_info is not None
+                and canonical_domain_slug(first.get("analysis_type", ""))
+                == "proximate"
+                else None
+            ),
+            "proximate_components": (
+                closure_info["components"]
+                if closure_info is not None
+                and canonical_domain_slug(first.get("analysis_type", ""))
+                == "proximate"
+                else {}
+            ),
         }
         replicate_groups[group_key] = group_entry
 
@@ -909,6 +988,7 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
         "decisions": candidate_decisions,
         "replicate_groups": replicate_groups,
         "co_measured_by_sample": dict(sample_params_map),
+        "proximate_closure_by_stratum": proximate_closure_by_stratum,
         "proximate_closure_by_sample": proximate_closure_by_sample,
     }
 
@@ -1507,6 +1587,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       <nav class="nav-links" aria-label="Portal Navigation">
         <a href="../index.html" id="link-portal-gallery">← Back to 5-Product Portal Gallery</a>
         <a href="resource_qc_outlier_dashboard.html" id="link-stat-snapshot">2. Statistical Snapshot</a>
+        <a href="resource_explorer_dashboard.html" id="link-data-visualizer">3. Data Visualizer</a>
         <a href="../login.html" id="link-login-portal">🔐 Portal Login / Role Switcher</a>
       </nav>
     </div>
@@ -2987,16 +3068,40 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (state.plotStyle === "proximate_closure") {
           var sampleKey =
             activeGroup.resource_name + "::" + activeGroup.prepared_sample;
+          var stratumKey =
+            activeGroup.resource_name +
+            "::" +
+            (activeGroup.experiment || "unassigned") +
+            "::" +
+            (activeGroup.group_context_label || activeGroup.prep_method || "unassigned");
           var closure =
-            (WORKBENCH_DATA.proximate_closure_by_sample || {})[sampleKey] || null;
-          var comps = (closure && closure.components) || {};
-          var compNames = Object.keys(comps);
-          var sumVal = closure ? closure.closure_sum_pct : st.mean || 0;
+            activeGroup.proximate_closure ||
+            (WORKBENCH_DATA.proximate_closure_by_stratum || {})[stratumKey] ||
+            (WORKBENCH_DATA.proximate_closure_by_sample || {})[sampleKey] ||
+            null;
+          var rawComps = (closure && closure.components) || {};
+          var mComp = rawComps.moisture !== undefined ? Number(rawComps.moisture) : null;
+          var aComp = rawComps.ash !== undefined ? Number(rawComps.ash) : null;
+          var vsComp =
+            rawComps.volatile_solids !== undefined ? Number(rawComps.volatile_solids) : null;
+          var fcComp =
+            rawComps.fixed_carbon !== undefined ? Number(rawComps.fixed_carbon) : null;
+          var portalSegments = [];
+          if (mComp !== null) portalSegments.push({ label: "Moisture", val: mComp });
+          if (aComp !== null) portalSegments.push({ label: "Ash", val: aComp });
+          if (vsComp !== null) {
+            portalSegments.push({ label: "Volatile Solids", val: vsComp });
+          } else if (fcComp !== null) {
+            portalSegments.push({ label: "100 - Fixed Carbon", val: 100.0 - fcComp });
+          }
+          var sumVal = closure
+            ? Number(closure.proximate_sum_pct !== undefined ? closure.proximate_sum_pct : closure.closure_sum_pct)
+            : Number(st.mean || 0);
 
           svgParts.push(
             '<text x="' +
               padL +
-              '" y="20" font-size="12" font-weight="700" fill="#0f172a">Proximate Mass-Balance Closure — ' +
+              '" y="20" font-size="12" font-weight="700" fill="#0f172a">Proximate Mass-Balance Closure (Moisture + Ash + VS [or 100 - FC]) — ' +
               escapeHtml(sampleKey) +
               " (Total: " +
               Number(sumVal).toFixed(1) +
@@ -3043,9 +3148,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           var curX = padL;
           var barY = padT + 65;
           var barH = 48;
-          for (var cIdx = 0; cIdx < compNames.length; cIdx++) {
-            var cName = compNames[cIdx];
-            var cVal = Number(comps[cName] || 0);
+          for (var cIdx = 0; cIdx < portalSegments.length; cIdx++) {
+            var cName = portalSegments[cIdx].label;
+            var cVal = Number(portalSegments[cIdx].val || 0);
             var segW = (cVal / maxScale) * plotW;
             var segColor = palette[cIdx % palette.length];
             svgParts.push(

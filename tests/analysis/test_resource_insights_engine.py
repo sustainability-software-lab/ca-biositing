@@ -9,6 +9,7 @@ from analysis.metadata.resource_insights_engine import (
     DIXON_MIN_RSD_PCT,
     _canonical_domain_slug,
     compute_dataset_outlier_screening,
+    compute_proximate_closure_strata,
 )
 
 
@@ -436,3 +437,134 @@ def test_summary_overall_within_and_between_sd_medians() -> None:
         == summary["flagged_active_groups"]
         == summary["flagged_replicate_groups"]
     )
+
+
+def test_proximate_closure_portal_formula_and_outlier_screening_flags() -> None:
+    """Verify Data Portal proximate_sum formula (Moisture + Ash + VS [or 100 - FC]) and 95-105% flags."""
+    rows = [
+        # Stratum 1: (Almond Hulls, EXP-01, Milled) -> Moisture=8.0, Ash=5.0, VS=74.0, FC=13.0
+        # Data Portal formula uses VS (74.0) and ignores FC (13.0) when VS is present -> 8 + 5 + 74 = 87.0% (<95% -> flagged)
+        _make_row(
+            prepared_sample="PS-1",
+            experiment="EXP-01",
+            prep_method="Milled",
+            parameter="Moisture",
+            record_id="M1",
+            value=8.0,
+        ),
+        _make_row(
+            prepared_sample="PS-1",
+            experiment="EXP-01",
+            prep_method="Milled",
+            parameter="Ash",
+            record_id="A1",
+            value=5.0,
+        ),
+        _make_row(
+            prepared_sample="PS-1",
+            experiment="EXP-01",
+            prep_method="Milled",
+            parameter="Volatile Solids",
+            record_id="V1",
+            value=74.0,
+        ),
+        _make_row(
+            prepared_sample="PS-1",
+            experiment="EXP-01",
+            prep_method="Milled",
+            parameter="Fixed Carbon",
+            record_id="F1",
+            value=13.0,
+        ),
+        # Stratum 2: (Almond Hulls, EXP-02, Dried) -> Moisture=6.0, Ash=4.0, NO VS, FC=15.0
+        # Data Portal formula falls back to (100 - FC) = 85.0 -> 6 + 4 + 85 = 95.0% (in 95-105% -> clean)
+        _make_row(
+            prepared_sample="PS-2",
+            experiment="EXP-02",
+            prep_method="Dried",
+            parameter="Moisture",
+            record_id="M2",
+            value=6.0,
+        ),
+        _make_row(
+            prepared_sample="PS-2",
+            experiment="EXP-02",
+            prep_method="Dried",
+            parameter="Ash",
+            record_id="A2",
+            value=4.0,
+        ),
+        _make_row(
+            prepared_sample="PS-2",
+            experiment="EXP-02",
+            prep_method="Dried",
+            parameter="Fixed Carbon",
+            record_id="F2",
+            value=15.0,
+        ),
+        # Stratum 3: (Almond Hulls, EXP-03, Ball Milled) -> Moisture=10.0, Ash=12.0, NO VS, FC=10.0
+        # Data Portal formula falls back to (100 - FC) = 90.0 -> 10 + 12 + 90 = 112.0% (>105% -> flagged)
+        _make_row(
+            prepared_sample="PS-3",
+            experiment="EXP-03",
+            prep_method="Ball Milled",
+            parameter="Moisture",
+            record_id="M3",
+            value=10.0,
+        ),
+        _make_row(
+            prepared_sample="PS-3",
+            experiment="EXP-03",
+            prep_method="Ball Milled",
+            parameter="Ash",
+            record_id="A3",
+            value=12.0,
+        ),
+        _make_row(
+            prepared_sample="PS-3",
+            experiment="EXP-03",
+            prep_method="Ball Milled",
+            parameter="Fixed Carbon",
+            record_id="F3",
+            value=10.0,
+        ),
+    ]
+
+    strata = compute_proximate_closure_strata({"Almond Hulls": rows})
+    s1 = strata[("Almond Hulls", "EXP-01", "Milled")]
+    assert s1["proximate_sum_pct"] == 87.0
+    assert s1["out_of_bounds"] is True
+
+    s2 = strata[("Almond Hulls", "EXP-02", "Dried")]
+    assert s2["proximate_sum_pct"] == 95.0
+    assert s2["out_of_bounds"] is False
+
+    s3 = strata[("Almond Hulls", "EXP-03", "Ball Milled")]
+    assert s3["proximate_sum_pct"] == 112.0
+    assert s3["out_of_bounds"] is True
+
+    out = compute_dataset_outlier_screening({"Almond Hulls": rows})["Almond Hulls"]
+    prox_tab = out["by_tab"]["proximate"]
+    grps_by_exp = {}
+    for g in prox_tab["replicate_groups"]:
+        grps_by_exp.setdefault(g["experiment"], []).append(g)
+
+    assert all(g["raw_proximate_sum"] is True for g in grps_by_exp["EXP-01"])
+    assert all(g["active_proximate_sum"] is True for g in grps_by_exp["EXP-01"])
+    assert all(g["active_flagged"] is True for g in grps_by_exp["EXP-01"])
+    assert all(g["proximate_sum_pct"] == 87.0 for g in grps_by_exp["EXP-01"])
+
+    assert all(g["raw_proximate_sum"] is False for g in grps_by_exp["EXP-02"])
+    assert all(g["active_proximate_sum"] is False for g in grps_by_exp["EXP-02"])
+    assert all(g["active_flagged"] is False for g in grps_by_exp["EXP-02"])
+    assert all(g["proximate_sum_pct"] == 95.0 for g in grps_by_exp["EXP-02"])
+
+    assert all(g["raw_proximate_sum"] is True for g in grps_by_exp["EXP-03"])
+    assert all(g["active_proximate_sum"] is True for g in grps_by_exp["EXP-03"])
+    assert all(g["active_flagged"] is True for g in grps_by_exp["EXP-03"])
+    assert all(g["proximate_sum_pct"] == 112.0 for g in grps_by_exp["EXP-03"])
+
+    # 4 groups in EXP-01 + 3 groups in EXP-03 = 7 proximate_sum flagged groups
+    assert prox_tab["proximate_sum_count"] == 7
+    assert out["summary"]["proximate_sum_count"] == 7
+    assert out["proximate_sum_count"] == 7

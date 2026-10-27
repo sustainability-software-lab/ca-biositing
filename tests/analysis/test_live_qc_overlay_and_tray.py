@@ -1557,3 +1557,37 @@ def test_card10_explorer_brush_zoom_and_qc_panels(
     assert "⚑ Identical Replicates" in page3
     assert "3. Resource Lab &amp; Sample Lineage Notes" in page3
     assert 'id="explorer-lab-notes-panel"' in page3
+
+
+def test_card11_proximate_sum_portal_parity_and_data_visualizer_rename(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    """Card 11: Verify Data Portal proximate_sum parity across Page 1, Page 2, and Page 3,
+    and Page 3 rename to Interactive Data Visualizer / 3. Data Visualizer.
+    """
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. Suite nav bar renamed to "3. Data Visualizer" across Page 1, Page 2, Page 3
+    assert "3. Data Visualizer" in page1
+    assert "3. Data Visualizer" in page2
+    assert "3. Data Visualizer" in page3
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page1
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page2
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page3
+
+    # 2. Page 3 title & header renamed to Interactive Feedstock Data Visualizer
+    assert "<title>BioCirV — Interactive Feedstock Data Visualizer</title>" in page3
+    assert "BioCirV Interactive Feedstock Data Visualizer" in page3
+
+    # 3. Proximate Sum badge & filter option across Page 1, Page 2, Page 3
+    assert "⚑ Proximate Sum" in page1
+    assert "⚑ Proximate Sum" in page2
+    assert "⚑ Proximate Sum" in page3
+    assert 'proxGroupMode: "exp_method"' in page1
+    assert "By Experiment × Method" in page1
+    assert '<option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>' in page2
+    assert '<option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>' in page3
+    assert "Proximate Closure (Moisture + VS + Ash):" in page3
+    assert "out_of_bounds: sumPct > 0.0 && (sumPct < 95.0 || sumPct > 105.0)" in page3

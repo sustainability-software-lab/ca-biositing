@@ -278,10 +278,107 @@ def _percentile_rank(val: float | None, population: list[float]) -> int | None:
     return max(1, min(99, pct))
 
 
+PROXIMATE_CLOSURE_MIN_PCT = 95.0
+PROXIMATE_CLOSURE_MAX_PCT = 105.0
+
+
+def _proximate_component_bucket(param_name: str) -> str | None:
+    """Map a parameter name to its canonical Data Portal proximate component bucket."""
+    p = str(param_name or "").strip().lower()
+    if p == "moisture":
+        return "moisture"
+    if p in {"ash", "ash solids"}:
+        return "ash"
+    if p in {"volatile solids", "volatile matter"}:
+        return "volatile_solids"
+    if p == "fixed carbon":
+        return "fixed_carbon"
+    return None
+
+
+def compute_proximate_closure_strata(
+    rows_by_resource: dict[str, list[dict[str, Any]]],
+) -> dict[tuple[str, str, str], dict[str, Any]]:
+    """Compute Data Portal proximate_sum across (resource_name, experiment, prep_method) strata.
+
+    Formula:
+        avg_moisture + avg_ash + (avg_vs if avg_vs is not None else (100 - avg_fc if avg_fc is not None else 0))
+    Across non-fail Proximate Analysis observations.
+    """
+    stratum_buckets: dict[tuple[str, str, str], dict[str, list[float]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
+    for rname, rrows in rows_by_resource.items():
+        for r in rrows:
+            if _canonical_domain_slug(r.get("analysis_type")) != "proximate":
+                continue
+            if str(r.get("qc_status") or "pass").lower() == "fail":
+                continue
+            bucket = _proximate_component_bucket(str(r.get("parameter") or ""))
+            if bucket is None:
+                continue
+            val = r.get("value")
+            if val is None:
+                continue
+            try:
+                fval = float(val)
+            except (TypeError, ValueError):
+                continue
+            if math.isnan(fval):
+                continue
+            key = (
+                str(r.get("resource_name") or rname or ""),
+                str(r.get("experiment") or "unassigned"),
+                _group_context_label(r) or "unassigned",
+            )
+            stratum_buckets[key][bucket].append(fval)
+
+    result: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for key, comp_lists in stratum_buckets.items():
+        comp_means: dict[str, float] = {
+            comp: round(sum(vals) / len(vals), 4)
+            for comp, vals in comp_lists.items()
+            if vals
+        }
+        avg_m = comp_means.get("moisture")
+        avg_a = comp_means.get("ash")
+        avg_vs = comp_means.get("volatile_solids")
+        avg_fc = comp_means.get("fixed_carbon")
+        has_closure_pair = (avg_vs is not None or avg_fc is not None) and (
+            avg_m is not None or avg_a is not None
+        )
+        if avg_vs is not None:
+            vs_or_fc = avg_vs
+        elif avg_fc is not None:
+            vs_or_fc = 100.0 - avg_fc
+        else:
+            vs_or_fc = 0.0
+        total_pct = round((avg_m or 0.0) + (avg_a or 0.0) + vs_or_fc, 2)
+        out_of_bounds = bool(
+            has_closure_pair
+            and total_pct > 0.0
+            and (
+                total_pct < PROXIMATE_CLOSURE_MIN_PCT
+                or total_pct > PROXIMATE_CLOSURE_MAX_PCT
+            )
+        )
+        result[key] = {
+            "resource_name": key[0],
+            "experiment": key[1],
+            "prep_method": key[2],
+            "components": comp_means,
+            "proximate_sum_pct": total_pct,
+            "out_of_bounds": out_of_bounds,
+        }
+    return result
+
+
 def compute_dataset_outlier_screening(
     rows_by_resource: dict[str, list[dict[str, Any]]],
 ) -> dict[str, dict[str, Any]]:
     """Run colleague's replicate-precision & candidate outlier screens + Within vs Between RSD."""
+    proximate_closure_by_stratum = compute_proximate_closure_strata(rows_by_resource)
+
     # Step 1: Partition all numeric observations into replicate groups
     raw_groups: dict[tuple[str, ...], list[dict[str, Any]]] = defaultdict(list)
     for rname, rrows in rows_by_resource.items():
@@ -379,6 +476,18 @@ def compute_dataset_outlier_screening(
             or _SLUG_TO_TAB.get(_canonical_domain_slug(atype), "proximate")
         )
 
+        prox_info = (
+            proximate_closure_by_stratum.get(
+                (rname, exp_id or "unassigned", ctx_method or "unassigned")
+            )
+            if _canonical_domain_slug(atype) == "proximate"
+            and _proximate_component_bucket(param) is not None
+            else None
+        )
+        raw_proximate_sum = bool(prox_info["out_of_bounds"]) if prox_info else False
+        proximate_sum_pct = prox_info["proximate_sum_pct"] if prox_info else None
+        proximate_components = dict(prox_info["components"]) if prox_info else {}
+
         sd_rounded = round(sd_val, 3) if sd_val is not None else None
         group_records.append({
             "resource_name": rname,
@@ -409,6 +518,9 @@ def compute_dataset_outlier_screening(
             "raw_dixon": raw_dixon,
             "raw_rsd20": bool(rsd_within is not None and rsd_within > 20.0),
             "raw_rsd10": bool(rsd_within is not None and rsd_within > 10.0),
+            "raw_proximate_sum": raw_proximate_sum,
+            "proximate_sum_pct": proximate_sum_pct,
+            "proximate_components": proximate_components,
             "replicates": [
                 {
                     "id": str(x["record_id"]),
@@ -450,13 +562,22 @@ def compute_dataset_outlier_screening(
         g["sd3x_candidate_ids"] = sd3x_ids
         g["raw_sd3x"] = len(sd3x_ids) > 0
 
-        # Primary candidate outlier screen: Dixon Q OR RSD > 20% OR 3xSD OR Mixed QC
-        raw_flagged = bool(g["raw_dixon"] or g["raw_rsd20"] or g["raw_sd3x"] or g["qc_mixed"])
+        # Primary candidate outlier screen: Dixon Q OR RSD > 20% OR 3xSD OR Mixed QC OR Proximate Sum
+        raw_flagged = bool(
+            g["raw_dixon"]
+            or g["raw_rsd20"]
+            or g["raw_sd3x"]
+            or g["qc_mixed"]
+            or g["raw_proximate_sum"]
+        )
         g["raw_flagged"] = raw_flagged
         active_flagged = bool(not g["below_cutoff"] and raw_flagged)
         g["active_flagged"] = active_flagged
         g["flagged_active"] = active_flagged
         g["active_rsd10"] = bool(not g["below_cutoff"] and g["raw_rsd10"])
+        g["active_proximate_sum"] = bool(
+            not g["below_cutoff"] and g["raw_proximate_sum"]
+        )
 
         groups_by_res_param[(g["resource_name"], g["analysis_type"], g["parameter"], g["prep_method"], g["unit"])].append(g)
 
@@ -623,6 +744,9 @@ def compute_dataset_outlier_screening(
                 "rsd20_flagged": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_rsd20"]),
                 "rsd10_flagged": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_rsd10"]),
                 "sd3x_flagged": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_sd3x"]),
+                "proximate_sum_count": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_proximate_sum"]),
+                "proximate_sum_flagged": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_proximate_sum"]),
+                "proximate_sum_flagged_groups": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_proximate_sum"]),
                 "qc_mixed_flagged": sum(1 for g in t_groups if g["qc_mixed"]),
                 "within_sd_median": round(statistics.median(w_sd_vals), 3) if w_sd_vals else None,
                 "between_sd_median": round(statistics.median(b_sd_vals), 3) if b_sd_vals else None,
@@ -669,6 +793,8 @@ def compute_dataset_outlier_screening(
             "flagged_active": flagged_active_cnt,
             "flagged_active_groups": flagged_active_cnt,
             "flagged_replicate_groups": flagged_active_cnt,
+            "proximate_sum_count": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_proximate_sum"]),
+            "proximate_sum_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_proximate_sum"]),
             "rsd_defined_groups": rsd_defined_cnt,
             "suppressed_low_abundance_groups": suppressed_trace_cnt,
             "overall_within_rsd_median": overall_w_rsd,
@@ -689,6 +815,9 @@ def compute_dataset_outlier_screening(
                 "rsd20_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_rsd20"]),
                 "rsd10_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_rsd10"]),
                 "sd3x_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_sd3x"]),
+                "proximate_sum_count": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_proximate_sum"]),
+                "proximate_sum_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_proximate_sum"]),
+                "proximate_sum_flagged_groups": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_proximate_sum"]),
                 "qc_mixed_flagged": sum(1 for g in res_all_groups if g["qc_mixed"]),
                 "overall_within_rsd_median": overall_w_rsd,
                 "overall_between_rsd_median": overall_b_rsd,
@@ -1226,19 +1355,67 @@ def build_resource_insights(payload: dict[str, Any]) -> dict[str, Any]:
 
         # Proximate & Compositional Mass-Balance Closure Diagnostics
         prox_closure_sum = None
-        if m["moisture"]["mean"] is not None and m["volatile_solids"]["mean"] is not None and m["ash"]["mean"] is not None:
-            # Compute per (prepared_sample, experiment) wet closure
-            ps_exp_closures = []
-            prox_rows = [r for r in rrows if r["analysis_type"] == "Proximate Analysis" and r["value"] is not None]
-            for key in {f"{r['prepared_sample']}|{r['experiment']}" for r in prox_rows}:
-                sub = [r for r in prox_rows if f"{r['prepared_sample']}|{r['experiment']}" == key]
-                mv = _mean_sd([float(r["value"]) for r in sub if r["parameter"] == "moisture"])["mean"]
-                vv = _mean_sd([float(r["value"]) for r in sub if r["parameter"] == "volatile solids"])["mean"]
-                av = _mean_sd([float(r["value"]) for r in sub if r["parameter"] == "ash"])["mean"]
-                if mv is not None and vv is not None and av is not None:
-                    ps_exp_closures.append(round(float(mv) + float(vv) + float(av), 2))
-            if ps_exp_closures:
-                prox_closure_sum = round(sum(ps_exp_closures) / len(ps_exp_closures), 2)
+        prox_rows = [
+            r
+            for r in rrows
+            if _canonical_domain_slug(r.get("analysis_type")) == "proximate"
+            and r.get("value") is not None
+            and str(r.get("qc_status") or "pass").lower() != "fail"
+        ]
+        if prox_rows:
+            stratum_closures = []
+            for key in {
+                f"{r.get('experiment') or 'unassigned'}|{_group_context_label(r) or 'unassigned'}"
+                for r in prox_rows
+            }:
+                sub = [
+                    r
+                    for r in prox_rows
+                    if f"{r.get('experiment') or 'unassigned'}|{_group_context_label(r) or 'unassigned'}"
+                    == key
+                ]
+                mv = _mean_sd(
+                    [
+                        float(r["value"])
+                        for r in sub
+                        if _proximate_component_bucket(r["parameter"]) == "moisture"
+                    ]
+                )["mean"]
+                av = _mean_sd(
+                    [
+                        float(r["value"])
+                        for r in sub
+                        if _proximate_component_bucket(r["parameter"]) == "ash"
+                    ]
+                )["mean"]
+                vv = _mean_sd(
+                    [
+                        float(r["value"])
+                        for r in sub
+                        if _proximate_component_bucket(r["parameter"])
+                        == "volatile_solids"
+                    ]
+                )["mean"]
+                fcv = _mean_sd(
+                    [
+                        float(r["value"])
+                        for r in sub
+                        if _proximate_component_bucket(r["parameter"])
+                        == "fixed_carbon"
+                    ]
+                )["mean"]
+                vs_or_fc = (
+                    float(vv)
+                    if vv is not None
+                    else ((100.0 - float(fcv)) if fcv is not None else None)
+                )
+                parts = [float(x) for x in (mv, av, vs_or_fc) if x is not None]
+                if len(parts) >= 2:
+                    stratum_closures.append(round(sum(parts), 2))
+            if stratum_closures:
+                prox_closure_sum = round(
+                    sum(stratum_closures) / len(stratum_closures), 2
+                )
 
         comp_polymer_sum = None
         comp_uncharacterized_dw = None

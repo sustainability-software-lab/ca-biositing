@@ -642,7 +642,7 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
             </label>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer">
               <input id="slice-page-explorer" type="checkbox" value="explorer" checked class="slice-page-checkbox rounded" />
-              <span><strong>3. Multi-Resource Side-by-Side Explorer</strong> <span class="badge-pass px-1.5 py-0.5 rounded font-mono text-[10px] ml-1">Default</span></span>
+              <span><strong>3. Data Visualizer</strong> <span class="badge-pass px-1.5 py-0.5 rounded font-mono text-[10px] ml-1">Default</span></span>
             </label>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer">
               <input id="slice-page-qc" type="checkbox" value="qc" class="slice-page-checkbox rounded" />
@@ -3587,10 +3587,13 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
                 g.raw_dixon = Boolean(dixonStillPassing);
                 if (passCnt === 0) {
                   g.raw_dixon = false;
+                  g.raw_proximate_sum = false;
+                  g.active_proximate_sum = false;
                   g.active_flagged = false;
                   g.flagged_active = false;
                 } else if (!g.below_cutoff) {
-                  g.active_flagged = Boolean(g.raw_dixon || g.raw_rsd20 || g.raw_sd3x);
+                  g.active_proximate_sum = Boolean(g.raw_proximate_sum);
+                  g.active_flagged = Boolean(g.raw_dixon || g.raw_rsd20 || g.raw_sd3x || g.raw_proximate_sum);
                   g.flagged_active = g.active_flagged;
                 }
               }
@@ -4383,7 +4386,7 @@ def build_analysis_dashboard_html(
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
-          3. Multi-Resource Side-by-Side Explorer
+          3. Data Visualizer
         </a>
         <a id="nav-page-drift" href="../audit/db_environment_drift_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
           4. DB Environment Drift
@@ -4660,7 +4663,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       suppressTraceFlags: true,
       blindMode: false,
       showAiPanel: true,
-      proxGroupMode: "ps_exp",
+      proxGroupMode: "exp_method",
       elemSourceMode: "all",
       icpScaleMode: "split",
       convSubTab: "all"
@@ -4675,6 +4678,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
         else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
         if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+        if (g.raw_proximate_sum) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Proximate Mass-Balance Sum = ${fmtNum(g.proximate_sum_pct, 1)}% (Data Portal requires Moisture + Ash + VS [or 100 - FC] within 95–105% per resource/experiment/method)">⚑ Proximate Sum (${fmtNum(g.proximate_sum_pct, 1)}%)</span>`);
         if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
         if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
       }
@@ -4698,7 +4702,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       if (!allGroups.length) return null;
       const hasAnyFlag = g => Boolean(
-        g && (g.raw_dixon || g.raw_rsd20 || g.raw_rsd10 || g.raw_sd3x || g.has_identical_replicates || g.qc_mixed || g.below_cutoff)
+        g && (g.raw_dixon || g.raw_rsd20 || g.raw_rsd10 || g.raw_sd3x || g.raw_proximate_sum || g.has_identical_replicates || g.qc_mixed || g.below_cutoff)
       );
       const recIdSet = new Set(groupRecs.map(r => String(r.record_id || "").trim()).filter(Boolean));
       if (recIdSet.size > 0) {
@@ -5442,6 +5446,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       const groupKeyFn = r => {
         if (state.repMode === "field_exp_mean_sd") return `Field: ${r.field_sample || r.prepared_sample} · ${r.experiment}`;
+        if (state.proxGroupMode === "exp_method") return `${r.experiment || 'unassigned'} · ${r.prep_method || 'unassigned'}`;
         if (state.proxGroupMode === "ps_exp") return `${r.prepared_sample} · ${r.experiment}`;
         if (state.proxGroupMode === "by_date") return `Col: ${r.collected_date || '—'} · Prep: ${r.prep_date || '—'} (${r.prepared_sample})`;
         return r.prepared_sample;
@@ -5451,23 +5456,29 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const params = ["moisture", "total solids", "volatile solids", "ash"];
 
       const massBalanceHtml = groups.map(g => {
-        const gRecs = recs.filter(r => groupKeyFn(r) === g);
-        const mStat = calcStats(gRecs.filter(r => r.parameter === "moisture").map(r => r.value));
-        const tsStat = calcStats(gRecs.filter(r => r.parameter === "total solids").map(r => r.value));
-        const vsStat = calcStats(gRecs.filter(r => r.parameter === "volatile solids").map(r => r.value));
-        const ashStat = calcStats(gRecs.filter(r => r.parameter === "ash").map(r => r.value));
+        const gRecs = recs.filter(r => groupKeyFn(r) === g && String(r.qc_status || "pass").toLowerCase() !== "fail");
+        const mStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "moisture").map(r => r.value));
+        const tsStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "total solids").map(r => r.value));
+        const vsStat = calcStats(gRecs.filter(r => ["volatile solids", "volatile matter"].includes(String(r.parameter || "").toLowerCase())).map(r => r.value));
+        const fcStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "fixed carbon").map(r => r.value));
+        const ashStat = calcStats(gRecs.filter(r => ["ash", "ash solids"].includes(String(r.parameter || "").toLowerCase())).map(r => r.value));
 
-        const m = mStat.mean || 0;
-        const vs = vsStat.mean || 0;
-        const ash = ashStat.mean || 0;
-        const sumWet = m + vs + ash;
+        const m = mStat.mean !== null && mStat.mean !== undefined ? mStat.mean : 0;
+        const vs = vsStat.mean !== null && vsStat.mean !== undefined ? vsStat.mean : (fcStat.mean !== null && fcStat.mean !== undefined ? (100 - fcStat.mean) : 0);
+        const ash = ashStat.mean !== null && ashStat.mean !== undefined ? ashStat.mean : 0;
+        const sumWet = Number((m + vs + ash).toFixed(2));
+        const outOfBounds = sumWet > 0 && (sumWet < 95.0 || sumWet > 105.0);
+        const proxBadge = outOfBounds
+          ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Data Portal proximate_sum = ${fmtNum(sumWet, 1)}% (outside 95–105%)">⚑ Proximate Sum (${fmtNum(sumWet, 1)}%)</span>`
+          : `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-pass" title="Data Portal proximate_sum within 95–105%">✓ 95–105% OK</span>`;
 
         return `
           <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
               <span class="font-mono font-semibold text-xs text-[var(--foreground)]">${g}</span>
-              <span class="text-xs font-mono text-[var(--muted-foreground)]">
-                Moisture (${fmtNum(m)}%) + VS (${fmtNum(vs)}%) + Ash (${fmtNum(ash)}%) = <strong class="text-[var(--foreground)]">${fmtNum(sumWet)}%</strong> | Total Solids = <strong class="text-[var(--foreground)]">${fmtNum(tsStat.mean)}%</strong>
+              <span class="text-xs font-mono text-[var(--muted-foreground)] flex items-center gap-2">
+                <span>Moisture (${fmtNum(m)}%) + VS (${fmtNum(vs)}%) + Ash (${fmtNum(ash)}%) = <strong class="text-[var(--foreground)]">${fmtNum(sumWet)}%</strong> | Total Solids = <strong class="text-[var(--foreground)]">${fmtNum(tsStat.mean)}%</strong></span>
+                ${proxBadge}
               </span>
             </div>
             <div class="w-full h-5 rounded-lg bg-[var(--content)] overflow-hidden flex border border-[var(--border)]">
@@ -5552,6 +5563,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                 <p class="text-xs text-[var(--muted-foreground)]">Moisture + Volatile Solids + Ash closure across prepared samples, drying protocols, and collection/prep dates.</p>
               </div>
               <div class="inline-flex rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5">
+                <button onclick="setSubMode('proxGroupMode', 'exp_method')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'exp_method' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Experiment × Method</button>
                 <button onclick="setSubMode('proxGroupMode', 'ps_exp')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'ps_exp' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Sample × Experiment</button>
                 <button onclick="setSubMode('proxGroupMode', 'ps')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'ps' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Prepared Sample</button>
                 <button onclick="setSubMode('proxGroupMode', 'by_date')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'by_date' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Collection / Prep Date</button>
@@ -6294,7 +6306,7 @@ def build_qc_outlier_dashboard_html(
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-white/20"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
-          3. Multi-Resource Side-by-Side Explorer
+          3. Data Visualizer
         </a>
         <a id="nav-page-drift" href="../audit/db_environment_drift_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
           4. DB Environment Drift
@@ -6327,6 +6339,7 @@ def build_qc_outlier_dashboard_html(
               <option value="dixon">Dixon's Q Outlier</option>
               <option value="rsd20">High RSD &gt; 20%</option>
               <option value="sd3x">&gt;3&times;SD_pooled</option>
+              <option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>
               <option value="identical">Identical Replicates</option>
             </select>
           </div>
@@ -6860,6 +6873,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (mode === "dixon") return g.raw_dixon;
       if (mode === "rsd20" || mode === "rsd") return g.raw_rsd20;
       if (mode === "sd3x" || mode === "sd3") return g.raw_sd3x;
+      if (mode === "proximate_sum") return Boolean(g.raw_proximate_sum);
       if (mode === "unquarantined") return isPrimary && g.qc_pass_count > 0;
       if (mode === "reviewed") {
         const dKey = makeGroupDecisionKey(state.resource, g);
@@ -7151,6 +7165,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const dixonGroups = groups.filter(g => isGroupMatchingFilter(g, "dixon", suppress));
       const rsd20Groups = groups.filter(g => isGroupMatchingFilter(g, "rsd20", suppress));
       const sd3xGroups = groups.filter(g => isGroupMatchingFilter(g, "sd3x", suppress));
+      const proxSumGroups = groups.filter(g => isGroupMatchingFilter(g, "proximate_sum", suppress));
       const identicalGroups = groups.filter(g => isGroupMatchingFilter(g, "identical", suppress));
       const unquarGroups = groups.filter(g => isGroupMatchingFilter(g, "unquarantined", suppress));
       const reviewedGroups = groups.filter(g => isGroupMatchingFilter(g, "reviewed", suppress));
@@ -7170,6 +7185,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         { id: "dixon", label: `Dixon's Q α=0.05 (${dixonGroups.length})` },
         { id: "rsd20", label: `RSD >20% (${rsd20Groups.length})` },
         { id: "sd3x", label: `>3×SD Pooled (${sd3xGroups.length})` },
+        { id: "proximate_sum", label: `Proximate Sum (${proxSumGroups.length})` },
         { id: "identical", label: `Identical Replicates (${identicalGroups.length})` },
         { id: "unquarantined", label: `Unquarantined / QC Pass (${unquarGroups.length})` },
         { id: "reviewed", label: `⚖️ Reviewed / Annotated (${reviewedGroups.length})` },
@@ -7242,6 +7258,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                     if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
                     else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
                     if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+                    if (g.raw_proximate_sum) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Proximate Mass-Balance Sum = ${fmtNum(g.proximate_sum_pct, 1)}% (Data Portal requires Moisture + Ash + VS [or 100 - FC] within 95–105% per resource/experiment/method)">⚑ Proximate Sum (${fmtNum(g.proximate_sum_pct, 1)}%)</span>`);
                     if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
                     if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
                   }
@@ -7556,6 +7573,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               isDixonCand,
               isSd3Cand,
               rawRsd20: Boolean(g.raw_rsd20),
+              rawProximateSum: Boolean(g.raw_proximate_sum),
+              proximateSumPct: g.proximate_sum_pct,
               hasIdentical: Boolean(g.has_identical_replicates),
               qcMixed: Boolean(g.qc_mixed),
               dixonQ: g.dixon_q,
@@ -7655,7 +7674,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             if (info.isSd3Cand) tags.push(`⚑ >3×SD_pooled`);
             statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold badge-warn ring-1 ring-amber-500" title="Dixon Q=${fmtNum(info.dixonQ, 2)} · Within-RSD ${fmtNum(info.rsdWithin, 1)}%">${tags.join(' · ')}</span>`;
           } else if (info.isPrimary) {
-            const pillLabel = info.rawRsd20 ? "⚑ RSD &gt; 20%" : "⚑ Outlier Flag";
+            const pillLabel = info.rawRsd20 ? "⚑ RSD &gt; 20%" : (info.rawProximateSum ? `⚑ Proximate Sum (${fmtNum(info.proximateSumPct, 1)}%)` : "⚑ Outlier Flag");
             statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-warn" title="Within-group RSD ${fmtNum(info.rsdWithin, 1)}%">${pillLabel}</span>`;
           }
         }

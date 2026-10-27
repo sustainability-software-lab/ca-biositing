@@ -383,7 +383,7 @@ def build_full_dashboard_html(payload: dict) -> str:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BioCirV — Multi-Resource Side-by-Side Parameter &amp; Analytical Explorer</title>
+  <title>BioCirV — Interactive Feedstock Data Visualizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root,
@@ -458,7 +458,7 @@ def build_full_dashboard_html(payload: dict) -> str:
           ⚖️ 2B. QC Audit Workbench
         </a>
         <a id="suite-link-3" href="resource_explorer_dashboard.html" class="px-2.5 py-1 rounded-md bg-[#00B5E2] text-slate-950 font-semibold transition-colors shadow-sm">
-          3. Multi-Resource Side-by-Side Explorer
+          3. Data Visualizer
         </a>
         <a id="suite-link-5" href="../audit/db_environment_drift_dashboard.html" class="px-2.5 py-1 rounded-md border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#00B5E2] transition-colors font-medium">
           4. DB Environment Drift
@@ -475,7 +475,7 @@ def build_full_dashboard_html(payload: dict) -> str:
     <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[var(--border)]">
       <div class="flex flex-wrap items-center gap-2.5">
         <div class="w-2.5 h-2.5 rounded-full bg-[#00B5E2]"></div>
-        <h2 id="dashboard-title" class="text-[var(--foreground)] font-semibold text-base tracking-tight">BioCirV Multi-Resource Side-by-Side Parameter Explorer</h2>
+        <h2 id="dashboard-title" class="text-[var(--foreground)] font-semibold text-base tracking-tight">BioCirV Interactive Feedstock Data Visualizer</h2>
         <span id="badge-count" class="text-xs px-2 py-0.5 rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] font-medium">11,974 obs</span>
         <span id="badge-resource-meta" class="hidden sm:inline-block text-xs px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--muted-foreground)] font-mono">127 resources</span>
         <span id="live-qc-overlay-badge" class="hidden text-[11px] px-2 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-mono"></span>
@@ -528,6 +528,7 @@ def build_full_dashboard_html(payload: dict) -> str:
               <option value="rsd">High RSD &gt; 20%</option>
               <option value="sd3">&gt;3&times;SD_pooled</option>
               <option value="identical">Identical Replicates</option>
+              <option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>
             </select>
           </div>
           <div>
@@ -2952,9 +2953,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           formatStatCard('Water 140°C (h2o140c)', h2o, '%')
         ].join('');
       } else if (currentDomain === 'proximate') {
-        const moist = byParam('moisture');
-        const vs = byParam('volatile solids');
-        const ash = byParam('ash');
+        const byProxBucket = b => calcStats(filteredRows.filter(r => proximateComponentBucket(r.parameter) === b && r.value !== null && !isNaN(r.value)).map(r => r.value));
+        const moist = byProxBucket('moisture');
+        const vs = byProxBucket('vs');
+        const fc = byProxBucket('fc');
+        const ash = byProxBucket('ash');
         const ts = byParam('total solids');
         grid.innerHTML = [
           formatStatCard('Moisture', moist, '%'),
@@ -2963,10 +2966,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           formatStatCard('Total Solids', ts, '%')
         ].join('');
         closureBanner.classList.remove('hidden');
-        closureLabel.textContent = 'Proximate Closure (VS + Ash):';
-        const dryClosure = (vs.mean !== null && ash.mean !== null) ? (vs.mean + ash.mean) : null;
-        closureVal.textContent = dryClosure !== null
-          ? `${dryClosure.toFixed(1)}% dw (${dryClosure >= 95 && dryClosure <= 105 ? 'Optimal' : 'Check Fixed C'})`
+        closureLabel.textContent = 'Proximate Closure (Moisture + VS + Ash):';
+        const hasProximateTerm = moist.mean !== null || ash.mean !== null || vs.mean !== null || fc.mean !== null;
+        const vsOrOneMinusFc = vs.mean !== null ? vs.mean : (fc.mean !== null ? 100 - fc.mean : 0);
+        const proximateSum = hasProximateTerm
+          ? ((moist.mean || 0) + (ash.mean || 0) + vsOrOneMinusFc)
+          : null;
+        closureVal.textContent = proximateSum !== null
+          ? `${proximateSum.toFixed(1)}% (${proximateSum >= 95 && proximateSum <= 105 ? 'Optimal 95–105%' : '⚑ Outside 95–105%'})`
           : '—';
       } else if (currentDomain === 'compositional') {
         const glucan = byParam('glucan');
@@ -4578,7 +4585,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const assignedToEmail = ((document.getElementById('click-popover-assignee') || {}).value || '').trim();
       closeClickAuditPopover();
       if (typeof window.openSubmitFindingModal === 'function') {
-        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(auditPopoverScope, note, 'Side-by-Side Explorer interactive plot', assignedToEmail));
+        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(auditPopoverScope, note, 'Data Visualizer interactive plot', assignedToEmail));
       }
     }
 
@@ -4691,6 +4698,15 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       return s.length % 2 !== 0 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
     }
 
+    function proximateComponentBucket(paramName) {
+      const p = String(paramName || '').trim().toLowerCase();
+      if (p === 'moisture' || p === 'moisture content') return 'moisture';
+      if (p === 'ash' || p === 'ash content') return 'ash';
+      if (p === 'volatile solids' || p === 'volatile matter' || p === 'volatile solids (vs)' || p === 'vs') return 'vs';
+      if (p === 'fixed carbon' || p === 'fixed carbon (fc)' || p === 'fc') return 'fc';
+      return null;
+    }
+
     function computeSliceStatScreening(rowsInput) {
       const sourceRows = Array.isArray(rowsInput) ? rowsInput : filteredRows;
       const numRows = sourceRows.filter(r => typeof r.value === 'number' && !isNaN(r.value) && r.parameter && r.parameter !== '(metadata only)');
@@ -4742,6 +4758,39 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         pooledSdMap[pKey] = acc.sumDf > 0 ? Math.sqrt(acc.sumSq / acc.sumDf) : 0;
       });
 
+      // Compute Data Portal proximate_sum per (resource_name, experiment, prep_method) stratum:
+      // COALESCE(avg_moisture, 0) + COALESCE(avg_ash, 0) + COALESCE(avg_vs, 100 - COALESCE(avg_fc, 0))
+      const normalizeProxStratumPart = val => {
+        const s = String(val || '').trim();
+        return (!s || s === '—' || s === 'Unrecorded') ? 'unassigned' : s;
+      };
+      const proximateStrataAcc = {};
+      rawGroups.forEach(g => {
+        const domSlug = window.canonicalDomainSlug ? window.canonicalDomainSlug(g.analysis_type) : String(g.analysis_type || currentDomain).toLowerCase();
+        if (domSlug !== 'proximate') return;
+        const bucket = proximateComponentBucket(g.parameter);
+        if (!bucket || g.mean === null || isNaN(g.mean)) return;
+        const sKey = `${g.resource_name}::${normalizeProxStratumPart(g.experiment)}::${normalizeProxStratumPart(g.prep_method)}`;
+        if (!proximateStrataAcc[sKey]) {
+          proximateStrataAcc[sKey] = { moisture: [], ash: [], vs: [], fc: [] };
+        }
+        proximateStrataAcc[sKey][bucket].push(g.mean);
+      });
+      const proximateStrataClosure = {};
+      Object.entries(proximateStrataAcc).forEach(([sKey, buckets]) => {
+        const m = buckets.moisture.length ? sampleMean(buckets.moisture) : null;
+        const a = buckets.ash.length ? sampleMean(buckets.ash) : null;
+        const v = buckets.vs.length ? sampleMean(buckets.vs) : null;
+        const f = buckets.fc.length ? sampleMean(buckets.fc) : null;
+        if ((v === null && f === null) || (m === null && a === null)) return;
+        const vsTerm = v !== null ? v : (f !== null ? (100.0 - f) : 0.0);
+        const sumPct = (m !== null ? m : 0.0) + (a !== null ? a : 0.0) + vsTerm;
+        proximateStrataClosure[sKey] = {
+          proximate_sum_pct: sumPct,
+          out_of_bounds: sumPct > 0.0 && (sumPct < 95.0 || sumPct > 105.0)
+        };
+      });
+
       const groups = rawGroups.map(g => {
         const vals = g.vals;
         const n = g.n;
@@ -4755,6 +4804,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const identicalReps = n >= 2 && (maxV - minV <= 1e-9 || new Set(vals.map(v => Number(v).toFixed(4))).size === 1);
         const cutoff = getTraceCutoff(currentDomain, g.unit);
         const belowFloor = cutoff > 0 && Math.abs(mean) < cutoff;
+
+        const domSlug = window.canonicalDomainSlug ? window.canonicalDomainSlug(g.analysis_type) : String(g.analysis_type || currentDomain).toLowerCase();
+        const proxBucket = domSlug === 'proximate' ? proximateComponentBucket(g.parameter) : null;
+        const proxStratum = proxBucket
+          ? proximateStrataClosure[`${g.resource_name}::${normalizeProxStratumPart(g.experiment)}::${normalizeProxStratumPart(g.prep_method)}`]
+          : null;
+        const proximateSumPct = proxStratum ? proxStratum.proximate_sum_pct : null;
+        const proximateSumFlag = !!(proxStratum && proxStratum.out_of_bounds);
 
         let dixonQ = null;
         const qCrit = dixonQCrit(n);
@@ -4805,6 +4862,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (rsd !== null && rsd > 20.0) rawTriggers.push('RSD_within > 20%');
         if (sd3xIds.length > 0) rawTriggers.push('|x - mean| > 3×SD_pooled');
         if (identicalReps) rawTriggers.push('Identical Replicates (SD=0)');
+        if (proximateSumFlag) rawTriggers.push(`Proximate Sum (${proximateSumPct.toFixed(1)}% outside 95–105%)`);
 
         const isFlaggedActive = (!suppressTraceFlags || !belowFloor) && rawTriggers.length > 0;
         const isSuppressedTraceFlag = belowFloor && rawTriggers.length > 0;
@@ -4817,6 +4875,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           pooled_sd: pooledSd,
           rsd_pct: rsd,
           identical_replicates: identicalReps,
+          proximate_sum_pct: proximateSumPct,
+          raw_proximate_sum: proximateSumFlag,
+          active_proximate_sum: (!suppressTraceFlags || !belowFloor) && proximateSumFlag,
           spread: maxV - minV,
           min_abundance_cutoff: cutoff,
           below_abundance_cutoff: belowFloor,
@@ -4926,6 +4987,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (flagMode === 'rsd20' || flagMode === 'rsd') return !isTraceSuppressed && g.rsd_pct !== null && g.rsd_pct > 20.0;
       if (flagMode === 'sd3x' || flagMode === 'sd3') return !isTraceSuppressed && Array.isArray(g.sd3x_candidate_ids) && g.sd3x_candidate_ids.length > 0;
       if (flagMode === 'identical') return !!g.identical_replicates || (g.n >= 2 && g.sd !== null && g.sd <= 1e-12);
+      if (flagMode === 'proximate_sum' || flagMode === 'proximate') return !isTraceSuppressed && !!g.raw_proximate_sum;
       if (flagMode === 'suppressed') return g.below_abundance_cutoff && g.raw_triggered_tests.length > 0;
       if (flagMode === 'clean') return g.n >= 2 && !activeFlag;
       return true;
@@ -5041,6 +5103,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           if (g.identical_replicates && allowFlag) {
             trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 font-mono" title="Zero variance across n>=2 replicates">⚑ Identical Replicates</span>`);
           }
+          if (g.raw_proximate_sum && allowFlag) {
+            const pSumStr = g.proximate_sum_pct !== null && g.proximate_sum_pct !== undefined ? `${g.proximate_sum_pct.toFixed(1)}%` : 'outside 95–105%';
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-300 border border-orange-500/30 font-mono" title="Data Portal proximate_sum = ${pSumStr} (outside 95–105%)">⚑ Proximate Sum</span>`);
+          }
           if (g.below_abundance_cutoff && g.raw_triggered_tests.length > 0) {
             trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] font-mono">Trace (&lt;${g.min_abundance_cutoff} ${g.unit})</span>`);
           }
@@ -5127,7 +5193,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="p-3 border-t border-[var(--border)] bg-[var(--card)] space-y-3 text-xs">
             <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border)]">
               <div class="text-[var(--muted-foreground)]">
-                Screens canonical 6-part replicate groups (<span class="font-mono">Resource × Analysis × Sample × Method × Parameter × Unit</span>) using <strong class="text-[var(--foreground)]">Dixon's Q-Test (α=0.05, n≥3, RSD≥10%)</strong>, <strong class="text-[var(--foreground)]">Within-Group RSD &gt; 20%</strong>, <strong class="text-[var(--foreground)]">|x − mean| &gt; 3×SD_pooled</strong>, and <strong class="text-[var(--foreground)]">Identical Replicates (SD=0)</strong>.
+                Screens canonical 6-part replicate groups (<span class="font-mono">Resource × Analysis × Sample × Method × Parameter × Unit</span>) using <strong class="text-[var(--foreground)]">Dixon's Q-Test (α=0.05, n≥3, RSD≥10%)</strong>, <strong class="text-[var(--foreground)]">Within-Group RSD &gt; 20%</strong>, <strong class="text-[var(--foreground)]">|x − mean| &gt; 3×SD_pooled</strong>, <strong class="text-[var(--foreground)]">Identical Replicates (SD=0)</strong>, and <strong class="text-[var(--foreground)]">Proximate Sum (Outside 95–105%)</strong>.
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 <label class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--background)] border border-[var(--border)] cursor-pointer">
@@ -5330,11 +5396,11 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
           unit: r.unit || '',
           qc_status: r.qc_pass || 'pass'
         }],
-        review_note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer to Audit Workbench',
-        note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer to Audit Workbench'
+        review_note: r.audit_note || 'Exported from Interactive Data Visualizer to Audit Workbench',
+        note: r.audit_note || 'Exported from Interactive Data Visualizer to Audit Workbench'
       }));
       if (window.BioCirvQcClient && typeof window.BioCirvQcClient.exportTrayToWorkbench === 'function') {
-        const res = await window.BioCirvQcClient.exportTrayToWorkbench(items, 'Page 3 — Multi-Resource Side-by-Side Explorer');
+        const res = await window.BioCirvQcClient.exportTrayToWorkbench(items, 'Page 3 — Interactive Data Visualizer');
         const btn = document.getElementById('btn-tray-to-workbench');
         if (btn) {
           const orig = btn.textContent;
@@ -5344,7 +5410,7 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
       }
     }
 
-    initSliceAndBugModals("Page 3 — Multi-Resource Side-by-Side Explorer");
+    initSliceAndBugModals("Page 3 — Interactive Data Visualizer");
     window.addEventListener('resize', () => renderCurrentView());
     window.addEventListener('popstate', () => {
       urlParams = new URLSearchParams(window.location.search);
