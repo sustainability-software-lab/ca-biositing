@@ -51,6 +51,7 @@ def create_wif(
         attribute_mapping={
             "google.subject": "assertion.sub",
             "attribute.repository": "assertion.repository",
+            "attribute.workflow_ref": "assertion.workflow_ref",
         },
         attribute_condition=f'assertion.repository == "{GITHUB_REPO}"',
         oidc=gcp.iam.WorkloadIdentityPoolProviderOidcArgs(
@@ -138,13 +139,24 @@ def create_wif(
     )
 
     # Allow WIF pool to impersonate the scoped dashboards publisher and reader SAs
-    for sa_key in ("dashboards-publisher", "dashboards-reader"):
+    scoped_workflow_refs = {
+        "dashboards-publisher": f"{GITHUB_REPO}/.github/workflows/dashboard-artifacts.yml@refs/heads/main",
+        "dashboards-reader": f"{GITHUB_REPO}/.github/workflows/gh-pages.yml@refs/heads/main",
+    }
+    for sa_key, wf_ref in scoped_workflow_refs.items():
         if service_accounts and sa_key in service_accounts:
+            scoped_principal_set = pulumi.Output.concat(
+                "principalSet://iam.googleapis.com/projects/",
+                project_number,
+                "/locations/global/workloadIdentityPools/",
+                pool.workload_identity_pool_id,
+                f"/attribute.workflow_ref/{wf_ref}",
+            )
             gcp.serviceaccount.IAMBinding(
                 f"{sa_key}-wif-binding",
                 service_account_id=service_accounts[sa_key].name,
                 role="roles/iam.workloadIdentityUser",
-                members=[wif_principal_set],
+                members=[scoped_principal_set],
                 opts=pulumi.ResourceOptions(depends_on=[service_accounts[sa_key]]),
             )
 

@@ -84,7 +84,9 @@ SA_DEFINITIONS = [
         "dashboards-publisher",
         SA_DASHBOARDS_PUBLISHER,
         f"BioCirV Dashboards Publisher ({STACK_NAME})",
-        [],
+        [
+            "roles/cloudsql.client",
+        ],
     ),
     (
         "dashboards-reader",
