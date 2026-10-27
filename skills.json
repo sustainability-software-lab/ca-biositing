@@ -7,12 +7,12 @@
         "commit",
         "create-issue",
         "create-pr",
-        "data-visualization",
-        "database-query",
+        "db-drift-assessment",
         "docs",
         "merge-pr",
         "okf-memory",
-        "push"
+        "push",
+        "resource-analysis-dashboards"
       ]
     },
     {

@@ -31,7 +31,9 @@
         "jjjermiah.pixi-vscode",
         "unbound.zoocode",
         "GitHub.vscode-pull-request-github",
-        "ck-dev.dbcode"
+        "ck-dev.dbcode",
+        "anthropic.claude-code",
+        "Google.google-antigravity"
       ]
     }
   },

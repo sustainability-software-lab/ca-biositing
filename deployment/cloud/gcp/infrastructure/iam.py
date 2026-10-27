@@ -8,12 +8,15 @@ import pulumi_gcp as gcp
 
 from config import (
     GCP_PROJECT,
+    STACK_NAME,
     SA_WEBSERVICE,
     SA_PREFECT_SERVER,
     SA_PREFECT_WORKER,
     SA_MIGRATE,
     SA_OAUTH2_PROXY,
     SA_FRONTEND,
+    SA_DASHBOARDS_PUBLISHER,
+    SA_DASHBOARDS_READER,
 )
 
 
@@ -76,6 +79,20 @@ SA_DEFINITIONS = [
         [
             "roles/secretmanager.secretAccessor",
         ],
+    ),
+    (
+        "dashboards-publisher",
+        SA_DASHBOARDS_PUBLISHER,
+        f"BioCirV Dashboards Publisher ({STACK_NAME})",
+        [
+            "roles/cloudsql.client",
+        ],
+    ),
+    (
+        "dashboards-reader",
+        SA_DASHBOARDS_READER,
+        f"BioCirV Dashboards Reader ({STACK_NAME})",
+        [],
     ),
 ]
 

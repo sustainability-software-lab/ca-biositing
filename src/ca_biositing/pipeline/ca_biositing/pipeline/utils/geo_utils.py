@@ -17,6 +17,7 @@ def get_geocoder():
     Lazily initialize the GoogleV3 geocoder and rate limiter.
     This avoids ConfigurationErrors at import time if the API key is missing.
     """
+
     api_key = os.environ.get("GOOGLE_MAPS_API_KEY")
     # if os still can't find an api_key, return None
     if not api_key:

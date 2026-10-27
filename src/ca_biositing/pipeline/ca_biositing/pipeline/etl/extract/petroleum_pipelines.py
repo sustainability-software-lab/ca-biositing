@@ -8,13 +8,17 @@ import os
 @task
 def extract(project_root: Optional[str] = None) -> Optional[gpd.GeoDataFrame]:
     """
-    Extracts raw data from a .geojson file.
+    Extracts raw petroleum pipeline data from a .geojson file on Google Drive.
 
     This function serves as the 'Extract' step in an ETL pipeline. It connects
     to the data source and returns the data as is, without transformation.
 
+    Args:
+        project_root: Optional absolute path to project root for resolving credentials
+            and dataset folder paths. Used primarily in notebook contexts.
+
     Returns:
-        A pandas DataFrame containing the raw data, or None if an error occurs.
+        A GeoDataFrame containing the raw geospatial data, or None if extraction fails.
     """
     logger = get_run_logger()
 

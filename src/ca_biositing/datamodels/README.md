@@ -75,6 +75,37 @@ See
 [docs/datamodels/ALEMBIC_VIEW_WORKFLOW.md](../../../docs/datamodels/ALEMBIC_VIEW_WORKFLOW.md)
 for the full view/migration workflow.
 
+## Two-Stage QC Audit Ledger (`QcReviewDecision`)
+
+Model `QcReviewDecision`
+(`src/ca_biositing/datamodels/ca_biositing/datamodels/models/qc_review/qc_review_decision.py`,
+table `qc_review_decision`, introduced in Alembic migration
+`0025_add_qc_review_decision_table`) stores the audit ledger for Stage 1 and
+Stage 2 Quality Control (QC) review decisions across all 10 Aim 1 and Aim 2
+analytical record tables.
+
+| Column                                                                    | Type                            | Description                                                                                                                                       |
+| :------------------------------------------------------------------------ | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `id`                                                                      | `Integer` (PK)                  | Auto-incrementing decision identifier (`BaseEntity`).                                                                                             |
+| `record_table`                                                            | `String` (indexed)              | Target analytical record table (e.g., `proximate_record`, `compositional_record`, `icp_record`).                                                  |
+| `record_id`                                                               | `String` (indexed)              | Primary `record_id` of the audited analytical observation.                                                                                        |
+| `replicate_group_key`                                                     | `String` (nullable, indexed)    | Composite replicate cohort key (`resource::prepared_sample::parameter`) when auditing a replicate group.                                          |
+| `selection_scope`                                                         | `String`                        | Selection granularity: `replicate_group` (default) or `single_record`.                                                                            |
+| `record_ids_json`                                                         | `Text` (nullable)               | JSON array of all target `record_id` strings covered by a replicate-group decision.                                                               |
+| `resource_name`                                                           | `String` (nullable, indexed)    | Lowercase canonical biomass resource name.                                                                                                        |
+| `analysis_type`                                                           | `String` (nullable, indexed)    | Analytical domain (`proximate`, `ultimate`, `compositional`, `icp`, `xrf`, `xrd`, `calorimetry`, `fermentation`, `pretreatment`, `gasification`). |
+| `parameter_name`                                                          | `String` (nullable)             | Audited parameter name.                                                                                                                           |
+| `flag_type`                                                               | `String`                        | Trigger category (`dixon_q`, `high_rsd`, `sum_exceeds_100`, `physically_impossible`, `analyst_flagged`, `manual_override`).                       |
+| `flag_trigger_value`                                                      | `String` (nullable)             | Formatted statistical metric or threshold that triggered the flag.                                                                                |
+| `old_qc_pass` / `new_qc_pass`                                             | `String`                        | Previous and updated `qc_pass` status (`pass` or `fail`).                                                                                         |
+| `decision_status`                                                         | `String` (indexed)              | Workflow state (`pending_review`, `approve_pass`, `reject_fail`, `revert`).                                                                       |
+| `rationale_tags_json`                                                     | `Text` (nullable)               | JSON array of structured rationale tags selected by the reviewer.                                                                                 |
+| `review_note`                                                             | `Text`                          | Mandatory human-readable audit rationale note.                                                                                                    |
+| `reviewer_email` / `assigned_to_email`                                    | `String` (indexed)              | Reviewer email and optional assignee email.                                                                                                       |
+| `reviewed_at`                                                             | `DateTime`                      | UTC timestamp of the Stage 1 review action.                                                                                                       |
+| `synced_to_gsheet`                                                        | `Boolean` (indexed)             | `False` during Stage 1 (protects `qc_pass` from ETL upsert overwrite); set to `True` after Stage 2 Google Sheets writeback completes.             |
+| `synced_at` / `gsheet_writeback_attempt_count` / `gsheet_writeback_error` | `DateTime` / `Integer` / `Text` | Stage 2 Google Sheets writeback telemetry and error tracking.                                                                                     |
+
 ## Key Dependencies
 
 - [SQLModel](https://sqlmodel.tiangolo.com/) — ORM + Pydantic validation
