@@ -140,6 +140,7 @@ analysis/biocirv-ai/
 
 # Visualization Exports
 exports/plots/
+exports/*.html
 
 # Quarto Audit Portal
 audit/portal/_site/

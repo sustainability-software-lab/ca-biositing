@@ -30,6 +30,8 @@ def is_forbidden_generated_artifact(rel_posix: str) -> str | None:
     parts = pure.parts
     if len(parts) >= 2 and parts[:2] == ("exports", "plots"):
         return "exports/plots/**"
+    if len(parts) == 2 and parts[0] == "exports" and parts[1].endswith(".html"):
+        return "exports/*.html"
     if rel_posix == "data/insights/resource_ai_insights.json":
         return "data/insights/resource_ai_insights.json"
     if (

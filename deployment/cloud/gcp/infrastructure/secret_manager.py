@@ -10,7 +10,9 @@ import pulumi_random as random
 from cloud_sql import CloudSQLResources
 from config import (
     DB_USER,
+    GCP_PROJECT,
     READONLY_USERS,
+    SA_DASHBOARDS_PUBLISHER,
     SECRET_DB_PASSWORD,
     SECRET_GSHEETS,
     SECRET_USDA_API_KEY,
@@ -23,6 +25,7 @@ from config import (
     SECRET_OAUTH2_CLIENT_ID,
     SECRET_OAUTH2_CLIENT_SECRET,
     SECRET_OAUTH2_COOKIE_SECRET,
+    STACK_NAME,
 )
 
 
@@ -39,6 +42,7 @@ class SecretResources:
     readonly_users: dict = field(default_factory=dict)
     readonly_passwords: dict = field(default_factory=dict)
     readonly_secrets: dict = field(default_factory=dict)
+    readonly_secret_iam_members: dict = field(default_factory=dict)
     postgres_password: random.RandomPassword = None
     postgres_user: gcp.sql.User = None
     postgres_password_secret: gcp.secretmanager.Secret = None
@@ -52,9 +56,67 @@ class SecretResources:
     oauth2_cookie_secret_sm: gcp.secretmanager.Secret = None
 
 
+def grant_dashboards_publisher_readonly_secret_access(
+    secrets: SecretResources,
+    publisher_sa: gcp.serviceaccount.Account | None = None,
+    service_accounts: dict[str, gcp.serviceaccount.Account] | None = None,
+) -> dict[str, gcp.secretmanager.SecretIamMember]:
+    """Grant dashboards-publisher secretAccessor exclusively on biocirv_readonly.
+
+    Enforces single-stack Pulumi ownership:
+    - On staging: binds biocirv-staging-dash-pub to biocirv-staging-ro-biocirv_readonly.
+    - On production: binds biocirv-prod-dash-pub AND biocirv-staging-dash-pub to
+      biocirv-production-ro-biocirv_readonly so the staging dashboard workflow can
+      read the production read-only secret without cross-stack resource contention.
+    """
+    if secrets.readonly_secret_iam_members:
+        return secrets.readonly_secret_iam_members
+
+    ro_biocirv_secret = secrets.readonly_secrets.get("biocirv_readonly")
+    if ro_biocirv_secret is None:
+        return {}
+
+    target_sa = publisher_sa or (
+        service_accounts.get("dashboards-publisher") if service_accounts else None
+    )
+    publisher_member = (
+        target_sa.email.apply(lambda email: f"serviceAccount:{email}")
+        if target_sa is not None
+        else f"serviceAccount:{SA_DASHBOARDS_PUBLISHER}@{GCP_PROJECT}.iam.gserviceaccount.com"
+    )
+
+    deps: list[pulumi.Resource] = [ro_biocirv_secret]
+    if target_sa is not None:
+        deps.append(target_sa)
+
+    iam_members: dict[str, gcp.secretmanager.SecretIamMember] = {}
+    iam_members["dashboards-publisher"] = gcp.secretmanager.SecretIamMember(
+        "ro-biocirv-readonly-dashboards-publisher-accessor",
+        project=GCP_PROJECT,
+        secret_id=ro_biocirv_secret.secret_id,
+        role="roles/secretmanager.secretAccessor",
+        member=publisher_member,
+        opts=pulumi.ResourceOptions(depends_on=deps),
+    )
+
+    if STACK_NAME == "production":
+        iam_members["staging-dashboards-publisher"] = gcp.secretmanager.SecretIamMember(
+            "ro-biocirv-readonly-staging-dashboards-publisher-accessor",
+            project=GCP_PROJECT,
+            secret_id=ro_biocirv_secret.secret_id,
+            role="roles/secretmanager.secretAccessor",
+            member=f"serviceAccount:biocirv-staging-dash-pub@{GCP_PROJECT}.iam.gserviceaccount.com",
+            opts=pulumi.ResourceOptions(depends_on=[ro_biocirv_secret]),
+        )
+
+    secrets.readonly_secret_iam_members = iam_members
+    return iam_members
+
+
 def create_secrets(
     sql: CloudSQLResources,
     depends_on: Sequence[pulumi.Resource] | None = None,
+    service_accounts: dict[str, gcp.serviceaccount.Account] | None = None,
 ) -> SecretResources:
     """Create Secret Manager secrets, database users, and passwords."""
     secret_opts = pulumi.ResourceOptions(depends_on=depends_on or [])
@@ -295,7 +357,7 @@ def create_secrets(
         secret_data=oauth2_cookie_secret.result,
     )
 
-    return SecretResources(
+    resources = SecretResources(
         db_password=db_password,
         db_user=db_user,
         db_password_secret=db_password_secret,
@@ -319,3 +381,8 @@ def create_secrets(
         oauth2_cookie_secret=oauth2_cookie_secret,
         oauth2_cookie_secret_sm=oauth2_cookie_secret_sm,
     )
+    grant_dashboards_publisher_readonly_secret_access(
+        resources,
+        service_accounts=service_accounts,
+    )
+    return resources
