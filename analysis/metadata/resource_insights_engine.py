@@ -23,6 +23,7 @@ import json
 import math
 from pathlib import Path
 import re
+import statistics
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -88,6 +89,8 @@ DIXON_Q_CRITICAL_VALUES_ALPHA_0_05: dict[int, float] = {
     30: 0.290,
 }
 
+DIXON_MIN_RSD_PCT: float = 10.0
+
 ANALYSIS_TYPE_TO_TAB: dict[str, str] = {
     "Proximate Analysis": "proximate",
     "Calorimetry": "proximate",
@@ -95,11 +98,88 @@ ANALYSIS_TYPE_TO_TAB: dict[str, str] = {
     "Ultimate Analysis": "compositional",
     "XRD Crystallinity": "compositional",
     "ICP Elemental Analysis": "elemental",
+    "ICP-OES / ICP-MS": "elemental",
     "XRF Elemental Analysis": "elemental",
+    "XRF Elemental": "elemental",
     "Pretreatment & Hydrolysis": "pretreatment",
+    "Pretreatment": "pretreatment",
     "Fermentation (Bioconversion)": "fermentation",
+    "Fermentation": "fermentation",
     "Gasification": "fermentation",
 }
+
+_SLUG_TO_TAB: dict[str, str] = {
+    "proximate": "proximate",
+    "calorimetry": "proximate",
+    "compositional": "compositional",
+    "ultimate": "compositional",
+    "xrd": "compositional",
+    "icp": "elemental",
+    "xrf": "elemental",
+    "pretreatment": "pretreatment",
+    "fermentation": "fermentation",
+    "gasification": "fermentation",
+}
+
+
+CANONICAL_DOMAIN_SLUGS: tuple[str, ...] = (
+    "proximate",
+    "ultimate",
+    "compositional",
+    "calorimetry",
+    "xrd",
+    "icp",
+    "xrf",
+    "pretreatment",
+    "fermentation",
+    "gasification",
+)
+
+
+def _canonical_domain_slug(analysis_type: str | None) -> str:
+    """Map raw analysis_type string to one of the 10 canonical analytical domain slugs."""
+    raw = str(analysis_type or "").strip().lower()
+    if not raw:
+        return "unknown"
+    if raw.endswith("_record"):
+        raw = raw[:-7]
+    mapping = {
+        "proximate analysis": "proximate",
+        "proximate": "proximate",
+        "ultimate analysis": "ultimate",
+        "ultimate": "ultimate",
+        "compositional analysis": "compositional",
+        "compositional": "compositional",
+        "calorimetry": "calorimetry",
+        "calorimetry analysis": "calorimetry",
+        "calorimetry_xrd": "calorimetry",
+        "xrd crystallinity": "xrd",
+        "xrd analysis": "xrd",
+        "xrd": "xrd",
+        "icp-oes / icp-ms": "icp",
+        "icp elemental analysis": "icp",
+        "icp analysis": "icp",
+        "icp": "icp",
+        "xrf elemental": "xrf",
+        "xrf elemental analysis": "xrf",
+        "xrf analysis": "xrf",
+        "xrf": "xrf",
+        "ash": "xrf",
+        "pretreatment": "pretreatment",
+        "pretreatment & hydrolysis": "pretreatment",
+        "fermentation": "fermentation",
+        "fermentation (bioconversion)": "fermentation",
+        "gasification": "gasification",
+    }
+    if raw in mapping:
+        return mapping[raw]
+    for slug in CANONICAL_DOMAIN_SLUGS:
+        if slug in raw:
+            return slug
+    return raw
+
+
+canonical_domain_slug = _canonical_domain_slug
 
 
 def _median(vals: list[float]) -> float | None:
@@ -143,18 +223,34 @@ def _check_abundance_cutoff(analysis_type: str, parameter: str, unit: str, mean_
 
 def _group_context_label(row: dict[str, Any]) -> str:
     """Return the relevant method/strain/time context string for a replicate group."""
-    atype = row.get("analysis_type", "")
-    if atype == "Pretreatment & Hydrolysis":
-        pt = row.get("pt_method") or "none"
+    slug = _canonical_domain_slug(row.get("analysis_type") or row.get("domain"))
+    if slug == "pretreatment":
+        pt = (
+            row.get("pt_method")
+            or (row.get("prep_method") if "pt_method" not in row else None)
+            or "none"
+        )
         eh = row.get("eh_method") or "none"
         return f"{pt} · {eh}" if eh and eh != "none" else pt
-    if atype == "Fermentation (Bioconversion)":
+    if slug == "fermentation":
         pt = row.get("pt_method") or ""
-        st = row.get("strain") or "no-strain"
+        st = (
+            row.get("strain")
+            or (row.get("prep_method") if "strain" not in row else None)
+            or "no-strain"
+        )
         th = row.get("time_h")
         base = f"{pt} · {st}" if pt and pt != "none" else st
-        return f"{base} @ {th:g}h" if th is not None else base
+        if th is not None and th != "":
+            try:
+                return f"{base} @ {float(th):g}h"
+            except (TypeError, ValueError):
+                pass
+        return base
     return row.get("prep_method") or "unassigned"
+
+
+group_context_label = _group_context_label
 
 
 def _replicate_group_key(row: dict[str, Any]) -> tuple[str, ...]:
@@ -246,9 +342,27 @@ def compute_dataset_outlier_screening(
                     dixon_q = round(q_high, 4)
                     dixon_side = "high"
                     dixon_cand_id = str(obs_sorted[-1]["record_id"])
-                raw_dixon = bool(dixon_q > dixon_crit)
+                raw_dixon = bool(
+                    dixon_q > dixon_crit
+                    and rsd_within is not None
+                    and rsd_within >= DIXON_MIN_RSD_PCT
+                )
             elif data_range <= 1e-12:
                 dixon_q = 0.0
+
+        has_identical_replicates = bool(
+            n >= 2
+            and (
+                (max(vals) - min(vals)) <= 1e-9
+                or len({round(v, 4) for v in vals}) == 1
+            )
+        )
+
+        replicate_group_key = (
+            f"{rname.strip().lower()}::{ps_name.strip().lower()}::"
+            f"{_canonical_domain_slug(atype)}::{param.strip().lower()}::"
+            f"{ctx_method.strip().lower()}::{exp_id.strip().lower()}"
+        )
 
         qc_pass_cnt = sum(1 for x in obs_sorted if x.get("qc_status") == "pass")
         qc_fail_cnt = sum(1 for x in obs_sorted if x.get("qc_status") == "fail")
@@ -260,10 +374,17 @@ def compute_dataset_outlier_screening(
             if (x.get("note") or "").strip()
         ))
 
+        tab_resolved = (
+            ANALYSIS_TYPE_TO_TAB.get(atype)
+            or _SLUG_TO_TAB.get(_canonical_domain_slug(atype), "proximate")
+        )
+
+        sd_rounded = round(sd_val, 3) if sd_val is not None else None
         group_records.append({
             "resource_name": rname,
-            "tab_key": ANALYSIS_TYPE_TO_TAB.get(atype, "overview"),
+            "tab_key": tab_resolved,
             "group_id": "|".join(key),
+            "replicate_group_key": replicate_group_key,
             "analysis_type": atype,
             "prepared_sample": ps_name,
             "prep_method": ctx_method,
@@ -272,12 +393,14 @@ def compute_dataset_outlier_screening(
             "unit": unit,
             "n": n,
             "mean": round(mean_val, 3),
-            "sd": round(sd_val, 3) if sd_val is not None else None,
+            "sd": sd_rounded,
+            "within_sd": sd_rounded,
             "rsd_within_pct": rsd_within,
             "dixon_q": dixon_q,
             "dixon_crit": dixon_crit,
             "dixon_side": dixon_side,
             "dixon_candidate_id": dixon_cand_id,
+            "has_identical_replicates": has_identical_replicates,
             "qc_pass_count": qc_pass_cnt,
             "qc_fail_count": qc_fail_cnt,
             "qc_mixed": qc_mixed,
@@ -304,8 +427,8 @@ def compute_dataset_outlier_screening(
         if pooled_den.get(pk, 0) > 0
     }
 
-    # Step 3: Evaluate 3xSD_pooled screen and group by (resource_name, analysis_type, parameter, unit)
-    groups_by_res_param: dict[tuple[str, str, str, str], list[dict[str, Any]]] = defaultdict(list)
+    # Step 3: Evaluate 3xSD_pooled screen and group by (resource_name, analysis_type, parameter, prep_method, unit)
+    groups_by_res_param: dict[tuple[str, str, str, str, str], list[dict[str, Any]]] = defaultdict(list)
     for g in group_records:
         pk = (g["analysis_type"], g["parameter"], g["unit"])
         p_sd = pooled_sd_map.get(pk)
@@ -330,32 +453,46 @@ def compute_dataset_outlier_screening(
         # Primary candidate outlier screen: Dixon Q OR RSD > 20% OR 3xSD OR Mixed QC
         raw_flagged = bool(g["raw_dixon"] or g["raw_rsd20"] or g["raw_sd3x"] or g["qc_mixed"])
         g["raw_flagged"] = raw_flagged
-        g["active_flagged"] = bool(not g["below_cutoff"] and raw_flagged)
+        active_flagged = bool(not g["below_cutoff"] and raw_flagged)
+        g["active_flagged"] = active_flagged
+        g["flagged_active"] = active_flagged
         g["active_rsd10"] = bool(not g["below_cutoff"] and g["raw_rsd10"])
 
-        groups_by_res_param[(g["resource_name"], g["analysis_type"], g["parameter"], g["unit"])].append(g)
+        groups_by_res_param[(g["resource_name"], g["analysis_type"], g["parameter"], g["prep_method"], g["unit"])].append(g)
 
-    # Step 4: Compute Parameter-level Within-Group vs Between-Group RSD per Resource
+    # Step 4: Compute Parameter-level Within-Group vs Between-Group SD and RSD per Resource (stratified by prep_method)
     param_summaries_by_res_tab: dict[tuple[str, str], list[dict[str, Any]]] = defaultdict(list)
-    for (rname, atype, param, unit), p_groups in groups_by_res_param.items():
-        tab_key = ANALYSIS_TYPE_TO_TAB.get(atype, "overview")
+    for (rname, atype, param, p_method, unit), p_groups in groups_by_res_param.items():
+        tab_key = (
+            ANALYSIS_TYPE_TO_TAB.get(atype)
+            or _SLUG_TO_TAB.get(_canonical_domain_slug(atype), "proximate")
+        )
         k_groups = len(p_groups)
         total_n = sum(g["n"] for g in p_groups)
         group_means = [float(g["mean"]) for g in p_groups]
         overall_mean = sum(group_means) / k_groups if k_groups > 0 else 0.0
+        between_sd: float | None = None
         between_rsd: float | None = None
-        if k_groups >= 2 and abs(overall_mean) > 1e-9:
+        if k_groups >= 2:
             b_var = sum((gm - overall_mean) ** 2 for gm in group_means) / (k_groups - 1)
-            between_rsd = round((math.sqrt(b_var) / abs(overall_mean)) * 100.0, 2)
+            between_sd = round(math.sqrt(b_var), 3)
+            if abs(overall_mean) > 1e-9:
+                between_rsd = round((math.sqrt(b_var) / abs(overall_mean)) * 100.0, 2)
+
+        w_sds = [float(g["sd"]) for g in p_groups if g["sd"] is not None]
+        w_sd_median = round(statistics.median(w_sds), 3) if w_sds else None
 
         within_rsds = [float(g["rsd_within_pct"]) for g in p_groups if g["rsd_within_pct"] is not None]
         w_median = _median(within_rsds)
         w_max = round(max(within_rsds), 2) if within_rsds else None
         below_cut, cut_lbl = _check_abundance_cutoff(atype, param, unit, overall_mean)
 
-        # Annotate each group with its parameter's between_rsd_pct
+        # Annotate each group with its parameter stratum's between_sd, rsd_between_pct, and between_k_groups
         for g in p_groups:
+            g["between_sd"] = between_sd
             g["rsd_between_pct"] = between_rsd
+            g["between_rsd_pct"] = between_rsd
+            g["between_k_groups"] = k_groups
 
         # Determine variance driver interpretation badge
         if below_cut:
@@ -386,18 +523,24 @@ def compute_dataset_outlier_screening(
         param_summaries_by_res_tab[(rname, tab_key)].append({
             "analysis_type": atype,
             "parameter": param,
+            "prep_method": p_method,
             "unit": unit,
             "n_groups": k_groups,
             "n_obs": total_n,
             "n_rsd_defined": len(within_rsds),
             "overall_mean": round(overall_mean, 3),
+            "within_sd_median": w_sd_median,
             "within_rsd_median": w_median,
             "within_rsd_max": w_max,
+            "between_sd": between_sd,
             "between_rsd_pct": between_rsd,
+            "between_k_groups": k_groups,
             "pooled_sd": p_groups[0].get("pooled_sd"),
             "below_cutoff": below_cut,
             "cutoff_label": cut_lbl,
             "flagged_active": n_flagged_active,
+            "flagged_active_groups": n_flagged_active,
+            "flagged_replicate_groups": n_flagged_active,
             "flagged_raw": n_flagged_raw,
             "driver_badge": driver_badge,
             "driver_tone": driver_tone,
@@ -438,12 +581,11 @@ def compute_dataset_outlier_screening(
                     g["parameter"],
                 ),
             )
-            # Keep replicate groups that triggered any candidate screen (Dixon Q, RSD > 20%, RSD > 10%, 3xSD, Mixed QC),
-            # including trace-floor groups so the UI "<100 ppm" suppression checkbox can toggle them live.
+            # Retain all replicate groups in sorted order so Page 2 ("All Replicate Groups")
+            # and downstream statistical consumers can inspect both flagged and unflagged groups.
             kept_groups = [
                 {k: v for k, v in g.items() if k not in ("resource_name", "tab_key", "group_id")}
                 for g in t_groups_sorted
-                if g["raw_flagged"] or g["raw_rsd10"]
             ]
 
             w_vals = [
@@ -456,12 +598,25 @@ def compute_dataset_outlier_screening(
                 for p in t_params_sorted
                 if not p["below_cutoff"] and p["between_rsd_pct"] is not None
             ]
+            w_sd_vals = [
+                float(p["within_sd_median"])
+                for p in t_params_sorted
+                if not p["below_cutoff"] and p.get("within_sd_median") is not None
+            ]
+            b_sd_vals = [
+                float(p["between_sd"])
+                for p in t_params_sorted
+                if not p["below_cutoff"] and p.get("between_sd") is not None
+            ]
 
+            tab_flagged_active = sum(1 for g in t_groups if g["active_flagged"])
             by_tab_out[tab_key] = {
                 "total_groups": len(t_groups),
                 "rsd_defined_groups": sum(1 for g in t_groups if g["n"] >= 2),
                 "singleton_groups": sum(1 for g in t_groups if g["n"] == 1),
-                "flagged_active": sum(1 for g in t_groups if g["active_flagged"]),
+                "flagged_active": tab_flagged_active,
+                "flagged_active_groups": tab_flagged_active,
+                "flagged_replicate_groups": tab_flagged_active,
                 "flagged_raw": sum(1 for g in t_groups if g["raw_flagged"]),
                 "suppressed_trace": sum(1 for g in t_groups if g["below_cutoff"] and g["raw_flagged"]),
                 "dixon_flagged": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_dixon"]),
@@ -469,6 +624,8 @@ def compute_dataset_outlier_screening(
                 "rsd10_flagged": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_rsd10"]),
                 "sd3x_flagged": sum(1 for g in t_groups if not g["below_cutoff"] and g["raw_sd3x"]),
                 "qc_mixed_flagged": sum(1 for g in t_groups if g["qc_mixed"]),
+                "within_sd_median": round(statistics.median(w_sd_vals), 3) if w_sd_vals else None,
+                "between_sd_median": round(statistics.median(b_sd_vals), 3) if b_sd_vals else None,
                 "within_rsd_median": _median(w_vals),
                 "between_rsd_median": _median(b_vals),
                 "param_rsd_table": t_params_sorted,
@@ -487,22 +644,56 @@ def compute_dataset_outlier_screening(
             for p in res_all_params
             if not p["below_cutoff"] and p["between_rsd_pct"] is not None
         ]
+        all_w_sd = [
+            float(p["within_sd_median"])
+            for p in res_all_params
+            if not p["below_cutoff"] and p.get("within_sd_median") is not None
+        ]
+        all_b_sd = [
+            float(p["between_sd"])
+            for p in res_all_params
+            if not p["below_cutoff"] and p.get("between_sd") is not None
+        ]
+        overall_w_rsd = _median(all_w)
+        overall_b_rsd = _median(all_b)
+        overall_w_sd = round(statistics.median(all_w_sd), 3) if all_w_sd else None
+        overall_b_sd = round(statistics.median(all_b_sd), 3) if all_b_sd else None
+        total_groups_cnt = len(res_all_groups)
+        rsd_defined_cnt = sum(1 for g in res_all_groups if g["n"] >= 2)
+        singleton_cnt = sum(1 for g in res_all_groups if g["n"] == 1)
+        flagged_active_cnt = sum(1 for g in res_all_groups if g["active_flagged"])
+        flagged_raw_cnt = sum(1 for g in res_all_groups if g["raw_flagged"])
+        suppressed_trace_cnt = sum(1 for g in res_all_groups if g["below_cutoff"] and g["raw_flagged"])
 
         out_by_res[rname] = {
+            "flagged_active": flagged_active_cnt,
+            "flagged_active_groups": flagged_active_cnt,
+            "flagged_replicate_groups": flagged_active_cnt,
+            "rsd_defined_groups": rsd_defined_cnt,
+            "suppressed_low_abundance_groups": suppressed_trace_cnt,
+            "overall_within_rsd_median": overall_w_rsd,
+            "overall_between_rsd_median": overall_b_rsd,
+            "overall_within_sd_median": overall_w_sd,
+            "overall_between_sd_median": overall_b_sd,
             "summary": {
-                "total_groups": len(res_all_groups),
-                "rsd_defined_groups": sum(1 for g in res_all_groups if g["n"] >= 2),
-                "singleton_groups": sum(1 for g in res_all_groups if g["n"] == 1),
-                "flagged_active": sum(1 for g in res_all_groups if g["active_flagged"]),
-                "flagged_raw": sum(1 for g in res_all_groups if g["raw_flagged"]),
-                "suppressed_trace": sum(1 for g in res_all_groups if g["below_cutoff"] and g["raw_flagged"]),
+                "total_groups": total_groups_cnt,
+                "rsd_defined_groups": rsd_defined_cnt,
+                "singleton_groups": singleton_cnt,
+                "flagged_active": flagged_active_cnt,
+                "flagged_active_groups": flagged_active_cnt,
+                "flagged_replicate_groups": flagged_active_cnt,
+                "flagged_raw": flagged_raw_cnt,
+                "suppressed_trace": suppressed_trace_cnt,
+                "suppressed_low_abundance_groups": suppressed_trace_cnt,
                 "dixon_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_dixon"]),
                 "rsd20_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_rsd20"]),
                 "rsd10_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_rsd10"]),
                 "sd3x_flagged": sum(1 for g in res_all_groups if not g["below_cutoff"] and g["raw_sd3x"]),
                 "qc_mixed_flagged": sum(1 for g in res_all_groups if g["qc_mixed"]),
-                "overall_within_rsd_median": _median(all_w),
-                "overall_between_rsd_median": _median(all_b),
+                "overall_within_rsd_median": overall_w_rsd,
+                "overall_between_rsd_median": overall_b_rsd,
+                "overall_within_sd_median": overall_w_sd,
+                "overall_between_sd_median": overall_b_sd,
             },
             "by_tab": by_tab_out,
         }
