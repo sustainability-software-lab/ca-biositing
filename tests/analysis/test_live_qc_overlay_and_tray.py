@@ -1753,3 +1753,182 @@ global.fetch = async (url, opts) => {
     assert out["batchApiCalls"][0]["body"]["assigned_to_email"] == "team.lead@lbl.gov"
     assert out["batchApiCalls"][0]["body"]["review_note"] == "Batch review note"
     assert len(out["batchApiCalls"][0]["body"]["items"]) == 2
+
+
+def test_card13_show_me_mini_plot_popover_pages_1_to_3(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Card 13: Verify #audit-flag-show-me-popover, window.openFlagShowMePopover, and '👁 Show me' buttons across Pages 1–3."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    for page_html in (page1, page2, page3):
+        assert 'id="audit-flag-show-me-popover"' in page_html
+        assert "background-color: var(--card, #0f172a)" in page_html
+        assert "opacity: 1" in page_html
+        assert 'id="show-me-mini-svg"' in page_html
+        assert 'id="show-me-proximate-bar"' in page_html
+        assert 'id="show-me-open-visualizer-link"' in page_html
+        assert "function openFlagShowMePopover(" in page_html
+        assert "function closeFlagShowMePopover(" in page_html
+        assert "btn-show-me-flag" in page_html
+        assert "👁 Show me" in page_html
+        assert "REC-OUTLIER-1" not in page_html
+        assert "Sample-01" not in page_html
+
+    assert 'id="btn-qc-pop-show-me"' in page3
+    assert "window.__HIGHLIGHT_RK__" in page3
+
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    harness = tmp_path / "run_card13_show_me_checks.js"
+    harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set(id === "audit-flag-show-me-popover" || id === "show-me-proximate-bar" ? ["hidden"] : []);
+  const attrs = {};
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: {
+      add(c){ classSet.add(c); },
+      remove(c){ classSet.delete(c); },
+      toggle(c){ if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c){ return classSet.has(c); }
+    },
+    addEventListener(){}, removeEventListener(){},
+    setAttribute(k, v){ attrs[k] = String(v); if (k === "href") this.href = String(v); },
+    getAttribute(k){ return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+const storage = {};
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 2",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
+"""
+        + p2_script
+        + """
+(() => {
+  // 1. Open Show Me popover for a real replicate group from the snapshot
+  const resKey = Object.keys(BUNDLE.insights || {})[0];
+  const ins = BUNDLE.insights[resKey];
+  const byTab = (ins.outlier_screening && ins.outlier_screening.by_tab) || {};
+  let realGrp = null;
+  for (const tKey of Object.keys(byTab)) {
+    const grps = (byTab[tKey] && byTab[tKey].replicate_groups) || [];
+    if (grps.length > 0) {
+      realGrp = grps.find(g => g.raw_flagged || g.active_flagged) || grps[0];
+      break;
+    }
+  }
+  const realRk = window.normalizeReplicateGroupKey(realGrp, resKey);
+  const res1 = window.openFlagShowMePopover({
+    replicateGroupKey: realRk,
+    resource: resKey,
+    analysisType: realGrp.analysis_type,
+    parameter: realGrp.parameter,
+    preparedSample: realGrp.prepared_sample,
+    outlierRecordId: String(realGrp.dixon_candidate_id || (realGrp.replicates && realGrp.replicates[0] && realGrp.replicates[0].id) || "")
+  });
+  const popEl = document.getElementById("audit-flag-show-me-popover");
+  const svgHtml1 = document.getElementById("show-me-mini-svg").innerHTML;
+  const vizHref1 = document.getElementById("show-me-open-visualizer-link").getAttribute("href");
+
+  // 2. Open Show Me popover with proximate_sum flag active on a real group
+  const res2 = window.openFlagShowMePopover({
+    replicateGroupKey: realRk,
+    resource: resKey,
+    analysisType: "proximate",
+    parameter: realGrp.parameter,
+    preparedSample: realGrp.prepared_sample,
+    flags: ["proximate_sum"],
+    proximateSumPct: 108.6
+  });
+  const proxBarEl = document.getElementById("show-me-proximate-bar");
+  const proxBar2Hidden = proxBarEl.classList.contains("hidden");
+  const proxBar2Html = proxBarEl.innerHTML;
+
+  // 3. Verify nonexistent replicateGroupKey renders honest empty state and zero synthetic data
+  const emptyRes = window.openFlagShowMePopover({
+    replicateGroupKey: "nonexistent::missing-sample::proximate::ash::none::none",
+    resource: "nonexistent_resource",
+    analysisType: "proximate",
+    parameter: "ash"
+  });
+  const emptySvgHtml = document.getElementById("show-me-mini-svg").innerHTML;
+
+  // 4. Close popover
+  window.closeFlagShowMePopover();
+  const popClosedHidden = popEl.classList.contains("hidden");
+
+  console.log(JSON.stringify({
+    res1,
+    svgHtml1,
+    vizHref1,
+    res2,
+    proxBar2Hidden,
+    proxBar2Html,
+    emptyRes,
+    emptySvgHtml,
+    popClosedHidden
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Card 13 overlay Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert 'class="show-me-pt-target-group"' in out["svgHtml1"] or 'class="show-me-pt-outlier"' in out["svgHtml1"]
+    assert 'class="show-me-outlier-pulse-ring"' in out["svgHtml1"]
+    assert 'r="10.5"' in out["svgHtml1"]
+    assert 'stroke="#60a5fa"' in out["svgHtml1"]
+    assert 'stroke="#dc2626"' in out["svgHtml1"]
+    assert "resource_explorer_dashboard.html?resource=" in out["vizHref1"]
+    assert "&highlight_rk=" in out["vizHref1"]
+    assert out["proxBar2Hidden"] is False
+    assert "95–105%" in out["proxBar2Html"]
+    assert 'data-role="proximate-stacked-bar"' in out["proxBar2Html"]
+    assert "Proximate Closure" in out["proxBar2Html"]
+    assert out["emptyRes"]["empty"] is True
+    assert "No matching database records found in snapshot." in out["emptySvgHtml"]
+    assert "<circle" not in out["emptySvgHtml"]
+    assert out["popClosedHidden"] is True

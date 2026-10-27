@@ -1002,26 +1002,61 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     total_flagged = payload.get("total_flagged_groups", 0)
 
     html_template = """<!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Product 4 — Resource QC &amp; Data Audit Workbench | BioCIRV</title>
   <style>
-    :root {
-      --bg-page: #f4f6f9;
-      --bg-card: #ffffff;
-      --bg-drawer: #f8fafc;
-      --bg-header: #0f172a;
-      --text-main: #0f172a;
-      --text-muted: #475569;
-      --border-color: #cbd5e1;
+    :root, [data-theme="dark"] {
+      --bg-page: #0f172a;
+      --bg-card: #1e293b;
+      --bg-drawer: #0f172a;
+      --bg-subtle: #0f172a;
+      --bg-hover: rgba(56, 189, 248, 0.12);
+      --bg-selected: rgba(56, 189, 248, 0.22);
+      --bg-header: #020617;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --surface: #1e293b;
+      --surface-alt: #0f172a;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: #334155;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       --accent-primary: #0284c7;
       --accent-primary-hover: #0369a1;
       --accent-admin: #7c3aed;
       --accent-success: #15803d;
       --accent-warn: #b45309;
       --accent-danger: #b91c1c;
+      --badge-open-bg: rgba(245, 158, 11, 0.2);
+      --badge-open-fg: #fde68a;
+      --badge-pass-bg: rgba(34, 197, 94, 0.2);
+      --badge-pass-fg: #bbf7d0;
+      --badge-fail-bg: rgba(239, 68, 68, 0.22);
+      --badge-fail-fg: #fecaca;
+      --badge-sync-bg: rgba(99, 102, 241, 0.22);
+      --badge-sync-fg: #c7d2fe;
+    }
+
+    [data-theme="light"] {
+      --bg-page: #f4f6f9;
+      --bg-card: #ffffff;
+      --bg-drawer: #f8fafc;
+      --bg-subtle: #f1f5f9;
+      --bg-hover: #f0f9ff;
+      --bg-selected: #e0f2fe;
+      --bg-header: #0f172a;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --border-color: #cbd5e1;
+      --surface: #ffffff;
+      --surface-alt: #f8fafc;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #cbd5e1;
       --badge-open-bg: #fef3c7;
       --badge-open-fg: #92400e;
       --badge-pass-bg: #dcfce7;
@@ -1131,7 +1166,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       padding: 6px 12px;
       border-radius: 6px;
       border: 1px solid var(--border-color);
-      background: #ffffff;
+      background: var(--bg-card);
       color: var(--text-main);
       font-size: 12.5px;
       font-weight: 600;
@@ -1140,7 +1175,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     }
 
     .btn:hover:not(:disabled) {
-      background: #f1f5f9;
+      background: var(--bg-subtle);
     }
 
     .btn:disabled {
@@ -1169,9 +1204,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     }
 
     .sync-banner {
-      background: #eff6ff;
-      border-bottom: 1px solid #bfdbfe;
-      color: #1e3a8a;
+      background: rgba(14, 165, 233, 0.12);
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-main);
       padding: 8px 20px;
       font-size: 12.5px;
       display: flex;
@@ -1229,7 +1264,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       flex-wrap: wrap;
       gap: 10px;
       padding-bottom: 10px;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--border-color);
     }
 
     .queue-tabs {
@@ -1242,7 +1277,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       padding: 6px 12px;
       border-radius: 999px;
       border: 1px solid var(--border-color);
-      background: #f8fafc;
+      background: var(--bg-subtle);
       color: var(--text-main);
       font-size: 12.5px;
       font-weight: 600;
@@ -1279,7 +1314,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       border-radius: 6px;
       border: 1px solid var(--border-color);
       font-size: 13px;
-      background: #ffffff;
+      background: var(--bg-subtle);
       color: var(--text-main);
     }
 
@@ -1310,13 +1345,13 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     th, td {
       padding: 8px 10px;
       text-align: left;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--border-color);
     }
 
     th {
-      background: #f1f5f9;
+      background: var(--bg-subtle);
       font-weight: 700;
-      color: #334155;
+      color: var(--text-muted);
       position: sticky;
       top: 0;
       z-index: 1;
@@ -1328,11 +1363,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     }
 
     tr.queue-row:hover {
-      background: #f0f9ff;
+      background: var(--bg-hover);
     }
 
     tr.queue-row.selected {
-      background: #e0f2fe;
+      background: var(--bg-selected);
       font-weight: 600;
     }
 
@@ -1381,8 +1416,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     }
 
     .status-in_review, .status-needs_retest {
-      background: #ffedd5;
-      color: #9a3412;
+      background: rgba(249, 115, 22, 0.22);
+      color: #fdba74;
     }
 
     .status-resolved {
@@ -1401,11 +1436,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       border: 2px solid var(--accent-primary);
       border-radius: 10px;
       overflow: hidden;
-      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.08);
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.28);
     }
 
     .drawer-header {
-      background: #0f172a;
+      background: var(--bg-header);
       color: #ffffff;
       padding: 10px 16px;
       display: flex;
@@ -1430,7 +1465,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     .pane-left {
       padding: 16px;
       border-right: 1px solid var(--border-color);
-      background: #ffffff;
+      background: var(--bg-card);
     }
 
     .pane-right {
@@ -1453,16 +1488,16 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
       gap: 10px;
       margin-bottom: 12px;
-      background: #f8fafc;
+      background: var(--bg-subtle);
       padding: 10px;
       border-radius: 8px;
-      border: 1px solid #e2e8f0;
+      border: 1px solid var(--border-color);
     }
 
     .plot-stage {
-      border: 1px solid #cbd5e1;
+      border: 1px solid var(--border-color);
       border-radius: 8px;
-      background: #ffffff;
+      background: var(--bg-subtle);
       padding: 10px;
       min-height: 290px;
       display: flex;
@@ -1477,7 +1512,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       font-size: 12px;
       color: var(--text-muted);
       padding-top: 8px;
-      border-top: 1px dashed #e2e8f0;
+      border-top: 1px dashed var(--border-color);
       margin-top: 8px;
     }
 
@@ -1486,7 +1521,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       gap: 12px;
       margin: 8px 0 10px;
       padding: 8px 10px;
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 6px;
     }
@@ -1501,8 +1536,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     .rationale-chip {
       padding: 5px 10px;
       border-radius: 999px;
-      border: 1px solid #94a3b8;
-      background: #ffffff;
+      border: 1px solid var(--border-color);
+      background: var(--bg-card);
+      color: var(--text-main);
       font-size: 11.5px;
       cursor: pointer;
       user-select: none;
@@ -1519,7 +1555,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       margin-top: 14px;
       padding: 12px;
       border-radius: 8px;
-      background: #ffffff;
+      background: var(--bg-card);
       border: 1px solid var(--border-color);
     }
 
@@ -1529,7 +1565,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       justify-content: space-between;
       gap: 8px;
       padding: 6px 0;
-      border-bottom: 1px dashed #e2e8f0;
+      border-bottom: 1px dashed var(--border-color);
       font-size: 12px;
     }
 
@@ -1539,15 +1575,16 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
     .timeline-label {
       font-weight: 700;
-      color: #334155;
+      color: var(--text-muted);
     }
 
     .transition-badge {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       padding: 2px 6px;
       border-radius: 4px;
-      background: #f1f5f9;
-      border: 1px solid #cbd5e1;
+      background: var(--bg-subtle);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
       font-size: 11px;
     }
 
@@ -1555,9 +1592,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       display: inline-block;
       padding: 4px 9px;
       border-radius: 6px;
-      background: #f1f5f9;
-      color: #475569;
-      border: 1px solid #cbd5e1;
+      background: var(--bg-subtle);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
       font-size: 11.5px;
       font-weight: 600;
     }
@@ -1596,6 +1633,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         <span>👤 <strong id="auth-user-email">analyst@lbl.gov</strong></span>
         <span class="role-badge role-analyst" id="auth-user-role-badge">analyst</span>
       </div>
+      <button type="button" class="btn" id="btn-theme-toggle" title="Toggle Dark / Light Mode">
+        ☀️ Light Mode
+      </button>
       <button type="button" class="btn" id="btn-toggle-role-sim" title="Toggle local role preview when offline">
         ⇄ Role Preview
       </button>
@@ -1802,8 +1842,18 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             <strong id="drawer-title">Contextual Workspace Drawer</strong>
             <span id="drawer-subtitle" style="margin-left: 10px; color: #94a3b8; font-size: 12px;"></span>
           </div>
-          <div style="font-size: 12px; color: #cbd5e1;">
-            Deep Link: <code id="drawer-deeplink-code">?decision_id=QC-0001</code>
+          <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: #cbd5e1;">
+            <button
+              id="btn-drawer-show-me-flag"
+              type="button"
+              class="btn-show-me-flag"
+              data-decision-id="QC-0001"
+              data-group-key=""
+              title="Show flagged replicate group and outlier in slice context"
+              style="padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; background: rgba(56,189,248,0.18); color: #38bdf8; border: 1px solid rgba(56,189,248,0.45); cursor: pointer;"
+              onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ decisionId: this.getAttribute('data-decision-id'), replicateGroupKey: this.getAttribute('data-group-key') }, this);"
+            >👁 Show me</button>
+            <span>Deep Link: <code id="drawer-deeplink-code">?decision_id=QC-0001</code></span>
           </div>
         </div>
 
@@ -1886,7 +1936,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               </label>
             </div>
 
-            <div class="table-scroll" style="max-height: 165px; border: 1px solid var(--border-color); border-radius: 6px; background: #fff; margin-bottom: 12px;">
+            <div class="table-scroll" style="max-height: 165px; border: 1px solid var(--border-color); border-radius: 6px; background: var(--bg-card); margin-bottom: 12px;">
               <table>
                 <thead>
                   <tr>
@@ -1965,7 +2015,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
             <!-- Complete 4-Step Audit Provenance & Timestamp Timeline -->
             <div class="provenance-timeline" id="audit-provenance-timeline">
-              <div style="font-weight: 700; font-size: 12.5px; margin-bottom: 6px; color: #0f172a;">
+              <div style="font-weight: 700; font-size: 12.5px; margin-bottom: 6px; color: var(--text-main);">
                 Audit Provenance &amp; Timestamp Timeline
               </div>
 
@@ -2039,8 +2089,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       padding: 16px;
     }
     .bug-modal-card {
-      background: var(--bg-card, #ffffff);
-      border: 1px solid var(--border-color, #cbd5e1);
+      background: var(--bg-card, #1e293b);
+      border: 1px solid var(--border-color, #334155);
       border-radius: 14px;
       max-width: 560px;
       width: 100%;
@@ -2049,7 +2099,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       display: flex;
       flex-direction: column;
       gap: 12px;
-      color: var(--text-main, #0f172a);
+      color: var(--text-main, #f8fafc);
     }
     .bug-modal-card input,
     .bug-modal-card select,
@@ -2057,20 +2107,20 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       width: 100%;
       padding: 8px 10px;
       border-radius: 8px;
-      border: 1px solid var(--border-color, #cbd5e1);
-      background: var(--bg-drawer, #f8fafc);
-      color: var(--text-main, #0f172a);
+      border: 1px solid var(--border-color, #334155);
+      background: var(--bg-drawer, #0f172a);
+      color: var(--text-main, #f8fafc);
       font-size: 0.82rem;
       font-family: inherit;
     }
     .bug-modal-diag {
-      background: var(--bg-drawer, #f8fafc);
-      border: 1px solid var(--border-color, #cbd5e1);
+      background: var(--bg-drawer, #0f172a);
+      border: 1px solid var(--border-color, #334155);
       border-radius: 8px;
       padding: 10px;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.75rem;
-      color: var(--text-muted, #475569);
+      color: var(--text-muted, #94a3b8);
       white-space: pre-wrap;
     }
   </style>
@@ -2130,6 +2180,33 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           ↗ Open Pre-Filled GitHub Issue
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Shared Contextual Flag "Show me" Mini-Plot Popover (Card 13) -->
+  <div id="audit-flag-show-me-popover" class="hidden" style="display:none; position:fixed; z-index:85; top:96px; right:32px; width:460px; max-width:94vw; border-radius:14px; border:2px solid #38bdf8; background:var(--bg-card, #1e293b); color:var(--text-main, #f8fafc); opacity:1; backdrop-filter:none; box-shadow:0 24px 48px rgba(2,6,23,0.88); padding:14px;" role="dialog" aria-label="Contextual Flag Slice Mini-Plot">
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:8px; border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:8px;">
+      <div>
+        <div id="show-me-popover-title" style="font-size:12px; font-weight:700; color:var(--text);">
+          👁 Contextual Slice Mini-Plot
+        </div>
+        <div id="show-me-popover-subtitle" style="font-size:11px; font-family:var(--mono); color:var(--muted); margin-top:2px;"></div>
+      </div>
+      <button id="btn-close-show-me-popover" type="button" class="btn" style="padding:2px 8px; font-size:11px;" onclick="window.closeFlagShowMePopover && window.closeFlagShowMePopover()" title="Close mini-plot popover">✕</button>
+    </div>
+    <div id="show-me-flag-pills" style="display:flex; flex-wrap:wrap; align-items:center; gap:4px; margin-bottom:8px;"></div>
+    <div id="show-me-mini-svg-wrap" style="border-radius:10px; border:1px solid var(--border); background:var(--bg-page, #0f172a); opacity:1; padding:8px; margin-bottom:8px;">
+      <svg id="show-me-mini-svg" viewBox="0 0 420 150" width="100%" height="150" role="img" aria-label="Flagged Replicate Group vs Peer Slice Distribution"></svg>
+    </div>
+    <div id="show-me-proximate-bar" class="hidden" style="display:none; border-radius:10px; border:1px solid rgba(217,119,6,0.45); background:rgba(245,158,11,0.1); padding:8px 10px; font-size:11px; font-family:var(--mono); margin-bottom:8px;"></div>
+    <div id="show-me-legend" style="display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px; font-size:10px; font-family:var(--mono); color:var(--muted); margin-bottom:8px;">
+      <span>⚪ Peer Slice Points (#64748b)</span>
+      <span>🔵 Target Replicate Group (#2563eb)</span>
+      <span>🔴 Flagged Outlier (#dc2626)</span>
+    </div>
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; border-top:1px solid var(--border); padding-top:8px; font-size:11px;">
+      <span id="show-me-stats-summary" style="font-family:var(--mono); font-size:10px; color:var(--muted);"></span>
+      <a id="show-me-open-visualizer-link" href="resource_explorer_dashboard.html" class="btn btn-primary" style="text-decoration:none; font-size:11px; padding:4px 10px;">Open in Data Visualizer ↗</a>
     </div>
   </div>
 
@@ -3056,6 +3133,12 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               return '<span class="flag-pill flag-' + ft + '">' + ft + "</span>";
             })
             .join("");
+          var showMeBtnHtml =
+            ' <button type="button" class="btn-show-me-flag" data-decision-id="' +
+            escapeHtml(decItem.decision_id) +
+            '" data-group-key="' +
+            escapeHtml(decItem.replicate_group_key || "") +
+            '" title="Show flagged replicate group and outlier in slice context" style="margin-left:4px;padding:1px 6px;border-radius:5px;font-size:10px;font-weight:600;background:rgba(56,189,248,0.16);color:#38bdf8;border:1px solid rgba(56,189,248,0.45);cursor:pointer;" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ decisionId: this.getAttribute(&quot;data-decision-id&quot;), replicateGroupKey: this.getAttribute(&quot;data-group-key&quot;) }, this);">👁 Show me</button>';
 
           var statusClass = "status-" + (decItem.decision_status || "open");
           var stageLabel =
@@ -3093,6 +3176,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             ")</span></td>" +
             "<td>" +
             flagsHtml +
+            showMeBtnHtml +
             "</td>" +
             "<td>" +
             escapeHtml(decItem.flag_trigger_value || "") +
@@ -3198,6 +3282,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           "drawer-deeplink-code",
           "?decision_id=" + dec.decision_id + "&replicate_group_key=" + resolvedGroupKey
         );
+        var drawerShowMeBtn = document.getElementById("btn-drawer-show-me-flag");
+        if (drawerShowMeBtn) {
+          drawerShowMeBtn.setAttribute("data-decision-id", dec.decision_id || "");
+          drawerShowMeBtn.setAttribute("data-group-key", resolvedGroupKey || "");
+        }
 
         // Populate Co-Measured Parameter selector on same prepared_sample
         var sampleKey = resolvedResource + "::" + resolvedSample;
@@ -3319,7 +3408,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           var r = reps[i];
           var tr = document.createElement("tr");
           if (r.is_iqr_outlier || r.is_analyst_flagged) {
-            tr.style.background = "#fff1f2";
+            tr.style.background = "rgba(239, 68, 68, 0.16)";
           }
           var checked = Boolean(state.selectedReplicateIds[r.record_id]);
           var disabled = state.scopeMode === "group";
@@ -3421,13 +3510,27 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         var plotW = width - padL - padR;
         var plotH = height - padT - padB;
 
+        var isLightTheme =
+          typeof document !== "undefined" &&
+          document.documentElement &&
+          typeof document.documentElement.getAttribute === "function" &&
+          document.documentElement.getAttribute("data-theme") === "light";
+        var svgBg = isLightTheme ? "#ffffff" : "#0f172a";
+        var svgTextMain = isLightTheme ? "#0f172a" : "#f8fafc";
+        var svgTextMuted = isLightTheme ? "#334155" : "#94a3b8";
+        var svgIqrFill = isLightTheme ? "#e0f2fe" : "rgba(56, 189, 248, 0.16)";
+        var svgClosFill = isLightTheme ? "#dcfce7" : "rgba(34, 197, 94, 0.18)";
+        var svgOutText = isLightTheme ? "#b91c1c" : "#fca5a5";
+
         var svgParts = [];
         svgParts.push(
           '<rect x="0" y="0" width="' +
             width +
             '" height="' +
             height +
-            '" fill="#ffffff" />'
+            '" fill="' +
+            svgBg +
+            '" />'
         );
 
         var palette = ["#0284c7", "#7c3aed", "#059669", "#d97706", "#dc2626", "#2563eb"];
@@ -3476,7 +3579,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           svgParts.push(
             '<text x="' +
               padL +
-              '" y="20" font-size="12" font-weight="700" fill="#0f172a">Proximate Mass-Balance Closure (Moisture + Ash + VS [or 100 - FC]) — ' +
+              '" y="20" font-size="12" font-weight="700" fill="' +
+              svgTextMain +
+              '">Proximate Mass-Balance Closure (Moisture + Ash + VS [or 100 - FC]) — ' +
               escapeHtml(sampleKey) +
               " (Total: " +
               Number(sumVal).toFixed(1) +
@@ -3495,7 +3600,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               (x105 - x95).toFixed(1) +
               '" height="' +
               (plotH - 40) +
-              '" fill="#dcfce7" opacity="0.65" />'
+              '" fill="' +
+              svgClosFill +
+              '" opacity="0.65" />'
           );
           svgParts.push(
             '<line x1="' +
@@ -3546,7 +3653,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 (curX + segW / 2).toFixed(1) +
                 '" y="' +
                 (barY + barH + 18) +
-                '" text-anchor="middle" font-size="11" fill="#334155">' +
+                '" text-anchor="middle" font-size="11" fill="' +
+                svgTextMuted +
+                '">' +
                 escapeHtml(cName) +
                 " (" +
                 cVal.toFixed(1) +
@@ -3591,7 +3700,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 plotW +
                 '" height="' +
                 Math.max(4, Math.abs(yQ1 - yQ3)).toFixed(1) +
-                '" fill="#e0f2fe" opacity="0.65" />'
+                '" fill="' +
+                svgIqrFill +
+                '" opacity="0.65" />'
             );
             svgParts.push(
               '<line x1="' +
@@ -3650,7 +3761,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                   cxM.toFixed(1) +
                   '" y="' +
                   (cyM - 10).toFixed(1) +
-                  '" text-anchor="middle" font-size="11" fill="#0f172a">' +
+                  '" text-anchor="middle" font-size="11" fill="' +
+                  svgTextMain +
+                  '">' +
                   escapeHtml(repM.record_id) +
                   " (" +
                   Number(repM.value).toFixed(2) +
@@ -3671,7 +3784,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 Math.max(6, Math.abs(xQ3 - xQ1)).toFixed(1) +
                 '" height="' +
                 plotH +
-                '" fill="#e0f2fe" opacity="0.65" />'
+                '" fill="' +
+                svgIqrFill +
+                '" opacity="0.65" />'
             );
             svgParts.push(
               '<line x1="' +
@@ -3723,7 +3838,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                   (padL - 6) +
                   '" y="' +
                   (rowY + 4).toFixed(1) +
-                  '" text-anchor="end" font-size="11" fill="#334155">Rep #' +
+                  '" text-anchor="end" font-size="11" fill="' +
+                  svgTextMuted +
+                  '">Rep #' +
                   escapeHtml(String(repN.replicate_no)) +
                   "</text>"
               );
@@ -3735,7 +3852,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                   '" font-size="11" font-weight="' +
                   (isOutN ? "700" : "500") +
                   '" fill="' +
-                  (isOutN ? "#b91c1c" : "#0f172a") +
+                  (isOutN ? svgOutText : svgTextMain) +
                   '">' +
                   escapeHtml(repN.record_id) +
                   ": " +
@@ -4617,6 +4734,25 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           });
         }
 
+        var themeToggleBtn = document.getElementById("btn-theme-toggle");
+        if (themeToggleBtn) {
+          themeToggleBtn.addEventListener("click", function () {
+            var currentTheme =
+              document.documentElement && typeof document.documentElement.getAttribute === "function"
+                ? document.documentElement.getAttribute("data-theme")
+                : "dark";
+            var nextTheme = currentTheme === "light" ? "dark" : "light";
+            if (document.documentElement && typeof document.documentElement.setAttribute === "function") {
+              document.documentElement.setAttribute("data-theme", nextTheme);
+            }
+            themeToggleBtn.textContent = nextTheme === "light" ? "☀ Light Mode" : "🌙 Dark Mode";
+            try {
+              localStorage.setItem("biocirv_workbench_theme", nextTheme);
+            } catch (_e) {}
+            renderContextualDrawer();
+          });
+        }
+
         var exportJsonBtn = document.getElementById("btn-export-client-json");
         if (exportJsonBtn) {
           exportJsonBtn.addEventListener("click", function () {
@@ -4805,7 +4941,629 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           .replace(/'/g, "&#39;");
       }
 
+      function closeFlagShowMePopover() {
+        var pop = document.getElementById("audit-flag-show-me-popover");
+        if (pop) {
+          pop.classList.add("hidden");
+          if (pop.style) pop.style.display = "none";
+        }
+      }
+
+      function openFlagShowMePopover(opts, anchorEl) {
+        var pop = document.getElementById("audit-flag-show-me-popover");
+        var svgEl = document.getElementById("show-me-mini-svg");
+        if (!pop || !svgEl) return null;
+
+        var o = typeof opts === "string" ? { replicateGroupKey: opts } : (opts || {});
+        var hasExplicitSelector = Boolean(
+          o.decisionId ||
+          o.replicateGroupKey ||
+          o.replicate_group_key ||
+          o.parameter ||
+          o.preparedSample ||
+          o.prepared_sample
+        );
+        var dec = null;
+        if (o.decisionId && state.decisionsById[o.decisionId]) {
+          dec = state.decisionsById[o.decisionId];
+        } else if (!hasExplicitSelector && state.selectedDecisionId) {
+          dec = state.decisionsById[state.selectedDecisionId];
+        }
+
+        var targetGroup = null;
+        if (dec) {
+          targetGroup = findReplicateGroupForDecision(dec);
+        }
+        var reqKey = String(
+          o.replicateGroupKey || o.replicate_group_key || (dec && dec.replicate_group_key) || ""
+        ).trim();
+        var rawGroups = (WORKBENCH_DATA && WORKBENCH_DATA.replicate_groups) || {};
+        var allGroups = Array.isArray(rawGroups)
+          ? rawGroups
+          : Object.values(rawGroups);
+        if (!targetGroup && reqKey) {
+          for (var i = 0; i < allGroups.length; i++) {
+            if (matchesReplicateGroupKey(allGroups[i].replicate_group_key, reqKey)) {
+              targetGroup = allGroups[i];
+              break;
+            }
+          }
+        }
+        if (!targetGroup && (o.parameter || o.preparedSample || o.prepared_sample)) {
+          var pLow = String(o.parameter || "").trim().toLowerCase();
+          var sLow = String(o.preparedSample || o.prepared_sample || "").trim().toLowerCase();
+          for (var gIdx = 0; gIdx < allGroups.length; gIdx++) {
+            var candG = allGroups[gIdx];
+            if (
+              (!pLow || String(candG.parameter_name || "").trim().toLowerCase() === pLow) &&
+              (!sLow || String(candG.prepared_sample || "").trim().toLowerCase() === sLow)
+            ) {
+              targetGroup = candG;
+              break;
+            }
+          }
+        }
+        if (!targetGroup && !hasExplicitSelector && allGroups.length > 0) {
+          targetGroup = allGroups[0];
+        }
+        if (!dec && targetGroup) {
+          var decList = Object.values(state.decisionsById || {});
+          for (var dIdx = 0; dIdx < decList.length; dIdx++) {
+            if (
+              matchesReplicateGroupKey(
+                decList[dIdx].replicate_group_key,
+                targetGroup.replicate_group_key
+              )
+            ) {
+              dec = decList[dIdx];
+              break;
+            }
+          }
+        }
+
+        var rawReps = (targetGroup && Array.isArray(targetGroup.replicates))
+          ? targetGroup.replicates
+          : [];
+        if (!targetGroup || rawReps.length === 0) {
+          svgEl.innerHTML =
+            '<rect x="28" y="18" width="368" height="102" rx="8" fill="rgba(15,23,42,0.04)" stroke="rgba(148,163,184,0.22)" stroke-width="1" />' +
+            '<text x="210" y="74" text-anchor="middle" font-size="11" font-family="monospace" fill="#94a3b8">No matching database records found in snapshot.</text>';
+          setText("show-me-popover-subtitle", "No matching database records found");
+          var emptyPillsEl = document.getElementById("show-me-flag-pills");
+          if (emptyPillsEl) emptyPillsEl.innerHTML = "";
+          setText("show-me-stats-summary", "No matching database records found");
+          var emptyProxEl = document.getElementById("show-me-proximate-bar");
+          if (emptyProxEl) {
+            emptyProxEl.classList.add("hidden");
+            if (emptyProxEl.style) emptyProxEl.style.display = "none";
+            emptyProxEl.innerHTML = "";
+          }
+          pop.classList.remove("hidden");
+          if (pop.style) pop.style.display = "block";
+          return {
+            empty: true,
+            decisionId: dec ? dec.decision_id : o.decisionId || null,
+            replicateGroupKey: reqKey,
+            peerCount: 0,
+            targetGroupCount: 0,
+            outlierCount: 0,
+            hasProximateBar: false
+          };
+        }
+
+        var resolvedResource =
+          o.resource ||
+          (dec && dec.resource_name) ||
+          (targetGroup && targetGroup.resource_name) ||
+          "";
+        var resolvedAnalysisType =
+          o.analysisType ||
+          (dec && dec.analysis_type) ||
+          (targetGroup && targetGroup.analysis_type) ||
+          "";
+        var resolvedDomSlug = canonicalDomainSlug(resolvedAnalysisType);
+        var resolvedParameter =
+          o.parameter ||
+          (dec && dec.parameter_name) ||
+          (targetGroup && targetGroup.parameter_name) ||
+          "";
+        var resolvedMethod =
+          o.method ||
+          (dec && dec.prep_method) ||
+          (targetGroup && targetGroup.prep_method) ||
+          "";
+        var resolvedSample =
+          o.preparedSample ||
+          (dec && dec.prepared_sample) ||
+          (targetGroup && targetGroup.prepared_sample) ||
+          "";
+        var resolvedUnit =
+          o.unit ||
+          (dec && dec.unit) ||
+          (targetGroup && targetGroup.unit) ||
+          "";
+        var activeFlags = [];
+        if (Array.isArray(o.flags)) {
+          activeFlags = o.flags.slice();
+        } else if (o.flags) {
+          activeFlags = [String(o.flags)];
+        } else if (dec) {
+          activeFlags = (dec.flag_types || [dec.flag_type]).filter(Boolean);
+        } else if (targetGroup && Array.isArray(targetGroup.flag_types)) {
+          activeFlags = targetGroup.flag_types.filter(Boolean);
+        }
+
+        var targetKey = targetGroup.replicate_group_key;
+        var normStr = function (v) {
+          return String(v || "").trim().toLowerCase();
+        };
+
+        var peerGroups = allGroups.filter(function (g) {
+          return (
+            g.replicate_group_key !== targetKey &&
+            normStr(g.resource_name) === normStr(resolvedResource) &&
+            canonicalDomainSlug(g.analysis_type) === resolvedDomSlug &&
+            normStr(g.parameter_name) === normStr(resolvedParameter) &&
+            (!resolvedMethod || normStr(g.prep_method) === normStr(resolvedMethod))
+          );
+        });
+        if (peerGroups.length === 0) {
+          peerGroups = allGroups.filter(function (g) {
+            return (
+              g.replicate_group_key !== targetKey &&
+              normStr(g.resource_name) === normStr(resolvedResource) &&
+              normStr(g.parameter_name) === normStr(resolvedParameter)
+            );
+          });
+        }
+        if (peerGroups.length === 0) {
+          peerGroups = allGroups.filter(function (g) {
+            return (
+              g.replicate_group_key !== targetKey &&
+              normStr(g.parameter_name) === normStr(resolvedParameter)
+            );
+          });
+        }
+        if (peerGroups.length === 0) {
+          peerGroups = allGroups.filter(function (g) {
+            return g.replicate_group_key !== targetKey;
+          });
+        }
+
+        var targetReps = rawReps.map(function (r, idx) {
+          return {
+            record_id: String(r.record_id || ""),
+            value: Number(r.value),
+            replicate_no: Number(r.replicate_no || idx + 1),
+            qc_pass: String(r.qc_pass || "pass"),
+            prepared_sample: String(resolvedSample || ""),
+            is_iqr_outlier: Boolean(r.is_iqr_outlier),
+            is_analyst_flagged: Boolean(r.is_analyst_flagged),
+            isTargetGroup: true,
+            isOutlier: false
+          };
+        });
+
+        var groupMean =
+          targetReps.reduce(function (s, r) {
+            return s + Number(r.value);
+          }, 0) / (targetReps.length || 1);
+        var explicitCandId = String(
+          o.outlierRecordId || (dec && dec.record_id) || ""
+        ).trim();
+
+        for (var rIdx = 0; rIdx < targetReps.length; rIdx++) {
+          var trItem = targetReps[rIdx];
+          trItem.isOutlier = Boolean(
+            (explicitCandId && trItem.record_id === explicitCandId) ||
+              trItem.is_iqr_outlier ||
+              trItem.is_analyst_flagged
+          );
+        }
+
+        if (targetReps.length >= 2) {
+          var outlierCnt = targetReps.filter(function (r) {
+            return r.isOutlier;
+          }).length;
+          if (outlierCnt === 0 || outlierCnt === targetReps.length) {
+            var furthestIdx = 0;
+            var maxDist = -1;
+            for (var k = 0; k < targetReps.length; k++) {
+              var dist = Math.abs(Number(targetReps[k].value) - groupMean);
+              if (dist > maxDist) {
+                maxDist = dist;
+                furthestIdx = k;
+              }
+            }
+            for (var m = 0; m < targetReps.length; m++) {
+              targetReps[m].isOutlier = m === furthestIdx;
+            }
+          }
+        } else if (targetReps.length === 1) {
+          targetReps[0].isOutlier = true;
+        }
+
+        var peerPoints = [];
+        for (var pIdx = 0; pIdx < peerGroups.length; pIdx++) {
+          var pg = peerGroups[pIdx];
+          var pgReps = pg.replicates || [];
+          for (var prIdx = 0; prIdx < pgReps.length; prIdx++) {
+            var pr = pgReps[prIdx];
+            if (typeof pr.value === "number" && !isNaN(pr.value)) {
+              peerPoints.push({
+                record_id: String(pr.record_id || ""),
+                value: Number(pr.value),
+                prepared_sample: String(pg.prepared_sample || "Peer Sample"),
+                replicate_group_key: pg.replicate_group_key,
+                isTargetGroup: false,
+                isOutlier: false
+              });
+            }
+          }
+        }
+
+        var allPoints = peerPoints.concat(targetReps);
+        var allVals = allPoints.map(function (pt) {
+          return Number(pt.value);
+        });
+        var sliceMean = allVals.length
+          ? allVals.reduce(function (s, v) {
+              return s + v;
+            }, 0) / allVals.length
+          : groupMean;
+        var sliceSd =
+          allVals.length >= 2
+            ? Math.sqrt(
+                allVals.reduce(function (s, v) {
+                  return s + Math.pow(v - sliceMean, 2);
+                }, 0) /
+                  (allVals.length - 1)
+              )
+            : Number((targetGroup && targetGroup.sd_value) || 0);
+
+        var minVal = allVals.length ? Math.min.apply(null, allVals) : 0;
+        var maxVal = allVals.length ? Math.max.apply(null, allVals) : 10;
+        if (Math.abs(maxVal - minVal) < 1e-9) {
+          minVal -= 1;
+          maxVal += 1;
+        } else {
+          var pad = (maxVal - minVal) * 0.12;
+          minVal -= pad;
+          maxVal += pad;
+        }
+
+        var svgW = 420;
+        var padL = 28;
+        var padR = 24;
+        var plotW = svgW - padL - padR;
+        var xOf = function (val) {
+          var t = (Number(val) - minVal) / (maxVal - minVal || 1);
+          return Math.max(padL, Math.min(svgW - padR, padL + t * plotW));
+        };
+
+        var bandX1 = xOf(sliceMean - sliceSd);
+        var bandX2 = xOf(sliceMean + sliceSd);
+        var bandW = Math.max(2, bandX2 - bandX1);
+        var targetMeanX = xOf(groupMean);
+        var sliceMeanX = xOf(sliceMean);
+
+        var peerCirclesSvg = peerPoints
+          .map(function (pt, idx) {
+            var cx = xOf(pt.value).toFixed(1);
+            var cy = (44 + ((idx * 17) % 28)).toFixed(1);
+            return (
+              '<circle class="show-me-pt-peer" data-role="peer" data-record-id="' +
+              escapeHtml(pt.record_id) +
+              '" cx="' +
+              cx +
+              '" cy="' +
+              cy +
+              '" r="4.5" fill="rgba(148,163,184,0.45)" stroke="#64748b" stroke-width="1.5"><title>' +
+              escapeHtml(pt.record_id) +
+              " | " +
+              escapeHtml(pt.prepared_sample) +
+              " | " +
+              Number(pt.value).toFixed(2) +
+              " " +
+              escapeHtml(resolvedUnit) +
+              "</title></circle>"
+            );
+          })
+          .join("");
+
+        var targetGroupCirclesSvg = targetReps
+          .filter(function (pt) {
+            return !pt.isOutlier;
+          })
+          .map(function (pt, idx) {
+            var cx = xOf(pt.value).toFixed(1);
+            var cy = (92 + ((idx * 13) % 18)).toFixed(1);
+            return (
+              '<circle class="show-me-pt-target-group" data-role="target-group" data-record-id="' +
+              escapeHtml(pt.record_id) +
+              '" cx="' +
+              cx +
+              '" cy="' +
+              cy +
+              '" r="6" fill="rgba(59,130,246,0.22)" stroke="#2563eb" stroke-width="2.5"><title>' +
+              escapeHtml(pt.record_id) +
+              " | " +
+              escapeHtml(pt.prepared_sample) +
+              " (Target Replicate Group) | " +
+              Number(pt.value).toFixed(2) +
+              " " +
+              escapeHtml(resolvedUnit) +
+              "</title></circle>"
+            );
+          })
+          .join("");
+
+        var outlierCirclesSvg = targetReps
+          .filter(function (pt) {
+            return pt.isOutlier;
+          })
+          .map(function (pt, idx) {
+            var cx = xOf(pt.value).toFixed(1);
+            var cy = (96 + ((idx * 11) % 14)).toFixed(1);
+            return (
+              '<circle class="show-me-outlier-pulse-ring" data-role="outlier-ring" data-record-id="' +
+              escapeHtml(pt.record_id) +
+              '" cx="' +
+              cx +
+              '" cy="' +
+              cy +
+              '" r="10.5" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.85" />' +
+              '<circle class="show-me-pt-outlier" data-role="outlier" data-record-id="' +
+              escapeHtml(pt.record_id) +
+              '" cx="' +
+              cx +
+              '" cy="' +
+              cy +
+              '" r="7.5" fill="rgba(239,68,68,0.28)" stroke="#dc2626" stroke-width="3"><title>' +
+              escapeHtml(pt.record_id) +
+              " | " +
+              escapeHtml(pt.prepared_sample) +
+              " (Flagged Outlier) | " +
+              Number(pt.value).toFixed(2) +
+              " " +
+              escapeHtml(resolvedUnit) +
+              "</title></circle>"
+            );
+          })
+          .join("");
+
+        svgEl.innerHTML =
+          '<rect x="' +
+          padL +
+          '" y="18" width="' +
+          plotW +
+          '" height="102" rx="8" fill="rgba(15,23,42,0.04)" stroke="rgba(148,163,184,0.22)" stroke-width="1" />' +
+          '<rect class="show-me-slice-sd-band" x="' +
+          bandX1.toFixed(1) +
+          '" y="22" width="' +
+          bandW.toFixed(1) +
+          '" height="94" fill="rgba(96,165,250,0.16)" stroke="#60a5fa" stroke-width="1" stroke-dasharray="3,3" />' +
+          '<line class="show-me-slice-mean-line" x1="' +
+          sliceMeanX.toFixed(1) +
+          '" y1="20" x2="' +
+          sliceMeanX.toFixed(1) +
+          '" y2="118" stroke="#64748b" stroke-width="1.2" stroke-dasharray="2,2" />' +
+          '<line class="show-me-target-mean-line" x1="' +
+          targetMeanX.toFixed(1) +
+          '" y1="20" x2="' +
+          targetMeanX.toFixed(1) +
+          '" y2="118" stroke="#2563eb" stroke-width="2" stroke-dasharray="4,3" />' +
+          '<text x="' +
+          (padL + 4) +
+          '" y="33" font-size="9" font-family="monospace" fill="#64748b">Peer Slice (n=' +
+          peerPoints.length +
+          ")</text>" +
+          '<text x="' +
+          (padL + 4) +
+          '" y="82" font-size="9" font-family="monospace" fill="#2563eb">Target Replicate Group (' +
+          escapeHtml(resolvedSample) +
+          ", n=" +
+          targetReps.length +
+          ")</text>" +
+          peerCirclesSvg +
+          targetGroupCirclesSvg +
+          outlierCirclesSvg +
+          '<line x1="' +
+          padL +
+          '" y1="124" x2="' +
+          (svgW - padR) +
+          '" y2="124" stroke="#94a3b8" stroke-width="1" />' +
+          '<text x="' +
+          padL +
+          '" y="138" font-size="9" font-family="monospace" fill="#64748b">' +
+          minVal.toFixed(2) +
+          " " +
+          escapeHtml(resolvedUnit) +
+          "</text>" +
+          '<text x="' +
+          (svgW / 2).toFixed(1) +
+          '" y="138" text-anchor="middle" font-size="9" font-family="monospace" fill="#2563eb">Grp Mean: ' +
+          groupMean.toFixed(2) +
+          " " +
+          escapeHtml(resolvedUnit) +
+          "</text>" +
+          '<text x="' +
+          (svgW - padR) +
+          '" y="138" text-anchor="end" font-size="9" font-family="monospace" fill="#64748b">' +
+          maxVal.toFixed(2) +
+          " " +
+          escapeHtml(resolvedUnit) +
+          "</text>";
+
+        setText(
+          "show-me-popover-subtitle",
+          resolvedResource +
+            " • " +
+            resolvedAnalysisType +
+            " • " +
+            resolvedParameter +
+            (resolvedUnit ? " (" + resolvedUnit + ")" : "") +
+            " • " +
+            resolvedSample
+        );
+
+        var pillsEl = document.getElementById("show-me-flag-pills");
+        if (pillsEl) {
+          var pillList = activeFlags.length ? activeFlags : ["flagged_group"];
+          pillsEl.innerHTML = pillList
+            .map(function (ft) {
+              return '<span class="flag-pill flag-' + escapeHtml(ft) + '">⚑ ' + escapeHtml(ft) + "</span>";
+            })
+            .join(" ");
+        }
+
+        var rsdVal =
+          targetGroup && typeof targetGroup.rsd_pct === "number"
+            ? targetGroup.rsd_pct.toFixed(1) + "%"
+            : "—";
+        setText(
+          "show-me-stats-summary",
+          "Group Mean " +
+            groupMean.toFixed(2) +
+            " (RSD " +
+            rsdVal +
+            ") vs Slice Mean " +
+            sliceMean.toFixed(2) +
+            " ± " +
+            sliceSd.toFixed(2)
+        );
+
+        var proxBarEl = document.getElementById("show-me-proximate-bar");
+        var hasProximateFlag = Boolean(
+          activeFlags.some(function (f) {
+            return String(f).toLowerCase().indexOf("proximate") !== -1;
+          }) ||
+            (targetGroup && targetGroup.raw_proximate_sum) ||
+            typeof o.proximateSumPct === "number" ||
+            (targetGroup && typeof targetGroup.proximate_sum_pct === "number")
+        );
+        if (proxBarEl) {
+          if (hasProximateFlag) {
+            var closureInfo = (targetGroup && targetGroup.proximate_closure) || {};
+            var comps = o.proximateComponents ||
+              (targetGroup && targetGroup.proximate_components) ||
+              closureInfo.components ||
+              {};
+            var moistVal = typeof comps.moisture === "number" ? comps.moisture : null;
+            var ashVal = typeof comps.ash === "number" ? comps.ash : null;
+            var vsRaw = typeof comps.vs === "number"
+              ? comps.vs
+              : (typeof comps.volatile_solids === "number" ? comps.volatile_solids : null);
+            var fcRaw = typeof comps.fc === "number"
+              ? comps.fc
+              : (typeof comps.fixed_carbon === "number" ? comps.fixed_carbon : null);
+            var vsOrFcVal = vsRaw !== null
+              ? vsRaw
+              : (fcRaw !== null ? Math.max(0, 100.0 - fcRaw) : null);
+            var computedSum = (moistVal !== null || ashVal !== null || vsOrFcVal !== null)
+              ? Number(((moistVal || 0) + (ashVal || 0) + (vsOrFcVal || 0)).toFixed(2))
+              : null;
+            var sumPct =
+              typeof o.proximateSumPct === "number"
+                ? o.proximateSumPct
+                : targetGroup && typeof targetGroup.proximate_sum_pct === "number"
+                  ? targetGroup.proximate_sum_pct
+                  : typeof closureInfo.proximate_sum_pct === "number"
+                    ? closureInfo.proximate_sum_pct
+                    : computedSum;
+            proxBarEl.classList.remove("hidden");
+            if (proxBarEl.style) proxBarEl.style.display = "block";
+            if (typeof sumPct === "number" && !isNaN(sumPct) && sumPct > 0) {
+              var scaleMax = Math.max(120, sumPct * 1.05);
+              var bandLeftPct = ((95.0 / scaleMax) * 100).toFixed(2);
+              var bandWidthPct = (((105.0 - 95.0) / scaleMax) * 100).toFixed(2);
+              var hasBreakdown = moistVal !== null || ashVal !== null || vsOrFcVal !== null;
+              var mW = hasBreakdown && moistVal ? Math.max(0, (moistVal / scaleMax) * 100).toFixed(2) : "0";
+              var aW = hasBreakdown && ashVal ? Math.max(0, (ashVal / scaleMax) * 100).toFixed(2) : "0";
+              var vW = hasBreakdown && vsOrFcVal ? Math.max(0, (vsOrFcVal / scaleMax) * 100).toFixed(2) : "0";
+              var totalW = Math.min(100, Math.max(0, (sumPct / scaleMax) * 100)).toFixed(2);
+              var barSegmentsHtml = hasBreakdown
+                ? (moistVal ? '<div style="width:' + mW + '%;height:100%;background:#38bdf8;" title="Moisture: ' + moistVal.toFixed(2) + '%"></div>' : "") +
+                  (ashVal ? '<div style="width:' + aW + '%;height:100%;background:#fbbf24;" title="Ash: ' + ashVal.toFixed(2) + '%"></div>' : "") +
+                  (vsOrFcVal ? '<div style="width:' + vW + '%;height:100%;background:#a78bfa;" title="VS / (100 - FC): ' + vsOrFcVal.toFixed(2) + '%"></div>' : "")
+                : '<div style="width:' + totalW + '%;height:100%;background:#f59e0b;" title="Proximate Sum: ' + sumPct.toFixed(2) + '%"></div>';
+              var detailText = hasBreakdown
+                ? "Moisture (" + (moistVal !== null ? moistVal.toFixed(1) + "%" : "—") + ") + Ash (" + (ashVal !== null ? ashVal.toFixed(1) + "%" : "—") + ") + VS (or 100 - FC) (" + (vsOrFcVal !== null ? vsOrFcVal.toFixed(1) + "%" : "—") + ") = " + Number(sumPct).toFixed(2) + "% (Acceptance Band: 95%–105%)"
+                : "Proximate Closure Sum = " + Number(sumPct).toFixed(2) + "% (Acceptance Band: 95%–105%)";
+              proxBarEl.innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">' +
+                "<strong>⚖️ Proximate Mass-Balance Closure (95–105% Band)</strong>" +
+                '<span class="flag-pill flag-proximate_sum">Proximate Closure: ' +
+                Number(sumPct).toFixed(2) +
+                "%</span></div>" +
+                '<div data-role="proximate-stacked-bar" style="position:relative;width:100%;height:14px;border-radius:4px;background:rgba(15,23,42,0.35);border:1px solid rgba(148,163,184,0.35);overflow:hidden;margin:6px 0;">' +
+                '<div style="display:flex;width:100%;height:100%;">' +
+                barSegmentsHtml +
+                "</div>" +
+                '<div style="position:absolute;top:0;bottom:0;left:' +
+                bandLeftPct +
+                "%;width:" +
+                bandWidthPct +
+                '%;border-left:1px dashed #34d399;border-right:1px dashed #34d399;background:rgba(16,185,129,0.18);pointer-events:none;" title="95%–105% Acceptance Band"></div>' +
+                "</div>" +
+                "<div>" +
+                detailText +
+                "</div>";
+            } else {
+              proxBarEl.innerHTML =
+                "<div>Proximate closure sum unavailable for this slice in snapshot.</div>";
+            }
+          } else {
+            proxBarEl.classList.add("hidden");
+            if (proxBarEl.style) proxBarEl.style.display = "none";
+            proxBarEl.innerHTML = "";
+          }
+        }
+
+        var vizLink = document.getElementById("show-me-open-visualizer-link");
+        if (vizLink) {
+          var href =
+            "resource_explorer_dashboard.html?resource=" +
+            encodeURIComponent(resolvedResource) +
+            "&resources=" +
+            encodeURIComponent(resolvedResource) +
+            "&domain=" +
+            encodeURIComponent(resolvedDomSlug) +
+            "&type=" +
+            encodeURIComponent(resolvedDomSlug) +
+            "&parameter=" +
+            encodeURIComponent(resolvedParameter) +
+            "&params=" +
+            encodeURIComponent(resolvedParameter) +
+            "&highlight_rk=" +
+            encodeURIComponent(targetKey);
+          vizLink.setAttribute("href", href);
+          vizLink.href = href;
+        }
+
+        pop.classList.remove("hidden");
+        if (pop.style) pop.style.display = "block";
+
+        return {
+          decisionId: dec ? dec.decision_id : o.decisionId || null,
+          replicateGroupKey: targetKey,
+          resource: resolvedResource,
+          analysisType: resolvedAnalysisType,
+          parameter: resolvedParameter,
+          peerCount: peerPoints.length,
+          targetGroupCount: targetReps.filter(function (r) {
+            return !r.isOutlier;
+          }).length,
+          outlierCount: targetReps.filter(function (r) {
+            return r.isOutlier;
+          }).length,
+          hasProximateBar: hasProximateFlag
+        };
+      }
+
       if (typeof window !== "undefined") {
+        window.openFlagShowMePopover = openFlagShowMePopover;
+        window.closeFlagShowMePopover = closeFlagShowMePopover;
         window.__WORKBENCH_TEST_HOOKS__ = {
           state: state,
           WORKBENCH_DATA: WORKBENCH_DATA,
@@ -4830,7 +5588,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           clearRowSelection: clearRowSelection,
           fillBulkAssignMyEmail: fillBulkAssignMyEmail,
           bulkAssignSelected: bulkAssignSelected,
-          updateBulkAssignBar: updateBulkAssignBar
+          updateBulkAssignBar: updateBulkAssignBar,
+          openFlagShowMePopover: openFlagShowMePopover,
+          closeFlagShowMePopover: closeFlagShowMePopover
         };
       }
 

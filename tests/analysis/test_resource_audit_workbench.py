@@ -1211,3 +1211,176 @@ global.fetch = function (url, opts) {
         check=False,
     )
     assert proc.returncode == 0, f"Card 12 JS harness failed: {proc.stderr}\n{proc.stdout}"
+
+
+def test_card13_workbench_show_me_mini_plot_popover(tmp_path: Path) -> None:
+    """Card 13: Verify Product 4 '👁 Show me' button in Queue Table & Contextual Drawer, dark-mode default, opaque popover, 3-tier SVG points, proximate sum bar, and visualizer link."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html = output_html.read_text(encoding="utf-8")
+    assert '<html lang="en" data-theme="dark">' in html
+    assert 'id="btn-theme-toggle"' in html
+    assert 'id="audit-flag-show-me-popover"' in html
+    assert "background:var(--bg-card, #1e293b)" in html
+    assert "opacity:1" in html
+    assert "backdrop-filter:none" in html
+    assert 'id="show-me-mini-svg"' in html
+    assert 'id="show-me-proximate-bar"' in html
+    assert 'id="show-me-open-visualizer-link"' in html
+    assert 'id="btn-drawer-show-me-flag"' in html
+    assert "btn-show-me-flag" in html
+    assert "👁 Show me" in html
+
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+    script_body = blocks[0]
+    harness_js = tmp_path / "workbench_card13_harness.js"
+
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set(id === "audit-flag-show-me-popover" || id === "show-me-proximate-bar" ? ["hidden"] : []);
+  const attrs = {};
+  return {
+    id, value: "", checked: false, disabled: false, textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    children: [],
+    classList: {
+      add(c) { classSet.add(c); },
+      remove(c) { classSet.delete(c); },
+      toggle(c) { if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c) { return classSet.has(c); }
+    },
+    appendChild(child) { this.children.push(child); return child; },
+    addEventListener() {},
+    setAttribute(k, v) { attrs[k] = String(v); if (k === "href") this.href = String(v); },
+    getAttribute(k) { return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    querySelectorAll() { return []; }
+  };
+}
+const localStore = {};
+global.localStorage = {
+  getItem(k) { return Object.prototype.hasOwnProperty.call(localStore, k) ? localStore[k] : null; },
+  setItem(k, v) { localStore[k] = String(v); },
+  removeItem(k) { delete localStore[k]; }
+};
+global.window = {
+  location: {
+    pathname: "/v1/dashboards/metadata/resource_audit_workbench.html",
+    search: "?decision_id=QC-0001",
+    href: "http://localhost:8000/v1/dashboards/metadata/resource_audit_workbench.html?decision_id=QC-0001",
+    origin: "http://localhost:8000",
+    protocol: "http:"
+  },
+  history: { replaceState() {} },
+  addEventListener() {},
+  dispatchEvent() {}
+};
+global.document = {
+  getElementById(id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll() { return []; },
+  createElement(tag) { return makeEl(tag); },
+  body: makeEl("body")
+};
+global.BroadcastChannel = function() {
+  return { postMessage() {}, close() {}, addEventListener() {} };
+};
+global.CustomEvent = function(name, opts) { return { name, detail: opts ? opts.detail : null }; };
+global.fetch = async function() { return { ok: false, status: 404, json: async () => ({}) }; };
+"""
+        + "\n"
+        + script_body
+        + "\n"
+        + """
+(() => {
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+  assert.strictEqual(typeof hooks.openFlagShowMePopover, "function");
+  assert.strictEqual(typeof hooks.closeFlagShowMePopover, "function");
+
+  // 1. Verify queue table rows include .btn-show-me-flag button and drawer header button tracks active decision
+  const rows = elements["qc-queue-tbody"].children;
+  assert.ok(rows.length >= 2, "Expected at least 2 rendered queue rows");
+  assert.ok(rows[0].innerHTML.includes("btn-show-me-flag"), "Expected .btn-show-me-flag in queue row");
+  assert.ok(rows[0].innerHTML.includes("👁 Show me"), "Expected '👁 Show me' label in queue row");
+  assert.strictEqual(elements["btn-drawer-show-me-flag"].getAttribute("data-decision-id"), "QC-0001");
+
+  // 2. Open Show Me popover for QC-0001 and verify 3-tier SVG circles (peer #64748b, target-group #2563eb, outlier #dc2626)
+  const res1 = hooks.openFlagShowMePopover({ decisionId: "QC-0001" });
+  assert.strictEqual(res1.decisionId, "QC-0001");
+  assert.ok(res1.peerCount >= 1, "Expected peer slice points for QC-0001");
+  assert.ok(res1.targetGroupCount >= 1, "Expected target replicate group sibling points for QC-0001");
+  assert.strictEqual(res1.outlierCount, 1, "Expected 1 flagged outlier point for QC-0001");
+
+  const svgHtml = elements["show-me-mini-svg"].innerHTML;
+  assert.ok(svgHtml.includes('class="show-me-pt-peer"'), "Expected peer circle class");
+  assert.ok(svgHtml.includes('data-role="peer"'), "Expected peer data-role");
+  assert.ok(svgHtml.includes('stroke="#64748b"'), "Expected peer stroke #64748b");
+  assert.ok(svgHtml.includes('class="show-me-pt-target-group"'), "Expected target-group circle class");
+  assert.ok(svgHtml.includes('data-role="target-group"'), "Expected target-group data-role");
+  assert.ok(svgHtml.includes('stroke="#2563eb"'), "Expected target-group stroke #2563eb");
+  assert.ok(svgHtml.includes('class="show-me-pt-outlier"'), "Expected outlier circle class");
+  assert.ok(svgHtml.includes('class="show-me-outlier-pulse-ring"'), "Expected outlier outer pulse ring class");
+  assert.ok(svgHtml.includes('r="10.5"'), "Expected outer pulse ring radius 10.5");
+  assert.ok(svgHtml.includes('stroke="#60a5fa"'), "Expected blue SD band stroke #60a5fa");
+  assert.ok(svgHtml.includes('data-role="outlier"'), "Expected outlier data-role");
+  assert.ok(svgHtml.includes('stroke="#dc2626"'), "Expected outlier stroke #dc2626");
+  assert.ok(svgHtml.includes('data-record-id="PROX-AH-004"'), "Expected outlier record PROX-AH-004");
+
+  const vizHref = elements["show-me-open-visualizer-link"].getAttribute("href");
+  assert.ok(vizHref.toLowerCase().includes("resource_explorer_dashboard.html?resource=almond%20hulls"));
+  assert.ok(vizHref.includes("&highlight_rk="));
+
+  // 3. Open Show Me popover with proximate_sum flag active and verify #show-me-proximate-bar
+  const res2 = hooks.openFlagShowMePopover({
+    decisionId: "QC-0001",
+    flags: ["proximate_sum"],
+    proximateSumPct: 107.8
+  });
+  assert.strictEqual(res2.hasProximateBar, true);
+  assert.strictEqual(elements["show-me-proximate-bar"].classList.contains("hidden"), false);
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes("95–105%"));
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes('data-role="proximate-stacked-bar"'));
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes("Proximate Closure"));
+
+  // 4. Verify nonexistent key renders honest empty state and zero synthetic data
+  const emptyRes = hooks.openFlagShowMePopover({
+    replicateGroupKey: "nonexistent::missing::proximate::ash::none::none"
+  });
+  assert.strictEqual(emptyRes.empty, true);
+  assert.ok(elements["show-me-mini-svg"].innerHTML.includes("No matching database records found in snapshot."));
+  assert.strictEqual(elements["show-me-mini-svg"].innerHTML.includes("<circle"), false);
+
+  // 5. Close popover
+  hooks.closeFlagShowMePopover();
+  assert.strictEqual(elements["audit-flag-show-me-popover"].classList.contains("hidden"), true);
+})();
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"Card 13 JS harness failed: {proc.stderr}\n{proc.stdout}"

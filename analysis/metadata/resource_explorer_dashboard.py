@@ -891,6 +891,9 @@ def build_full_dashboard_html(payload: dict) -> str:
             <button type="button" onclick="submitClickPopoverAuditFinding()" class="flex-1 bg-[#00B5E2] text-slate-950 font-semibold py-1.5 px-2.5 rounded hover:opacity-90">
               Submit Audit Finding
             </button>
+            <button type="button" id="btn-qc-pop-show-me" onclick="openShowMeFromClickPopover(this)" class="btn-show-me-flag btn-audit-show-me px-2 py-1.5 rounded bg-[var(--background)] text-[#00B5E2] hover:bg-[#00B5E2]/10 border border-[#00B5E2]/40 font-semibold" title="Show replicate group and outlier in slice context">
+              👁 Show me
+            </button>
             <button type="button" onclick="escalateClickPopoverToModal()" class="px-2 py-1.5 rounded bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)]" title="Open full Submit Audit Finding / Escalation modal">
               Full Modal&hellip;
             </button>
@@ -2157,13 +2160,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (samParam && samParam !== 'ALL') {
         samParam.split(',').map(s => s.trim()).filter(Boolean).forEach(s => selectedFilters.samples.add(s));
       }
-      const pParam = urlParams.get('params') || urlParams.get('param') || (Array.isArray(sf.parameters) && sf.parameters.length ? sf.parameters.join(',') : '');
+      const pParam = urlParams.get('params') || urlParams.get('param') || urlParams.get('parameter') || (Array.isArray(sf.parameters) && sf.parameters.length ? sf.parameters.join(',') : '');
       if (pParam && pParam !== 'ALL') {
         pParam.split(',').map(s => s.trim()).filter(Boolean).forEach(p => {
           const norm = (currentDomain === 'icp' || currentDomain === 'xrf') ? formatElementSymbol(p) : p;
           selectedFilters.params.add(norm);
         });
       }
+      window.__HIGHLIGHT_RK__ = String(urlParams.get('highlight_rk') || '').trim().toLowerCase();
       const mParam = urlParams.get('methods') || urlParams.get('method') || (Array.isArray(sf.methods) && sf.methods.length ? sf.methods.join(',') : '');
       if (mParam && mParam !== 'ALL') {
         mParam.split(',').map(s => s.trim()).filter(Boolean).forEach(m => selectedFilters.methods.add(m));
@@ -4010,6 +4014,31 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           renderedPoints.push({ x, y, r, groupRows: gRows, groupStats: gStats, isGroupMean: false });
         });
       }
+      if (window.__HIGHLIGHT_RK__) {
+        const matchedPts = renderedPoints.filter(pt => pt.r && (
+          window.matchesReplicateGroupKey
+            ? window.matchesReplicateGroupKey(getReplicateGroupKey(pt.r), window.__HIGHLIGHT_RK__)
+            : String(getReplicateGroupKey(pt.r)).toLowerCase() === window.__HIGHLIGHT_RK__
+        ));
+        matchedPts.forEach(pt => {
+          ctx.save();
+          ctx.strokeStyle = '#2563eb';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 8.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([3, 2]);
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 11.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        });
+        if (!pinnedRecord && matchedPts.length > 0) {
+          pinRecord(matchedPts[0].r, matchedPts[0].groupRows, matchedPts[0].groupStats);
+        }
+      }
       ctx.restore();
       ctx.globalAlpha = 1.0;
     }
@@ -4235,6 +4264,31 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         }
         ctx.restore();
       });
+      if (window.__HIGHLIGHT_RK__) {
+        const matchedPts = renderedPoints.filter(pt => pt.r && (
+          window.matchesReplicateGroupKey
+            ? window.matchesReplicateGroupKey(getReplicateGroupKey(pt.r), window.__HIGHLIGHT_RK__)
+            : String(getReplicateGroupKey(pt.r)).toLowerCase() === window.__HIGHLIGHT_RK__
+        ));
+        matchedPts.forEach(pt => {
+          ctx.save();
+          ctx.strokeStyle = '#2563eb';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 8.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([3, 2]);
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 11.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        });
+        if (!pinnedRecord && matchedPts.length > 0) {
+          pinRecord(matchedPts[0].r, matchedPts[0].groupRows, matchedPts[0].groupStats);
+        }
+      }
     }
 
     // Canvas hover, brush zoom & click hit-testing
@@ -4585,6 +4639,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         note: noteText || `Flagged from ${sourceLabel} (${scopeMode === 'group' ? `entire replicate group, n=${allGrpRows.length}` : 'single observation'}).`,
         description: noteText || `Flagged from ${sourceLabel} (${scopeMode === 'group' ? `entire replicate group, n=${allGrpRows.length}` : 'single observation'}).`
       };
+    }
+
+    function openShowMeFromClickPopover(btnEl) {
+      if (!pinnedRecord) return;
+      const rk = getReplicateGroupKey(pinnedRecord);
+      if (typeof window.openFlagShowMePopover === 'function') {
+        window.openFlagShowMePopover({
+          replicateGroupKey: rk,
+          resource: pinnedRecord.resource_name || '',
+          analysisType: pinnedRecord.domain || currentDomain || '',
+          parameter: pinnedRecord.parameter || '',
+          preparedSample: pinnedRecord.prepared_sample_name || '',
+          outlierRecordId: String(pinnedRecord.record_id || '')
+        }, btnEl);
+      }
     }
 
     function escalateClickPopoverToModal() {
@@ -5124,8 +5193,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           if (g.below_abundance_cutoff && g.raw_triggered_tests.length > 0) {
             trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] font-mono">Trace (&lt;${g.min_abundance_cutoff} ${g.unit})</span>`);
           }
+          const hasActiveFlagBadge = trigBadges.length > 0;
           if (!trigBadges.length) {
             trigBadges.push(`<span class="text-emerald-600 dark:text-emerald-400 font-mono">Pass (Q=${g.dixon_q !== null ? g.dixon_q.toFixed(2) : '—'})</span>`);
+          }
+          if (hasActiveFlagBadge || g.is_flagged) {
+            const safeShowKey = String(g.replicate_group_key || g.group_key || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowRes = String(g.resource_name || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowAt = String(g.analysis_type || currentDomain || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowParam = String(g.parameter || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowSample = String(g.prepared_sample || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowCand = String(g.dixon_candidate_id || (g.sd3x_candidate_ids && g.sd3x_candidate_ids[0]) || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            trigBadges.push(`<button type="button" class="btn-show-me-flag px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--card)] text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/10 transition" data-group-key="${safeShowKey}" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ replicateGroupKey: '${safeShowKey}', resource: '${safeShowRes}', analysisType: '${safeShowAt}', parameter: '${safeShowParam}', preparedSample: '${safeShowSample}', outlierRecordId: '${safeShowCand}' }, this)" title="Show flagged replicate group and outlier in slice context">👁 Show me</button>`);
           }
 
           const targetId = g.dixon_candidate_id || (g.rows[0] && g.rows[0].record_id) || '';
