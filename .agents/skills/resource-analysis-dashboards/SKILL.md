@@ -31,7 +31,9 @@ embed a compressed dictionary-encoded payload directly into self-contained
 | **Page 1: Resource Characterization & AI Brief**                | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_analysis_dashboard.html`   | Clean, focused single-resource characterization dashboard with compact 2-card Executive AI Brief, 4 KPI cards, and 5 domain visualization tabs (`Proximate & Mass Balance`, `Compositional & Ultimate`, `Calorimetry & XRD`, `Elemental (ICP & XRF)`, `Conversion: Pretreatment, Ferm & Gasification`).                                                                                       |
 | **Page 2: Statistical QC, Outlier Screening & Lab Notes Audit** | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_qc_outlier_dashboard.html` | Dedicated statistical quality control & audit workspace featuring within-group vs. between-group RSD scatter/ratio charts, interactive outlier screening table (`Dixon's Q`, `RSD > 20%`, `>3×SD_pooled` with trace-level suppression toggle), mined bench notes audit trail, and full anonymized CSV export.                                                                                 |
 | **Page 3: Multi-Resource Side-by-Side Comparison Explorer**     | `analysis/metadata/resource_explorer_dashboard.py` | `exports/plots/metadata/resource_explorer_dashboard.html`   | High-DPI HTML5 `<canvas>` explorer with searchable **Multi-Select Checklist Popovers** (`Resources`, `Prepared Samples`, `Parameters`, `Methods / Preps / Strains`) and a `Compare By:` grouping selector (`Resource`, `Prepared Sample`, `Field Sample`, `Experiment`, `Method / Prep`) for side-by-side visual and numeric comparison.                                                      |
-| **Unified Suite Landing Gallery**                               | `scripts/generate_dashboard_gallery.py`            | `exports/plots/index.html`                                  | Single entry-point landing page linking the 4 core products (`resource_analysis_dashboard.html`, `resource_qc_outlier_dashboard.html`, `resource_explorer_dashboard.html`, and `db_environment_drift_dashboard.html`).                                                                                                                                                                        |
+| **Product 4: Resource QC & Data Audit Workbench**               | `analysis/metadata/resource_audit_workbench.py`    | `exports/plots/metadata/resource_audit_workbench.html`      | Interactive Stage 1 QC decision workbench for reviewing replicate cohorts, logging pass/fail/flag rulings, and syncing live QC overrides across the suite.                                                                                                                                                                                                                                    |
+| **Product 5: Multi-Environment DB Drift Assessment**            | `analysis/audit/db_environment_drift.py`           | `exports/plots/audit/db_environment_drift_dashboard.html`   | 4-layer PostgreSQL environment drift dashboard comparing `local`, `staging`, and `production` across schema/migrations, 21 core tables, 19 materialized views, lineage sets, and parameter distributions.                                                                                                                                                                                     |
+| **Unified Suite Landing Gallery & Login Portal**                | `scripts/generate_dashboard_gallery.py`            | `exports/plots/index.html`, `exports/plots/login.html`      | Single entry-point landing page linking all 5 dashboard products (`resource_analysis_dashboard.html`, `resource_qc_outlier_dashboard.html`, `resource_explorer_dashboard.html`, `resource_audit_workbench.html`, and `db_environment_drift_dashboard.html`).                                                                                                                                  |
 
 ## 2. One-Command Workflow (Pixi Tasks)
 
@@ -59,9 +61,51 @@ pixi run build-resource-explorer-dashboard
 pixi run python scripts/generate_dashboard_gallery.py
 ```
 
-## 3. Offline / Snapshot Execution Mode (`--from-snapshot`)
+## 3. Single-Pass Live Extraction & Snapshot Execution Mode (`--from-snapshot`)
 
-When running inside a sandboxed environment or when PostgreSQL is offline, all
+### Single-Pass Live Database Extraction Pattern (CI `live_db` & Cloud SQL Tunnel Builds)
+
+When refreshing against a live PostgreSQL instance or Cloud SQL Auth Proxy
+tunnel (such as Staging `:5434` via `biocirv_readonly` during the nightly
+`0 9 * * *` cron, post-ETL `workflow_run`, or
+`gh workflow run dashboard-artifacts.yml -f data_source=live_db`), extract the
+database payload **once** via `resource_explorer_dashboard.py` and feed that
+snapshot into the remaining generators and insights sidecar:
+
+```bash
+# 1. Single-pass live SQL extraction + Page 3 HTML build (writes exports/plots/metadata/dashboard_data_snapshot.json)
+pixi run python analysis/metadata/resource_explorer_dashboard.py \
+  --output-dir exports/plots/metadata
+cp exports/plots/metadata/dashboard_data_snapshot.json \
+  audit/output/env_fingerprints/baseline_records_snapshot.json
+
+# 2. Recompute deterministic insights sidecar & build Pages 1 & 2 from the extracted snapshot
+pixi run python analysis/metadata/resource_insights_engine.py \
+  --from-snapshot audit/output/env_fingerprints/baseline_records_snapshot.json \
+  --output data/insights/resource_ai_insights.json
+
+pixi run python analysis/metadata/resource_analysis_dashboard.py \
+  --from-snapshot audit/output/env_fingerprints/baseline_records_snapshot.json \
+  --sidecar data/insights/resource_ai_insights.json \
+  --write-sidecar \
+  --output-dir exports/plots/metadata
+
+# 3. Build Product 4 (Resource QC & Data Audit Workbench) from the same snapshot
+pixi run python analysis/metadata/resource_audit_workbench.py \
+  --from-snapshot audit/output/env_fingerprints/baseline_records_snapshot.json \
+  --output exports/plots/metadata/resource_audit_workbench.html
+
+# 4. Write the verified snapshot and freshly computed sidecar back to GCS (CI live_db mode)
+gcloud storage cp audit/output/env_fingerprints/baseline_records_snapshot.json \
+  gs://biocirv-staging-dashboards/snapshots/staging/latest/baseline_records_snapshot.json
+gcloud storage cp data/insights/resource_ai_insights.json \
+  gs://biocirv-staging-dashboards/snapshots/staging/latest/resource_ai_insights.json
+```
+
+### Offline / Snapshot-Only Execution Mode (`--from-snapshot`)
+
+When running inside a sandboxed environment, on `push` to `main` /
+`pull_request` CI (`mode=snapshot`), or when PostgreSQL is offline, all
 generator scripts support `--from-snapshot <path_to_db_snapshot.json>`:
 
 ```bash
@@ -74,14 +118,13 @@ python3 analysis/metadata/resource_insights_engine.py \
 python3 analysis/metadata/resource_analysis_dashboard.py \
   --from-snapshot scratch/db_snapshot.json \
   --sidecar data/insights/resource_ai_insights.json \
-  --output-dir exports/plots/metadata \
-  --artifact-dir exports
+  --write-sidecar \
+  --output-dir exports/plots/metadata
 
 # 3. Build Page 3 (resource_explorer_dashboard.html)
 python3 analysis/metadata/resource_explorer_dashboard.py \
   --from-snapshot scratch/db_snapshot.json \
-  --output-dir exports/plots/metadata \
-  --artifact-dir exports
+  --output-dir exports/plots/metadata
 ```
 
 ## 4. Multi-Resource Collaborator Slice `.html` & `.csv` Exporter
