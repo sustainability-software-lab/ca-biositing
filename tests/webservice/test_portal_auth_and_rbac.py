@@ -464,3 +464,30 @@ def test_portal_auth_public_config_and_rest_gcs_adapter(
 
     missing_blob = bucket.blob("dashboards/staging/latest/missing.html")
     assert missing_blob.exists() is False
+
+
+def test_login_html_uses_location_replace_for_post_login_redirect() -> None:
+    """Verify both render_login_html() and BUILTIN_LOGIN_HTML use window.location.replace() so login.html does not remain in history."""
+    import importlib.util
+
+    from ca_biositing.webservice.services.dashboard_loader import BUILTIN_LOGIN_HTML
+
+    gallery_script_path = (
+        Path(__file__).resolve().parents[2]
+        / "scripts"
+        / "generate_dashboard_gallery.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "generate_dashboard_gallery", gallery_script_path
+    )
+    assert spec is not None and spec.loader is not None
+    gallery_mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(gallery_mod)
+
+    rendered_login = gallery_mod.render_login_html("2026-10-26 12:00")
+    assert "window.location.replace(nextUrl);" in rendered_login
+    assert rendered_login.count("window.location.replace(nextUrl);") >= 2
+    assert "window.location.href =" not in rendered_login
+
+    assert "window.location.replace(getNextUrl());" in BUILTIN_LOGIN_HTML
+    assert "window.location.href =" not in BUILTIN_LOGIN_HTML
