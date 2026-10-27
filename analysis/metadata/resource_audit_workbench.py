@@ -1800,10 +1800,10 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               <div class="field-group">
                 <label for="select-decision-action">Stage 1 Decision Action</label>
                 <select id="select-decision-action">
+                  <option value="in_review" selected>Keep Open / In Review (Default)</option>
                   <option value="reject_fail">Flag as QC Fail (new_qc_pass = fail)</option>
                   <option value="approve_pass">Approve as QC Pass (new_qc_pass = pass)</option>
                   <option value="needs_retest">Needs Lab Retest (in_review / retest)</option>
-                  <option value="in_review">Keep Open / In Review</option>
                 </select>
               </div>
 
@@ -2800,7 +2800,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           actionSel.value =
             dec.decision_action && dec.decision_action !== "open"
               ? dec.decision_action
-              : "reject_fail";
+              : "in_review";
         }
         var assignedInput = document.getElementById("input-assigned-to");
         if (assignedInput) {
@@ -3610,13 +3610,13 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           return;
         }
 
-        var actionVal = actionEl ? actionEl.value : "reject_fail";
+        var actionVal = actionEl ? actionEl.value : "in_review";
         var newQcPass =
           actionVal === "approve_pass"
             ? "pass"
             : actionVal === "reject_fail"
             ? "fail"
-            : dec.old_qc_pass || "pass";
+            : null;
         var newStatus =
           actionVal === "approve_pass" || actionVal === "reject_fail"
             ? "resolved"

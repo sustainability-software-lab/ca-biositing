@@ -943,3 +943,228 @@ console.log(JSON.stringify({
     assert out["byDom"]["xrf"]["groups"] == ["K"]
     assert len(out["byDom"]["all"]["groups"]) == 7
     assert "type=xrd" in out["byDom"]["xrd"]["navExplorerHref"]
+
+
+def test_card5a_default_in_review_status_and_assignee_persistence(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Verify Card 5a defaults to provisional/keep_note/in_review across all 4 surfaces and persists assignee emails on Pages 2 & 3."""
+    from analysis.metadata.resource_audit_workbench import (
+        build_resource_audit_workbench,
+    )
+
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1_html = snapshot_and_pages["page1"]
+    page2_html = snapshot_and_pages["page2"]
+    page3_html = snapshot_and_pages["page3"]
+    wb_path = tmp_path / "wb_card5a.html"
+    build_resource_audit_workbench(snapshot_path=SNAPSHOT_PATH, output_path=wb_path)
+    wb_html = wb_path.read_text(encoding="utf-8")
+
+    # 1. Verify HTML dropdown defaults across Shared Modal (Pages 1-3), Page 3 Popover & Pinned Inspector, and Product 4 Drawer
+    modal_sel = re.search(
+        r'<select id="finding-modal-qc-status"[^>]*>\s*<option value="([^"]+)" selected>',
+        page1_html,
+    )
+    assert modal_sel and modal_sel.group(1) == "provisional"
+
+    pop_sel = re.search(
+        r'<select id="click-popover-action"[^>]*>\s*<option value="([^"]+)" selected>',
+        page3_html,
+    )
+    assert pop_sel and pop_sel.group(1) == "keep_note"
+    assert 'id="click-popover-assignee"' in page3_html
+
+    pin_sel = re.search(
+        r'<select id="pin-audit-action"[^>]*>\s*<option value="([^"]+)" selected>',
+        page3_html,
+    )
+    assert pin_sel and pin_sel.group(1) == "keep_note"
+    assert 'id="pin-audit-assignee"' in page3_html
+    assert "(document.getElementById('click-popover-action') || {}).value || 'keep_note'" in page3_html
+    assert "(document.getElementById('pin-audit-action') || {}).value || 'keep_note'" in page3_html
+    assert "default_qc_status: 'provisional'" in page3_html
+    assert "assigned_to_email: cleanAssignee" in page3_html
+
+    wb_sel = re.search(
+        r'<select id="select-decision-action"[^>]*>\s*<option value="([^"]+)" selected>',
+        wb_html,
+    )
+    assert wb_sel and wb_sel.group(1) == "in_review"
+
+    # 2. Execute Page 2 + Shared Modal JS in Node to verify default status & Page 2 assignee persistence
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2_html, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    p2_harness = tmp_path / "run_card5a_p2.js"
+    p2_harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    addEventListener(ev, fn){ this["_on_" + ev] = fn; },
+    removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+const storage = {};
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+const listeners = {};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(ev, fn){ (listeners[ev] = listeners[ev] || []).push(fn); },
+  dispatchEvent(ev){ (listeners[ev.type] || []).forEach(fn => fn(ev)); }
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+const apiCalls = [];
+let nextApiId = 500;
+global.fetch = async (url, opts) => {
+  const method = (opts && opts.method) || "GET";
+  const body = (opts && opts.body) ? JSON.parse(opts.body) : null;
+  apiCalls.push({ url, method, body });
+  if (String(url).includes("/v1/qc/decisions/") && String(url).endsWith("/assign")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "ok",
+        decision: { id: 500, assigned_to_email: body.assigned_to_email, decision_status: "in_review" }
+      })
+    };
+  }
+  if (String(url).endsWith("/v1/qc/decisions") && method === "POST") {
+    const id = body.id || (++nextApiId);
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "ok",
+        decision: {
+          id,
+          record_id: body.record_id,
+          replicate_group_key: body.replicate_group_key,
+          resource_name: body.resource_name,
+          analysis_type: body.analysis_type,
+          parameter_name: body.parameter_name,
+          decision_action: body.decision_action,
+          decision_status: body.decision_status,
+          new_qc_pass: body.new_qc_pass,
+          assigned_to_email: body.assigned_to_email,
+          review_note: body.review_note
+        }
+      })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + p2_script
+        + """
+(async () => {
+  // 1. Open shared finding modal with empty payload and verify default status is "provisional"
+  window.openSubmitFindingModal({ resource_name: "almond hulls", parameter_name: "Ash", record_id: "rec-901" });
+  const modalDefaultQc = document.getElementById("finding-modal-qc-status").value;
+
+  // 2. Submit a finding with default provisional status and assignee email
+  const findingRes = await window.BioCirvQcClient.submitFinding({
+    scope: "replicate_group",
+    resource_name: "almond hulls",
+    analysis_type: "proximate",
+    parameter_name: "Ash",
+    record_id: "rec-901",
+    target_record_ids: ["rec-901", "rec-902"],
+    new_qc_status: modalDefaultQc,
+    assigned_to_email: "Reviewer1@lbl.gov",
+    audit_note: "Default provisional check"
+  });
+
+  // 3. Test Page 2 inline triage row: set assignee first, then change decision, then update assignee
+  const metaObj = {
+    scope: "replicate_group",
+    replicate_group_key: "almond hulls::ah-01::proximate::moisture::oven::exp-1",
+    resource_name: "almond hulls",
+    analysis_type: "proximate",
+    prepared_sample: "AH-01",
+    experiment: "EXP-1",
+    parameter: "Moisture",
+    record_id: "rec-910",
+    record_ids: "rec-910|rec-911"
+  };
+  const encodedMeta = encodeURIComponent(JSON.stringify(metaObj));
+  const rowKey = "grp::almond hulls::ah-01::proximate::moisture::oven::exp-1";
+
+  window.handleDecisionAssignee(rowKey, "pi.reviewer@lbl.gov", encodedMeta);
+  await new Promise(r => setTimeout(r, 20));
+  window.handleDecisionChange(rowKey, "accept_with_note", encodedMeta);
+  await new Promise(r => setTimeout(r, 20));
+  const afterDecisionEntry = JSON.parse(global.localStorage.getItem("biocirv_qc_decisions_v1"))[rowKey];
+
+  window.handleDecisionAssignee(rowKey, "lead.analyst@lbl.gov", encodedMeta);
+  await new Promise(r => setTimeout(r, 20));
+  const afterReassignEntry = JSON.parse(global.localStorage.getItem("biocirv_qc_decisions_v1"))[rowKey];
+
+  console.log(JSON.stringify({
+    modalDefaultQc,
+    findingSubmittedBody: apiCalls[0].body,
+    findingDecision: findingRes.decision,
+    afterDecisionEntry,
+    afterReassignEntry,
+    apiCalls
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc_p2 = subprocess.run(
+        [node_bin, str(p2_harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc_p2.returncode == 0, f"Page 2 Node harness failed: {proc_p2.stderr}"
+    out_p2 = json.loads(proc_p2.stdout.strip().splitlines()[-1])
+
+    assert out_p2["modalDefaultQc"] == "provisional"
+    post_calls = [c for c in out_p2["apiCalls"] if c["method"] == "POST"]
+    assert len(post_calls) >= 1
+    first_post_body = post_calls[0]["body"]
+    assert first_post_body["decision_action"] == "in_review"
+    assert first_post_body["decision_status"] == "in_review"
+    assert first_post_body["new_qc_pass"] is None
+    assert first_post_body["new_qc_status"] == "provisional"
+    assert first_post_body["decision"] == "accept_with_note"
+    assert first_post_body["assigned_to_email"] == "reviewer1@lbl.gov"
+
+    assert out_p2["afterDecisionEntry"]["decision"] == "accept_with_note"
+    assert out_p2["afterDecisionEntry"]["assigned_to_email"] == "pi.reviewer@lbl.gov"
+    assert out_p2["afterDecisionEntry"]["api_decision_id"] is not None
+
+    assert out_p2["afterReassignEntry"]["assigned_to_email"] == "lead.analyst@lbl.gov"
+    assign_patch_calls = [
+        c for c in out_p2["apiCalls"] if c["method"] == "PATCH" and "/assign" in c["url"]
+    ]
+    assert len(assign_patch_calls) >= 1
+    assert assign_patch_calls[-1]["body"]["assigned_to_email"] == "lead.analyst@lbl.gov"

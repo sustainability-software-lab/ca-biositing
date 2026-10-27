@@ -289,6 +289,7 @@ class Stage1DecisionRequest(BaseModel):
     record_table: str = Field(default="proximate_record")
     record_id: str | None = Field(default=None)
     record_ids: list[str] | None = Field(default=None)
+    target_record_ids: list[str] | None = Field(default=None)
     replicate_group_key: str | None = Field(default=None)
     resource_name: str = Field(default="unknown")
     analysis_type: str | None = Field(default=None)
@@ -296,12 +297,17 @@ class Stage1DecisionRequest(BaseModel):
     flag_type: str = Field(default="analyst_flagged")
     flag_trigger_value: str | None = Field(default=None)
     old_qc_pass: str | None = Field(default=None)
+    previous_qc_status: str | None = Field(default=None)
     new_qc_pass: str | None = Field(default=None)
+    new_qc_status: str | None = Field(default=None)
     decision_status: str | None = Field(default=None)
     status: str | None = Field(default=None)
     decision_action: str | None = Field(default=None)
+    decision: str | None = Field(default=None)
     rationale_chips: list[str] | str | None = Field(default=None)
+    rationale_tags: list[str] | str | None = Field(default=None)
     review_note: str = Field(default="")
+    audit_note: str | None = Field(default=None)
     assigned_to_email: str | None = Field(default=None)
 
 
@@ -647,10 +653,12 @@ def create_or_update_stage1_decision(
     and the seed CSV, while setting `synced_to_gsheet = False`.
     """
     all_record_ids: list[str] = []
-    if payload.record_ids:
-        for rid in payload.record_ids:
-            if rid and str(rid).strip():
-                all_record_ids.append(str(rid).strip())
+    for rlist in (payload.record_ids, payload.target_record_ids):
+        if rlist:
+            for rid in rlist:
+                cleaned_rid = str(rid).strip() if rid is not None else ""
+                if cleaned_rid and cleaned_rid not in all_record_ids:
+                    all_record_ids.append(cleaned_rid)
     primary_record_id = (payload.record_id or "").strip()
     if not primary_record_id and all_record_ids:
         primary_record_id = all_record_ids[0]
@@ -670,6 +678,67 @@ def create_or_update_stage1_decision(
         else payload.replicate_group_key
     )
 
+    effective_action = payload.decision_action or payload.decision or payload.new_qc_status
+    effective_old_qc_pass = (
+        payload.old_qc_pass if payload.old_qc_pass is not None else payload.previous_qc_status
+    )
+    raw_new_qc_pass = (
+        payload.new_qc_pass if payload.new_qc_pass is not None else payload.new_qc_status
+    )
+    effective_new_qc_pass: str | None
+    if raw_new_qc_pass is not None:
+        norm_qc = str(raw_new_qc_pass).strip().lower()
+        if norm_qc in {
+            "provisional",
+            "in_review",
+            "re_assay",
+            "needs_retest",
+            "retest",
+            "keep_note",
+            "accept_with_note",
+            "pending",
+            "open",
+            "defer",
+            "",
+        }:
+            effective_new_qc_pass = None
+        elif norm_qc in {
+            "pass",
+            "qc_pass",
+            "keep",
+            "approve_pass",
+            "approve",
+            "keep_pass",
+            "flip_to_pass",
+            "trace_ignore",
+        }:
+            effective_new_qc_pass = "pass"
+        elif norm_qc in {
+            "fail",
+            "qc_fail",
+            "exclude_qc_fail",
+            "flag_fail",
+            "reject_fail",
+            "reject",
+            "flip_to_fail",
+        }:
+            effective_new_qc_pass = "fail"
+        else:
+            effective_new_qc_pass = raw_new_qc_pass
+    else:
+        effective_new_qc_pass = None
+
+    raw_status = payload.decision_status or payload.status
+    if raw_status and raw_status.strip().lower() in {"pending", "provisional"}:
+        effective_status: str | None = None
+    else:
+        effective_status = raw_status
+
+    effective_rationale = (
+        payload.rationale_chips if payload.rationale_chips is not None else payload.rationale_tags
+    )
+    effective_note = payload.review_note if payload.review_note else (payload.audit_note or "")
+
     decision, updated_record_ids = record_stage1_decision(
         session=session,
         actor_email=user.email,
@@ -683,12 +752,12 @@ def create_or_update_stage1_decision(
         parameter_name=payload.parameter_name,
         flag_type=payload.flag_type,
         flag_trigger_value=payload.flag_trigger_value,
-        old_qc_pass=payload.old_qc_pass,
-        new_qc_pass=payload.new_qc_pass,
-        decision_action=payload.decision_action,
-        decision_status=payload.decision_status or payload.status,
-        rationale_chips=payload.rationale_chips,
-        review_note=payload.review_note,
+        old_qc_pass=effective_old_qc_pass,
+        new_qc_pass=effective_new_qc_pass,
+        decision_action=effective_action,
+        decision_status=effective_status,
+        rationale_chips=effective_rationale,
+        review_note=effective_note,
         assigned_to_email=assigned,
     )
     serialized = serialize_decision(decision)

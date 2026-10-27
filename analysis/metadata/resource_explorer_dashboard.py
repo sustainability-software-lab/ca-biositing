@@ -825,10 +825,13 @@ def build_full_dashboard_html(payload: dict) -> str:
           <div class="mb-2">
             <label class="block text-[10px] uppercase tracking-wider font-mono text-[var(--muted-foreground)] mb-1">Audit Action / QC Status:</label>
             <select id="click-popover-action" class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs font-medium focus:outline-none focus:border-[#00B5E2]">
+              <option value="keep_note" selected>📋 Flag for Review / Keep with Audit Note (Provisional)</option>
               <option value="flag_fail">⚑ Flag Outlier / Set QC Fail (exclude)</option>
               <option value="approve_pass">✓ Verify &amp; Approve (Set QC Pass)</option>
-              <option value="keep_note">✎ Log Audit Note Only (Keep Status)</option>
             </select>
+          </div>
+          <div class="mb-2">
+            <input id="click-popover-assignee" type="email" placeholder="Assign reviewer email (e.g. analyst@lbl.gov, optional)..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00B5E2]" />
           </div>
           <div class="mb-2">
             <input id="click-popover-note" type="text" placeholder="Audit rationale / note (optional)..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitClickPopoverAuditFinding();}" class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00B5E2]" />
@@ -883,11 +886,12 @@ def build_full_dashboard_html(payload: dict) -> str:
                 <option value="single">Single Point Only</option>
               </select>
               <select id="pin-audit-action" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-[11px] font-medium focus:outline-none">
+                <option value="keep_note" selected>📋 Flag for Review / Note (Provisional)</option>
                 <option value="flag_fail">⚑ Flag Outlier (Fail)</option>
                 <option value="approve_pass">✓ Approve (Pass)</option>
-                <option value="keep_note">✎ Note Only</option>
               </select>
             </div>
+            <input id="pin-audit-assignee" type="email" placeholder="Assign reviewer email (e.g. analyst@lbl.gov, optional)..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none" />
             <input id="pin-note" type="text" placeholder="Add audit note / rationale..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none" />
             <div class="flex flex-wrap items-center gap-1.5">
               <button type="button" onclick="submitPinnedAuditFinding()" class="flex-1 bg-[#00B5E2] text-slate-950 font-semibold text-xs py-1 px-2 rounded hover:opacity-90">
@@ -4115,6 +4119,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (scopeGroupBtn) scopeGroupBtn.textContent = `Replicate Group (${gRows.length} pt${gRows.length === 1 ? '' : 's'})`;
       if (scopeSingleBtn) scopeSingleBtn.textContent = `Single Point (${r.record_id.slice(0, 14)})`;
       setAuditPopoverScope(gRows.length > 1 ? 'group' : 'single');
+      const popActionSel = document.getElementById('click-popover-action');
+      if (popActionSel) popActionSel.value = 'keep_note';
 
       const fb = document.getElementById('click-popover-feedback');
       if (fb) { fb.classList.add('hidden'); fb.textContent = ''; }
@@ -4148,13 +4154,29 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (pinScopeSel) pinScopeSel.value = auditPopoverScope;
     }
 
-    function applyAuditDecisionToRows(targetRows, action, note, reviewer) {
+    function applyAuditDecisionToRows(targetRows, action, note, reviewer, assignedToEmail) {
+      const normalizedAction = String(action || 'keep_note').trim();
       const statusMap = {
         flag_fail: 'fail',
         approve_pass: 'pass',
-        keep_note: 'Needs Review'
+        keep_note: 'provisional',
+        in_review: 'provisional',
+        provisional: 'provisional'
       };
-      const newQcStatus = statusMap[action] || 'fail';
+      const newQcStatus = statusMap[normalizedAction] || 'provisional';
+      const decisionAction = normalizedAction === 'flag_fail'
+        ? 'reject_fail'
+        : (normalizedAction === 'approve_pass' ? 'approve_pass' : 'in_review');
+      const decisionStatus = (normalizedAction === 'flag_fail' || normalizedAction === 'approve_pass')
+        ? 'resolved'
+        : 'in_review';
+      const newQcPass = normalizedAction === 'flag_fail'
+        ? 'fail'
+        : (normalizedAction === 'approve_pass' ? 'pass' : null);
+      const decisionCode = normalizedAction === 'flag_fail'
+        ? 'exclude_qc_fail'
+        : (normalizedAction === 'approve_pass' ? 'keep' : 'accept_with_note');
+      const cleanAssignee = String(assignedToEmail || '').trim() || null;
       const allTargetIds = Array.from(new Set(targetRows.map(tr => String(tr.record_id || '')).filter(Boolean)));
       const isGroupScope = targetRows.length > 1;
       targetRows.forEach(tr => {
@@ -4162,7 +4184,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         tr.qc_pass = newQcStatus;
         if (newQcStatus === 'fail') tr.data_status = 'Outlier Flagged';
         else if (newQcStatus === 'pass') tr.data_status = 'Validated';
-        addRecordToExport(tr, `[${action.toUpperCase()}] ${note}`);
+        else tr.data_status = 'In Review';
+        addRecordToExport(tr, `[${normalizedAction.toUpperCase()}] ${note}`);
         if (window.BioCirvQcClient && typeof window.BioCirvQcClient.submitDecision === 'function') {
           window.BioCirvQcClient.submitDecision({
             scope: isGroupScope ? 'replicate_group' : 'single_record',
@@ -4176,13 +4199,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             experiment_name: tr.experiment || '',
             record_id: String(tr.record_id || ''),
             target_record_ids: isGroupScope ? allTargetIds : [String(tr.record_id || '')],
-            action: action,
-            decision: newQcStatus === 'pass' ? 'keep' : 'exclude_qc_fail',
+            action: normalizedAction,
+            decision_action: decisionAction,
+            decision_status: decisionStatus,
+            new_qc_pass: newQcPass,
+            decision: decisionCode,
             previous_qc_status: priorStatus,
             prior_qc_status: priorStatus,
             new_qc_status: newQcStatus,
-            audit_note: note || `Interactive point/group audit (${action})`,
-            rationale: note || `Interactive point/group audit (${action})`,
+            assigned_to_email: cleanAssignee,
+            audit_note: note || `Interactive point/group audit (${normalizedAction})`,
+            rationale: note || `Interactive point/group audit (${normalizedAction})`,
             reviewer: reviewer || 'Explorer Interactive Reviewer',
             dashboard_page: 'explorer'
           });
@@ -4192,10 +4219,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function submitClickPopoverAuditFinding() {
       if (!pinnedRecord) return;
-      const action = (document.getElementById('click-popover-action') || {}).value || 'flag_fail';
+      const action = (document.getElementById('click-popover-action') || {}).value || 'keep_note';
+      const assignedToEmail = ((document.getElementById('click-popover-assignee') || {}).value || '').trim();
       const note = ((document.getElementById('click-popover-note') || {}).value || '').trim() || `Audited via interactive plot (${auditPopoverScope === 'group' ? 'Replicate Group' : 'Single Point'})`;
       const targetRows = (auditPopoverScope === 'group' && pinnedGroupRows && pinnedGroupRows.length) ? pinnedGroupRows : [pinnedRecord];
-      applyAuditDecisionToRows(targetRows, action, note, 'Explorer Interactive Reviewer');
+      applyAuditDecisionToRows(targetRows, action, note, 'Explorer Interactive Reviewer', assignedToEmail);
 
       const fb = document.getElementById('click-popover-feedback');
       if (fb) {
@@ -4209,7 +4237,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       setTimeout(() => closeClickAuditPopover(), 950);
     }
 
-    function buildFindingModalPayloadFromPinned(scopeMode, noteText, sourceLabel) {
+    function buildFindingModalPayloadFromPinned(scopeMode, noteText, sourceLabel, assignedToEmail) {
       const allGrpRows = (pinnedGroupRows && pinnedGroupRows.length) ? pinnedGroupRows : [pinnedRecord];
       const targetRows = scopeMode === 'group' ? allGrpRows : [pinnedRecord];
       const allGroupIds = Array.from(new Set(allGrpRows.map(r => String(r.record_id || '')).filter(Boolean)));
@@ -4237,6 +4265,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         analysis_type: currentDomain,
         unit: pinnedRecord.unit || '',
         value: pinnedRecord.value,
+        default_qc_status: 'provisional',
+        assigned_to_email: String(assignedToEmail || '').trim(),
         title: `[${currentDomain.toUpperCase()}] ${pinnedRecord.resource_name} — ${formatParamName(pinnedRecord.parameter, currentDomain)} (${scopeMode === 'group' ? `Replicate Group n=${allGrpRows.length}` : pinnedRecord.record_id})`,
         category: 'Replicate Outlier / Interactive Plot Audit',
         severity: 'high',
@@ -4250,19 +4280,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     function escalateClickPopoverToModal() {
       if (!pinnedRecord) return;
       const note = ((document.getElementById('click-popover-note') || {}).value || '').trim();
+      const assignedToEmail = ((document.getElementById('click-popover-assignee') || {}).value || '').trim();
       closeClickAuditPopover();
       if (typeof window.openSubmitFindingModal === 'function') {
-        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(auditPopoverScope, note, 'Side-by-Side Explorer interactive plot'));
+        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(auditPopoverScope, note, 'Side-by-Side Explorer interactive plot', assignedToEmail));
       }
     }
 
     function submitPinnedAuditFinding() {
       if (!pinnedRecord) return;
       const scope = (document.getElementById('pin-audit-scope') || {}).value || 'group';
-      const action = (document.getElementById('pin-audit-action') || {}).value || 'flag_fail';
+      const action = (document.getElementById('pin-audit-action') || {}).value || 'keep_note';
+      const assignedToEmail = ((document.getElementById('pin-audit-assignee') || {}).value || '').trim();
       const note = ((document.getElementById('pin-note') || {}).value || '').trim() || `Audited via Pinned Inspector (${scope === 'group' ? 'Replicate Group' : 'Single Point'})`;
       const targetRows = (scope === 'group' && pinnedGroupRows && pinnedGroupRows.length) ? pinnedGroupRows : [pinnedRecord];
-      applyAuditDecisionToRows(targetRows, action, note, 'Explorer Pinned Inspector');
+      applyAuditDecisionToRows(targetRows, action, note, 'Explorer Pinned Inspector', assignedToEmail);
 
       const fb = document.getElementById('pin-audit-feedback');
       if (fb) {
@@ -4279,8 +4311,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (!pinnedRecord) return;
       const scope = (document.getElementById('pin-audit-scope') || {}).value || 'group';
       const note = ((document.getElementById('pin-note') || {}).value || '').trim();
+      const assignedToEmail = ((document.getElementById('pin-audit-assignee') || {}).value || '').trim();
       if (typeof window.openSubmitFindingModal === 'function') {
-        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(scope, note, 'Pinned Inspector'));
+        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(scope, note, 'Pinned Inspector', assignedToEmail));
       }
     }
 

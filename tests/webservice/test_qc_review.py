@@ -553,3 +553,127 @@ def test_replicate_group_key_normalization_in_decisions_and_tray_endpoints(
         tray_decisions[0]["replicate_group_key"]
         == "almond shells::as-ps-01::proximate::ash"
     )
+
+
+def test_card5a_decision_actions_and_legacy_payload_mapping(
+    client: TestClient,
+    sqlite_engine,
+) -> None:
+    """Verify provisional/in_review/keep_note/accept_with_note/re_assay/keep/exclude_qc_fail and legacy client fields map cleanly."""
+    _seed_proximate_records(sqlite_engine)
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov"},
+    )
+
+    # 1. Default in_review / provisional submission does NOT flip qc_pass to 'fail'
+    resp_prov = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "target_record_ids": ["PROX-AS-01", "PROX-AS-02"],
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "moisture",
+            "previous_qc_status": "pass",
+            "new_qc_status": "provisional",
+            "decision": "accept_with_note",
+            "status": "pending",
+            "rationale_tags": ["Method Note", "Check Notebook"],
+            "audit_note": "Flagged for PI review without failing replicate",
+            "assigned_to_email": "Analyst2@BeamCircular.org",
+        },
+    )
+    assert resp_prov.status_code == 200
+    dec_prov = resp_prov.json()["decision"]
+    assert dec_prov["decision_status"] == "in_review"
+    assert dec_prov["new_qc_pass"] is None
+    assert dec_prov["old_qc_pass"] == "pass"
+    assert dec_prov["assigned_to_email"] == "analyst2@beamcircular.org"
+    assert dec_prov["review_note"] == "Flagged for PI review without failing replicate"
+    assert dec_prov["rationale_chips"] == "Method Note, Check Notebook"
+
+    with Session(sqlite_engine) as session:
+        rec1 = session.exec(
+            select(ProximateRecord).where(ProximateRecord.record_id == "PROX-AS-01")
+        ).first()
+        assert rec1 is not None
+        assert rec1.qc_pass == "pass"
+
+    # 2. keep_note action maps to decision_status='in_review', new_qc_pass=None
+    resp_keep_note = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-02",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "moisture",
+            "decision_action": "keep_note",
+            "review_note": "Keep with note from Explorer popover",
+            "assigned_to_email": "analyst1@lbl.gov",
+        },
+    )
+    assert resp_keep_note.status_code == 200
+    dec_kn = resp_keep_note.json()["decision"]
+    assert dec_kn["decision_status"] == "in_review"
+    assert dec_kn["new_qc_pass"] is None
+    assert dec_kn["assigned_to_email"] == "analyst1@lbl.gov"
+
+    # 3. re_assay action maps to decision_status='needs_retest', new_qc_pass=None
+    resp_reassay = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-03",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "ash",
+            "decision": "re_assay",
+            "new_qc_status": "re_assay",
+            "audit_note": "Needs bench re-assay",
+        },
+    )
+    assert resp_reassay.status_code == 200
+    dec_ra = resp_reassay.json()["decision"]
+    assert dec_ra["decision_status"] == "needs_retest"
+    assert dec_ra["new_qc_pass"] is None
+
+    # 4. keep action maps to decision_status='resolved', new_qc_pass='pass'
+    resp_keep = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-03",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "ash",
+            "decision": "keep",
+            "new_qc_status": "pass",
+            "audit_note": "Verified valid replicate",
+        },
+    )
+    assert resp_keep.status_code == 200
+    dec_keep = resp_keep.json()["decision"]
+    assert dec_keep["decision_status"] == "resolved"
+    assert dec_keep["new_qc_pass"] == "pass"
+
+    # 5. exclude_qc_fail action maps to decision_status='resolved', new_qc_pass='fail'
+    resp_fail = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-03",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "ash",
+            "decision": "exclude_qc_fail",
+            "new_qc_status": "fail",
+            "audit_note": "Confirmed ash outlier",
+        },
+    )
+    assert resp_fail.status_code == 200
+    dec_fail = resp_fail.json()["decision"]
+    assert dec_fail["decision_status"] == "resolved"
+    assert dec_fail["new_qc_pass"] == "fail"

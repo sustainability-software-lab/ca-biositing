@@ -923,9 +923,10 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
         <div>
           <label for="finding-modal-qc-status" class="block font-semibold text-[var(--foreground)] mb-1">Recommended QC Status</label>
           <select id="finding-modal-qc-status" class="w-full rounded-lg px-2.5 py-2 text-xs font-semibold border border-[var(--border)]">
-            <option value="fail">Flag for QC Fail (qc_fail)</option>
-            <option value="provisional">Needs Verification / Provisional</option>
-            <option value="pass">Confirm QC Pass (qc_pass)</option>
+            <option value="provisional" selected>provisional — Flagged for Analyst / PI Review (Default)</option>
+            <option value="fail">qc_fail — Exclude from Portal Slice</option>
+            <option value="pass">qc_pass — Verified Valid Replicate</option>
+            <option value="re_assay">re_assay — Flag for Bench Re-Assay</option>
           </select>
         </div>
       </div>
@@ -2682,7 +2683,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
               : null
           );
           const key = item.decision_key || item.key || (
-            (item.scope === "replicate_group" || item.triage_scope === "group") && repGroupKey
+            (item.scope === "replicate_group" || item.triage_scope === "group" || (!item.scope && repGroupKey)) && repGroupKey
               ? `grp::${repGroupKey}`
               : (item.id ? `api::${item.id}` : `finding::${Date.now()}`)
           );
@@ -2690,11 +2691,27 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           const normScope = (item.scope === "finding" || item.scope === "ad_hoc_finding")
             ? "ad_hoc_finding"
             : ((item.scope === "single" || item.scope === "single_record") ? "single_record" : "replicate_group");
+          const rawAct = String(item.decision || item.decision_action || item.new_qc_status || item.new_qc_pass || "").trim().toLowerCase();
+          let mappedDecision = existing.decision || "accept_with_note";
+          if (rawAct === "keep" || rawAct === "approve_pass" || rawAct === "pass" || item.new_qc_pass === "pass" || item.new_qc_status === "pass") {
+            mappedDecision = "keep";
+          } else if (rawAct === "trace_ignore") {
+            mappedDecision = "trace_ignore";
+          } else if (rawAct === "re_assay" || rawAct === "needs_retest" || rawAct === "retest") {
+            mappedDecision = "re_assay";
+          } else if (rawAct === "exclude_qc_fail" || rawAct === "flag_fail" || rawAct === "reject_fail" || rawAct === "fail" || item.new_qc_pass === "fail" || item.new_qc_status === "fail") {
+            mappedDecision = "exclude_qc_fail";
+          } else if (rawAct === "accept_with_note" || rawAct === "keep_note" || rawAct === "in_review" || rawAct === "provisional") {
+            mappedDecision = "accept_with_note";
+          }
+          const nextAssignee = (item.assigned_to_email !== undefined && item.assigned_to_email !== null && String(item.assigned_to_email).trim() !== "")
+            ? String(item.assigned_to_email).trim()
+            : (existing.assigned_to_email || "");
           store[key] = {
             ...existing,
             key,
             replicate_group_key: repGroupKey || existing.replicate_group_key || "",
-            api_decision_id: item.id || existing.api_decision_id || null,
+            api_decision_id: item.api_decision_id || item.id || existing.api_decision_id || null,
             scope: normScope,
             triage_scope: normScope === "single_record" ? "single" : "group",
             resource_name: item.resource_name || existing.resource_name || "",
@@ -2705,13 +2722,13 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             record_id: item.record_id || existing.record_id || "",
             record_ids: Array.isArray(item.target_record_ids)
               ? item.target_record_ids.join("|")
-              : (item.target_record_ids || item.record_ids || item.record_id || existing.record_ids || ""),
+              : (item.target_record_ids || (Array.isArray(item.record_ids) ? item.record_ids.join("|") : item.record_ids) || item.record_id || existing.record_ids || ""),
             parameter: item.parameter_name || item.parameter || existing.parameter || "Resource-Level Observation",
-            decision: item.decision || (item.new_qc_status === "fail" ? "exclude_qc_fail" : (existing.decision || "exclude_qc_fail")),
-            status: item.status || (item.review_status === "resolved" ? "approved" : (item.review_status || existing.status || "open")),
-            note: item.rationale_note || item.audit_note || item.note || existing.note || "",
-            assigned_to_email: item.assigned_to_email ?? existing.assigned_to_email ?? "",
-            reviewer_email: item.reviewer_email || item.analyst_email || existing.reviewer_email || "",
+            decision: mappedDecision,
+            status: item.status || (item.decision_status === "resolved" || item.review_status === "resolved" ? "approved" : (item.decision_status || item.review_status || existing.status || "open")),
+            note: item.review_note || item.rationale_note || item.audit_note || item.note || existing.note || "",
+            assigned_to_email: nextAssignee,
+            reviewer_email: item.resolved_by_email || item.reviewer_email || item.analyst_email || existing.reviewer_email || "",
             synced_to_gsheet: Boolean(item.synced_to_gsheet || existing.synced_to_gsheet),
             updated_at: (item.updated_at || item.created_at || new Date().toISOString()).slice(0, 19).replace("T", " ")
           };
@@ -2803,7 +2820,57 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             ? normalizeReplicateGroupKey(payload, payload.resource_name)
             : null
         );
+        const rawAction = String(
+          payload.decision_action || payload.action || payload.decision || payload.new_qc_status || payload.new_qc_pass || "in_review"
+        ).trim().toLowerCase();
+        let canonicalAction = "in_review";
+        let canonicalStatus = payload.decision_status || payload.review_status || payload.status || "in_review";
+        let canonicalNewQcPass = null;
+        let legacyNewQcStatus = "provisional";
+        let legacyDecision = "accept_with_note";
+
+        if (rawAction === "approve_pass" || rawAction === "keep" || rawAction === "pass" || rawAction === "qc_pass" || rawAction === "trace_ignore") {
+          canonicalAction = rawAction === "trace_ignore" ? "trace_ignore" : "approve_pass";
+          canonicalStatus = "resolved";
+          canonicalNewQcPass = "pass";
+          legacyNewQcStatus = "pass";
+          legacyDecision = rawAction === "trace_ignore" ? "trace_ignore" : "keep";
+        } else if (rawAction === "reject_fail" || rawAction === "exclude_qc_fail" || rawAction === "flag_fail" || rawAction === "fail" || rawAction === "qc_fail") {
+          canonicalAction = "reject_fail";
+          canonicalStatus = "resolved";
+          canonicalNewQcPass = "fail";
+          legacyNewQcStatus = "fail";
+          legacyDecision = "exclude_qc_fail";
+        } else if (rawAction === "needs_retest" || rawAction === "re_assay" || rawAction === "retest") {
+          canonicalAction = "needs_retest";
+          canonicalStatus = "needs_retest";
+          canonicalNewQcPass = null;
+          legacyNewQcStatus = "re_assay";
+          legacyDecision = "re_assay";
+        } else {
+          canonicalAction = "in_review";
+          if (!canonicalStatus || canonicalStatus === "pending" || canonicalStatus === "provisional" || canonicalStatus === "open") {
+            canonicalStatus = "in_review";
+          }
+          canonicalNewQcPass = null;
+          legacyNewQcStatus = "provisional";
+          legacyDecision = "accept_with_note";
+        }
+
+        const targetRecs = Array.isArray(payload.target_record_ids)
+          ? payload.target_record_ids
+          : (Array.isArray(payload.record_ids)
+            ? payload.record_ids
+            : (payload.record_ids ? String(payload.record_ids).split("|").map(s => s.trim()).filter(Boolean) : (payload.record_id ? [String(payload.record_id)] : [])));
+        const primaryRecId = payload.record_id || targetRecs[0] || repGroupKey || null;
+        const rationaleList = Array.isArray(payload.rationale_chips)
+          ? payload.rationale_chips
+          : (Array.isArray(payload.rationale_tags) ? payload.rationale_tags : []);
+        const noteText = payload.review_note || payload.audit_note || payload.note || "";
+
         const body = {
+          id: payload.api_decision_id || payload.id || null,
+          decision_id: payload.api_decision_id || payload.decision_id || payload.id || null,
           decision_key: payload.decision_key || payload.key || (repGroupKey ? `grp::${repGroupKey}` : null),
           replicate_group_key: repGroupKey,
           scope: payload.scope || "finding",
@@ -2813,15 +2880,22 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           prepared_sample_name: payload.prepared_sample_name || payload.prepared_sample || null,
           field_sample_name: payload.field_sample_name || payload.field_sample || null,
           experiment_name: payload.experiment_name || payload.experiment || null,
-          record_id: payload.record_id || null,
-          target_record_ids: payload.target_record_ids || (payload.record_id ? [payload.record_id] : []),
-          previous_qc_status: payload.previous_qc_status || "pass",
-          new_qc_status: payload.new_qc_status || "fail",
-          decision: payload.decision || (payload.new_qc_status === "keep" ? "keep" : "exclude_qc_fail"),
-          rationale_tags: payload.rationale_tags || [],
-          audit_note: payload.audit_note || payload.note || "",
+          record_id: primaryRecId,
+          record_ids: targetRecs,
+          target_record_ids: targetRecs,
+          old_qc_pass: payload.old_qc_pass || payload.previous_qc_status || "pass",
+          previous_qc_status: payload.previous_qc_status || payload.old_qc_pass || "pass",
+          new_qc_pass: canonicalNewQcPass,
+          new_qc_status: legacyNewQcStatus,
+          decision_action: canonicalAction,
+          decision: payload.decision || legacyDecision,
+          decision_status: canonicalStatus,
+          status: canonicalStatus,
+          rationale_chips: rationaleList,
+          rationale_tags: rationaleList,
+          review_note: noteText,
+          audit_note: noteText,
           assigned_to_email: payload.assigned_to_email ? payload.assigned_to_email.trim().toLowerCase() : null,
-          status: payload.review_status || payload.status || "open",
           gsheet_writeback_requested: Boolean(payload.gsheet_writeback_requested)
         };
 
@@ -2833,10 +2907,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           });
           if (resp.ok) {
             const data = await resp.json();
-            if (data.decision) this.upsertLocalDecision(data.decision);
-            window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: data.decision }));
-            window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: data.decision }));
-            return { ok: true, source: "api", ...data };
+            const mergedDec = data.decision ? { ...body, ...data.decision, api_decision_id: data.decision.id } : body;
+            this.upsertLocalDecision(mergedDec);
+            window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: mergedDec }));
+            window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: mergedDec }));
+            return { ok: true, source: "api", ...data, decision: mergedDec };
           }
         } catch (_e) {}
 
@@ -3108,7 +3183,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           flag_type: String(it.flag_type || "analyst_flagged"),
           flag_trigger_value: it.flag_trigger_value != null ? String(it.flag_trigger_value) : null,
           old_qc_pass: String(it.old_qc_pass || it.previous_qc_status || "pass"),
-          recommended_qc_status: it.recommended_qc_status || it.new_qc_status || "fail",
+          recommended_qc_status: it.recommended_qc_status || it.new_qc_status || "provisional",
           assigned_to_email: it.assigned_to_email || null,
           review_note: reviewNote,
           note: reviewNote
@@ -3940,7 +4015,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const paramInput = document.getElementById("finding-modal-parameter");
         if (paramInput) paramInput.value = discovered.parameter_name || pf.parameter_name || pf.parameter || "";
         const qcSel = document.getElementById("finding-modal-qc-status");
-        if (qcSel) qcSel.value = pf.new_qc_status || "fail";
+        if (qcSel) qcSel.value = pf.default_qc_status || pf.new_qc_status || "provisional";
         const assignInput = document.getElementById("finding-modal-assigned-email");
         if (assignInput) assignInput.value = pf.assigned_to_email || "";
         const noteInput = document.getElementById("finding-modal-note");
@@ -3966,7 +4041,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           const domVal = (document.getElementById("finding-modal-domain") || {}).value || "proximate";
           const paramVal = ((document.getElementById("finding-modal-parameter") || {}).value || "").trim() || "Observation";
           const recVal = ((document.getElementById("finding-modal-record-id") || {}).value || "").trim() || "(unspecified)";
-          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "fail";
+          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "provisional";
           const noteVal = ((document.getElementById("finding-modal-note") || {}).value || "").trim();
           const scopeLabel = scopeVal === "group"
             ? `Entire Replicate Group (${currentFindingContext.groupRecordIds.length || 1} replicates)`
@@ -4003,7 +4078,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           const domVal = (document.getElementById("finding-modal-domain") || {}).value || "proximate";
           const paramVal = ((document.getElementById("finding-modal-parameter") || {}).value || "").trim() || "Observation";
           const recVal = ((document.getElementById("finding-modal-record-id") || {}).value || "").trim() || null;
-          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "fail";
+          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "provisional";
           const assignVal = ((document.getElementById("finding-modal-assigned-email") || {}).value || "").trim() || null;
           const noteVal = ((document.getElementById("finding-modal-note") || {}).value || "").trim();
 
@@ -4061,7 +4136,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           const domVal = (document.getElementById("finding-modal-domain") || {}).value || "proximate";
           const paramVal = ((document.getElementById("finding-modal-parameter") || {}).value || "").trim() || "Resource-Level Observation";
           const recVal = ((document.getElementById("finding-modal-record-id") || {}).value || "").trim() || null;
-          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "fail";
+          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "provisional";
           const assignVal = ((document.getElementById("finding-modal-assigned-email") || {}).value || "").trim() || null;
           const noteVal = ((document.getElementById("finding-modal-note") || {}).value || "").trim();
           const gsheetSync = Boolean((document.getElementById("finding-modal-gsheet-sync") || {}).checked);
@@ -4111,7 +4186,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             upsertDecisionEntry(
               localKey,
               {
-                decision: qcVal === "pass" ? "keep" : (qcVal === "provisional" ? "re_assay" : "exclude_qc_fail"),
+                decision: qcVal === "pass" ? "keep" : (qcVal === "provisional" || qcVal === "in_review" ? "accept_with_note" : (qcVal === "re_assay" ? "re_assay" : "exclude_qc_fail")),
+                api_decision_id: (result.decision && result.decision.id) ? result.decision.id : undefined,
                 triage_scope: scopeVal === "single" ? "single" : "group",
                 assigned_to_email: assignVal || "",
                 note: noteVal || Array.from(selectedFindingChips).join("; ")
@@ -7745,13 +7821,39 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       let meta = {};
       try { meta = JSON.parse(decodeURIComponent(encodedMeta)); } catch (_) {}
       const cur = getDecisionEntry(key);
+      const cleanEmail = (emailVal || "").trim();
       const nextDecision = cur.decision || "pending";
       upsertDecisionEntry(key, {
         decision: nextDecision,
-        assigned_to_email: (emailVal || "").trim()
+        assigned_to_email: cleanEmail
       }, meta);
-      if (cur.api_decision_id && window.BioCirvQcClient) {
-        window.BioCirvQcClient.assignDecision(cur.api_decision_id, (emailVal || "").trim());
+      const updated = getDecisionEntry(key);
+      if (window.BioCirvQcClient) {
+        if (updated.api_decision_id && typeof window.BioCirvQcClient.assignDecision === "function") {
+          window.BioCirvQcClient.assignDecision(updated.api_decision_id, cleanEmail);
+        } else if (cleanEmail && typeof window.BioCirvQcClient.submitDecision === "function") {
+          window.BioCirvQcClient.submitDecision({
+            decision_key: key,
+            replicate_group_key: updated.replicate_group_key || meta.replicate_group_key || key.replace(/^grp::/, ""),
+            scope: updated.scope || "replicate_group",
+            resource_name: updated.resource_name || meta.resource_name || state.resource,
+            analysis_type: updated.analysis_type || meta.analysis_type || state.domain,
+            parameter_name: updated.parameter || meta.parameter || "",
+            prepared_sample: updated.prepared_sample || meta.prepared_sample || "",
+            experiment: updated.experiment || meta.experiment || "",
+            record_id: updated.record_id || meta.record_id || "",
+            record_ids: updated.record_ids || meta.record_ids || "",
+            decision: nextDecision === "pending" ? "accept_with_note" : nextDecision,
+            note: updated.note || "",
+            assigned_to_email: cleanEmail
+          }).then(res => {
+            if (res && res.decision && res.decision.id && DECISIONS_STORE[key]) {
+              DECISIONS_STORE[key].api_decision_id = res.decision.id;
+              DECISIONS_STORE[key].assigned_to_email = cleanEmail;
+              saveDecisionsStore(DECISIONS_STORE);
+            }
+          }).catch(() => {});
+        }
       }
       renderDecisionBanner();
       renderHeaderAndKpis();
@@ -7894,7 +7996,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     window.addEventListener("biocirv-decisions-updated", () => {
-      DECISIONS_STORE = loadDecisionsStore();
+      const fromStorage = loadDecisionsStore();
+      Object.keys(DECISIONS_STORE || {}).forEach(k => {
+        const mem = DECISIONS_STORE[k];
+        if (!fromStorage[k]) {
+          fromStorage[k] = mem;
+        } else {
+          if (mem.assigned_to_email && !fromStorage[k].assigned_to_email) {
+            fromStorage[k].assigned_to_email = mem.assigned_to_email;
+          }
+          if (mem.api_decision_id && !fromStorage[k].api_decision_id) {
+            fromStorage[k].api_decision_id = mem.api_decision_id;
+          }
+        }
+      });
+      DECISIONS_STORE = fromStorage;
       render();
     });
 
@@ -7905,7 +8021,39 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     window.handleDecisionChange = function(key, decisionVal, encodedMeta) {
       let meta = {};
       try { meta = JSON.parse(decodeURIComponent(encodedMeta)); } catch (_) {}
-      upsertDecisionEntry(key, { decision: decisionVal }, meta);
+      const prev = getDecisionEntry(key);
+      const preservedEmail = (prev && prev.assigned_to_email) ? prev.assigned_to_email : "";
+      upsertDecisionEntry(key, {
+        decision: decisionVal,
+        ...(preservedEmail ? { assigned_to_email: preservedEmail } : {})
+      }, meta);
+      const updated = getDecisionEntry(key);
+      if (decisionVal && decisionVal !== "pending" && window.BioCirvQcClient && typeof window.BioCirvQcClient.submitDecision === "function") {
+        window.BioCirvQcClient.submitDecision({
+          api_decision_id: updated.api_decision_id || null,
+          decision_key: key,
+          replicate_group_key: updated.replicate_group_key || meta.replicate_group_key || key.replace(/^grp::/, ""),
+          scope: updated.scope || "replicate_group",
+          resource_name: updated.resource_name || meta.resource_name || state.resource,
+          analysis_type: updated.analysis_type || meta.analysis_type || state.domain,
+          parameter_name: updated.parameter || meta.parameter || "",
+          prepared_sample: updated.prepared_sample || meta.prepared_sample || "",
+          experiment: updated.experiment || meta.experiment || "",
+          record_id: updated.record_id || meta.record_id || "",
+          record_ids: updated.record_ids || meta.record_ids || "",
+          decision: decisionVal,
+          note: updated.note || "",
+          assigned_to_email: updated.assigned_to_email || preservedEmail || null
+        }).then(res => {
+          if (res && res.decision && res.decision.id && DECISIONS_STORE[key]) {
+            DECISIONS_STORE[key].api_decision_id = res.decision.id;
+            if (preservedEmail && !DECISIONS_STORE[key].assigned_to_email) {
+              DECISIONS_STORE[key].assigned_to_email = preservedEmail;
+            }
+            saveDecisionsStore(DECISIONS_STORE);
+          }
+        }).catch(() => {});
+      }
       renderDecisionBanner();
       renderHeaderAndKpis();
     };
