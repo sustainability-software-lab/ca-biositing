@@ -664,3 +664,282 @@ console.log(JSON.stringify({
     assert out["grpNoCandAfter"]["active_flagged"] is False
     assert out["grpNoCandAfter"]["flagged_active"] is False
     assert out["sumAfter"]["flaggedActive"] == 0
+
+
+def test_card4_individual_analytical_domain_filters_and_cross_page_parity(
+    tmp_path: Path,
+) -> None:
+    """Verify Card 4: byte-identical DOMAIN_DEFS/normalizeDomainKey across all 3 generators,
+    10 individual domain pills on Page 2 & Page 3, and Page 2 filtering across shared by_tab keys."""
+    node_bin = shutil.which("node")
+    if node_bin is None:
+        pytest.skip("node binary not available in PATH")
+
+    from analysis.metadata.resource_audit_workbench import (
+        build_resource_audit_workbench,
+    )
+
+    payload = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    insights = build_resource_insights(payload)
+    bundle = prepare_dashboard_payload(payload, insights)
+    res_key = next(
+        (k for k in bundle.get("insights", {}) if k.lower() == "almond hulls"),
+        "almond hulls",
+    )
+    bundle.setdefault("insights", {}).setdefault(res_key, {}).setdefault(
+        "outlier_screening", {}
+    )["by_tab"] = {
+        "proximate": {
+            "replicate_groups": [
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::proximate::ash::oven-105c::exp-01",
+                    "analysis_type": "Proximate Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Ash",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": True,
+                    "raw_flagged": True,
+                    "below_cutoff": False,
+                },
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::calorimetry::hhv::bomb::exp-01",
+                    "analysis_type": "Calorimetry",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "HHV",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": False,
+                    "raw_flagged": False,
+                    "below_cutoff": False,
+                },
+            ],
+            "param_rsd_table": [
+                {"analysis_type": "Proximate Analysis", "parameter": "Ash", "within_rsd_pct": 5.0},
+                {"analysis_type": "Calorimetry", "parameter": "HHV", "within_rsd_pct": 1.2},
+            ],
+        },
+        "compositional": {
+            "replicate_groups": [
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::compositional::glucan::nrel::exp-01",
+                    "analysis_type": "Compositional Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Glucan",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": False,
+                    "raw_flagged": False,
+                    "below_cutoff": False,
+                },
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::ultimate::carbon::chn::exp-01",
+                    "analysis_type": "Ultimate Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Carbon",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": True,
+                    "raw_flagged": True,
+                    "below_cutoff": False,
+                },
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::xrd::crystallinity::powder::exp-01",
+                    "analysis_type": "XRD Crystallinity",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Crystallinity",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": False,
+                    "raw_flagged": False,
+                    "below_cutoff": False,
+                },
+            ],
+            "param_rsd_table": [
+                {"analysis_type": "Compositional Analysis", "parameter": "Glucan", "within_rsd_pct": 2.1},
+                {"analysis_type": "Ultimate Analysis", "parameter": "Carbon", "within_rsd_pct": 3.4},
+                {"analysis_type": "XRD Crystallinity", "parameter": "Crystallinity", "within_rsd_pct": 4.0},
+            ],
+        },
+        "elemental": {
+            "replicate_groups": [
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::icp::ca::microwave::exp-01",
+                    "analysis_type": "ICP Elemental Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Ca",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": False,
+                    "raw_flagged": False,
+                    "below_cutoff": False,
+                },
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::xrf::k::pellet::exp-01",
+                    "analysis_type": "XRF Elemental Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "K",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": True,
+                    "raw_flagged": True,
+                    "below_cutoff": False,
+                },
+            ],
+            "param_rsd_table": [
+                {"analysis_type": "ICP Elemental Analysis", "parameter": "Ca", "within_rsd_pct": 1.5},
+                {"analysis_type": "XRF Elemental Analysis", "parameter": "K", "within_rsd_pct": 6.2},
+            ],
+        },
+    }
+
+    page2_html = build_qc_outlier_dashboard_html(bundle, default_resource="almond hulls")
+    page3_html = build_full_dashboard_html(payload)
+    wb_path = tmp_path / "wb.html"
+    build_resource_audit_workbench(snapshot_path=SNAPSHOT_PATH, output_path=wb_path)
+    wb_html = wb_path.read_text(encoding="utf-8")
+
+    # 1. Verify byte-identical DOMAIN_DEFS and normalizeDomainKey block across all 3 generators
+    domain_defs_pattern = re.compile(
+        r"(const DOMAIN_DEFS = \[.*?\];\s*window\.DOMAIN_DEFS = DOMAIN_DEFS;\s*function normalizeDomainKey\(raw\) \{.*?\}\s*window\.normalizeDomainKey = normalizeDomainKey;)",
+        re.S,
+    )
+    m_p2 = domain_defs_pattern.search(page2_html)
+    m_p3 = domain_defs_pattern.search(page3_html)
+    m_wb = domain_defs_pattern.search(wb_html)
+    assert m_p2 and m_p3 and m_wb, "Expected DOMAIN_DEFS + normalizeDomainKey in all 3 generators"
+    assert m_p2.group(1) == m_p3.group(1) == m_wb.group(1), (
+        "DOMAIN_DEFS and normalizeDomainKey must be byte-identical across Page 1/2, Page 3, and Product 4"
+    )
+
+    # 2. Verify Page 3 splits Calorimetry and XRD (no paired calorimetry_xrd pill, axis title, or branch)
+    assert "{ id: 'calorimetry', label: 'Calorimetry'" in page3_html
+    assert "{ id: 'xrd', label: 'XRD'" in page3_html
+    assert "calorimetry: 'Calorimetry Parameter (MJ/kg)'" in page3_html
+    assert "xrd: 'XRD Crystallinity Parameter (%)'" in page3_html
+    page3_own_source = page3_html.replace(SHARED_SLICE_AND_BUG_MODALS_JS, "")
+    assert "calorimetry_xrd" not in page3_own_source
+
+    # 3. Execute Page 2 inline JS in Node to verify individual domain pill rendering and shared-by_tab filtering
+    m_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2_html, flags=re.S
+    )
+    assert m_script
+    p2_script = m_script.group(1)
+
+    harness_js = tmp_path / "run_card4_domain_checks.js"
+    harness_js.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    addEventListener(){}, removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html?resource=almond+hulls&domain=calorimetry_xrd", search: "?resource=almond+hulls&domain=calorimetry_xrd", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html" },
+  history: { replaceState(){} },
+  addEventListener(){}
+};
+global.document = {
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.localStorage = { getItem(){ return null; }, setItem(){}, removeItem(){} };
+global.fetch = async () => ({ ok: false, status: 401, json: async () => ({}) });
+"""
+        + p2_script
+        + """
+const pillsHtml = document.getElementById("domain-pills").innerHTML;
+// Verify legacy URL ?domain=calorimetry_xrd normalized to "calorimetry"
+const initialDom = state.domain;
+
+const byDom = {};
+["all", ...window.DOMAIN_DEFS.map(d => d.key)].forEach(k => {
+  window.setDomain(k);
+  byDom[k] = {
+    groups: getAllDomainOutlierGroups().map(g => g.parameter),
+    params: getAllDomainParamRsdRows().map(p => p.parameter),
+    navExplorerHref: document.getElementById("nav-page-explorer").href
+  };
+});
+
+console.log(JSON.stringify({
+  domainKeys: window.DOMAIN_DEFS.map(d => d.key),
+  initialDom,
+  pillsHtml,
+  byDom,
+  normTests: {
+    ash: window.normalizeDomainKey("Ash"),
+    xrf: window.normalizeDomainKey("XRF Elemental Analysis"),
+    icp: window.normalizeDomainKey("ICP Elemental Analysis"),
+    elemental: window.normalizeDomainKey("elemental"),
+    calXrd: window.normalizeDomainKey("calorimetry_xrd"),
+    xrd: window.normalizeDomainKey("XRD Crystallinity"),
+    ferm: window.normalizeDomainKey("Fermentation (Bioconversion)")
+  }
+}));
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert out["domainKeys"] == [
+        "proximate",
+        "calorimetry",
+        "compositional",
+        "ultimate",
+        "xrd",
+        "icp",
+        "xrf",
+        "pretreatment",
+        "fermentation",
+        "gasification",
+    ]
+    assert out["initialDom"] == "calorimetry"
+    assert out["normTests"] == {
+        "ash": "xrf",
+        "xrf": "xrf",
+        "icp": "icp",
+        "elemental": "icp",
+        "calXrd": "calorimetry",
+        "xrd": "xrd",
+        "ferm": "fermentation",
+    }
+    # Compositional, Ultimate, and XRD are cleanly separated even though they share by_tab.compositional
+    assert out["byDom"]["compositional"]["groups"] == ["Glucan"]
+    assert out["byDom"]["ultimate"]["groups"] == ["Carbon"]
+    assert out["byDom"]["xrd"]["groups"] == ["Crystallinity"]
+    assert out["byDom"]["proximate"]["groups"] == ["Ash"]
+    assert out["byDom"]["calorimetry"]["groups"] == ["HHV"]
+    assert out["byDom"]["icp"]["groups"] == ["Ca"]
+    assert out["byDom"]["xrf"]["groups"] == ["K"]
+    assert len(out["byDom"]["all"]["groups"]) == 7
+    assert "type=xrd" in out["byDom"]["xrd"]["navExplorerHref"]

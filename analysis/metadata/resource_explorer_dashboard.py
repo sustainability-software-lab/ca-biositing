@@ -1010,14 +1010,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       return trimmed;
     }
 
-    // 9 Analysis Type Pill Definitions
+    // Shared DOMAIN_DEFS and normalizeDomainKey(raw) are injected into this <script> scope
+    // via SHARED_SLICE_AND_BUG_MODALS_JS (exposed as window.DOMAIN_DEFS and window.normalizeDomainKey).
+
+    // 10 Individual Analysis Type Pill Definitions
     const DOMAINS = [
       { id: 'proximate', label: 'Proximate', title: 'Proximate Analysis — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
+      { id: 'calorimetry', label: 'Calorimetry', title: 'Calorimetry — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
       { id: 'compositional', label: 'Compositional', title: 'Compositional Biopolymers — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
       { id: 'ultimate', label: 'Ultimate', title: 'Ultimate Elemental & Fiber — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
-      { id: 'calorimetry_xrd', label: 'Calorimetry & XRD', title: 'XRD Crystallinity & Calorimetry — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
-      { id: 'icp', label: 'ICP Elements', title: 'ICP-OES Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
-      { id: 'xrf', label: 'XRF Elements', title: 'XRF Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
+      { id: 'xrd', label: 'XRD', title: 'XRD Crystallinity — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
+      { id: 'icp', label: 'ICP', title: 'ICP-OES Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
+      { id: 'xrf', label: 'XRF', title: 'XRF Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
       { id: 'pretreatment', label: 'Pretreatment', title: 'Pretreatment Hydrolysis Yields — Parameter & Resource Comparison', methodCol: 'pt_method', methodLabel: 'Method:' },
       { id: 'fermentation', label: 'Fermentation', title: 'Fermentation Bioconversion — Parameter & Resource Comparison', methodCol: 'pt_method', methodLabel: 'Method:' },
       { id: 'gasification', label: 'Gasification', title: 'Gasification Syngas & Mass Balance — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' }
@@ -1025,15 +1029,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function mapAnalysisTypeToDomain(at) {
       if (at === 'Proximate Analysis') return 'proximate';
+      if (at === 'Calorimetry') return 'calorimetry';
       if (at === 'Compositional Analysis') return 'compositional';
       if (at === 'Ultimate Analysis') return 'ultimate';
-      if (at === 'Calorimetry' || at === 'XRD Crystallinity') return 'calorimetry_xrd';
+      if (at === 'XRD Crystallinity') return 'xrd';
       if (at === 'ICP Elemental Analysis') return 'icp';
       if (at === 'XRF Elemental Analysis') return 'xrf';
       if (at === 'Pretreatment & Hydrolysis') return 'pretreatment';
       if (at === 'Fermentation (Bioconversion)') return 'fermentation';
       if (at === 'Gasification') return 'gasification';
-      return 'proximate';
+      return normalizeDomainKey(at);
     }
 
     function seededRandom(seed) {
@@ -1148,7 +1153,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (domainId === 'proximate') return '%';
       if (domainId === 'compositional') return '% dw';
       if (domainId === 'ultimate') return '%';
-      if (domainId === 'calorimetry_xrd') return param === 'crystallinity' ? '%' : 'MJ/kg';
+      if (domainId === 'calorimetry') return 'MJ/kg';
+      if (domainId === 'xrd') return '%';
       if (domainId === 'icp' || domainId === 'xrf') return 'ppm';
       if (domainId === 'pretreatment') {
         if (param === 'glucose_yld') return '% of glucan';
@@ -1288,7 +1294,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     const urlParams = new URLSearchParams(window.location.search);
-    let currentDomain = urlParams.get('type') || urlParams.get('domain') || urlParams.get('tab') || 'proximate';
+    const rawDomainParam = urlParams.get('type') || urlParams.get('domain') || urlParams.get('tab') || 'proximate';
+    let currentDomain = normalizeDomainKey(rawDomainParam);
     if (!DOMAINS.some(d => d.id === currentDomain)) currentDomain = 'proximate';
 
     let currentTab = 'scatter';
@@ -2036,9 +2043,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             : 'resource_analysis_dashboard.html';
         }
         if (link2) {
+          const domQ = currentDomain ? `domain=${encodeURIComponent(currentDomain)}` : '';
           link2.href = firstRes
-            ? `resource_qc_outlier_dashboard.html?resource=${encodeURIComponent(firstRes)}`
-            : 'resource_qc_outlier_dashboard.html';
+            ? `resource_qc_outlier_dashboard.html?resource=${encodeURIComponent(firstRes)}${domQ ? `&${domQ}` : ''}`
+            : (domQ ? `resource_qc_outlier_dashboard.html?${domQ}` : 'resource_qc_outlier_dashboard.html');
         }
       }
 
@@ -2404,7 +2412,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       // Populate cascading Parameter checklist catalog (with units!)
       const paramCounts = {};
       catalogSourceRows.forEach(r => {
-        if (r.parameter && (r.parameter !== '(metadata only)' || currentDomain === 'calorimetry_xrd')) {
+        if (r.parameter && (r.parameter !== '(metadata only)' || currentDomain === 'calorimetry' || currentDomain === 'xrd')) {
           paramCounts[r.parameter] = (paramCounts[r.parameter] || 0) + 1;
         }
       });
@@ -2871,16 +2879,26 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           formatStatCard('ADF-Residue', byParam('adf-r'), '%'),
           formatStatCard('Dry Matter (dm)', byParam('dm'), '%')
         ].join('');
-      } else if (currentDomain === 'calorimetry_xrd') {
+      } else if (currentDomain === 'calorimetry') {
+        closureBanner.classList.add('hidden');
+        const hhv = byParam('hhv');
+        const lhv = byParam('lhv');
+        const calCnt = filteredRows.filter(r => r.analysis_type === 'Calorimetry').length;
+        const samCnt = new Set(filteredRows.map(r => r.prepared_sample_name)).size;
+        grid.innerHTML = [
+          formatStatCard('HHV (Higher Heating)', hhv, ' MJ/kg'),
+          formatStatCard('LHV (Lower Heating)', lhv, ' MJ/kg'),
+          `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">Calorimetry Runs</div><div class="text-sm font-semibold font-mono">${calCnt} runs</div><div class="text-xs text-[var(--muted-foreground)]">calorimetry_record</div></div>`,
+          `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">Prepared Samples</div><div class="text-sm font-semibold font-mono">${samCnt} samples</div><div class="text-xs text-[var(--muted-foreground)]">Active slice</div></div>`
+        ].join('');
+      } else if (currentDomain === 'xrd') {
         closureBanner.classList.add('hidden');
         const cryst = byParam('crystallinity');
-        const calCnt = filteredRows.filter(r => r.analysis_type === 'Calorimetry').length;
         const xrdCnt = filteredRows.filter(r => r.analysis_type === 'XRD Crystallinity').length;
         const samCnt = new Set(filteredRows.map(r => r.prepared_sample_name)).size;
         grid.innerHTML = [
           formatStatCard('XRD Crystallinity', cryst, '%'),
           `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">XRD Replicates</div><div class="text-sm font-semibold font-mono">${xrdCnt} obs</div><div class="text-xs text-[var(--muted-foreground)]">xrd_record table</div></div>`,
-          `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">Calorimetry Runs</div><div class="text-sm font-semibold font-mono">${calCnt} runs</div><div class="text-xs text-[var(--muted-foreground)]">calorimetry_record</div></div>`,
           `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">Prepared Samples</div><div class="text-sm font-semibold font-mono">${samCnt} samples</div><div class="text-xs text-[var(--muted-foreground)]">Active slice</div></div>`
         ].join('');
       } else if (currentDomain === 'icp' || currentDomain === 'xrf') {
@@ -2965,7 +2983,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         return ['glucose_yld', 'xylose_yld'];
       }
       const counts = {};
-      const sourceRows = currentDomain === 'calorimetry_xrd' ? filteredRows : numericRows;
+      const sourceRows = (currentDomain === 'calorimetry' || currentDomain === 'xrd') ? filteredRows : numericRows;
       sourceRows.forEach(r => {
         counts[r.parameter] = (counts[r.parameter] || 0) + 1;
       });
@@ -3356,7 +3374,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           const uSuffix = primaryUnit ? ` ${primaryUnit}` : '';
           const label = realVal >= 1000 ? `${(realVal / 1000).toFixed(0)}k${uSuffix}` : (realVal >= 1 ? `${realVal.toFixed(0)}${uSuffix}` : `${realVal.toFixed(2)}${uSuffix}`);
           ctx.fillText(label, pad.left - 7, y);
-        } else if (!numericRows.length && currentDomain === 'calorimetry_xrd') {
+        } else if (!numericRows.length && (currentDomain === 'calorimetry' || currentDomain === 'xrd')) {
           const repLabel = i === 0 ? '' : (i === 5 ? '' : `Rep ${i}`);
           ctx.fillText(repLabel, pad.left - 7, y);
         } else {
@@ -3686,7 +3704,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         proximate: 'Proximate Analysis Parameter (% Dry/Wet Basis)',
         compositional: 'Compositional Analysis Parameter (% Dry Weight)',
         ultimate: 'Ultimate Analysis Parameter (% Dry Weight)',
-        calorimetry_xrd: 'Calorimetry & XRD Parameter (%)',
+        calorimetry: 'Calorimetry Parameter (MJ/kg)',
+        xrd: 'XRD Crystallinity Parameter (%)',
         gasification: 'Gasification Parameter (ppm / °C / %)'
       };
       ctx.fillStyle = theme.axisText;
@@ -3815,7 +3834,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const plotH = height - pad.top - pad.bottom;
 
       const numericRows = filteredRows.filter(r => typeof r.value === 'number' && !isNaN(r.value));
-      const stripRows = (currentDomain === 'calorimetry_xrd' || !numericRows.length) ? filteredRows : numericRows;
+      const stripRows = (currentDomain === 'calorimetry' || currentDomain === 'xrd' || !numericRows.length) ? filteredRows : numericRows;
       renderedPoints = [];
 
       if (!stripRows.length) {
@@ -4990,11 +5009,12 @@ def build_quick_widget_html(payload: dict) -> str:
         <span class="text-[var(--muted-foreground)] font-medium">Analysis:</span>
         <select id="w-domain" onchange="onWidgetDomainOrResourceChange()" class="rounded px-1.5 py-0.5 border border-[var(--border)] text-xs">
           <option value="proximate" selected>Proximate</option>
+          <option value="calorimetry">Calorimetry</option>
           <option value="compositional">Compositional</option>
           <option value="ultimate">Ultimate</option>
-          <option value="calorimetry_xrd">Calorimetry &amp; XRD</option>
-          <option value="icp">ICP Elements</option>
-          <option value="xrf">XRF Elements</option>
+          <option value="xrd">XRD</option>
+          <option value="icp">ICP</option>
+          <option value="xrf">XRF</option>
           <option value="pretreatment">Pretreatment</option>
           <option value="fermentation">Fermentation</option>
           <option value="gasification">Gasification</option>
@@ -5070,9 +5090,10 @@ def build_quick_widget_html(payload: dict) -> str:
 
     function mapDomain(at) {
       if (at === 'Proximate Analysis') return 'proximate';
+      if (at === 'Calorimetry') return 'calorimetry';
       if (at === 'Compositional Analysis') return 'compositional';
       if (at === 'Ultimate Analysis') return 'ultimate';
-      if (at === 'Calorimetry' || at === 'XRD Crystallinity') return 'calorimetry_xrd';
+      if (at === 'XRD Crystallinity') return 'xrd';
       if (at === 'ICP Elemental Analysis') return 'icp';
       if (at === 'XRF Elemental Analysis') return 'xrf';
       if (at === 'Pretreatment & Hydrolysis') return 'pretreatment';

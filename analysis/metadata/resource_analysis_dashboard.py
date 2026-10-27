@@ -2206,6 +2206,38 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
     const LOCAL_DECISIONS_STORAGE_KEY = "biocirv_qc_decisions_ledger_v1";
     const PAGE2_DECISIONS_STORAGE_KEY = "biocirv_qc_decisions_v1";
 
+    const DOMAIN_DEFS = [
+      { key: "proximate", label: "Proximate", analysisType: "Proximate Analysis" },
+      { key: "calorimetry", label: "Calorimetry", analysisType: "Calorimetry" },
+      { key: "compositional", label: "Compositional", analysisType: "Compositional Analysis" },
+      { key: "ultimate", label: "Ultimate", analysisType: "Ultimate Analysis" },
+      { key: "xrd", label: "XRD", analysisType: "XRD Crystallinity" },
+      { key: "icp", label: "ICP", analysisType: "ICP-OES / ICP-MS" },
+      { key: "xrf", label: "XRF", analysisType: "XRF Elemental" },
+      { key: "pretreatment", label: "Pretreatment", analysisType: "Pretreatment" },
+      { key: "fermentation", label: "Fermentation", analysisType: "Fermentation" },
+      { key: "gasification", label: "Gasification", analysisType: "Gasification" }
+    ];
+    window.DOMAIN_DEFS = DOMAIN_DEFS;
+
+    function normalizeDomainKey(raw) {
+      const s = String(raw || "").trim().toLowerCase();
+      if (!s) return "proximate";
+      if (s === "all") return "all";
+      if (s === "calorimetry_xrd" || s.includes("calorim") || s.includes("hhv") || s.includes("lhv")) return "calorimetry";
+      if (s.includes("proximate")) return "proximate";
+      if (s.includes("ultimate")) return "ultimate";
+      if (s.includes("compositional") || s.includes("structural")) return "compositional";
+      if (s.includes("xrd") || s.includes("crystallin")) return "xrd";
+      if (s === "elemental" || s.includes("icp")) return "icp";
+      if (s.includes("xrf") || s === "ash" || s.startsWith("ash ")) return "xrf";
+      if (s.includes("pretreatment") || s.includes("hydrolysis")) return "pretreatment";
+      if (s.includes("fermentation") || s.includes("bioconversion")) return "fermentation";
+      if (s.includes("gasification")) return "gasification";
+      return s;
+    }
+    window.normalizeDomainKey = normalizeDomainKey;
+
     const CANONICAL_DOMAIN_LOOKUP = {
       "proximate analysis": "proximate",
       "proximate": "proximate",
@@ -3632,22 +3664,6 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         analysis_type: "",
         unit: ""
       };
-
-      function normalizeDomainKey(rawDom) {
-        const s = String(rawDom || "").trim().toLowerCase();
-        if (!s) return "proximate";
-        if (s.includes("prox")) return "proximate";
-        if (s.includes("ult")) return "ultimate";
-        if (s.includes("comp")) return "compositional";
-        if (s.includes("xrf") || s.includes("ash")) return "ash";
-        if (s.includes("icp") || s.includes("elem")) return "icp";
-        if (s.includes("calor")) return "calorimetry";
-        if (s.includes("ftnir") || s.includes("nir")) return "ftnir";
-        if (s.includes("xrd")) return "xrd";
-        if (s.includes("ferm")) return "fermentation";
-        if (s.includes("pretreat") || s.includes("hydro") || s.includes("conv")) return "pretreatment";
-        return s;
-      }
 
       function discoverSiblingReplicates(pf, fallbackRes) {
         const allPool = (typeof ALL_RECORDS !== "undefined" && Array.isArray(ALL_RECORDS))
@@ -6067,12 +6083,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     const DOMAIN_LABELS = {
-      all: "All Analytical Domains",
-      proximate: "Proximate & Calorimetry",
-      compositional: "Compositional, Ultimate & XRD",
-      elemental: "ICP & XRF Elements",
-      pretreatment: "Pretreatment & EH",
-      fermentation: "Fermentation & Gasification"
+      all: "All",
+      proximate: "Proximate",
+      calorimetry: "Calorimetry",
+      compositional: "Compositional",
+      ultimate: "Ultimate",
+      xrd: "XRD",
+      icp: "ICP",
+      xrf: "XRF",
+      pretreatment: "Pretreatment",
+      fermentation: "Fermentation",
+      gasification: "Gasification"
     };
 
     const DECISION_OPTIONS = [
@@ -6172,7 +6193,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     const urlParams = new URLSearchParams(window.location.search);
     const initialResParam = (urlParams.get("resource") || DEFAULT_RESOURCE).toLowerCase();
     const matchedInitialRes = ACTIVE_RESOURCES.find(r => r.toLowerCase() === initialResParam) || ACTIVE_RESOURCES[0];
-    const initialDomainParam = urlParams.get("domain") || "all";
+    const rawDomainParam = urlParams.get("domain") || urlParams.get("type") || "all";
+    const initialDomainParam = rawDomainParam === "all" ? "all" : normalizeDomainKey(rawDomainParam);
     const initialSubtabParam = urlParams.get("subtab") || "outliers";
     const initialPortalQcParam = urlParams.get("portal_qc") || "qc_pass";
 
@@ -6342,11 +6364,20 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       selExp.value = expNames.includes(state.experiment) ? state.experiment : "all";
     }
 
+    function matchesActiveDomain(rowOrGroup, tabKey, domainFilter) {
+      if (!domainFilter || domainFilter === "all") return true;
+      const target = normalizeDomainKey(domainFilter);
+      if (rowOrGroup && rowOrGroup.analysis_type) {
+        return normalizeDomainKey(rowOrGroup.analysis_type) === target;
+      }
+      return tabKey === target;
+    }
+
     function getAllDomainOutlierGroups() {
       const ins = getResourceInsights();
       const resourcePortalExcluded = Boolean(ins && ins.portal_excluded);
       const byTab = (ins && ins.outlier_screening && ins.outlier_screening.by_tab) || {};
-      const keys = state.domain === "all" ? Object.keys(byTab) : [state.domain];
+      const keys = Object.keys(byTab);
       const groups = [];
       const normRange = window.normalizeDateRange
         ? window.normalizeDateRange(state.from_date, state.to_date)
@@ -6355,6 +6386,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const t = byTab[k];
         if (!t) return;
         (t.replicate_groups || []).forEach(g => {
+          if (!matchesActiveDomain(g, k, state.domain)) return;
           if (state.prepared_sample !== "all" && g.prepared_sample !== state.prepared_sample) return;
           if (state.experiment !== "all" && g.experiment !== state.experiment) return;
           if (!isGroupMatchingPortalQc(g, state.portalQcMode, resourcePortalExcluded)) return;
@@ -6370,7 +6402,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             const ok = candidates.some(d => (!normRange.from || d >= normRange.from) && (!normRange.to || d <= normRange.to));
             if (!ok) return;
           }
-          groups.push({ ...g, domainKey: k });
+          const resolvedDomKey = g && g.analysis_type ? normalizeDomainKey(g.analysis_type) : k;
+          groups.push({ ...g, domainKey: resolvedDomKey });
         });
       });
       return groups;
@@ -6381,13 +6414,15 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const resourcePortalExcluded = Boolean(ins && ins.portal_excluded);
       if (state.portalQcMode === "portal_compliant" && resourcePortalExcluded) return [];
       const byTab = (ins && ins.outlier_screening && ins.outlier_screening.by_tab) || {};
-      const keys = state.domain === "all" ? Object.keys(byTab) : [state.domain];
+      const keys = Object.keys(byTab);
       const rows = [];
       keys.forEach(k => {
         const t = byTab[k];
         if (!t) return;
         (t.param_rsd_table || []).forEach(p => {
-          rows.push({ ...p, domainKey: k });
+          if (!matchesActiveDomain(p, k, state.domain)) return;
+          const resolvedDomKey = p && p.analysis_type ? normalizeDomainKey(p.analysis_type) : k;
+          rows.push({ ...p, domainKey: resolvedDomKey });
         });
       });
       return rows;
@@ -6418,24 +6453,26 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const byTab = (ins && ins.outlier_screening && ins.outlier_screening.by_tab) || {};
       const suppress = state.suppressTraceFlags;
 
-      const domains = ["all", "proximate", "compositional", "elemental", "pretreatment", "fermentation"];
+      const domains = ["all", ...DOMAIN_DEFS.map(d => d.key)];
+      const tabKeys = Object.keys(byTab);
       document.getElementById("domain-pills").innerHTML = domains.map(d => {
         let flgCnt = 0;
         let grpCnt = 0;
-        const tabKeys = d === "all" ? Object.keys(byTab) : (byTab[d] ? [d] : []);
         tabKeys.forEach(k => {
           const t = byTab[k];
           if (!t) return;
           (t.replicate_groups || []).forEach(g => {
+            if (!matchesActiveDomain(g, k, d)) return;
             if (!isGroupMatchingPortalQc(g, state.portalQcMode, resourcePortalExcluded)) return;
             grpCnt += 1;
             if (isGroupMatchingFilter(g, "flagged", suppress)) flgCnt += 1;
           });
         });
         const active = state.domain === d;
+        const label = DOMAIN_LABELS[d] || d;
         return `
           <button onclick="setDomain('${d}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 ${active ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]' : 'bg-[var(--background)] text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)]'}">
-            <span>${DOMAIN_LABELS[d]}</span>
+            <span>${label}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[11px] font-mono ${flgCnt > 0 ? (active ? 'bg-white/25 text-white' : 'badge-warn') : 'opacity-75'}">${flgCnt} flag / ${grpCnt} grp</span>
           </button>
         `;
@@ -6556,9 +6593,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       document.getElementById("btn-anon-analyst").textContent = state.anonymizeAnalyst ? "👤 Show Analysts" : "🔒 Hide Analysts";
 
       const encRes = encodeURIComponent(state.resource);
+      const domQueryPage2 = state.domain && state.domain !== "all" ? `&domain=${encodeURIComponent(state.domain)}` : "";
+      const domQueryPage3 = state.domain && state.domain !== "all" ? `&type=${encodeURIComponent(state.domain)}` : "";
       document.getElementById("nav-page-char").href = `${CHAR_PAGE_FILENAME}?resource=${encRes}`;
-      document.getElementById("nav-page-qc").href = `resource_qc_outlier_dashboard.html?resource=${encRes}`;
-      document.getElementById("nav-page-explorer").href = `resource_explorer_dashboard.html?resource=${encRes}`;
+      document.getElementById("nav-page-qc").href = `resource_qc_outlier_dashboard.html?resource=${encRes}${domQueryPage2}`;
+      document.getElementById("nav-page-explorer").href = `resource_explorer_dashboard.html?resource=${encRes}${domQueryPage3}`;
 
       const groups = getAllDomainOutlierGroups();
       const paramRows = getAllDomainParamRsdRows();
@@ -6971,7 +7010,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function getFilteredCuratedNotes() {
       const ins = getResourceInsights();
-      const rawNotes = (ins && ins.curated_notes) || [];
+      const rawNotes = ((ins && ins.curated_notes) || []).filter(n => {
+        if (state.domain !== "all" && n && n.analysis_type) {
+          return normalizeDomainKey(n.analysis_type) === state.domain;
+        }
+        return true;
+      });
       if (state.portalQcMode === "all") return rawNotes;
       const matchingRecIds = new Set(
         getResourceRecords()
@@ -7074,6 +7118,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const resRecs = getResourceRecords();
       const q = state.search.trim().toLowerCase();
       return resRecs.filter(r => {
+        if (state.domain !== "all" && r.analysis_type && normalizeDomainKey(r.analysis_type) !== state.domain) return false;
         if (!isRecordMatchingPortalQc(r, state.portalQcMode)) return false;
         if (state.prepared_sample !== "all" && r.prepared_sample !== state.prepared_sample) return false;
         if (state.experiment !== "all" && r.experiment !== state.experiment) return false;
@@ -7403,7 +7448,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <p class="text-xs text-[var(--muted-foreground)]">Manage statistical outlier flags, whole-replicate-group vs. single-record flips, and ad-hoc audit findings. Assign tasks to team members by email address and approve write-backs to Google Sheets &amp; PostgreSQL.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button type="button" onclick="openSubmitFindingModal({ resource_name: state.resource, analysis_type: state.domain === 'all' ? 'Proximate Analysis' : state.domain })" class="px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90">
+              <button type="button" onclick="openSubmitFindingModal({ resource_name: state.resource, analysis_type: (DOMAIN_DEFS.find(d => d.key === state.domain) || {}).analysisType || (state.domain === 'all' ? 'Proximate Analysis' : state.domain) })" class="px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90">
                 + Submit Audit Finding
               </button>
               <button type="button" onclick="syncReviewQueueWithApi()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
@@ -7951,7 +7996,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     window.setDomain = function(d) {
-      state.domain = d;
+      const norm = d === "all" ? "all" : normalizeDomainKey(d);
+      state.domain = DOMAIN_LABELS[norm] ? norm : "all";
       render();
     };
 
@@ -7976,6 +8022,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     window.jumpToRecord = function(recId) {
+      if (state.domain !== "all") {
+        const targetRec = getResourceRecords().find(r => String(r.record_id) === String(recId));
+        if (targetRec && targetRec.analysis_type && normalizeDomainKey(targetRec.analysis_type) !== state.domain) {
+          state.domain = "all";
+        }
+      }
       state.search = recId;
       state.explorerFlagFilter = "all";
       state.subtab = "explorer";
