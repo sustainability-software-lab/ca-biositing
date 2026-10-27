@@ -452,7 +452,7 @@ def build_full_dashboard_html(payload: dict) -> str:
           1. Characterization &amp; AI Brief
         </a>
         <a id="suite-link-2" href="resource_qc_outlier_dashboard.html" class="px-2.5 py-1 rounded-md border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#00B5E2] transition-colors font-medium">
-          2. Statistical QC &amp; Lab Notes Audit
+          2. Statistical Snapshot
         </a>
         <a id="nav-page-workbench" href="/v1/dashboards/metadata/resource_audit_workbench.html" class="px-2.5 py-1 rounded-md border border-emerald-500/40 bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-emerald-400 transition-colors font-medium">
           ⚖️ 2B. QC Audit Workbench
@@ -4688,7 +4688,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         <div class="rounded-lg border border-[var(--border)] bg-[var(--background)] overflow-hidden">
           <div onclick="toggleStatDrawer()" class="px-3 py-2 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-[var(--secondary)]/30 transition-colors">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-[#00B5E2]/15 text-[#00B5E2] font-semibold">Stat QC Screen</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-[#00B5E2]/15 text-[#00B5E2] font-semibold">Statistical Snapshot</span>
               <span class="text-xs font-semibold text-[var(--foreground)]">Replicate Precision &amp; Candidate Outlier Screening</span>
               <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Within-RSD: <strong class="text-[var(--foreground)]">${withinStr}</strong> · Between-RSD: <strong class="text-[#00B5E2]">${betweenStr}</strong></span>
             </div>

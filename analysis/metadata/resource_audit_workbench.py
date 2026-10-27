@@ -1506,6 +1506,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       </div>
       <nav class="nav-links" aria-label="Portal Navigation">
         <a href="../index.html" id="link-portal-gallery">← Back to 5-Product Portal Gallery</a>
+        <a href="resource_qc_outlier_dashboard.html" id="link-stat-snapshot">2. Statistical Snapshot</a>
         <a href="../login.html" id="link-login-portal">🔐 Portal Login / Role Switcher</a>
       </nav>
     </div>

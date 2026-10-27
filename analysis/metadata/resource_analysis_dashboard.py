@@ -646,7 +646,7 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
             </label>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer">
               <input id="slice-page-qc" type="checkbox" value="qc" class="slice-page-checkbox rounded" />
-              <span><strong>2. Statistical QC &amp; Lab Notes Audit</strong> <span class="text-[var(--muted-foreground)] text-[11px]">(Optional internal QC view)</span></span>
+              <span><strong>2. Statistical Snapshot</strong> <span class="text-[var(--muted-foreground)] text-[11px]">(Optional internal QC view)</span></span>
             </label>
           </div>
         </div>
@@ -4379,7 +4379,7 @@ def build_analysis_dashboard_html(
           1. Characterization &amp; AI Brief
         </a>
         <a id="nav-page-qc" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition flex items-center gap-1.5">
-          <span>2. Statistical QC &amp; Lab Notes Audit</span>
+          <span>2. Statistical Snapshot</span>
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
@@ -4394,53 +4394,107 @@ def build_analysis_dashboard_html(
       </div>
     </nav>
 
-    <!-- Streamlined Resource Header & Single-Row Filter Bar -->
-    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-3.5">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="space-y-1 flex-1 min-w-[260px]">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-[var(--primary)] inline-block"></span>
-            <h1 id="hdr-title" class="text-lg sm:text-xl font-bold text-[var(--foreground)]">BioCirV — Resource Characterization</h1>
-            <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
-            <span id="hdr-class-badge" class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]"></span>
-            <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
-            <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
+    <!-- Page 1 Reorganized Top Workspace: 3 Logical Cards -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch" id="page1-top-workspace-cards">
+        <!-- Card 1: Resource Metadata & Lab Notes -->
+        <div id="top-card-resource-metadata" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Resource Metadata &amp; Lab Notes</div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--primary)] inline-block"></span>
+              <h1 id="hdr-title" class="text-base sm:text-lg font-bold text-[var(--foreground)]">BioCirV — Resource Characterization</h1>
+              <span id="hdr-code-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
+              <span id="hdr-class-badge" class="px-2 py-0.5 text-xs font-medium rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]"></span>
+              <span id="hdr-portal-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full"></span>
+              <span id="live-qc-overlay-badge" class="hidden px-2 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
+            </div>
+            <div id="resource-switcher-wrap" class="flex items-center gap-1.5 pt-1">
+              <label for="flt-resource" class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
+              <button id="btn-prev-res" title="Previous Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&larr;</button>
+              <select id="flt-resource" class="rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold border min-w-[200px] flex-1"></select>
+              <button id="btn-next-res" title="Next Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&rarr;</button>
+            </div>
+            <p id="hdr-desc" class="text-xs text-[var(--muted-foreground)]"></p>
           </div>
-          <p id="hdr-desc" class="text-xs sm:text-sm text-[var(--muted-foreground)]"></p>
+          <div class="pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span id="active-slice-badge" class="font-mono text-[var(--muted-foreground)]"></span>
+            <span id="hdr-lab-notes-summary" class="font-mono text-[var(--foreground)]"></span>
+          </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
-            ↻ Refresh QC State
-          </button>
-          <button id="btn-toggle-ai" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
-            ✨ Hide AI Brief
-          </button>
-          <button id="btn-theme-toggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
-            ☀️ Light Mode
-          </button>
-          <button id="btn-download-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
-            ⬇ Export CSV
-          </button>
-          <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition">
-            📤 Export Slice (.HTML)
-          </button>
-          <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-400 transition">
-            🐛 Report a Bug
-          </button>
+        <!-- Card 2: Flag Counts & Statistical Snapshot -->
+        <div id="top-card-flag-counts" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">Flag Counts</span>
+              <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Scoped to selected resource &amp; analysis type</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 pt-1.5 text-xs font-mono">
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Active Flags</div>
+                <div id="p1-flag-count-val" class="text-sm font-bold text-[var(--foreground)] mt-0.5">0</div>
+              </div>
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Within-Rep RSD</div>
+                <div id="p1-within-rsd-val" class="text-xs font-bold text-[var(--foreground)] mt-0.5 truncate">—</div>
+              </div>
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Between-Sample RSD</div>
+                <div id="p1-between-rsd-val" class="text-xs font-bold text-[var(--foreground)] mt-0.5 truncate">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-[var(--border)] flex items-center justify-between gap-2">
+            <a id="hdr-qc-deep-link" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 w-full justify-center"></a>
+          </div>
+        </div>
+
+        <!-- Card 3: Unified Controls & Export -->
+        <div id="top-card-controls-export" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Unified Controls &amp; Export</div>
+            <div class="flex flex-col gap-1.5 text-xs">
+              <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+                <input id="chk-p1-suppress-trace" type="checkbox" checked class="rounded" />
+                <span class="font-medium text-[var(--foreground)]">Suppress Low-Abundance Trace</span>
+              </label>
+              <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+                <input id="chk-p1-blind-mode" type="checkbox" class="rounded" />
+                <span class="font-medium text-[var(--foreground)]">Blind Analyst Mode</span>
+              </label>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-1.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="btn-open-slice-modal" title="📤 Export Slice (.HTML)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
+                📤 Export
+              </button>
+              <button id="btn-download-csv" class="hidden px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ⬇ Export CSV
+              </button>
+              <button id="btn-refresh-qc-state" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
+                ↻ Refresh QC State
+              </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="btn-toggle-ai" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ✨ Hide AI Brief
+              </button>
+              <button id="btn-theme-toggle" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ☀️ Light Mode
+              </button>
+              <button id="btn-open-bug-modal" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-400 transition">
+                🐛 Report a Bug
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Clean Single-Row Filter Bar -->
       <div class="pt-3 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2.5">
-          <div id="resource-switcher-wrap" class="flex items-center gap-1.5">
-            <label for="flt-resource" class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
-            <button id="btn-prev-res" title="Previous Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&larr;</button>
-            <select id="flt-resource" class="rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold border min-w-[230px]"></select>
-            <button id="btn-next-res" title="Next Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&rarr;</button>
-          </div>
-
           <div class="flex items-center gap-1.5">
             <label for="flt-prepared-sample" class="text-xs font-semibold text-[var(--muted-foreground)]">Sample:</label>
             <select id="flt-prepared-sample" class="rounded-lg px-2.5 py-1.5 text-xs font-medium border min-w-[180px]"></select>
@@ -4480,12 +4534,6 @@ def build_analysis_dashboard_html(
           <button id="btn-reset-filters" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
             Reset
           </button>
-        </div>
-
-        <!-- Subtle Stat QC & Lab Notes Link Pill -->
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="active-slice-badge" class="text-xs font-mono text-[var(--muted-foreground)]"></span>
-          <a id="hdr-qc-deep-link" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5"></a>
         </div>
       </div>
     </header>
@@ -4609,12 +4657,73 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       from_date: BUNDLE.slice_from_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.from_date) || "",
       to_date: BUNDLE.slice_to_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.to_date) || "",
       repMode: "replicates",
+      suppressTraceFlags: true,
+      blindMode: false,
       showAiPanel: true,
       proxGroupMode: "ps_exp",
       elemSourceMode: "all",
       icpScaleMode: "split",
       convSubTab: "all"
     };
+
+    function renderGroupFlagBadges(g) {
+      if (!g) return "";
+      const badges = [];
+      const allowFlags = !g.below_cutoff || !state.suppressTraceFlags;
+      if (allowFlags) {
+        if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Dixon Q=${fmtNum(g.dixon_q, 3)}">⚑ Dixon Outlier</span>`);
+        if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
+        else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
+        if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+        if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
+        if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
+      }
+      if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Low-abundance trace parameter (${g.cutoff_label})">Trace (${g.cutoff_label})</span>`);
+      return badges.join(" ");
+    }
+
+    function findOutlierGroupForRecords(groupRecs, paramName) {
+      if (!groupRecs || !groupRecs.length) return null;
+      const ins = typeof getResourceInsights === "function" ? getResourceInsights() : null;
+      const out = ins && ins.outlier_screening;
+      if (!out) return null;
+      const allGroups = [];
+      if (Array.isArray(out.groups)) allGroups.push(...out.groups);
+      if (Array.isArray(out.replicate_groups)) allGroups.push(...out.replicate_groups);
+      if (out.by_tab && typeof out.by_tab === "object") {
+        Object.values(out.by_tab).forEach(t => {
+          if (t && Array.isArray(t.replicate_groups)) allGroups.push(...t.replicate_groups);
+          else if (t && Array.isArray(t.groups)) allGroups.push(...t.groups);
+        });
+      }
+      if (!allGroups.length) return null;
+      const hasAnyFlag = g => Boolean(
+        g && (g.raw_dixon || g.raw_rsd20 || g.raw_rsd10 || g.raw_sd3x || g.has_identical_replicates || g.qc_mixed || g.below_cutoff)
+      );
+      const recIdSet = new Set(groupRecs.map(r => String(r.record_id || "").trim()).filter(Boolean));
+      if (recIdSet.size > 0) {
+        const idMatches = allGroups.filter(g => {
+          const reps = Array.isArray(g.replicates) ? g.replicates : [];
+          return reps.some(rep => recIdSet.has(String(rep.id || rep.record_id || "").trim()));
+        });
+        if (idMatches.length > 0) {
+          return idMatches.find(hasAnyFlag) || idMatches[0];
+        }
+      }
+      const first = groupRecs[0];
+      const rawParam = (paramName && !String(paramName).startsWith("⚑") && !String(paramName).includes(":"))
+        ? paramName
+        : (first.parameter || "");
+      const targetParam = String(rawParam).trim().toLowerCase();
+      const targetPs = String(first.prepared_sample || "").trim().toLowerCase();
+      const targetAt = String(first.analysis_type || "").trim().toLowerCase();
+      const propMatches = allGroups.filter(g =>
+        String(g.parameter || "").trim().toLowerCase() === targetParam &&
+        (!targetPs || String(g.prepared_sample || "").trim().toLowerCase() === targetPs) &&
+        (!targetAt || String(g.analysis_type || "").trim().toLowerCase() === targetAt)
+      );
+      return propMatches.find(hasAnyFlag) || propMatches[0] || null;
+    }
 
     window.auditPage1PointOrGroup = function(encodedPayload) {
       let prefill = {};
@@ -4662,11 +4771,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         prepared_sample: x.prepared_sample,
         experiment: x.experiment
       }));
+      const resolvedParam = (paramName && !String(paramName).startsWith("⚑") && !String(paramName).includes(":"))
+        ? paramName
+        : (first.parameter || "");
       const payload = encodeURIComponent(JSON.stringify({
         scope: "replicate_group",
         resource_name: first.resource_name || state.resource,
         analysis_type: first.analysis_type || "",
-        parameter: paramName || first.parameter || "",
+        parameter: resolvedParam,
         prepared_sample: first.prepared_sample || "",
         field_sample: first.field_sample || "",
         experiment: first.experiment || "",
@@ -4675,7 +4787,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         replicates: siblings,
         group_record_ids: siblings.map(s => s.id)
       }));
-      return `<button type="button" onclick="window.auditPage1PointOrGroup('${payload}')" title="Flag/audit this replicate group (n=${siblings.length}) or a single point" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">⚑ Audit (n=${siblings.length})</button>`;
+      const matchedOutlierGroup = findOutlierGroupForRecords(groupRecs, resolvedParam);
+      const flagBadgesHtml = matchedOutlierGroup ? renderGroupFlagBadges(matchedOutlierGroup) : "";
+      const btnHtml = `<button type="button" onclick="window.auditPage1PointOrGroup('${payload}')" title="Flag/audit this replicate group (n=${siblings.length}) or a single point" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">⚑ Audit (n=${siblings.length})</button>`;
+      return flagBadgesHtml ? `<span class="inline-flex flex-wrap items-center gap-1">${flagBadgesHtml} ${btnHtml}</span>` : btnHtml;
     }
 
     function formatMdInline(text) {
@@ -4834,8 +4949,39 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       const ins = getResourceInsights();
       const outSummary = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
-      const activeFlags = outSummary.flaggedActive || 0;
+      const activeFlags = state.suppressTraceFlags
+        ? (outSummary.flaggedActive || 0)
+        : (outSummary.flaggedRaw ?? outSummary.flaggedActive ?? 0);
+      const tabOut = (state.tab && state.tab !== "overview" && ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[state.tab]) || null;
+      const scopedActiveFlags = tabOut
+        ? (state.suppressTraceFlags ? (tabOut.flagged_active ?? 0) : (tabOut.flagged_raw ?? tabOut.flagged_active ?? 0))
+        : activeFlags;
       const notesCnt = (ins && ins.curated_notes && ins.curated_notes.length) || 0;
+
+      const flagValEl = document.getElementById("p1-flag-count-val");
+      if (flagValEl) {
+        flagValEl.textContent = `${scopedActiveFlags}`;
+      }
+      const wRsdEl = document.getElementById("p1-within-rsd-val");
+      if (wRsdEl) {
+        const wMed = tabOut ? tabOut.within_rsd_median : outSummary.withinRsdMedian;
+        const wSd = tabOut ? tabOut.within_sd_median : outSummary.withinSdMedian;
+        wRsdEl.textContent = wMed !== null && wMed !== undefined
+          ? `${fmtNum(wMed, 1)}%${wSd !== null && wSd !== undefined ? ` (±${fmtNum(wSd, 2)})` : ""}`
+          : "N/A (n=1)";
+      }
+      const bRsdEl = document.getElementById("p1-between-rsd-val");
+      if (bRsdEl) {
+        const bMed = tabOut ? tabOut.between_rsd_median : outSummary.betweenRsdMedian;
+        const bSd = tabOut ? tabOut.between_sd_median : outSummary.betweenSdMedian;
+        bRsdEl.textContent = bMed !== null && bMed !== undefined
+          ? `${fmtNum(bMed, 1)}%${bSd !== null && bSd !== undefined ? ` (±${fmtNum(bSd, 2)})` : ""}`
+          : "N/A (n=1 method group)";
+      }
+      const notesSumEl = document.getElementById("hdr-lab-notes-summary");
+      if (notesSumEl) {
+        notesSumEl.textContent = `Lab Notes: ${notesCnt} curated group(s)`;
+      }
 
       const navBadge = document.getElementById("nav-qc-badge");
       if (activeFlags > 0) {
@@ -4849,11 +4995,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const hdrLink = document.getElementById("hdr-qc-deep-link");
       hdrLink.href = `${QC_PAGE_FILENAME}?resource=${encRes}`;
       if (activeFlags > 0 || notesCnt > 0) {
-        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90 transition flex items-center gap-1.5";
-        hdrLink.innerHTML = `<span>⚑ Stat QC: <strong>${activeFlags}</strong> Flagged Group(s) · <strong>${notesCnt}</strong> Bench Note(s) &rarr; Audit</span>`;
+        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90 transition flex items-center gap-1.5 w-full justify-center";
+        hdrLink.innerHTML = `<span>⚑ Statistical Snapshot: <strong>${activeFlags}</strong> Flagged Group(s) · <strong>${notesCnt}</strong> Bench Note(s) &rarr; Audit</span>`;
       } else {
-        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-pass hover:opacity-90 transition flex items-center gap-1.5";
-        hdrLink.innerHTML = `<span>✓ Stat QC: 0 Active Flags &rarr; Open Precision Audit</span>`;
+        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-pass hover:opacity-90 transition flex items-center gap-1.5 w-full justify-center";
+        hdrLink.innerHTML = `<span>✓ Statistical Snapshot: 0 Active Flags &rarr; Open Precision Audit</span>`;
       }
     }
 
@@ -4882,13 +5028,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
 
       const provStr = ins && ins.providers && ins.providers.length ? ins.providers.join(", ") : "multi-provider";
-      const colDates = Array.from(new Set(fsList.map(f => f.collected_at ? f.collected_at.slice(0, 10) : "").filter(Boolean))).sort();
       const geoids = Array.from(new Set(fsList.map(f => f.geoid).filter(Boolean))).map(fmtGeoid);
-      const colSummary = colDates.length ? ` · Collected: <span class="font-mono text-[var(--foreground)]">${colDates.join(", ")}</span>` : "";
       const geoSummary = geoids.length ? ` · GEOID: <span class="font-mono text-[var(--primary)]">${geoids.join(", ")}</span>` : "";
       document.getElementById("hdr-desc").innerHTML = `
         <strong>${fsList.length} field sample(s)</strong> &rarr; <strong>${psList.length} prepared sample(s)</strong> &rarr;
-        <strong>${resRecs.length.toLocaleString()} analytical &amp; conversion observations</strong> (Providers: <span class="font-mono">${provStr}</span>)${colSummary}${geoSummary}.
+        <strong>${resRecs.length.toLocaleString()} analytical &amp; conversion observations</strong> (Providers: <span class="font-mono">${provStr}</span>)${geoSummary}.
       `;
       updateSuiteNavLinks();
     }
@@ -5005,16 +5149,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const activePs = new Set(filtered.map(r => r.prepared_sample).filter(Boolean)).size;
       const activeFs = new Set(filtered.map(r => r.field_sample).filter(Boolean)).size;
 
-      const colDates = Array.from(new Set(filtered.map(r => r.collected_date).filter(Boolean))).sort();
-      const prepDates = Array.from(new Set(filtered.map(r => r.prep_date).filter(Boolean))).sort();
       const geoids = Array.from(new Set(filtered.map(r => r.geoid).filter(Boolean))).map(fmtGeoid);
-
-      const colDateStr = colDates.length
-        ? (colDates.length === 1 ? colDates[0] : `${colDates[0]} → ${colDates[colDates.length - 1]}`)
-        : "Not recorded";
-      const prepDateStr = prepDates.length
-        ? (prepDates.length === 1 ? prepDates[0] : `${prepDates[0]} → ${prepDates[prepDates.length - 1]}`)
-        : "Not recorded";
       const geoStr = geoids.length ? geoids.join(", ") : "Statewide / Unassigned";
 
       const sliceBadgeSuffix = BUNDLE.collaborator_slice_mode
@@ -5035,8 +5170,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         : (d.syngas_h2_ppm ? `H2: ${fmtNum(d.syngas_h2_ppm, 0)} ppm` : "Aim 2 Conversion");
 
       const kpis = [
-        { label: "Filtered Observations", value: `${filtered.length.toLocaleString()}`, sub: `${passRate}% QC Pass (${passCount}P · ${failCount}F) · Run/Prep: ${prepDateStr}` },
-        { label: "Sample Lineage & Dates", value: `${activeFs} Field → ${activePs} Prep`, sub: `Collected: ${colDateStr} · GEOID: ${geoStr}` },
+        { label: "Filtered Observations", value: `${filtered.length.toLocaleString()}`, sub: `${passRate}% QC Pass (${passCount}P · ${failCount}F)` },
+        { label: "Sample Lineage & Geography", value: `${activeFs} Field → ${activePs} Prep`, sub: `GEOID: ${geoStr}` },
         { label: "Biochemical & Ash Signature", value: polyStr, sub: ashStr },
         { label: "Peak Conversion Performance", value: convMain, sub: convSub }
       ];
@@ -5075,7 +5210,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const text = ins && ins.ai_narratives && ins.ai_narratives.tab_insights && ins.ai_narratives.tab_insights[tabKey];
       if (!text) return "";
       const out = (ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[tabKey]) || null;
-      const activeFlags = out ? out.flagged_active : 0;
+      const activeFlags = out
+        ? (state.suppressTraceFlags ? (out.flagged_active ?? 0) : (out.flagged_raw ?? out.flagged_active ?? 0))
+        : 0;
       const encRes = encodeURIComponent(state.resource);
       return `
         <div class="bg-[var(--card)] border border-[var(--primary)]/40 rounded-xl p-3.5 shadow-sm flex flex-wrap items-center justify-between gap-3">
@@ -5229,7 +5366,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const passCnt = recs.filter(r => r.qc_status === "pass").length;
         const failCnt = recs.filter(r => r.qc_status === "fail").length;
         const tabOut = ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[t.qcDomain];
-        const flagCnt = tabOut ? tabOut.flagged_active : 0;
+        const flagCnt = tabOut
+          ? (state.suppressTraceFlags ? (tabOut.flagged_active ?? 0) : (tabOut.flagged_raw ?? tabOut.flagged_active ?? 0))
+          : 0;
         const wMed = tabOut ? tabOut.within_rsd_median : null;
         return `
           <tr class="border-t border-[var(--border)] hover:bg-[var(--background)] transition text-xs">
@@ -5974,6 +6113,23 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       });
     });
 
+    const chkP1SuppressEl = document.getElementById("chk-p1-suppress-trace");
+    if (chkP1SuppressEl) {
+      chkP1SuppressEl.checked = state.suppressTraceFlags !== false;
+      chkP1SuppressEl.addEventListener("change", e => {
+        state.suppressTraceFlags = Boolean(e.target.checked);
+        render();
+      });
+    }
+    const chkP1BlindEl = document.getElementById("chk-p1-blind-mode");
+    if (chkP1BlindEl) {
+      chkP1BlindEl.checked = Boolean(state.blindMode);
+      chkP1BlindEl.addEventListener("change", e => {
+        state.blindMode = Boolean(e.target.checked);
+        document.body.classList.toggle("blind-analyst-mode", state.blindMode);
+        render();
+      });
+    }
     document.getElementById("btn-toggle-ai").addEventListener("click", () => {
       state.showAiPanel = !state.showAiPanel;
       document.getElementById("btn-toggle-ai").textContent = state.showAiPanel ? "✨ Hide AI Brief" : "✨ Show AI Brief";
@@ -6108,7 +6264,7 @@ def build_qc_outlier_dashboard_html(
           1. Characterization &amp; AI Brief
         </a>
         <a id="nav-page-qc" href="resource_qc_outlier_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm flex items-center gap-1.5">
-          <span>2. Statistical QC &amp; Lab Notes Audit</span>
+          <span>2. Statistical Snapshot</span>
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-white/20"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
@@ -6970,12 +7126,15 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   }).join(" ");
 
                   const badges = [];
-                  if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail">Dixon Q=${fmtNum(g.dixon_q, 3)}</span>`);
-                  if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn">RSD &gt; 20%</span>`);
-                  else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">RSD 10–20%</span>`);
-                  if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn">&gt;3&times;SD<sub>pool</sub></span>`);
-                  if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0)">Identical Replicates (SD=0)</span>`);
-                  if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail">Mixed QC</span>`);
+                  const showActiveFlags = !g.below_cutoff || !state.suppressTraceFlags;
+                  if (showActiveFlags) {
+                    if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Dixon Q=${fmtNum(g.dixon_q, 3)}">⚑ Dixon Outlier</span>`);
+                    if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
+                    else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
+                    if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+                    if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
+                    if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
+                  }
                   if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">Trace (${g.cutoff_label})</span>`);
 
                   const qcSummary = g.qc_fail_count === 0
@@ -7286,6 +7445,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               isCandidate: isDixonCand || isSd3Cand,
               isDixonCand,
               isSd3Cand,
+              rawRsd20: Boolean(g.raw_rsd20),
+              hasIdentical: Boolean(g.has_identical_replicates),
+              qcMixed: Boolean(g.qc_mixed),
               dixonQ: g.dixon_q,
               rsdWithin: g.rsd_within_pct,
               cutoffLabel: g.cutoff_label
@@ -7379,11 +7541,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-info">Trace (${info.cutoffLabel})</span>`;
           } else if (info.isCandidate) {
             const tags = [];
-            if (info.isDixonCand) tags.push(`Dixon Q=${fmtNum(info.dixonQ, 2)}`);
-            if (info.isSd3Cand) tags.push(`>3×SD`);
-            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold badge-warn ring-1 ring-amber-500">★ ${tags.join(' · ')}</span>`;
+            if (info.isDixonCand) tags.push(`⚑ Dixon Outlier`);
+            if (info.isSd3Cand) tags.push(`⚑ >3×SD_pooled`);
+            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold badge-warn ring-1 ring-amber-500" title="Dixon Q=${fmtNum(info.dixonQ, 2)} · Within-RSD ${fmtNum(info.rsdWithin, 1)}%">${tags.join(' · ')}</span>`;
           } else if (info.isPrimary) {
-            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-warn">⚑ Grp RSD ${fmtNum(info.rsdWithin, 1)}%</span>`;
+            const pillLabel = info.rawRsd20 ? "⚑ RSD &gt; 20%" : "⚑ Outlier Flag";
+            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-warn" title="Within-group RSD ${fmtNum(info.rsdWithin, 1)}%">${pillLabel}</span>`;
           }
         }
         const qcHtml = r.qc_status === "pass"
@@ -7462,7 +7625,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 class="text-base font-bold text-[var(--foreground)]">Complete ${state.resource.toUpperCase()} Record Explorer (${flagFiltered.length} matching records)</h2>
-              <p class="text-xs text-[var(--muted-foreground)]">Includes Collection Date, GEOID, Sample Prep/Run Date, Stat Screen status, and per-record Analyst QC Review decisions &amp; email task assignment.</p>
+              <p class="text-xs text-[var(--muted-foreground)]">Includes Collection Date, GEOID, Sample Prep/Run Date, Statistical Snapshot status, and per-record Analyst QC Review decisions &amp; email task assignment.</p>
             </div>
             <input id="flt-search-input" type="text" value="${state.search.replace(/"/g, '&quot;')}" oninput="updateSearch(this.value)" placeholder="Search record ID, parameter, GEOID, date, note..." class="rounded-lg px-3 py-1.5 text-xs border min-w-[260px]" />
           </div>
@@ -7483,7 +7646,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <th class="py-2 px-2.5">Exp</th>
                   <th class="py-2 px-2.5">Parameter</th>
                   <th class="py-2 px-2.5 text-right">Value</th>
-                  <th class="py-2 px-2.5 text-center">Stat Screen</th>
+                  <th class="py-2 px-2.5 text-center">Statistical Snapshot</th>
                   <th class="py-2 px-2.5 text-center">QC</th>
                   <th class="py-2 px-2.5">Bench Note</th>
                   <th class="py-2 px-2.5">⚖️ Analyst Decision &amp; Assignee</th>
