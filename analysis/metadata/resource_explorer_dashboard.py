@@ -777,7 +777,7 @@ def build_full_dashboard_html(payload: dict) -> str:
     <!-- Row 4: Main 12-Column Workspace -->
     <div id="view-charts" class="grid grid-cols-12 gap-3 pt-2.5 items-start">
       <!-- Left (col-span-8): Interactive High-DPI Canvas Plot -->
-      <div class="col-span-12 lg:col-span-8 bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 relative">
+      <div class="col-span-12 lg:col-span-8 bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 relative canvas-container">
         <!-- Quick Parameter Pill Bar for Instant Single-Parameter or Multi-Parameter Comparison with Units -->
         <div id="param-pill-bar" class="flex flex-wrap items-center gap-1 pb-2 mb-2 border-b border-[var(--border)] text-xs"></div>
 
@@ -810,6 +810,7 @@ def build_full_dashboard_html(payload: dict) -> str:
               <span class="text-[var(--muted-foreground)]">Y-Range:</span>
               <button type="button" id="btn-yrange-auto" onclick="setYRangeMode('auto')" class="px-1.5 py-0.5 rounded text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)]" title="Auto-scale Y-axis to the actual measured parameter values &amp; units">Auto-Fit Values</button>
               <button type="button" id="btn-yrange-full" onclick="setYRangeMode('full')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Fix Y-axis to 0–100%">0–100%</button>
+              <button type="button" class="btn-Action px-1.5 py-0.5 rounded text-xs font-medium bg-sky-500/15 text-sky-400 border border-sky-500/40 hover:bg-sky-500/25" id="btn-reset-zoom" onclick="resetCanvasZoom()" style="display:none;">↺ Reset Zoom</button>
             </div>
 
             <!-- Strip Sort Control (shown in Strip tab) -->
@@ -841,6 +842,7 @@ def build_full_dashboard_html(payload: dict) -> str:
           </div>
         </div>
 
+        <div id="canvas-zoom-brush" style="display:none; pointer-events:none; position:absolute; border:1.5px dashed #0284c7; background:rgba(2,132,199,0.12); z-index:12;"></div>
         <canvas id="plot-canvas" width="640" height="365" style="width: 100%; height: 365px;" class="w-full h-[365px] cursor-crosshair block"></canvas>
 
         <!-- Floating Hover Tooltip -->
@@ -1317,6 +1319,23 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     let exportRows = [];
     let activeSeriesMap = {};
     let activeCompareDimension = 'method';
+    const state = { zoomBounds: null };
+    window.state = state;
+    const brush = { active: false, startX: 0, startY: 0, curX: 0, curY: 0, suppressNextClick: false };
+    let lastPlotTransform = null;
+
+    function renderPlot() {
+      renderCurrentView();
+    }
+
+    function resetCanvasZoom() {
+      state.zoomBounds = null;
+      const btn = document.getElementById('btn-reset-zoom');
+      if (btn) btn.style.display = 'none';
+      const brushEl = document.getElementById('canvas-zoom-brush');
+      if (brushEl) brushEl.style.display = 'none';
+      renderPlot();
+    }
 
     function onExplorerFlagTypeChange(val) {
       explorerFlagType = val || 'all';
@@ -1347,8 +1366,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function getReplicateGroupKey(r) {
       if (!r) return '';
-      const sMethod = getSeriesValue(r, r.domain || currentDomain);
-      return `${r.resource_name || ''}::${r.prepared_sample_name || ''}::${r.field_sample_name || ''}::${sMethod}::${r.experiment || ''}::${r.parameter || ''}::${r.unit || ''}`;
+      return window.normalizeReplicateGroupKey(r, r.resource_name);
     }
 
     function buildReplicateGroupsMap(rows) {
@@ -1481,8 +1499,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function setYRangeMode(mode) {
       yRangeMode = mode;
+      state.zoomBounds = null;
       updateYRangeButtons();
       renderCurrentView();
+    }
+
+    function resetYRange() {
+      setYRangeMode('auto');
     }
 
     function updateYRangeButtons() {
@@ -2260,6 +2283,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function setDomain(domainId) {
       currentDomain = domainId;
+      state.zoomBounds = null;
       selectedFilters.params.clear();
       selectedFilters.methods.clear();
       if (domainId === 'icp' || domainId === 'xrf') {
@@ -2516,6 +2540,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function setTab(tab, opts = { push: true }) {
       currentTab = tab === 'export' ? 'scatter' : tab;
+      state.zoomBounds = null;
       ['scatter', 'strip'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
         if (!btn) return;
@@ -2740,6 +2765,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function resetFilters() {
       document.getElementById('filter-status').value = 'qc_pass';
+      state.zoomBounds = null;
       explorerFlagType = 'all';
       explorerSearchQuery = '';
       explorerBlindMode = false;
@@ -3255,6 +3281,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const plotW = width - pad.left - pad.right;
       const plotH = height - pad.top - pad.bottom;
 
+      const resetZoomBtn = document.getElementById('btn-reset-zoom');
+      if (resetZoomBtn) resetZoomBtn.style.display = state.zoomBounds ? 'inline-flex' : 'none';
+
       renderedPoints = [];
 
       if (!filteredRows.length) {
@@ -3269,15 +3298,32 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (isTimeMode) {
         const timeRows = filteredRows.filter(r => r.time_h !== null && r.value !== null && (selectedFilters.params.size === 0 || selectedFilters.params.has(r.parameter)));
         const maxVal = timeRows.length ? Math.max(...timeRows.map(r => r.value)) : 20;
-        const yMax = computeNiceAxisMax(maxVal, yRangeMode, currentDomain);
-        const xMax = 115;
+        let yMin = 0;
+        let yMax = computeNiceAxisMax(maxVal, yRangeMode, currentDomain);
+        let xMin = 0;
+        let xMax = 115;
+        if (state.zoomBounds) {
+          if (Number.isFinite(state.zoomBounds.yMin) && Number.isFinite(state.zoomBounds.yMax) && state.zoomBounds.yMax > state.zoomBounds.yMin) {
+            yMin = state.zoomBounds.yMin;
+            yMax = state.zoomBounds.yMax;
+          }
+          if (Number.isFinite(state.zoomBounds.xMin) && Number.isFinite(state.zoomBounds.xMax) && state.zoomBounds.xMax > state.zoomBounds.xMin) {
+            xMin = Math.max(0, state.zoomBounds.xMin);
+            xMax = Math.min(115, state.zoomBounds.xMax);
+          }
+        }
+        lastPlotTransform = {
+          pad, plotW, plotH, xMin, xMax, yMin, yMax, useLog: false, mode: 'time',
+          pxToDataX: px => xMin + ((px - pad.left) / Math.max(1, plotW)) * (xMax - xMin),
+          pxToDataY: py => yMin + ((pad.top + plotH - py) / Math.max(1, plotH)) * (yMax - yMin)
+        };
 
         ctx.font = '11px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         for (let i = 0; i <= 5; i++) {
-          const val = (yMax / 5) * i;
-          const y = pad.top + plotH - (val / yMax) * plotH;
+          const val = yMin + ((yMax - yMin) / 5) * i;
+          const y = pad.top + plotH - ((val - yMin) / Math.max(1e-9, yMax - yMin)) * plotH;
           ctx.strokeStyle = theme.grid;
           ctx.beginPath();
           ctx.moveTo(pad.left, y);
@@ -3300,12 +3346,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         ctx.lineTo(pad.left + plotW, pad.top + plotH);
         ctx.stroke();
 
-        const xTicks = [0, 24, 48, 72, 96, 115];
+        const xSpan = Math.max(1e-9, xMax - xMin);
+        const ySpan = Math.max(1e-9, yMax - yMin);
+        const timeToX = t => pad.left + ((t - xMin) / xSpan) * plotW;
+        const timeValToY = v => pad.top + plotH - ((Math.max(yMin, Math.min(yMax, v)) - yMin) / ySpan) * plotH;
+
+        const xTicks = state.zoomBounds ? [0, 0.25, 0.5, 0.75, 1.0].map(f => Math.round((xMin + f * xSpan) * 10) / 10) : [0, 24, 48, 72, 96, 115];
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         ctx.font = '600 11px system-ui, -apple-system, sans-serif';
         xTicks.forEach(t => {
-          const x = pad.left + (t / xMax) * plotW;
+          const x = timeToX(t);
           ctx.strokeStyle = theme.grid;
           ctx.beginPath();
           ctx.moveTo(x, pad.top);
@@ -3328,6 +3379,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         ctx.textBaseline = 'bottom';
         ctx.fillText('Fermentation Time (Hours) — Multi-Condition Kinetic Trajectories', pad.left + plotW / 2, height - 4);
 
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(pad.left, pad.top, plotW, plotH);
+        ctx.clip();
+
         Object.entries(activeSeriesMap).forEach(([sKey, cfg]) => {
           const sRows = timeRows.filter(r => getComparisonGroupValue(r, currentDomain) === sKey);
           const byHour = {};
@@ -3345,8 +3401,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             ctx.beginPath();
             hours.forEach((h, idx) => {
               const mVal = byHour[h].reduce((a, b) => a + b, 0) / byHour[h].length;
-              const hx = pad.left + (h / xMax) * plotW;
-              const hy = pad.top + plotH - (Math.max(0, mVal) / yMax) * plotH;
+              const hx = timeToX(h);
+              const hy = timeValToY(mVal);
               if (idx === 0) ctx.moveTo(hx, hy);
               else ctx.lineTo(hx, hy);
             });
@@ -3364,17 +3420,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           });
           Object.values(timeGroups).forEach(gRows => {
             const rep0 = gRows[0];
+            if (rep0.time_h < xMin || rep0.time_h > xMax) return;
             const st = calcStats(gRows.map(x => x.value));
             if (st.mean === null) return;
             const sKey = getComparisonGroupValue(rep0, currentDomain);
             const cfg = activeSeriesMap[sKey] || { color: '#00B5E2', shape: 'circle', offset: 0 };
-            const x = Math.max(pad.left + 6, Math.min(pad.left + plotW - 6, pad.left + (rep0.time_h / xMax) * plotW + cfg.offset * 12));
-            const y = pad.top + plotH - (Math.max(0, st.mean) / yMax) * plotH;
+            const x = Math.max(pad.left + 6, Math.min(pad.left + plotW - 6, timeToX(rep0.time_h) + cfg.offset * 12));
+            const y = timeValToY(st.mean);
             const isPinned = pinnedRecord && gRows.some(gr => gr.record_id === pinnedRecord.record_id && gr.parameter === pinnedRecord.parameter);
 
             if (st.n >= 2 && st.sd > 0) {
-              const yLow = pad.top + plotH - (Math.max(0, st.mean - st.sd) / yMax) * plotH;
-              const yHigh = pad.top + plotH - (Math.min(yMax, st.mean + st.sd) / yMax) * plotH;
+              const yLow = timeValToY(st.mean - st.sd);
+              const yHigh = timeValToY(st.mean + st.sd);
               ctx.save();
               ctx.strokeStyle = cfg.color;
               ctx.lineWidth = 1.9;
@@ -3399,12 +3456,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           });
         } else {
           timeRows.forEach(r => {
+            if (r.time_h < xMin || r.time_h > xMax) return;
             const gRows = repGroupsMap[getReplicateGroupKey(r)] || [r];
             const gStats = calcStats(gRows.map(x => x.value));
             const sKey = getComparisonGroupValue(r, currentDomain);
             const cfg = activeSeriesMap[sKey] || { color: '#00B5E2', shape: 'circle', offset: 0 };
-            const x = Math.max(pad.left + 6, Math.min(pad.left + plotW - 6, pad.left + (r.time_h / xMax) * plotW + cfg.offset * 12 + r.jitter * 4.0));
-            const y = pad.top + plotH - (Math.max(0, r.value) / yMax) * plotH;
+            const x = Math.max(pad.left + 6, Math.min(pad.left + plotW - 6, timeToX(r.time_h) + cfg.offset * 12 + r.jitter * 4.0));
+            const y = timeValToY(r.value);
             const isPinned = pinnedRecord && pinnedRecord.record_id === r.record_id && pinnedRecord.parameter === r.parameter;
 
             ctx.fillStyle = cfg.color;
@@ -3415,6 +3473,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             renderedPoints.push({ x, y, r, groupRows: gRows, groupStats: gStats, isGroupMean: false });
           });
         }
+        ctx.restore();
         ctx.globalAlpha = 1.0;
         return;
       }
@@ -3437,12 +3496,44 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const rawMax = scaleRows.length ? Math.max(...scaleRows.map(r => r.value)) : 100;
         yMax = computeNiceAxisMax(rawMax, yRangeMode, currentDomain);
       }
+      const totalCols = useResourceColumns ? Math.max(1, seriesKeys.length) : Math.max(1, params.length);
+      let xMin = 0;
+      let xMax = totalCols;
+      if (state.zoomBounds) {
+        if (Number.isFinite(state.zoomBounds.yMin) && Number.isFinite(state.zoomBounds.yMax) && state.zoomBounds.yMax > state.zoomBounds.yMin) {
+          yMin = state.zoomBounds.yMin;
+          yMax = state.zoomBounds.yMax;
+        }
+        const zbXMin = Number.isFinite(state.zoomBounds.xMin)
+          ? state.zoomBounds.xMin
+          : (Array.isArray(state.zoomBounds.xCatIndices) ? state.zoomBounds.xCatIndices[0] : null);
+        const zbXMax = Number.isFinite(state.zoomBounds.xMax)
+          ? state.zoomBounds.xMax
+          : (Array.isArray(state.zoomBounds.xCatIndices) ? state.zoomBounds.xCatIndices[1] + 1 : null);
+        if (Number.isFinite(zbXMin) && Number.isFinite(zbXMax) && zbXMax > zbXMin) {
+          xMin = Math.max(0, Math.min(totalCols - 0.1, zbXMin));
+          xMax = Math.max(xMin + 0.1, Math.min(totalCols, zbXMax));
+        }
+      }
+      const isXZoomed = Math.abs(xMin - 0) > 1e-4 || Math.abs(xMax - totalCols) > 1e-4;
+      const xSpan = Math.max(0.1, xMax - xMin);
+      const catIndexToX = (idx, count, twoColLeft = 0.28, twoColRight = 0.72) => {
+        if (!isXZoomed && count === 2) {
+          return pad.left + plotW * (idx === 0 ? twoColLeft : twoColRight);
+        }
+        return pad.left + (((idx + 0.5) - xMin) / xSpan) * plotW;
+      };
+      lastPlotTransform = {
+        pad, plotW, plotH, xMin, xMax, yMin, yMax, useLog, mode: 'scatter', isCategorical: true,
+        pxToDataX: px => xMin + ((px - pad.left) / Math.max(1, plotW)) * (xMax - xMin),
+        pxToDataY: py => yMin + ((pad.top + plotH - py) / Math.max(1, plotH)) * (yMax - yMin)
+      };
 
       // Draw Y gridlines & unit-aware tick labels
       ctx.font = '11px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      const ySteps = useLog ? Math.min(6, yMax - yMin) : 5;
+      const ySteps = useLog ? Math.min(6, Math.max(1, Math.round(yMax - yMin))) : 5;
       for (let i = 0; i <= ySteps; i++) {
         const frac = i / ySteps;
         const y = pad.top + plotH - frac * plotH;
@@ -3464,7 +3555,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           const repLabel = i === 0 ? '' : (i === 5 ? '' : `Rep ${i}`);
           ctx.fillText(repLabel, pad.left - 7, y);
         } else {
-          const val = (yMax / ySteps) * i;
+          const val = yMin + ((yMax - yMin) / ySteps) * i;
           ctx.fillText(formatTickValueWithUnit(val, primaryUnit, yMax), pad.left - 7, y);
         }
       }
@@ -3488,10 +3579,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const valueToY = val => {
         if (useLog) {
           const logV = Math.log10(Math.max(Math.pow(10, yMin), val));
-          const frac = (logV - yMin) / (yMax - yMin);
+          const frac = (logV - yMin) / Math.max(1e-9, yMax - yMin);
           return pad.top + plotH - Math.max(0, Math.min(1, frac)) * plotH;
         }
-        return pad.top + plotH - Math.max(0, Math.min(1, val / yMax)) * plotH;
+        const frac = (val - yMin) / Math.max(1e-9, yMax - yMin);
+        return pad.top + plotH - Math.max(0, Math.min(1, frac)) * plotH;
       };
 
       // =========================================================================
@@ -3499,40 +3591,47 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       // =========================================================================
       if (useResourceColumns) {
         const colCount = Math.max(1, seriesKeys.length);
-        const colWidth = plotW / colCount;
+        const colWidth = plotW / Math.max(1, xSpan);
         const subParams = validParams.slice(0, 4);
         const paramPalette = ['#00B5E2', '#f59e0b', '#10b981', '#a855f7'];
         const paramShapes = ['circle', 'square', 'diamond', 'triangle'];
 
         seriesKeys.forEach((sKey, colIdx) => {
-          const cx = colCount === 2
-            ? pad.left + plotW * (colIdx === 0 ? 0.28 : 0.72)
-            : pad.left + ((colIdx + 0.5) / colCount) * plotW;
+          const cx = catIndexToX(colIdx, colCount, 0.28, 0.72);
           const sCfg = activeSeriesMap[sKey] || { color: SERIES_PALETTE[colIdx % SERIES_PALETTE.length], shape: 'circle' };
 
-          // X-axis tick
-          ctx.strokeStyle = theme.axisText;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(cx, pad.top + plotH);
-          ctx.lineTo(cx, pad.top + plotH + 4);
-          ctx.stroke();
+          if (cx >= pad.left && cx <= pad.left + plotW) {
+            // X-axis tick
+            ctx.strokeStyle = theme.axisText;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx, pad.top + plotH);
+            ctx.lineTo(cx, pad.top + plotH + 4);
+            ctx.stroke();
 
-          // Resource / condition label on X-axis
-          const shortLabel = sKey.length > 26 ? sKey.slice(0, 25) + '…' : sKey;
-          drawXAxisTickLabel(ctx, shortLabel, cx, pad.top + plotH, rotateLabels, theme, colCount);
+            // Resource / condition label on X-axis
+            const shortLabel = sKey.length > 26 ? sKey.slice(0, 25) + '…' : sKey;
+            drawXAxisTickLabel(ctx, shortLabel, cx, pad.top + plotH, rotateLabels, theme, colCount);
+          }
 
           // Column divider line
           if (colIdx < colCount - 1) {
-            const divX = colCount === 2
+            const divX = !isXZoomed && colCount === 2
               ? pad.left + plotW * 0.5
-              : pad.left + ((colIdx + 1) / colCount) * plotW;
-            ctx.strokeStyle = theme.grid;
-            ctx.beginPath();
-            ctx.moveTo(divX, pad.top);
-            ctx.lineTo(divX, pad.top + plotH);
-            ctx.stroke();
+              : pad.left + (((colIdx + 1) - xMin) / xSpan) * plotW;
+            if (divX >= pad.left && divX <= pad.left + plotW) {
+              ctx.strokeStyle = theme.grid;
+              ctx.beginPath();
+              ctx.moveTo(divX, pad.top);
+              ctx.lineTo(divX, pad.top + plotH);
+              ctx.stroke();
+            }
           }
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(pad.left, pad.top, plotW, plotH);
+          ctx.clip();
 
           // Draw bars + whiskers + replicate points for each active parameter inside this Resource column
           subParams.forEach((p, pIdx) => {
@@ -3658,6 +3757,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               });
             }
           });
+          ctx.restore();
         });
 
         // X-axis title caption for Side-by-Side Resource Mode
@@ -3684,26 +3784,30 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       // =========================================================================
       const paramIndexMap = {};
       params.forEach((p, idx) => { paramIndexMap[p] = idx; });
-      const laneWidth = plotW / Math.max(1, params.length);
+      const laneWidth = plotW / Math.max(1, xSpan);
 
       params.forEach((p, idx) => {
-        const cx = params.length === 2
-          ? pad.left + plotW * (idx === 0 ? 0.27 : 0.73)
-          : pad.left + ((idx + 0.5) / params.length) * plotW;
+        const cx = catIndexToX(idx, params.length, 0.27, 0.73);
 
-        // Tick mark on X-axis
-        ctx.strokeStyle = theme.axisText;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(cx, pad.top + plotH);
-        ctx.lineTo(cx, pad.top + plotH + 4);
-        ctx.stroke();
+        if (cx >= pad.left && cx <= pad.left + plotW) {
+          // Tick mark on X-axis
+          ctx.strokeStyle = theme.axisText;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx, pad.top + plotH);
+          ctx.lineTo(cx, pad.top + plotH + 4);
+          ctx.stroke();
 
-        const label = xLabels[idx];
-        drawXAxisTickLabel(ctx, label, cx, pad.top + plotH, rotateLabels, theme, params.length);
+          const label = xLabels[idx];
+          drawXAxisTickLabel(ctx, label, cx, pad.top + plotH, rotateLabels, theme, params.length);
+        }
 
         // Draw side-by-side sub-lane translucent Mean Bar + ±1 SD whiskers for each active resource/series
         if (p !== '(metadata only)') {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(pad.left, pad.top, plotW, plotH);
+          ctx.clip();
           const sEntries = Object.entries(activeSeriesMap);
           const subBarW = Math.min(28, Math.max(6, (laneWidth * 0.68) / Math.max(1, sEntries.length)));
           sEntries.forEach(([sKey, cfg]) => {
@@ -3757,6 +3861,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             }
             ctx.restore();
           });
+          ctx.restore();
         }
 
         if (p === '(metadata only)') {
@@ -3771,14 +3876,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         }
 
         if (idx < params.length - 1) {
-          const divX = params.length === 2
+          const divX = !isXZoomed && params.length === 2
             ? pad.left + plotW * 0.5
-            : pad.left + ((idx + 1) / params.length) * plotW;
-          ctx.strokeStyle = theme.grid;
-          ctx.beginPath();
-          ctx.moveTo(divX, pad.top);
-          ctx.lineTo(divX, pad.top + plotH);
-          ctx.stroke();
+            : pad.left + (((idx + 1) - xMin) / xSpan) * plotW;
+          if (divX >= pad.left && divX <= pad.left + plotW) {
+            ctx.strokeStyle = theme.grid;
+            ctx.beginPath();
+            ctx.moveTo(divX, pad.top);
+            ctx.lineTo(divX, pad.top + plotH);
+            ctx.stroke();
+          }
         }
       });
 
@@ -3800,14 +3907,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       ctx.textBaseline = 'bottom';
       ctx.fillText(xAxisTitleMap[currentDomain] || 'Analytical Parameter (with Units)', pad.left + plotW / 2, height - 3);
 
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pad.left, pad.top, plotW, plotH);
+      ctx.clip();
       if (repPlotMode === 'mean_sd') {
         Object.values(repGroupsMap).forEach(gRows => {
           const rep0 = gRows[0];
           const pIdx = paramIndexMap[rep0.parameter];
           if (pIdx === undefined) return;
-          const baseCx = params.length === 2
-            ? pad.left + plotW * (pIdx === 0 ? 0.27 : 0.73)
-            : pad.left + ((pIdx + 0.5) / params.length) * plotW;
+          const baseCx = catIndexToX(pIdx, params.length, 0.27, 0.73);
 
           const sKey = getComparisonGroupValue(rep0, currentDomain);
           const cfg = activeSeriesMap[sKey] || { color: '#00B5E2', shape: 'circle', offset: 0 };
@@ -3853,9 +3962,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         filteredRows.forEach(r => {
           const pIdx = paramIndexMap[r.parameter];
           if (pIdx === undefined) return;
-          const baseCx = params.length === 2
-            ? pad.left + plotW * (pIdx === 0 ? 0.27 : 0.73)
-            : pad.left + ((pIdx + 0.5) / params.length) * plotW;
+          const baseCx = catIndexToX(pIdx, params.length, 0.27, 0.73);
 
           const sKey = getComparisonGroupValue(r, currentDomain);
           const cfg = activeSeriesMap[sKey] || { color: '#00B5E2', shape: 'circle', offset: 0 };
@@ -3896,6 +4003,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           renderedPoints.push({ x, y, r, groupRows: gRows, groupStats: gStats, isGroupMean: false });
         });
       }
+      ctx.restore();
       ctx.globalAlpha = 1.0;
     }
 
@@ -3980,7 +4088,19 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const topGroups = groupList.slice(0, 14);
 
       const rawMax = topGroups.length ? Math.max(...topGroups.map(g => g.max)) : 10;
-      const xMax = computeNiceAxisMax(rawMax, yRangeMode, currentDomain);
+      let xMinVal = 0;
+      let xMax = computeNiceAxisMax(rawMax, yRangeMode, currentDomain);
+      const resetZoomBtn = document.getElementById('btn-reset-zoom');
+      if (resetZoomBtn) resetZoomBtn.style.display = state.zoomBounds ? 'inline-flex' : 'none';
+      if (state.zoomBounds && Number.isFinite(state.zoomBounds.xMin) && Number.isFinite(state.zoomBounds.xMax) && state.zoomBounds.xMax > state.zoomBounds.xMin) {
+        xMinVal = Math.max(0, state.zoomBounds.xMin);
+        xMax = state.zoomBounds.xMax;
+      }
+      lastPlotTransform = {
+        pad, plotW, plotH, xMin: xMinVal, xMax, yMin: 0, yMax: Math.max(1, topGroups.length), useLog: false, mode: 'strip',
+        pxToDataX: px => xMinVal + ((px - pad.left) / Math.max(1, plotW)) * (xMax - xMinVal),
+        pxToDataY: py => ((py - pad.top) / Math.max(1, plotH)) * Math.max(1, topGroups.length)
+      };
       const activeParams = Array.from(new Set(topGroups.map(g => g.parameter).filter(Boolean)));
       const stripUnit = activeParams.length === 1
         ? getParamUnit(activeParams[0], currentDomain)
@@ -3998,8 +4118,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       for (let i = 0; i <= 5; i++) {
-        const val = (xMax / 5) * i;
-        const x = pad.left + (val / xMax) * plotW;
+        const val = xMinVal + ((xMax - xMinVal) / 5) * i;
+        const x = pad.left + ((val - xMinVal) / Math.max(1e-9, xMax - xMinVal)) * plotW;
         ctx.strokeStyle = theme.grid;
         ctx.beginPath();
         ctx.moveTo(x, pad.top);
@@ -4023,6 +4143,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       ctx.fillText(stripUnit ? `Measured Parameter Value (${stripUnit})` : 'Measured Parameter Value', pad.left + plotW / 2, height - 4);
 
       const rowStep = plotH / Math.max(1, topGroups.length);
+      const valToStripX = val => pad.left + ((Math.max(xMinVal, Math.min(xMax, val)) - xMinVal) / Math.max(1e-9, xMax - xMinVal)) * plotW;
       topGroups.forEach((g, idx) => {
         const y = pad.top + idx * rowStep + rowStep / 2;
         ctx.fillStyle = theme.axisText;
@@ -4031,9 +4152,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const shortLabel = g.label.length > 33 ? g.label.slice(0, 32) + '…' : g.label;
         ctx.fillText(shortLabel, pad.left - 8, y);
 
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(pad.left, pad.top, plotW, plotH);
+        ctx.clip();
+
         if (!g.isMetaGroup) {
-          const xMin = pad.left + (Math.max(0, g.min) / xMax) * plotW;
-          const xMaxBar = pad.left + (Math.min(xMax, g.max) / xMax) * plotW;
+          const xMin = valToStripX(g.min);
+          const xMaxBar = valToStripX(g.max);
           ctx.strokeStyle = theme.rangeBar;
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -4044,12 +4170,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
         if (repPlotMode === 'mean_sd' && !g.isMetaGroup) {
           const rep0 = g.rows[0];
-          const xMean = pad.left + (Math.max(0, Math.min(xMax, g.mean)) / xMax) * plotW;
+          const xMean = valToStripX(g.mean);
           const sKey = getComparisonGroupValue(rep0, currentDomain);
           const cfg = activeSeriesMap[sKey] || { color: SERIES_PALETTE[idx % SERIES_PALETTE.length] };
           if (g.st.n >= 2 && g.st.sd > 0) {
-            const xLow = pad.left + (Math.max(0, g.mean - g.st.sd) / xMax) * plotW;
-            const xHigh = pad.left + (Math.min(xMax, g.mean + g.st.sd) / xMax) * plotW;
+            const xLow = valToStripX(g.mean - g.st.sd);
+            const xHigh = valToStripX(g.mean + g.st.sd);
             ctx.save();
             ctx.strokeStyle = cfg.color;
             ctx.lineWidth = 2.0;
@@ -4077,7 +4203,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             const isMetaOnly = r.value === null || isNaN(r.value);
             const x = isMetaOnly
               ? pad.left + Math.min(plotW - 24, 34 + rIdx * 22)
-              : pad.left + (Math.max(0, Math.min(xMax, r.value)) / xMax) * plotW;
+              : valToStripX(r.value);
             const isPinned = pinnedRecord && pinnedRecord.record_id === r.record_id && pinnedRecord.parameter === r.parameter;
             const sKey = getComparisonGroupValue(r, currentDomain);
             const cfg = activeSeriesMap[sKey] || { color: SERIES_PALETTE[rIdx % SERIES_PALETTE.length] };
@@ -4100,11 +4226,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             renderedPoints.push({ x, y, r, groupRows: g.rows, groupStats: g.st, isGroupMean: false });
           });
         }
+        ctx.restore();
       });
     }
 
-    // Canvas hover & click hit-testing
+    // Canvas hover, brush zoom & click hit-testing
     const canvasEl = document.getElementById('plot-canvas');
+    const brushEl = document.getElementById('canvas-zoom-brush');
     const tooltipEl = document.getElementById('hover-tooltip');
     const clickPopoverEl = document.getElementById('click-audit-popover');
 
@@ -4124,7 +4252,88 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       return best;
     }
 
+    canvasEl.addEventListener('mousedown', evt => {
+      if (evt.button !== 0) return;
+      const rect = canvasEl.getBoundingClientRect();
+      brush.active = true;
+      brush.startX = evt.clientX - rect.left;
+      brush.startY = evt.clientY - rect.top;
+      brush.curX = brush.startX;
+      brush.curY = brush.startY;
+      if (brushEl) {
+        brushEl.style.display = 'none';
+        brushEl.style.left = `${canvasEl.offsetLeft + brush.startX}px`;
+        brushEl.style.top = `${canvasEl.offsetTop + brush.startY}px`;
+        brushEl.style.width = '0px';
+        brushEl.style.height = '0px';
+      }
+    });
+
+    function finishCanvasBrush(evt) {
+      if (!brush.active) return;
+      const rect = canvasEl.getBoundingClientRect();
+      if (evt && typeof evt.clientX === 'number') {
+        brush.curX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+        brush.curY = Math.max(0, Math.min(rect.height, evt.clientY - rect.top));
+      }
+      brush.active = false;
+      if (brushEl) brushEl.style.display = 'none';
+      const dx = Math.abs(brush.curX - brush.startX);
+      const dy = Math.abs(brush.curY - brush.startY);
+      if (dx >= 6 && dy >= 6 && lastPlotTransform) {
+        brush.suppressNextClick = true;
+        const x0 = Math.min(brush.startX, brush.curX);
+        const x1 = Math.max(brush.startX, brush.curX);
+        const y0 = Math.min(brush.startY, brush.curY);
+        const y1 = Math.max(brush.startY, brush.curY);
+        const dataX0 = lastPlotTransform.pxToDataX(x0);
+        const dataX1 = lastPlotTransform.pxToDataX(x1);
+        const dataY0 = lastPlotTransform.pxToDataY(y1);
+        const dataY1 = lastPlotTransform.pxToDataY(y0);
+        const minX = Math.min(dataX0, dataX1);
+        const maxX = Math.max(dataX0, dataX1);
+        const xCatIndices = lastPlotTransform.isCategorical
+          ? [Math.max(0, Math.floor(minX)), Math.max(0, Math.ceil(maxX) - 1)]
+          : null;
+        state.zoomBounds = {
+          xMin: minX,
+          xMax: maxX,
+          yMin: Math.min(dataY0, dataY1),
+          yMax: Math.max(dataY0, dataY1),
+          xCatIndices
+        };
+        const resetBtn = document.getElementById('btn-reset-zoom');
+        if (resetBtn) resetBtn.style.display = 'inline-flex';
+        closeClickAuditPopover();
+        renderPlot();
+      }
+    }
+
+    canvasEl.addEventListener('mouseup', finishCanvasBrush);
+    window.addEventListener('mouseup', finishCanvasBrush);
+    canvasEl.addEventListener('dblclick', () => {
+      resetCanvasZoom();
+    });
+
     canvasEl.addEventListener('mousemove', evt => {
+      if (brush.active) {
+        const rect = canvasEl.getBoundingClientRect();
+        brush.curX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+        brush.curY = Math.max(0, Math.min(rect.height, evt.clientY - rect.top));
+        const dx = Math.abs(brush.curX - brush.startX);
+        const dy = Math.abs(brush.curY - brush.startY);
+        if (brushEl && (dx >= 6 && dy >= 6)) {
+          const leftPx = Math.min(brush.startX, brush.curX);
+          const topPx = Math.min(brush.startY, brush.curY);
+          brushEl.style.display = 'block';
+          brushEl.style.left = `${canvasEl.offsetLeft + leftPx}px`;
+          brushEl.style.top = `${canvasEl.offsetTop + topPx}px`;
+          brushEl.style.width = `${dx}px`;
+          brushEl.style.height = `${dy}px`;
+          tooltipEl.classList.add('hidden');
+          return;
+        }
+      }
       const hit = findNearestPoint(evt);
       if (!hit) {
         tooltipEl.classList.add('hidden');
@@ -4162,6 +4371,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     });
 
     canvasEl.addEventListener('click', evt => {
+      if (brush.suppressNextClick) {
+        brush.suppressNextClick = false;
+        return;
+      }
       const hit = findNearestPoint(evt);
       if (!hit) {
         closeClickAuditPopover();
@@ -4484,13 +4697,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const groupMap = {};
       numRows.forEach(r => {
         const sMethod = getSeriesValue(r, currentDomain);
-        const key = `${r.resource_name}::${r.prepared_sample_name}::${sMethod}::${r.experiment}::${r.parameter}::${r.unit}`;
+        const prepMethod = (window.groupContextLabel ? window.groupContextLabel(r) : (r.prep_method || sMethod)) || sMethod;
+        const key = getReplicateGroupKey(r);
         if (!groupMap[key]) {
           groupMap[key] = {
             group_key: key,
+            replicate_group_key: key,
             resource_name: r.resource_name,
-            prepared_sample: r.prepared_sample_name,
-            method_label: sMethod,
+            analysis_type: r.analysis_type || currentDomain,
+            prepared_sample: r.prepared_sample_name || r.field_sample_name || '—',
+            prep_method: prepMethod,
+            method_label: prepMethod,
             experiment: r.experiment || '—',
             parameter: r.parameter,
             unit: r.unit || '',
@@ -4500,16 +4717,42 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         groupMap[key].rows.push(r);
       });
 
-      const groups = Object.values(groupMap).map(g => {
+      // Pre-pass: compute group-level basic stats so we can calculate parameter-level pooled_sd
+      const rawGroups = Object.values(groupMap).map(g => {
         g.rows.sort((a, b) => ((Number(a.replicate) || 1) - (Number(b.replicate) || 1)) || String(a.record_id).localeCompare(String(b.record_id)));
         const vals = g.rows.map(x => Number(x.value));
         const n = vals.length;
         const mean = sampleMean(vals);
         const sd = sampleSd(vals);
+        return { ...g, vals, n, mean, sd };
+      });
+
+      // Compute parameter-level pooled_sd across all replicate groups (n >= 2) for each (parameter, unit)
+      const pooledByParam = {};
+      rawGroups.forEach(g => {
+        const pKey = `${g.parameter}::${g.unit}`;
+        if (!pooledByParam[pKey]) pooledByParam[pKey] = { sumSq: 0, sumDf: 0 };
+        if (g.n >= 2 && g.sd > 0) {
+          pooledByParam[pKey].sumSq += (g.n - 1) * g.sd * g.sd;
+          pooledByParam[pKey].sumDf += (g.n - 1);
+        }
+      });
+      const pooledSdMap = {};
+      Object.entries(pooledByParam).forEach(([pKey, acc]) => {
+        pooledSdMap[pKey] = acc.sumDf > 0 ? Math.sqrt(acc.sumSq / acc.sumDf) : 0;
+      });
+
+      const groups = rawGroups.map(g => {
+        const vals = g.vals;
+        const n = g.n;
+        const mean = g.mean;
+        const sd = g.sd;
+        const pKey = `${g.parameter}::${g.unit}`;
+        const pooledSd = pooledSdMap[pKey] || 0;
         const rsd = (n >= 2 && Math.abs(mean) > 1e-12) ? Math.abs(sd / mean) * 100.0 : null;
-        const identicalReps = n >= 2 && sd <= 1e-12;
         const minV = Math.min(...vals);
         const maxV = Math.max(...vals);
+        const identicalReps = n >= 2 && (maxV - minV <= 1e-9 || new Set(vals.map(v => Number(v).toFixed(4))).size === 1);
         const cutoff = getTraceCutoff(currentDomain, g.unit);
         const belowFloor = cutoff > 0 && Math.abs(mean) < cutoff;
 
@@ -4533,7 +4776,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               dixonCandidateId = indexed[0].id;
               dixonCandidateVal = indexed[0].v;
             }
-            dixonPass = dixonQ <= qCrit;
+            // Guard Dixon outlier flag with rsd !== null && rsd >= 10.0 to match Page 2
+            dixonPass = !(dixonQ > qCrit && rsd !== null && rsd >= 10.0);
           } else {
             dixonQ = 0;
             dixonPass = true;
@@ -4542,12 +4786,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
         const sd3xIds = [];
         let maxZ = null;
-        if (n >= 3 && sd > 1e-12) {
+        const refSd = pooledSd > 1e-12 ? pooledSd : (n >= 3 && sd > 1e-12 ? sd : 0);
+        if (n >= 2 && refSd > 1e-12) {
           const zs = [];
           g.rows.forEach(x => {
-            const z = Math.abs(Number(x.value) - mean) / sd;
+            const diff = Math.abs(Number(x.value) - mean);
+            const z = diff / refSd;
             zs.push(z);
-            if (z > 3.0) sd3xIds.push(x.record_id);
+            if (pooledSd > 1e-12 ? (diff > 3.0 * pooledSd) : (n >= 3 && z > 3.0)) {
+              sd3xIds.push(x.record_id);
+            }
           });
           maxZ = Math.max(...zs);
         }
@@ -4555,7 +4803,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const rawTriggers = [];
         if (dixonPass === false) rawTriggers.push('Dixon Q (α=0.05)');
         if (rsd !== null && rsd > 20.0) rawTriggers.push('RSD_within > 20%');
-        if (sd3xIds.length > 0) rawTriggers.push('|x - mean| > 3×SD');
+        if (sd3xIds.length > 0) rawTriggers.push('|x - mean| > 3×SD_pooled');
+        if (identicalReps) rawTriggers.push('Identical Replicates (SD=0)');
 
         const isFlaggedActive = (!suppressTraceFlags || !belowFloor) && rawTriggers.length > 0;
         const isSuppressedTraceFlag = belowFloor && rawTriggers.length > 0;
@@ -4565,6 +4814,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           n,
           mean,
           sd,
+          pooled_sd: pooledSd,
           rsd_pct: rsd,
           identical_replicates: identicalReps,
           spread: maxV - minV,
@@ -4583,11 +4833,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         };
       });
 
-      // Compute parameter-level Within-Group vs Between-Group RSD
+      // Stratify parameter-level Within-Replicate vs Between-Sample RSD by 5-tuple:
+      // (resource_name, analysis_type, parameter, prep_method, unit)
       const byParam = {};
       groups.forEach(g => {
-        const pKey = `${g.parameter}::${g.unit}`;
-        if (!byParam[pKey]) byParam[pKey] = { parameter: g.parameter, unit: g.unit, groups: [] };
+        const pKey = `${g.resource_name}::${g.analysis_type}::${g.parameter}::${g.prep_method}::${g.unit}`;
+        if (!byParam[pKey]) {
+          byParam[pKey] = {
+            resource_name: g.resource_name,
+            analysis_type: g.analysis_type,
+            parameter: g.parameter,
+            prep_method: g.prep_method,
+            unit: g.unit,
+            groups: []
+          };
+        }
         byParam[pKey].groups.push(g);
       });
 
@@ -4597,25 +4857,40 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const withinList = gs
           .filter(x => x.rsd_pct !== null && (!suppressTraceFlags || !x.below_abundance_cutoff))
           .map(x => x.rsd_pct);
+        const withinSdList = gs
+          .filter(x => x.n >= 2 && (!suppressTraceFlags || !x.below_abundance_cutoff))
+          .map(x => x.sd);
         const gMeans = gs.map(x => x.mean);
+        const gm = sampleMean(gMeans);
+        let betweenSd = null;
         let betweenRsd = null;
         if (gs.length >= 2) {
-          const gm = sampleMean(gMeans);
-          const gsd = sampleSd(gMeans);
+          betweenSd = sampleSd(gMeans);
           const allBelow = cutoff > 0 && gs.every(x => x.below_abundance_cutoff);
-          if (Math.abs(gm) > 1e-12 && (!suppressTraceFlags || !allBelow)) {
-            betweenRsd = Math.abs(gsd / gm) * 100.0;
+          if (Math.abs(gm) > 1e-9 && (!suppressTraceFlags || !allBelow)) {
+            betweenRsd = (betweenSd / Math.abs(gm)) * 100.0;
           }
         }
-        gs.forEach(x => { x.between_group_rsd_pct = betweenRsd; });
+        gs.forEach(x => {
+          x.between_group_sd = betweenSd;
+          x.between_group_rsd_pct = betweenRsd;
+          x.k_method_groups = gs.length;
+        });
         return {
+          resource_name: pb.resource_name,
+          analysis_type: pb.analysis_type,
           parameter: pb.parameter,
+          prep_method: pb.prep_method,
           unit: pb.unit,
+          k_groups: gs.length,
           n_groups: gs.length,
           n_multi_rep_groups: gs.filter(x => x.n >= 2).length,
+          grand_mean: gm,
+          within_sd_median: medianVal(withinSdList),
           within_rsd_mean: withinList.length ? sampleMean(withinList) : null,
           within_rsd_median: medianVal(withinList),
           within_rsd_max: withinList.length ? Math.max(...withinList) : null,
+          between_sd: betweenSd,
           between_group_rsd: betweenRsd,
           n_flagged: gs.filter(x => x.is_flagged).length,
           n_trace_suppressed: gs.filter(x => x.is_suppressed_trace_flag).length,
@@ -4707,7 +4982,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         sidebarSupChk.checked = suppressTraceFlags;
       }
       const withinStr = stats.medianWithin !== null ? `${stats.medianWithin.toFixed(1)}%` : 'Singleton (n=1)';
-      const betweenStr = stats.medianBetween !== null ? `${stats.medianBetween.toFixed(1)}%` : 'Single group';
+      const betweenStr = stats.medianBetween !== null ? `${stats.medianBetween.toFixed(1)}%` : 'N/A (n=1 method group)';
 
       const flagBadge = stats.flaggedCount > 0
         ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30">⚑ ${stats.flaggedCount} Flagged Replicate Group${stats.flaggedCount === 1 ? '' : 's'}</span>`
@@ -4719,35 +4994,24 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       let bodyHtml = '';
       if (statDrawerOpen) {
-        const paramRowsHtml = stats.paramBreakdown.slice(0, 18).map(p => {
+        const paramRowsHtml = stats.paramBreakdown.slice(0, 24).map(p => {
+          const meanWithinSd = (p.grand_mean !== null && p.within_sd_median !== null)
+            ? `${p.grand_mean.toFixed(2)} ± ${p.within_sd_median.toFixed(2)}`
+            : (p.grand_mean !== null ? `${p.grand_mean.toFixed(2)} ± —` : '—');
           const wMed = p.within_rsd_median !== null ? `${p.within_rsd_median.toFixed(1)}%` : '—';
           const wMax = p.within_rsd_max !== null ? `${p.within_rsd_max.toFixed(1)}%` : '—';
-          const bRsd = p.between_group_rsd !== null ? `${p.between_group_rsd.toFixed(1)}%` : '—';
-          let interp = '<span class="text-[var(--muted-foreground)]">Singleton / 1 group</span>';
-          if (p.within_rsd_median !== null && p.between_group_rsd !== null) {
-            if (p.between_group_rsd > p.within_rsd_median * 1.5 && p.within_rsd_median <= 15) {
-              interp = '<span class="text-emerald-600 dark:text-emerald-400 font-medium">Sample/method driven (Between &gt; Within)</span>';
-            } else if (p.within_rsd_max !== null && p.within_rsd_max > 20) {
-              interp = '<span class="text-amber-600 dark:text-amber-300 font-medium">Assay replicate scatter (&gt;20% Within-RSD)</span>';
-            } else {
-              interp = '<span class="text-[#00B5E2] font-medium">Uniformly tight precision</span>';
-            }
-          } else if (p.within_rsd_max !== null && p.within_rsd_max > 20) {
-            interp = '<span class="text-amber-600 dark:text-amber-300 font-medium">Assay replicate scatter (&gt;20% Within-RSD)</span>';
-          } else if (p.within_rsd_median !== null) {
-            interp = '<span class="text-emerald-600 dark:text-emerald-400 font-medium">High technical repeatability</span>';
-          }
-          const fCell = p.n_flagged > 0
-            ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 font-mono font-semibold">${p.n_flagged} / ${p.n_multi_rep_groups}</span>`
-            : `<span class="text-[var(--muted-foreground)] font-mono">0 / ${p.n_multi_rep_groups}</span>`;
+          const bSd = (p.k_groups >= 2 && p.between_sd !== null) ? p.between_sd.toFixed(2) : '<span class="text-[var(--muted-foreground)]">N/A (n=1 method group)</span>';
+          const bRsd = (p.k_groups >= 2 && p.between_group_rsd !== null) ? `${p.between_group_rsd.toFixed(1)}%` : '<span class="text-[var(--muted-foreground)] font-normal">N/A (n=1 method group)</span>';
+          const resLabel = explorerBlindMode ? 'Masked Resource' : `${p.resource_name} · ${p.prep_method}`;
           return `
             <tr class="border-b border-[var(--border)]">
+              <td class="py-1 px-2 font-mono text-[11px] text-[var(--muted-foreground)]">${escapeHtml(resLabel)}</td>
               <td class="py-1 px-2 font-mono font-semibold text-[var(--foreground)]">${formatParamName(p.parameter, currentDomain)} <span class="text-[var(--muted-foreground)] font-normal">(${p.unit || '—'})</span></td>
-              <td class="py-1 px-2 text-right font-mono">${p.n_multi_rep_groups} / ${p.n_groups}</td>
+              <td class="py-1 px-2 text-right font-mono">${p.n_multi_rep_groups} / ${p.k_groups}</td>
+              <td class="py-1 px-2 text-right font-mono">${meanWithinSd}</td>
               <td class="py-1 px-2 text-right font-mono font-semibold">${wMed} <span class="text-[var(--muted-foreground)] font-normal">(max ${wMax})</span></td>
+              <td class="py-1 px-2 text-right font-mono">${bSd}</td>
               <td class="py-1 px-2 text-right font-mono font-semibold text-[#00B5E2]">${bRsd}</td>
-              <td class="py-1 px-2 text-center">${fCell}</td>
-              <td class="py-1 px-2">${interp}</td>
             </tr>
           `;
         }).join('');
@@ -4764,14 +5028,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           }).join(' ');
 
           const trigBadges = [];
-          if (g.dixon_pass === false && (!suppressTraceFlags || !g.below_abundance_cutoff)) {
-            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-mono">Dixon Q=${g.dixon_q.toFixed(2)} &gt; ${g.dixon_q_crit.toFixed(2)}</span>`);
+          const allowFlag = !g.below_abundance_cutoff || !suppressTraceFlags;
+          if (g.dixon_pass === false && allowFlag) {
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-mono" title="Dixon Q=${g.dixon_q.toFixed(2)} > Q_crit=${g.dixon_q_crit.toFixed(2)}">⚑ Dixon Outlier</span>`);
           }
-          if (g.rsd_pct !== null && g.rsd_pct > 20 && (!suppressTraceFlags || !g.below_abundance_cutoff)) {
-            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 font-mono">RSD=${g.rsd_pct.toFixed(1)}%</span>`);
+          if (g.rsd_pct !== null && g.rsd_pct > 20 && allowFlag) {
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 font-mono" title="Within-group RSD=${g.rsd_pct.toFixed(1)}%">⚑ RSD &gt; 20%</span>`);
           }
-          if (g.sd3x_candidate_ids.length > 0 && (!suppressTraceFlags || !g.below_abundance_cutoff)) {
-            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 font-mono">&gt;3×SD</span>`);
+          if (g.sd3x_candidate_ids.length > 0 && allowFlag) {
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 font-mono" title="Exceeds 3×Pooled SD (${(g.pooled_sd || 0).toFixed(3)})">⚑ &gt;3×SD_pooled</span>`);
+          }
+          if (g.identical_replicates && allowFlag) {
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 font-mono" title="Zero variance across n>=2 replicates">⚑ Identical Replicates</span>`);
           }
           if (g.below_abundance_cutoff && g.raw_triggered_tests.length > 0) {
             trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] font-mono">Trace (&lt;${g.min_abundance_cutoff} ${g.unit})</span>`);
@@ -4783,24 +5051,83 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           const targetId = g.dixon_candidate_id || (g.rows[0] && g.rows[0].record_id) || '';
           const sampleLabel = explorerBlindMode ? `Masked Sample #${gIdx + 1}` : g.prepared_sample;
           const subLabel = explorerBlindMode ? 'Blind Review Mode' : `${g.resource_name} · ${g.method_label}`;
+          const betweenCellStr = (g.k_method_groups >= 2 && g.between_group_rsd_pct !== null && g.between_group_rsd_pct !== undefined)
+            ? `${g.between_group_rsd_pct.toFixed(1)}%`
+            : 'N/A (n=1 method group)';
           return `
             <tr class="border-b border-[var(--border)]">
-              <td class="py-1.5 px-2 font-mono font-semibold text-[#00B5E2]">${sampleLabel}<div class="text-[10px] font-sans font-normal text-[var(--muted-foreground)]">${subLabel}</div></td>
+              <td class="py-1.5 px-2 font-mono font-semibold text-[#00B5E2]">${escapeHtml(sampleLabel)}<div class="text-[10px] font-sans font-normal text-[var(--muted-foreground)]">${escapeHtml(subLabel)}</div></td>
               <td class="py-1.5 px-2 font-mono font-semibold">${formatParamName(g.parameter, currentDomain)} <span class="text-[var(--muted-foreground)] font-normal">(${g.unit})</span></td>
               <td class="py-1.5 px-2"><div class="flex flex-wrap gap-1">${repBadges}</div></td>
               <td class="py-1.5 px-2 text-right font-mono">${g.mean.toFixed(2)} ± ${g.sd.toFixed(2)}</td>
-              <td class="py-1.5 px-2 text-right font-mono font-semibold ${g.rsd_pct > 20 ? 'text-amber-600 dark:text-amber-300' : ''}">${g.rsd_pct !== null ? g.rsd_pct.toFixed(1) + '%' : '—'} <span class="text-[var(--muted-foreground)] font-normal">/ ${g.between_group_rsd_pct !== null && g.between_group_rsd_pct !== undefined ? g.between_group_rsd_pct.toFixed(1) + '%' : '—'}</span></td>
+              <td class="py-1.5 px-2 text-right font-mono font-semibold ${g.rsd_pct > 20 ? 'text-amber-600 dark:text-amber-300' : ''}">${g.rsd_pct !== null ? g.rsd_pct.toFixed(1) + '%' : '—'} <span class="text-[var(--muted-foreground)] font-normal">/ ${betweenCellStr}</span></td>
               <td class="py-1.5 px-2"><div class="flex flex-wrap gap-1">${trigBadges.join(' ')}</div></td>
               <td class="py-1.5 px-2 text-right"><button onclick="pinRecordById('${targetId}', '${g.parameter}')" class="px-2 py-0.5 rounded bg-[var(--card)] hover:border-[#00B5E2] border border-[var(--border)] text-[var(--foreground)] font-medium">Pin</button></td>
             </tr>
           `;
         }).join('');
 
+        // Section 3: Resource Lab & Sample Lineage Notes
+        const activeResourceNames = Array.from(new Set(filteredRows.map(r => r.resource_name).filter(Boolean)));
+        const activePrepNames = Array.from(new Set(filteredRows.map(r => r.prepared_sample_name).filter(Boolean)));
+        const activeFieldNames = Array.from(new Set(filteredRows.map(r => r.field_sample_name).filter(Boolean)));
+
+        const resourceNoteItems = [];
+        activeResourceNames.forEach((rn, idx) => {
+          const meta = (typeof RESOURCES_BY_NAME !== 'undefined' && RESOURCES_BY_NAME[rn]) ? RESOURCES_BY_NAME[rn] : null;
+          if (!meta) return;
+          const noteText = [meta.lab_notes, meta.notes, meta.description, meta.processing_notes]
+            .filter(x => x && String(x).trim() && String(x).trim() !== 'None')
+            .join(' · ');
+          if (noteText) {
+            const label = explorerBlindMode ? `Masked Resource #${idx + 1}` : rn;
+            resourceNoteItems.push(`<div class="p-2 rounded border border-[var(--border)] bg-[var(--card)]"><span class="font-mono font-semibold text-[#00B5E2]">${escapeHtml(label)}</span> <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#00B5E2]/10 text-[#00B5E2] ml-1">Resource Lab Notes</span><div class="mt-1 text-[var(--foreground)]">${escapeHtml(noteText)}</div></div>`);
+          }
+        });
+
+        const prepNoteItems = [];
+        activePrepNames.forEach((pn, idx) => {
+          const pMeta = (typeof PREP_SAMPLES_BY_NAME !== 'undefined' && PREP_SAMPLES_BY_NAME[pn]) ? PREP_SAMPLES_BY_NAME[pn] : null;
+          const rowNotes = Array.from(new Set(filteredRows.filter(r => r.prepared_sample_name === pn).map(r => r.prep_notes || r.sample_note).filter(Boolean)));
+          const noteParts = [];
+          if (pMeta) {
+            [pMeta.notes, pMeta.prep_notes, pMeta.description, pMeta.prep_method].filter(x => x && String(x).trim() && String(x).trim() !== 'None').forEach(x => noteParts.push(String(x).trim()));
+          }
+          rowNotes.forEach(x => { if (!noteParts.includes(String(x).trim())) noteParts.push(String(x).trim()); });
+          if (noteParts.length > 0) {
+            const label = explorerBlindMode ? `Masked Prep Sample #${idx + 1}` : pn;
+            prepNoteItems.push(`<div class="p-2 rounded border border-[var(--border)] bg-[var(--card)]"><span class="font-mono font-semibold text-emerald-500">${escapeHtml(label)}</span> <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 ml-1">Preparation Lineage</span><div class="mt-1 text-[var(--foreground)]">${escapeHtml(noteParts.join(' · '))}</div></div>`);
+          }
+        });
+
+        const fieldNoteItems = [];
+        activeFieldNames.forEach((fn, idx) => {
+          const fMeta = (typeof FIELD_SAMPLES_BY_NAME !== 'undefined' && FIELD_SAMPLES_BY_NAME[fn]) ? FIELD_SAMPLES_BY_NAME[fn] : null;
+          if (!fMeta) return;
+          const noteParts = [fMeta.notes, fMeta.field_notes, fMeta.collection_notes, fMeta.sample_source, fMeta.county]
+            .filter(x => x && String(x).trim() && String(x).trim() !== 'None');
+          if (noteParts.length > 0) {
+            const label = explorerBlindMode ? `Masked Field Sample #${idx + 1}` : fn;
+            fieldNoteItems.push(`<div class="p-2 rounded border border-[var(--border)] bg-[var(--card)]"><span class="font-mono font-semibold text-amber-500">${escapeHtml(label)}</span> <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 ml-1">Field Sample Lineage</span><div class="mt-1 text-[var(--foreground)]">${escapeHtml(noteParts.join(' · '))}</div></div>`);
+          }
+        });
+
+        const obsWithNotes = filteredRows.filter(r => r.note && String(r.note).trim() && String(r.note).trim() !== 'None').slice(0, 12);
+        const obsNoteItems = obsWithNotes.map((r, idx) => {
+          const sLabel = explorerBlindMode ? `Masked Obs #${idx + 1}` : `${r.resource_name} · ${r.prepared_sample_name || r.field_sample_name || r.record_id}`;
+          return `<div class="p-2 rounded border border-[var(--border)] bg-[var(--card)]"><span class="font-mono font-semibold text-purple-400">${escapeHtml(sLabel)}</span> <span class="font-mono text-[10px] text-[var(--muted-foreground)] ml-1">(${escapeHtml(r.parameter || 'obs')})</span><div class="mt-1 text-[var(--foreground)]">${escapeHtml(String(r.note).trim())}</div></div>`;
+        });
+
+        const allNotesCombined = [...resourceNoteItems, ...prepNoteItems, ...fieldNoteItems, ...obsNoteItems];
+        const labNotesHtml = allNotesCombined.length > 0
+          ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto p-2 rounded border border-[var(--border)] bg-[var(--background)]">${allNotesCombined.join('')}</div>`
+          : `<div class="p-3 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]">No lab, preparation, or field lineage notes recorded for the active resource slice (${activeResourceNames.length} resource${activeResourceNames.length === 1 ? '' : 's'}).</div>`;
+
         bodyHtml = `
           <div class="p-3 border-t border-[var(--border)] bg-[var(--card)] space-y-3 text-xs">
             <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border)]">
               <div class="text-[var(--muted-foreground)]">
-                Screens replicate groups (<span class="font-mono">Sample × Method × Exp × Parameter</span>) using <strong class="text-[var(--foreground)]">Dixon's Q-Test (α=0.05, n≥3)</strong>, <strong class="text-[var(--foreground)]">Within-Group RSD &gt; 20%</strong>, and <strong class="text-[var(--foreground)]">|x − mean| &gt; 3×SD</strong>, alongside <strong class="text-[var(--foreground)]">Between-Group RSD</strong> across samples/batches.
+                Screens canonical 6-part replicate groups (<span class="font-mono">Resource × Analysis × Sample × Method × Parameter × Unit</span>) using <strong class="text-[var(--foreground)]">Dixon's Q-Test (α=0.05, n≥3, RSD≥10%)</strong>, <strong class="text-[var(--foreground)]">Within-Group RSD &gt; 20%</strong>, <strong class="text-[var(--foreground)]">|x − mean| &gt; 3×SD_pooled</strong>, and <strong class="text-[var(--foreground)]">Identical Replicates (SD=0)</strong>.
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 <label class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--background)] border border-[var(--border)] cursor-pointer">
@@ -4814,29 +5141,35 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               </div>
             </div>
 
-            <!-- Section A: Within vs Between Group RSD Table -->
+            <!-- Section 1: Within-Replicate vs. Between-Sample RSD Summary -->
             <div>
-              <div class="font-semibold text-[var(--foreground)] mb-1">1. Within-Replicate-Group vs. Between-Replicate-Group RSD by Parameter</div>
+              <div class="font-semibold text-[var(--foreground)] mb-1">1. Within-Replicate vs. Between-Sample RSD Summary</div>
+              <div class="mb-2 px-2.5 py-1.5 rounded border border-[var(--border)] bg-[var(--background)] font-mono text-[11px] text-[var(--muted-foreground)] flex flex-wrap gap-x-4 gap-y-1">
+                <span><strong class="text-[var(--foreground)]">Within-Replicate RSD</strong> = SD_within / |Mean_group| × 100%</span>
+                <span><strong class="text-[var(--foreground)]">Pooled SD</strong> = sqrt(Σ(n_g - 1)s_g² / Σ(n_g - 1))</span>
+                <span><strong class="text-[#00B5E2]">Between-Sample RSD</strong> = SD(group means) / |Grand Mean| × 100% <span class="text-[10px]">(stratified by resource, analysis_type, parameter, prep_method, unit)</span></span>
+              </div>
               <div class="overflow-x-auto max-h-[190px] overflow-y-auto border border-[var(--border)] rounded bg-[var(--background)]">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
-                      <th class="py-1 px-2">Parameter</th>
-                      <th class="py-1 px-2 text-right">Multi-Rep / Total Groups</th>
-                      <th class="py-1 px-2 text-right">Within-Group RSD (Med / Max)</th>
-                      <th class="py-1 px-2 text-right">Between-Group RSD</th>
-                      <th class="py-1 px-2 text-center">Flagged</th>
-                      <th class="py-1 px-2">Variance Driver</th>
+                      <th class="py-1 px-2">Resource &amp; Method</th>
+                      <th class="py-1 px-2">Parameter (Unit)</th>
+                      <th class="py-1 px-2 text-right">Replicate Groups</th>
+                      <th class="py-1 px-2 text-right">Mean ± Within SD</th>
+                      <th class="py-1 px-2 text-right">Within RSD%</th>
+                      <th class="py-1 px-2 text-right">Between-Sample SD</th>
+                      <th class="py-1 px-2 text-right">Between-Sample RSD%</th>
                     </tr>
                   </thead>
-                  <tbody>${paramRowsHtml || '<tr><td colspan="6" class="py-3 text-center text-[var(--muted-foreground)]">No numeric parameter groups in current slice.</td></tr>'}</tbody>
+                  <tbody>${paramRowsHtml || '<tr><td colspan="7" class="py-3 text-center text-[var(--muted-foreground)]">No numeric parameter groups in current slice.</td></tr>'}</tbody>
                 </table>
               </div>
             </div>
 
-            <!-- Section B: Flagged Replicate Groups Table -->
+            <!-- Section 2: Flagged Replicate Groups -->
             <div>
-              <div class="font-semibold text-[var(--foreground)] mb-1">2. ${statFilterMode === 'flagged' ? 'Flagged Replicate Groups & Candidate Outlier Replicates (★)' : 'All Multi-Replicate Groups'}</div>
+              <div class="font-semibold text-[var(--foreground)] mb-1">2. Flagged Replicate Groups ${statFilterMode === 'all' ? '(Showing All Multi-Replicate Groups)' : '&amp; Candidate Outlier Replicates (★)'}</div>
               ${shownGroups.length === 0 ? `<div class="p-3 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]">✓ Zero replicate groups triggered candidate outlier flags under current filter settings.</div>` : `
               <div class="overflow-x-auto max-h-[240px] overflow-y-auto border border-[var(--border)] rounded bg-[var(--background)]">
                 <table class="w-full text-left border-collapse text-xs">
@@ -4854,6 +5187,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <tbody>${groupRowsHtml}</tbody>
                 </table>
               </div>`}
+            </div>
+
+            <!-- Section 3: Resource Lab & Sample Lineage Notes -->
+            <div id="explorer-lab-notes-panel">
+              <div class="font-semibold text-[var(--foreground)] mb-1">3. Resource Lab &amp; Sample Lineage Notes</div>
+              ${labNotesHtml}
             </div>
           </div>
         `;

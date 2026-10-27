@@ -1507,3 +1507,53 @@ def test_card9_sticky_sidebar_and_pushstate_popstate(
         )
         assert "push: true" in html, f"{name} missing interactive push: true transitions"
         assert "push: false" in html, f"{name} missing non-push popstate/init transitions"
+
+
+def test_card10_explorer_brush_zoom_and_qc_panels(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    """Card 10: Verify Page 3 HTML5 canvas rectangular brush zoom, click-audit popover preservation,
+    canonical 6-part replicate key synchronization, method-aware Between-Sample RSD, and Lab Notes panel.
+    """
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. HTML5 2D <canvas id="plot-canvas"> rectangular brush zoom overlay & controls
+    assert 'id="canvas-zoom-brush"' in page3
+    assert 'id="btn-reset-zoom"' in page3
+    assert "resetCanvasZoom()" in page3
+    assert "state.zoomBounds" in page3
+    assert "brush.suppressNextClick" in page3
+    assert "pxToDataX" in page3 and "pxToDataY" in page3
+
+    # 2. Click-Audit Popover DOM/JS contract preserved intact
+    assert 'id="click-audit-popover"' in page3
+    assert 'id="btn-audit-scope-group"' in page3
+    assert 'id="btn-audit-scope-single"' in page3
+    assert "function openClickAuditPopover(" in page3
+    assert "function submitClickPopoverAuditFinding(" in page3
+    assert "function escalateClickPopoverToModal(" in page3
+    assert "let auditPopoverScope = 'group';" in page3
+    assert "function setAuditPopoverScope(scope)" in page3
+
+    # 3. Canonical 6-part replicate group key + statistical screening parity
+    assert "window.normalizeReplicateGroupKey(r, r.resource_name)" in page3
+    assert "const key = getReplicateGroupKey(r);" in page3
+    assert "dixonPass = !(dixonQ > qCrit && rsd !== null && rsd >= 10.0);" in page3
+    assert "3.0 * pooledSd" in page3
+    assert "Identical Replicates (SD=0)" in page3
+    assert "${g.resource_name}::${g.analysis_type}::${g.parameter}::${g.prep_method}::${g.unit}" in page3
+
+    # 4. Redesigned 3-section #stat-screening-drawer
+    assert "1. Within-Replicate vs. Between-Sample RSD Summary" in page3
+    assert "Within-Replicate RSD" in page3
+    assert "SD_within / |Mean_group| × 100%" in page3
+    assert "sqrt(Σ(n_g - 1)s_g² / Σ(n_g - 1))" in page3
+    assert "SD(group means) / |Grand Mean| × 100%" in page3
+    assert "N/A (n=1 method group)" in page3
+    assert "2. Flagged Replicate Groups" in page3
+    assert "⚑ Dixon Outlier" in page3
+    assert "⚑ RSD &gt; 20%" in page3
+    assert "⚑ &gt;3×SD_pooled" in page3
+    assert "⚑ Identical Replicates" in page3
+    assert "3. Resource Lab &amp; Sample Lineage Notes" in page3
+    assert 'id="explorer-lab-notes-panel"' in page3
