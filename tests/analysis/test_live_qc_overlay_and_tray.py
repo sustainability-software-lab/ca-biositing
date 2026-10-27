@@ -1457,3 +1457,53 @@ console.log(JSON.stringify({{ activeHtml, traceSuppressedHtml, traceUnsuppressed
     ]:
         assert flag_label in page1
         assert flag_label in page2
+
+
+def test_card9_sticky_sidebar_and_pushstate_popstate(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. Page 2 Sticky Filter Sidebar structure & controls
+    assert 'id="qc-sticky-filter-sidebar"' in page2
+    assert "position: sticky; top: 16px;" in page2
+    assert "Flag Filters" in page2
+    assert "Choose an Analysis Type" in page2
+    assert "Additional Filters" in page2
+    assert 'id="flt-sidebar-flag-type"' in page2
+    assert '<option value="identical">Identical Replicates</option>' in page2
+    assert 'id="sidebar-suppressed-count-badge"' in page2
+    assert 'id="chk-sidebar-blind-mode"' in page2
+    assert 'id="sidebar-search-input"' in page2
+    assert (
+        'if (mode === "identical") return Boolean(g.has_identical_replicates || g.identical_replicates);'
+        in page2
+    )
+
+    # 2. Page 3 Sticky Filter Sidebar structure & controls
+    assert 'id="explorer-sticky-filter-sidebar"' in page3
+    assert "position: sticky; top: 16px;" in page3
+    assert "Flag Filters" in page3
+    assert "Choose an Analysis Type" in page3
+    assert "Additional Filters" in page3
+    assert 'id="flt-explorer-flag-type"' in page3
+    assert '<option value="identical">Identical Replicates</option>' in page3
+    assert 'id="chk-explorer-suppress-trace"' in page3
+    assert 'id="explorer-suppressed-count-badge"' in page3
+    assert 'id="chk-explorer-blind-mode"' in page3
+    assert 'id="filter-search"' in page3
+    assert "function isExplorerGroupMatchingFlagFilter(g, flagMode)" in page3
+
+    # 3. History pushState + popstate listener across Page 1, Page 2, and Page 3
+    for name, html in [("page1", page1), ("page2", page2), ("page3", page3)]:
+        assert "window.history.pushState(" in html, f"{name} missing window.history.pushState"
+        assert "window.history.replaceState(" in html, (
+            f"{name} missing window.history.replaceState"
+        )
+        assert "addEventListener" in html and "popstate" in html, (
+            f"{name} missing popstate listener"
+        )
+        assert "push: true" in html, f"{name} missing interactive push: true transitions"
+        assert "push: false" in html, f"{name} missing non-push popstate/init transitions"

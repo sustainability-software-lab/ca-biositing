@@ -507,157 +507,205 @@ def build_full_dashboard_html(payload: dict) -> str:
       </div>
     </div>
 
-    <!-- Row 2: Analysis Type Pill Bar (9 Analysis Domains) -->
-    <div id="domain-pill-bar" class="flex flex-wrap items-center gap-1.5 py-1.5 border-b border-[var(--border)] text-xs"></div>
-
-    <!-- Row 3: Multi-Select Checklist Filter Bar & Compare By Selector -->
-    <div class="flex flex-wrap items-center gap-2 py-2 border-b border-[var(--border)] text-xs relative">
-      <!-- Combined Status / QC Filter -->
-      <div class="flex items-center gap-1">
-        <span class="text-[var(--muted-foreground)] font-medium">Status / QC:</span>
-        <select id="filter-status" onchange="applyFilters()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs focus:outline-none">
-          <option value="ALL">All Statuses &amp; QC</option>
-          <option value="Portal Compliant">Portal Compliant</option>
-          <option value="Raw">Raw / Portal Excluded</option>
-          <option value="qc_pass" selected>qc_pass: pass</option>
-          <option value="qc_fail">qc_pass: fail</option>
-          <option value="qc_provisional">qc_pass: provisional/unknown</option>
-        </select>
-      </div>
-
-      <!-- Toggle Inline 4-Column Multi-Select Checklists Drawer -->
-      <button type="button" id="btn-toggle-drawer" onclick="toggleInlineChecklistDrawer()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors">
-        <span>&#9745; Multi-Select Checklists</span>
-        <span id="drawer-chevron" class="text-[10px]">&#9652;</span>
-      </button>
-
-      <!-- Multi-Select Checklist Popover: Resources -->
-      <div class="relative inline-flex items-center gap-1" id="popover-wrap-resources">
-        <button type="button" onclick="stepResource(-1)" class="px-1.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]" title="Step to Previous Active Resource">&larr;</button>
-        <button type="button" id="btn-popover-resources" onclick="togglePopover('resources', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
-          <span id="label-popover-resources">Resources: All (43 active)</span>
-          <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
-        </button>
-        <button type="button" onclick="stepResource(1)" class="px-1.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]" title="Step to Next Active Resource">&rarr;</button>
-        <div id="panel-popover-resources" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-80 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
-          <input id="search-popover-resources" type="text" oninput="renderChecklistItems('resources', true)" placeholder="Filter resources..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
-          <div class="flex flex-wrap items-center gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[10px]">
-            <span class="text-[var(--muted-foreground)] font-mono">Presets:</span>
-            <button type="button" onclick="applyResourcePreset('hulls')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Nut Hulls</button>
-            <button type="button" onclick="applyResourcePreset('straws')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Straws</button>
-            <button type="button" onclick="applyResourcePreset('pomaces')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Pomaces</button>
-            <button type="button" onclick="selectTopDomainResources(4)" class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/25 font-medium">Top 4 in Tab</button>
+    <!-- Workspace Two-Column Layout: Sticky Left Filter Sidebar (280px) + Right Interactive Workspace -->
+    <div class="flex flex-col lg:flex-row gap-4 items-start pt-2">
+      <!-- Sticky Left Filter Sidebar -->
+      <aside id="explorer-sticky-filter-sidebar" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 shadow-sm space-y-3.5 w-full lg:w-[280px] text-xs" style="width: 280px; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; flex-shrink: 0;">
+        <!-- 1. Flag Filters -->
+        <div class="space-y-2 pb-3 border-b border-[var(--border)]">
+          <div class="flex items-center justify-between">
+            <h2 class="text-[11px] font-bold uppercase tracking-wider text-[#00B5E2]">Flag Filters</h2>
+            <button type="button" onclick="resetFilters()" class="text-[11px] px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+              Reset All
+            </button>
           </div>
-          <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="checklistAction('resources', 'domain')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]" title="Select all resources that have data in the active analysis tab">All in Tab</button>
-              <button type="button" onclick="checklistAction('resources', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">All</button>
-              <button type="button" onclick="checklistAction('resources', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
-              <button type="button" onclick="checklistAction('resources', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
-            </div>
-            <span id="count-popover-resources" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+          <div>
+            <label for="flt-explorer-flag-type" class="block text-[11px] text-[var(--muted-foreground)] font-medium mb-1">Flag Type:</label>
+            <select id="flt-explorer-flag-type" onchange="onExplorerFlagTypeChange(this.value)" class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none">
+              <option value="all" selected>All Records / Groups</option>
+              <option value="active">Active Flagged Only</option>
+              <option value="dixon">Dixon's Q Outlier</option>
+              <option value="rsd">High RSD &gt; 20%</option>
+              <option value="sd3">&gt;3&times;SD_pooled</option>
+              <option value="identical">Identical Replicates</option>
+            </select>
           </div>
-          <div id="list-popover-resources" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+          <div>
+            <label for="filter-status" class="block text-[11px] text-[var(--muted-foreground)] font-medium mb-1">Status / QC:</label>
+            <select id="filter-status" onchange="applyFilters()" class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs focus:outline-none">
+              <option value="ALL">All Statuses &amp; QC</option>
+              <option value="Portal Compliant">Portal Compliant</option>
+              <option value="Raw">Raw / Portal Excluded</option>
+              <option value="qc_pass" selected>qc_pass: pass</option>
+              <option value="qc_fail">qc_pass: fail</option>
+              <option value="qc_provisional">qc_pass: provisional/unknown</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      <!-- Multi-Select Checklist Popover: Parameters -->
-      <div class="relative inline-flex items-center" id="popover-wrap-params">
-        <button type="button" id="btn-popover-params" onclick="togglePopover('params', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
-          <span id="label-popover-params">Params: All</span>
-          <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
-        </button>
-        <div id="panel-popover-params" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
-          <input id="search-popover-params" type="text" oninput="renderChecklistItems('params', true)" placeholder="Filter parameters..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
-          <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="checklistAction('params', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
-              <button type="button" onclick="checklistAction('params', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
-              <button type="button" onclick="checklistAction('params', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
-            </div>
-            <span id="count-popover-params" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
-          </div>
-          <div id="list-popover-params" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+        <!-- 2. Choose an Analysis Type -->
+        <div class="space-y-2 pb-3 border-b border-[var(--border)]">
+          <h2 class="text-[11px] font-bold uppercase tracking-wider text-[#00B5E2]">Choose an Analysis Type</h2>
+          <div id="domain-pill-bar" class="flex flex-wrap items-center gap-1.5 text-xs"></div>
         </div>
-      </div>
 
-      <!-- Multi-Select Checklist Popover: Prepared Samples -->
-      <div class="relative inline-flex items-center" id="popover-wrap-samples">
-        <button type="button" id="btn-popover-samples" onclick="togglePopover('samples', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
-          <span id="label-popover-samples">Samples: All</span>
-          <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
-        </button>
-        <div id="panel-popover-samples" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-80 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
-          <input id="search-popover-samples" type="text" oninput="renderChecklistItems('samples', true)" placeholder="Filter prepared samples..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
-          <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="checklistAction('samples', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
-              <button type="button" onclick="checklistAction('samples', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
-              <button type="button" onclick="checklistAction('samples', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
-            </div>
-            <span id="count-popover-samples" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+        <!-- 3. Additional Filters -->
+        <div class="space-y-2.5">
+          <h2 class="text-[11px] font-bold uppercase tracking-wider text-[#00B5E2]">Additional Filters</h2>
+
+          <label class="flex items-center justify-between gap-1.5 px-2 py-1.5 rounded bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+            <span class="flex items-center gap-1.5">
+              <input id="chk-explorer-suppress-trace" type="checkbox" checked onchange="toggleSuppressTrace(this.checked)" class="rounded" />
+              <span>Suppress trace flags</span>
+            </span>
+            <span id="explorer-suppressed-count-badge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--background)] text-[var(--muted-foreground)] border border-[var(--border)]">0 suppressed</span>
+          </label>
+
+          <label class="flex items-center gap-1.5 px-2 py-1.5 rounded bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+            <input id="chk-explorer-blind-mode" type="checkbox" onchange="toggleExplorerBlindMode(this.checked)" class="rounded" />
+            <span>Blind review mode (hide flags)</span>
+          </label>
+
+          <div>
+            <label for="filter-search" class="block text-[11px] text-[var(--muted-foreground)] font-medium mb-1">Keyword Search:</label>
+            <input id="filter-search" type="search" oninput="onExplorerSearchChange(this.value)" placeholder="Search sample / parameter / ID..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00B5E2]" />
           </div>
-          <div id="list-popover-samples" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
-        </div>
-      </div>
 
-      <!-- Multi-Select Checklist Popover: Methods / Preps / Strains -->
-      <div class="relative inline-flex items-center" id="popover-wrap-methods">
-        <button type="button" id="btn-popover-methods" onclick="togglePopover('methods', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
-          <span id="label-popover-methods">Methods: All</span>
-          <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
-        </button>
-        <div id="panel-popover-methods" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
-          <input id="search-popover-methods" type="text" oninput="renderChecklistItems('methods', true)" placeholder="Filter methods / preps / strains..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
-          <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="checklistAction('methods', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
-              <button type="button" onclick="checklistAction('methods', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
-              <button type="button" onclick="checklistAction('methods', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+          <!-- Toggle Inline 4-Column Multi-Select Checklists Drawer -->
+          <button type="button" id="btn-toggle-drawer" onclick="toggleInlineChecklistDrawer()" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors">
+            <span>&#9745; Multi-Select Checklists</span>
+            <span id="drawer-chevron" class="text-[10px]">&#9652;</span>
+          </button>
+
+          <!-- Multi-Select Checklist Popover: Resources -->
+          <div class="relative flex items-center gap-1 w-full" id="popover-wrap-resources">
+            <button type="button" onclick="stepResource(-1)" class="px-1.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]" title="Step to Previous Active Resource">&larr;</button>
+            <button type="button" id="btn-popover-resources" onclick="togglePopover('resources', event)" class="flex-1 inline-flex items-center justify-between gap-1.5 px-2 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors min-w-0">
+              <span id="label-popover-resources" class="truncate">Resources: All (43 active)</span>
+              <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
+            </button>
+            <button type="button" onclick="stepResource(1)" class="px-1.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]" title="Step to Next Active Resource">&rarr;</button>
+            <div id="panel-popover-resources" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
+              <input id="search-popover-resources" type="text" oninput="renderChecklistItems('resources', true)" placeholder="Filter resources..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
+              <div class="flex flex-wrap items-center gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[10px]">
+                <span class="text-[var(--muted-foreground)] font-mono">Presets:</span>
+                <button type="button" onclick="applyResourcePreset('hulls')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Nut Hulls</button>
+                <button type="button" onclick="applyResourcePreset('straws')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Straws</button>
+                <button type="button" onclick="applyResourcePreset('pomaces')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Pomaces</button>
+                <button type="button" onclick="selectTopDomainResources(4)" class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/25 font-medium">Top 4 in Tab</button>
+              </div>
+              <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="checklistAction('resources', 'domain')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]" title="Select all resources that have data in the active analysis tab">All in Tab</button>
+                  <button type="button" onclick="checklistAction('resources', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">All</button>
+                  <button type="button" onclick="checklistAction('resources', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
+                  <button type="button" onclick="checklistAction('resources', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+                </div>
+                <span id="count-popover-resources" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+              </div>
+              <div id="list-popover-resources" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
             </div>
-            <span id="count-popover-methods" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
           </div>
-          <div id="list-popover-methods" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+
+          <!-- Multi-Select Checklist Popover: Parameters -->
+          <div class="relative flex items-center w-full" id="popover-wrap-params">
+            <button type="button" id="btn-popover-params" onclick="togglePopover('params', event)" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
+              <span id="label-popover-params" class="truncate">Params: All</span>
+              <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
+            </button>
+            <div id="panel-popover-params" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
+              <input id="search-popover-params" type="text" oninput="renderChecklistItems('params', true)" placeholder="Filter parameters..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
+              <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="checklistAction('params', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
+                  <button type="button" onclick="checklistAction('params', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
+                  <button type="button" onclick="checklistAction('params', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+                </div>
+                <span id="count-popover-params" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+              </div>
+              <div id="list-popover-params" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+            </div>
+          </div>
+
+          <!-- Multi-Select Checklist Popover: Prepared Samples -->
+          <div class="relative flex items-center w-full" id="popover-wrap-samples">
+            <button type="button" id="btn-popover-samples" onclick="togglePopover('samples', event)" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
+              <span id="label-popover-samples" class="truncate">Samples: All</span>
+              <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
+            </button>
+            <div id="panel-popover-samples" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
+              <input id="search-popover-samples" type="text" oninput="renderChecklistItems('samples', true)" placeholder="Filter prepared samples..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
+              <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="checklistAction('samples', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
+                  <button type="button" onclick="checklistAction('samples', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
+                  <button type="button" onclick="checklistAction('samples', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+                </div>
+                <span id="count-popover-samples" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+              </div>
+              <div id="list-popover-samples" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+            </div>
+          </div>
+
+          <!-- Multi-Select Checklist Popover: Methods / Preps / Strains -->
+          <div class="relative flex items-center w-full" id="popover-wrap-methods">
+            <button type="button" id="btn-popover-methods" onclick="togglePopover('methods', event)" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
+              <span id="label-popover-methods" class="truncate">Methods: All</span>
+              <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
+            </button>
+            <div id="panel-popover-methods" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
+              <input id="search-popover-methods" type="text" oninput="renderChecklistItems('methods', true)" placeholder="Filter methods / preps / strains..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
+              <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="checklistAction('methods', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
+                  <button type="button" onclick="checklistAction('methods', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
+                  <button type="button" onclick="checklistAction('methods', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+                </div>
+                <span id="count-popover-methods" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+              </div>
+              <div id="list-popover-methods" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+            </div>
+          </div>
+
+          <!-- Compare By Selector (Side-by-Side Visual Comparison) -->
+          <div>
+            <label for="compare-by-select" class="block text-[11px] text-[var(--muted-foreground)] font-medium mb-1">Compare By:</label>
+            <select id="compare-by-select" onchange="onCompareByManualChange(this.value)" class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[#00B5E2]/60 rounded px-1.5 py-1 text-xs font-medium focus:outline-none">
+              <option value="auto">Auto (Resource / Method)</option>
+              <option value="resource">Resource (Side-by-Side)</option>
+              <option value="sample">Prepared Sample (Side-by-Side)</option>
+              <option value="field_sample">Field Sample (Side-by-Side)</option>
+              <option value="experiment">Experiment / Run (Side-by-Side)</option>
+              <option value="method">Method / Prep / Strain (Side-by-Side)</option>
+              <option value="collection_date">Collection Date Cohort (Side-by-Side)</option>
+              <option value="prep_date">Prep / Run Date Cohort (Side-by-Side)</option>
+            </select>
+          </div>
+
+          <!-- Date Range Filter (Collection Date or Run / Prep Date) -->
+          <div class="space-y-1.5 pt-2 border-t border-[var(--border)]">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] text-[var(--muted-foreground)] font-medium">Date Range:</span>
+              <button id="filter-date-clear" type="button" onclick="clearDateFilter()" class="hidden px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 text-[10px] font-semibold" title="Clear date filter">&times; Clear</button>
+            </div>
+            <select id="filter-date-type" onchange="onDateFilterChange()" class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs font-medium focus:outline-none">
+              <option value="any">Col or Run/Prep</option>
+              <option value="collected">Collection Date</option>
+              <option value="run">Run / Prep Date</option>
+            </select>
+            <div class="grid grid-cols-2 gap-1">
+              <input id="filter-from-date" type="date" min="2020-01-01" placeholder="2024-01-01" onfocus="onFromDateFocus(this)" oninput="onDateFilterChange()" onchange="onDateFilterChange()" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-mono" title="From Date (defaults to 2024-01-01 when opened if empty)" />
+              <input id="filter-to-date" type="date" min="2020-01-01" oninput="onDateFilterChange()" onchange="onDateFilterChange()" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-mono" title="To Date (YYYY-MM-DD)" />
+            </div>
+            <span id="date-filter-active-badge" class="hidden inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"></span>
+          </div>
         </div>
-      </div>
+      </aside>
 
-      <!-- Compare By Selector (Side-by-Side Visual Comparison) -->
-      <div class="flex items-center gap-1 pl-1 border-l border-[var(--border)]">
-        <span class="text-[var(--muted-foreground)] font-medium">Compare By:</span>
-        <select id="compare-by-select" onchange="onCompareByManualChange(this.value)" class="bg-[var(--background)] text-[var(--foreground)] border border-[#00B5E2]/60 rounded px-1.5 py-1 text-xs font-medium focus:outline-none">
-          <option value="auto">Auto (Resource / Method)</option>
-          <option value="resource">Resource (Side-by-Side)</option>
-          <option value="sample">Prepared Sample (Side-by-Side)</option>
-          <option value="field_sample">Field Sample (Side-by-Side)</option>
-          <option value="experiment">Experiment / Run (Side-by-Side)</option>
-          <option value="method">Method / Prep / Strain (Side-by-Side)</option>
-          <option value="collection_date">Collection Date Cohort (Side-by-Side)</option>
-          <option value="prep_date">Prep / Run Date Cohort (Side-by-Side)</option>
-        </select>
-      </div>
-
-      <!-- Date Range Filter (Collection Date or Run / Prep Date) -->
-      <div class="flex flex-wrap items-center gap-1 pl-1 border-l border-[var(--border)]">
-        <span class="text-[var(--muted-foreground)] font-medium">Date:</span>
-        <select id="filter-date-type" onchange="onDateFilterChange()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs font-medium focus:outline-none">
-          <option value="any">Col or Run/Prep</option>
-          <option value="collected">Collection Date</option>
-          <option value="run">Run / Prep Date</option>
-        </select>
-        <input id="filter-from-date" type="date" min="2020-01-01" placeholder="2024-01-01" onfocus="onFromDateFocus(this)" oninput="onDateFilterChange()" onchange="onDateFilterChange()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-mono" title="From Date (defaults to 2024-01-01 when opened if empty)" />
-        <span class="text-[var(--muted-foreground)]">to</span>
-        <input id="filter-to-date" type="date" min="2020-01-01" oninput="onDateFilterChange()" onchange="onDateFilterChange()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-mono" title="To Date (YYYY-MM-DD)" />
-        <button id="filter-date-clear" type="button" onclick="clearDateFilter()" class="hidden px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 text-[10px] font-semibold" title="Clear date filter">&times; Clear</button>
-        <span id="date-filter-active-badge" class="hidden text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"></span>
-      </div>
-
-      <button type="button" onclick="resetFilters()" class="ml-auto text-xs px-2 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-        Reset All
-      </button>
-    </div>
-
-    <!-- Row 3B: Always-Accessible 4-Column Multi-Select Checklist Drawer (Open by Default for Effortless Multi-Selection) -->
-    <div id="inline-checklist-drawer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 py-2.5 border-b border-[var(--border)] text-xs">
+      <!-- Right Main Workspace -->
+      <div class="flex-1 min-w-0 space-y-2.5 w-full" style="flex: 1; min-width: 0;">
+        <!-- Always-Accessible 4-Column Multi-Select Checklist Drawer (Open by Default for Effortless Multi-Selection) -->
+        <div id="inline-checklist-drawer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pb-2.5 border-b border-[var(--border)] text-xs">
       <!-- Column 1: Multi-Select Resources -->
       <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2 flex flex-col">
         <div class="flex items-center justify-between gap-1 mb-1">
@@ -908,6 +956,8 @@ def build_full_dashboard_html(payload: dict) -> str:
 
       <!-- Full-Width Collapsible Statistical Precision & Candidate Outlier Drawer (Collapsed by Default) -->
       <div id="stat-screening-drawer" class="col-span-12 mt-1"></div>
+    </div>
+      </div>
     </div>
 
   </div>
@@ -1243,12 +1293,15 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       onResourceOrDomainChange(false);
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
+    let urlParams = new URLSearchParams(window.location.search);
     const rawDomainParam = urlParams.get('type') || urlParams.get('domain') || urlParams.get('tab') || 'proximate';
     let currentDomain = normalizeDomainKey(rawDomainParam);
     if (!DOMAINS.some(d => d.id === currentDomain)) currentDomain = 'proximate';
 
-    let currentTab = 'scatter';
+    let currentTab = urlParams.get('view') === 'strip' ? 'strip' : 'scatter';
+    let explorerFlagType = urlParams.get('flag') || 'all';
+    let explorerSearchQuery = urlParams.get('q') || '';
+    let explorerBlindMode = false;
     let scaleMode = 'log';
     let fermXMode = 'param';
     let xLayoutMode = 'auto'; // 'auto', 'resources', 'by_field_sample', 'by_experiment', 'dates', 'params'
@@ -1264,6 +1317,25 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     let exportRows = [];
     let activeSeriesMap = {};
     let activeCompareDimension = 'method';
+
+    function onExplorerFlagTypeChange(val) {
+      explorerFlagType = val || 'all';
+      applyFilters({ push: false });
+    }
+
+    function onExplorerSearchChange(val) {
+      explorerSearchQuery = String(val || '');
+      applyFilters({ push: false });
+    }
+
+    function toggleExplorerBlindMode(checked) {
+      explorerBlindMode = !!checked;
+      document.body.classList.toggle('blind-mode', explorerBlindMode);
+      const chk = document.getElementById('chk-explorer-blind-mode');
+      if (chk && chk.checked !== explorerBlindMode) chk.checked = explorerBlindMode;
+      renderStatScreeningDrawer();
+      renderCurrentView();
+    }
 
     function setRepPlotMode(mode) {
       repPlotMode = mode === 'mean_sd' ? 'mean_sd' : 'individual';
@@ -1857,7 +1929,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       autoUpdateCompareBy();
       if (key === 'resources') {
-        onResourceOrDomainChange(false);
+        onResourceOrDomainChange(false, { push: true });
       } else {
         renderChecklistItems(key, sourceListId ? [sourceListId] : []);
         applyFilters();
@@ -1901,7 +1973,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       autoUpdateCompareBy();
       if (key === 'resources') {
-        onResourceOrDomainChange(false);
+        onResourceOrDomainChange(false, { push: true });
       } else {
         renderChecklistItems(key);
         applyFilters();
@@ -1912,7 +1984,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       selectedFilters[key].delete(val);
       autoUpdateCompareBy();
       if (key === 'resources') {
-        onResourceOrDomainChange(false);
+        onResourceOrDomainChange(false, { push: true });
       } else {
         renderChecklistItems(key);
         applyFilters();
@@ -1964,7 +2036,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       `;
     }
 
-    function syncUrlAndNavLinks() {
+    function syncUrlAndNavLinks(opts = { push: false }) {
       const firstRes = selectedFilters.resources.size > 0 ? Array.from(selectedFilters.resources)[0] : null;
       const link1 = document.getElementById('suite-link-1');
       const link2 = document.getElementById('suite-link-2');
@@ -2003,6 +2075,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       try {
         const params = new URLSearchParams();
         if (currentDomain && currentDomain !== 'proximate') params.set('type', currentDomain);
+        if (currentTab && currentTab !== 'scatter') params.set('view', currentTab);
         if (selectedFilters.resources.size === 1) {
           params.set('resource', Array.from(selectedFilters.resources)[0]);
         } else if (selectedFilters.resources.size > 1) {
@@ -2015,6 +2088,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (xLayoutMode && xLayoutMode !== 'auto') params.set('x_layout', xLayoutMode);
         if (yRangeMode && yRangeMode !== 'auto') params.set('y_range', yRangeMode);
         if (repPlotMode && repPlotMode !== 'individual') params.set('rep_mode', repPlotMode);
+        if (explorerFlagType && explorerFlagType !== 'all') params.set('flag', explorerFlagType);
+        if (explorerSearchQuery && explorerSearchQuery.trim()) params.set('q', explorerSearchQuery.trim());
         const statusVal = document.getElementById('filter-status').value;
         if (statusVal && statusVal !== 'qc_pass') params.set('status', statusVal);
         const dtVal = (document.getElementById('filter-date-type') || {}).value || 'any';
@@ -2025,7 +2100,19 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (tdVal) params.set('to_date', tdVal);
         const qs = params.toString();
         const newUrl = window.location.pathname + (qs ? `?${qs}` : '');
-        window.history.replaceState(null, '', newUrl);
+        const stateSnapshot = {
+          type: currentDomain,
+          view: currentTab,
+          resources: Array.from(selectedFilters.resources),
+          flag: explorerFlagType,
+          q: explorerSearchQuery,
+          status: statusVal
+        };
+        if (opts && opts.push) {
+          window.history.pushState(stateSnapshot, '', newUrl);
+        } else {
+          window.history.replaceState(stateSnapshot, '', newUrl);
+        }
       } catch (e) {
         // Ignore history errors in sandboxed/file:// environments
       }
@@ -2064,8 +2151,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const fdEl = document.getElementById('filter-from-date');
       const tdEl = document.getElementById('filter-to-date');
       if (dtEl && ['any', 'collected', 'run'].includes(dtInit)) dtEl.value = dtInit;
-      if (fdEl && fdInit) fdEl.value = fdInit;
-      if (tdEl && tdInit) tdEl.value = tdInit;
+      if (fdEl) fdEl.value = fdInit || '';
+      if (tdEl) tdEl.value = tdInit || '';
       updateDateFilterUiBadge();
 
       const compParam = urlParams.get('compare');
@@ -2114,16 +2201,41 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (rmSel) rmSel.value = repPlotMode;
       }
 
+      const flagParam = urlParams.get('flag');
+      if (flagParam && ['all', 'active', 'dixon', 'rsd', 'sd3', 'identical'].includes(flagParam)) {
+        explorerFlagType = flagParam;
+      } else {
+        explorerFlagType = 'all';
+      }
+      const fltFlagEl = document.getElementById('flt-explorer-flag-type');
+      if (fltFlagEl) fltFlagEl.value = explorerFlagType;
+
+      explorerSearchQuery = urlParams.get('q') || '';
+      const searchEl = document.getElementById('filter-search');
+      if (searchEl) searchEl.value = explorerSearchQuery;
+
+      const viewParam = urlParams.get('view');
+      currentTab = viewParam === 'strip' ? 'strip' : 'scatter';
+      ['scatter', 'strip'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (!btn) return;
+        btn.className = t === currentTab
+          ? 'text-xs px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)] transition-colors'
+          : 'text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors';
+      });
+
       const initialStatus = urlParams.get('status') || urlParams.get('qc');
-      if (initialStatus) {
+      const statusSel = document.getElementById('filter-status');
+      if (initialStatus && statusSel) {
         const sLower = initialStatus.trim().toLowerCase();
-        const statusSel = document.getElementById('filter-status');
         if (sLower === 'all') statusSel.value = 'ALL';
         else if (sLower === 'pass' || sLower === 'qc_pass') statusSel.value = 'qc_pass';
         else if (sLower === 'fail' || sLower === 'qc_fail') statusSel.value = 'qc_fail';
         else if (sLower === 'provisional' || sLower === 'qc_provisional') statusSel.value = 'qc_provisional';
         else if (sLower === 'portal' || sLower === 'portal compliant') statusSel.value = 'Portal Compliant';
         else if (sLower === 'raw') statusSel.value = 'Raw';
+      } else if (statusSel) {
+        statusSel.value = 'qc_pass';
       }
     }
 
@@ -2143,7 +2255,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         selectedFilters.resources.add(list[nextIdx]);
       }
       autoUpdateCompareBy();
-      onResourceOrDomainChange(false);
+      onResourceOrDomainChange(false, { push: true });
     }
 
     function setDomain(domainId) {
@@ -2157,7 +2269,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       updateScaleButtons();
       autoUpdateCompareBy();
-      onResourceOrDomainChange(false);
+      onResourceOrDomainChange(false, { push: true });
     }
 
     function setScaleMode(mode) {
@@ -2291,7 +2403,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       `;
     }
 
-    function onResourceOrDomainChange(allowDomainFallback = false) {
+    function onResourceOrDomainChange(allowDomainFallback = false, opts = { push: false }) {
       const hasResFilter = selectedFilters.resources.size > 0;
       const dateTypeVal = (document.getElementById('filter-date-type') || {}).value || 'any';
       const fromDateVal = (document.getElementById('filter-from-date') || {}).value || '';
@@ -2399,10 +2511,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       ['resources', 'samples', 'params', 'methods'].forEach(k => renderChecklistItems(k));
       autoUpdateCompareBy();
-      applyFilters();
+      applyFilters(opts);
     }
 
-    function setTab(tab) {
+    function setTab(tab, opts = { push: true }) {
       currentTab = tab === 'export' ? 'scatter' : tab;
       ['scatter', 'strip'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
@@ -2416,6 +2528,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       const viewCharts = document.getElementById('view-charts');
       if (viewCharts) viewCharts.classList.remove('hidden');
+      syncUrlAndNavLinks(opts);
       updateChartHeaderControls();
       renderCurrentView();
     }
@@ -2465,7 +2578,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
     }
 
-    function applyFilters() {
+    function applyFilters(opts = { push: false }) {
       const status = document.getElementById('filter-status').value;
       const dateTypeVal = (document.getElementById('filter-date-type') || {}).value || 'any';
       const fromDateVal = (document.getElementById('filter-from-date') || {}).value || '';
@@ -2475,11 +2588,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const hasSam = selectedFilters.samples.size > 0;
       const hasParam = selectedFilters.params.size > 0;
       const hasMethod = selectedFilters.methods.size > 0;
+      const qLower = (explorerSearchQuery || '').trim().toLowerCase();
 
       updateDateFilterUiBadge();
       ['resources', 'samples', 'params', 'methods'].forEach(k => updatePopoverButtonLabel(k));
       renderActiveChipsBar();
-      syncUrlAndNavLinks();
+      syncUrlAndNavLinks(opts);
 
       // Update combined Status / QC dropdown counts for active domain + resource + date selection
       const baseDomainRows = ALL_ROWS.filter(r =>
@@ -2500,7 +2614,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       statusSel.options[4].textContent = `qc_pass: fail (${qcFailCnt})`;
       statusSel.options[5].textContent = `qc_pass: provisional/unknown (${qcProvCnt})`;
 
-      filteredRows = ALL_ROWS.filter(r => {
+      let candidateRows = ALL_ROWS.filter(r => {
         if (r.domain !== currentDomain) return false;
         if (!matchesStatusFilter(r, status)) return false;
         if (hasRes && !selectedFilters.resources.has(r.resource_name)) return false;
@@ -2508,8 +2622,25 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (hasParam && !selectedFilters.params.has(r.parameter)) return false;
         if (hasMethod && !selectedFilters.methods.has(getSeriesValue(r, currentDomain))) return false;
         if (hasDateFilter && !recordMatchesDateFilter(r, dateTypeVal, fromDateVal, toDateVal)) return false;
+        if (qLower) {
+          const hay = `${r.record_id || ''} ${r.resource_name || ''} ${r.prepared_sample_name || ''} ${r.field_sample_name || ''} ${r.parameter || ''} ${r.experiment || ''} ${r.note || ''}`.toLowerCase();
+          if (!hay.includes(qLower)) return false;
+        }
         return true;
       });
+
+      if (explorerFlagType && explorerFlagType !== 'all') {
+        const preScreen = computeSliceStatScreening(candidateRows);
+        const matchingIds = new Set();
+        preScreen.groups.forEach(g => {
+          if (isExplorerGroupMatchingFlagFilter(g, explorerFlagType)) {
+            g.rows.forEach(row => matchingIds.add(`${row.record_id}::${row.parameter}`));
+          }
+        });
+        candidateRows = candidateRows.filter(r => matchingIds.has(`${r.record_id}::${r.parameter}`));
+      }
+
+      filteredRows = candidateRows;
 
       const uniqueSamples = new Set(filteredRows.map(r => r.prepared_sample_name).filter(x => x !== 'Unassigned')).size;
       const domainTotal = ALL_ROWS.filter(r => r.domain === currentDomain).length;
@@ -2609,6 +2740,19 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function resetFilters() {
       document.getElementById('filter-status').value = 'qc_pass';
+      explorerFlagType = 'all';
+      explorerSearchQuery = '';
+      explorerBlindMode = false;
+      suppressTraceFlags = true;
+      document.body.classList.remove('blind-mode');
+      const fltFlagEl = document.getElementById('flt-explorer-flag-type');
+      if (fltFlagEl) fltFlagEl.value = 'all';
+      const searchEl = document.getElementById('filter-search');
+      if (searchEl) searchEl.value = '';
+      const chkBlindEl = document.getElementById('chk-explorer-blind-mode');
+      if (chkBlindEl) chkBlindEl.checked = false;
+      const chkTraceEl = document.getElementById('chk-explorer-suppress-trace');
+      if (chkTraceEl) chkTraceEl.checked = true;
       const dtEl = document.getElementById('filter-date-type');
       const fdEl = document.getElementById('filter-from-date');
       const tdEl = document.getElementById('filter-to-date');
@@ -4334,8 +4478,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       return s.length % 2 !== 0 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
     }
 
-    function computeSliceStatScreening() {
-      const numRows = filteredRows.filter(r => typeof r.value === 'number' && !isNaN(r.value) && r.parameter && r.parameter !== '(metadata only)');
+    function computeSliceStatScreening(rowsInput) {
+      const sourceRows = Array.isArray(rowsInput) ? rowsInput : filteredRows;
+      const numRows = sourceRows.filter(r => typeof r.value === 'number' && !isNaN(r.value) && r.parameter && r.parameter !== '(metadata only)');
       const groupMap = {};
       numRows.forEach(r => {
         const sMethod = getSeriesValue(r, currentDomain);
@@ -4362,6 +4507,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const mean = sampleMean(vals);
         const sd = sampleSd(vals);
         const rsd = (n >= 2 && Math.abs(mean) > 1e-12) ? Math.abs(sd / mean) * 100.0 : null;
+        const identicalReps = n >= 2 && sd <= 1e-12;
         const minV = Math.min(...vals);
         const maxV = Math.max(...vals);
         const cutoff = getTraceCutoff(currentDomain, g.unit);
@@ -4420,6 +4566,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           mean,
           sd,
           rsd_pct: rsd,
+          identical_replicates: identicalReps,
           spread: maxV - minV,
           min_abundance_cutoff: cutoff,
           below_abundance_cutoff: belowFloor,
@@ -4477,7 +4624,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }).sort((a, b) => (b.n_flagged - a.n_flagged) || ((b.within_rsd_max || 0) - (a.within_rsd_max || 0)));
 
       groups.sort((a, b) => (Number(b.is_flagged) - Number(a.is_flagged)) || ((b.rsd_pct || 0) - (a.rsd_pct || 0)));
-      lastScreenedGroups = groups;
+      if (!Array.isArray(rowsInput)) {
+        lastScreenedGroups = groups;
+      }
 
       const allWithin = paramBreakdown.filter(p => p.within_rsd_median !== null).map(p => p.within_rsd_median);
       const allBetween = paramBreakdown.filter(p => p.between_group_rsd !== null).map(p => p.between_group_rsd);
@@ -4493,6 +4642,20 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       };
     }
 
+    function isExplorerGroupMatchingFlagFilter(g, flagMode) {
+      if (!flagMode || flagMode === 'all') return true;
+      const isTraceSuppressed = suppressTraceFlags && g.below_abundance_cutoff && g.raw_triggered_tests.length > 0;
+      const activeFlag = g.is_flagged && !isTraceSuppressed;
+      if (flagMode === 'active' || flagMode === 'flagged') return activeFlag;
+      if (flagMode === 'dixon') return !isTraceSuppressed && g.dixon_pass === false;
+      if (flagMode === 'rsd20' || flagMode === 'rsd') return !isTraceSuppressed && g.rsd_pct !== null && g.rsd_pct > 20.0;
+      if (flagMode === 'sd3x' || flagMode === 'sd3') return !isTraceSuppressed && Array.isArray(g.sd3x_candidate_ids) && g.sd3x_candidate_ids.length > 0;
+      if (flagMode === 'identical') return !!g.identical_replicates || (g.n >= 2 && g.sd !== null && g.sd <= 1e-12);
+      if (flagMode === 'suppressed') return g.below_abundance_cutoff && g.raw_triggered_tests.length > 0;
+      if (flagMode === 'clean') return g.n >= 2 && !activeFlag;
+      return true;
+    }
+
     function toggleStatDrawer() {
       statDrawerOpen = !statDrawerOpen;
       renderStatScreeningDrawer();
@@ -4500,7 +4663,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function toggleSuppressTrace(checked) {
       suppressTraceFlags = !!checked;
-      renderStatScreeningDrawer();
+      const sidebarChk = document.getElementById('chk-explorer-suppress-trace');
+      if (sidebarChk) sidebarChk.checked = suppressTraceFlags;
+      applyFilters({ push: false });
     }
 
     function setStatFilterMode(mode) {
@@ -4533,6 +4698,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const el = document.getElementById('stat-screening-drawer');
       if (!el) return;
       const stats = computeSliceStatScreening();
+      const sidebarSupBadge = document.getElementById('explorer-suppressed-count-badge');
+      if (sidebarSupBadge) {
+        sidebarSupBadge.textContent = `${stats.suppressedCount} suppressed`;
+      }
+      const sidebarSupChk = document.getElementById('chk-explorer-suppress-trace');
+      if (sidebarSupChk) {
+        sidebarSupChk.checked = suppressTraceFlags;
+      }
       const withinStr = stats.medianWithin !== null ? `${stats.medianWithin.toFixed(1)}%` : 'Singleton (n=1)';
       const betweenStr = stats.medianBetween !== null ? `${stats.medianBetween.toFixed(1)}%` : 'Single group';
 
@@ -4580,7 +4753,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         }).join('');
 
         const shownGroups = stats.groups.filter(g => statFilterMode === 'all' ? g.n >= 2 : g.is_flagged).slice(0, 40);
-        const groupRowsHtml = shownGroups.map(g => {
+        const groupRowsHtml = shownGroups.map((g, gIdx) => {
           const repBadges = g.rows.map(r => {
             const isCand = r.record_id === g.dixon_candidate_id || g.sd3x_candidate_ids.includes(r.record_id);
             const cls = isCand
@@ -4608,9 +4781,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           }
 
           const targetId = g.dixon_candidate_id || (g.rows[0] && g.rows[0].record_id) || '';
+          const sampleLabel = explorerBlindMode ? `Masked Sample #${gIdx + 1}` : g.prepared_sample;
+          const subLabel = explorerBlindMode ? 'Blind Review Mode' : `${g.resource_name} · ${g.method_label}`;
           return `
             <tr class="border-b border-[var(--border)]">
-              <td class="py-1.5 px-2 font-mono font-semibold text-[#00B5E2]">${g.prepared_sample}<div class="text-[10px] font-sans font-normal text-[var(--muted-foreground)]">${g.resource_name} · ${g.method_label}</div></td>
+              <td class="py-1.5 px-2 font-mono font-semibold text-[#00B5E2]">${sampleLabel}<div class="text-[10px] font-sans font-normal text-[var(--muted-foreground)]">${subLabel}</div></td>
               <td class="py-1.5 px-2 font-mono font-semibold">${formatParamName(g.parameter, currentDomain)} <span class="text-[var(--muted-foreground)] font-normal">(${g.unit})</span></td>
               <td class="py-1.5 px-2"><div class="flex flex-wrap gap-1">${repBadges}</div></td>
               <td class="py-1.5 px-2 text-right font-mono">${g.mean.toFixed(2)} ± ${g.sd.toFixed(2)}</td>
@@ -4832,6 +5007,18 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
 
     initSliceAndBugModals("Page 3 — Multi-Resource Side-by-Side Explorer");
     window.addEventListener('resize', () => renderCurrentView());
+    window.addEventListener('popstate', () => {
+      urlParams = new URLSearchParams(window.location.search);
+      const rawDom = urlParams.get('type') || urlParams.get('domain') || urlParams.get('tab') || 'proximate';
+      currentDomain = normalizeDomainKey(rawDom);
+      if (!DOMAINS.some(d => d.id === currentDomain)) currentDomain = 'proximate';
+      selectedFilters.resources.clear();
+      selectedFilters.samples.clear();
+      selectedFilters.params.clear();
+      selectedFilters.methods.clear();
+      initFromUrlParams();
+      onResourceOrDomainChange(false, { push: false });
+    });
     initFromUrlParams();
     onResourceOrDomainChange(true);
     if (typeof window.refreshLiveQcOverlay === 'function') {
