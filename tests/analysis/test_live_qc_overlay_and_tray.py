@@ -96,15 +96,19 @@ def test_replicate_group_default_selection_and_one_click_toggle(
 def test_unified_export_tray_and_export_to_audit_workbench(
     snapshot_and_pages: dict[str, str],
 ) -> None:
+    page1 = snapshot_and_pages["page1"]
     page2 = snapshot_and_pages["page2"]
     page3 = snapshot_and_pages["page3"]
 
+    assert "📤 Export Slice (.HTML)" in page1, "page1 missing Export Slice (.HTML) button"
+    assert "window.openSliceExportModal" in page1, "page1 missing window.openSliceExportModal"
+
     for name, html in [("page2", page2), ("page3", page3)]:
-        assert "⬇ Export Tray (.CSV)" in html, f"{name} missing CSV tray button"
-        assert "📤 Export Slice (.HTML)" in html, f"{name} missing HTML slice tray button"
+        assert "📤 Export Slice (.HTML)" in html, f"{name} missing HTML slice export button"
         assert "⚖️ Export to Audit Workbench" in html, (
             f"{name} missing Export to Audit Workbench button"
         )
+        assert 'id="btn-open-slice-modal"' in html, f"{name} missing #btn-open-slice-modal"
         assert 'id="btn-tray-to-workbench"' in html, f"{name} missing #btn-tray-to-workbench"
         assert 'id="btn-finding-export-workbench"' in html, (
             f"{name} missing #btn-finding-export-workbench in modal"
@@ -113,6 +117,24 @@ def test_unified_export_tray_and_export_to_audit_workbench(
             f"{name} missing POST /v1/qc/tray-to-workbench endpoint"
         )
         assert "exportTrayToWorkbench" in html, f"{name} missing exportTrayToWorkbench helper"
+        assert "window.openSliceExportModal" in html, f"{name} missing window.openSliceExportModal"
+        # Legacy multi-select Export Tray UI must be removed
+        assert 'id="qc-selection-export-tray"' not in html, (
+            f"{name} still contains legacy #qc-selection-export-tray section"
+        )
+        assert "renderSelectionExportTray" not in html, (
+            f"{name} still contains legacy renderSelectionExportTray()"
+        )
+        assert "⬇ Export Tray (.CSV)" not in html, (
+            f"{name} still contains legacy CSV tray button"
+        )
+        assert "📌 Add to Tray" not in html, f"{name} still contains legacy Add to Tray button"
+        assert 'id="tab-export"' not in html, f"{name} still contains legacy #tab-export"
+        assert 'id="view-export"' not in html, f"{name} still contains legacy #view-export"
+        assert "+ Export Tray" not in html, f"{name} still contains legacy + Export Tray button"
+        assert "+ Add Flagged to Export Tray" not in html, (
+            f"{name} still contains legacy + Add Flagged to Export Tray button"
+        )
 
 
 def test_tray_to_workbench_contract_and_unified_overlay_execution(
@@ -1168,3 +1190,139 @@ global.fetch = async (url, opts) => {
     ]
     assert len(assign_patch_calls) >= 1
     assert assign_patch_calls[-1]["body"]["assigned_to_email"] == "lead.analyst@lbl.gov"
+
+
+def test_card6_open_slice_export_modal_and_sliced_bundle_insights(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Verify Card 6: window.openSliceExportModal opens #modal-export-slice & preselects resource, and buildClientSideSlicedBundle filters insights to selectedResources."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page2_html = snapshot_and_pages["page2"]
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2_html, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    harness = tmp_path / "run_card6_slice_modal.js"
+    harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  const classes = new Set(id === "modal-export-slice" ? ["hidden"] : []);
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    checked: true,
+    options: [],
+    classList: {
+      add(c){ classes.add(c); },
+      remove(c){ classes.delete(c); },
+      toggle(c){ if (classes.has(c)) classes.delete(c); else classes.add(c); },
+      contains(c){ return classes.has(c); }
+    },
+    addEventListener(ev, fn){ this["_on_" + ev] = fn; },
+    removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+global.localStorage = { getItem(){ return null; }, setItem(){}, removeItem(){} };
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 2",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){}, outerHTML: "<html></html>" },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
+"""
+        + p2_script
+        + """
+// 1. Verify window.openSliceExportModal and BioCirvQcClient.openSliceExportModal exist and open #modal-export-slice
+const modalEl = document.getElementById("modal-export-slice");
+const beforeHidden = modalEl.classList.contains("hidden");
+window.openSliceExportModal({ resource: "almond hulls" });
+const afterHidden = modalEl.classList.contains("hidden");
+const selectedResVal = document.getElementById("slice-modal-resource").value;
+const checklistHtml = document.getElementById("slice-modal-resources-list").innerHTML;
+const previewHtml = document.getElementById("slice-preview-count").textContent || document.getElementById("slice-preview-count").innerHTML;
+
+// 2. Test buildClientSideSlicedBundle with both top-level and nested insights.resources structures
+const baseTopLevel = {
+  resources: ["almond hulls", "rice straw"],
+  by_resource: {
+    "almond hulls": { sample_count: 2 },
+    "rice straw": { sample_count: 3 }
+  },
+  insights: {
+    schema_version: "1.0.0",
+    "almond hulls": { headline: "Almond insight" },
+    "rice straw": { headline: "Rice insight" },
+    resources: {
+      "almond hulls": { summary: "Nested almond" },
+      "rice straw": { summary: "Nested rice" }
+    }
+  },
+  qc_Index: {
+    resources: ["almond hulls", "rice straw"],
+    by_resource: {
+      "almond hulls": { raw_records: [{ record_id: "r1", prepared_sample: "S1", experiment: "E1", analysis_type: "Proximate Analysis" }] },
+      "rice straw": { raw_records: [{ record_id: "r2", prepared_sample: "S2", experiment: "E2", analysis_type: "Proximate Analysis" }] }
+    }
+  }
+};
+
+const slicedPositional = buildClientSideSlicedBundle(baseTopLevel, ["almond hulls"], "all", "all", "", "");
+const slicedOptions = buildClientSideSlicedBundle(baseTopLevel, { selectedResources: ["almond hulls"] });
+
+console.log(JSON.stringify({
+  hasOpenSliceFn: typeof window.openSliceExportModal === "function",
+  hasClientOpenSliceFn: typeof (window.BioCirvQcClient && window.BioCirvQcClient.openSliceExportModal) === "function",
+  beforeHidden,
+  afterHidden,
+  selectedResVal,
+  checklistHasAlmondChecked: checklistHtml.toLowerCase().includes('data-slice-res="almond hulls"') && checklistHtml.includes("checked"),
+  previewHasAlmond: previewHtml.toLowerCase().includes("almond hulls"),
+  slicedPositionalInsightsKeys: Object.keys(slicedPositional.insights),
+  slicedPositionalNestedKeys: Object.keys(slicedPositional.insights.resources || {}),
+  slicedOptionsInsightsKeys: Object.keys(slicedOptions.insights),
+  slicedOptionsNestedKeys: Object.keys(slicedOptions.insights.resources || {})
+}));
+process.exit(0);
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Card 6 Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert out["hasOpenSliceFn"] is True
+    assert out["hasClientOpenSliceFn"] is True
+    assert out["beforeHidden"] is True
+    assert out["afterHidden"] is False
+    assert out["selectedResVal"].lower() == "almond hulls"
+    assert out["checklistHasAlmondChecked"] is True
+    assert out["previewHasAlmond"] is True
+    assert "almond hulls" in out["slicedPositionalInsightsKeys"]
+    assert "rice straw" not in out["slicedPositionalInsightsKeys"]
+    assert out["slicedPositionalNestedKeys"] == ["almond hulls"]
+    assert "almond hulls" in out["slicedOptionsInsightsKeys"]
+    assert "rice straw" not in out["slicedOptionsInsightsKeys"]
+    assert out["slicedOptionsNestedKeys"] == ["almond hulls"]

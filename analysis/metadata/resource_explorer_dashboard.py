@@ -488,15 +488,15 @@ def build_full_dashboard_html(payload: dict) -> str:
           <button type="button" id="tab-strip" onclick="setTab('strip')" class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
             Replicate Strip Plot
           </button>
-          <button type="button" id="tab-export" onclick="setTab('export')" class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
-            Export Tray (<span id="tray-count">0</span>)
-          </button>
         </div>
         <button type="button" id="btn-refresh-qc-state" onclick="window.refreshLiveQcOverlay && window.refreshLiveQcOverlay(true)" class="text-xs px-2.5 py-1 rounded-md border border-emerald-500/50 bg-[var(--background)] text-[var(--foreground)] hover:border-emerald-400 transition-colors font-semibold" title="Fetch latest QC decisions from API without regenerating HTML">
           ↻ Refresh QC State
         </button>
         <button type="button" id="btn-open-slice-modal" class="text-xs px-2.5 py-1 rounded-md border border-[#00B5E2]/50 bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] transition-colors font-semibold">
-          📤 Export Slice (.html)
+          📤 Export Slice (.HTML)
+        </button>
+        <button type="button" id="btn-tray-to-workbench" onclick="exportExplorerTrayToWorkbench()" class="text-xs px-2.5 py-1 rounded-md bg-emerald-500 text-slate-950 font-semibold hover:opacity-90 transition-colors">
+          ⚖️ Export to Audit Workbench
         </button>
         <button type="button" id="btn-open-bug-modal" class="text-xs px-2.5 py-1 rounded-md border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-amber-500 transition-colors font-semibold">
           🐛 Report a Bug
@@ -840,9 +840,6 @@ def build_full_dashboard_html(payload: dict) -> str:
             <button type="button" onclick="submitClickPopoverAuditFinding()" class="flex-1 bg-[#00B5E2] text-slate-950 font-semibold py-1.5 px-2.5 rounded hover:opacity-90">
               Submit Audit Finding
             </button>
-            <button type="button" onclick="addClickPopoverToExport()" class="px-2 py-1.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[#00B5E2] font-medium" title="Add selected point or replicate group to Export Tray">
-              + Tray
-            </button>
             <button type="button" onclick="escalateClickPopoverToModal()" class="px-2 py-1.5 rounded bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)]" title="Open full Submit Audit Finding / Escalation modal">
               Full Modal&hellip;
             </button>
@@ -897,9 +894,6 @@ def build_full_dashboard_html(payload: dict) -> str:
               <button type="button" onclick="submitPinnedAuditFinding()" class="flex-1 bg-[#00B5E2] text-slate-950 font-semibold text-xs py-1 px-2 rounded hover:opacity-90">
                 Submit Audit
               </button>
-              <button type="button" onclick="addPinnedToExport()" class="bg-[var(--secondary)] text-[var(--secondary-foreground)] text-xs py-1 px-2 rounded border border-[var(--border)] hover:border-[#00B5E2]">
-                + Export Tray
-              </button>
               <button type="button" onclick="escalatePinnedToModal()" class="bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-xs py-1 px-2 rounded border border-[var(--border)]" title="Open full Submit Audit Finding modal">
                 Modal&hellip;
               </button>
@@ -914,54 +908,6 @@ def build_full_dashboard_html(payload: dict) -> str:
 
       <!-- Full-Width Collapsible Statistical Precision & Candidate Outlier Drawer (Collapsed by Default) -->
       <div id="stat-screening-drawer" class="col-span-12 mt-1"></div>
-    </div>
-
-    <!-- Export Tray Tab View -->
-    <div id="view-export" class="hidden pt-2.5">
-      <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 h-[340px] flex flex-col justify-between">
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border)]">
-          <span class="text-xs font-semibold text-[var(--foreground)]">Selected Records for Audit / CSV Export</span>
-          <div class="flex flex-wrap items-center gap-2">
-            <button onclick="addFilteredSliceToExport()" class="text-xs px-2.5 py-1 rounded bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] font-medium hover:border-[#00B5E2]">
-              + Add Current Slice (max 250)
-            </button>
-            <button onclick="copyExportTSV()" id="btn-copy-tsv" class="text-xs px-2.5 py-1 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] font-medium">
-              Copy TSV
-            </button>
-            <button onclick="downloadExportCSV()" class="text-xs px-2.5 py-1 rounded bg-[#00B5E2] text-slate-950 font-semibold">
-              ⬇ Export Tray (.CSV)
-            </button>
-            <button onclick="document.getElementById('btn-open-slice-modal') && document.getElementById('btn-open-slice-modal').click()" class="text-xs px-2.5 py-1 rounded border border-[#00B5E2]/50 bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-semibold">
-              📤 Export Slice (.HTML)
-            </button>
-            <button id="btn-tray-to-workbench" onclick="exportExplorerTrayToWorkbench()" class="text-xs px-2.5 py-1 rounded bg-emerald-500 text-slate-950 font-semibold hover:opacity-90">
-              ⚖️ Export to Audit Workbench
-            </button>
-            <button onclick="clearExport()" class="text-xs px-2 py-1 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-              Clear
-            </button>
-          </div>
-        </div>
-        <div class="overflow-y-auto flex-1 my-1.5">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
-                <th class="py-1 px-1.5">Record ID</th>
-                <th class="py-1 px-1.5">Domain</th>
-                <th class="py-1 px-1.5">Sample</th>
-                <th class="py-1 px-1.5">Resource</th>
-                <th class="py-1 px-1.5">Method / Strain</th>
-                <th class="py-1 px-1.5">Param</th>
-                <th class="py-1 px-1.5">Value</th>
-                <th class="py-1 px-1.5">Status</th>
-                <th class="py-1 px-1.5">Note</th>
-                <th class="py-1 px-1"></th>
-              </tr>
-            </thead>
-            <tbody id="export-tbody" class="divide-y divide-[var(--border)]"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
   </div>
@@ -2457,10 +2403,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function setTab(tab) {
-      currentTab = tab;
-      ['scatter', 'strip', 'export'].forEach(t => {
+      currentTab = tab === 'export' ? 'scatter' : tab;
+      ['scatter', 'strip'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
-        if (t === tab) {
+        if (!btn) return;
+        if (t === currentTab) {
           btn.className = 'text-xs px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)] transition-colors';
         } else {
           btn.className = 'text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors';
@@ -2468,18 +2415,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       });
 
       const viewCharts = document.getElementById('view-charts');
-      const viewExport = document.getElementById('view-export');
-
-      if (tab === 'export') {
-        viewCharts.classList.add('hidden');
-        viewExport.classList.remove('hidden');
-        renderExportTable();
-      } else {
-        viewCharts.classList.remove('hidden');
-        viewExport.classList.add('hidden');
-        updateChartHeaderControls();
-        renderCurrentView();
-      }
+      if (viewCharts) viewCharts.classList.remove('hidden');
+      updateChartHeaderControls();
+      renderCurrentView();
     }
 
     function updateChartHeaderControls() {
@@ -4698,7 +4636,6 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <button onclick="setStatFilterMode('flagged')" class="px-2 py-0.5 rounded ${statFilterMode === 'flagged' ? 'bg-[#00B5E2] text-slate-950 font-semibold' : 'text-[var(--muted-foreground)]'}">Flagged (${stats.flaggedCount})</button>
                   <button onclick="setStatFilterMode('all')" class="px-2 py-0.5 rounded ${statFilterMode === 'all' ? 'bg-[#00B5E2] text-slate-950 font-semibold' : 'text-[var(--muted-foreground)]'}">All Multi-Rep (${stats.multiRepCount})</button>
                 </div>
-                ${stats.flaggedCount > 0 ? `<button onclick="addFlaggedGroupsToExport()" class="px-2 py-1 rounded bg-[#00B5E2] text-slate-950 font-semibold hover:opacity-90">+ Add Flagged to Export Tray</button>` : ''}
               </div>
             </div>
 
@@ -4802,7 +4739,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           ...r,
           audit_note: auditNote || r.note || ''
         });
-        document.getElementById('tray-count').textContent = exportRows.length;
+        const cntEl = document.getElementById('tray-count');
+        if (cntEl) cntEl.textContent = exportRows.length;
       }
     }
 
@@ -4821,68 +4759,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function renderExportTable() {
       const tbody = document.getElementById('export-tbody');
-      if (!exportRows.length) {
-        tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-[var(--muted-foreground)]">No records added yet. Click points in the scatter or strip plot to inspect and add them, or click "+ Add Current Slice".</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = exportRows.map((r, i) => {
-        const valStr = r.value !== null && !isNaN(r.value) ? `${r.value.toFixed(2)} ${r.unit}` : 'metadata';
-        return `
-          <tr>
-            <td class="py-1 px-1.5 font-mono text-[#00B5E2]">${r.record_id}</td>
-            <td class="py-1 px-1.5">${r.analysis_type}</td>
-            <td class="py-1 px-1.5 font-mono">${r.prepared_sample_name}</td>
-            <td class="py-1 px-1.5">${r.resource_name}</td>
-            <td class="py-1 px-1.5">${getSeriesValue(r, r.domain)}</td>
-            <td class="py-1 px-1.5 font-mono">${formatParamName(r.parameter, r.domain)}</td>
-            <td class="py-1 px-1.5 font-semibold font-mono">${valStr}</td>
-            <td class="py-1 px-1.5">${r.qc_pass} · ${r.data_status}</td>
-            <td class="py-1 px-1.5">${r.audit_note || '—'}</td>
-            <td class="py-1 px-1 text-right"><button onclick="removeExportRow(${i})" class="text-xs text-rose-500 hover:underline">Remove</button></td>
-          </tr>
-        `;
-      }).join('');
+      if (!tbody) return;
     }
 
     function removeExportRow(idx) {
       exportRows.splice(idx, 1);
-      document.getElementById('tray-count').textContent = exportRows.length;
+      const cntEl = document.getElementById('tray-count');
+      if (cntEl) cntEl.textContent = exportRows.length;
       renderExportTable();
     }
 
     function clearExport() {
       exportRows = [];
-      document.getElementById('tray-count').textContent = '0';
+      const cntEl = document.getElementById('tray-count');
+      if (cntEl) cntEl.textContent = '0';
       renderExportTable();
-    }
-
-    function copyExportTSV() {
-      if (!exportRows.length) return;
-      const cols = ['record_id', 'analysis_type', 'prepared_sample_name', 'field_sample_name', 'collected_date', 'geoid', 'county_name', 'prep_date', 'resource_name', 'pretreatment_method', 'prep_method', 'parameter', 'value', 'unit', 'qc_pass', 'data_status', 'audit_note'];
-      const lines = [cols.join('\\t')];
-      exportRows.forEach(r => {
-        lines.push(cols.map(c => r[c] ?? '').join('\\t'));
-      });
-      navigator.clipboard.writeText(lines.join('\\n'));
-      const btn = document.getElementById('btn-copy-tsv');
-      btn.textContent = 'Copied TSV!';
-      setTimeout(() => { btn.textContent = 'Copy TSV'; }, 1200);
-    }
-
-    function downloadExportCSV() {
-      if (!exportRows.length) return;
-      const cols = ['record_id', 'analysis_type', 'prepared_sample_name', 'field_sample_name', 'collected_date', 'geoid', 'county_name', 'prep_date', 'resource_name', 'pretreatment_method', 'prep_method', 'parameter', 'value', 'unit', 'qc_pass', 'data_status', 'audit_note'];
-      const lines = [cols.join(',')];
-      exportRows.forEach(r => {
-        lines.push(cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(','));
-      });
-      const blob = new Blob([lines.join('\\n')], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `biocirv_${currentDomain}_export.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
     }
 
     function toggleTheme() {
@@ -4901,8 +4792,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 __SHARED_SLICE_AND_BUG_MODALS_JS__
 
     async function exportExplorerTrayToWorkbench() {
-      if (!exportRows || !exportRows.length) return;
-      const items = exportRows.map(r => ({
+      const sourceRows = (exportRows && exportRows.length)
+        ? exportRows
+        : ((pinnedGroupRows && pinnedGroupRows.length)
+            ? pinnedGroupRows
+            : (pinnedRecord ? [pinnedRecord] : filteredRows.slice(0, 25)));
+      if (!sourceRows || !sourceRows.length) return;
+      const items = sourceRows.map(r => ({
         scope: 'replicate_group',
         resource_name: r.resource_name || '',
         analysis_type: r.analysis_type || currentDomain || '',
@@ -4920,8 +4816,8 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
           unit: r.unit || '',
           qc_status: r.qc_pass || 'pass'
         }],
-        review_note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer tray',
-        note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer tray'
+        review_note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer to Audit Workbench',
+        note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer to Audit Workbench'
       }));
       if (window.BioCirvQcClient && typeof window.BioCirvQcClient.exportTrayToWorkbench === 'function') {
         const res = await window.BioCirvQcClient.exportTrayToWorkbench(items, 'Page 3 — Multi-Resource Side-by-Side Explorer');

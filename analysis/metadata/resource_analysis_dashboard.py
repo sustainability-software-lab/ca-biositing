@@ -1151,12 +1151,29 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
     window.initDateFilterInputs = initDateFilterInputs;
 
     function buildClientSideSlicedBundle(baseBundle, targetRes, qcStatuses, maskAnalyst, extraFilters, selectedPages) {
-      const targetResources = normalizeFilterTokenArray(targetRes);
+      if (targetRes && typeof targetRes === "object" && !Array.isArray(targetRes) && !(targetRes instanceof Set)) {
+        const optsObj = targetRes;
+        targetRes = optsObj.resources || optsObj.selectedResources || optsObj.resource || optsObj.targetRes || [];
+        qcStatuses = qcStatuses !== undefined ? qcStatuses : (optsObj.qcStatuses || optsObj.qc_statuses || ["pass"]);
+        maskAnalyst = maskAnalyst !== undefined ? maskAnalyst : (optsObj.maskAnalyst !== undefined ? optsObj.maskAnalyst : optsObj.exclude_analyst_default);
+        extraFilters = extraFilters || optsObj.extraFilters || optsObj.filters || optsObj;
+        selectedPages = selectedPages || optsObj.selectedPages || optsObj.pages;
+      }
+      const ef = extraFilters || {};
+      let targetResources = normalizeFilterTokenArray(targetRes);
+      if (targetResources.length === 0 && (ef.resources || ef.selectedResources || ef.resource)) {
+        targetResources = normalizeFilterTokenArray(ef.resources || ef.selectedResources || ef.resource);
+      }
       const targetResSet = new Set(targetResources);
       const allowedSet = new Set();
-      (qcStatuses || ["pass"]).forEach(s => {
+      const qcStatusList = Array.isArray(qcStatuses)
+        ? qcStatuses
+        : (typeof qcStatuses === "string" && qcStatuses.trim() ? [qcStatuses.trim()] : ["pass"]);
+      qcStatusList.forEach(s => {
         const tok = String(s).trim().toLowerCase();
-        if (tok === "pass" || tok === "qc_pass") allowedSet.add("pass");
+        if (tok === "all") {
+          ["pass", "fail", "unscored", "provisional", "unknown", ""].forEach(v => allowedSet.add(v));
+        } else if (tok === "pass" || tok === "qc_pass") allowedSet.add("pass");
         else if (tok === "fail" || tok === "qc_fail") allowedSet.add("fail");
         else if (tok === "unscored" || tok === "provisional" || tok === "unknown") {
           allowedSet.add("unscored");
@@ -1166,7 +1183,6 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         } else if (tok) allowedSet.add(tok);
       });
 
-      const ef = extraFilters || {};
       const psFilterList = normalizeFilterTokenArray(ef.prepared_samples || ef.preparedSamples);
       const psFilterSet = new Set(psFilterList);
       const fsFilterList = normalizeFilterTokenArray(ef.field_samples || ef.fieldSamples);
@@ -1187,8 +1203,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       const normPages = normalizeFilterTokenArray(selectedPages).filter(p => pageOrder.includes(p));
       const effectivePages = normPages.length ? normPages : ["char", "explorer"];
 
-      const strCols = baseBundle.str_cols.slice();
-      const origDicts = JSON.parse(JSON.stringify(baseBundle.dicts));
+      const strCols = (baseBundle.str_cols || []).slice();
+      const origDicts = JSON.parse(JSON.stringify(baseBundle.dicts || {}));
       if (maskAnalyst && origDicts.analyst) {
         origDicts.analyst = origDicts.analyst.map(a => (a !== "Unassigned" && a !== "") ? "—" : a);
       }
@@ -1384,7 +1400,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
 
       const resources = JSON.parse(JSON.stringify(
         (baseBundle.resources || []).filter(r => {
-          const rName = String(r.name || "").trim().toLowerCase();
+          const rName = String((r && typeof r === "object" ? r.name : r) || "").trim().toLowerCase();
           return survivingResSet.size === 0 || survivingResSet.has(rName);
         })
       ));
@@ -1392,11 +1408,29 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const rName = String(er || "").trim().toLowerCase();
         return survivingResSet.size === 0 || survivingResSet.has(rName);
       });
+      const nonResourceInsightKeys = new Set([
+        "schema_version",
+        "generated_at",
+        "generated_utc",
+        "model_metadata",
+        "catalog_medians"
+      ]);
       const filteredInsights = {};
-      if (baseBundle.insights) {
+      if (baseBundle.insights && typeof baseBundle.insights === "object") {
         Object.keys(baseBundle.insights).forEach(k => {
-          if (survivingResSet.size === 0 || survivingResSet.has(k.trim().toLowerCase())) {
-            filteredInsights[k] = JSON.parse(JSON.stringify(baseBundle.insights[k]));
+          const val = baseBundle.insights[k];
+          if (k === "resources" && val && typeof val === "object" && !Array.isArray(val)) {
+            const subRes = {};
+            Object.keys(val).forEach(rk => {
+              if (survivingResSet.size === 0 || survivingResSet.has(rk.trim().toLowerCase())) {
+                subRes[rk] = JSON.parse(JSON.stringify(val[rk]));
+              }
+            });
+            filteredInsights.resources = subRes;
+          } else if (nonResourceInsightKeys.has(k)) {
+            filteredInsights[k] = JSON.parse(JSON.stringify(val));
+          } else if (survivingResSet.size === 0 || survivingResSet.has(k.trim().toLowerCase())) {
+            filteredInsights[k] = JSON.parse(JSON.stringify(val));
           }
         });
       }
@@ -1510,6 +1544,24 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       return true;
     }
     window.switchCollaboratorSlicePage = switchCollaboratorSlicePage;
+
+    function openSliceExportModal(opts) {
+      if (typeof window._sliceModalOpenImpl === "function") {
+        return window._sliceModalOpenImpl(opts);
+      }
+      if (document.getElementById("modal-export-slice")) {
+        initSliceAndBugModals("Dashboard");
+        if (typeof window._sliceModalOpenImpl === "function") {
+          return window._sliceModalOpenImpl(opts);
+        }
+      }
+      const modalEl = document.getElementById("modal-export-slice");
+      if (modalEl && modalEl.classList) {
+        modalEl.classList.remove("hidden");
+      }
+      return modalEl;
+    }
+    window.openSliceExportModal = openSliceExportModal;
 
     function initSliceAndBugModals(pageLabel) {
       if (!document.getElementById("modal-export-slice")) {
@@ -1783,21 +1835,60 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         previewEl.textContent = `Slice preview: ${sliced.rows.length.toLocaleString()} observation(s) across ${resLabel} · Pages: [${pageNames}] · QC: [${qcSt.join(", ").toUpperCase()}] · 0 non-selected resources included.`;
       }
 
+      function openSliceExportModalImpl(opts) {
+        selectedSliceResources.clear();
+        let explicitResources = [];
+        if (typeof opts === "string" && opts.trim()) {
+          explicitResources = normalizeFilterTokenArray(opts);
+        } else if (Array.isArray(opts)) {
+          explicitResources = normalizeFilterTokenArray(opts);
+        } else if (opts && typeof opts === "object") {
+          explicitResources = normalizeFilterTokenArray(
+            opts.resources || opts.selectedResources || opts.resource || ""
+          );
+        }
+        if (explicitResources.length > 0) {
+          const knownByLower = {};
+          activeResourcesList.forEach(r => {
+            knownByLower[String(r || "").trim().toLowerCase()] = r;
+          });
+          explicitResources.forEach(er => {
+            const norm = String(er || "").trim().toLowerCase();
+            if (!norm) return;
+            const matched = knownByLower[norm] || er;
+            if (!activeResourcesList.includes(matched)) {
+              activeResourcesList.push(matched);
+            }
+            selectedSliceResources.add(matched);
+          });
+        } else {
+          getPageDefaultResources().forEach(r => selectedSliceResources.add(r));
+        }
+        const pageDates = getPageDateInputs();
+        const dtModal = document.getElementById("slice-date-type");
+        const fromModal = document.getElementById("slice-from-date");
+        const toModal = document.getElementById("slice-to-date");
+        if (dtModal && pageDates.date_type) dtModal.value = pageDates.date_type;
+        if (fromModal) fromModal.value = pageDates.from_date || "";
+        if (toModal) toModal.value = pageDates.to_date || "";
+        syncHiddenResourceSelect();
+        renderSliceModalResourceCheckboxes();
+        updateSlicePreviewCount();
+        const modalEl = sliceModal || document.getElementById("modal-export-slice");
+        if (modalEl) {
+          modalEl.classList.remove("hidden");
+        }
+        return modalEl;
+      }
+      window._sliceModalOpenImpl = openSliceExportModalImpl;
+      window.openSliceExportModal = openSliceExportModalImpl;
+      if (window.BioCirvQcClient) {
+        window.BioCirvQcClient.openSliceExportModal = openSliceExportModalImpl;
+      }
+
       if (openSliceBtn && sliceModal) {
         openSliceBtn.addEventListener("click", () => {
-          selectedSliceResources.clear();
-          getPageDefaultResources().forEach(r => selectedSliceResources.add(r));
-          const pageDates = getPageDateInputs();
-          const dtModal = document.getElementById("slice-date-type");
-          const fromModal = document.getElementById("slice-from-date");
-          const toModal = document.getElementById("slice-to-date");
-          if (dtModal && pageDates.date_type) dtModal.value = pageDates.date_type;
-          if (fromModal) fromModal.value = pageDates.from_date || "";
-          if (toModal) toModal.value = pageDates.to_date || "";
-          syncHiddenResourceSelect();
-          renderSliceModalResourceCheckboxes();
-          updateSlicePreviewCount();
-          sliceModal.classList.remove("hidden");
+          openSliceExportModalImpl();
         });
       }
 
@@ -3286,6 +3377,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           decision: fallbackDecisions[0] || null,
           decisions: fallbackDecisions
         };
+      },
+
+      openSliceExportModal(opts) {
+        return window.openSliceExportModal ? window.openSliceExportModal(opts) : null;
       }
     };
     window.BioCirvQcClient = BioCirvQcClient;
@@ -4328,7 +4423,7 @@ def build_analysis_dashboard_html(
             ⬇ Export CSV
           </button>
           <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition">
-            📤 Export Slice (.html)
+            📤 Export Slice (.HTML)
           </button>
           <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-400 transition">
             🐛 Report a Bug
@@ -6055,7 +6150,10 @@ def build_qc_outlier_dashboard_html(
             ☀️ Light Mode
           </button>
           <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)]">
-            📤 Export Slice (.html)
+            📤 Export Slice (.HTML)
+          </button>
+          <button id="btn-tray-to-workbench" type="button" onclick="window.sendSelectionTrayToWorkbench('pending')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+            ⚖️ Export to Audit Workbench
           </button>
           <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-500">
             🐛 Report a Bug
@@ -6129,9 +6227,6 @@ def build_qc_outlier_dashboard_html(
 
     <!-- 5-Card Statistical Precision & QC KPI Strip -->
     <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="qc-kpi-strip"></section>
-
-    <!-- Selection & Export Tray (Replicate Group Default + 1-Click Toggle to Single Point Only) -->
-    <section id="qc-selection-export-tray" class="bg-[var(--card)] border border-amber-500/40 rounded-xl p-3.5 shadow-sm"></section>
 
     <!-- Analyst QC Decision-Making & Export Workbench Banner -->
     <section id="qc-decision-banner" class="bg-[var(--card)] border border-[var(--primary)]/50 rounded-xl p-3.5 shadow-sm"></section>
@@ -6871,7 +6966,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                       triage_scope: "group",
                       note: `Clicked replicate ${rep.id} (val=${fmtNum(rep.val, 2)} ${g.unit || ''}, n=${g.n}, group mean=${fmtNum(g.mean, 2)} ± ${fmtNum(g.sd, 2)})`
                     }));
-                    return `<span class="inline-flex items-center gap-0.5"><button type="button" onclick="window.auditPage2PointOrGroup('${chipAuditPayload}')" title="Click to select Entire Replicate Group (n=${g.n}, default) or Single Point Only (${rep.id}) · Rep ${rep.rep}, QC: ${rep.qc}" class="px-1.5 py-0.5 rounded font-mono text-xs transition ${isCand ? 'badge-warn ring-1 ring-amber-500 font-bold' : 'bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]'}">⚑ ${isCand ? '★ ' : ''}${fmtNum(rep.val, 2)}${qcTag}</button><button type="button" onclick="window.addSelectionToTray('${chipAuditPayload}')" title="Add Replicate Group (default) or Single Point (${rep.id}) to Selection &amp; Export Tray" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">📌</button><button type="button" onclick="jumpToRecord('${rep.id}')" title="Jump to Record ${rep.id} in Explorer" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">🔍</button></span>`;
+                    return `<span class="inline-flex items-center gap-0.5"><button type="button" onclick="window.auditPage2PointOrGroup('${chipAuditPayload}')" title="Click to select Entire Replicate Group (n=${g.n}, default) or Single Point Only (${rep.id}) · Rep ${rep.rep}, QC: ${rep.qc}" class="px-1.5 py-0.5 rounded font-mono text-xs transition ${isCand ? 'badge-warn ring-1 ring-amber-500 font-bold' : 'bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]'}">⚑ ${isCand ? '★ ' : ''}${fmtNum(rep.val, 2)}${qcTag}</button><button type="button" onclick="jumpToRecord('${rep.id}')" title="Jump to Record ${rep.id} in Explorer" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">🔍</button></span>`;
                   }).join(" ");
 
                   const badges = [];
@@ -6945,7 +7040,6 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         ${pLabel} <span class="font-mono text-[11px] font-normal text-[var(--muted-foreground)]">(${g.unit || '—'})</span>
                         <div class="mt-1 flex flex-wrap gap-1">
                           <button onclick="inspectSampleParam('${g.prepared_sample}', '${g.parameter}')" class="px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] text-[10px] font-semibold hover:border-[var(--primary)]">Inspect Records &rarr;</button>
-                          <button type="button" onclick="window.addSelectionToTray('${metaPayload}')" class="px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] text-[10px] font-semibold hover:border-[var(--primary)]">📌 Add to Tray</button>
                           <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" class="px-2 py-0.5 rounded badge-warn text-[10px] font-semibold hover:opacity-90">⚑ Audit Modal</button>
                         </div>
                       </td>
@@ -7328,7 +7422,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
         return `
           <tr class="border-t border-[var(--border)] hover:bg-[var(--background)] text-xs align-top">
-            <td class="py-2 px-2.5 font-mono font-semibold"><div class="flex items-center gap-1"><button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Click to select Entire Replicate Group (default) or Single Point Only (${r.record_id})" class="hover:text-[var(--primary)] underline decoration-dotted">⚑ ${r.record_id}</button><button type="button" onclick="window.addSelectionToTray('${metaPayload}')" title="Add to Selection &amp; Export Tray" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">📌</button></div></td>
+            <td class="py-2 px-2.5 font-mono font-semibold"><div class="flex items-center gap-1"><button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Click to select Entire Replicate Group (default) or Single Point Only (${r.record_id})" class="hover:text-[var(--primary)] underline decoration-dotted">⚑ ${r.record_id}</button></div></td>
             <td class="py-2 px-2.5">${r.analysis_type}</td>
             <td class="py-2 px-2.5 font-mono">
               <div class="font-semibold text-[var(--primary)]">${r.prepared_sample}</div>
@@ -7355,7 +7449,6 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <input type="text" value="${(dEntry.note || '').replace(/"/g, '&quot;')}" onchange="handleDecisionNote('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Reviewer note..." class="w-full rounded px-1.5 py-1 text-[11px] border border-[var(--border)] font-mono" />
               <div class="flex items-center gap-1">
                 <input type="email" value="${(dEntry.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email..." class="flex-1 rounded px-1.5 py-0.5 text-[10px] border border-[var(--border)] font-mono" />
-                <button type="button" onclick="window.addSelectionToTray('${metaPayload}')" title="Add Replicate Group to Selection &amp; Export Tray" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📌 Tray</button>
                 <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Open Audit Finding Modal (Entire Replicate Group default vs Single Point Only)" class="px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-90">⚑ Audit</button>
                 <button type="button" onclick="approveAndSyncDecision('${safeKeyAttr}', '${metaPayload}')" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚡ Sync</button>
               </div>
@@ -7672,9 +7765,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       saveSelectionTray(SELECTION_TRAY);
       if (window.showQcToast) {
-        window.showQcToast(`📌 Added ${item.prepared_sample || item.record_id} (${item.triage_scope === 'group' ? 'Entire Replicate Group' : 'Single Point Only'}) to Selection & Export Tray`, "info");
+        window.showQcToast(`Staged ${item.prepared_sample || item.record_id} (${item.triage_scope === 'group' ? 'Entire Replicate Group' : 'Single Point Only'}) for Audit Workbench`, "info");
       }
-      renderSelectionExportTray();
     };
 
     window.toggleTrayItemScope = function(idx, scopeVal) {
@@ -7686,114 +7778,52 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         ? (item.record_id || String(item.all_group_record_ids || "").split("|")[0] || "")
         : (item.all_group_record_ids || item.record_id || "");
       saveSelectionTray(SELECTION_TRAY);
-      renderSelectionExportTray();
     };
 
     window.removeTrayItem = function(idx) {
       SELECTION_TRAY.splice(idx, 1);
       saveSelectionTray(SELECTION_TRAY);
-      renderSelectionExportTray();
     };
 
     window.clearSelectionTray = function() {
       SELECTION_TRAY = [];
       saveSelectionTray(SELECTION_TRAY);
-      renderSelectionExportTray();
-    };
-
-    window.exportSelectionTrayCsv = function() {
-      if (!SELECTION_TRAY.length) return;
-      const cols = ["resource_name", "analysis_type", "prepared_sample", "experiment", "parameter", "scope", "record_id", "record_ids", "note"];
-      const csv = [
-        cols.join(","),
-        ...SELECTION_TRAY.map(it => cols.map(c => `"${String(it[c] ?? '').replace(/"/g, '""')}"`).join(","))
-      ].join("\\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `biocirv_selection_tray_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     };
 
     window.sendSelectionTrayToWorkbench = async function(defaultDecision) {
-      if (!SELECTION_TRAY.length || !window.BioCirvQcClient) return;
-      const items = SELECTION_TRAY.map(it => ({
+      if (!window.BioCirvQcClient) return;
+      let sourceItems = SELECTION_TRAY;
+      if (!sourceItems.length) {
+        const decisionEntries = Object.values(DECISIONS_STORE || {});
+        if (decisionEntries.length) {
+          sourceItems = decisionEntries;
+        } else {
+          window.openReviewQueueSubtab();
+          return;
+        }
+      }
+      const items = sourceItems.map(it => ({
         scope: it.scope || (it.triage_scope === "single" ? "single_record" : "replicate_group"),
         replicate_group_key: it.replicate_group_key || (window.normalizeReplicateGroupKey ? window.normalizeReplicateGroupKey(it, it.resource_name || state.resource) : ""),
         resource_name: it.resource_name || state.resource,
         analysis_type: it.analysis_type || "",
-        prepared_sample_name: it.prepared_sample || "",
+        prepared_sample_name: it.prepared_sample || it.prepared_sample_name || "",
         prep_method: it.prep_method || "",
-        experiment_name: it.experiment || "",
-        parameter_name: it.parameter || "",
+        experiment_name: it.experiment || it.experiment_name || "",
+        parameter_name: it.parameter || it.parameter_name || "",
         record_id: it.triage_scope === "single" ? (it.record_id || "") : "",
         target_record_ids: String(it.record_ids || it.all_group_record_ids || it.record_id || "").split(/[|,\\s]+/).map(s => s.trim()).filter(Boolean),
-        decision: defaultDecision || "pending",
-        rationale_note: it.note || "Exported from Page 2 Selection & Export Tray"
+        decision: it.decision || defaultDecision || "pending",
+        rationale_note: it.note || "Exported from Page 2 to Audit Workbench"
       }));
-      await window.BioCirvQcClient.exportTrayToWorkbench(items, defaultDecision || "pending", "Exported from Page 2 Selection & Export Tray");
+      await window.BioCirvQcClient.exportTrayToWorkbench(items, defaultDecision || "pending", "Exported from Page 2 to Audit Workbench");
       await window.syncReviewQueueWithApi();
     };
-
-    function renderSelectionExportTray() {
-      const trayEl = document.getElementById("qc-selection-export-tray");
-      if (!trayEl) return;
-      if (!SELECTION_TRAY.length) {
-        trayEl.className = "bg-[var(--card)] border border-[var(--border)] rounded-xl p-3 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs";
-        trayEl.innerHTML = `
-          <div class="flex items-center gap-2 text-[var(--muted-foreground)]">
-            <span class="font-bold text-[var(--foreground)]">📌 Selection &amp; Export Tray (0 selected):</span>
-            <span>Click <strong>📌 Add to Tray</strong> or <strong>⚑</strong> on any replicate point/group to stage its <strong>Entire Replicate Group</strong> (default) or <strong>Single Point Only</strong>.</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-1.5">
-            <button type="button" onclick="window.openSliceExportModal({ resource: state.resource })" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📤 Export Slice (.HTML)</button>
-            <button type="button" id="btn-tray-to-workbench" onclick="window.openReviewQueueSubtab()" class="px-2.5 py-1 rounded text-[11px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚖️ Export to Audit Workbench</button>
-          </div>
-        `;
-        return;
-      }
-      trayEl.className = "bg-[var(--card)] border-2 border-[var(--primary)] rounded-xl p-3.5 shadow-sm space-y-2.5 text-xs";
-      trayEl.innerHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded font-mono font-bold bg-[var(--primary)] text-[var(--primary-foreground)]">${SELECTION_TRAY.length} Selected</span>
-            <span class="font-bold text-[var(--foreground)]">Selection &amp; Export Tray (Replicate-Group Default with 1-Click Single-Point Toggle)</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-1.5">
-            <button type="button" onclick="window.exportSelectionTrayCsv()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]">⬇ Export Tray (.CSV)</button>
-            <button type="button" onclick="window.openSliceExportModal({ resource: state.resource })" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📤 Export Slice (.HTML)</button>
-            <button type="button" id="btn-tray-to-workbench" onclick="window.sendSelectionTrayToWorkbench('pending')" class="px-2.5 py-1 rounded text-[11px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚖️ Export to Audit Workbench</button>
-            <button type="button" onclick="window.clearSelectionTray()" class="px-2 py-1 rounded text-[11px] text-[var(--muted-foreground)] hover:text-red-500">✕ Clear</button>
-          </div>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          ${SELECTION_TRAY.map((it, idx) => {
-            const grpCnt = String(it.all_group_record_ids || "").split("|").filter(Boolean).length || 1;
-            return `
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--background)] border border-[var(--border)] font-mono text-[11px]">
-                <strong class="text-[var(--primary)]">${it.prepared_sample || it.record_id}</strong>
-                <span class="text-[var(--muted-foreground)]">${it.parameter || ''}</span>
-                <select onchange="window.toggleTrayItemScope(${idx}, this.value)" class="rounded px-1.5 py-0.5 text-[10px] font-semibold border border-[var(--border)] bg-[var(--card)]">
-                  <option value="group" ${it.triage_scope !== 'single' ? 'selected' : ''}>Entire Replicate Group (${grpCnt} recs)</option>
-                  <option value="single" ${it.triage_scope === 'single' ? 'selected' : ''}>Single Point Only (${it.record_id || '1 rec'})</option>
-                </select>
-                <button type="button" onclick="window.removeTrayItem(${idx})" class="text-[var(--muted-foreground)] hover:text-red-500 font-bold">&times;</button>
-              </div>
-            `;
-          }).join("")}
-        </div>
-      `;
-    }
 
     function render() {
       renderDomainPills();
       renderHeaderAndKpis();
       renderDecisionBanner();
-      renderSelectionExportTray();
       const container = document.getElementById("qc-content");
       if (state.subtab === "outliers") container.innerHTML = renderOutliersSubtab();
       else if (state.subtab === "rsd") container.innerHTML = renderRsdSubtab();
