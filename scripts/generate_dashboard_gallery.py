@@ -771,8 +771,8 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
     <div id="bug-modal-status" class="hidden small font-monospace p-2 rounded border border-secondary mb-2"></div>
     <div class="d-flex justify-content-end gap-2 border-top border-secondary pt-2">
       <button id="btn-cancel-bug-modal" type="button" class="btn btn-sm btn-outline-light">Cancel</button>
-      <button id="btn-submit-github-api" type="button" class="btn btn-sm btn-outline-info">⚡ Submit via API</button>
-      <button id="btn-submit-github-url" type="button" class="btn btn-sm btn-warning fw-bold text-dark">↗ Open Pre-Filled GitHub Issue</button>
+      <button id="btn-submit-github-api" type="button" class="btn btn-sm btn-warning fw-bold text-dark">🚀 Submit Issue</button>
+      <button id="btn-submit-github-url" type="button" class="btn btn-sm btn-warning fw-bold text-dark hidden" style="display:none;">↗ Open Pre-Filled GitHub Issue</button>
     </div>
   </div>
 </div>
@@ -979,7 +979,14 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
             var data = await resp.json();
             if (data.created_via_api) {{
               if (statusEl) {{
-                statusEl.textContent = "✓ GitHub Issue #" + (data.issue_number ?? "") + " created!";
+                statusEl.textContent = "✓ GitHub Issue #" + (data.issue_number ?? "") + " created & recorded in PostgreSQL QC Ledger (ID #" + (data.decision_id ?? "") + ")!";
+                statusEl.classList.remove("hidden");
+              }}
+              return;
+            }}
+            if (data.persisted) {{
+              if (statusEl) {{
+                statusEl.textContent = "✓ Issue recorded in PostgreSQL QC Ledger (ID #" + (data.decision_id ?? "") + ").";
                 statusEl.classList.remove("hidden");
               }}
               return;

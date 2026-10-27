@@ -414,9 +414,14 @@ def test_stage2_gsheet_sync_rbac_idempotency_and_re_edit_reset(
 
 def test_github_issue_endpoint_fallback_and_api(
     client: TestClient,
+    sqlite_engine: Any,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Verify POST /v1/qc/github-issue returns pre-populated fallback URL when GITHUB_TOKEN is unset."""
+    """Verify POST /v1/qc/github-issue persists to PostgreSQL and supports both fallback URL and GitHub API."""
+    import io
+    import json
+    import urllib.request
+
     monkeypatch.delenv("GITHUB_TOKEN", raising=False)
 
     resp = client.post(
@@ -437,9 +442,87 @@ def test_github_issue_endpoint_fallback_and_api(
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "ok"
+    assert data["persisted"] is True
+    assert isinstance(data["decision_id"], int)
+    assert str(data["bug_record_id"]).startswith("BUG-")
     assert data["created_via_api"] is False
-    assert "issues/new?" in data["issue_url"]
+    assert "https://github.com/uw-ssec/ca-biositing/issues/new?" in data["issue_url"]
     assert "Ash+outlier+whisker+clipping" in data["issue_url"]
+
+    # Verify the bug report was persisted in qc_review_decision
+    with Session(sqlite_engine) as session:
+        persisted_bug = session.get(QcReviewDecision, data["decision_id"])
+        assert persisted_bug is not None
+        assert persisted_bug.record_table == "portal_bug_report"
+        assert persisted_bug.flag_type == "bug_report"
+        assert persisted_bug.decision_status == "open"
+        assert "Ash outlier whisker clipping" in persisted_bug.review_note
+
+    # Verify mocked GitHub API path also persists with GH-<issue_number>
+    monkeypatch.setenv("GITHUB_TOKEN", "ghp_test_token_123")
+
+    class _DummyResp:
+        def __enter__(self) -> "_DummyResp":
+            return self
+
+        def __exit__(self, *args: object) -> None:
+            pass
+
+        def read(self) -> bytes:
+            return json.dumps(
+                {
+                    "number": 42,
+                    "html_url": "https://github.com/uw-ssec/ca-biositing/issues/42",
+                }
+            ).encode("utf-8")
+
+    monkeypatch.setattr(urllib.request, "urlopen", lambda req, timeout=10: _DummyResp())
+
+    api_resp = client.post(
+        "/v1/qc/github-issue",
+        json={
+            "title": "Pretreatment yield axis label",
+            "category": "Unit / Basis Normalization Issue",
+            "description": "Y-axis unit label missing",
+            "expected_behavior": "Show g/L",
+            "page": "Page 3 — Multi-Resource Comparison",
+            "resource": "Corn stover",
+            "domain_tab": "pretreatment",
+            "qc_filter": "all",
+            "query_string": "?tab=pretreatment",
+            "create_via_api": True,
+        },
+    )
+    assert api_resp.status_code == 200
+    api_data = api_resp.json()
+    assert api_data["status"] == "ok"
+    assert api_data["persisted"] is True
+    assert api_data["created_via_api"] is True
+    assert api_data["issue_number"] == 42
+    assert api_data["bug_record_id"] == "GH-42"
+    assert api_data["issue_url"] == "https://github.com/uw-ssec/ca-biositing/issues/42"
+
+    # Verify GET /v1/qc/bug-issues returns both persisted bug reports
+    bug_list_resp = client.get("/v1/qc/bug-issues")
+    assert bug_list_resp.status_code == 200
+    bug_list_body = bug_list_resp.json()
+    assert bug_list_body["status"] == "ok"
+    assert bug_list_body["count"] == 2
+    assert [b["record_id"] for b in bug_list_body["bug_issues"]] == [
+        "GH-42",
+        data["bug_record_id"],
+    ]
+
+    # Verify GET /v1/qc/summary does not count portal_bug_report rows as analytical outliers
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst@lbl.gov"},
+    )
+    summary_resp = client.get("/v1/qc/summary")
+    assert summary_resp.status_code == 200
+    summary_body = summary_resp.json()
+    assert summary_body["total_decisions"] == 0
+    assert "bug_report" not in summary_body["by_flag_type"]
 
 
 def test_replicate_group_key_normalization_in_decisions_and_tray_endpoints(

@@ -47,7 +47,7 @@ except ImportError:
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "exports" / "plots" / "metadata"
-GITHUB_ISSUES_NEW_URL = "https://github.com/sustainability-software-lab/ca-biositing/issues/new"
+GITHUB_ISSUES_NEW_URL = "https://github.com/uw-ssec/ca-biositing/issues/new"
 
 
 def build_github_bug_issue_url(
@@ -784,10 +784,10 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
         <button id="btn-cancel-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">
           Cancel
         </button>
-        <button id="btn-submit-github-api" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)]">
-          ⚡ Submit via API
+        <button id="btn-submit-github-api" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+          🚀 Submit Issue
         </button>
-        <button id="btn-submit-github-url" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+        <button id="btn-submit-github-url" style="display:none;" class="hidden px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
           🚀 Open Pre-Filled GitHub Issue &rarr;
         </button>
       </div>
@@ -985,10 +985,10 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
 """
 
 SHARED_SLICE_AND_BUG_MODALS_JS = """
-    var GITHUB_ISSUES_NEW_URL = "https://github.com/sustainability-software-lab/ca-biositing/issues/new";
+    var GITHUB_ISSUES_NEW_URL = "https://github.com/uw-ssec/ca-biositing/issues/new";
 
     function buildGitHubBugIssueUrl(opts) {
-      const repoNewUrl = GITHUB_ISSUES_NEW_URL || "https://github.com/sustainability-software-lab/ca-biositing/issues/new";
+      const repoNewUrl = GITHUB_ISSUES_NEW_URL || "https://github.com/uw-ssec/ca-biositing/issues/new";
       const o = opts || {};
       const cat = o.category || "UI / Chart Rendering Bug";
       const res = o.resource || (typeof state !== "undefined" && state.resource) || "all resources";
@@ -2147,11 +2147,23 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
               if (data.created_via_api) {
                 if (statusEl) {
                   statusEl.className = "text-xs font-mono p-2.5 rounded-lg badge-pass";
-                  statusEl.innerHTML = `✓ GitHub Issue #${escBugHtml(data.issue_number ?? "")} created directly via API! <a href="${escBugHtml(data.issue_url ?? "")}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue on GitHub &rarr;</a>`;
+                  statusEl.innerHTML = `✓ GitHub Issue #${escBugHtml(data.issue_number ?? "")} created &amp; recorded in PostgreSQL QC Ledger (ID #${escBugHtml(data.decision_id ?? "")})! <a href="${escBugHtml(data.issue_url ?? "")}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue on GitHub &rarr;</a>`;
                   statusEl.classList.remove("hidden");
                 }
                 if (window.showQcToast) {
-                  window.showQcToast(`Created GitHub Issue #${data.issue_number ?? ""} directly via API`, "pass");
+                  window.showQcToast(`Created GitHub Issue #${data.issue_number ?? ""} & saved to PostgreSQL (ID #${data.decision_id ?? ""})`, "pass");
+                }
+                return;
+              }
+              if (data.persisted) {
+                const ghFallbackHref = escBugHtml(data.issue_url || data.fallback_url || "");
+                if (statusEl) {
+                  statusEl.className = "text-xs font-mono p-2.5 rounded-lg badge-pass";
+                  statusEl.innerHTML = `✓ Issue recorded in PostgreSQL QC Ledger (ID #${escBugHtml(data.decision_id ?? "")}).${ghFallbackHref ? ` <a href="${ghFallbackHref}" target="_blank" rel="noopener" class="underline font-bold ml-1">Optional: Open on GitHub &rarr;</a>` : ""}`;
+                  statusEl.classList.remove("hidden");
+                }
+                if (window.showQcToast) {
+                  window.showQcToast(`Issue recorded in PostgreSQL QC Ledger (ID #${data.decision_id ?? ""})`, "pass");
                 }
                 return;
               }

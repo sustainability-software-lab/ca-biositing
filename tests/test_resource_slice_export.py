@@ -343,6 +343,7 @@ def test_date_range_filtering_and_modal_closed_on_open(
 
 
 def test_build_github_bug_issue_url() -> None:
+    assert GITHUB_ISSUES_NEW_URL == "https://github.com/uw-ssec/ca-biositing/issues/new"
     url = build_github_bug_issue_url(
         title="Dixon Q badge clipping on narrow viewport",
         category="UI / Chart Rendering Bug",
@@ -772,7 +773,7 @@ function makeEl(id) {
     querySelector() { return makeEl("qs"); },
     querySelectorAll() { return []; },
     closest() { return null; },
-    parentElement: { clientWidth: 800, clientHeight: 400, getBoundingClientRect() { return { width: 800, height: 400, top: 0, left: 0 }; } },
+    parentElement: { clientWidth: 800, clientHeight: 400, removeChild() {}, getBoundingClientRect() { return { width: 800, height: 400, top: 0, left: 0 }; } },
     getContext() {
       return new Proxy({}, {
         get(_t, prop) {
@@ -820,22 +821,52 @@ global.document = {
 global.navigator = { clipboard: { writeText: async () => {} } };
 """
     verify_tail = """
-const openBtn = document.getElementById("btn-open-bug-modal");
-const bugModal = document.getElementById("modal-report-bug");
-const submitUrlBtn = document.getElementById("btn-submit-github-url");
-const hasClickListener = Boolean(openBtn.listeners["click"] && openBtn.listeners["click"].length > 0);
-openBtn.click();
-const openedModal = !bugModal.classList.contains("hidden");
-const diagText = document.getElementById("bug-modal-diagnostics").textContent;
-submitUrlBtn.click();
-const closedModal = bugModal.classList.contains("hidden");
-process.stdout.write(JSON.stringify({
-  hasClickListener,
-  openedModal,
-  closedModal,
-  diagText,
-  openedUrl: openedUrls[0] || ""
-}));
+(async () => {
+  const openBtn = document.getElementById("btn-open-bug-modal");
+  const bugModal = document.getElementById("modal-report-bug");
+  const submitApiBtn = document.getElementById("btn-submit-github-api");
+  const submitUrlBtn = document.getElementById("btn-submit-github-url");
+  const statusEl = document.getElementById("bug-modal-status");
+  const hasClickListener = Boolean(openBtn.listeners["click"] && openBtn.listeners["click"].length > 0);
+  openBtn.click();
+  const openedModal = !bugModal.classList.contains("hidden");
+  const diagText = document.getElementById("bug-modal-diagnostics").textContent;
+
+  global.fetch = async (url) => {
+    if (String(url).includes("/v1/qc/github-issue")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          status: "ok",
+          persisted: true,
+          decision_id: 99,
+          created_via_api: false,
+          issue_url: "https://github.com/uw-ssec/ca-biositing/issues/new?title=test"
+        })
+      };
+    }
+    return { ok: false, status: 503, json: async () => ({}) };
+  };
+  for (const fn of (submitApiBtn.listeners["click"] || [])) {
+    await fn({ preventDefault(){}, stopPropagation(){}, target: submitApiBtn });
+  }
+  const persistedNoPopup = openedUrls.length === 0;
+  const statusConfirm = (statusEl.innerHTML || statusEl.textContent || "");
+
+  submitUrlBtn.click();
+  const closedModal = bugModal.classList.contains("hidden");
+  process.stdout.write(JSON.stringify({
+    hasClickListener,
+    openedModal,
+    closedModal,
+    persistedNoPopup,
+    statusConfirm,
+    diagText,
+    openedUrl: openedUrls[0] || ""
+  }));
+  process.exit(0);
+})();
 """
 
     pages = [
@@ -848,6 +879,8 @@ process.stdout.write(JSON.stringify({
     for expected_label, html_doc in pages:
         assert 'id="btn-open-bug-modal"' in html_doc
         assert 'id="modal-report-bug"' in html_doc
+        assert "Submit Issue" in html_doc
+        assert "sustainability-software-lab/ca-biositing" not in html_doc
         assert ".hidden { display: none !important; }" in html_doc
         scripts = re.findall(r"<script(?![^>]*src=)[^>]*>(.*?)</script>", html_doc, flags=re.S)
         assert scripts, f"{expected_label} missing inline script"
@@ -863,6 +896,8 @@ process.stdout.write(JSON.stringify({
         out = json.loads(proc.stdout.strip().splitlines()[-1])
         assert out["hasClickListener"] is True, f"{expected_label} #btn-open-bug-modal listener not bound"
         assert out["openedModal"] is True, f"{expected_label} #modal-report-bug did not open on click"
+        assert out["persistedNoPopup"] is True, f"{expected_label} should not call window.open when persisted"
+        assert "PostgreSQL QC Ledger (ID #99)" in out["statusConfirm"], f"{expected_label} missing PostgreSQL confirmation"
         assert out["closedModal"] is True, f"{expected_label} #modal-report-bug did not close on submit"
         assert expected_label in out["diagText"]
-        assert "/issues/new?" in out["openedUrl"]
+        assert "https://github.com/uw-ssec/ca-biositing/issues/new?" in out["openedUrl"]

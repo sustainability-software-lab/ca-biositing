@@ -368,6 +368,7 @@ def _count_assigned_open(session: Session, email: str) -> int:
     rows = list(
         session.exec(
             select(QcReviewDecision).where(
+                QcReviewDecision.record_table != "portal_bug_report",
                 QcReviewDecision.assigned_to_email == clean_email,
                 QcReviewDecision.decision_status.in_(
                     ["open", "in_review", "needs_retest"]
@@ -533,6 +534,19 @@ def _query_filtered_decisions(
     stmt = select(QcReviewDecision)
     rows = list(session.exec(stmt).all())
 
+    allowed_flags: set[str] | None = None
+    if flag_type is not None and flag_type.strip():
+        allowed_flags = {
+            f.strip().lower() for f in flag_type.split(",") if f.strip()
+        }
+
+    if not allowed_flags or "bug_report" not in allowed_flags:
+        rows = [
+            r
+            for r in rows
+            if (r.record_table or "").strip().lower() != "portal_bug_report"
+        ]
+
     if assigned_to is not None and assigned_to.strip():
         target = assigned_to.strip().lower()
         if target == "me":
@@ -560,10 +574,7 @@ def _query_filtered_decisions(
             if (r.decision_status or "").strip().lower() in allowed_statuses
         ]
 
-    if flag_type is not None and flag_type.strip():
-        allowed_flags = {
-            f.strip().lower() for f in flag_type.split(",") if f.strip()
-        }
+    if allowed_flags is not None:
         rows = [
             r for r in rows if (r.flag_type or "").strip().lower() in allowed_flags
         ]
@@ -902,7 +913,11 @@ def get_qc_review_summary(
     session: SessionDep,
 ) -> dict[str, Any]:
     """Return aggregate queue counts for the QC Audit Workbench."""
-    rows = list(session.exec(select(QcReviewDecision)).all())
+    rows = [
+        r
+        for r in session.exec(select(QcReviewDecision)).all()
+        if (r.record_table or "").strip().lower() != "portal_bug_report"
+    ]
     by_status: dict[str, int] = {}
     by_flag_type: dict[str, int] = {}
     by_resource: dict[str, int] = {}
@@ -1025,11 +1040,16 @@ class GitHubIssueRequest(BaseModel):
 
 
 @router.post("/github-issue")
-def create_github_bug_issue(payload: GitHubIssueRequest) -> dict[str, Any]:
-    """Create a GitHub issue via REST API when `GITHUB_TOKEN` is set, or return a pre-filled issue URL."""
+def create_github_bug_issue(
+    payload: GitHubIssueRequest,
+    request: Request,
+    session: SessionDep,
+) -> dict[str, Any]:
+    """Create a GitHub issue via REST API when `GITHUB_TOKEN` is set, persist to `qc_review_decision`, and return a pre-filled issue URL."""
     repo = os.getenv("GITHUB_REPO", "uw-ssec/ca-biositing").strip() or "uw-ssec/ca-biositing"
     clean_title = payload.title.strip() or f"[Dashboard Bug] {payload.category} on {payload.page}"
-    now_iso = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(timezone.utc)
+    now_iso = now.isoformat()
     body_lines = [
         "### Dashboard Bug / Data QC Report",
         "",
@@ -1057,47 +1077,132 @@ def create_github_bug_issue(payload: GitHubIssueRequest) -> dict[str, Any]:
     )
     fallback_url = f"https://github.com/{repo}/issues/new?{query}"
 
-    github_token = (os.getenv("GITHUB_TOKEN") or "").strip()
-    if not payload.create_via_api or not github_token:
-        return {
-            "status": "ok",
-            "created_via_api": False,
-            "issue_url": fallback_url,
-            "api_error": "GITHUB_TOKEN not configured" if not github_token else "create_via_api disabled",
-        }
-
-    api_url = f"https://api.github.com/repos/{repo}/issues"
-    req_data = json.dumps(
-        {
-            "title": clean_title,
-            "body": body_markdown,
-            "labels": ["bug", "dashboard"],
-        }
-    ).encode("utf-8")
-    req = urllib.request.Request(
-        api_url,
-        data=req_data,
-        headers={
-            "Authorization": f"Bearer {github_token}",
-            "Accept": "application/vnd.github+json",
-            "Content-Type": "application/json",
-            "User-Agent": "ca-biositing-qc-portal",
-        },
-        method="POST",
-    )
     try:
-        with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
-            resp_payload = json.loads(resp.read().decode("utf-8"))
-            return {
-                "status": "ok",
-                "created_via_api": True,
-                "issue_number": resp_payload.get("number"),
-                "issue_url": resp_payload.get("html_url") or fallback_url,
+        portal_user = require_portal_analyst(request)
+        actor_email = portal_user.email
+    except Exception:
+        actor_email = "analyst@lbl.gov"
+
+    github_token = (os.getenv("GITHUB_TOKEN") or "").strip()
+    created_via_api = False
+    issue_number: int | None = None
+    issue_url = fallback_url
+    api_error: str | None = None
+
+    if not payload.create_via_api or not github_token:
+        api_error = (
+            "GITHUB_TOKEN not configured"
+            if not github_token
+            else "create_via_api disabled"
+        )
+    else:
+        api_url = f"https://api.github.com/repos/{repo}/issues"
+        req_data = json.dumps(
+            {
+                "title": clean_title,
+                "body": body_markdown,
+                "labels": ["bug", "dashboard"],
             }
-    except Exception as exc:
-        return {
-            "status": "ok",
-            "created_via_api": False,
-            "issue_url": fallback_url,
-            "api_error": str(exc),
-        }
+        ).encode("utf-8")
+        req = urllib.request.Request(
+            api_url,
+            data=req_data,
+            headers={
+                "Authorization": f"Bearer {github_token}",
+                "Accept": "application/vnd.github+json",
+                "Content-Type": "application/json",
+                "User-Agent": "ca-biositing-qc-portal",
+            },
+            method="POST",
+        )
+        try:
+            with urllib.request.urlopen(req, timeout=10) as resp:  # noqa: S310
+                resp_payload = json.loads(resp.read().decode("utf-8"))
+                created_via_api = True
+                raw_num = resp_payload.get("number")
+                issue_number = int(raw_num) if raw_num is not None else None
+                issue_url = resp_payload.get("html_url") or fallback_url
+        except Exception as exc:
+            created_via_api = False
+            issue_url = fallback_url
+            api_error = str(exc)
+
+    bug_record_id = (
+        f"GH-{issue_number}"
+        if issue_number is not None
+        else f"BUG-{int(now.timestamp() * 1_000_000)}"
+    )
+    page_slug = (payload.page or "dashboard").strip().lower() or "dashboard"
+    cat_slug = (payload.category or "bug").strip().lower() or "bug"
+    group_key = f"portal_bug_report::{page_slug}::{cat_slug}"
+
+    note_parts = [f"[{clean_title}]"]
+    if payload.description.strip():
+        note_parts.append(payload.description.strip())
+    if payload.expected_behavior.strip():
+        note_parts.append(f"Expected: {payload.expected_behavior.strip()}")
+    if payload.query_string and payload.query_string.strip() not in {"", "(none)"}:
+        note_parts.append(f"Query: {payload.query_string.strip()}")
+    if issue_url:
+        note_parts.append(f"GitHub: {issue_url}")
+    review_note_text = " | ".join(note_parts)
+
+    decision, _ = record_stage1_decision(
+        session=session,
+        actor_email=actor_email,
+        record_table="portal_bug_report",
+        record_id=bug_record_id,
+        record_ids=[bug_record_id],
+        replicate_group_key=group_key,
+        resource_name=(payload.resource or "all").strip() or "all",
+        analysis_type=None,
+        parameter_name=(payload.page or "Dashboard").strip() or "Dashboard",
+        flag_type="bug_report",
+        flag_trigger_value=(payload.category or "UI / Chart Rendering Bug").strip(),
+        old_qc_pass=None,
+        new_qc_pass=None,
+        decision_action="flag_for_review",
+        decision_status="open",
+        rationale_chips=[payload.category] if payload.category else ["bug_report"],
+        review_note=review_note_text,
+    )
+    decision.analysis_type = (payload.domain_tab or "portal").strip() or "portal"
+    session.add(decision)
+    session.commit()
+    session.refresh(decision)
+    append_or_update_seed_csv(decision)
+
+    result: dict[str, Any] = {
+        "status": "ok",
+        "persisted": True,
+        "decision_id": decision.id,
+        "bug_record_id": decision.record_id,
+        "created_via_api": created_via_api,
+        "issue_url": issue_url,
+        "fallback_url": fallback_url,
+    }
+    if issue_number is not None:
+        result["issue_number"] = issue_number
+    if api_error is not None:
+        result["api_error"] = api_error
+    return result
+
+
+@router.get("/bug-issues")
+def list_portal_bug_issues(
+    session: SessionDep,
+) -> dict[str, Any]:
+    """List portal bug reports persisted in `qc_review_decision` (`record_table='portal_bug_report'`)."""
+    stmt = (
+        select(QcReviewDecision)
+        .where(QcReviewDecision.record_table == "portal_bug_report")
+        .order_by(QcReviewDecision.id.desc())
+    )
+    rows = list(session.exec(stmt).all())
+    serialized = [serialize_decision(r) for r in rows]
+    return {
+        "status": "ok",
+        "count": len(serialized),
+        "bug_issues": serialized,
+        "items": serialized,
+    }
