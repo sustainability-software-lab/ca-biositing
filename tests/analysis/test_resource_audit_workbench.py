@@ -18,7 +18,12 @@ from analysis.metadata.resource_audit_workbench import (  # noqa: E402
     ANALYSIS_TABLE_MAP,
     build_resource_audit_workbench,
     build_workbench_payload,
+    canonical_domain_slug,
+    group_context_label,
     load_snapshot,
+    matches_replicate_group_key,
+    normalize_replicate_group_key,
+    resolve_record_table,
     unpack_snapshot_records,
 )
 from scripts.generate_dashboard_gallery import generate_gallery  # noqa: E402
@@ -292,3 +297,595 @@ def test_dashboard_artifacts_workflow_never_publishes_minimal_fixture_to_gcs() -
     assert 'echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}" >> "$GITHUB_ENV"' in content
     assert 'if [ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]' in content
     assert "dashboards/${DASHBOARDS_ENV}/latest/metadata/dashboard_data_snapshot.json" in content
+
+
+def test_canonical_6_part_replicate_group_key_and_4_part_fallback() -> None:
+    """Verify 6-part replicate_group_key normalization, Pretreatment/Fermentation context slots, and domain slug mapping."""
+    assert len(ANALYSIS_TABLE_MAP) == 10
+    for display_name, expected_table in ANALYSIS_TABLE_MAP.items():
+        slug = canonical_domain_slug(display_name)
+        assert resolve_record_table(display_name) == expected_table
+        assert resolve_record_table(slug) == expected_table
+
+    # Verify edge cases on canonical_domain_slug
+    assert canonical_domain_slug(None) == "unknown"
+    assert canonical_domain_slug("") == "unknown"
+    assert canonical_domain_slug("   ") == "unknown"
+    assert canonical_domain_slug("Ash") == "xrf"
+    assert canonical_domain_slug("ash_record") == "xrf"
+    assert canonical_domain_slug("calorimetry_xrd") == "calorimetry"
+    assert canonical_domain_slug("Pretreatment & Hydrolysis") == "pretreatment"
+    assert canonical_domain_slug("Fermentation (Bioconversion)") == "fermentation"
+    assert canonical_domain_slug("ICP-OES / ICP-MS") == "icp"
+
+    # Verify group_context_label and dict-based normalize_replicate_group_key for Pretreatment & Fermentation
+    # Including real data shape where both prep_method (e.g. "Wiley Milled") and pt_method (e.g. "Dilute Acid") exist
+    from analysis.metadata.resource_insights_engine import (
+        _group_context_label as engine_group_context_label,
+    )
+    from ca_biositing.webservice.v1.endpoints.qc_review import (
+        group_context_label as qc_review_group_context_label,
+        normalize_replicate_group_key as qc_review_normalize_replicate_group_key,
+    )
+
+    pt_row = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Pretreatment & Hydrolysis",
+        "parameter": "Glucose Yield",
+        "prep_method": "Wiley Milled",
+        "pt_method": "Dilute Acid",
+        "eh_method": "Cellic CTec2",
+        "experiment": "EXP-PT-01",
+    }
+    assert group_context_label(pt_row) == "Dilute Acid · Cellic CTec2"
+    assert group_context_label(pt_row) == engine_group_context_label(pt_row)
+    assert (
+        normalize_replicate_group_key(pt_row)
+        == "corn stover::cs-prep-01::pretreatment::glucose yield::dilute acid · cellic ctec2::exp-pt-01"
+    )
+
+    # Fallback when pt_method key is absent from synthetic row
+    pt_fallback_row = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Pretreatment & Hydrolysis",
+        "parameter": "Glucose Yield",
+        "prep_method": "Dilute Acid",
+        "eh_method": "Cellic CTec2",
+        "experiment": "EXP-PT-01",
+    }
+    assert group_context_label(pt_fallback_row) == "Dilute Acid · Cellic CTec2"
+
+    ferm_row_a = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Fermentation (Bioconversion)",
+        "parameter": "Ethanol",
+        "prep_method": "Wiley Milled",
+        "pt_method": "SHF",
+        "strain": "S. cerevisiae",
+        "time_h": 48,
+        "experiment": "EXP-FERM-01",
+    }
+    ferm_row_b = {
+        **ferm_row_a,
+        "strain": "Z. mobilis",
+        "time_h": 72,
+    }
+    assert group_context_label(ferm_row_a) == "SHF · S. cerevisiae @ 48h"
+    assert group_context_label(ferm_row_a) == engine_group_context_label(ferm_row_a)
+    assert qc_review_group_context_label(ferm_row_a) == engine_group_context_label(
+        ferm_row_a
+    )
+    assert group_context_label(ferm_row_b) == "SHF · Z. mobilis @ 72h"
+    assert group_context_label(ferm_row_b) == engine_group_context_label(ferm_row_b)
+    assert qc_review_group_context_label(ferm_row_b) == engine_group_context_label(
+        ferm_row_b
+    )
+    assert normalize_replicate_group_key(ferm_row_a) != normalize_replicate_group_key(
+        ferm_row_b
+    )
+    assert (
+        normalize_replicate_group_key(ferm_row_a)
+        == "corn stover::cs-prep-01::fermentation::ethanol::shf · s. cerevisiae @ 48h::exp-ferm-01"
+    )
+    assert qc_review_normalize_replicate_group_key(
+        ferm_row_a
+    ) == normalize_replicate_group_key(ferm_row_a)
+
+    # Fermentation row without pt_method must NEVER fall back to prep_method for pt
+    ferm_no_pt_row = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Fermentation (Bioconversion)",
+        "parameter": "Ethanol",
+        "prep_method": "Wiley Milled",
+        "strain": "S. cerevisiae",
+        "time_h": 48,
+        "experiment": "EXP-FERM-01",
+    }
+    assert engine_group_context_label(ferm_no_pt_row) == "S. cerevisiae @ 48h"
+    assert group_context_label(ferm_no_pt_row) == "S. cerevisiae @ 48h"
+    assert qc_review_group_context_label(ferm_no_pt_row) == "S. cerevisiae @ 48h"
+    assert (
+        normalize_replicate_group_key(ferm_no_pt_row)
+        == "corn stover::cs-prep-01::fermentation::ethanol::s. cerevisiae @ 48h::exp-ferm-01"
+    )
+    assert qc_review_normalize_replicate_group_key(
+        ferm_no_pt_row
+    ) == normalize_replicate_group_key(ferm_no_pt_row)
+
+    # Verify unpack_snapshot_records unpacks pt_method + time_h and constructs Pretreatment/Fermentation 6-part keys
+    synth_snapshot = {
+        "generated_utc": "2026-01-01T00:00:00Z",
+        "str_cols": [
+            "resource_name",
+            "field_sample",
+            "prepared_sample",
+            "analysis_type",
+            "parameter",
+            "unit",
+            "qc_status",
+            "analyst",
+            "provider",
+            "experiment",
+            "prep_method",
+            "pt_method",
+            "eh_method",
+            "strain",
+            "note",
+        ],
+        "dicts": {
+            "resource_name": ["Corn Stover"],
+            "field_sample": ["CS-F1"],
+            "prepared_sample": ["CS-PREP-01"],
+            "analysis_type": [
+                "Pretreatment & Hydrolysis",
+                "Fermentation (Bioconversion)",
+                "Ash",
+            ],
+            "parameter": ["Glucose Yield", "Ethanol", "SiO2"],
+            "unit": ["g/L", "%"],
+            "qc_status": ["pass"],
+            "analyst": ["a@lbl.gov"],
+            "provider": ["LBL"],
+            "experiment": ["EXP-1"],
+            "prep_method": ["Wiley Milled", "Muffle 575C"],
+            "pt_method": ["Dilute Acid", "SHF", "none"],
+            "eh_method": ["none", "Cellic CTec2"],
+            "strain": ["none", "S. cerevisiae", "Z. mobilis"],
+            "note": [""],
+        },
+        "rows": [
+            ["PT-1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 42.0, "2026-01-01", None],
+            ["FM-1", 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 18.5, "2026-01-01", 48],
+            ["FM-2", 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 22.1, "2026-01-01", 72],
+            ["ASH-1", 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 1, 2, 0, 0, 0, 1, 51.0, "2026-01-01", None],
+        ],
+    }
+    unpacked = unpack_snapshot_records(synth_snapshot)
+    assert len(unpacked) == 4
+    assert (
+        unpacked[0]["replicate_group_key"]
+        == "corn stover::cs-prep-01::pretreatment::glucose yield::dilute acid · cellic ctec2::exp-1"
+    )
+    assert (
+        unpacked[1]["replicate_group_key"]
+        == "corn stover::cs-prep-01::fermentation::ethanol::shf · s. cerevisiae @ 48h::exp-1"
+    )
+    assert (
+        unpacked[2]["replicate_group_key"]
+        == "corn stover::cs-prep-01::fermentation::ethanol::shf · z. mobilis @ 72h::exp-1"
+    )
+    assert (
+        unpacked[3]["replicate_group_key"]
+        == "corn stover::cs-prep-01::xrf::sio2::muffle 575c::exp-1"
+    )
+
+    key_6 = normalize_replicate_group_key(
+        "Almond Hulls",
+        "AH-PREP-01",
+        "Proximate Analysis",
+        "Ash",
+        "Mill-1mm",
+        "EXP-2025-A",
+    )
+    assert key_6 == "almond hulls::ah-prep-01::proximate::ash::mill-1mm::exp-2025-a"
+
+    key_4 = normalize_replicate_group_key(
+        "grp::Almond Hulls::AH-PREP-01::Proximate Analysis::Ash"
+    )
+    assert key_4 == "almond hulls::ah-prep-01::proximate::ash"
+
+    assert matches_replicate_group_key(key_6, key_6) is True
+    assert (
+        matches_replicate_group_key(
+            key_6, "Almond Hulls::AH-PREP-01::Proximate Analysis::Ash"
+        )
+        is True
+    )
+    assert (
+        matches_replicate_group_key(
+            key_6,
+            "almond hulls::ah-prep-01::proximate::ash::mill-2mm::exp-2025-a",
+        )
+        is False
+    )
+
+    records = unpack_snapshot_records(load_snapshot(MINIMAL_SNAPSHOT))
+    assert records
+    for rec in records:
+        parts = rec["replicate_group_key"].split("::")
+        assert len(parts) == 6
+        assert parts[2] in {
+            "proximate",
+            "ultimate",
+            "compositional",
+            "calorimetry",
+            "xrd",
+            "icp",
+            "xrf",
+            "pretreatment",
+            "fermentation",
+            "gasification",
+        }
+
+
+def test_method_stratified_between_sd_and_between_rsd_pct_on_replicate_groups() -> None:
+    """Verify within_sd and method-stratified between_sd / between_rsd_pct on replicate groups and decisions."""
+    payload = build_workbench_payload(load_snapshot(MINIMAL_SNAPSHOT))
+    groups = payload["replicate_groups"]
+    assert groups
+
+    # Almond Hulls Proximate Ash has two prepared samples (AH-PREP-01 and AH-PREP-02) with Milled 2mm & % (wt/wt db)
+    ah_ash_key = "almond hulls::ah-prep-01::proximate::ash::milled 2mm::exp-prox-01"
+    assert ah_ash_key in groups
+    ah_ash_group = groups[ah_ash_key]
+    assert ah_ash_group["within_sd"] is not None
+    assert ah_ash_group["within_sd"] > 0
+    assert ah_ash_group["between_k_groups"] == 2
+    assert ah_ash_group["between_sd"] is not None and ah_ash_group["between_sd"] > 0
+    assert (
+        ah_ash_group["between_rsd_pct"] is not None
+        and ah_ash_group["between_rsd_pct"] > 0
+    )
+    assert len(ah_ash_group["records"]) == ah_ash_group["replicate_count"] == 4
+
+    # Single-sample stratum (k_groups < 2) must have between_sd=None and between_rsd_pct=None
+    cs_ash_key = (
+        "corn stover::cs-prep-01::proximate::ash::knife milled::exp-prox-01"
+    )
+    assert cs_ash_key in groups
+    cs_ash_group = groups[cs_ash_key]
+    assert cs_ash_group["between_k_groups"] == 1
+    assert cs_ash_group["between_sd"] is None
+    assert cs_ash_group["between_rsd_pct"] is None
+
+    # Decisions also carry within_sd, between_sd, between_rsd_pct, and between_k_groups
+    ah_decisions = [
+        d for d in payload["decisions"] if d["replicate_group_key"] == ah_ash_key
+    ]
+    assert len(ah_decisions) == 1
+    assert ah_decisions[0]["within_sd"] == ah_ash_group["within_sd"]
+    assert ah_decisions[0]["between_sd"] == ah_ash_group["between_sd"]
+    assert ah_decisions[0]["between_rsd_pct"] == ah_ash_group["between_rsd_pct"]
+
+
+def test_js_refresh_qc_state_non_colliding_ids_and_drawer_fallback(
+    tmp_path: Path,
+) -> None:
+    """Verify JS matchesReplicateGroupKey, non-colliding QC-DB- IDs, metadata preservation, and drawer fallback."""
+    node_bin = shutil.which("node")
+    if node_bin is None:
+        pytest.skip("node binary not available in PATH")
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html_text = output_html.read_text(encoding="utf-8")
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html_text,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+
+    harness_js = tmp_path / "run_workbench_unit_checks.js"
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  return {
+    id: id,
+    value: "",
+    textContent: "",
+    innerHTML: "",
+    style: {},
+    className: "",
+    checked: false,
+    disabled: false,
+    classList: {
+      add: function () {},
+      remove: function () {},
+      toggle: function () {}
+    },
+    appendChild: function () {},
+    addEventListener: function () {},
+    getAttribute: function () { return ""; },
+    setAttribute: function () {},
+    querySelectorAll: function () { return []; }
+  };
+}
+global.document = {
+  getElementById: function (id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll: function () { return []; },
+  createElement: function (tag) { return makeEl(tag); }
+};
+global.window = {
+  location: { pathname: "/v1/dashboards/metadata/resource_audit_workbench.html", search: "" },
+  history: { replaceState: function () {} },
+  open: function () {}
+};
+let mockServerDecisions = [];
+global.fetch = function (url) {
+  if (String(url).indexOf("/v1/qc/auth/me") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          email: "qa.analyst@lbl.gov",
+          name: "QA Analyst",
+          role: "analyst",
+          authenticated: true
+        });
+      }
+    });
+  }
+  if (String(url).indexOf("/v1/qc/decisions") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          decisions: mockServerDecisions
+        });
+      }
+    });
+  }
+  return Promise.resolve({ ok: false, json: function () { return Promise.resolve(null); } });
+};
+"""
+        + blocks[0]
+        + """
+(async function () {
+  await new Promise((r) => setTimeout(r, 20));
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+
+  // 1. Verify JS canonicalDomainSlug, groupContextLabel, normalizeReplicateGroupKey, and matchesReplicateGroupKey
+  assert.strictEqual(hooks.canonicalDomainSlug(""), "unknown");
+  assert.strictEqual(hooks.canonicalDomainSlug(null), "unknown");
+  assert.strictEqual(hooks.canonicalDomainSlug("Ash"), "xrf");
+  assert.strictEqual(hooks.canonicalDomainSlug("calorimetry_xrd"), "calorimetry");
+  assert.strictEqual(hooks.canonicalDomainSlug("Pretreatment & Hydrolysis"), "pretreatment");
+  assert.strictEqual(hooks.canonicalDomainSlug("Fermentation (Bioconversion)"), "fermentation");
+
+  const ptObj = {
+    resource_name: "Corn Stover",
+    prepared_sample: "CS-PREP-01",
+    analysis_type: "Pretreatment & Hydrolysis",
+    parameter: "Glucose Yield",
+    prep_method: "Wiley Milled",
+    pt_method: "Dilute Acid",
+    eh_method: "Cellic CTec2",
+    experiment: "EXP-PT-01"
+  };
+  assert.strictEqual(hooks.groupContextLabel(ptObj), "Dilute Acid \u00b7 Cellic CTec2");
+  assert.strictEqual(
+    hooks.normalizeReplicateGroupKey(ptObj),
+    "corn stover::cs-prep-01::pretreatment::glucose yield::dilute acid \u00b7 cellic ctec2::exp-pt-01"
+  );
+
+  const fermObj = {
+    resource_name: "Corn Stover",
+    prepared_sample: "CS-PREP-01",
+    analysis_type: "Fermentation (Bioconversion)",
+    parameter: "Ethanol",
+    prep_method: "Wiley Milled",
+    pt_method: "SHF",
+    strain: "S. cerevisiae",
+    time_h: 48,
+    experiment: "EXP-FERM-01"
+  };
+  assert.strictEqual(hooks.groupContextLabel(fermObj), "SHF \u00b7 S. cerevisiae @ 48h");
+  assert.strictEqual(
+    hooks.normalizeReplicateGroupKey(fermObj),
+    "corn stover::cs-prep-01::fermentation::ethanol::shf \u00b7 s. cerevisiae @ 48h::exp-ferm-01"
+  );
+
+  // Fermentation row lacking pt_method key must NEVER fall back to prep_method for pt
+  const fermNoPtObj = {
+    resource_name: "Corn Stover",
+    prepared_sample: "CS-PREP-01",
+    analysis_type: "Fermentation (Bioconversion)",
+    parameter: "Ethanol",
+    prep_method: "Wiley Milled",
+    strain: "S. cerevisiae",
+    time_h: 48,
+    experiment: "EXP-FERM-01"
+  };
+  assert.strictEqual(hooks.groupContextLabel(fermNoPtObj), "S. cerevisiae @ 48h");
+  assert.strictEqual(
+    hooks.normalizeReplicateGroupKey(fermNoPtObj),
+    "corn stover::cs-prep-01::fermentation::ethanol::s. cerevisiae @ 48h::exp-ferm-01"
+  );
+
+  const k6 = "almond hulls::ah-prep-01::proximate::ash::milled 2mm::exp-prox-01";
+  const k4 = "grp::Almond Hulls::AH-PREP-01::Proximate Analysis::Ash";
+  assert.strictEqual(hooks.matchesReplicateGroupKey(k6, k6), true);
+  assert.strictEqual(hooks.matchesReplicateGroupKey(k6, k4), true);
+  assert.strictEqual(
+    hooks.matchesReplicateGroupKey(k6, "almond hulls::ah-prep-01::proximate::ash::knife milled::exp-prox-01"),
+    false
+  );
+
+  // 2. Capture static QC-0001 metadata before server refresh
+  const origQc1 = JSON.parse(JSON.stringify(hooks.state.decisionsById["QC-0001"]));
+  assert.ok(origQc1.prepared_sample, "Expected static QC-0001 to have prepared_sample");
+  assert.ok(origQc1.rsd_pct > 0, "Expected static QC-0001 to have rsd_pct > 0");
+  assert.ok(origQc1.replicate_count >= 2, "Expected static QC-0001 to have replicate_count >= 2");
+
+  // 3. Simulate server decisions:
+  //    - A bug_report row (must be ignored)
+  //    - DB id=1 (decision_id="QC-0001" from server) for an UNFLAGGED group (CAL-AH-001) -> must NOT overwrite static QC-0001; gets QC-DB-0001
+  //    - DB id=2 matching static QC-0001 via 4-part key -> merges status/note without clobbering prepared_sample/rsd_pct/replicate_count
+  mockServerDecisions = [
+    {
+      id: 99,
+      decision_id: "QC-0099",
+      record_table: "portal_bug_report",
+      flag_type: "bug_report",
+      record_id: "BUG-1"
+    },
+    {
+      id: 1,
+      decision_id: "QC-0001",
+      record_table: "icp_record",
+      record_id: "ICP-AH-001",
+      replicate_group_key: "Almond Hulls::AH-PREP-01::ICP Elemental Analysis::Potassium (K)",
+      resource_name: "Almond Hulls",
+      analysis_type: "ICP Elemental Analysis",
+      parameter_name: "Potassium (K)",
+      decision_status: "in_review",
+      review_note: "Tray item with DB id=1"
+    },
+    {
+      id: 2,
+      decision_id: "QC-0002",
+      record_table: origQc1.record_table,
+      record_id: origQc1.record_id,
+      replicate_group_key: origQc1.resource_name + "::" + origQc1.prepared_sample + "::" + origQc1.analysis_type + "::" + origQc1.parameter_name,
+      decision_status: "resolved",
+      decision_action: "reject_fail",
+      new_qc_pass: "fail",
+      review_note: "Verified outlier on static QC-0001",
+      assigned_to_email: "qa.analyst@lbl.gov",
+      synced_to_gsheet: false
+    }
+  ];
+
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+
+  // Verify bug_report row was ignored
+  assert.strictEqual(hooks.state.decisionsById["QC-DB-0099"], undefined);
+
+  // Verify static QC-0001 was NOT overwritten by server id=1, and merged server id=2 properly
+  const afterQc1 = hooks.state.decisionsById["QC-0001"];
+  assert.strictEqual(afterQc1.db_id, 2);
+  assert.strictEqual(afterQc1.decision_status, "resolved");
+  assert.strictEqual(afterQc1.review_note, "Verified outlier on static QC-0001");
+  assert.strictEqual(afterQc1.prepared_sample, origQc1.prepared_sample);
+  assert.strictEqual(afterQc1.rsd_pct, origQc1.rsd_pct);
+  assert.strictEqual(afterQc1.within_sd, origQc1.within_sd);
+  assert.strictEqual(afterQc1.replicate_count, origQc1.replicate_count);
+  assert.strictEqual(afterQc1.replicate_group_key, origQc1.replicate_group_key);
+
+  // Verify server id=1 became non-colliding QC-DB-0001 and hydrated metadata from replicate_groups
+  const dbDec1 = hooks.state.decisionsById["QC-DB-0001"];
+  assert.ok(dbDec1, "Expected QC-DB-0001 to be created");
+  assert.strictEqual(dbDec1.db_id, 1);
+  assert.strictEqual(dbDec1.prepared_sample, "AH-PREP-01");
+  assert.strictEqual(dbDec1.replicate_count, 2);
+  assert.ok(dbDec1.rsd_pct > 0);
+  assert.strictEqual(
+    dbDec1.replicate_group_key,
+    "almond hulls::ah-prep-01::icp::potassium (k)::milled 2mm::exp-icp-01"
+  );
+
+  // Verify repeated refresh does not duplicate QC-DB-0001 in decisionsOrder
+  const countBefore = hooks.state.decisionsOrder.filter((x) => x === "QC-DB-0001").length;
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+  const countAfter = hooks.state.decisionsOrder.filter((x) => x === "QC-DB-0001").length;
+  assert.strictEqual(countBefore, 1);
+  assert.strictEqual(countAfter, 1);
+
+  // Verify findReplicateGroupForDecision fallback by record_id when replicate_group_key is missing
+  const foundByRecId = hooks.findReplicateGroupForDecision({
+    record_table: "proximate_record",
+    record_id: "PROX-AH-002"
+  });
+  assert.ok(foundByRecId, "Expected findReplicateGroupForDecision to resolve group by record_id");
+  assert.strictEqual(foundByRecId.prepared_sample, "AH-PREP-01");
+
+  // Verify db_id-first and exact-6-part-before-4-part priority when two candidates share a 4-part prefix
+  hooks.state.decisionsById["QC-FERM-A"] = {
+    id: "QC-FERM-A",
+    decision_id: "QC-FERM-A",
+    db_id: null,
+    replicate_group_key: "corn stover::cs-prep-01::fermentation::ethanol::shf s. cerevisiae @ 48h::exp-1",
+    record_table: "fermentation_record",
+    record_id: "FM-A1",
+    decision_status: "open",
+    review_note: "Initial A"
+  };
+  hooks.state.decisionsById["QC-FERM-B"] = {
+    id: "QC-FERM-B",
+    decision_id: "QC-FERM-B",
+    db_id: 77,
+    replicate_group_key: "corn stover::cs-prep-01::fermentation::ethanol::shf z. mobilis @ 72h::exp-1",
+    record_table: "fermentation_record",
+    record_id: "FM-B1",
+    decision_status: "open",
+    review_note: "Initial B"
+  };
+  hooks.state.decisionsOrder.unshift("QC-FERM-B");
+  hooks.state.decisionsOrder.unshift("QC-FERM-A");
+
+  mockServerDecisions = [
+    {
+      id: 77,
+      decision_id: "QC-0077",
+      record_table: "fermentation_record",
+      record_id: "FM-B1",
+      // 4-part prefix would match QC-FERM-A first in decisionsOrder if db_id wasn't checked in Pass 1!
+      replicate_group_key: "corn stover::cs-prep-01::fermentation::ethanol",
+      decision_status: "resolved",
+      review_note: "Matched QC-FERM-B by db_id priority"
+    }
+  ];
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+  assert.strictEqual(
+    hooks.state.decisionsById["QC-FERM-B"].review_note,
+    "Matched QC-FERM-B by db_id priority"
+  );
+  assert.strictEqual(
+    hooks.state.decisionsById["QC-FERM-A"].review_note,
+    "Initial A"
+  );
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"JS unit harness failed: {proc.stderr}\n{proc.stdout}"

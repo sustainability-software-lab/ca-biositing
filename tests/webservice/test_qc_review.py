@@ -24,6 +24,11 @@ from ca_biositing.webservice.services.qc_ledger_service import (
     read_seed_csv,
     sync_seed_csv_to_db,
 )
+from ca_biositing.webservice.v1.endpoints.qc_review import (
+    canonical_domain_slug,
+    matches_replicate_group_key,
+    normalize_replicate_group_key,
+)
 
 
 @pytest.fixture
@@ -435,3 +440,116 @@ def test_github_issue_endpoint_fallback_and_api(
     assert data["created_via_api"] is False
     assert "issues/new?" in data["issue_url"]
     assert "Ash+outlier+whisker+clipping" in data["issue_url"]
+
+
+def test_replicate_group_key_normalization_in_decisions_and_tray_endpoints(
+    client: TestClient,
+    sqlite_engine,
+) -> None:
+    """Verify 6-part and 4-part replicate_group_key normalization in /v1/qc/decisions and /v1/qc/tray-to-workbench."""
+    _seed_proximate_records(sqlite_engine)
+
+    assert canonical_domain_slug("Proximate Analysis") == "proximate"
+    assert canonical_domain_slug("ICP-OES / ICP-MS") == "icp"
+    assert canonical_domain_slug("Ash") == "xrf"
+    assert canonical_domain_slug("Pretreatment & Hydrolysis") == "pretreatment"
+    assert canonical_domain_slug("Fermentation (Bioconversion)") == "fermentation"
+    assert canonical_domain_slug(None) == "unknown"
+    assert canonical_domain_slug("") == "unknown"
+
+    assert (
+        normalize_replicate_group_key(
+            {
+                "resource_name": "Corn Stover",
+                "prepared_sample": "CS-PREP-01",
+                "analysis_type": "Pretreatment & Hydrolysis",
+                "parameter_name": "Glucose Yield",
+                "prep_method": "Wiley Milled",
+                "pt_method": "Dilute Acid",
+                "eh_method": "CTec3",
+                "experiment": "EXP-PT-01",
+            }
+        )
+        == "corn stover::cs-prep-01::pretreatment::glucose yield::dilute acid · ctec3::exp-pt-01"
+    )
+    assert (
+        normalize_replicate_group_key(
+            {
+                "resource_name": "Corn Stover",
+                "prepared_sample": "CS-PREP-01",
+                "analysis_type": "Fermentation (Bioconversion)",
+                "parameter_name": "Ethanol",
+                "prep_method": "Wiley Milled",
+                "pt_method": "SHF",
+                "strain": "S. cerevisiae",
+                "time_h": 48,
+                "experiment": "EXP-FERM-01",
+            }
+        )
+        == "corn stover::cs-prep-01::fermentation::ethanol::shf · s. cerevisiae @ 48h::exp-ferm-01"
+    )
+
+    k6 = normalize_replicate_group_key(
+        "Almond Hulls",
+        "AH-01_prep",
+        "Proximate Analysis",
+        "Ash",
+        "Mill-1mm",
+        "EXP-2025-A",
+    )
+    assert k6 == "almond hulls::ah-01_prep::proximate::ash::mill-1mm::exp-2025-a"
+
+    k4 = normalize_replicate_group_key(
+        "grp::Almond Hulls::AH-01_prep::Proximate Analysis::Ash"
+    )
+    assert k4 == "almond hulls::ah-01_prep::proximate::ash"
+    assert matches_replicate_group_key(k6, k4) is True
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov"},
+    )
+
+    # 1. POST /v1/qc/decisions normalizes incoming 6-part replicate_group_key with grp:: prefix & mixed case
+    dec_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "replicate_group_key": "grp::Almond Shells::AS-PS-01::Proximate Analysis::Moisture::Oven-105C::EXP-01",
+            "resource_name": "Almond Shells",
+            "analysis_type": "Proximate Analysis",
+            "parameter_name": "Moisture",
+            "flag_type": "rsd_gt_10",
+            "decision_action": "reject_fail",
+            "new_qc_pass": "fail",
+            "review_note": "Normalized 6-part key check",
+        },
+    )
+    assert dec_resp.status_code == 200
+    assert (
+        dec_resp.json()["decision"]["replicate_group_key"]
+        == "almond shells::as-ps-01::proximate::moisture::oven-105c::exp-01"
+    )
+
+    # 2. POST /v1/qc/tray-to-workbench normalizes incoming 4-part or 6-part replicate_group_key
+    tray_resp = client.post(
+        "/v1/qc/tray-to-workbench",
+        json={
+            "record_table": "proximate_record",
+            "record_ids": ["PROX-AS-02"],
+            "replicate_group_key": "grp::Almond Shells::AS-PS-01::Proximate Analysis::Ash",
+            "resource_name": "Almond Shells",
+            "analysis_type": "Proximate Analysis",
+            "parameter_name": "Ash",
+            "flag_type": "iqr_outlier",
+            "review_note": "Normalized 4-part tray key check",
+        },
+    )
+    assert tray_resp.status_code == 200
+    tray_decisions = tray_resp.json()["decisions"]
+    assert len(tray_decisions) == 1
+    assert (
+        tray_decisions[0]["replicate_group_key"]
+        == "almond shells::as-ps-01::proximate::ash"
+    )

@@ -62,6 +62,225 @@ ANALYSIS_TABLE_MAP: dict[str, str] = {
     "XRF": "xrf_record",
 }
 
+CANONICAL_DOMAIN_SLUGS: tuple[str, ...] = (
+    "proximate",
+    "ultimate",
+    "compositional",
+    "calorimetry",
+    "xrd",
+    "icp",
+    "xrf",
+    "pretreatment",
+    "fermentation",
+    "gasification",
+)
+
+DOMAIN_SLUG_TO_RECORD_TABLE: dict[str, str] = {
+    "proximate": "proximate_record",
+    "ultimate": "ultimate_record",
+    "compositional": "compositional_record",
+    "icp": "icp_record",
+    "calorimetry": "calorimetry_record",
+    "fermentation": "fermentation_record",
+    "pretreatment": "pretreatment_record",
+    "gasification": "gasification_record",
+    "xrd": "xrd_record",
+    "xrf": "xrf_record",
+}
+
+CANONICAL_DOMAIN_LOOKUP: dict[str, str] = {
+    "proximate analysis": "proximate",
+    "proximate": "proximate",
+    "ultimate analysis": "ultimate",
+    "ultimate": "ultimate",
+    "compositional analysis": "compositional",
+    "compositional": "compositional",
+    "calorimetry": "calorimetry",
+    "calorimetry analysis": "calorimetry",
+    "calorimetry_xrd": "calorimetry",
+    "xrd": "xrd",
+    "xrd analysis": "xrd",
+    "icp": "icp",
+    "icp-oes / icp-ms": "icp",
+    "icp elemental analysis": "icp",
+    "icp analysis": "icp",
+    "xrf": "xrf",
+    "xrf elemental": "xrf",
+    "xrf elemental analysis": "xrf",
+    "xrf analysis": "xrf",
+    "ash": "xrf",
+    "pretreatment": "pretreatment",
+    "pretreatment & hydrolysis": "pretreatment",
+    "fermentation": "fermentation",
+    "fermentation (bioconversion)": "fermentation",
+    "gasification": "gasification",
+}
+
+
+def canonical_domain_slug(analysis_type: str | None) -> str:
+    """Normalize an analysis domain display name or slug to its canonical 10-domain slug."""
+    cleaned = str(analysis_type or "").strip().lower()
+    if not cleaned:
+        return "unknown"
+    if cleaned.endswith("_record"):
+        cleaned = cleaned[: -len("_record")].strip()
+    if cleaned in CANONICAL_DOMAIN_LOOKUP:
+        return CANONICAL_DOMAIN_LOOKUP[cleaned]
+    for slug in CANONICAL_DOMAIN_SLUGS:
+        if slug in cleaned:
+            return slug
+    return cleaned
+
+
+def group_context_label(row: dict[str, Any]) -> str:
+    """Return the context / method label defining experimental conditions for a replicate group."""
+    existing = row.get("group_context_label")
+    if isinstance(existing, str) and existing.strip():
+        return existing.strip()
+    domain_slug = canonical_domain_slug(
+        row.get("analysis_type") or row.get("domain")
+    )
+    if domain_slug == "pretreatment":
+        pt = (
+            str(row.get("pt_method") or "").strip()
+            or (
+                str(row.get("prep_method") or "").strip()
+                if "pt_method" not in row
+                else ""
+            )
+            or "none"
+        )
+        eh = str(row.get("eh_method") or "").strip() or "none"
+        return f"{pt} · {eh}" if eh and eh != "none" else pt
+    if domain_slug == "fermentation":
+        pt = str(row.get("pt_method") or "").strip()
+        st = (
+            str(row.get("strain") or "").strip()
+            or (
+                str(row.get("prep_method") or "").strip()
+                if "strain" not in row
+                else ""
+            )
+            or "no-strain"
+        )
+        th = row.get("time_h")
+        base = f"{pt} · {st}" if pt and pt != "none" else st
+        if th is not None and str(th).strip() != "":
+            try:
+                return f"{base} @ {float(th):g}h"
+            except (TypeError, ValueError):
+                return f"{base} @ {str(th).strip()}h"
+        return base
+    return str(row.get("prep_method") or "").strip() or "unassigned"
+
+
+def resolve_record_table(analysis_type_or_slug: str | None) -> str:
+    """Resolve an analysis domain display name, slug, or record table name to its *_record table."""
+    cleaned = str(analysis_type_or_slug or "").strip()
+    if cleaned in ANALYSIS_TABLE_MAP:
+        return ANALYSIS_TABLE_MAP[cleaned]
+    lowered = cleaned.lower()
+    if lowered in DOMAIN_SLUG_TO_RECORD_TABLE.values():
+        return lowered
+    slug = canonical_domain_slug(cleaned)
+    if slug in DOMAIN_SLUG_TO_RECORD_TABLE:
+        return DOMAIN_SLUG_TO_RECORD_TABLE[slug]
+    for label, table_name in ANALYSIS_TABLE_MAP.items():
+        prefix = label.split()[0].lower()
+        if label.lower() in lowered or prefix in lowered:
+            return table_name
+    return "proximate_record"
+
+
+def normalize_replicate_group_key(
+    raw_key: str | dict[str, Any] | None = None,
+    prepared_sample: str | None = None,
+    analysis_type: str | None = None,
+    parameter: str | None = None,
+    prep_method: str | None = None,
+    experiment: str | None = None,
+    *,
+    resource_name: str | None = None,
+    parameter_name: str | None = None,
+) -> str:
+    """Build or normalize a canonical 6-part (or legacy 4-part) replicate_group_key."""
+    if isinstance(raw_key, dict):
+        if (
+            isinstance(raw_key.get("replicate_group_key"), str)
+            and "::" in raw_key["replicate_group_key"]
+            and not raw_key.get("resource_name")
+            and not raw_key.get("resource")
+        ):
+            return normalize_replicate_group_key(raw_key["replicate_group_key"])
+        res_s = str(raw_key.get("resource_name") or raw_key.get("resource") or "").strip().lower()
+        prep_s = str(raw_key.get("prepared_sample") or "").strip().lower()
+        dom_s = canonical_domain_slug(raw_key.get("analysis_type") or raw_key.get("domain"))
+        param_s = str(raw_key.get("parameter") or raw_key.get("parameter_name") or "").strip().lower()
+        method_s = str(group_context_label(raw_key) or "").strip().lower()
+        exp_s = str(raw_key.get("experiment") or "").strip().lower()
+        return f"{res_s}::{prep_s}::{dom_s}::{param_s}::{method_s}::{exp_s}"
+
+    has_component_args = any(
+        val is not None
+        for val in (
+            prepared_sample,
+            analysis_type,
+            parameter,
+            parameter_name,
+            prep_method,
+            experiment,
+            resource_name,
+        )
+    )
+    if isinstance(raw_key, str) and ("::" in raw_key or not has_component_args):
+        s = raw_key.strip()
+        if not s:
+            return ""
+        if s.lower().startswith("grp::"):
+            s = s[5:].strip()
+        parts = [p.strip().lower() for p in s.split("::")]
+        if len(parts) >= 3:
+            parts[2] = canonical_domain_slug(parts[2])
+        if len(parts) == 4:
+            return "::".join(parts[:4])
+        if len(parts) >= 6:
+            return "::".join(parts[:6])
+        if len(parts) == 5:
+            parts.append("")
+            return "::".join(parts)
+        return "::".join(parts)
+
+    if raw_key is None and not has_component_args:
+        return ""
+
+    res_val = resource_name if resource_name is not None else raw_key
+    param_val = parameter if parameter is not None else parameter_name
+    res_s = str(res_val or "").strip().lower()
+    prep_s = str(prepared_sample or "").strip().lower()
+    dom_s = canonical_domain_slug(analysis_type)
+    param_s = str(param_val or "").strip().lower()
+    method_s = str(prep_method or "").strip().lower()
+    exp_s = str(experiment or "").strip().lower()
+    return f"{res_s}::{prep_s}::{dom_s}::{param_s}::{method_s}::{exp_s}"
+
+
+def matches_replicate_group_key(
+    key_a: str | None,
+    key_b: str | None,
+) -> bool:
+    """Return True if two replicate group keys match on all 6 slots or via 4-part prefix fallback."""
+    na = normalize_replicate_group_key(key_a) if key_a else ""
+    nb = normalize_replicate_group_key(key_b) if key_b else ""
+    if not na or not nb:
+        return False
+    if na == nb:
+        return True
+    pa = na.split("::")
+    pb = nb.split("::")
+    if (len(pa) == 4 or len(pb) == 4) and len(pa) >= 4 and len(pb) >= 4:
+        return "::".join(pa[:4]) == "::".join(pb[:4])
+    return False
+
 
 def _fetch_live_resource_data() -> dict[str, Any]:
     """Import and invoke fetch_all_resource_data without permanently mutating sys.path."""
@@ -128,15 +347,7 @@ def load_snapshot(snapshot_path: Path) -> dict[str, Any]:
 
 
 def _infer_record_table(analysis_type: str) -> str:
-    cleaned = (analysis_type or "").strip()
-    if cleaned in ANALYSIS_TABLE_MAP:
-        return ANALYSIS_TABLE_MAP[cleaned]
-    lowered = cleaned.lower()
-    for label, table_name in ANALYSIS_TABLE_MAP.items():
-        prefix = label.split()[0].lower()
-        if label.lower() in lowered or prefix in lowered:
-            return table_name
-    return "proximate_record"
+    return resolve_record_table(analysis_type)
 
 
 def unpack_snapshot_records(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
@@ -169,6 +380,9 @@ def unpack_snapshot_records(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
         exp_date = (
             raw_row[num_str_cols + 3] if len(raw_row) > num_str_cols + 3 else ""
         )
+        raw_time_h = (
+            raw_row[num_str_cols + 4] if len(raw_row) > num_str_cols + 4 else None
+        )
 
         try:
             numeric_value = float(raw_value) if raw_value is not None else None
@@ -182,15 +396,20 @@ def unpack_snapshot_records(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
         )
         decoded["value"] = numeric_value
         decoded["exp_date"] = str(exp_date or "")
+        decoded["time_h"] = raw_time_h
         decoded["parameter_name"] = decoded.get("parameter", "")
-        decoded["record_table"] = _infer_record_table(
+        decoded["record_table"] = resolve_record_table(
             decoded.get("analysis_type", "")
         )
-        decoded["replicate_group_key"] = (
-            f"{decoded.get('resource_name', '')}::"
-            f"{decoded.get('prepared_sample', '')}::"
-            f"{decoded.get('analysis_type', '')}::"
-            f"{decoded.get('parameter', '')}"
+        ctx_method = group_context_label(decoded)
+        decoded["group_context_label"] = ctx_method
+        decoded["replicate_group_key"] = normalize_replicate_group_key(
+            resource_name=decoded.get("resource_name", ""),
+            prepared_sample=decoded.get("prepared_sample", ""),
+            analysis_type=decoded.get("analysis_type", ""),
+            parameter=decoded.get("parameter", ""),
+            prep_method=ctx_method,
+            experiment=decoded.get("experiment", ""),
         )
         records.append(decoded)
 
@@ -204,6 +423,7 @@ def _compute_quantiles(values: list[float]) -> dict[str, float]:
             "count": 0,
             "mean": 0.0,
             "std": 0.0,
+            "within_sd": 0.0,
             "median": 0.0,
             "q1": 0.0,
             "q3": 0.0,
@@ -238,10 +458,12 @@ def _compute_quantiles(values: list[float]) -> dict[str, float]:
         else 0.0
     )
 
+    rounded_std = round(std_val, 4)
     return {
         "count": n,
         "mean": round(mean_val, 4),
-        "std": round(std_val, 4),
+        "std": rounded_std,
+        "within_sd": rounded_std,
         "median": round(median_val, 4),
         "q1": round(q1, 4),
         "q3": round(q3, 4),
@@ -254,6 +476,20 @@ def _compute_quantiles(values: list[float]) -> dict[str, float]:
     }
 
 
+def _method_stratum_key(rec: dict[str, Any]) -> tuple[str, str, str, str, str]:
+    """Return method-stratified key (resource_name, analysis_type, parameter, prep_method, unit)."""
+    ctx_method = rec.get("group_context_label")
+    if ctx_method is None:
+        ctx_method = group_context_label(rec)
+    return (
+        str(rec.get("resource_name", "")).strip().lower(),
+        canonical_domain_slug(rec.get("analysis_type", "")),
+        str(rec.get("parameter") or rec.get("parameter_name") or "").strip().lower(),
+        str(ctx_method or "").strip().lower(),
+        str(rec.get("unit", "")).strip().lower(),
+    )
+
+
 def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
     """Build the normalized payload embedded into the Product 4 HTML workbench."""
     records = unpack_snapshot_records(snapshot)
@@ -262,23 +498,59 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
         or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     )
 
-    # 1. Group by (analysis_type, parameter) across resources & per-resource for IQR stats
+    # 1. Group by (analysis_type, parameter) across resources & per-resource for IQR stats,
+    #    and by (resource_name, analysis_type, parameter, prep_method, unit) -> prepared_sample
+    #    for method-stratified between-sample SD / RSD.
     param_values_by_res: dict[str, list[float]] = defaultdict(list)
     param_values_global: dict[str, list[float]] = defaultdict(list)
     groups_map: dict[str, list[dict[str, Any]]] = defaultdict(list)
     sample_params_map: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    stratum_sample_values: dict[
+        tuple[str, str, str, str, str], dict[str, list[float]]
+    ] = defaultdict(lambda: defaultdict(list))
 
     for rec in records:
         val = rec.get("value")
         if val is None or (isinstance(val, float) and math.isnan(val)):
             continue
+        fval = float(val)
         res_param_key = (
             f"{rec['resource_name']}::{rec['analysis_type']}::{rec['parameter']}"
         )
         global_param_key = f"{rec['analysis_type']}::{rec['parameter']}"
-        param_values_by_res[res_param_key].append(float(val))
-        param_values_global[global_param_key].append(float(val))
+        param_values_by_res[res_param_key].append(fval)
+        param_values_global[global_param_key].append(fval)
         groups_map[rec["replicate_group_key"]].append(rec)
+        sample_slug = str(rec.get("prepared_sample", "")).strip().lower()
+        stratum_sample_values[_method_stratum_key(rec)][sample_slug].append(fval)
+
+    between_stats_by_stratum: dict[
+        tuple[str, str, str, str, str], dict[str, Any]
+    ] = {}
+    for stratum_key, sample_vals_map in stratum_sample_values.items():
+        sample_means = [
+            statistics.fmean(svals)
+            for svals in sample_vals_map.values()
+            if svals
+        ]
+        k_groups = len(sample_means)
+        if k_groups >= 2:
+            mean_of_means = statistics.fmean(sample_means)
+            raw_between_sd = statistics.stdev(sample_means)
+            between_sd: float | None = round(raw_between_sd, 4)
+            between_rsd_pct: float | None = (
+                round(abs(raw_between_sd / mean_of_means) * 100.0, 2)
+                if abs(mean_of_means) > 1e-12
+                else 0.0
+            )
+        else:
+            between_sd = None
+            between_rsd_pct = None
+        between_stats_by_stratum[stratum_key] = {
+            "between_k_groups": k_groups,
+            "between_sd": between_sd,
+            "between_rsd_pct": between_rsd_pct,
+        }
 
     res_param_stats: dict[str, dict[str, float]] = {
         key: _compute_quantiles(vals)
@@ -342,6 +614,21 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
             float(r["value"]) for r in group_recs if r.get("value") is not None
         ]
         group_stats = _compute_quantiles(vals)
+        between_info = between_stats_by_stratum.get(
+            _method_stratum_key(first),
+            {
+                "between_k_groups": 1,
+                "between_sd": None,
+                "between_rsd_pct": None,
+            },
+        )
+        within_sd = group_stats["std"]
+        between_sd = between_info["between_sd"]
+        between_rsd_pct = between_info["between_rsd_pct"]
+        between_k_groups = between_info["between_k_groups"]
+        group_stats["between_sd"] = between_sd
+        group_stats["between_rsd_pct"] = between_rsd_pct
+        group_stats["between_k_groups"] = between_k_groups
 
         res_param_key = (
             f"{first['resource_name']}::{first['analysis_type']}::{first['parameter']}"
@@ -420,6 +707,10 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
                     "exp_date": rec.get("exp_date", ""),
                     "experiment": rec.get("experiment", ""),
                     "prep_method": rec.get("prep_method", ""),
+                    "eh_method": rec.get("eh_method", ""),
+                    "strain": rec.get("strain", ""),
+                    "time_h": rec.get("time_h"),
+                    "group_context_label": rec.get("group_context_label", ""),
                     "note": rec.get("note", ""),
                     "deviation_from_median_pct": deviation_pct,
                     "is_iqr_outlier": is_iqr_outlier,
@@ -475,11 +766,22 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
             "analyst": first.get("analyst", ""),
             "experiment": first.get("experiment", ""),
             "prep_method": first.get("prep_method", ""),
+            "eh_method": first.get("eh_method", ""),
+            "strain": first.get("strain", ""),
+            "time_h": first.get("time_h"),
+            "group_context_label": first.get("group_context_label", ""),
             "exp_date": first.get("exp_date", ""),
             "record_table": first.get("record_table", "proximate_record"),
+            "rsd_pct": group_stats["rsd_pct"],
+            "within_sd": within_sd,
+            "between_rsd_pct": between_rsd_pct,
+            "between_sd": between_sd,
+            "between_k_groups": between_k_groups,
+            "replicate_count": group_stats["count"],
             "stats": group_stats,
             "reference_stats": ref_stats,
             "replicates": replicate_rows,
+            "records": replicate_rows,
             "flag_types": flag_types,
             "proximate_closure": closure_info,
         }
@@ -494,6 +796,10 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
                 "mean": group_stats["mean"],
                 "median": group_stats["median"],
                 "rsd_pct": group_stats["rsd_pct"],
+                "within_sd": within_sd,
+                "between_rsd_pct": between_rsd_pct,
+                "between_sd": between_sd,
+                "between_k_groups": between_k_groups,
                 "count": group_stats["count"],
                 "flag_types": flag_types,
             }
@@ -536,11 +842,19 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
                     "analyst": first.get("analyst", ""),
                     "experiment": first.get("experiment", ""),
                     "prep_method": first.get("prep_method", ""),
+                    "eh_method": first.get("eh_method", ""),
+                    "strain": first.get("strain", ""),
+                    "time_h": first.get("time_h"),
+                    "group_context_label": first.get("group_context_label", ""),
                     "exp_date": first.get("exp_date", ""),
                     "flag_type": primary_flag,
                     "flag_types": flag_types,
                     "flag_trigger_value": "; ".join(trigger_parts),
                     "rsd_pct": group_stats["rsd_pct"],
+                    "within_sd": within_sd,
+                    "between_rsd_pct": between_rsd_pct,
+                    "between_sd": between_sd,
+                    "between_k_groups": between_k_groups,
                     "replicate_count": group_stats["count"],
                     "median_value": group_stats["median"],
                     "mean_value": group_stats["mean"],
@@ -1777,6 +2091,253 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         }
       }
 
+      var CANONICAL_DOMAIN_SLUGS_MAP = {
+        "proximate analysis": "proximate",
+        "proximate": "proximate",
+        "proximate_record": "proximate",
+        "ultimate analysis": "ultimate",
+        "ultimate": "ultimate",
+        "ultimate_record": "ultimate",
+        "compositional analysis": "compositional",
+        "compositional": "compositional",
+        "compositional_record": "compositional",
+        "calorimetry": "calorimetry",
+        "calorimetry analysis": "calorimetry",
+        "calorimetry_xrd": "calorimetry",
+        "calorimetry_record": "calorimetry",
+        "xrd": "xrd",
+        "xrd analysis": "xrd",
+        "xrd_record": "xrd",
+        "icp": "icp",
+        "icp-oes / icp-ms": "icp",
+        "icp elemental analysis": "icp",
+        "icp analysis": "icp",
+        "icp_record": "icp",
+        "xrf": "xrf",
+        "xrf elemental": "xrf",
+        "xrf elemental analysis": "xrf",
+        "xrf analysis": "xrf",
+        "xrf_record": "xrf",
+        "ash": "xrf",
+        "pretreatment": "pretreatment",
+        "pretreatment & hydrolysis": "pretreatment",
+        "pretreatment_record": "pretreatment",
+        "fermentation": "fermentation",
+        "fermentation (bioconversion)": "fermentation",
+        "fermentation_record": "fermentation",
+        "gasification": "gasification",
+        "gasification_record": "gasification"
+      };
+
+      function canonicalDomainSlug(analysisType) {
+        if (!analysisType) return "unknown";
+        var cleaned = String(analysisType).trim().toLowerCase();
+        if (!cleaned) return "unknown";
+        if (cleaned.slice(-7) === "_record") {
+          cleaned = cleaned.slice(0, -7).trim();
+        }
+        if (CANONICAL_DOMAIN_SLUGS_MAP[cleaned]) {
+          return CANONICAL_DOMAIN_SLUGS_MAP[cleaned];
+        }
+        var slugs = [
+          "proximate",
+          "ultimate",
+          "compositional",
+          "calorimetry",
+          "xrd",
+          "icp",
+          "xrf",
+          "pretreatment",
+          "fermentation",
+          "gasification"
+        ];
+        for (var i = 0; i < slugs.length; i++) {
+          if (cleaned.indexOf(slugs[i]) !== -1) {
+            return slugs[i];
+          }
+        }
+        return cleaned;
+      }
+
+      function groupContextLabel(obj) {
+        if (!obj || typeof obj !== "object") return "unassigned";
+        if (
+          typeof obj.group_context_label === "string" &&
+          obj.group_context_label.trim() !== ""
+        ) {
+          return obj.group_context_label.trim();
+        }
+        var domSlug = canonicalDomainSlug(obj.analysis_type || obj.domain || "");
+        var hasPtKey = Object.prototype.hasOwnProperty.call(obj, "pt_method");
+        var hasStrainKey = Object.prototype.hasOwnProperty.call(obj, "strain");
+        var prep = String(obj.prep_method || "").trim();
+        var ptRaw = String(obj.pt_method || "").trim();
+        if (domSlug === "pretreatment") {
+          var pt = ptRaw || (!hasPtKey ? prep : "") || "none";
+          var eh = String(obj.eh_method || "").trim() || "none";
+          return eh && eh !== "none" ? pt + " \u00b7 " + eh : pt;
+        }
+        if (domSlug === "fermentation") {
+          var fermPt = ptRaw;
+          var strain =
+            String(obj.strain || "").trim() ||
+            (!hasStrainKey ? prep : "") ||
+            "no-strain";
+          var base =
+            fermPt && fermPt !== "none" ? fermPt + " \u00b7 " + strain : strain;
+          var th = obj.time_h;
+          if (th !== null && th !== undefined && String(th).trim() !== "") {
+            var numTh = Number(th);
+            var thFmt = Number.isFinite(numTh)
+              ? String(numTh)
+              : String(th).trim();
+            return base + " @ " + thFmt + "h";
+          }
+          return base;
+        }
+        return prep || "unassigned";
+      }
+
+      function normalizeReplicateGroupKey(
+        rawKeyOrResource,
+        preparedSample,
+        analysisType,
+        parameter,
+        prepMethod,
+        experiment
+      ) {
+        if (
+          typeof rawKeyOrResource === "string" &&
+          rawKeyOrResource.indexOf("::") !== -1 &&
+          preparedSample === undefined &&
+          analysisType === undefined &&
+          parameter === undefined
+        ) {
+          var s = rawKeyOrResource.trim();
+          if (s.toLowerCase().indexOf("grp::") === 0) {
+            s = s.slice(5);
+          }
+          var parts = s.split("::").map(function (p) {
+            return String(p || "").trim().toLowerCase();
+          });
+          if (parts.length >= 3) {
+            parts[2] = canonicalDomainSlug(parts[2]);
+          }
+          if (parts.length === 4 || parts.length === 6) {
+            return parts.join("::");
+          }
+          if (parts.length === 5) {
+            parts.push("");
+            return parts.join("::");
+          }
+          if (parts.length > 6) {
+            return parts.slice(0, 6).join("::");
+          }
+          return parts.join("::");
+        }
+        if (rawKeyOrResource && typeof rawKeyOrResource === "object") {
+          var obj = rawKeyOrResource;
+          if (
+            typeof obj.replicate_group_key === "string" &&
+            obj.replicate_group_key.indexOf("::") !== -1 &&
+            !obj.resource_name &&
+            !obj.resource
+          ) {
+            return normalizeReplicateGroupKey(obj.replicate_group_key);
+          }
+          return [
+            String(obj.resource_name || obj.resource || "").trim().toLowerCase(),
+            String(obj.prepared_sample || "").trim().toLowerCase(),
+            canonicalDomainSlug(obj.analysis_type || obj.domain || ""),
+            String(obj.parameter_name || obj.parameter || "").trim().toLowerCase(),
+            String(groupContextLabel(obj) || "").trim().toLowerCase(),
+            String(obj.experiment || "").trim().toLowerCase()
+          ].join("::");
+        }
+        return [
+          String(rawKeyOrResource || "").trim().toLowerCase(),
+          String(preparedSample || "").trim().toLowerCase(),
+          canonicalDomainSlug(analysisType || ""),
+          String(parameter || "").trim().toLowerCase(),
+          String(prepMethod || "").trim().toLowerCase(),
+          String(experiment || "").trim().toLowerCase()
+        ].join("::");
+      }
+
+      function matchesReplicateGroupKey(a, b) {
+        if (!a || !b) return false;
+        var na = normalizeReplicateGroupKey(String(a));
+        var nb = normalizeReplicateGroupKey(String(b));
+        if (!na || !nb) return false;
+        if (na === nb) return true;
+        var pa = na.split("::");
+        var pb = nb.split("::");
+        if ((pa.length === 4 || pb.length === 4) && pa.length >= 4 && pb.length >= 4) {
+          return pa.slice(0, 4).join("::") === pb.slice(0, 4).join("::");
+        }
+        return false;
+      }
+
+      function findReplicateGroupForDecision(dec) {
+        if (!dec) return null;
+        var groups = (WORKBENCH_DATA && WORKBENCH_DATA.replicate_groups) || {};
+        if (dec.replicate_group_key && groups[dec.replicate_group_key]) {
+          return groups[dec.replicate_group_key];
+        }
+        var groupList = Object.values(groups);
+        if (dec.replicate_group_key) {
+          for (var i = 0; i < groupList.length; i++) {
+            var g = groupList[i];
+            if (g && matchesReplicateGroupKey(g.replicate_group_key, dec.replicate_group_key)) {
+              return g;
+            }
+          }
+        }
+        var targetRecIds = [];
+        if (dec.record_id) {
+          targetRecIds.push(String(dec.record_id));
+        }
+        if (Array.isArray(dec.record_ids)) {
+          for (var rIdx = 0; rIdx < dec.record_ids.length; rIdx++) {
+            if (dec.record_ids[rIdx]) {
+              targetRecIds.push(String(dec.record_ids[rIdx]));
+            }
+          }
+        }
+        if (targetRecIds.length > 0) {
+          for (var k = 0; k < groupList.length; k++) {
+            var grp = groupList[k];
+            if (!grp) continue;
+            if (
+              dec.record_table &&
+              grp.record_table &&
+              String(dec.record_table) !== String(grp.record_table)
+            ) {
+              continue;
+            }
+            var recs = grp.records || grp.replicates || [];
+            for (var m = 0; m < recs.length; m++) {
+              var recId = recs[m] && recs[m].record_id ? String(recs[m].record_id) : "";
+              if (recId && targetRecIds.indexOf(recId) !== -1) {
+                return grp;
+              }
+            }
+          }
+          for (var k2 = 0; k2 < groupList.length; k2++) {
+            var grp2 = groupList[k2];
+            if (!grp2) continue;
+            var recs2 = grp2.records || grp2.replicates || [];
+            for (var m2 = 0; m2 < recs2.length; m2++) {
+              var recId2 = recs2[m2] && recs2[m2].record_id ? String(recs2[m2].record_id) : "";
+              if (recId2 && targetRecIds.indexOf(recId2) !== -1) {
+                return grp2;
+              }
+            }
+          }
+        }
+        return null;
+      }
+
       function populateFacetDropdowns() {
         var facets = WORKBENCH_DATA.facets || {};
         fillSelect("filter-resource", facets.resources || [], "All Resources");
@@ -2075,9 +2636,12 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       function selectDecision(decisionId, updateUrl) {
         var dec = state.decisionsById[decisionId];
         if (!dec) return;
+        var matchedGroup = findReplicateGroupForDecision(dec);
+        var resolvedGroupKey =
+          (matchedGroup && matchedGroup.replicate_group_key) || dec.replicate_group_key;
         state.selectedDecisionId = decisionId;
-        state.selectedGroupKey = dec.replicate_group_key;
-        state.inspectedGroupKey = dec.replicate_group_key;
+        state.selectedGroupKey = resolvedGroupKey;
+        state.inspectedGroupKey = resolvedGroupKey;
         state.scopeMode = dec.scope_mode || "group";
 
         // Default replicate checkboxes
@@ -2100,7 +2664,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             "?decision_id=" +
             encodeURIComponent(decisionId) +
             "&replicate_group_key=" +
-            encodeURIComponent(dec.replicate_group_key);
+            encodeURIComponent(resolvedGroupKey || dec.replicate_group_key || "");
           window.history.replaceState({ decision_id: decisionId }, "", newUrl);
         }
 
@@ -2111,31 +2675,38 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       function renderContextualDrawer() {
         var dec = state.decisionsById[state.selectedDecisionId];
         if (!dec) return;
-        var groups = WORKBENCH_DATA.replicate_groups || {};
-        var group = groups[dec.replicate_group_key] || null;
+        var group = findReplicateGroupForDecision(dec);
+        var resolvedGroupKey =
+          (group && group.replicate_group_key) || dec.replicate_group_key || "";
+        var resolvedSample =
+          dec.prepared_sample || (group && group.prepared_sample) || "";
+        var resolvedResource =
+          dec.resource_name || (group && group.resource_name) || "";
 
         setText(
           "drawer-title",
           dec.decision_id +
             " • " +
-            dec.resource_name +
+            resolvedResource +
             " — " +
-            dec.parameter_name +
+            (dec.parameter_name || (group && group.parameter_name) || "") +
             " (" +
-            dec.prepared_sample +
+            resolvedSample +
             ")"
         );
         setText(
           "drawer-subtitle",
-          dec.analysis_type + " • Table: " + (dec.record_table || "proximate_record")
+          (dec.analysis_type || (group && group.analysis_type) || "") +
+            " • Table: " +
+            (dec.record_table || (group && group.record_table) || "proximate_record")
         );
         setText(
           "drawer-deeplink-code",
-          "?decision_id=" + dec.decision_id + "&replicate_group_key=" + dec.replicate_group_key
+          "?decision_id=" + dec.decision_id + "&replicate_group_key=" + resolvedGroupKey
         );
 
         // Populate Co-Measured Parameter selector on same prepared_sample
-        var sampleKey = dec.resource_name + "::" + dec.prepared_sample;
+        var sampleKey = resolvedResource + "::" + resolvedSample;
         var coList = (WORKBENCH_DATA.co_measured_by_sample || {})[sampleKey] || [];
         var coSelect = document.getElementById("select-co-measured-param");
         if (coSelect) {
@@ -2160,7 +2731,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               flagSuffix;
             coSelect.appendChild(opt);
           }
-          coSelect.value = state.inspectedGroupKey || dec.replicate_group_key;
+          coSelect.value = state.inspectedGroupKey || resolvedGroupKey;
         }
 
         // Render Left Pane Plot
@@ -2310,7 +2881,22 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
         var groups = WORKBENCH_DATA.replicate_groups || {};
         var targetKey = state.inspectedGroupKey || state.selectedGroupKey;
-        var activeGroup = groups[targetKey];
+        var activeDec =
+          state.selectedDecisionId && state.decisionsById[state.selectedDecisionId]
+            ? state.decisionsById[state.selectedDecisionId]
+            : null;
+        var activeGroup = (targetKey && groups[targetKey]) || null;
+        if (!activeGroup && targetKey) {
+          activeGroup = findReplicateGroupForDecision({
+            replicate_group_key: targetKey,
+            record_id: activeDec ? activeDec.record_id : null,
+            record_ids: activeDec ? activeDec.record_ids : null,
+            record_table: activeDec ? activeDec.record_table : null
+          });
+        }
+        if (!activeGroup && activeDec) {
+          activeGroup = findReplicateGroupForDecision(activeDec);
+        }
         if (!activeGroup) {
           svg.innerHTML =
             '<text x="320" y="130" text-anchor="middle" fill="#64748b">Select a replicate group to render diagnostic plot</text>';
@@ -2712,8 +3298,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           })
           .then(function (data) {
             var serverItems = (data && (data.decisions || data.items)) || [];
-            for (var i = 0; i < serverItems.length; i++) {
-              var srv = serverItems[i];
+            serverItems.forEach(function (srv) {
+              if (!srv) return;
+              if (srv.record_table === "portal_bug_report" || srv.flag_type === "bug_report") return;
               var srvDbId =
                 typeof srv.id === "number"
                   ? srv.id
@@ -2724,34 +3311,124 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                   ? Number(srv.id)
                   : null;
               var targetId = null;
-              if (srv.decision_id && state.decisionsById[srv.decision_id]) {
-                targetId = srv.decision_id;
-              }
-              if (!targetId) {
-                for (var j = 0; j < state.decisionsOrder.length; j++) {
-                  var cand = state.decisionsById[state.decisionsOrder[j]];
-                  if (!cand) continue;
+              var repGroups = (WORKBENCH_DATA && WORKBENCH_DATA.replicate_groups) || {};
+              var normSrvKey = srv.replicate_group_key
+                ? normalizeReplicateGroupKey(srv.replicate_group_key)
+                : "";
+
+              // Pass 1: Exact db_id match (highest priority)
+              if (srvDbId !== null) {
+                for (var j1 = 0; j1 < state.decisionsOrder.length; j1++) {
+                  var cand1 = state.decisionsById[state.decisionsOrder[j1]];
+                  if (!cand1) continue;
                   if (
-                    (srvDbId !== null &&
-                      cand.db_id !== null &&
-                      cand.db_id !== undefined &&
-                      Number(cand.db_id) === srvDbId) ||
-                    (srv.replicate_group_key &&
-                      cand.replicate_group_key === srv.replicate_group_key)
+                    cand1.db_id !== null &&
+                    cand1.db_id !== undefined &&
+                    (cand1.db_id === srv.id || Number(cand1.db_id) === srvDbId)
                   ) {
-                    targetId = cand.decision_id;
+                    targetId = cand1.decision_id;
                     break;
+                  }
+                }
+              }
+
+              // Pass 2: Exact 6-part normalized replicate_group_key match
+              if (!targetId && normSrvKey) {
+                for (var j2 = 0; j2 < state.decisionsOrder.length; j2++) {
+                  var cand2 = state.decisionsById[state.decisionsOrder[j2]];
+                  if (!cand2) continue;
+                  if (
+                    srvDbId !== null &&
+                    cand2.db_id !== null &&
+                    cand2.db_id !== undefined &&
+                    Number(cand2.db_id) !== srvDbId
+                  ) {
+                    continue;
+                  }
+                  if (
+                    cand2.replicate_group_key &&
+                    normalizeReplicateGroupKey(cand2.replicate_group_key) === normSrvKey
+                  ) {
+                    targetId = cand2.decision_id;
+                    break;
+                  }
+                }
+              }
+
+              // Pass 3: 4-part prefix fallback match on replicate_group_key
+              if (!targetId && srv.replicate_group_key) {
+                for (var j3 = 0; j3 < state.decisionsOrder.length; j3++) {
+                  var cand3 = state.decisionsById[state.decisionsOrder[j3]];
+                  if (!cand3) continue;
+                  if (
+                    srvDbId !== null &&
+                    cand3.db_id !== null &&
+                    cand3.db_id !== undefined &&
+                    Number(cand3.db_id) !== srvDbId
+                  ) {
+                    continue;
+                  }
+                  if (
+                    cand3.replicate_group_key &&
+                    matchesReplicateGroupKey(cand3.replicate_group_key, srv.replicate_group_key)
+                  ) {
+                    targetId = cand3.decision_id;
+                    break;
+                  }
+                }
+              }
+
+              // Pass 4: Fallback match on (record_table, record_id)
+              if (!targetId && srv.record_id) {
+                for (var j4 = 0; j4 < state.decisionsOrder.length; j4++) {
+                  var cand4 = state.decisionsById[state.decisionsOrder[j4]];
+                  if (!cand4) continue;
+                  if (
+                    srvDbId !== null &&
+                    cand4.db_id !== null &&
+                    cand4.db_id !== undefined &&
+                    Number(cand4.db_id) !== srvDbId
+                  ) {
+                    continue;
+                  }
+                  if (
+                    !srv.record_table ||
+                    !cand4.record_table ||
+                    srv.record_table === cand4.record_table
+                  ) {
+                    var recMatched = false;
+                    var candGrp =
+                      repGroups[cand4.replicate_group_key] ||
+                      findReplicateGroupForDecision(cand4);
+                    var candRecs = (candGrp && (candGrp.records || candGrp.replicates)) || [];
+                    for (var rIdx = 0; rIdx < candRecs.length; rIdx++) {
+                      if (
+                        candRecs[rIdx] &&
+                        String(candRecs[rIdx].record_id) === String(srv.record_id)
+                      ) {
+                        recMatched = true;
+                        break;
+                      }
+                    }
+                    if (!recMatched && Array.isArray(cand4.record_ids)) {
+                      if (cand4.record_ids.indexOf(srv.record_id) !== -1) {
+                        recMatched = true;
+                      }
+                    }
+                    if (recMatched) {
+                      targetId = cand4.decision_id;
+                      break;
+                    }
                   }
                 }
               }
               if (targetId && state.decisionsById[targetId]) {
                 var merged = state.decisionsById[targetId];
-                merged.db_id = srvDbId !== null ? srvDbId : merged.db_id || null;
-                merged.decision_id =
-                  merged.decision_id ||
-                  "QC-" + String(srv.id).padStart(4, "0");
+                merged.db_id = srvDbId !== null ? srvDbId : srv.id !== undefined ? srv.id : merged.db_id || null;
                 merged.decision_status =
-                  srv.decision_status || merged.decision_status;
+                  srv.decision_status || srv.status || merged.decision_status;
+                merged.status =
+                  srv.status || srv.decision_status || merged.status || merged.decision_status;
                 merged.decision_action =
                   srv.decision_action || merged.decision_action;
                 merged.new_qc_pass = srv.new_qc_pass || merged.new_qc_pass;
@@ -2759,9 +3436,14 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                   srv.assigned_to_email !== undefined
                     ? srv.assigned_to_email
                     : merged.assigned_to_email;
-                merged.review_note = srv.review_note || merged.review_note;
+                merged.review_note =
+                  srv.review_note !== undefined && srv.review_note !== null
+                    ? srv.review_note
+                    : merged.review_note;
                 merged.rationale_chips =
-                  srv.rationale_chips || merged.rationale_chips;
+                  Array.isArray(srv.rationale_chips) && srv.rationale_chips.length > 0
+                    ? srv.rationale_chips
+                    : merged.rationale_chips || [];
                 merged.resolved_by_email =
                   srv.resolved_by_email || merged.resolved_by_email;
                 merged.resolved_at = srv.resolved_at || merged.resolved_at;
@@ -2771,22 +3453,98 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 merged.gsheet_synced_by_email =
                   srv.gsheet_synced_by_email || merged.gsheet_synced_by_email;
               } else {
-                srv.db_id = srvDbId;
-                srv.decision_id =
-                  typeof srv.decision_id === "string" &&
-                  srv.decision_id.indexOf("QC-") === 0
-                    ? srv.decision_id
-                    : "QC-" +
-                      String(
-                        srv.id != null
-                          ? srv.id
-                          : state.decisionsOrder.length + 1
-                      ).padStart(4, "0");
-                srv.record_table = srv.record_table || "proximate_record";
-                state.decisionsById[srv.decision_id] = srv;
-                state.decisionsOrder.push(srv.decision_id);
+                var did = "QC-DB-" + String(srv.id).padStart(4, "0");
+                var matchedGrp = findReplicateGroupForDecision(srv);
+                var grpStats = (matchedGrp && matchedGrp.stats) || {};
+                var hydrated = JSON.parse(JSON.stringify(srv));
+                hydrated.db_id = srvDbId !== null ? srvDbId : srv.id;
+                hydrated.decision_id = did;
+                hydrated.record_table =
+                  srv.record_table ||
+                  (matchedGrp && matchedGrp.record_table) ||
+                  "proximate_record";
+                hydrated.record_ids =
+                  Array.isArray(srv.record_ids) && srv.record_ids.length > 0
+                    ? srv.record_ids
+                    : matchedGrp && Array.isArray(matchedGrp.record_ids)
+                    ? matchedGrp.record_ids.slice()
+                    : srv.record_id
+                    ? [srv.record_id]
+                    : [];
+                hydrated.replicate_group_key =
+                  (matchedGrp && matchedGrp.replicate_group_key) ||
+                  (srv.replicate_group_key
+                    ? normalizeReplicateGroupKey(srv.replicate_group_key)
+                    : "");
+                hydrated.resource_name =
+                  srv.resource_name || (matchedGrp && matchedGrp.resource_name) || "";
+                hydrated.prepared_sample =
+                  srv.prepared_sample ||
+                  (matchedGrp && matchedGrp.prepared_sample) ||
+                  "";
+                hydrated.field_sample =
+                  srv.field_sample || (matchedGrp && matchedGrp.field_sample) || "";
+                hydrated.analysis_type =
+                  srv.analysis_type || (matchedGrp && matchedGrp.analysis_type) || "";
+                hydrated.parameter_name =
+                  srv.parameter_name || (matchedGrp && matchedGrp.parameter_name) || "";
+                hydrated.unit =
+                  srv.unit || (matchedGrp && matchedGrp.unit) || "";
+                hydrated.rsd_pct =
+                  matchedGrp && matchedGrp.rsd_pct != null
+                    ? matchedGrp.rsd_pct
+                    : grpStats.rsd_pct != null
+                    ? grpStats.rsd_pct
+                    : srv.rsd_pct != null
+                    ? srv.rsd_pct
+                    : 0.0;
+                hydrated.within_sd =
+                  matchedGrp && matchedGrp.within_sd != null
+                    ? matchedGrp.within_sd
+                    : grpStats.within_sd != null
+                    ? grpStats.within_sd
+                    : srv.within_sd != null
+                    ? srv.within_sd
+                    : null;
+                hydrated.between_rsd_pct =
+                  matchedGrp && matchedGrp.between_rsd_pct !== undefined
+                    ? matchedGrp.between_rsd_pct
+                    : grpStats.between_rsd_pct !== undefined
+                    ? grpStats.between_rsd_pct
+                    : srv.between_rsd_pct !== undefined
+                    ? srv.between_rsd_pct
+                    : null;
+                hydrated.between_sd =
+                  matchedGrp && matchedGrp.between_sd !== undefined
+                    ? matchedGrp.between_sd
+                    : grpStats.between_sd !== undefined
+                    ? grpStats.between_sd
+                    : srv.between_sd !== undefined
+                    ? srv.between_sd
+                    : null;
+                hydrated.replicate_count =
+                  matchedGrp && matchedGrp.replicate_count != null
+                    ? matchedGrp.replicate_count
+                    : grpStats.count != null
+                    ? grpStats.count
+                    : srv.replicate_count != null
+                    ? srv.replicate_count
+                    : hydrated.record_ids.length || 1;
+                hydrated.decision_status =
+                  srv.decision_status || srv.status || "open";
+                hydrated.status =
+                  srv.status || srv.decision_status || "open";
+                hydrated.flag_type = srv.flag_type || "analyst_flagged";
+                hydrated.flag_types =
+                  Array.isArray(srv.flag_types) && srv.flag_types.length > 0
+                    ? srv.flag_types
+                    : [hydrated.flag_type];
+                state.decisionsById[did] = hydrated;
+                if (state.decisionsOrder.indexOf(did) === -1) {
+                  state.decisionsOrder.push(did);
+                }
               }
-            }
+            });
             parseDeepLinkQuery();
             renderQueueTable();
             renderContextualDrawer();
@@ -3159,6 +3917,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         var qGroupKey = params.get("replicate_group_key");
         if (qDecisionId) {
           var paddedCandidate = "QC-" + String(qDecisionId).padStart(4, "0");
+          var paddedDbCandidate = "QC-DB-" + String(qDecisionId).padStart(4, "0");
           for (var k = 0; k < state.decisionsOrder.length; k++) {
             var d = state.decisionsById[state.decisionsOrder[k]];
             if (!d) continue;
@@ -3166,7 +3925,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               d.decision_id === qDecisionId ||
               String(d.db_id || "") === String(qDecisionId) ||
               String(d.id || "") === String(qDecisionId) ||
-              d.decision_id === paddedCandidate
+              d.decision_id === paddedCandidate ||
+              d.decision_id === paddedDbCandidate
             ) {
               selectDecision(d.decision_id, false);
               return;
@@ -3176,10 +3936,18 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (qGroupKey) {
           for (var i = 0; i < state.decisionsOrder.length; i++) {
             var item = state.decisionsById[state.decisionsOrder[i]];
-            if (item && item.replicate_group_key === qGroupKey) {
+            if (item && matchesReplicateGroupKey(item.replicate_group_key, qGroupKey)) {
               selectDecision(item.decision_id, false);
               return;
             }
+          }
+          var fallbackGroup = findReplicateGroupForDecision({
+            replicate_group_key: qGroupKey
+          });
+          if (fallbackGroup && fallbackGroup.replicate_group_key) {
+            state.selectedGroupKey = fallbackGroup.replicate_group_key;
+            state.inspectedGroupKey = fallbackGroup.replicate_group_key;
+            renderDiagnosticPlot();
           }
         }
       }
@@ -3488,6 +4256,23 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           .replace(/>/g, "&gt;")
           .replace(/"/g, "&quot;")
           .replace(/'/g, "&#39;");
+      }
+
+      if (typeof window !== "undefined") {
+        window.__WORKBENCH_TEST_HOOKS__ = {
+          state: state,
+          WORKBENCH_DATA: WORKBENCH_DATA,
+          canonicalDomainSlug: canonicalDomainSlug,
+          groupContextLabel: groupContextLabel,
+          normalizeReplicateGroupKey: normalizeReplicateGroupKey,
+          matchesReplicateGroupKey: matchesReplicateGroupKey,
+          findReplicateGroupForDecision: findReplicateGroupForDecision,
+          refreshQcStateFromApi: refreshQcStateFromApi,
+          renderContextualDrawer: renderContextualDrawer,
+          renderDiagnosticPlot: renderDiagnosticPlot,
+          parseDeepLinkQuery: parseDeepLinkQuery,
+          selectDecision: selectDecision
+        };
       }
 
       // Boot application

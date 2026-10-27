@@ -51,6 +51,218 @@ SessionDep = Annotated[Session, Depends(get_session)]
 AnalystDep = Annotated[PortalUser, Depends(require_portal_analyst)]
 AdminDep = Annotated[PortalUser, Depends(require_portal_admin)]
 
+CANONICAL_DOMAIN_SLUGS: dict[str, str] = {
+    "proximate analysis": "proximate",
+    "proximate": "proximate",
+    "proximate_record": "proximate",
+    "ultimate analysis": "ultimate",
+    "ultimate": "ultimate",
+    "ultimate_record": "ultimate",
+    "compositional analysis": "compositional",
+    "compositional": "compositional",
+    "compositional_record": "compositional",
+    "calorimetry": "calorimetry",
+    "calorimetry analysis": "calorimetry",
+    "calorimetry_xrd": "calorimetry",
+    "calorimetry_record": "calorimetry",
+    "xrd": "xrd",
+    "xrd analysis": "xrd",
+    "xrd_record": "xrd",
+    "icp": "icp",
+    "icp-oes / icp-ms": "icp",
+    "icp elemental analysis": "icp",
+    "icp analysis": "icp",
+    "icp_record": "icp",
+    "xrf": "xrf",
+    "xrf elemental": "xrf",
+    "xrf elemental analysis": "xrf",
+    "xrf analysis": "xrf",
+    "xrf_record": "xrf",
+    "ash": "xrf",
+    "pretreatment": "pretreatment",
+    "pretreatment & hydrolysis": "pretreatment",
+    "pretreatment_record": "pretreatment",
+    "fermentation": "fermentation",
+    "fermentation (bioconversion)": "fermentation",
+    "fermentation_record": "fermentation",
+    "gasification": "gasification",
+    "gasification_record": "gasification",
+}
+
+
+def canonical_domain_slug(analysis_type: str | None) -> str:
+    """Map an analysis domain display name or slug to its canonical 10-domain slug."""
+    cleaned = str(analysis_type or "").strip().lower()
+    if not cleaned:
+        return "unknown"
+    if cleaned.endswith("_record"):
+        cleaned = cleaned[: -len("_record")].strip()
+    if cleaned in CANONICAL_DOMAIN_SLUGS:
+        return CANONICAL_DOMAIN_SLUGS[cleaned]
+    for slug in (
+        "proximate",
+        "ultimate",
+        "compositional",
+        "calorimetry",
+        "xrd",
+        "icp",
+        "xrf",
+        "pretreatment",
+        "fermentation",
+        "gasification",
+    ):
+        if slug in cleaned:
+            return slug
+    return cleaned
+
+
+def group_context_label(row: dict[str, Any]) -> str:
+    """Return the context / method label defining experimental conditions for a replicate group."""
+    existing = row.get("group_context_label")
+    if isinstance(existing, str) and existing.strip():
+        return existing.strip()
+    domain_slug = canonical_domain_slug(
+        row.get("analysis_type") or row.get("domain")
+    )
+    if domain_slug == "pretreatment":
+        pt = (
+            str(row.get("pt_method") or "").strip()
+            or (
+                str(row.get("prep_method") or "").strip()
+                if "pt_method" not in row
+                else ""
+            )
+            or "none"
+        )
+        eh = str(row.get("eh_method") or "").strip() or "none"
+        return f"{pt} · {eh}" if eh and eh != "none" else pt
+    if domain_slug == "fermentation":
+        pt = str(row.get("pt_method") or "").strip()
+        st = (
+            str(row.get("strain") or "").strip()
+            or (
+                str(row.get("prep_method") or "").strip()
+                if "strain" not in row
+                else ""
+            )
+            or "no-strain"
+        )
+        th = row.get("time_h")
+        base = f"{pt} · {st}" if pt and pt != "none" else st
+        if th is not None and str(th).strip() != "":
+            try:
+                return f"{base} @ {float(th):g}h"
+            except (TypeError, ValueError):
+                return f"{base} @ {str(th).strip()}h"
+        return base
+    return str(row.get("prep_method") or "").strip() or "unassigned"
+
+
+def normalize_replicate_group_key(
+    raw_key_or_resource: str | dict[str, Any] | None = None,
+    prepared_sample: str | None = None,
+    analysis_type: str | None = None,
+    parameter: str | None = None,
+    prep_method: str | None = None,
+    experiment: str | None = None,
+    *,
+    resource_name: str | None = None,
+    parameter_name: str | None = None,
+) -> str:
+    """Normalize a 4-part or 6-part replicate group key or construct a canonical 6-part key."""
+    if isinstance(raw_key_or_resource, dict):
+        if (
+            isinstance(raw_key_or_resource.get("replicate_group_key"), str)
+            and "::" in raw_key_or_resource["replicate_group_key"]
+            and not raw_key_or_resource.get("resource_name")
+            and not raw_key_or_resource.get("resource")
+        ):
+            return normalize_replicate_group_key(
+                raw_key_or_resource["replicate_group_key"]
+            )
+        res_s = (
+            str(
+                raw_key_or_resource.get("resource_name")
+                or raw_key_or_resource.get("resource")
+                or ""
+            )
+            .strip()
+            .lower()
+        )
+        prep_s = str(raw_key_or_resource.get("prepared_sample") or "").strip().lower()
+        dom_s = canonical_domain_slug(
+            raw_key_or_resource.get("analysis_type")
+            or raw_key_or_resource.get("domain")
+        )
+        param_s = (
+            str(
+                raw_key_or_resource.get("parameter")
+                or raw_key_or_resource.get("parameter_name")
+                or ""
+            )
+            .strip()
+            .lower()
+        )
+        method_s = str(group_context_label(raw_key_or_resource) or "").strip().lower()
+        exp_s = str(raw_key_or_resource.get("experiment") or "").strip().lower()
+        return f"{res_s}::{prep_s}::{dom_s}::{param_s}::{method_s}::{exp_s}"
+
+    if (
+        raw_key_or_resource is not None
+        and "::" in str(raw_key_or_resource)
+        and prepared_sample is None
+        and analysis_type is None
+        and parameter is None
+        and resource_name is None
+        and parameter_name is None
+    ):
+        s = str(raw_key_or_resource).strip()
+        if s.lower().startswith("grp::"):
+            s = s[5:]
+        slots = [part.strip().lower() for part in s.split("::")]
+        if len(slots) >= 3:
+            slots[2] = canonical_domain_slug(slots[2])
+        if len(slots) == 4:
+            return "::".join(slots[:4])
+        if len(slots) >= 6:
+            return "::".join(slots[:6])
+        if len(slots) == 5:
+            slots.append("")
+            return "::".join(slots)
+        return "::".join(slots)
+
+    res_val = (
+        resource_name if resource_name is not None else (raw_key_or_resource or "")
+    )
+    param_val = parameter_name if parameter_name is not None else (parameter or "")
+    dom_val = canonical_domain_slug(analysis_type)
+    parts = [
+        str(res_val or "").strip().lower(),
+        str(prepared_sample or "").strip().lower(),
+        dom_val,
+        str(param_val or "").strip().lower(),
+        str(prep_method or "").strip().lower(),
+        str(experiment or "").strip().lower(),
+    ]
+    return "::".join(parts)
+
+
+def matches_replicate_group_key(key_a: str | None, key_b: str | None) -> bool:
+    """Match two replicate_group_key strings with automatic 4-part prefix fallback."""
+    if not key_a or not key_b:
+        return False
+    na = normalize_replicate_group_key(str(key_a))
+    nb = normalize_replicate_group_key(str(key_b))
+    if not na or not nb:
+        return False
+    if na == nb:
+        return True
+    pa = na.split("::")
+    pb = nb.split("::")
+    if (len(pa) == 4 or len(pb) == 4) and len(pa) >= 4 and len(pb) >= 4:
+        return "::".join(pa[:4]) == "::".join(pb[:4])
+    return False
+
 
 class GoogleAuthRequest(BaseModel):
     """Request body for Google OIDC login."""
@@ -452,6 +664,12 @@ def create_or_update_stage1_decision(
     if assigned and assigned.strip().lower() == "me":
         assigned = user.email
 
+    normalized_group_key = (
+        normalize_replicate_group_key(payload.replicate_group_key)
+        if payload.replicate_group_key and payload.replicate_group_key.strip()
+        else payload.replicate_group_key
+    )
+
     decision, updated_record_ids = record_stage1_decision(
         session=session,
         actor_email=user.email,
@@ -459,7 +677,7 @@ def create_or_update_stage1_decision(
         record_table=payload.record_table,
         record_id=primary_record_id,
         record_ids=all_record_ids or [primary_record_id],
-        replicate_group_key=payload.replicate_group_key,
+        replicate_group_key=normalized_group_key,
         resource_name=payload.resource_name,
         analysis_type=payload.analysis_type,
         parameter_name=payload.parameter_name,
@@ -525,6 +743,13 @@ def send_selection_tray_to_workbench(
         if assigned and assigned.strip().lower() == "me":
             assigned = user.email
 
+        raw_group_key = item.replicate_group_key or payload.replicate_group_key
+        normalized_group_key = (
+            normalize_replicate_group_key(raw_group_key)
+            if raw_group_key and raw_group_key.strip()
+            else raw_group_key
+        )
+
         for rid in rids:
             decision, _ = record_stage1_decision(
                 session=session,
@@ -532,8 +757,7 @@ def send_selection_tray_to_workbench(
                 record_table=item.record_table or payload.record_table,
                 record_id=rid,
                 record_ids=[rid],
-                replicate_group_key=item.replicate_group_key
-                or payload.replicate_group_key,
+                replicate_group_key=normalized_group_key,
                 resource_name=item.resource_name or payload.resource_name,
                 analysis_type=item.analysis_type or payload.analysis_type,
                 parameter_name=item.parameter_name or payload.parameter_name,
