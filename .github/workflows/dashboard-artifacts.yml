@@ -98,13 +98,13 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Pixi
-        uses: prefix-dev/setup-pixi@v0.10.2
+        uses: prefix-dev/setup-pixi@v0.11.2
         with:
           pixi-version: v0.63.2
           environments: default
 
       - name: Set up Node.js (for inline JS syntax verification)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: "22"
 
@@ -481,7 +481,7 @@ jobs:
 
       - name: Upload BioCirV Dashboards & Drift Audit Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: biocirv-dashboards-and-drift-suite
           retention-days: 30
