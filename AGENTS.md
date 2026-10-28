@@ -34,6 +34,11 @@ These apply to every task, in every session:
 6. **Never open a PR** without working through
    [`.agents/rules/contribution-discipline.md`](.agents/rules/contribution-discipline.md)
    in full, including human review of the complete diff.
+7. **Zero synthetic or fabricated data rendered to users.** Only 100% verifiable
+   records from the database (or an explicit database snapshot) may ever be
+   displayed in any portal view, dashboard, plot, or fallback path. If no
+   records match, render an honest empty state — never invent placeholder or
+   demo data in user-facing code (synthetic fixture data in tests is fine).
 
 ## Rule Index
 
