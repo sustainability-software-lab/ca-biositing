@@ -1557,3 +1557,378 @@ def test_card10_explorer_brush_zoom_and_qc_panels(
     assert "⚑ Identical Replicates" in page3
     assert "3. Resource Lab &amp; Sample Lineage Notes" in page3
     assert 'id="explorer-lab-notes-panel"' in page3
+
+
+def test_card11_proximate_sum_portal_parity_and_data_visualizer_rename(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    """Card 11: Verify Data Portal proximate_sum parity across Page 1, Page 2, and Page 3,
+    and Page 3 rename to Interactive Data Visualizer / 3. Data Visualizer.
+    """
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. Suite nav bar renamed to "3. Data Visualizer" across Page 1, Page 2, Page 3
+    assert "3. Data Visualizer" in page1
+    assert "3. Data Visualizer" in page2
+    assert "3. Data Visualizer" in page3
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page1
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page2
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page3
+
+    # 2. Page 3 title & header renamed to Interactive Feedstock Data Visualizer
+    assert "<title>BioCirV — Interactive Feedstock Data Visualizer</title>" in page3
+    assert "BioCirV Interactive Feedstock Data Visualizer" in page3
+
+    # 3. Proximate Sum badge & filter option across Page 1, Page 2, Page 3
+    assert "⚑ Proximate Sum" in page1
+    assert "⚑ Proximate Sum" in page2
+    assert "⚑ Proximate Sum" in page3
+    assert 'proxGroupMode: "exp_method"' in page1
+    assert "By Experiment × Method" in page1
+    assert '<option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>' in page2
+    assert '<option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>' in page3
+    assert "Proximate Closure (Moisture + VS + Ash):" in page3
+    assert "out_of_bounds: sumPct > 0.0 && (sumPct < 95.0 || sumPct > 105.0)" in page3
+
+
+def test_card12_default_assignee_email_and_assign_batch(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Card 12: Verify window.getDefaultAssigneeEmail auto-fill across Pages 1–3 and BioCirvQcClient.assignBatch."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    assert "function getDefaultAssigneeEmail(" in page1
+    assert "function getDefaultAssigneeEmail(" in page2
+    assert "function getDefaultAssigneeEmail(" in page3
+    assert "getDefaultAssigneeEmail(pf.assigned_to_email)" in page1
+    assert "window.getDefaultAssigneeEmail(dEntry.assigned_to_email)" in page2
+    assert "window.getDefaultAssigneeEmail(" in page3
+    assert "async assignBatch(" in page1
+
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    harness = tmp_path / "run_card12_overlay_checks.js"
+    harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    addEventListener(){}, removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+const storage = {};
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 2",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+const apiCalls = [];
+global.fetch = async (url, opts) => {
+  const method = (opts && opts.method) || "GET";
+  const body = (opts && opts.body) ? JSON.parse(opts.body) : null;
+  apiCalls.push({ url, method, body });
+  if (String(url).includes("/v1/qc/auth/me")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ email: "Auto.Analyst@lbl.gov", name: "Auto Analyst", role: "analyst", authenticated: true })
+    };
+  }
+  if (String(url).endsWith("/v1/qc/decisions/assign-batch") && method === "POST") {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "ok",
+        assigned_count: (body.items || []).length,
+        assigned_to_email: body.assigned_to_email,
+        decisions: (body.items || []).map((it, idx) => ({
+          id: it.id || (700 + idx),
+          record_table: it.record_table,
+          record_id: it.record_id,
+          replicate_group_key: it.replicate_group_key,
+          assigned_to_email: body.assigned_to_email,
+          decision_status: "in_review",
+          decision_action: "in_review"
+        }))
+      })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + p2_script
+        + """
+(async () => {
+  window.BioCirvQcClient.setAnalystIdentity({
+    email: "Auto.Analyst@lbl.gov",
+    name: "Auto Analyst",
+    role: "analyst",
+    confirmed: true
+  });
+
+  // 1. Verify getDefaultAssigneeEmail falls back to currentUser.email when empty, and preserves explicit email
+  const fallbackEmail = window.getDefaultAssigneeEmail("");
+  const explicitEmail = window.getDefaultAssigneeEmail("custom.reviewer@lbl.gov");
+
+  // 2. Open Submit Finding modal with no assigned_to_email -> auto-fills #finding-modal-assigned-email
+  window.openSubmitFindingModal({ resource_name: "almond hulls", parameter_name: "Ash", record_id: "rec-101" });
+  const modalAssignedVal = document.getElementById("finding-modal-assigned-email").value;
+
+  // 3. Verify Page 2 getDecisionEntry defaults assigned_to_email to current analyst
+  const defaultEntry = getDecisionEntry("grp::almond hulls::ah-01::proximate::ash::oven::exp-1");
+
+  // 4. Verify BioCirvQcClient.assignBatch posts to /v1/qc/decisions/assign-batch and updates live decisions cache
+  const batchRes = await window.BioCirvQcClient.assignBatch(
+    [
+      { record_table: "proximate_record", record_id: "rec-101", resource_name: "almond hulls", analysis_type: "proximate", parameter_name: "Ash" },
+      { record_table: "proximate_record", record_id: "rec-102", resource_name: "almond hulls", analysis_type: "proximate", parameter_name: "Moisture" }
+    ],
+    "Team.Lead@lbl.gov",
+    "Batch review note"
+  );
+
+  console.log(JSON.stringify({
+    fallbackEmail,
+    explicitEmail,
+    modalAssignedVal,
+    defaultEntryAssignee: defaultEntry.assigned_to_email,
+    batchRes,
+    batchApiCalls: apiCalls.filter(c => String(c.url).endsWith("/v1/qc/decisions/assign-batch"))
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Card 12 overlay Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert out["fallbackEmail"] == "auto.analyst@lbl.gov"
+    assert out["explicitEmail"] == "custom.reviewer@lbl.gov"
+    assert out["modalAssignedVal"] == "auto.analyst@lbl.gov"
+    assert out["defaultEntryAssignee"] == "auto.analyst@lbl.gov"
+    assert out["batchRes"]["ok"] is True
+    assert out["batchRes"]["assigned_count"] == 2
+    assert len(out["batchApiCalls"]) == 1
+    assert out["batchApiCalls"][0]["body"]["assigned_to_email"] == "team.lead@lbl.gov"
+    assert out["batchApiCalls"][0]["body"]["review_note"] == "Batch review note"
+    assert len(out["batchApiCalls"][0]["body"]["items"]) == 2
+
+
+def test_card13_show_me_mini_plot_popover_pages_1_to_3(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Card 13: Verify #audit-flag-show-me-popover, window.openFlagShowMePopover, and '👁 Show me' buttons across Pages 1–3."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    for page_html in (page1, page2, page3):
+        assert 'id="audit-flag-show-me-popover"' in page_html
+        assert "background-color: var(--card, #0f172a)" in page_html
+        assert "opacity: 1" in page_html
+        assert 'id="show-me-mini-svg"' in page_html
+        assert 'id="show-me-proximate-bar"' in page_html
+        assert 'id="show-me-open-visualizer-link"' in page_html
+        assert "function openFlagShowMePopover(" in page_html
+        assert "function closeFlagShowMePopover(" in page_html
+        assert "btn-show-me-flag" in page_html
+        assert "👁 Show me" in page_html
+        assert "REC-OUTLIER-1" not in page_html
+        assert "Sample-01" not in page_html
+
+    assert 'id="btn-qc-pop-show-me"' in page3
+    assert "window.__HIGHLIGHT_RK__" in page3
+
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    harness = tmp_path / "run_card13_show_me_checks.js"
+    harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set(id === "audit-flag-show-me-popover" || id === "show-me-proximate-bar" ? ["hidden"] : []);
+  const attrs = {};
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: {
+      add(c){ classSet.add(c); },
+      remove(c){ classSet.delete(c); },
+      toggle(c){ if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c){ return classSet.has(c); }
+    },
+    addEventListener(){}, removeEventListener(){},
+    setAttribute(k, v){ attrs[k] = String(v); if (k === "href") this.href = String(v); },
+    getAttribute(k){ return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+const storage = {};
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 2",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
+"""
+        + p2_script
+        + """
+(() => {
+  // 1. Open Show Me popover for a real replicate group from the snapshot
+  const resKey = Object.keys(BUNDLE.insights || {})[0];
+  const ins = BUNDLE.insights[resKey];
+  const byTab = (ins.outlier_screening && ins.outlier_screening.by_tab) || {};
+  let realGrp = null;
+  for (const tKey of Object.keys(byTab)) {
+    const grps = (byTab[tKey] && byTab[tKey].replicate_groups) || [];
+    if (grps.length > 0) {
+      realGrp = grps.find(g => g.raw_flagged || g.active_flagged) || grps[0];
+      break;
+    }
+  }
+  const realRk = window.normalizeReplicateGroupKey(realGrp, resKey);
+  const res1 = window.openFlagShowMePopover({
+    replicateGroupKey: realRk,
+    resource: resKey,
+    analysisType: realGrp.analysis_type,
+    parameter: realGrp.parameter,
+    preparedSample: realGrp.prepared_sample,
+    outlierRecordId: String(realGrp.dixon_candidate_id || (realGrp.replicates && realGrp.replicates[0] && realGrp.replicates[0].id) || "")
+  });
+  const popEl = document.getElementById("audit-flag-show-me-popover");
+  const svgHtml1 = document.getElementById("show-me-mini-svg").innerHTML;
+  const vizHref1 = document.getElementById("show-me-open-visualizer-link").getAttribute("href");
+
+  // 2. Open Show Me popover with proximate_sum flag active on a real group
+  const res2 = window.openFlagShowMePopover({
+    replicateGroupKey: realRk,
+    resource: resKey,
+    analysisType: "proximate",
+    parameter: realGrp.parameter,
+    preparedSample: realGrp.prepared_sample,
+    flags: ["proximate_sum"],
+    proximateSumPct: 108.6
+  });
+  const proxBarEl = document.getElementById("show-me-proximate-bar");
+  const proxBar2Hidden = proxBarEl.classList.contains("hidden");
+  const proxBar2Html = proxBarEl.innerHTML;
+
+  // 3. Verify nonexistent replicateGroupKey renders honest empty state and zero synthetic data
+  const emptyRes = window.openFlagShowMePopover({
+    replicateGroupKey: "nonexistent::missing-sample::proximate::ash::none::none",
+    resource: "nonexistent_resource",
+    analysisType: "proximate",
+    parameter: "ash"
+  });
+  const emptySvgHtml = document.getElementById("show-me-mini-svg").innerHTML;
+
+  // 4. Close popover
+  window.closeFlagShowMePopover();
+  const popClosedHidden = popEl.classList.contains("hidden");
+
+  console.log(JSON.stringify({
+    res1,
+    svgHtml1,
+    vizHref1,
+    res2,
+    proxBar2Hidden,
+    proxBar2Html,
+    emptyRes,
+    emptySvgHtml,
+    popClosedHidden
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Card 13 overlay Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert 'class="show-me-pt-target-group"' in out["svgHtml1"] or 'class="show-me-pt-outlier"' in out["svgHtml1"]
+    assert 'class="show-me-outlier-pulse-ring"' in out["svgHtml1"]
+    assert 'r="10.5"' in out["svgHtml1"]
+    assert 'stroke="#60a5fa"' in out["svgHtml1"]
+    assert 'stroke="#dc2626"' in out["svgHtml1"]
+    assert "resource_explorer_dashboard.html?resource=" in out["vizHref1"]
+    assert "&highlight_rk=" in out["vizHref1"]
+    assert out["proxBar2Hidden"] is False
+    assert "95–105%" in out["proxBar2Html"]
+    assert 'data-role="proximate-stacked-bar"' in out["proxBar2Html"]
+    assert "Proximate Closure" in out["proxBar2Html"]
+    assert out["emptyRes"]["empty"] is True
+    assert "No matching database records found in snapshot." in out["emptySvgHtml"]
+    assert "<circle" not in out["emptySvgHtml"]
+    assert out["popClosedHidden"] is True

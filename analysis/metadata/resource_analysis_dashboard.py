@@ -642,7 +642,7 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
             </label>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer">
               <input id="slice-page-explorer" type="checkbox" value="explorer" checked class="slice-page-checkbox rounded" />
-              <span><strong>3. Multi-Resource Side-by-Side Explorer</strong> <span class="badge-pass px-1.5 py-0.5 rounded font-mono text-[10px] ml-1">Default</span></span>
+              <span><strong>3. Data Visualizer</strong> <span class="badge-pass px-1.5 py-0.5 rounded font-mono text-[10px] ml-1">Default</span></span>
             </label>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer">
               <input id="slice-page-qc" type="checkbox" value="qc" class="slice-page-checkbox rounded" />
@@ -980,6 +980,33 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
           </button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Shared Contextual Flag "Show me" Mini-Plot Popover (Card 13) -->
+  <div id="audit-flag-show-me-popover" class="hidden fixed z-[65] w-[460px] max-w-[94vw] rounded-2xl border-2 border-[var(--primary)] bg-[var(--card)] text-[var(--foreground)] shadow-2xl p-4 space-y-2.5" style="background-color: var(--card, #0f172a); color: var(--foreground, #f8fafc); opacity: 1; backdrop-filter: none; box-shadow: 0 24px 48px rgba(2, 6, 23, 0.85);" role="dialog" aria-label="Contextual Flag Slice Mini-Plot">
+    <div class="flex items-start justify-between gap-2 border-b border-[var(--border)] pb-2">
+      <div>
+        <div id="show-me-popover-title" class="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
+          <span>👁 Contextual Slice Mini-Plot</span>
+        </div>
+        <div id="show-me-popover-subtitle" class="text-[11px] font-mono text-[var(--muted-foreground)] mt-0.5"></div>
+      </div>
+      <button id="btn-close-show-me-popover" type="button" onclick="window.closeFlagShowMePopover && window.closeFlagShowMePopover()" class="px-2 py-0.5 rounded text-xs font-mono bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]" title="Close mini-plot popover">✕</button>
+    </div>
+    <div id="show-me-flag-pills" class="flex flex-wrap items-center gap-1 text-[10px] font-mono"></div>
+    <div id="show-me-mini-svg-wrap" class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-2" style="background-color: var(--background, #020617); opacity: 1;">
+      <svg id="show-me-mini-svg" viewBox="0 0 420 150" width="100%" height="150" role="img" aria-label="Flagged Replicate Group vs Peer Slice Distribution"></svg>
+    </div>
+    <div id="show-me-proximate-bar" class="hidden rounded-xl border border-amber-500/40 bg-amber-500/10 p-2.5 text-[11px] font-mono space-y-1"></div>
+    <div id="show-me-legend" class="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-[var(--muted-foreground)] pt-0.5">
+      <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:9px;height:9px;border-radius:9999px;background:rgba(148,163,184,0.45);border:1.5px solid #64748b;"></span>⚪ Peer Slice Points</span>
+      <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:10px;height:10px;border-radius:9999px;background:rgba(59,130,246,0.22);border:2px solid #2563eb;"></span>🔵 Target Replicate Group</span>
+      <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:11px;height:11px;border-radius:9999px;background:rgba(239,68,68,0.28);border:2.5px solid #dc2626;"></span>🔴 Flagged Outlier</span>
+    </div>
+    <div class="flex items-center justify-between gap-2 border-t border-[var(--border)] pt-2 text-[11px]">
+      <span id="show-me-stats-summary" class="font-mono text-[10px] text-[var(--muted-foreground)]"></span>
+      <a id="show-me-open-visualizer-link" href="resource_explorer_dashboard.html" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 whitespace-nowrap">Open in Data Visualizer ↗</a>
     </div>
   </div>
 """
@@ -1578,7 +1605,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const m = document.getElementById(id);
         if (m) m.classList.add("hidden");
       });
-      ["panel-popover-resources", "panel-popover-params", "panel-popover-samples", "panel-popover-methods"].forEach(id => {
+      ["panel-popover-resources", "panel-popover-params", "panel-popover-samples", "panel-popover-methods", "audit-flag-show-me-popover"].forEach(id => {
         const p = document.getElementById(id);
         if (p) p.classList.add("hidden");
       });
@@ -2653,12 +2680,39 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       };
     }
 
+    function getDefaultAssigneeEmail(existingEmail) {
+      const cleanExisting = String(existingEmail || "").trim();
+      if (
+        cleanExisting &&
+        !["unassigned", "none", "null", "anonymous", "guest"].includes(cleanExisting.toLowerCase())
+      ) {
+        return cleanExisting;
+      }
+      try {
+        if (typeof BioCirvQcClient !== "undefined" && typeof BioCirvQcClient.getAnalystIdentity === "function") {
+          const id = BioCirvQcClient.getAnalystIdentity();
+          const email = String((id && id.email) || "").trim();
+          if (email && !["unassigned", "none", "null", "anonymous", "guest"].includes(email.toLowerCase())) {
+            return email;
+          }
+        }
+      } catch (_e) {}
+      try {
+        const stored = String(localStorage.getItem("biocirv_analyst_email") || "").trim();
+        if (stored && !["unassigned", "none", "null", "anonymous", "guest"].includes(stored.toLowerCase())) {
+          return stored;
+        }
+      } catch (_e) {}
+      return "";
+    }
+
     window.canonicalDomainSlug = canonicalDomainSlug;
     window.groupContextLabel = groupContextLabel;
     window.normalizeReplicateGroupKey = normalizeReplicateGroupKey;
     window.matchesReplicateGroupKey = matchesReplicateGroupKey;
     window.computeMedianNumeric = computeMedianNumeric;
     window.getOutlierSummary = getOutlierSummary;
+    window.getDefaultAssigneeEmail = getDefaultAssigneeEmail;
 
     const BioCirvQcClient = {
       canonicalDomainSlug,
@@ -2666,6 +2720,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       normalizeReplicateGroupKey,
       matchesReplicateGroupKey,
       getOutlierSummary,
+      getDefaultAssigneeEmail,
       _pendingSignInCallback: null,
 
       hasConfirmedIdentity() {
@@ -3074,6 +3129,99 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
 
       async assignDecision(decisionId, assignedToEmail, note) {
         return this.assignTask(decisionId, assignedToEmail, note);
+      },
+
+      async assignBatch(items, assignedToEmail, reviewNote) {
+        const id = this.getAnalystIdentity();
+        const cleanEmail = getDefaultAssigneeEmail(assignedToEmail).toLowerCase();
+        const normalizedItems = (Array.isArray(items) ? items : []).map(it => {
+          const repGroupKey = it.replicate_group_key || it.group_key || (
+            (it.resource_name || it.prepared_sample_name || it.prepared_sample || it.parameter_name || it.parameter)
+              ? normalizeReplicateGroupKey(it, it.resource_name)
+              : null
+          );
+          return {
+            decision_id: it.api_decision_id || it.db_id || it.decision_id || it.id || null,
+            record_table: it.record_table || `${canonicalDomainSlug(it.analysis_type || "proximate")}_record`,
+            record_id: it.record_id ? String(it.record_id) : null,
+            record_ids: Array.isArray(it.record_ids)
+              ? it.record_ids.map(String)
+              : (it.record_ids ? String(it.record_ids).split(/[|,\\s]+/).map(s => s.trim()).filter(Boolean) : (it.record_id ? [String(it.record_id)] : [])),
+            replicate_group_key: repGroupKey,
+            resource_name: it.resource_name || "unknown",
+            analysis_type: it.analysis_type || null,
+            parameter_name: it.parameter_name || it.parameter || null,
+            flag_type: it.flag_type || "statistical_outlier",
+            flag_trigger_value: it.flag_trigger_value || null,
+            old_qc_pass: it.old_qc_pass || null,
+            review_note: it.review_note || reviewNote || null
+          };
+        });
+        const actorEmail = ((id && id.email) || getDefaultAssigneeEmail("") || "local.analyst@lbl.gov").toLowerCase();
+        const nowIso = new Date().toISOString();
+        const requestBody = {
+          assigned_to_email: cleanEmail,
+          assigned_by_email: actorEmail,
+          review_note: reviewNote || null,
+          items: normalizedItems
+        };
+        try {
+          const resp = await fetch(`${id.apiBase}/v1/qc/decisions/assign-batch`, {
+            method: "POST",
+            headers: this.getHeaders(),
+            body: JSON.stringify(requestBody)
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const decisionsList = data.decisions || [];
+            decisionsList.forEach(d => this.upsertLocalDecision(d));
+            window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: data }));
+            window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: data }));
+            return { ok: true, source: "api", ...data };
+          }
+        } catch (_e) {}
+
+        const localAssigned = normalizedItems.map(it => {
+          const localEntry = {
+            id: it.decision_id || (Date.now() + Math.floor(Math.random() * 1000)),
+            decision_id: it.decision_id,
+            record_table: it.record_table,
+            record_id: it.record_id,
+            record_ids: it.record_ids,
+            replicate_group_key: it.replicate_group_key,
+            resource_name: it.resource_name,
+            analysis_type: it.analysis_type,
+            parameter_name: it.parameter_name,
+            flag_type: it.flag_type,
+            assigned_to_email: cleanEmail,
+            assigned_by_email: actorEmail,
+            decision_status: "in_review",
+            status: "in_review",
+            review_note: it.review_note || `Bulk-assigned to ${cleanEmail}`,
+            audit_history: [
+              {
+                action: "bulk_assign",
+                assigned_to_email: cleanEmail,
+                assigned_by_email: actorEmail,
+                actor_email: actorEmail,
+                timestamp: nowIso
+              }
+            ],
+            updated_at: nowIso
+          };
+          this.upsertLocalDecision(localEntry);
+          return localEntry;
+        });
+        window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: localAssigned }));
+        window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: localAssigned }));
+        return {
+          ok: true,
+          source: "local",
+          status: "assigned",
+          assigned_count: localAssigned.length,
+          assigned_to_email: cleanEmail,
+          decisions: localAssigned
+        };
       },
 
       async approveDecisions(itemsOrPayload, syncToGsheet = true) {
@@ -3587,10 +3735,13 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
                 g.raw_dixon = Boolean(dixonStillPassing);
                 if (passCnt === 0) {
                   g.raw_dixon = false;
+                  g.raw_proximate_sum = false;
+                  g.active_proximate_sum = false;
                   g.active_flagged = false;
                   g.flagged_active = false;
                 } else if (!g.below_cutoff) {
-                  g.active_flagged = Boolean(g.raw_dixon || g.raw_rsd20 || g.raw_sd3x);
+                  g.active_proximate_sum = Boolean(g.raw_proximate_sum);
+                  g.active_flagged = Boolean(g.raw_dixon || g.raw_rsd20 || g.raw_sd3x || g.raw_proximate_sum);
                   g.flagged_active = g.active_flagged;
                 }
               }
@@ -4124,7 +4275,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const qcSel = document.getElementById("finding-modal-qc-status");
         if (qcSel) qcSel.value = pf.default_qc_status || pf.new_qc_status || "provisional";
         const assignInput = document.getElementById("finding-modal-assigned-email");
-        if (assignInput) assignInput.value = pf.assigned_to_email || "";
+        if (assignInput) assignInput.value = getDefaultAssigneeEmail(pf.assigned_to_email);
         const noteInput = document.getElementById("finding-modal-note");
         if (noteInput) noteInput.value = pf.audit_note || pf.note || "";
         const statusEl = document.getElementById("finding-modal-status");
@@ -4330,6 +4481,589 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         });
       }
     }
+
+    function closeFlagShowMePopover() {
+      const pop = document.getElementById("audit-flag-show-me-popover");
+      if (pop) {
+        pop.classList.add("hidden");
+        if (pop.style) pop.style.display = "none";
+      }
+    }
+    window.closeFlagShowMePopover = closeFlagShowMePopover;
+
+    function collectAllPageReplicateGroupsForShowMe(preferredResource) {
+      const groupsMap = new Map();
+      const addNormalizedGroup = (rawGrp, fallbackRes) => {
+        if (!rawGrp || typeof rawGrp !== "object") return;
+        const res = String(rawGrp.resource_name || rawGrp.resource || fallbackRes || "").trim();
+        const at = String(rawGrp.analysis_type || rawGrp.domain || "").trim();
+        const param = String(rawGrp.parameter || rawGrp.parameter_name || "").trim();
+        const sample = String(rawGrp.prepared_sample || rawGrp.prepared_sample_name || rawGrp.field_sample || "").trim();
+        const method = String(rawGrp.prep_method || rawGrp.method_label || rawGrp.group_context_label || "").trim();
+        const exp = String(rawGrp.experiment || rawGrp.experiment_name || "").trim();
+        const unit = String(rawGrp.unit || "").trim();
+        const key = String(
+          rawGrp.replicate_group_key || rawGrp.group_key ||
+          normalizeReplicateGroupKey({
+            resource_name: res,
+            prepared_sample: sample,
+            analysis_type: at,
+            parameter: param,
+            prep_method: method,
+            experiment: exp
+          }, res)
+        ).trim().toLowerCase();
+        if (!key) return;
+
+        const rawReps = Array.isArray(rawGrp.replicates)
+          ? rawGrp.replicates
+          : (Array.isArray(rawGrp.rows) ? rawGrp.rows : []);
+        const reps = rawReps.map((r, idx) => ({
+          record_id: String(r.record_id || r.id || `${key}::rep-${idx + 1}`),
+          value: Number(r.value !== undefined ? r.value : r.val),
+          replicate: Number(r.replicate !== undefined ? r.replicate : (r.replicate_no !== undefined ? r.replicate_no : (r.rep !== undefined ? r.rep : (idx + 1)))),
+          qc: String(r.qc_pass || r.qc_status || r.qc || "pass").toLowerCase(),
+          prepared_sample: String(r.prepared_sample_name || r.prepared_sample || sample || "—"),
+          is_iqr_outlier: Boolean(r.is_iqr_outlier),
+          is_analyst_flagged: Boolean(r.is_analyst_flagged)
+        })).filter(r => typeof r.value === "number" && !Number.isNaN(r.value));
+
+        if (!reps.length && typeof rawGrp.mean === "number" && !Number.isNaN(rawGrp.mean)) {
+          reps.push({
+            record_id: String(rawGrp.dixon_candidate_id || `${key}::rep-1`),
+            value: Number(rawGrp.mean),
+            replicate: 1,
+            qc: "pass",
+            prepared_sample: sample || "—",
+            is_iqr_outlier: false,
+            is_analyst_flagged: false
+          });
+        }
+        if (!reps.length) return;
+
+        const vals = reps.map(r => r.value);
+        const meanVal = typeof rawGrp.mean === "number" && !Number.isNaN(rawGrp.mean)
+          ? rawGrp.mean
+          : (typeof rawGrp.mean_value === "number" && !Number.isNaN(rawGrp.mean_value)
+              ? rawGrp.mean_value
+              : vals.reduce((s, v) => s + v, 0) / vals.length);
+        const sdVal = typeof rawGrp.within_sd === "number" && !Number.isNaN(rawGrp.within_sd)
+          ? rawGrp.within_sd
+          : (typeof rawGrp.sd === "number" && !Number.isNaN(rawGrp.sd)
+              ? rawGrp.sd
+              : (typeof rawGrp.sd_value === "number" && !Number.isNaN(rawGrp.sd_value)
+                  ? rawGrp.sd_value
+                  : (vals.length >= 2 ? Math.sqrt(vals.reduce((s, v) => s + Math.pow(v - meanVal, 2), 0) / (vals.length - 1)) : 0)));
+        const rsdVal = typeof rawGrp.rsd_within_pct === "number"
+          ? rawGrp.rsd_within_pct
+          : (typeof rawGrp.rsd_pct === "number"
+              ? rawGrp.rsd_pct
+              : (vals.length >= 2 && Math.abs(meanVal) > 1e-9 ? (sdVal / Math.abs(meanVal)) * 100.0 : 0));
+
+        const flags = [];
+        if (rawGrp.raw_dixon || rawGrp.dixon_pass === false) flags.push("dixon_outlier");
+        if (rawGrp.raw_rsd20 || rsdVal > 20.0) flags.push("rsd_gt_20");
+        else if (rawGrp.raw_rsd10 || rsdVal > 10.0) flags.push("rsd_gt_10");
+        if (rawGrp.raw_sd3x || (Array.isArray(rawGrp.sd3x_candidate_ids) && rawGrp.sd3x_candidate_ids.length > 0)) flags.push("sd_gt_3x_pooled");
+        if (rawGrp.raw_proximate_sum || rawGrp.active_proximate_sum) flags.push("proximate_sum");
+        if (rawGrp.has_identical_replicates || rawGrp.identical_replicates) flags.push("identical_replicates");
+        if (rawGrp.qc_mixed) flags.push("qc_mixed");
+
+        const existing = groupsMap.get(key);
+        if (!existing || reps.length >= existing.replicates.length) {
+          groupsMap.set(key, {
+            replicate_group_key: key,
+            resource_name: res,
+            analysis_type: at,
+            domain_slug: canonicalDomainSlug(at),
+            parameter: param,
+            prepared_sample: sample,
+            prep_method: method,
+            experiment: exp,
+            unit: unit,
+            n: reps.length,
+            mean: meanVal,
+            sd: sdVal,
+            rsd_pct: rsdVal,
+            dixon_candidate_id: rawGrp.dixon_candidate_id || null,
+            sd3x_candidate_ids: Array.isArray(rawGrp.sd3x_candidate_ids) ? rawGrp.sd3x_candidate_ids : [],
+            raw_proximate_sum: Boolean(rawGrp.raw_proximate_sum || rawGrp.active_proximate_sum),
+            proximate_sum_pct: typeof rawGrp.proximate_sum_pct === "number" ? rawGrp.proximate_sum_pct : null,
+            flags: flags,
+            replicates: reps
+          });
+        }
+      };
+
+      const ingestInsightsObj = (insObj, resKey) => {
+        const out = insObj && insObj.outlier_screening;
+        if (!out || typeof out !== "object") return;
+        if (Array.isArray(out.groups)) out.groups.forEach(g => addNormalizedGroup(g, resKey));
+        if (Array.isArray(out.replicate_groups)) out.replicate_groups.forEach(g => addNormalizedGroup(g, resKey));
+        if (out.by_tab && typeof out.by_tab === "object") {
+          Object.values(out.by_tab).forEach(tabObj => {
+            if (!tabObj || typeof tabObj !== "object") return;
+            if (Array.isArray(tabObj.replicate_groups)) tabObj.replicate_groups.forEach(g => addNormalizedGroup(g, resKey));
+            if (Array.isArray(tabObj.groups)) tabObj.groups.forEach(g => addNormalizedGroup(g, resKey));
+          });
+        }
+      };
+
+      const defaultRes = preferredResource || (typeof state !== "undefined" && state && state.resource) || "";
+      if (typeof getResourceInsights === "function") {
+        try {
+          const ins = getResourceInsights(defaultRes);
+          if (ins) ingestInsightsObj(ins, defaultRes);
+        } catch (_e) {}
+      }
+      if (typeof INSIGHTS_DATA !== "undefined" && INSIGHTS_DATA && typeof INSIGHTS_DATA === "object") {
+        Object.entries(INSIGHTS_DATA).forEach(([rKey, insObj]) => ingestInsightsObj(insObj, rKey));
+      }
+      if (typeof BUNDLE !== "undefined" && BUNDLE && BUNDLE.insights && typeof BUNDLE.insights === "object") {
+        Object.entries(BUNDLE.insights).forEach(([rKey, insObj]) => ingestInsightsObj(insObj, rKey));
+      }
+      if (typeof lastScreenedGroups !== "undefined" && Array.isArray(lastScreenedGroups) && lastScreenedGroups.length) {
+        lastScreenedGroups.forEach(g => addNormalizedGroup(g, g.resource_name || defaultRes));
+      } else if (typeof computeSliceStatScreening === "function") {
+        try {
+          const screened = computeSliceStatScreening();
+          if (screened && Array.isArray(screened.groups)) {
+            screened.groups.forEach(g => addNormalizedGroup(g, g.resource_name || defaultRes));
+          }
+        } catch (_e) {}
+      }
+      if (typeof ALL_ROWS !== "undefined" && Array.isArray(ALL_ROWS) && ALL_ROWS.length && typeof computeSliceStatScreening === "function") {
+        try {
+          const allScreened = computeSliceStatScreening(ALL_ROWS);
+          if (allScreened && Array.isArray(allScreened.groups)) {
+            allScreened.groups.forEach(g => addNormalizedGroup(g, g.resource_name || defaultRes));
+          }
+        } catch (_e) {}
+      }
+      if (typeof getResourceRecords === "function") {
+        try {
+          const rawRecs = getResourceRecords(defaultRes) || [];
+          const byKey = new Map();
+          rawRecs.forEach(r => {
+            if (!r || typeof r.value !== "number" || Number.isNaN(r.value)) return;
+            const k = normalizeReplicateGroupKey(r, r.resource_name || defaultRes);
+            if (!byKey.has(k)) {
+              byKey.set(k, {
+                replicate_group_key: k,
+                resource_name: r.resource_name || defaultRes,
+                analysis_type: r.analysis_type || "",
+                parameter: r.parameter || "",
+                prepared_sample: r.prepared_sample || r.field_sample || "",
+                prep_method: groupContextLabel(r),
+                experiment: r.experiment || "",
+                unit: r.unit || "",
+                replicates: []
+              });
+            }
+            byKey.get(k).replicates.push({
+              id: r.record_id,
+              val: r.value,
+              rep: r.replicate || (byKey.get(k).replicates.length + 1),
+              qc: r.qc_status || r.qc_pass || "pass",
+              prepared_sample: r.prepared_sample || r.field_sample || ""
+            });
+          });
+          byKey.forEach(g => addNormalizedGroup(g, defaultRes));
+        } catch (_e) {}
+      }
+      return Array.from(groupsMap.values());
+    }
+
+    function openFlagShowMePopover(opts, anchorEl) {
+      const pop = document.getElementById("audit-flag-show-me-popover");
+      const svgEl = document.getElementById("show-me-mini-svg");
+      if (!pop || !svgEl) return null;
+
+      const escSvg = (s) => String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+      const o = typeof opts === "string" ? { replicateGroupKey: opts } : (opts || {});
+      const preferredRes = o.resource || o.resource_name || (typeof state !== "undefined" && state && state.resource) || "";
+      const allGroups = collectAllPageReplicateGroupsForShowMe(preferredRes);
+
+      const reqKey = String(o.replicateGroupKey || o.replicate_group_key || "").trim().toLowerCase();
+      const rLow = String(o.resource || o.resource_name || "").trim().toLowerCase();
+      const hasExplicitSelector = Boolean(reqKey || rLow || o.parameter || o.preparedSample || o.prepared_sample);
+      let targetGroup = null;
+      if (reqKey) {
+        targetGroup = allGroups.find(g => g.replicate_group_key === reqKey)
+          || allGroups.find(g => matchesReplicateGroupKey(g.replicate_group_key, reqKey));
+      } else if (rLow || o.parameter || o.preparedSample || o.prepared_sample) {
+        const pLow = String(o.parameter || "").trim().toLowerCase();
+        const sLow = String(o.preparedSample || o.prepared_sample || "").trim().toLowerCase();
+        const atSlug = o.analysisType ? canonicalDomainSlug(o.analysisType) : "";
+        targetGroup = allGroups.find(g =>
+          (!rLow || String(g.resource_name || "").trim().toLowerCase() === rLow) &&
+          (!atSlug || g.domain_slug === atSlug) &&
+          (!pLow || String(g.parameter || "").trim().toLowerCase() === pLow) &&
+          (!sLow || String(g.prepared_sample || "").trim().toLowerCase() === sLow) &&
+          (g.flags && g.flags.length > 0)
+        ) || allGroups.find(g =>
+          (!rLow || String(g.resource_name || "").trim().toLowerCase() === rLow) &&
+          (!atSlug || g.domain_slug === atSlug) &&
+          (!pLow || String(g.parameter || "").trim().toLowerCase() === pLow) &&
+          (!sLow || String(g.prepared_sample || "").trim().toLowerCase() === sLow)
+        );
+      }
+      if (!targetGroup && !hasExplicitSelector && allGroups.length > 0) {
+        targetGroup = allGroups.find(g => g.flags && g.flags.length > 0) || allGroups[0];
+      }
+
+      if (!targetGroup || !Array.isArray(targetGroup.replicates) || targetGroup.replicates.length === 0) {
+        svgEl.innerHTML = [
+          `<rect x="28" y="18" width="368" height="102" rx="8" fill="rgba(15,23,42,0.04)" stroke="rgba(148,163,184,0.22)" stroke-width="1" />`,
+          `<text x="210" y="74" text-anchor="middle" font-size="11" font-family="monospace" fill="#94a3b8">No matching database records found in snapshot.</text>`
+        ].join("");
+        const subEl = document.getElementById("show-me-popover-subtitle");
+        if (subEl) subEl.textContent = "No matching database records found";
+        const pillsEl = document.getElementById("show-me-flag-pills");
+        if (pillsEl) pillsEl.innerHTML = "";
+        const statsEl = document.getElementById("show-me-stats-summary");
+        if (statsEl) statsEl.textContent = "No matching database records found";
+        const proxBarEl = document.getElementById("show-me-proximate-bar");
+        if (proxBarEl) {
+          proxBarEl.classList.add("hidden");
+          if (proxBarEl.style) proxBarEl.style.display = "none";
+          proxBarEl.innerHTML = "";
+        }
+        pop.classList.remove("hidden");
+        if (pop.style) pop.style.display = "block";
+        return {
+          empty: true,
+          replicateGroupKey: reqKey,
+          peerCount: 0,
+          targetGroupCount: 0,
+          outlierCount: 0,
+          hasProximateBar: false
+        };
+      }
+
+      const resolvedResource = o.resource || targetGroup.resource_name || preferredRes || "";
+      const resolvedAnalysisType = o.analysisType || targetGroup.analysis_type || "";
+      const resolvedDomSlug = canonicalDomainSlug(resolvedAnalysisType);
+      const resolvedParameter = o.parameter || targetGroup.parameter || "";
+      const resolvedMethod = o.method || targetGroup.prep_method || "";
+      const resolvedSample = o.preparedSample || targetGroup.prepared_sample || "";
+      const resolvedUnit = o.unit || targetGroup.unit || "";
+      const activeFlags = Array.from(new Set([
+        ...(Array.isArray(o.flags) ? o.flags : (o.flags ? [o.flags] : [])),
+        ...(Array.isArray(targetGroup.flags) ? targetGroup.flags : [])
+      ].filter(Boolean)));
+
+      // Find peer groups in the same slice (progressively broadening if narrow slice has only the target group)
+      const normStr = (v) => String(v || "").trim().toLowerCase();
+      const targetKey = targetGroup.replicate_group_key;
+      let peerGroups = allGroups.filter(g =>
+        g.replicate_group_key !== targetKey &&
+        normStr(g.resource_name) === normStr(resolvedResource) &&
+        g.domain_slug === resolvedDomSlug &&
+        normStr(g.parameter) === normStr(resolvedParameter) &&
+        (!resolvedMethod || normStr(g.prep_method) === normStr(resolvedMethod))
+      );
+      if (peerGroups.length === 0) {
+        peerGroups = allGroups.filter(g =>
+          g.replicate_group_key !== targetKey &&
+          normStr(g.resource_name) === normStr(resolvedResource) &&
+          normStr(g.parameter) === normStr(resolvedParameter)
+        );
+      }
+      if (peerGroups.length === 0) {
+        peerGroups = allGroups.filter(g =>
+          g.replicate_group_key !== targetKey &&
+          normStr(g.parameter) === normStr(resolvedParameter)
+        );
+      }
+      if (peerGroups.length === 0) {
+        peerGroups = allGroups.filter(g =>
+          g.replicate_group_key !== targetKey &&
+          normStr(g.resource_name) === normStr(resolvedResource) &&
+          g.domain_slug === resolvedDomSlug
+        );
+      }
+      if (peerGroups.length === 0) {
+        peerGroups = allGroups.filter(g => g.replicate_group_key !== targetKey);
+      }
+
+      // Build target group replicate points with explicit outlier identification
+      const targetReps = targetGroup.replicates.map(r => ({ ...r }));
+
+      const groupMean = targetReps.reduce((s, r) => s + Number(r.value), 0) / (targetReps.length || 1);
+      const candId = String(o.outlierRecordId || targetGroup.dixon_candidate_id || "").trim();
+      const sd3Set = new Set((targetGroup.sd3x_candidate_ids || []).map(x => String(x)));
+
+      targetReps.forEach(r => {
+        r.isTargetGroup = true;
+        r.isOutlier = Boolean(
+          (candId && String(r.record_id) === candId) ||
+          sd3Set.has(String(r.record_id)) ||
+          r.is_iqr_outlier ||
+          r.is_analyst_flagged
+        );
+      });
+
+      // Ensure clear distinction between target group sibling points and outlier candidate when n >= 2
+      if (targetReps.length >= 2) {
+        const outlierCnt = targetReps.filter(r => r.isOutlier).length;
+        if (outlierCnt === 0 || outlierCnt === targetReps.length) {
+          let furthestIdx = 0;
+          let maxDist = -1;
+          targetReps.forEach((r, idx) => {
+            const dist = Math.abs(Number(r.value) - groupMean) + (r.qc === "fail" ? 1e-6 : 0);
+            if (dist > maxDist) {
+              maxDist = dist;
+              furthestIdx = idx;
+            }
+          });
+          targetReps.forEach((r, idx) => {
+            r.isOutlier = (idx === furthestIdx);
+          });
+        }
+      } else if (targetReps.length === 1) {
+        targetReps[0].isOutlier = true;
+      }
+
+      const peerPoints = [];
+      peerGroups.slice(0, 25).forEach(pg => {
+        (pg.replicates || []).forEach(pr => {
+          if (typeof pr.value === "number" && !Number.isNaN(pr.value)) {
+            peerPoints.push({
+              record_id: String(pr.record_id || ""),
+              value: Number(pr.value),
+              replicate: Number(pr.replicate || 1),
+              qc: String(pr.qc || "pass"),
+              prepared_sample: String(pr.prepared_sample || pg.prepared_sample || "Peer Sample"),
+              replicate_group_key: pg.replicate_group_key,
+              isTargetGroup: false,
+              isOutlier: false
+            });
+          }
+        });
+      });
+
+      const allPoints = [...peerPoints, ...targetReps];
+      const allVals = allPoints.map(p => Number(p.value)).filter(v => !Number.isNaN(v));
+      const sliceMean = allVals.length ? allVals.reduce((s, v) => s + v, 0) / allVals.length : groupMean;
+      const sliceSd = allVals.length >= 2
+        ? Math.sqrt(allVals.reduce((s, v) => s + Math.pow(v - sliceMean, 2), 0) / (allVals.length - 1))
+        : (targetGroup.sd || 0);
+
+      let minVal = allVals.length ? Math.min(...allVals) : 0;
+      let maxVal = allVals.length ? Math.max(...allVals) : 10;
+      if (Math.abs(maxVal - minVal) < 1e-9) {
+        minVal -= 1;
+        maxVal += 1;
+      } else {
+        const pad = (maxVal - minVal) * 0.12;
+        minVal -= pad;
+        maxVal += pad;
+      }
+
+      const svgW = 420;
+      const svgH = 150;
+      const padL = 28;
+      const padR = 24;
+      const plotW = svgW - padL - padR;
+      const xOf = (val) => {
+        const t = (Number(val) - minVal) / ((maxVal - minVal) || 1);
+        return Math.max(padL, Math.min(svgW - padR, padL + t * plotW));
+      };
+
+      const bandX1 = xOf(sliceMean - sliceSd);
+      const bandX2 = xOf(sliceMean + sliceSd);
+      const bandW = Math.max(2, bandX2 - bandX1);
+      const targetMeanX = xOf(groupMean);
+      const sliceMeanX = xOf(sliceMean);
+
+      const peerCirclesSvg = peerPoints.map((pt, idx) => {
+        const cx = xOf(pt.value).toFixed(1);
+        const cy = (44 + ((idx * 17) % 28)).toFixed(1);
+        return `<circle class="show-me-pt-peer" data-role="peer" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="4.5" fill="rgba(148,163,184,0.45)" stroke="#64748b" stroke-width="1.5"><title>${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}</title></circle>`;
+      }).join("");
+
+      const targetGroupCirclesSvg = targetReps.filter(pt => !pt.isOutlier).map((pt, idx) => {
+        const cx = xOf(pt.value).toFixed(1);
+        const cy = (92 + ((idx * 13) % 18)).toFixed(1);
+        return `<circle class="show-me-pt-target-group" data-role="target-group" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="6" fill="rgba(59,130,246,0.22)" stroke="#2563eb" stroke-width="2.5"><title>${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} (Target Replicate Group) | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}</title></circle>`;
+      }).join("");
+
+      const outlierCirclesSvg = targetReps.filter(pt => pt.isOutlier).map((pt, idx) => {
+        const cx = xOf(pt.value).toFixed(1);
+        const cy = (96 + ((idx * 11) % 14)).toFixed(1);
+        return [
+          `<circle class="show-me-outlier-pulse-ring" data-role="outlier-ring" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="10.5" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.85" />`,
+          `<circle class="show-me-pt-outlier" data-role="outlier" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="7.5" fill="rgba(239,68,68,0.28)" stroke="#dc2626" stroke-width="3"><title>${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} (Flagged Outlier) | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}</title></circle>`
+        ].join("");
+      }).join("");
+
+      svgEl.innerHTML = [
+        `<rect x="${padL}" y="18" width="${plotW}" height="102" rx="8" fill="rgba(15,23,42,0.04)" stroke="rgba(148,163,184,0.22)" stroke-width="1" />`,
+        `<rect class="show-me-slice-sd-band" x="${bandX1.toFixed(1)}" y="22" width="${bandW.toFixed(1)}" height="94" fill="rgba(96,165,250,0.16)" stroke="#60a5fa" stroke-width="1" stroke-dasharray="3,3" />`,
+        `<line class="show-me-slice-mean-line" x1="${sliceMeanX.toFixed(1)}" y1="20" x2="${sliceMeanX.toFixed(1)}" y2="118" stroke="#64748b" stroke-width="1.2" stroke-dasharray="2,2" />`,
+        `<line class="show-me-target-mean-line" x1="${targetMeanX.toFixed(1)}" y1="20" x2="${targetMeanX.toFixed(1)}" y2="118" stroke="#2563eb" stroke-width="2" stroke-dasharray="4,3" />`,
+        `<text x="${padL + 4}" y="33" font-size="9" font-family="monospace" fill="#64748b">Peer Slice (n=${peerPoints.length})</text>`,
+        `<text x="${padL + 4}" y="82" font-size="9" font-family="monospace" fill="#2563eb">Target Replicate Group (${escSvg(resolvedSample)}, n=${targetReps.length})</text>`,
+        peerCirclesSvg,
+        targetGroupCirclesSvg,
+        outlierCirclesSvg,
+        `<line x1="${padL}" y1="124" x2="${svgW - padR}" y2="124" stroke="#94a3b8" stroke-width="1" />`,
+        `<text x="${padL}" y="138" font-size="9" font-family="monospace" fill="#64748b">${minVal.toFixed(2)} ${escSvg(resolvedUnit)}</text>`,
+        `<text x="${(svgW / 2).toFixed(1)}" y="138" text-anchor="middle" font-size="9" font-family="monospace" fill="#2563eb">Grp Mean: ${groupMean.toFixed(2)} ${escSvg(resolvedUnit)}</text>`,
+        `<text x="${svgW - padR}" y="138" text-anchor="end" font-size="9" font-family="monospace" fill="#64748b">${maxVal.toFixed(2)} ${escSvg(resolvedUnit)}</text>`
+      ].join("");
+
+      const subEl = document.getElementById("show-me-popover-subtitle");
+      if (subEl) {
+        subEl.textContent = `${resolvedResource} • ${resolvedAnalysisType} • ${resolvedParameter}${resolvedUnit ? " (" + resolvedUnit + ")" : ""} • ${resolvedSample}`;
+      }
+
+      const pillsEl = document.getElementById("show-me-flag-pills");
+      if (pillsEl) {
+        const pillList = activeFlags.length ? activeFlags : ["flagged_group"];
+        pillsEl.innerHTML = pillList.map(f => `<span class="px-1.5 py-0.5 rounded badge-warn font-semibold">⚑ ${escSvg(f)}</span>`).join(" ");
+      }
+
+      const statsEl = document.getElementById("show-me-stats-summary");
+      if (statsEl) {
+        const rsdTxt = typeof targetGroup.rsd_pct === "number" ? `${targetGroup.rsd_pct.toFixed(1)}%` : "—";
+        statsEl.textContent = `Group Mean ${groupMean.toFixed(2)} (RSD ${rsdTxt}) vs Slice Mean ${sliceMean.toFixed(2)} ± ${sliceSd.toFixed(2)}`;
+      }
+
+      // Optional Proximate Sum Proportional 100% Stacked Horizontal Bar (#show-me-proximate-bar)
+      const proxBarEl = document.getElementById("show-me-proximate-bar");
+      const hasProximateFlag = Boolean(
+        activeFlags.some(f => String(f).toLowerCase().includes("proximate")) ||
+        targetGroup.raw_proximate_sum ||
+        typeof o.proximateSumPct === "number" ||
+        typeof targetGroup.proximate_sum_pct === "number"
+      );
+      if (proxBarEl) {
+        if (hasProximateFlag) {
+          const normProxBucket = (pName) => {
+            const p = String(pName || "").trim().toLowerCase();
+            if (p === "moisture" || p === "moisture content") return "moisture";
+            if (p === "ash" || p === "ash content") return "ash";
+            if (p === "volatile solids" || p === "volatile matter" || p === "volatile solids (vs)" || p === "vs") return "vs";
+            if (p === "fixed carbon" || p === "fixed carbon (fc)" || p === "fc") return "fc";
+            return null;
+          };
+          const bucketVals = { moisture: [], ash: [], vs: [], fc: [] };
+          const targetExpNorm = normStr(targetGroup.experiment || "unassigned");
+          const targetMethodNorm = normStr(targetGroup.prep_method || "unassigned");
+          allGroups.forEach(g => {
+            if (g.domain_slug !== "proximate") return;
+            if (normStr(g.resource_name) !== normStr(resolvedResource)) return;
+            if (normStr(g.experiment || "unassigned") !== targetExpNorm) return;
+            if (normStr(g.prep_method || "unassigned") !== targetMethodNorm) return;
+            const b = normProxBucket(g.parameter);
+            if (!b) return;
+            if (Array.isArray(g.replicates) && g.replicates.length) {
+              g.replicates.forEach(r => {
+                if (typeof r.value === "number" && !Number.isNaN(r.value)) bucketVals[b].push(Number(r.value));
+              });
+            } else if (typeof g.mean === "number" && !Number.isNaN(g.mean)) {
+              bucketVals[b].push(Number(g.mean));
+            }
+          });
+          const avgOf = (arr) => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
+          const comps = o.proximateComponents || targetGroup.proximate_components || {};
+          const moistVal = typeof comps.moisture === "number" ? comps.moisture : avgOf(bucketVals.moisture);
+          const ashVal = typeof comps.ash === "number" ? comps.ash : avgOf(bucketVals.ash);
+          const vsRaw = typeof comps.vs === "number" ? comps.vs : (typeof comps.volatile_solids === "number" ? comps.volatile_solids : avgOf(bucketVals.vs));
+          const fcRaw = typeof comps.fc === "number" ? comps.fc : (typeof comps.fixed_carbon === "number" ? comps.fixed_carbon : avgOf(bucketVals.fc));
+          const vsOrFcVal = vsRaw !== null ? vsRaw : (fcRaw !== null ? Math.max(0, 100.0 - fcRaw) : null);
+          const computedSum = (moistVal !== null || ashVal !== null || vsOrFcVal !== null)
+            ? Number(((moistVal || 0) + (ashVal || 0) + (vsOrFcVal || 0)).toFixed(2))
+            : null;
+          const sumPct = typeof o.proximateSumPct === "number"
+            ? o.proximateSumPct
+            : (typeof targetGroup.proximate_sum_pct === "number" ? targetGroup.proximate_sum_pct : computedSum);
+
+          proxBarEl.classList.remove("hidden");
+          if (proxBarEl.style) proxBarEl.style.display = "block";
+          if (typeof sumPct === "number" && !Number.isNaN(sumPct) && sumPct > 0) {
+            const scaleMax = Math.max(120, sumPct * 1.05);
+            const bandLeftPct = ((95.0 / scaleMax) * 100).toFixed(2);
+            const bandWidthPct = (((105.0 - 95.0) / scaleMax) * 100).toFixed(2);
+            const hasComponentBreakdown = moistVal !== null || ashVal !== null || vsOrFcVal !== null;
+            const mW = hasComponentBreakdown && moistVal ? Math.max(0, (moistVal / scaleMax) * 100).toFixed(2) : "0";
+            const aW = hasComponentBreakdown && ashVal ? Math.max(0, (ashVal / scaleMax) * 100).toFixed(2) : "0";
+            const vW = hasComponentBreakdown && vsOrFcVal ? Math.max(0, (vsOrFcVal / scaleMax) * 100).toFixed(2) : "0";
+            const totalW = Math.min(100, Math.max(0, (sumPct / scaleMax) * 100)).toFixed(2);
+            const barSegmentsHtml = hasComponentBreakdown
+              ? [
+                  moistVal ? `<div class="h-full bg-sky-400" style="width:${mW}%" title="Moisture: ${moistVal.toFixed(2)}%"></div>` : "",
+                  ashVal ? `<div class="h-full bg-amber-400" style="width:${aW}%" title="Ash: ${ashVal.toFixed(2)}%"></div>` : "",
+                  vsOrFcVal ? `<div class="h-full bg-purple-400" style="width:${vW}%" title="VS / (100 - FC): ${vsOrFcVal.toFixed(2)}%"></div>` : ""
+                ].join("")
+              : `<div class="h-full bg-amber-500/80" style="width:${totalW}%" title="Proximate Sum: ${sumPct.toFixed(2)}%"></div>`;
+            const detailLine = hasComponentBreakdown
+              ? `Moisture (${moistVal !== null ? moistVal.toFixed(1) + "%" : "—"}) + Ash (${ashVal !== null ? ashVal.toFixed(1) + "%" : "—"}) + VS / (100 - FC) (${vsOrFcVal !== null ? vsOrFcVal.toFixed(1) + "%" : "—"}) = ${sumPct.toFixed(2)}% (Target: 95%–105%)`
+              : `Proximate Closure Sum = ${sumPct.toFixed(2)}% (Target Acceptance Band: 95%–105%)`;
+            proxBarEl.innerHTML = [
+              `<div class="flex items-center justify-between gap-2 font-bold text-amber-600 dark:text-amber-300">`,
+              `  <span>⚖️ Proximate Mass-Balance Closure (95–105% Band)</span>`,
+              `  <span class="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-[10px] font-mono">Proximate Closure: ${sumPct.toFixed(2)}%</span>`,
+              `</div>`,
+              `<div class="relative w-full h-3.5 rounded bg-slate-900/30 border border-[var(--border)] overflow-hidden my-1.5" data-role="proximate-stacked-bar">`,
+              `  <div class="flex h-full w-full">${barSegmentsHtml}</div>`,
+              `  <div class="absolute top-0 bottom-0 border-x border-dashed border-emerald-400 bg-emerald-500/15 pointer-events-none" style="left:${bandLeftPct}%;width:${bandWidthPct}%;" title="95%–105% Acceptance Band"></div>`,
+              `</div>`,
+              `<div class="text-[10px] text-[var(--muted-foreground)]">${detailLine}</div>`
+            ].join("");
+          } else {
+            proxBarEl.innerHTML = `<div class="text-[10px] text-[var(--muted-foreground)]">Proximate closure sum unavailable for this slice in snapshot.</div>`;
+          }
+        } else {
+          proxBarEl.classList.add("hidden");
+          if (proxBarEl.style) proxBarEl.style.display = "none";
+          proxBarEl.innerHTML = "";
+        }
+      }
+
+      const vizLink = document.getElementById("show-me-open-visualizer-link");
+      if (vizLink) {
+        const href = `resource_explorer_dashboard.html?resource=${encodeURIComponent(resolvedResource)}&resources=${encodeURIComponent(resolvedResource)}&domain=${encodeURIComponent(resolvedDomSlug)}&type=${encodeURIComponent(resolvedDomSlug)}&parameter=${encodeURIComponent(resolvedParameter)}&params=${encodeURIComponent(resolvedParameter)}&highlight_rk=${encodeURIComponent(targetKey)}`;
+        vizLink.setAttribute("href", href);
+        vizLink.href = href;
+      }
+
+      pop.classList.remove("hidden");
+      if (pop.style) {
+        pop.style.display = "block";
+        if (anchorEl && typeof anchorEl.getBoundingClientRect === "function") {
+          try {
+            const rect = anchorEl.getBoundingClientRect();
+            const topPx = Math.max(16, Math.min((window.innerHeight || 800) - 340, rect.bottom + 8));
+            const leftPx = Math.max(16, Math.min((window.innerWidth || 1200) - 480, rect.left));
+            pop.style.top = `${topPx}px`;
+            pop.style.left = `${leftPx}px`;
+          } catch (_e) {}
+        } else {
+          pop.style.top = "96px";
+          pop.style.right = "32px";
+        }
+      }
+
+      return {
+        replicateGroupKey: targetGroup.replicate_group_key,
+        resource: resolvedResource,
+        analysisType: resolvedAnalysisType,
+        parameter: resolvedParameter,
+        peerCount: peerPoints.length,
+        targetGroupCount: targetReps.filter(r => !r.isOutlier).length,
+        outlierCount: targetReps.filter(r => r.isOutlier).length,
+        hasProximateBar: hasProximateFlag
+      };
+    }
+    window.openFlagShowMePopover = openFlagShowMePopover;
 """
 
 
@@ -4383,7 +5117,7 @@ def build_analysis_dashboard_html(
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
-          3. Multi-Resource Side-by-Side Explorer
+          3. Data Visualizer
         </a>
         <a id="nav-page-drift" href="../audit/db_environment_drift_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
           4. DB Environment Drift
@@ -4660,7 +5394,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       suppressTraceFlags: true,
       blindMode: false,
       showAiPanel: true,
-      proxGroupMode: "ps_exp",
+      proxGroupMode: "exp_method",
       elemSourceMode: "all",
       icpScaleMode: "split",
       convSubTab: "all"
@@ -4675,10 +5409,24 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
         else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
         if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+        if (g.raw_proximate_sum) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Proximate Mass-Balance Sum = ${fmtNum(g.proximate_sum_pct, 1)}% (Data Portal requires Moisture + Ash + VS [or 100 - FC] within 95–105% per resource/experiment/method)">⚑ Proximate Sum (${fmtNum(g.proximate_sum_pct, 1)}%)</span>`);
         if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
         if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
       }
       if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Low-abundance trace parameter (${g.cutoff_label})">Trace (${g.cutoff_label})</span>`);
+      if (badges.length > 0) {
+        const resName = (typeof state !== "undefined" && state && state.resource) || g.resource_name || "";
+        const repKey = (typeof window !== "undefined" && window.normalizeReplicateGroupKey)
+          ? window.normalizeReplicateGroupKey(g, resName)
+          : [resName, g.prepared_sample || "", g.analysis_type || "", g.parameter || "", g.prep_method || "", g.experiment || ""].map(v => String(v || "").trim().toLowerCase()).join("::");
+        const safeKey = String(repKey).replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeRes = String(resName).replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeAt = String(g.analysis_type || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeParam = String(g.parameter || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeSample = String(g.prepared_sample || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeCand = String(g.dixon_candidate_id || ((g.sd3x_candidate_ids && g.sd3x_candidate_ids[0]) || "")).replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        badges.push(`<button type="button" class="btn-show-me-flag px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--card)] text-[var(--primary)] border border-[var(--primary)]/40 hover:bg-[var(--primary)]/10 transition" data-group-key="${safeKey}" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ replicateGroupKey: '${safeKey}', resource: '${safeRes}', analysisType: '${safeAt}', parameter: '${safeParam}', preparedSample: '${safeSample}', outlierRecordId: '${safeCand}' }, this)" title="Show flagged replicate group and outlier in slice context">👁 Show me</button>`);
+      }
       return badges.join(" ");
     }
 
@@ -4698,7 +5446,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       if (!allGroups.length) return null;
       const hasAnyFlag = g => Boolean(
-        g && (g.raw_dixon || g.raw_rsd20 || g.raw_rsd10 || g.raw_sd3x || g.has_identical_replicates || g.qc_mixed || g.below_cutoff)
+        g && (g.raw_dixon || g.raw_rsd20 || g.raw_rsd10 || g.raw_sd3x || g.raw_proximate_sum || g.has_identical_replicates || g.qc_mixed || g.below_cutoff)
       );
       const recIdSet = new Set(groupRecs.map(r => String(r.record_id || "").trim()).filter(Boolean));
       if (recIdSet.size > 0) {
@@ -5442,6 +6190,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       const groupKeyFn = r => {
         if (state.repMode === "field_exp_mean_sd") return `Field: ${r.field_sample || r.prepared_sample} · ${r.experiment}`;
+        if (state.proxGroupMode === "exp_method") return `${r.experiment || 'unassigned'} · ${r.prep_method || 'unassigned'}`;
         if (state.proxGroupMode === "ps_exp") return `${r.prepared_sample} · ${r.experiment}`;
         if (state.proxGroupMode === "by_date") return `Col: ${r.collected_date || '—'} · Prep: ${r.prep_date || '—'} (${r.prepared_sample})`;
         return r.prepared_sample;
@@ -5451,23 +6200,29 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const params = ["moisture", "total solids", "volatile solids", "ash"];
 
       const massBalanceHtml = groups.map(g => {
-        const gRecs = recs.filter(r => groupKeyFn(r) === g);
-        const mStat = calcStats(gRecs.filter(r => r.parameter === "moisture").map(r => r.value));
-        const tsStat = calcStats(gRecs.filter(r => r.parameter === "total solids").map(r => r.value));
-        const vsStat = calcStats(gRecs.filter(r => r.parameter === "volatile solids").map(r => r.value));
-        const ashStat = calcStats(gRecs.filter(r => r.parameter === "ash").map(r => r.value));
+        const gRecs = recs.filter(r => groupKeyFn(r) === g && String(r.qc_status || "pass").toLowerCase() !== "fail");
+        const mStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "moisture").map(r => r.value));
+        const tsStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "total solids").map(r => r.value));
+        const vsStat = calcStats(gRecs.filter(r => ["volatile solids", "volatile matter"].includes(String(r.parameter || "").toLowerCase())).map(r => r.value));
+        const fcStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "fixed carbon").map(r => r.value));
+        const ashStat = calcStats(gRecs.filter(r => ["ash", "ash solids"].includes(String(r.parameter || "").toLowerCase())).map(r => r.value));
 
-        const m = mStat.mean || 0;
-        const vs = vsStat.mean || 0;
-        const ash = ashStat.mean || 0;
-        const sumWet = m + vs + ash;
+        const m = mStat.mean !== null && mStat.mean !== undefined ? mStat.mean : 0;
+        const vs = vsStat.mean !== null && vsStat.mean !== undefined ? vsStat.mean : (fcStat.mean !== null && fcStat.mean !== undefined ? (100 - fcStat.mean) : 0);
+        const ash = ashStat.mean !== null && ashStat.mean !== undefined ? ashStat.mean : 0;
+        const sumWet = Number((m + vs + ash).toFixed(2));
+        const outOfBounds = sumWet > 0 && (sumWet < 95.0 || sumWet > 105.0);
+        const proxBadge = outOfBounds
+          ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Data Portal proximate_sum = ${fmtNum(sumWet, 1)}% (outside 95–105%)">⚑ Proximate Sum (${fmtNum(sumWet, 1)}%)</span>`
+          : `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-pass" title="Data Portal proximate_sum within 95–105%">✓ 95–105% OK</span>`;
 
         return `
           <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
               <span class="font-mono font-semibold text-xs text-[var(--foreground)]">${g}</span>
-              <span class="text-xs font-mono text-[var(--muted-foreground)]">
-                Moisture (${fmtNum(m)}%) + VS (${fmtNum(vs)}%) + Ash (${fmtNum(ash)}%) = <strong class="text-[var(--foreground)]">${fmtNum(sumWet)}%</strong> | Total Solids = <strong class="text-[var(--foreground)]">${fmtNum(tsStat.mean)}%</strong>
+              <span class="text-xs font-mono text-[var(--muted-foreground)] flex items-center gap-2">
+                <span>Moisture (${fmtNum(m)}%) + VS (${fmtNum(vs)}%) + Ash (${fmtNum(ash)}%) = <strong class="text-[var(--foreground)]">${fmtNum(sumWet)}%</strong> | Total Solids = <strong class="text-[var(--foreground)]">${fmtNum(tsStat.mean)}%</strong></span>
+                ${proxBadge}
               </span>
             </div>
             <div class="w-full h-5 rounded-lg bg-[var(--content)] overflow-hidden flex border border-[var(--border)]">
@@ -5552,6 +6307,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                 <p class="text-xs text-[var(--muted-foreground)]">Moisture + Volatile Solids + Ash closure across prepared samples, drying protocols, and collection/prep dates.</p>
               </div>
               <div class="inline-flex rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5">
+                <button onclick="setSubMode('proxGroupMode', 'exp_method')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'exp_method' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Experiment × Method</button>
                 <button onclick="setSubMode('proxGroupMode', 'ps_exp')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'ps_exp' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Sample × Experiment</button>
                 <button onclick="setSubMode('proxGroupMode', 'ps')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'ps' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Prepared Sample</button>
                 <button onclick="setSubMode('proxGroupMode', 'by_date')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'by_date' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Collection / Prep Date</button>
@@ -6294,7 +7050,7 @@ def build_qc_outlier_dashboard_html(
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-white/20"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
-          3. Multi-Resource Side-by-Side Explorer
+          3. Data Visualizer
         </a>
         <a id="nav-page-drift" href="../audit/db_environment_drift_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
           4. DB Environment Drift
@@ -6327,6 +7083,7 @@ def build_qc_outlier_dashboard_html(
               <option value="dixon">Dixon's Q Outlier</option>
               <option value="rsd20">High RSD &gt; 20%</option>
               <option value="sd3x">&gt;3&times;SD_pooled</option>
+              <option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>
               <option value="identical">Identical Replicates</option>
             </select>
           </div>
@@ -6703,11 +7460,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         });
         if (matched) return matched;
       }
-      return { decision: "pending", note: "", updated_at: "" };
+      return {
+        decision: "pending",
+        note: "",
+        assigned_to_email: window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail("") : "",
+        updated_at: ""
+      };
     }
 
     function upsertDecisionEntry(key, patch, meta) {
-      const existing = DECISIONS_STORE[key] || { decision: "pending", note: "", updated_at: "" };
+      const existing = DECISIONS_STORE[key] || {
+        decision: "pending",
+        note: "",
+        assigned_to_email: window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail("") : "",
+        updated_at: ""
+      };
       const merged = {
         ...existing,
         ...meta,
@@ -6860,6 +7627,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (mode === "dixon") return g.raw_dixon;
       if (mode === "rsd20" || mode === "rsd") return g.raw_rsd20;
       if (mode === "sd3x" || mode === "sd3") return g.raw_sd3x;
+      if (mode === "proximate_sum") return Boolean(g.raw_proximate_sum);
       if (mode === "unquarantined") return isPrimary && g.qc_pass_count > 0;
       if (mode === "reviewed") {
         const dKey = makeGroupDecisionKey(state.resource, g);
@@ -7151,6 +7919,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const dixonGroups = groups.filter(g => isGroupMatchingFilter(g, "dixon", suppress));
       const rsd20Groups = groups.filter(g => isGroupMatchingFilter(g, "rsd20", suppress));
       const sd3xGroups = groups.filter(g => isGroupMatchingFilter(g, "sd3x", suppress));
+      const proxSumGroups = groups.filter(g => isGroupMatchingFilter(g, "proximate_sum", suppress));
       const identicalGroups = groups.filter(g => isGroupMatchingFilter(g, "identical", suppress));
       const unquarGroups = groups.filter(g => isGroupMatchingFilter(g, "unquarantined", suppress));
       const reviewedGroups = groups.filter(g => isGroupMatchingFilter(g, "reviewed", suppress));
@@ -7170,6 +7939,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         { id: "dixon", label: `Dixon's Q α=0.05 (${dixonGroups.length})` },
         { id: "rsd20", label: `RSD >20% (${rsd20Groups.length})` },
         { id: "sd3x", label: `>3×SD Pooled (${sd3xGroups.length})` },
+        { id: "proximate_sum", label: `Proximate Sum (${proxSumGroups.length})` },
         { id: "identical", label: `Identical Replicates (${identicalGroups.length})` },
         { id: "unquarantined", label: `Unquarantined / QC Pass (${unquarGroups.length})` },
         { id: "reviewed", label: `⚖️ Reviewed / Annotated (${reviewedGroups.length})` },
@@ -7242,10 +8012,20 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                     if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
                     else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
                     if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+                    if (g.raw_proximate_sum) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Proximate Mass-Balance Sum = ${fmtNum(g.proximate_sum_pct, 1)}% (Data Portal requires Moisture + Ash + VS [or 100 - FC] within 95–105% per resource/experiment/method)">⚑ Proximate Sum (${fmtNum(g.proximate_sum_pct, 1)}%)</span>`);
                     if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
                     if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
                   }
                   if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">Trace (${g.cutoff_label})</span>`);
+                  if (badges.length > 0) {
+                    const safeShowKey = String(repGroupKey || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowRes = String(state.resource || g.resource_name || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowAt = String(g.analysis_type || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowParam = String(g.parameter || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowSample = String(g.prepared_sample || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowCand = String(singleCandId || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    badges.push(`<button type="button" class="btn-show-me-flag px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--card)] text-[var(--primary)] border border-[var(--primary)]/40 hover:bg-[var(--primary)]/10 transition" data-group-key="${safeShowKey}" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ replicateGroupKey: '${safeShowKey}', resource: '${safeShowRes}', analysisType: '${safeShowAt}', parameter: '${safeShowParam}', preparedSample: '${safeShowSample}', outlierRecordId: '${safeShowCand}' }, this)" title="Show flagged replicate group and outlier in slice context">👁 Show me</button>`);
+                  }
 
                   const qcSummary = g.qc_fail_count === 0
                     ? `<span class="badge-pass px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold">Unquarantined (${g.qc_pass_count}P)</span>`
@@ -7337,7 +8117,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         </select>
                         <input type="text" value="${(dEntry.note || '').replace(/"/g, '&quot;')}" onchange="handleDecisionNote('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Add reviewer rationale / action note..." class="w-full rounded px-2 py-1 text-xs border border-[var(--border)] font-mono" />
                         <div class="flex items-center gap-1">
-                          <input type="email" value="${(dEntry.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email (e.g. reviewer@lbl.gov)..." class="flex-1 rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
+                          <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(dEntry.assigned_to_email) : (dEntry.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email (e.g. reviewer@lbl.gov)..." class="flex-1 rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
                           <button type="button" onclick="approveAndSyncDecision('${safeKeyAttr}', '${metaPayload}')" title="Approve decision &amp; sync to Google Sheets + Postgres" class="px-2 py-1 rounded text-[10px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 whitespace-nowrap">⚡ Approve &amp; Sync</button>
                         </div>
                         <div class="flex flex-wrap gap-1">
@@ -7425,7 +8205,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               ` : `<span class="text-[var(--muted-foreground)] italic">N/A (n=1 method group)</span>`}
             </td>
             <td class="py-2.5 px-3 font-mono text-right">${p.pooled_sd !== null && p.pooled_sd !== undefined ? `±${fmtNum(p.pooled_sd, 2)}` : '—'}</td>
-            <td class="py-2.5 px-3 font-mono text-center">${flagCnt > 0 ? `<span class="px-2 py-0.5 rounded font-bold badge-warn">${flagCnt}</span>` : '0'}</td>
+            <td class="py-2.5 px-3 font-mono text-center">${flagCnt > 0 ? `<div class="inline-flex items-center gap-1.5"><span class="px-2 py-0.5 rounded font-bold badge-warn">${flagCnt}</span><button type="button" class="btn-show-me-flag btn-audit-show-me px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--content)] text-[var(--primary)] border border-[var(--border)] hover:opacity-80 transition" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ resource: state.resource, analysisType: '${escHtml(p.analysis_type || "")}', parameter: '${escHtml(p.parameter || "")}' }, this)" title="Show flagged replicate group in slice context">👁 Show me</button></div>` : '0'}</td>
             <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold ${driverBadgeClass(p.driver_tone)}">${p.driver_badge}</span></td>
           </tr>
         `;
@@ -7556,6 +8336,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               isDixonCand,
               isSd3Cand,
               rawRsd20: Boolean(g.raw_rsd20),
+              rawProximateSum: Boolean(g.raw_proximate_sum),
+              proximateSumPct: g.proximate_sum_pct,
               hasIdentical: Boolean(g.has_identical_replicates),
               qcMixed: Boolean(g.qc_mixed),
               dixonQ: g.dixon_q,
@@ -7655,7 +8437,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             if (info.isSd3Cand) tags.push(`⚑ >3×SD_pooled`);
             statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold badge-warn ring-1 ring-amber-500" title="Dixon Q=${fmtNum(info.dixonQ, 2)} · Within-RSD ${fmtNum(info.rsdWithin, 1)}%">${tags.join(' · ')}</span>`;
           } else if (info.isPrimary) {
-            const pillLabel = info.rawRsd20 ? "⚑ RSD &gt; 20%" : "⚑ Outlier Flag";
+            const pillLabel = info.rawRsd20 ? "⚑ RSD &gt; 20%" : (info.rawProximateSum ? `⚑ Proximate Sum (${fmtNum(info.proximateSumPct, 1)}%)` : "⚑ Outlier Flag");
             statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-warn" title="Within-group RSD ${fmtNum(info.rsdWithin, 1)}%">${pillLabel}</span>`;
           }
         }
@@ -7721,7 +8503,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               </select>
               <input type="text" value="${(dEntry.note || '').replace(/"/g, '&quot;')}" onchange="handleDecisionNote('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Reviewer note..." class="w-full rounded px-1.5 py-1 text-[11px] border border-[var(--border)] font-mono" />
               <div class="flex items-center gap-1">
-                <input type="email" value="${(dEntry.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email..." class="flex-1 rounded px-1.5 py-0.5 text-[10px] border border-[var(--border)] font-mono" />
+                <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(dEntry.assigned_to_email) : (dEntry.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email..." class="flex-1 rounded px-1.5 py-0.5 text-[10px] border border-[var(--border)] font-mono" />
                 <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Open Audit Finding Modal (Entire Replicate Group default vs Single Point Only)" class="px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-90">⚑ Audit</button>
                 <button type="button" onclick="approveAndSyncDecision('${safeKeyAttr}', '${metaPayload}')" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚡ Sync</button>
               </div>
@@ -7868,7 +8650,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         <div class="font-mono text-[11px] text-[var(--muted-foreground)]">${e.parameter || '—'}</div>
                       </td>
                       <td class="py-2.5 px-3 space-y-1 min-w-[200px]">
-                        <input type="email" value="${(e.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="assignQueueEntryEmail('${safeKeyAttr}', this.value)" placeholder="Assign to email..." class="w-full rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
+                        <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(e.assigned_to_email) : (e.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="assignQueueEntryEmail('${safeKeyAttr}', this.value)" placeholder="Assign to email..." class="w-full rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
                         ${currentAnalystEmail ? `<button type="button" onclick="assignQueueEntryEmail('${safeKeyAttr}', '${currentAnalystEmail.replace(/'/g, "\\'")}')" class="px-1.5 py-0.5 rounded text-[10px] bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">👤 Assign to Me</button>` : ''}
                       </td>
                       <td class="py-2.5 px-3 space-y-1 min-w-[250px]">

@@ -355,6 +355,39 @@ class AssignDecisionRequest(BaseModel):
     )
 
 
+class BatchAssignItem(BaseModel):
+    """Single item in a bulk assignment request (`POST /v1/qc/decisions/assign-batch`)."""
+
+    id: int | None = Field(default=None)
+    decision_id: int | str | None = Field(default=None)
+    record_table: str | None = Field(default=None)
+    record_id: str | None = Field(default=None)
+    record_ids: list[str] | None = Field(default=None)
+    replicate_group_key: str | None = Field(default=None)
+    resource_name: str | None = Field(default=None)
+    analysis_type: str | None = Field(default=None)
+    parameter_name: str | None = Field(default=None)
+    flag_type: str | None = Field(default=None)
+    flag_trigger_value: str | None = Field(default=None)
+    old_qc_pass: str | None = Field(default=None)
+    review_note: str | None = Field(default=None)
+
+
+class BatchAssignRequest(BaseModel):
+    """Request body for `POST /v1/qc/decisions/assign-batch`."""
+
+    assigned_to_email: str = Field(
+        default="",
+        description="Target analyst email address or 'me'.",
+    )
+    assigned_by_email: str | None = Field(
+        default=None,
+        description="Optional actor email address performing the batch assignment.",
+    )
+    review_note: str | None = Field(default=None)
+    items: list[BatchAssignItem] = Field(default_factory=list)
+
+
 class BatchGSheetSyncRequest(BaseModel):
     """Optional request body for `POST /v1/qc/decisions/sync-gsheet-batch`."""
 
@@ -904,6 +937,178 @@ def assign_qc_decision(
     return {
         "status": "ok",
         "decision": serialize_decision(decision),
+    }
+
+
+@router.post("/decisions/assign-batch")
+def assign_qc_decisions_batch(
+    payload: BatchAssignRequest,
+    user: AnalystDep,
+    session: SessionDep,
+) -> dict[str, Any]:
+    """Atomically bulk-assign multiple existing or static-candidate QC flags to an analyst."""
+    raw_target = (payload.assigned_to_email or "").strip().lower()
+    if raw_target == "me":
+        target_email = user.email.strip().lower()
+    else:
+        target_email = raw_target
+
+    if not target_email or target_email in {"unassigned", "none", "null"}:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Non-empty assigned_to_email is required for batch assignment.",
+        )
+
+    if not payload.items:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="At least one item is required for batch assignment.",
+        )
+
+    if len(payload.items) > 500:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Batch assignment cannot exceed 500 items per request.",
+        )
+
+    actor_email_clean = (
+        (payload.assigned_by_email or "").strip().lower()
+        or user.email.strip().lower()
+    )
+    now_utc = datetime.now(timezone.utc)
+    now_iso = now_utc.isoformat().replace("+00:00", "Z")
+    audit_entry = {
+        "action": "bulk_assign",
+        "assigned_to_email": target_email,
+        "assigned_by_email": actor_email_clean,
+        "actor_email": actor_email_clean,
+        "timestamp": now_iso,
+    }
+
+    all_db_rows = [
+        r
+        for r in session.exec(select(QcReviewDecision)).all()
+        if (r.record_table or "").strip().lower() != "portal_bug_report"
+    ]
+    assigned_decisions: list[QcReviewDecision] = []
+
+    for item in payload.items:
+        dom_slug = canonical_domain_slug(item.record_table or item.analysis_type)
+        if dom_slug != "unknown":
+            record_table = f"{dom_slug}_record"
+        else:
+            raw_tbl = (item.record_table or "proximate_record").strip().lower()
+            record_table = raw_tbl if raw_tbl.endswith("_record") else f"{raw_tbl}_record"
+
+        all_rids = [str(r).strip() for r in (item.record_ids or []) if str(r).strip()]
+        primary_rid = (item.record_id or "").strip() or (all_rids[0] if all_rids else "")
+        normalized_group_key = (
+            normalize_replicate_group_key(item.replicate_group_key)
+            if item.replicate_group_key and item.replicate_group_key.strip()
+            else None
+        )
+
+        existing: QcReviewDecision | None = None
+        if isinstance(item.id, int):
+            existing = session.get(QcReviewDecision, item.id)
+        elif isinstance(item.decision_id, int):
+            existing = session.get(QcReviewDecision, item.decision_id)
+        elif isinstance(item.decision_id, str):
+            raw_id_str = item.decision_id.strip()
+            if raw_id_str.isdigit():
+                existing = session.get(QcReviewDecision, int(raw_id_str))
+            elif raw_id_str.upper().startswith("QC-DB-"):
+                suffix = raw_id_str[6:].strip()
+                if suffix.isdigit():
+                    existing = session.get(QcReviewDecision, int(suffix))
+
+        if existing is None and primary_rid:
+            for row in all_db_rows:
+                if (
+                    (row.record_table or "").strip().lower() == record_table.lower()
+                    and str(row.record_id or "").strip() == primary_rid
+                ):
+                    existing = row
+                    break
+
+        if existing is None and normalized_group_key:
+            for row in all_db_rows:
+                if row.replicate_group_key and matches_replicate_group_key(
+                    row.replicate_group_key, normalized_group_key
+                ):
+                    existing = row
+                    break
+
+        if (
+            existing is None
+            and isinstance(item.decision_id, str)
+            and not primary_rid
+            and not normalized_group_key
+        ):
+            raw_id_str = item.decision_id.strip().upper()
+            if raw_id_str.startswith("QC-") and raw_id_str[3:].isdigit():
+                existing = session.get(QcReviewDecision, int(raw_id_str[3:]))
+
+        effective_note = (item.review_note or payload.review_note or "").strip()
+
+        if existing is not None:
+            existing.assigned_to_email = target_email
+            current_status = (existing.decision_status or "open").strip().lower()
+            if current_status in {"", "open", "pending"}:
+                existing.decision_status = "in_review"
+            if effective_note:
+                existing.review_note = effective_note
+            existing.updated_at = datetime.now(timezone.utc)
+            session.add(existing)
+            session.commit()
+            session.refresh(existing)
+            append_or_update_seed_csv(existing)
+            assigned_decisions.append(existing)
+        else:
+            fallback_rid = primary_rid or str(item.decision_id or "0").strip()
+            if fallback_rid not in all_rids:
+                all_rids.insert(0, fallback_rid)
+            group_key = normalized_group_key or normalize_replicate_group_key(
+                f"{item.analysis_type or record_table}||{item.resource_name or 'unknown'}||||||{item.parameter_name or ''}"
+            )
+            created, _ = record_stage1_decision(
+                session=session,
+                actor_email=actor_email_clean,
+                record_table=record_table,
+                record_id=fallback_rid,
+                record_ids=all_rids,
+                replicate_group_key=group_key,
+                resource_name=(item.resource_name or "unknown").strip() or "unknown",
+                analysis_type=item.analysis_type,
+                parameter_name=item.parameter_name,
+                flag_type=(item.flag_type or "statistical_outlier").strip()
+                or "statistical_outlier",
+                flag_trigger_value=item.flag_trigger_value,
+                old_qc_pass=item.old_qc_pass,
+                new_qc_pass=None,
+                decision_action="flag_for_review",
+                decision_status="in_review",
+                review_note=effective_note or f"Bulk-assigned to {target_email}",
+                assigned_to_email=target_email,
+            )
+            all_db_rows.append(created)
+            assigned_decisions.append(created)
+
+    serialized_list = [
+        {
+            **serialize_decision(d),
+            "assigned_by_email": actor_email_clean,
+            "audit_history": [dict(audit_entry, decision_id=d.id)],
+        }
+        for d in assigned_decisions
+    ]
+    return {
+        "status": "ok",
+        "assigned_count": len(serialized_list),
+        "assigned_to_email": target_email,
+        "assigned_by_email": actor_email_clean,
+        "audit_history": [dict(audit_entry)],
+        "decisions": serialized_list,
     }
 
 

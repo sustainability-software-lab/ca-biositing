@@ -116,12 +116,22 @@ def test_build_workbench_payload_detects_all_four_qc_flag_types() -> None:
     assert "proximate_sum" in all_flags
     assert "analyst_flagged" in all_flags
 
-    # Verify AH-PREP-02 proximate closure violation (>105%) is captured
+    # Verify AH-PREP-02 proximate closure violation (outside 95-105% via Data Portal formula:
+    # COALESCE(avg_moisture, 0) + COALESCE(avg_ash, 0) + COALESCE(avg_vs, 100 - COALESCE(avg_fc, 0))
+    # = 0.0 + 5.9 + 82.0 = 87.9%) is captured at both sample and stratum levels
     closure_map = payload["proximate_closure_by_sample"]
     assert "Almond Hulls::AH-PREP-02" in closure_map
     ah_prep_02 = closure_map["Almond Hulls::AH-PREP-02"]
     assert ah_prep_02["out_of_bounds"] is True
-    assert ah_prep_02["closure_sum_pct"] == pytest.approx(112.4, abs=0.2)
+    assert ah_prep_02["closure_sum_pct"] == pytest.approx(87.9, abs=0.2)
+    assert ah_prep_02["proximate_sum_pct"] == pytest.approx(87.9, abs=0.2)
+
+    stratum_map = payload["proximate_closure_by_stratum"]
+    assert "Almond Hulls::EXP-PROX-02::Milled 2mm" in stratum_map
+    assert stratum_map["Almond Hulls::EXP-PROX-02::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(
+        87.9, abs=0.2
+    )
+    assert stratum_map["Almond Hulls::EXP-PROX-02::Milled 2mm"]["out_of_bounds"] is True
 
     # Verify co-measured parameters on Almond Hulls::AH-PREP-01 include multiple parameters
     co_measured = payload["co_measured_by_sample"].get("Almond Hulls::AH-PREP-01", [])
@@ -194,8 +204,21 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     assert "Refresh QC State" in html
     assert "/v1/qc/decisions" in html
     assert "/v1/qc/decisions/sync-gsheet-batch" in html
+    assert "/v1/qc/decisions/assign-batch" in html
     assert "/sync-gsheet" in html
     assert "/assign" in html
+    assert 'id="qc-bulk-assign-bar"' in html
+    assert 'id="chk-select-all-filtered"' in html
+    assert 'id="chk-select-all-header"' in html
+    assert 'id="bulk-selected-count"' in html
+    assert 'id="btn-select-all-filtered"' in html
+    assert 'id="btn-clear-selection"' in html
+    assert 'id="bulk-assign-email"' in html
+    assert 'id="AnalystDirectoryList"' in html
+    assert 'id="btn-bulk-assign-apply"' in html
+    assert "qc-row-select-chk" in html
+    assert "bulkAssignSelected" in html
+    assert "getDefaultAssigneeEmail" in html
 
     # 5. Complete 4-step Audit Provenance & Timestamp Timeline + role-aware Stage 2 controls
     assert 'id="audit-provenance-timeline"' in html
@@ -205,6 +228,7 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     assert "Google Sheets Sync Status" in html
     assert "Sync This Decision to Google Sheets" in html
     assert 'id="badge-analyst-gsheet-readonly"' in html
+    assert "3. Data Visualizer" in html
 
     # 6. Validate inline JS syntax via node --check
     script_count = _validate_inline_js_blocks(output_html)
@@ -239,6 +263,7 @@ def test_generate_dashboard_gallery_and_login_portal(tmp_path: Path) -> None:
     assert "audit/db_environment_drift_dashboard.html" in index_html
     assert 'id="badge-my-assigned-reviews"' in index_html
     assert "My Assigned Reviews" in index_html
+    assert "Interactive Data Visualizer" in index_html
     assert 'id="product-card-5-drift"' in index_html
     assert 'data-admin-only="true"' in index_html
     assert "/v1/qc/auth/me" in index_html
@@ -294,9 +319,9 @@ def test_dashboard_artifacts_workflow_never_publishes_minimal_fixture_to_gcs() -
     workflow_path = REPO_ROOT / ".github" / "workflows" / "dashboard-artifacts.yml"
     content = workflow_path.read_text(encoding="utf-8")
     assert 'USED_MINIMAL_FIXTURE="true"' in content
-    assert 'echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}" >> "$GITHUB_ENV"' in content
-    assert 'if [ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]' in content
-    assert "dashboards/${DASHBOARDS_ENV}/latest/metadata/dashboard_data_snapshot.json" in content
+    assert 'echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}"' in content
+    assert '[ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]' in content
+    assert "metadata/dashboard_data_snapshot.json" in content
 
 
 def test_canonical_6_part_replicate_group_key_and_4_part_fallback() -> None:
@@ -586,6 +611,8 @@ def test_js_refresh_qc_state_non_colliding_ids_and_drawer_fallback(
         output_path=output_html,
     )
     html_text = output_html.read_text(encoding="utf-8")
+    assert 'id="btn-bulk-assign-my-email"' in html_text
+    assert 'id="btn-clear-selection"' in html_text
     blocks = [
         block
         for block in re.findall(
@@ -906,3 +933,454 @@ global.fetch = function (url) {
         check=False,
     )
     assert proc.returncode == 0, f"JS unit harness failed: {proc.stderr}\n{proc.stdout}"
+
+
+def test_proximate_sum_portal_parity_and_fc_fallback() -> None:
+    """Verify build_workbench_payload computes Data Portal proximate_sum with VS priority and (100 - FC) fallback."""
+    snapshot = {
+        "str_cols": [
+            "resource_name",
+            "analysis_type",
+            "prepared_sample",
+            "field_sample",
+            "provider",
+            "prep_method",
+            "experiment",
+            "analyst",
+            "qc_status",
+            "pt_method",
+            "eh_method",
+            "vessel",
+            "strain",
+            "bioconv",
+            "well_or_block",
+            "parameter",
+            "unit",
+            "note",
+        ],
+        "dicts": {
+            "resource_name": ["Almond Hulls", "Walnut Shells"],
+            "analysis_type": ["Proximate Analysis"],
+            "prepared_sample": ["AH-S1", "WS-S1"],
+            "field_sample": ["AH-F1", "WS-F1"],
+            "provider": ["lbl"],
+            "prep_method": ["Milled 2mm"],
+            "experiment": ["EXP-A", "EXP-B"],
+            "analyst": ["QA"],
+            "qc_status": ["pass"],
+            "pt_method": [""],
+            "eh_method": [""],
+            "vessel": [""],
+            "strain": [""],
+            "bioconv": [""],
+            "well_or_block": [""],
+            "parameter": ["Moisture", "Ash", "Volatile Solids", "Fixed Carbon"],
+            "unit": ["%"],
+            "note": [""],
+        },
+        # Row format: [record_id] + 18 str_cols indices + [replicate, value, exp_date]
+        "rows": [
+            # Stratum 1 (Almond Hulls::EXP-A::Milled 2mm): Moisture=8.0, Ash=5.0, VS=75.0, FC=12.0
+            # Portal formula uses Moisture + Ash + VS = 8.0 + 5.0 + 75.0 = 88.0% (<95% -> flagged, FC ignored when VS present)
+            ["R-M1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8.0, "2026-01-01"],
+            ["R-A1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 5.0, "2026-01-01"],
+            ["R-V1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1, 75.0, "2026-01-01"],
+            ["R-F1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 12.0, "2026-01-01"],
+            # Stratum 2 (Walnut Shells::EXP-B::Milled 2mm): Moisture=6.0, Ash=2.0, NO VS, FC=18.0
+            # Portal formula uses Moisture + Ash + (100 - FC) = 6.0 + 2.0 + 82.0 = 90.0% (<95% -> flagged)
+            ["R-M2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6.0, "2026-01-02"],
+            ["R-A2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 2.0, "2026-01-02"],
+            ["R-F2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 18.0, "2026-01-02"],
+        ],
+    }
+    payload = build_workbench_payload(snapshot)
+    strata = payload["proximate_closure_by_stratum"]
+    assert strata["Almond Hulls::EXP-A::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(88.0)
+    assert strata["Almond Hulls::EXP-A::Milled 2mm"]["out_of_bounds"] is True
+    assert strata["Walnut Shells::EXP-B::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(90.0)
+    assert strata["Walnut Shells::EXP-B::Milled 2mm"]["out_of_bounds"] is True
+
+
+def test_card12_default_assignee_and_bulk_assign_selected(tmp_path: Path) -> None:
+    """Verify Card 12: getDefaultAssigneeEmail auto-fill in drawer/bulk bar and bulkAssignSelected batch POST."""
+    node_bin = shutil.which("node")
+    if node_bin is None:
+        pytest.skip("node binary not available in PATH")
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html_text = output_html.read_text(encoding="utf-8")
+    assert 'id="btn-bulk-assign-my-email"' in html_text
+    assert 'id="btn-clear-selection"' in html_text
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html_text,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+
+    harness_js = tmp_path / "run_card12_workbench_checks.js"
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  return {
+    id: id,
+    value: "",
+    textContent: "",
+    innerHTML: "",
+    style: {},
+    className: "",
+    checked: false,
+    indeterminate: false,
+    disabled: false,
+    classList: {
+      add: function () {},
+      remove: function () {},
+      toggle: function () {}
+    },
+    appendChild: function () {},
+    addEventListener: function () {},
+    getAttribute: function () { return ""; },
+    setAttribute: function () {},
+    querySelectorAll: function () { return []; }
+  };
+}
+global.document = {
+  getElementById: function (id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll: function () { return []; },
+  createElement: function (tag) { return makeEl(tag); }
+};
+global.window = {
+  location: { pathname: "/v1/dashboards/metadata/resource_audit_workbench.html", search: "" },
+  history: { replaceState: function () {} },
+  open: function () {}
+};
+let batchRequests = [];
+global.fetch = function (url, opts) {
+  if (String(url).indexOf("/v1/qc/auth/me") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          email: "qa.analyst@lbl.gov",
+          name: "QA Analyst",
+          role: "analyst",
+          authenticated: true
+        });
+      }
+    });
+  }
+  if (String(url).indexOf("/v1/qc/decisions/assign-batch") !== -1) {
+    const body = opts && opts.body ? JSON.parse(opts.body) : {};
+    batchRequests.push(body);
+    const assignedEmail = String(body.assigned_to_email || "").trim().toLowerCase();
+    const outDecisions = (body.items || []).map(function (it, idx) {
+      return {
+        id: it.id || (200 + idx),
+        decision_id: it.decision_id,
+        record_table: it.record_table,
+        record_id: it.record_id,
+        replicate_group_key: it.replicate_group_key,
+        resource_name: it.resource_name,
+        analysis_type: it.analysis_type,
+        parameter_name: it.parameter_name,
+        decision_status: "in_review",
+        decision_action: "in_review",
+        assigned_to_email: assignedEmail,
+        assigned_by_email: "qa.analyst@lbl.gov",
+        assigned_at: "2026-04-20T12:00:00Z"
+      };
+    });
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          status: "ok",
+          assigned_count: outDecisions.length,
+          assigned_to_email: assignedEmail,
+          assigned_by_email: "qa.analyst@lbl.gov",
+          decisions: outDecisions
+        });
+      }
+    });
+  }
+  if (String(url).indexOf("/v1/qc/decisions") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({ decisions: [] });
+      }
+    });
+  }
+  return Promise.resolve({ ok: false, json: function () { return Promise.resolve(null); } });
+};
+"""
+        + blocks[0]
+        + """
+(async function () {
+  await new Promise((r) => setTimeout(r, 30));
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+
+  // 1. Verify getDefaultAssigneeEmail returns authenticated user email, preserves existing assignment on QC-0001, and auto-fills unassigned #input-assigned-to and #bulk-assign-email
+  assert.strictEqual(hooks.getDefaultAssigneeEmail(), "qa.analyst@lbl.gov");
+  assert.strictEqual(hooks.getDefaultAssigneeEmail("analyst@lbl.gov"), "analyst@lbl.gov");
+  assert.strictEqual(elements["input-assigned-to"].value, "qa.analyst@lbl.gov");
+  hooks.state.decisionsById["QC-0001"].assigned_to_email = "explicit.owner@lbl.gov";
+  hooks.selectDecision("QC-0001", false);
+  assert.strictEqual(elements["input-assigned-to"].value, "explicit.owner@lbl.gov");
+  hooks.state.decisionsById["QC-0001"].assigned_to_email = "";
+  hooks.selectDecision("QC-0001", false);
+  assert.strictEqual(elements["input-assigned-to"].value, "qa.analyst@lbl.gov");
+  assert.strictEqual(elements["bulk-assign-email"].value, "qa.analyst@lbl.gov");
+
+  // 2. Verify selectAllFilteredRows selects all visible queue decisions and updates #bulk-selected-count
+  const visibleIds = hooks.getVisibleQueueDecisionIds();
+  assert.ok(visibleIds.length >= 2, "Expected at least 2 visible queue decisions");
+  hooks.selectAllFilteredRows();
+  assert.strictEqual(hooks.state.selectedIds.size, visibleIds.length);
+  assert.strictEqual(elements["bulk-selected-count"].textContent, visibleIds.length + " selected");
+  assert.strictEqual(elements["btn-bulk-assign-apply"].disabled, false);
+  assert.strictEqual(elements["btn-clear-selection"].disabled, false);
+
+  // 3. Toggle off all except first 2 rows, test fillBulkAssignMyEmail, and run bulkAssignSelected
+  hooks.clearRowSelection();
+  assert.strictEqual(hooks.state.selectedIds.size, 0);
+  assert.strictEqual(elements["btn-clear-selection"].disabled, true);
+  elements["bulk-assign-email"].value = "other@lbl.gov";
+  assert.strictEqual(hooks.fillBulkAssignMyEmail(), "qa.analyst@lbl.gov");
+  assert.strictEqual(elements["bulk-assign-email"].value, "qa.analyst@lbl.gov");
+
+  hooks.toggleRowSelection(visibleIds[0], true);
+  hooks.toggleRowSelection(visibleIds[1], true);
+  assert.strictEqual(hooks.state.selectedIds.size, 2);
+
+  elements["bulk-assign-email"].value = "Lead.Reviewer@lbl.gov";
+  const onlineRes = await hooks.bulkAssignSelected();
+  assert.strictEqual(onlineRes.online, true);
+
+  assert.strictEqual(batchRequests.length, 1);
+  assert.strictEqual(batchRequests[0].assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(batchRequests[0].items.length, 2);
+  assert.strictEqual(hooks.state.selectedIds.size, 0, "Expected selection to clear after bulk assign");
+
+  const d0 = hooks.state.decisionsById[visibleIds[0]];
+  const d1 = hooks.state.decisionsById[visibleIds[1]];
+  assert.strictEqual(d0.assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(d1.assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(d0.decision_status, "in_review");
+  assert.strictEqual(d1.decision_status, "in_review");
+  assert.ok(d0.db_id >= 200);
+  assert.ok(d1.db_id >= 200);
+
+  // 4. Verify offline / failed POST fallback sets online=false and updates local state cleanly
+  global.fetch = function () {
+    return Promise.resolve({ ok: false, status: 503, json: function () { return Promise.resolve(null); } });
+  };
+  hooks.toggleRowSelection(visibleIds[0], true);
+  elements["bulk-assign-email"].value = "Offline.Reviewer@lbl.gov";
+  const offlineRes = await hooks.bulkAssignSelected();
+  assert.strictEqual(offlineRes.ok, true);
+  assert.strictEqual(offlineRes.online, false);
+  assert.strictEqual(offlineRes.status, "assigned_offline");
+  assert.strictEqual(hooks.state.decisionsById[visibleIds[0]].assigned_to_email, "offline.reviewer@lbl.gov");
+  assert.ok(String(elements["decision-toast"].textContent || "").indexOf("offline fallback") !== -1);
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"Card 12 JS harness failed: {proc.stderr}\n{proc.stdout}"
+
+
+def test_card13_workbench_show_me_mini_plot_popover(tmp_path: Path) -> None:
+    """Card 13: Verify Product 4 '👁 Show me' button in Queue Table & Contextual Drawer, dark-mode default, opaque popover, 3-tier SVG points, proximate sum bar, and visualizer link."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html = output_html.read_text(encoding="utf-8")
+    assert '<html lang="en" data-theme="dark">' in html
+    assert 'id="btn-theme-toggle"' in html
+    assert 'id="audit-flag-show-me-popover"' in html
+    assert "background:var(--bg-card, #1e293b)" in html
+    assert "opacity:1" in html
+    assert "backdrop-filter:none" in html
+    assert 'id="show-me-mini-svg"' in html
+    assert 'id="show-me-proximate-bar"' in html
+    assert 'id="show-me-open-visualizer-link"' in html
+    assert 'id="btn-drawer-show-me-flag"' in html
+    assert "btn-show-me-flag" in html
+    assert "👁 Show me" in html
+
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+    script_body = blocks[0]
+    harness_js = tmp_path / "workbench_card13_harness.js"
+
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set(id === "audit-flag-show-me-popover" || id === "show-me-proximate-bar" ? ["hidden"] : []);
+  const attrs = {};
+  return {
+    id, value: "", checked: false, disabled: false, textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    children: [],
+    classList: {
+      add(c) { classSet.add(c); },
+      remove(c) { classSet.delete(c); },
+      toggle(c) { if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c) { return classSet.has(c); }
+    },
+    appendChild(child) { this.children.push(child); return child; },
+    addEventListener() {},
+    setAttribute(k, v) { attrs[k] = String(v); if (k === "href") this.href = String(v); },
+    getAttribute(k) { return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    querySelectorAll() { return []; }
+  };
+}
+const localStore = {};
+global.localStorage = {
+  getItem(k) { return Object.prototype.hasOwnProperty.call(localStore, k) ? localStore[k] : null; },
+  setItem(k, v) { localStore[k] = String(v); },
+  removeItem(k) { delete localStore[k]; }
+};
+global.window = {
+  location: {
+    pathname: "/v1/dashboards/metadata/resource_audit_workbench.html",
+    search: "?decision_id=QC-0001",
+    href: "http://localhost:8000/v1/dashboards/metadata/resource_audit_workbench.html?decision_id=QC-0001",
+    origin: "http://localhost:8000",
+    protocol: "http:"
+  },
+  history: { replaceState() {} },
+  addEventListener() {},
+  dispatchEvent() {}
+};
+global.document = {
+  getElementById(id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll() { return []; },
+  createElement(tag) { return makeEl(tag); },
+  body: makeEl("body")
+};
+global.BroadcastChannel = function() {
+  return { postMessage() {}, close() {}, addEventListener() {} };
+};
+global.CustomEvent = function(name, opts) { return { name, detail: opts ? opts.detail : null }; };
+global.fetch = async function() { return { ok: false, status: 404, json: async () => ({}) }; };
+"""
+        + "\n"
+        + script_body
+        + "\n"
+        + """
+(() => {
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+  assert.strictEqual(typeof hooks.openFlagShowMePopover, "function");
+  assert.strictEqual(typeof hooks.closeFlagShowMePopover, "function");
+
+  // 1. Verify queue table rows include .btn-show-me-flag button and drawer header button tracks active decision
+  const rows = elements["qc-queue-tbody"].children;
+  assert.ok(rows.length >= 2, "Expected at least 2 rendered queue rows");
+  assert.ok(rows[0].innerHTML.includes("btn-show-me-flag"), "Expected .btn-show-me-flag in queue row");
+  assert.ok(rows[0].innerHTML.includes("👁 Show me"), "Expected '👁 Show me' label in queue row");
+  assert.strictEqual(elements["btn-drawer-show-me-flag"].getAttribute("data-decision-id"), "QC-0001");
+
+  // 2. Open Show Me popover for QC-0001 and verify 3-tier SVG circles (peer #64748b, target-group #2563eb, outlier #dc2626)
+  const res1 = hooks.openFlagShowMePopover({ decisionId: "QC-0001" });
+  assert.strictEqual(res1.decisionId, "QC-0001");
+  assert.ok(res1.peerCount >= 1, "Expected peer slice points for QC-0001");
+  assert.ok(res1.targetGroupCount >= 1, "Expected target replicate group sibling points for QC-0001");
+  assert.strictEqual(res1.outlierCount, 1, "Expected 1 flagged outlier point for QC-0001");
+
+  const svgHtml = elements["show-me-mini-svg"].innerHTML;
+  assert.ok(svgHtml.includes('class="show-me-pt-peer"'), "Expected peer circle class");
+  assert.ok(svgHtml.includes('data-role="peer"'), "Expected peer data-role");
+  assert.ok(svgHtml.includes('stroke="#64748b"'), "Expected peer stroke #64748b");
+  assert.ok(svgHtml.includes('class="show-me-pt-target-group"'), "Expected target-group circle class");
+  assert.ok(svgHtml.includes('data-role="target-group"'), "Expected target-group data-role");
+  assert.ok(svgHtml.includes('stroke="#2563eb"'), "Expected target-group stroke #2563eb");
+  assert.ok(svgHtml.includes('class="show-me-pt-outlier"'), "Expected outlier circle class");
+  assert.ok(svgHtml.includes('class="show-me-outlier-pulse-ring"'), "Expected outlier outer pulse ring class");
+  assert.ok(svgHtml.includes('r="10.5"'), "Expected outer pulse ring radius 10.5");
+  assert.ok(svgHtml.includes('stroke="#60a5fa"'), "Expected blue SD band stroke #60a5fa");
+  assert.ok(svgHtml.includes('data-role="outlier"'), "Expected outlier data-role");
+  assert.ok(svgHtml.includes('stroke="#dc2626"'), "Expected outlier stroke #dc2626");
+  assert.ok(svgHtml.includes('data-record-id="PROX-AH-004"'), "Expected outlier record PROX-AH-004");
+
+  const vizHref = elements["show-me-open-visualizer-link"].getAttribute("href");
+  assert.ok(vizHref.toLowerCase().includes("resource_explorer_dashboard.html?resource=almond%20hulls"));
+  assert.ok(vizHref.includes("&highlight_rk="));
+
+  // 3. Open Show Me popover with proximate_sum flag active and verify #show-me-proximate-bar
+  const res2 = hooks.openFlagShowMePopover({
+    decisionId: "QC-0001",
+    flags: ["proximate_sum"],
+    proximateSumPct: 107.8
+  });
+  assert.strictEqual(res2.hasProximateBar, true);
+  assert.strictEqual(elements["show-me-proximate-bar"].classList.contains("hidden"), false);
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes("95–105%"));
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes('data-role="proximate-stacked-bar"'));
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes("Proximate Closure"));
+
+  // 4. Verify nonexistent key renders honest empty state and zero synthetic data
+  const emptyRes = hooks.openFlagShowMePopover({
+    replicateGroupKey: "nonexistent::missing::proximate::ash::none::none"
+  });
+  assert.strictEqual(emptyRes.empty, true);
+  assert.ok(elements["show-me-mini-svg"].innerHTML.includes("No matching database records found in snapshot."));
+  assert.strictEqual(elements["show-me-mini-svg"].innerHTML.includes("<circle"), false);
+
+  // 5. Close popover
+  hooks.closeFlagShowMePopover();
+  assert.strictEqual(elements["audit-flag-show-me-popover"].classList.contains("hidden"), true);
+})();
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"Card 13 JS harness failed: {proc.stderr}\n{proc.stdout}"

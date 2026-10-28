@@ -760,3 +760,151 @@ def test_card5a_decision_actions_and_legacy_payload_mapping(
     dec_fail = resp_fail.json()["decision"]
     assert dec_fail["decision_status"] == "resolved"
     assert dec_fail["new_qc_pass"] == "fail"
+
+
+def test_assign_qc_decisions_batch_updates_existing_and_upserts_static_candidates(
+    client: TestClient,
+    sqlite_engine,
+    tmp_path: Path,
+) -> None:
+    """Verify POST /v1/qc/decisions/assign-batch atomically assigns existing DB decisions and upserts unpersisted static queue candidates."""
+    _seed_proximate_records(sqlite_engine)
+
+    login_resp = client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov", "name": "Analyst One"},
+    )
+    assert login_resp.status_code == 200
+
+    # 1. Create an existing DB decision row for PROX-AS-01
+    existing_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "replicate_group_key": "almond shells::as-ps-01::proximate::moisture::milled 2mm::exp-01",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "moisture",
+            "flag_type": "rsd_gt_10",
+            "flag_trigger_value": "RSD=18.4%",
+            "decision_action": "in_review",
+            "review_note": "Existing open finding",
+        },
+    )
+    assert existing_resp.status_code == 200
+    existing_id = existing_resp.json()["decision"]["id"]
+
+    # 2. Call POST /v1/qc/decisions/assign-batch with 1 existing DB decision + 1 unpersisted static candidate
+    batch_resp = client.post(
+        "/v1/qc/decisions/assign-batch",
+        json={
+            "assigned_to_email": "Reviewer.Lead@lbl.gov",
+            "review_note": "Bulk assigned for weekly review",
+            "items": [
+                {
+                    "id": existing_id,
+                    "decision_id": f"QC-{existing_id:04d}",
+                    "record_table": "proximate_record",
+                    "record_id": "PROX-AS-01",
+                },
+                {
+                    "decision_id": "QC-0002",
+                    "record_table": "proximate_record",
+                    "record_id": "PROX-AS-02",
+                    "record_ids": ["PROX-AS-02", "PROX-AS-03"],
+                    "replicate_group_key": "almond shells::as-ps-02::proximate::ash::milled 2mm::exp-01",
+                    "resource_name": "almond shells",
+                    "analysis_type": "Proximate Analysis",
+                    "parameter_name": "Ash",
+                    "flag_type": "rsd_gt_20",
+                    "flag_trigger_value": "RSD=24.1%",
+                },
+            ],
+        },
+    )
+    assert batch_resp.status_code == 200
+    batch_data = batch_resp.json()
+    assert batch_data["status"] == "ok"
+    assert batch_data["assigned_count"] == 2
+    assert batch_data["assigned_to_email"] == "reviewer.lead@lbl.gov"
+    assert batch_data["assigned_by_email"] == "analyst1@lbl.gov"
+    assert isinstance(batch_data.get("audit_history"), list)
+    assert batch_data["audit_history"][0]["action"] == "bulk_assign"
+    assert len(batch_data["decisions"]) == 2
+
+    by_rec = {d["record_id"]: d for d in batch_data["decisions"]}
+    assert by_rec["PROX-AS-01"]["id"] == existing_id
+    assert by_rec["PROX-AS-01"]["assigned_to_email"] == "reviewer.lead@lbl.gov"
+    assert by_rec["PROX-AS-01"]["assigned_by_email"] == "analyst1@lbl.gov"
+    assert by_rec["PROX-AS-01"]["decision_status"] == "in_review"
+    assert by_rec["PROX-AS-01"]["review_note"] == "Bulk assigned for weekly review"
+    assert by_rec["PROX-AS-01"]["audit_history"][0]["action"] == "bulk_assign"
+
+    assert by_rec["PROX-AS-02"]["id"] != existing_id
+    assert by_rec["PROX-AS-02"]["assigned_to_email"] == "reviewer.lead@lbl.gov"
+    assert by_rec["PROX-AS-02"]["assigned_by_email"] == "analyst1@lbl.gov"
+    assert by_rec["PROX-AS-02"]["decision_status"] == "in_review"
+    assert by_rec["PROX-AS-02"]["decision_action"] == "flag_for_review"
+    assert by_rec["PROX-AS-02"]["old_qc_pass"] == "pass"
+
+    # 2b. Verify >500 items per batch is rejected with HTTP 400
+    too_large_resp = client.post(
+        "/v1/qc/decisions/assign-batch",
+        json={
+            "assigned_to_email": "Reviewer.Lead@lbl.gov",
+            "items": [
+                {
+                    "decision_id": f"QC-{i:04d}",
+                    "record_table": "proximate_record",
+                    "record_id": f"PROX-AS-{i:04d}",
+                }
+                for i in range(501)
+            ],
+        },
+    )
+    assert too_large_resp.status_code == 400
+    assert "cannot exceed 500 items" in too_large_resp.json()["detail"]
+
+    # 3. Resolve existing_id and verify reassigning a resolved decision preserves decision_status == "resolved"
+    resolve_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "replicate_group_key": "almond shells::as-ps-01::proximate::moisture::milled 2mm::exp-01",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "moisture",
+            "flag_type": "rsd_gt_10",
+            "decision_action": "pass",
+            "new_qc_pass": "pass",
+            "review_note": "Resolved as pass",
+        },
+    )
+    assert resolve_resp.status_code == 200
+    assert resolve_resp.json()["decision"]["decision_status"] == "resolved"
+
+    reassign_resolved_resp = client.post(
+        "/v1/qc/decisions/assign-batch",
+        json={
+            "assigned_to_email": "Senior.Auditor@lbl.gov",
+            "items": [
+                {
+                    "id": existing_id,
+                    "record_table": "proximate_record",
+                    "record_id": "PROX-AS-01",
+                }
+            ],
+        },
+    )
+    assert reassign_resolved_resp.status_code == 200
+    reassigned_dec = reassign_resolved_resp.json()["decisions"][0]
+    assert reassigned_dec["id"] == existing_id
+    assert reassigned_dec["assigned_to_email"] == "senior.auditor@lbl.gov"
+    assert reassigned_dec["decision_status"] == "resolved"
+
+    # 4. Verify seed CSV was synced with both assigned rows
+    seed_csv_path = tmp_path / "qc_review_decisions_seed.csv"
+    csv_rows = read_seed_csv(seed_csv_path)
+    assert len(csv_rows) == 2

@@ -25,15 +25,15 @@ embed a compressed dictionary-encoded payload directly into self-contained
 `.html` files that open in any browser (Safari, Chrome, Edge, Firefox) via
 `file://` or HTTP without a backend server.
 
-| Suite Page / Asset                                              | Generator Script                                   | Output HTML / File Path                                     | Purpose                                                                                                                                                                                                                                                                                                                                                                                       |
-| :-------------------------------------------------------------- | :------------------------------------------------- | :---------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **AI & Statistical Insights Sidecar**                           | `analysis/metadata/resource_insights_engine.py`    | `data/insights/resource_ai_insights.json`                   | Mines free-text bench notes (`observation.note`, `experiment.note`, `prepared_sample.note`, `field_sample.note`), computes within-group ($\text{RSD}_{\text{within}}$) vs. between-group ($\text{RSD}_{\text{between}}$) replicate precision, runs 3-test outlier screening with trace-element cutoffs (`<100 ppm` ICP / `<0.5%` XRF), and generates per-resource executive synthesis briefs. |
-| **Page 1: Resource Characterization & AI Brief**                | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_analysis_dashboard.html`   | Clean, focused single-resource characterization dashboard with compact 2-card Executive AI Brief, 4 KPI cards, and 5 domain visualization tabs (`Proximate & Mass Balance`, `Compositional & Ultimate`, `Calorimetry & XRD`, `Elemental (ICP & XRF)`, `Conversion: Pretreatment, Ferm & Gasification`).                                                                                       |
-| **Page 2: Statistical QC, Outlier Screening & Lab Notes Audit** | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_qc_outlier_dashboard.html` | Dedicated statistical quality control & audit workspace featuring within-group vs. between-group RSD scatter/ratio charts, interactive outlier screening table (`Dixon's Q`, `RSD > 20%`, `>3×SD_pooled` with trace-level suppression toggle), mined bench notes audit trail, and full anonymized CSV export.                                                                                 |
-| **Page 3: Multi-Resource Side-by-Side Comparison Explorer**     | `analysis/metadata/resource_explorer_dashboard.py` | `exports/plots/metadata/resource_explorer_dashboard.html`   | High-DPI HTML5 `<canvas>` explorer with searchable **Multi-Select Checklist Popovers** (`Resources`, `Prepared Samples`, `Parameters`, `Methods / Preps / Strains`) and a `Compare By:` grouping selector (`Resource`, `Prepared Sample`, `Field Sample`, `Experiment`, `Method / Prep`) for side-by-side visual and numeric comparison.                                                      |
-| **Product 4: Resource QC & Data Audit Workbench**               | `analysis/metadata/resource_audit_workbench.py`    | `exports/plots/metadata/resource_audit_workbench.html`      | Interactive Stage 1 QC decision workbench for reviewing replicate cohorts, logging pass/fail/flag rulings, and syncing live QC overrides across the suite.                                                                                                                                                                                                                                    |
-| **Product 5: Multi-Environment DB Drift Assessment**            | `analysis/audit/db_environment_drift.py`           | `exports/plots/audit/db_environment_drift_dashboard.html`   | 4-layer PostgreSQL environment drift dashboard comparing `local`, `staging`, and `production` across schema/migrations, 21 core tables, 19 materialized views, lineage sets, and parameter distributions.                                                                                                                                                                                     |
-| **Unified Suite Landing Gallery & Login Portal**                | `scripts/generate_dashboard_gallery.py`            | `exports/plots/index.html`, `exports/plots/login.html`      | Single entry-point landing page linking all 5 dashboard products (`resource_analysis_dashboard.html`, `resource_qc_outlier_dashboard.html`, `resource_explorer_dashboard.html`, `resource_audit_workbench.html`, and `db_environment_drift_dashboard.html`).                                                                                                                                  |
+| Suite Page / Asset                                          | Generator Script                                   | Output HTML / File Path                                     | Purpose                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| :---------------------------------------------------------- | :------------------------------------------------- | :---------------------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **AI & Statistical Insights Sidecar**                       | `analysis/metadata/resource_insights_engine.py`    | `data/insights/resource_ai_insights.json`                   | Mines free-text bench notes (`observation.note`, `experiment.note`, `prepared_sample.note`, `field_sample.note`), computes within-group ($\text{RSD}_{\text{within}}$) vs. method-stratified between-group ($\text{RSD}_{\text{between}}$, $\text{SD}_{\text{between}}$) replicate precision, runs 3-test outlier screening (`Dixon's Q` guarded by $\text{RSD} \ge 10\%$, `RSD > 20%`, `>3×SD_pooled`), and computes proximate mass-balance closure (`95–105%`). |
+| **Page 1: Resource Characterization & AI Brief**            | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_analysis_dashboard.html`   | Clean, focused single-resource characterization dashboard with sticky left filter sidebar, 10 individual analytical domain pills, KPI cards, proximate mass-balance closure parity with `mv_biomass_proximate_data.py`, and contextual `"👁 Show me"` flag mini-plots.                                                                                                                                                                                             |
+| **Page 2: Statistical Snapshot (QC, Outliers & Lab Notes)** | `analysis/metadata/resource_analysis_dashboard.py` | `exports/plots/metadata/resource_qc_outlier_dashboard.html` | Dedicated statistical quality control & audit workspace featuring within-group vs. method-stratified between-group RSD/SD scatter/ratio charts, 10 individual domain filter pills, interactive outlier screening table (`Dixon's Q` guarded by $\text{RSD} \ge 10\%$, `RSD > 20%`, `>3×SD_pooled`), mined bench notes audit trail, and `"👁 Show me"` flag mini-plots.                                                                                             |
+| **Page 3: Interactive Data Visualizer**                     | `analysis/metadata/resource_explorer_dashboard.py` | `exports/plots/metadata/resource_explorer_dashboard.html`   | High-DPI HTML5 `<canvas>` visualizer with 2D rectangular brush zoom (`#canvas-zoom-brush`), sticky left filter sidebar, 3-section statistical screening & lab notes drawer (`#explorer-lab-notes-panel`), canonical 6-part `replicate_group_key` point selection, `"📤 Export Slice (.HTML)"` collaborator export, and `"👁 Show me"` `?highlight_rk=` pulse-ring deep-linking.                                                                                    |
+| **Product 4: Resource QC & Data Audit Workbench**           | `analysis/metadata/resource_audit_workbench.py`    | `exports/plots/metadata/resource_audit_workbench.html`      | Default dark-mode Stage 1 QC decision workbench (`in_review` default workflow state, auto-filled analyst assignee, multi-row bulk assignment up to 500 items, contextual `"👁 Show me"` mini-plots, and admin-only Stage 2 Google Sheets writeback).                                                                                                                                                                                                               |
+| **Product 5: Multi-Environment DB Drift Assessment**        | `analysis/audit/db_environment_drift.py`           | `exports/plots/audit/db_environment_drift_dashboard.html`   | 4-layer PostgreSQL environment drift dashboard comparing `local`, `staging`, and `production` across schema/migrations, 21 core tables, 19 materialized views, lineage sets, and parameter distributions.                                                                                                                                                                                                                                                         |
+| **Unified Suite Landing Gallery & Login Portal**            | `scripts/generate_dashboard_gallery.py`            | `exports/plots/index.html`, `exports/plots/login.html`      | Single entry-point landing page linking all 5 dashboard products (`resource_analysis_dashboard.html`, `resource_qc_outlier_dashboard.html`, `resource_explorer_dashboard.html`, `resource_audit_workbench.html`, and `db_environment_drift_dashboard.html`).                                                                                                                                                                                                      |
 
 ## 2. One-Command Workflow (Pixi Tasks)
 
@@ -161,29 +161,49 @@ pixi run python analysis/metadata/resource_analysis_dashboard.py \
   to include, and download the self-contained `.html` slice and `.csv` bundle
   directly in the browser.
 
-## 5. Interactive QC Filtering, Live QC Overlay, Tray-to-Workbench & Issue Reporting
+## 5. Interactive QC Filtering, Live QC Overlay, Audit Escalation & Issue Reporting
 
-- **Default `qc_pass = pass`**: All dashboards (Page 1, Page 2, and Page 3)
-  default their initial load and reset state to `qc_pass = pass`.
-- **Replicate-Group-Default Selection**:
+- **Default `qc_pass = pass`**: All analytical dashboards (Page 1, Page 2, and
+  Page 3) default their initial load and reset state to `qc_pass = pass`, while
+  Product 4 (**QC Audit Workbench**) defaults to dark mode (`theme = "dark"`)
+  and `decision_status = "in_review"`.
+- **Canonical 6-Part Replicate Group Key & Cohort Selection**:
+  - Every replicate cohort across Python generators, FastAPI `/v1/qc/*` routes,
+    and browser overlays uses the canonical 6-part key
+    `{resource}::{sample}::{domain_slug}::{param}::{context_label}::{experiment}`
+    (`build_canonical_replicate_key` / `window.normalizeReplicateGroupKey`).
   - Clicking an outlier candidate or point in Page 2
     (`resource_qc_outlier_dashboard.html`) or Page 3
     (`resource_explorer_dashboard.html`) defaults the selection scope to
-    **`Entire Replicate Group`** (`scope = "group"`, highlighting all sibling
-    replicates sharing
-    `(resource, analysis_type, parameter, prepared_sample, method_or_strain)`),
-    with a 1-click toggle to **`Single Point Only`** (`scope = "single"`).
-- **Unified Export Tray & Audit Workbench Handoff
-  (`⚖️ Export to Audit Workbench`)**:
-  - Both Page 2 and Page 3 provide a unified selection tray with three actions:
-    1. `⬇ Export Tray (.CSV)` — downloads the selected records/groups as CSV.
-    2. `📤 Export Slice (.HTML)` — opens the leak-free collaborator slice modal
-       pre-populated with the selected resources.
-    3. `⚖️ Export to Audit Workbench` — dispatches
-       `POST /v1/qc/tray-to-workbench` (and mirrors to
-       `localStorage["biocirv_qc_audit_tray_v1"]` for offline `file://` mode) so
-       selected replicate groups or individual records appear immediately in the
-       Product 4 **QC Audit Workbench** (`resource_audit_workbench.html`).
+    **`Entire Replicate Group`** (`scope = "group"`), with a 1-click toggle to
+    **`Single Point Only`** (`scope = "single"`).
+- **Direct Audit Workbench Escalation (`⚖️ Export to Audit Workbench`) & Header
+  Slice Export (`📤 Export Slice (.HTML)`)**:
+  - The legacy floating CSV selection tray (`#selection-export-tray`) has been
+    retired. Collaborator slices are exported via the header
+    **`📤 Export Slice (.HTML)`** modal, and flagged cohorts/points escalate
+    directly via **`⚖️ Export to Audit Workbench`**
+    (`POST /v1/qc/tray-to-workbench` with `localStorage` fallback), auto-filling
+    the signed-in analyst's email and defaulting
+    `decision_status = "in_review"`.
+  - In Product 4 (`resource_audit_workbench.html`), analysts can select multiple
+    queue items via row checkboxes and bulk-assign them in a single transaction
+    (`POST /v1/qc/decisions/assign-batch`, capped at 500 items).
+- **Contextual `"👁 Show me"` Flag Mini-Plot Popover
+  (`#audit-flag-show-me-popover`)**:
+  - Every QC flag row and badge across Pages 1, 2, 3, and Product 4 includes a
+    **`"👁 Show me"`** trigger (`window.openAuditFlagShowMePopover`) that renders
+    an interactive mini-plot inside `#audit-flag-show-me-popover`:
+    - **1D Strip + Box/Whisker + Mean ± SD Overlay** for `dixon_q`, `high_rsd`,
+      `exceeds_3sd_pooled`, `physically_impossible`, `icp_above_cap`, and
+      `analyst_flagged` / `manual_override` flags.
+    - **100% Mass-Balance Stacked Horizontal Bar** (`95–105%` target band) for
+      `proximate_sum` / `sum_exceeds_100` flags, computed with exact portal
+      parity (averaging replicates per component within
+      `(resource_name, experiment, prep_method)` before summing).
+  - Clicking **`↗ Open in Data Visualizer`** deep-links to
+    `resource_explorer_dashboard.html?highlight_rk=<6-part-key>`, auto-scrolling
+    to the target cohort and rendering an animated gold highlight pulse ring.
 - **Live QC State Overlay (`GET /v1/qc/decisions`) & Cross-Tab
   `BroadcastChannel` (`FINAL_DECISION.md` §2.2)**:
   - On page load and whenever the user clicks **`↻ Refresh QC State`**
@@ -199,13 +219,13 @@ pixi run python analysis/metadata/resource_analysis_dashboard.py \
     by another user on a different machine or browser) are fetched on initial
     page load or on-demand via the explicit **`↻ Refresh QC State`** header
     button, with zero background `setInterval` polling.
-- **Replicate Mean ± SD & Field Sample / Experiment Grouping**:
-  - Toggle between `Individual Points` and `Replicate Mean ± SD` error bars, and
-    group by `Field Sample` or `Experiment / Run` to compare replicate cohorts.
-- **Report a Bug (`🐛 Report a Bug`)**:
-  - Every dashboard header includes a **"🐛 Report a Bug"** modal that captures
-    active page/resource/filter context and opens a pre-populated GitHub Issue
-    URL.
+- **Submit Issue (`🐛 Submit Issue`) & PostgreSQL Bug Persistence**:
+  - Every dashboard header includes a unified **"🐛 Submit Issue"** modal that
+    captures active page/resource/filter context and persists the report in
+    PostgreSQL via `POST /v1/qc/github-issue`
+    (`record_table="portal_bug_report"`, `flag_type="bug_report"`, queryable at
+    `GET /v1/qc/bug-issues`), while optionally forwarding to GitHub Issues when
+    `GITHUB_ISSUES_TOKEN` is set.
 
 ## 6. Key Domain Rules & Guardrails
 
@@ -248,3 +268,10 @@ pixi run python analysis/metadata/resource_analysis_dashboard.py \
    - Whenever modifying inline `<script>` templates in the Python generators,
      always extract the generated `<script>` block and run `node --check` to
      verify zero syntax errors.
+7. **Zero Synthetic or Fallback Data Rendered to Users**:
+   - Never hardcode demo resources (e.g., `"almond hulls"`), synthetic record
+     IDs, or fallback proximate percentages in any dashboard renderer, popover,
+     or mini-plot. If a requested `replicate_group_key`, `decision_id`, or
+     filter slice has no matching records in the loaded database snapshot,
+     render a clear empty-state message and zero counts (synthetic data in test
+     suites is fine, but never in user-facing UI).
