@@ -2206,7 +2206,330 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
     const LOCAL_DECISIONS_STORAGE_KEY = "biocirv_qc_decisions_ledger_v1";
     const PAGE2_DECISIONS_STORAGE_KEY = "biocirv_qc_decisions_v1";
 
+    const CANONICAL_DOMAIN_LOOKUP = {
+      "proximate analysis": "proximate",
+      "proximate": "proximate",
+      "ultimate analysis": "ultimate",
+      "ultimate": "ultimate",
+      "compositional analysis": "compositional",
+      "compositional": "compositional",
+      "calorimetry": "calorimetry",
+      "calorimetry analysis": "calorimetry",
+      "calorimetry_xrd": "calorimetry",
+      "xrd": "xrd",
+      "xrd analysis": "xrd",
+      "icp": "icp",
+      "icp-oes / icp-ms": "icp",
+      "icp elemental analysis": "icp",
+      "icp analysis": "icp",
+      "xrf": "xrf",
+      "xrf elemental": "xrf",
+      "xrf elemental analysis": "xrf",
+      "xrf analysis": "xrf",
+      "ash": "xrf",
+      "pretreatment": "pretreatment",
+      "pretreatment & hydrolysis": "pretreatment",
+      "fermentation": "fermentation",
+      "fermentation (bioconversion)": "fermentation",
+      "gasification": "gasification"
+    };
+
+    const CANONICAL_DOMAIN_SLUGS = [
+      "proximate",
+      "ultimate",
+      "compositional",
+      "calorimetry",
+      "xrd",
+      "icp",
+      "xrf",
+      "pretreatment",
+      "fermentation",
+      "gasification"
+    ];
+
+    function canonicalDomainSlug(analysisType) {
+      let cleaned = String(analysisType || "").trim().toLowerCase();
+      if (!cleaned) return "unknown";
+      if (cleaned.endsWith("_record")) {
+        cleaned = cleaned.slice(0, -"_record".length).trim();
+      }
+      if (CANONICAL_DOMAIN_LOOKUP[cleaned]) {
+        return CANONICAL_DOMAIN_LOOKUP[cleaned];
+      }
+      for (let i = 0; i < CANONICAL_DOMAIN_SLUGS.length; i++) {
+        if (cleaned.indexOf(CANONICAL_DOMAIN_SLUGS[i]) !== -1) {
+          return CANONICAL_DOMAIN_SLUGS[i];
+        }
+      }
+      return cleaned;
+    }
+
+    function groupContextLabel(obj) {
+      if (!obj || typeof obj !== "object") return "unassigned";
+      if (typeof obj.group_context_label === "string" && obj.group_context_label.trim() !== "") {
+        return obj.group_context_label.trim();
+      }
+      const domSlug = canonicalDomainSlug(obj.analysis_type || obj.domain || "");
+      const hasPtKey = Object.prototype.hasOwnProperty.call(obj, "pt_method");
+      const hasStrainKey = Object.prototype.hasOwnProperty.call(obj, "strain");
+      const prep = String(obj.prep_method || "").trim();
+      const ptRaw = String(obj.pt_method || "").trim();
+      if (domSlug === "pretreatment") {
+        const pt = ptRaw || (!hasPtKey ? prep : "") || "none";
+        const eh = String(obj.eh_method || "").trim() || "none";
+        return eh && eh !== "none" ? `${pt} \u00b7 ${eh}` : pt;
+      }
+      if (domSlug === "fermentation") {
+        const fermPt = ptRaw;
+        const strain = String(obj.strain || "").trim() || (!hasStrainKey ? prep : "") || "no-strain";
+        const base = fermPt && fermPt !== "none" ? `${fermPt} \u00b7 ${strain}` : strain;
+        const th = obj.time_h;
+        if (th !== null && th !== undefined && String(th).trim() !== "") {
+          const numTh = Number(th);
+          const thFmt = Number.isFinite(numTh) ? String(numTh) : String(th).trim();
+          return `${base} @ ${thFmt}h`;
+        }
+        return base;
+      }
+      return prep || "unassigned";
+    }
+
+    function normalizeReplicateGroupKey(
+      rawKeyOrResource,
+      preparedSample,
+      analysisType,
+      parameter,
+      prepMethod,
+      experiment
+    ) {
+      if (
+        typeof rawKeyOrResource === "string" &&
+        rawKeyOrResource.indexOf("::") !== -1 &&
+        preparedSample === undefined &&
+        analysisType === undefined &&
+        parameter === undefined
+      ) {
+        let s = rawKeyOrResource.trim();
+        const isLegacyGrp = s.toLowerCase().indexOf("grp::") === 0;
+        if (isLegacyGrp) {
+          s = s.slice(5);
+        }
+        const parts = s.split("::").map(p => String(p || "").trim().toLowerCase());
+        if (isLegacyGrp && parts.length === 5) {
+          // Legacy grp::{resource}::{analysis_type}::{prepared_sample}::{experiment}::{parameter}
+          return [
+            parts[0],
+            parts[2],
+            canonicalDomainSlug(parts[1]),
+            parts[4],
+            "unassigned",
+            parts[3]
+          ].join("::");
+        }
+        if (parts.length >= 3) {
+          parts[2] = canonicalDomainSlug(parts[2]);
+        }
+        if (parts.length === 4 || parts.length === 6) {
+          return parts.join("::");
+        }
+        if (parts.length === 5) {
+          parts.push("");
+          return parts.join("::");
+        }
+        if (parts.length > 6) {
+          return parts.slice(0, 6).join("::");
+        }
+        return parts.join("::");
+      }
+      if (rawKeyOrResource && typeof rawKeyOrResource === "object") {
+        const obj = rawKeyOrResource;
+        if (
+          typeof obj.replicate_group_key === "string" &&
+          obj.replicate_group_key.indexOf("::") !== -1 &&
+          !obj.resource_name &&
+          !obj.resource
+        ) {
+          return normalizeReplicateGroupKey(obj.replicate_group_key);
+        }
+        return [
+          String(obj.resource_name || obj.resource || "").trim().toLowerCase(),
+          String(obj.prepared_sample || obj.prepared_sample_name || "").trim().toLowerCase(),
+          canonicalDomainSlug(obj.analysis_type || obj.domain || ""),
+          String(obj.parameter_name || obj.parameter || "").trim().toLowerCase(),
+          String(groupContextLabel(obj) || "").trim().toLowerCase(),
+          String(obj.experiment || obj.experiment_name || "").trim().toLowerCase()
+        ].join("::");
+      }
+      return [
+        String(rawKeyOrResource || "").trim().toLowerCase(),
+        String(preparedSample || "").trim().toLowerCase(),
+        canonicalDomainSlug(analysisType || ""),
+        String(parameter || "").trim().toLowerCase(),
+        String(prepMethod || "unassigned").trim().toLowerCase(),
+        String(experiment || "").trim().toLowerCase()
+      ].join("::");
+    }
+
+    function matchesReplicateGroupKey(a, b) {
+      if (!a || !b) return false;
+      const na = normalizeReplicateGroupKey(String(a));
+      const nb = normalizeReplicateGroupKey(String(b));
+      if (!na || !nb) return false;
+      if (na === nb) return true;
+      const pa = na.split("::");
+      const pb = nb.split("::");
+      if (pa.length >= 4 && pb.length >= 4) {
+        const samePrefix = pa.slice(0, 4).join("::") === pb.slice(0, 4).join("::");
+        if (!samePrefix) return false;
+        if (pa.length === 4 || pb.length === 4) return true;
+        if ((pa[4] === "unassigned" || pb[4] === "unassigned") && pa[5] === pb[5]) return true;
+      }
+      return false;
+    }
+
+    function computeMedianNumeric(vals) {
+      const clean = (vals || [])
+        .filter(v => typeof v === "number" && Number.isFinite(v))
+        .slice()
+        .sort((a, b) => a - b);
+      if (!clean.length) return null;
+      const mid = Math.floor(clean.length / 2);
+      return clean.length % 2 === 1 ? clean[mid] : (clean[mid - 1] + clean[mid]) / 2.0;
+    }
+
+    function getOutlierSummary(insOrOut) {
+      const out = (insOrOut && insOrOut.outlier_screening) ? insOrOut.outlier_screening : (insOrOut || {});
+      const s = (out && out.summary && typeof out.summary === "object") ? out.summary : out;
+      const firstNum = (...cands) => {
+        for (const c of cands) {
+          if (typeof c === "number" && Number.isFinite(c)) return c;
+        }
+        return null;
+      };
+      const allGroups = [];
+      const allParams = [];
+      if (out && out.by_tab && typeof out.by_tab === "object") {
+        Object.values(out.by_tab).forEach(t => {
+          const grps = (t && (t.replicate_groups || t.groups)) || [];
+          if (Array.isArray(grps)) allGroups.push(...grps);
+          const prms = (t && (t.param_rsd_table || t.parameters)) || [];
+          if (Array.isArray(prms)) allParams.push(...prms);
+        });
+      }
+      const multiRepGroups = allGroups.filter(
+        g => g && (g.n || 0) >= 2 && typeof g.rsd_within_pct === "number" && Number.isFinite(g.rsd_within_pct)
+      );
+      const flaggedActive = firstNum(
+        s && s.flagged_active,
+        s && s.flagged_active_groups,
+        s && s.flagged_replicate_groups,
+        out && out.flagged_active,
+        out && out.flagged_active_groups,
+        out && out.flagged_replicate_groups
+      ) ?? (allGroups.length ? allGroups.filter(g => Boolean(g && (g.active_flagged ?? g.flagged_active))).length : 0);
+      const flaggedRaw = firstNum(
+        s && s.flagged_raw,
+        s && s.flagged_raw_groups,
+        out && out.flagged_raw,
+        out && out.flagged_raw_groups
+      ) ?? (allGroups.length ? allGroups.filter(g => Boolean(g && g.raw_flagged)).length : 0);
+      const suppressedTrace = firstNum(
+        s && s.suppressed_trace,
+        s && s.suppressed_low_abundance_groups,
+        s && s.suppressed_below_cutoff_groups,
+        out && out.suppressed_trace,
+        out && out.suppressed_low_abundance_groups,
+        out && out.suppressed_below_cutoff_groups
+      ) ?? Math.max(0, flaggedRaw - flaggedActive);
+      const totalGroups = firstNum(
+        s && s.total_groups,
+        s && s.total_replicate_groups,
+        out && out.total_groups,
+        out && out.total_replicate_groups
+      ) ?? allGroups.length;
+      const rsdDefinedGroups = firstNum(
+        s && s.rsd_defined_groups,
+        s && s.multi_rep_groups,
+        out && out.rsd_defined_groups
+      ) ?? multiRepGroups.length;
+      const withinRsdMedian = firstNum(
+        s && s.overall_within_rsd_median,
+        s && s.within_rsd_median,
+        s && s.median_within_rsd_pct,
+        out && out.overall_within_rsd_median,
+        out && out.within_rsd_median,
+        out && out.median_within_rsd_pct
+      ) ?? computeMedianNumeric(multiRepGroups.map(g => g.rsd_within_pct));
+      const withinSdMedian = firstNum(
+        s && s.overall_within_sd_median,
+        s && s.within_sd_median,
+        out && out.overall_within_sd_median,
+        out && out.within_sd_median
+      ) ?? computeMedianNumeric(multiRepGroups.map(g => (typeof g.within_sd === "number" ? g.within_sd : g.sd)));
+      const betweenRsdMedian = firstNum(
+        s && s.overall_between_rsd_median,
+        s && s.between_rsd_median,
+        s && s.median_between_rsd_pct,
+        out && out.overall_between_rsd_median,
+        out && out.between_rsd_median,
+        out && out.median_between_rsd_pct
+      ) ?? computeMedianNumeric(
+        (allParams.length ? allParams : multiRepGroups).map(
+          x => (typeof x.between_rsd_pct === "number" ? x.between_rsd_pct : x.rsd_between_pct)
+        )
+      );
+      const betweenSdMedian = firstNum(
+        s && s.overall_between_sd_median,
+        s && s.between_sd_median,
+        out && out.overall_between_sd_median,
+        out && out.between_sd_median
+      ) ?? computeMedianNumeric(
+        (allParams.length ? allParams : multiRepGroups).map(
+          x => (typeof x.between_sd === "number" ? x.between_sd : x.pooled_sd)
+        )
+      );
+      const dixonActive = firstNum(
+        s && s.dixon_flagged,
+        s && s.dixon_active,
+        s && s.dixon_q_groups_active,
+        out && out.dixon_flagged,
+        out && out.dixon_active,
+        out && out.dixon_q_groups_active
+      ) ?? allGroups.filter(g => Boolean(g && g.raw_dixon && !g.below_cutoff)).length;
+      const dixonRaw = firstNum(
+        s && s.dixon_raw,
+        s && s.dixon_q_groups_raw,
+        out && out.dixon_raw,
+        out && out.dixon_q_groups_raw
+      ) ?? allGroups.filter(g => Boolean(g && g.raw_dixon)).length;
+      return {
+        flaggedActive,
+        flaggedRaw,
+        suppressedTrace,
+        totalGroups,
+        rsdDefinedGroups,
+        withinRsdMedian,
+        withinSdMedian,
+        betweenRsdMedian,
+        betweenSdMedian,
+        dixonActive,
+        dixonRaw
+      };
+    }
+
+    window.canonicalDomainSlug = canonicalDomainSlug;
+    window.groupContextLabel = groupContextLabel;
+    window.normalizeReplicateGroupKey = normalizeReplicateGroupKey;
+    window.matchesReplicateGroupKey = matchesReplicateGroupKey;
+    window.computeMedianNumeric = computeMedianNumeric;
+    window.getOutlierSummary = getOutlierSummary;
+
     const BioCirvQcClient = {
+      canonicalDomainSlug,
+      groupContextLabel,
+      normalizeReplicateGroupKey,
+      matchesReplicateGroupKey,
+      getOutlierSummary,
       _pendingSignInCallback: null,
 
       hasConfirmedIdentity() {
@@ -2321,7 +2644,16 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         try {
           const raw = localStorage.getItem(PAGE2_DECISIONS_STORAGE_KEY);
           const store = raw ? JSON.parse(raw) : {};
-          const key = item.decision_key || item.key || (item.id ? `api::${item.id}` : `finding::${Date.now()}`);
+          const repGroupKey = item.replicate_group_key || item.group_key || (
+            (item.resource_name || item.prepared_sample_name || item.prepared_sample || item.parameter_name || item.parameter)
+              ? normalizeReplicateGroupKey(item, item.resource_name)
+              : null
+          );
+          const key = item.decision_key || item.key || (
+            (item.scope === "replicate_group" || item.triage_scope === "group") && repGroupKey
+              ? `grp::${repGroupKey}`
+              : (item.id ? `api::${item.id}` : `finding::${Date.now()}`)
+          );
           const existing = store[key] || {};
           const normScope = (item.scope === "finding" || item.scope === "ad_hoc_finding")
             ? "ad_hoc_finding"
@@ -2329,12 +2661,14 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           store[key] = {
             ...existing,
             key,
+            replicate_group_key: repGroupKey || existing.replicate_group_key || "",
             api_decision_id: item.id || existing.api_decision_id || null,
             scope: normScope,
             triage_scope: normScope === "single_record" ? "single" : "group",
             resource_name: item.resource_name || existing.resource_name || "",
             analysis_type: item.analysis_type || existing.analysis_type || "",
             prepared_sample: item.prepared_sample_name || item.prepared_sample || existing.prepared_sample || "",
+            prep_method: item.prep_method || existing.prep_method || "",
             experiment: item.experiment_name || item.experiment || existing.experiment || "",
             record_id: item.record_id || existing.record_id || "",
             record_ids: Array.isArray(item.target_record_ids)
@@ -2432,12 +2766,21 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
 
       async submitDecision(payload) {
         const id = this.getAnalystIdentity();
+        const repGroupKey = payload.replicate_group_key || payload.group_key || (
+          (payload.resource_name || payload.prepared_sample_name || payload.prepared_sample || payload.parameter_name || payload.parameter)
+            ? normalizeReplicateGroupKey(payload, payload.resource_name)
+            : null
+        );
         const body = {
-          decision_key: payload.decision_key || payload.key || null,
+          decision_key: payload.decision_key || payload.key || (repGroupKey ? `grp::${repGroupKey}` : null),
+          replicate_group_key: repGroupKey,
           scope: payload.scope || "finding",
           resource_name: (payload.resource_name || "unknown").trim().toLowerCase(),
           analysis_type: (payload.analysis_type || "proximate").trim().toLowerCase(),
           parameter_name: (payload.parameter_name || payload.parameter || "Resource-Level Observation").trim(),
+          prepared_sample_name: payload.prepared_sample_name || payload.prepared_sample || null,
+          field_sample_name: payload.field_sample_name || payload.field_sample || null,
+          experiment_name: payload.experiment_name || payload.experiment || null,
           record_id: payload.record_id || null,
           target_record_ids: payload.target_record_ids || (payload.record_id ? [payload.record_id] : []),
           previous_qc_status: payload.previous_qc_status || "pass",
@@ -2529,31 +2872,37 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         if (Array.isArray(itemsOrPayload)) {
           requestBody = {
             sync_to_gsheet: Boolean(syncToGsheet),
-            items: itemsOrPayload.map(e => ({
-              decision_key: e.key || e.decision_key || null,
-              scope: e.scope || (e.triage_scope === "single" ? "single_record" : "replicate_group"),
-              resource_name: e.resource_name || "",
-              analysis_type: e.analysis_type || "",
-              prepared_sample_name: e.prepared_sample || e.prepared_sample_name || "",
-              field_sample_name: e.field_sample || e.field_sample_name || "",
-              experiment_name: e.experiment || e.experiment_name || "",
-              record_id: e.record_id || (e.triage_scope === "single" ? (e.dixon_candidate_id || "") : ""),
-              record_ids: e.record_ids || e.all_group_record_ids || e.record_id || "",
-              parameter_name: e.parameter || e.parameter_name || "",
-              decision: (!e.decision || e.decision === "pending") ? "exclude_qc_fail" : e.decision,
-              rationale_note: e.note || e.rationale_note || e.audit_note || "",
-              assigned_to_email: e.assigned_to_email || null,
-              anomaly_flags_json: e.dixon_q ? JSON.stringify({ dixon_q: e.dixon_q, rsd_within_pct: e.rsd_within_pct }) : ""
-            }))
+            items: itemsOrPayload.map(e => {
+              const repGroupKey = e.replicate_group_key || normalizeReplicateGroupKey(e, e.resource_name);
+              return {
+                decision_key: e.key || e.decision_key || (repGroupKey ? `grp::${repGroupKey}` : null),
+                replicate_group_key: repGroupKey,
+                scope: e.scope || (e.triage_scope === "single" ? "single_record" : "replicate_group"),
+                resource_name: e.resource_name || "",
+                analysis_type: e.analysis_type || "",
+                prepared_sample_name: e.prepared_sample || e.prepared_sample_name || "",
+                field_sample_name: e.field_sample || e.field_sample_name || "",
+                experiment_name: e.experiment || e.experiment_name || "",
+                record_id: e.record_id || (e.triage_scope === "single" ? (e.dixon_candidate_id || "") : ""),
+                record_ids: e.record_ids || e.all_group_record_ids || e.record_id || "",
+                parameter_name: e.parameter || e.parameter_name || "",
+                decision: (!e.decision || e.decision === "pending") ? "exclude_qc_fail" : e.decision,
+                rationale_note: e.note || e.rationale_note || e.audit_note || "",
+                assigned_to_email: e.assigned_to_email || null,
+                anomaly_flags_json: e.dixon_q ? JSON.stringify({ dixon_q: e.dixon_q, rsd_within_pct: e.rsd_within_pct }) : ""
+              };
+            })
           };
         } else if (itemsOrPayload && Array.isArray(itemsOrPayload.items)) {
           requestBody = itemsOrPayload;
         } else {
           const p = itemsOrPayload || {};
+          const repGroupKey = p.replicate_group_key || normalizeReplicateGroupKey(p, p.resource_name);
           requestBody = {
             sync_to_gsheet: Boolean(p.sync_to_gsheet ?? syncToGsheet),
             items: [{
-              decision_key: p.key || p.decision_key || null,
+              decision_key: p.key || p.decision_key || (repGroupKey ? `grp::${repGroupKey}` : null),
+              replicate_group_key: repGroupKey,
               scope: p.scope || "single_record",
               resource_name: p.resource_name || "",
               analysis_type: p.analysis_type || "",
@@ -2705,11 +3054,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           it.review_note || it.note || it.audit_note ||
           (sourceLabel ? `Flagged from ${sourceLabel}` : "Flagged from Selection & Export Tray")
         ).trim();
-        const repGroupKey = it.replicate_group_key || it.group_key || (
-          (it.resource_name || it.prepared_sample_name || it.prepared_sample || it.parameter_name || it.parameter)
-            ? `${String(it.resource_name || "unknown").trim().toLowerCase()}::${String(it.prepared_sample_name || it.prepared_sample || "all").trim()}::${String(it.parameter_name || it.parameter || "Observation").trim()}`
-            : null
-        );
+        const repGroupKey = (
+          it.resource_name || it.prepared_sample_name || it.prepared_sample || it.parameter_name || it.parameter || it.replicate_group_key || it.group_key
+        )
+          ? normalizeReplicateGroupKey(it, it.resource_name)
+          : null;
         return {
           record_table: recordTable,
           record_id: primaryRecordId,
@@ -2722,6 +3071,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           parameter_name: String(it.parameter_name || it.parameter || "Observation").trim(),
           prepared_sample: it.prepared_sample || it.prepared_sample_name || null,
           field_sample: it.field_sample || it.field_sample_name || null,
+          prep_method: it.prep_method || it.group_context_label || null,
           experiment: it.experiment || it.experiment_name || null,
           flag_type: String(it.flag_type || "analyst_flagged"),
           flag_trigger_value: it.flag_trigger_value != null ? String(it.flag_trigger_value) : null,
@@ -2959,18 +3309,28 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         Object.values(BUNDLE.insights).forEach(ins => {
           const byTab = ins && ins.outlier_screening && ins.outlier_screening.by_tab;
           if (!byTab || typeof byTab !== "object") return;
+          let totalFlaggedActive = 0;
+          let anyResourceOverlaid = false;
           Object.values(byTab).forEach(tabObj => {
-            const groups = tabObj && tabObj.groups;
+            const groups = (tabObj && (tabObj.replicate_groups || tabObj.groups)) || null;
             if (!Array.isArray(groups)) return;
+            let tabFlaggedActive = 0;
+            let anyTabOverlaid = false;
             groups.forEach(g => {
               if (!Array.isArray(g.replicates)) return;
               let passCnt = 0;
               let failCnt = 0;
+              let anyOverlaid = false;
               const passVals = [];
               const allVals = [];
               g.replicates.forEach(rep => {
                 if (!rep._baseline_qc) rep._baseline_qc = rep.qc || "pass";
                 const overQc = recordQcOverlay.get(String(rep.id || ""));
+                if (overQc) {
+                  anyOverlaid = true;
+                  anyTabOverlaid = true;
+                  anyResourceOverlaid = true;
+                }
                 rep.qc = overQc || rep._baseline_qc;
                 if (rep.qc === "fail") {
                   failCnt += 1;
@@ -2990,14 +3350,57 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
                 if (activeVals.length > 1) {
                   const variance = activeVals.reduce((s, v) => s + Math.pow(v - meanVal, 2), 0) / (activeVals.length - 1);
                   g.sd = Math.sqrt(variance);
+                  g.within_sd = g.sd;
                   g.rsd_within_pct = Math.abs(meanVal) > 1e-9 ? (g.sd / Math.abs(meanVal)) * 100.0 : 0.0;
                 } else {
                   g.sd = 0.0;
+                  g.within_sd = 0.0;
                   g.rsd_within_pct = 0.0;
                 }
               }
+              if (g._baseline_raw_dixon === undefined) {
+                g._baseline_raw_dixon = Boolean(g.raw_dixon);
+              }
+              if (anyOverlaid) {
+                const rsdNow = g.rsd_within_pct || 0;
+                g.raw_rsd20 = rsdNow > 20.0;
+                g.raw_rsd10 = rsdNow > 10.0;
+                const dixonStillPassing = g._baseline_raw_dixon && rsdNow >= 10.0 && (
+                  g.dixon_candidate_id
+                    ? g.replicates.some(r => String(r.id) === String(g.dixon_candidate_id) && r.qc !== "fail")
+                    : passCnt > 0
+                );
+                g.raw_dixon = Boolean(dixonStillPassing);
+                if (passCnt === 0) {
+                  g.raw_dixon = false;
+                  g.active_flagged = false;
+                  g.flagged_active = false;
+                } else if (!g.below_cutoff) {
+                  g.active_flagged = Boolean(g.raw_dixon || g.raw_rsd20 || g.raw_sd3x);
+                  g.flagged_active = g.active_flagged;
+                }
+              }
+              if (g.active_flagged || g.flagged_active) {
+                tabFlaggedActive += 1;
+                totalFlaggedActive += 1;
+              }
             });
+            if (anyTabOverlaid) {
+              tabObj.flagged_active = tabFlaggedActive;
+              tabObj.flagged_active_groups = tabFlaggedActive;
+              tabObj.flagged_replicate_groups = tabFlaggedActive;
+            }
           });
+          if (anyResourceOverlaid && ins && ins.outlier_screening) {
+            ins.outlier_screening.flagged_active = totalFlaggedActive;
+            ins.outlier_screening.flagged_active_groups = totalFlaggedActive;
+            ins.outlier_screening.flagged_replicate_groups = totalFlaggedActive;
+            if (ins.outlier_screening.summary && typeof ins.outlier_screening.summary === "object") {
+              ins.outlier_screening.summary.flagged_active = totalFlaggedActive;
+              ins.outlier_screening.summary.flagged_active_groups = totalFlaggedActive;
+              ins.outlier_screening.summary.flagged_replicate_groups = totalFlaggedActive;
+            }
+          }
         });
       }
 
@@ -3677,9 +4080,18 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           window.refreshLiveQcOverlay(false);
 
           if (typeof upsertDecisionEntry === "function") {
+            const repGroupKey = normalizeReplicateGroupKey(
+              {
+                ...currentFindingContext,
+                resource_name: resVal,
+                analysis_type: currentFindingContext.analysis_type || domVal,
+                parameter: paramVal
+              },
+              resVal
+            );
             const localKey = scopeVal === "single" && primaryRecId
               ? `rec::${primaryRecId}`
-              : `grp::${resVal}::${currentFindingContext.analysis_type || domVal}::${currentFindingContext.prepared_sample || 'sample'}::${currentFindingContext.experiment || 'exp'}::${paramVal}`;
+              : `grp::${repGroupKey}`;
             upsertDecisionEntry(
               localKey,
               {
@@ -3690,10 +4102,12 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
               },
               {
                 scope: scopeVal === "single" ? "single_record" : "replicate_group",
+                replicate_group_key: repGroupKey,
                 resource_name: resVal,
                 analysis_type: currentFindingContext.analysis_type || domVal,
                 prepared_sample: currentFindingContext.prepared_sample || "",
                 field_sample: currentFindingContext.field_sample || "",
+                prep_method: currentFindingContext.prep_method || "",
                 experiment: currentFindingContext.experiment || "",
                 parameter: paramVal,
                 record_id: primaryRecId || "",
@@ -4220,8 +4634,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
 
       const ins = getResourceInsights();
-      const out = (ins && ins.outlier_screening) || {};
-      const activeFlags = out.flagged_active_groups || 0;
+      const outSummary = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
+      const activeFlags = outSummary.flaggedActive || 0;
       const notesCnt = (ins && ins.curated_notes && ins.curated_notes.length) || 0;
 
       const navBadge = document.getElementById("nav-qc-badge");
@@ -4297,6 +4711,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const d = ins.diagnostics || {};
       const p = ins.percentiles || {};
       const out = ins.outlier_screening || {};
+      const outSummary = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
       const notes = ins.curated_notes || [];
       const encRes = encodeURIComponent(state.resource);
 
@@ -4307,6 +4722,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         p.titer_3hp_g_l ? { label: "3-HP Titer", val: `${d.titer_3hp_g_l} g/L`, pct: `${p.titer_3hp_g_l}th %ile` } : null
       ].filter(Boolean);
 
+      const withinRsdLabel = outSummary.withinRsdMedian !== null && outSummary.withinRsdMedian !== undefined
+        ? `${outSummary.withinRsdMedian}%${outSummary.withinSdMedian !== null && outSummary.withinSdMedian !== undefined ? ` (±${fmtNum(outSummary.withinSdMedian, 2)})` : ''}`
+        : 'n=1';
+
       panel.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-2.5">
           <div class="flex items-center gap-2">
@@ -4314,7 +4733,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <h2 class="text-sm font-bold text-[var(--foreground)]">Synthesized Feedstock Meaning &amp; Stoichiometric Summary</h2>
           </div>
           <a href="${QC_PAGE_FILENAME}?resource=${encRes}" class="text-xs font-semibold text-[var(--primary)] hover:underline">
-            View Full Statistical Outlier Screen (${out.flagged_active_groups || 0} flags) &amp; Mined Bench Notes (${notes.length}) &rarr;
+            View Full Statistical Outlier Screen (${outSummary.flaggedActive || 0} flags) &amp; Mined Bench Notes (${notes.length}) &rarr;
           </a>
         </div>
 
@@ -4339,7 +4758,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">2. Stoichiometric Closure &amp; Precision Overview</span>
-              <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Within-Rep RSD: ${out.overall_within_rsd_median !== null && out.overall_within_rsd_median !== undefined ? out.overall_within_rsd_median + '%' : 'n=1'}</span>
+              <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Within-Rep RSD: ${withinRsdLabel}</span>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
               <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2.5">
@@ -4361,8 +4780,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             </div>
             <div class="p-2.5 rounded-lg bg-[var(--card)] border border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-xs">
               <span class="text-[var(--muted-foreground)]">
-                Statistical Screen: <strong>${out.flagged_active_groups || 0}</strong> active outlier group(s)
-                ${out.suppressed_low_abundance_groups ? `(${out.suppressed_low_abundance_groups} trace &lt;100 ppm suppressed)` : ''} ·
+                Statistical Screen: <strong>${outSummary.flaggedActive || 0}</strong> active outlier group(s)
+                ${outSummary.suppressedTrace ? `(${outSummary.suppressedTrace} trace &lt;100 ppm suppressed)` : ''} ·
                 <strong>${notes.length}</strong> distinct lab note group(s)
               </span>
               <a href="${QC_PAGE_FILENAME}?resource=${encRes}" class="px-2.5 py-1 rounded bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] font-semibold hover:border-[var(--primary)]">
@@ -5820,7 +6239,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function makeGroupDecisionKey(resourceName, g) {
-      return `grp::${resourceName}::${g.analysis_type}::${g.prepared_sample}::${g.experiment}::${g.parameter}`;
+      const repKey = window.normalizeReplicateGroupKey
+        ? window.normalizeReplicateGroupKey(g, resourceName)
+        : `${String(resourceName || "").toLowerCase()}::${g.prepared_sample || ""}::${g.analysis_type || ""}::${g.parameter || ""}::${g.prep_method || ""}::${g.experiment || ""}`;
+      return `grp::${repKey}`;
     }
 
     function makeRecordDecisionKey(recordId) {
@@ -5828,7 +6250,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function getDecisionEntry(key) {
-      return DECISIONS_STORE[key] || { decision: "pending", note: "", updated_at: "" };
+      if (DECISIONS_STORE[key]) return DECISIONS_STORE[key];
+      if (String(key || "").startsWith("grp::") && window.matchesReplicateGroupKey) {
+        const rawTargetKey = String(key).slice(5);
+        const matched = Object.values(DECISIONS_STORE).find(e => {
+          const eKey = e && (e.replicate_group_key || (String(e.key || "").startsWith("grp::") ? String(e.key).slice(5) : ""));
+          return eKey && window.matchesReplicateGroupKey(rawTargetKey, eKey);
+        });
+        if (matched) return matched;
+      }
+      return { decision: "pending", note: "", updated_at: "" };
     }
 
     function upsertDecisionEntry(key, patch, meta) {
@@ -5872,7 +6303,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const sel = document.getElementById("flt-resource");
       sel.innerHTML = ACTIVE_RESOURCES.map(r => {
         const ins = BUNDLE.insights && BUNDLE.insights[r];
-        const flg = (ins && ins.outlier_screening && ins.outlier_screening.flagged_active_groups) || 0;
+        const outSum = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
+        const flg = outSum.flaggedActive || 0;
         const recs = RECORDS_BY_RESOURCE[r];
         const pTag = ins && ins.portal_excluded ? " [Portal Excluded]" : "";
         return `<option value="${r}">${r.toUpperCase()} — ${flg} Active Flag(s) (${recs.length} obs)${pTag}</option>`;
@@ -6129,6 +6561,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       document.getElementById("nav-page-explorer").href = `resource_explorer_dashboard.html?resource=${encRes}`;
 
       const groups = getAllDomainOutlierGroups();
+      const paramRows = getAllDomainParamRsdRows();
       const suppress = state.suppressTraceFlags;
       const primaryGroups = groups.filter(g => isGroupMatchingFilter(g, "flagged", suppress));
       const dixonGroups = groups.filter(g => isGroupMatchingFilter(g, "dixon", suppress));
@@ -6136,11 +6569,6 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const sd3xGroups = groups.filter(g => isGroupMatchingFilter(g, "sd3x", suppress));
       const unquarGroups = groups.filter(g => isGroupMatchingFilter(g, "unquarantined", suppress));
       const suppressedCount = groups.filter(g => g.below_cutoff && g.raw_flagged).length;
-
-      const resRecs = getResourceRecords();
-      const colDates = Array.from(new Set(resRecs.map(r => r.collected_date).filter(Boolean))).sort();
-      const prepDates = Array.from(new Set(resRecs.map(r => r.prep_date).filter(Boolean))).sort();
-      const geoids = Array.from(new Set(resRecs.map(r => r.geoid ? (r.county_name ? `${r.county_name} (${r.geoid})` : r.geoid) : "").filter(Boolean)));
 
       document.getElementById("nav-qc-badge").textContent = `⚑ ${primaryGroups.length}`;
 
@@ -6151,11 +6579,60 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         qc_fail: "qc_pass = fail Only"
       }[state.portalQcMode];
 
+      const outSummary = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
+      const activeEvalGroups = groups.filter(g => !(suppress && g.below_cutoff));
+      const multiRepGroups = activeEvalGroups.filter(g => (g.n || 0) >= 2 && g.rsd_within_pct !== null && g.rsd_within_pct !== undefined);
+      const dynWithinRsdMed = window.computeMedianNumeric
+        ? window.computeMedianNumeric(multiRepGroups.map(g => g.rsd_within_pct))
+        : null;
+      const dynWithinSdMed = window.computeMedianNumeric
+        ? window.computeMedianNumeric(multiRepGroups.map(g => g.within_sd !== undefined && g.within_sd !== null ? g.within_sd : g.sd))
+        : null;
+      const withinRsdVal = dynWithinRsdMed !== null
+        ? dynWithinRsdMed
+        : (groups.length === 0 ? (outSummary.withinRsdMedian ?? null) : null);
+      const withinSdVal = dynWithinSdMed !== null
+        ? dynWithinSdMed
+        : (groups.length === 0 ? (outSummary.withinSdMedian ?? null) : null);
+      const multiRepCount = groups.length > 0 ? multiRepGroups.length : (outSummary.rsdDefinedGroups || 0);
+      const withinKpiValue = withinRsdVal !== null && withinRsdVal !== undefined
+        ? `${fmtNum(withinRsdVal, 1)}%${withinSdVal !== null && withinSdVal !== undefined ? ` (±${fmtNum(withinSdVal, 2)})` : ""}`
+        : "N/A (n=1)";
+
+      const activeParamRows = paramRows.filter(p => !(suppress && p.below_cutoff));
+      const dynBetweenRsdMed = window.computeMedianNumeric
+        ? window.computeMedianNumeric(
+            activeParamRows.length > 0
+              ? activeParamRows.map(p => p.between_rsd_pct)
+              : activeEvalGroups.map(g => g.rsd_between_pct)
+          )
+        : null;
+      const dynBetweenSdMed = window.computeMedianNumeric
+        ? window.computeMedianNumeric(
+            activeParamRows.length > 0
+              ? activeParamRows.map(p => p.between_sd !== undefined && p.between_sd !== null ? p.between_sd : p.pooled_sd)
+              : activeEvalGroups.map(g => g.between_sd)
+          )
+        : null;
+      const betweenRsdVal = dynBetweenRsdMed !== null
+        ? dynBetweenRsdMed
+        : (groups.length === 0 ? (outSummary.betweenRsdMedian ?? null) : null);
+      const betweenSdVal = dynBetweenSdMed !== null
+        ? dynBetweenSdMed
+        : (groups.length === 0 ? (outSummary.betweenSdMedian ?? null) : null);
+      const multiMethodParamCnt = activeParamRows.filter(p => p.between_rsd_pct !== null && p.between_rsd_pct !== undefined).length;
+      const betweenKpiValue = betweenRsdVal !== null && betweenRsdVal !== undefined
+        ? `${fmtNum(betweenRsdVal, 1)}%${betweenSdVal !== null && betweenSdVal !== undefined ? ` (±${fmtNum(betweenSdVal, 2)})` : ""}`
+        : "N/A (n=1 method group)";
+      const betweenKpiSub = betweenRsdVal !== null && betweenRsdVal !== undefined
+        ? `Method-stratified across ${multiMethodParamCnt || activeParamRows.length} parameter(s)`
+        : "Single method group per parameter (k=1)";
+
       const kpis = [
-        { label: `Flagged Groups (${portalModeLabel})`, value: `${primaryGroups.length} / ${groups.length}`, sub: `Dixon Q: ${dixonGroups.length} · RSD>20%: ${rsd20Groups.length} · >3×SD: ${sd3xGroups.length}` },
+        { label: `Flag Counts (${portalModeLabel})`, value: `${primaryGroups.length} / ${groups.length}`, sub: `Dixon Q: ${dixonGroups.length} · RSD>20%: ${rsd20Groups.length} · >3×SD: ${sd3xGroups.length}` },
         { label: "Unquarantined (QC Pass) Flags", value: `${unquarGroups.length}`, sub: unquarGroups.length ? "Flagged groups with qc_pass=pass records" : "Zero unquarantined flags in current filter" },
-        { label: "Within-Replicate RSD Median", value: out.overall_within_rsd_median !== null && out.overall_within_rsd_median !== undefined ? `${fmtNum(out.overall_within_rsd_median, 1)}%` : "N/A (n=1)", sub: `Across ${out.rsd_defined_groups || 0} multi-replicate groups` },
-        { label: "Collection & Prep Dates", value: colDates.length ? colDates[0] : (prepDates.length ? `Prep ${prepDates[0]}` : "No Date"), sub: `${geoids.length ? geoids.join(', ') : 'GEOID unrecorded'} · Prep: ${prepDates.length ? prepDates.join(', ') : '—'}` },
+        { label: "Within-Replicate RSD & SD", value: withinKpiValue, sub: `Across ${multiRepCount} multi-replicate groups` },
+        { label: "Between-Sample RSD & SD (Method-Stratified)", value: betweenKpiValue, sub: betweenKpiSub },
         { label: "Trace Suppressed & Lab Notes", value: `${suppressedCount} trace · ${notes.length} notes`, sub: suppress ? "Trace floor ON (<100 ppm ICP/XRF, <0.5% wt)" : "Trace floor OFF (showing all raw flags)" }
       ];
 
@@ -6167,7 +6644,6 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         </div>
       `).join("");
 
-      const paramRows = getAllDomainParamRsdRows();
       const filteredExplorer = getFilteredExplorerRecords();
       const queueEntries = Object.values(DECISIONS_STORE);
       const openQueueCnt = queueEntries.filter(e => !e.status || e.status === "open" || e.status === "pending").length;
@@ -6244,6 +6720,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   const sd3Set = new Set(g.sd3x_candidate_ids || []);
                   const candRecIds = (g.replicates || []).map(r => r.id).join("|");
                   const singleCandId = g.dixon_candidate_id || ((g.sd3x_candidate_ids && g.sd3x_candidate_ids[0]) || ((g.replicates && g.replicates[0] && g.replicates[0].id) || ""));
+                  const repGroupKey = window.normalizeReplicateGroupKey ? window.normalizeReplicateGroupKey(g, state.resource) : "";
                   const repChips = (g.replicates || []).map(rep => {
                     const isDixonCand = g.dixon_candidate_id && rep.id === g.dixon_candidate_id;
                     const isSd3Cand = sd3Set.has(rep.id);
@@ -6253,8 +6730,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                       resource_name: state.resource,
                       analysis_type: g.analysis_type,
                       prepared_sample: g.prepared_sample,
+                      prep_method: g.prep_method || "",
+                      group_context_label: g.group_context_label || g.prep_method || "",
                       experiment: g.experiment,
                       parameter: g.parameter,
+                      replicate_group_key: repGroupKey,
                       record_id: rep.id,
                       dixon_candidate_id: rep.id,
                       record_ids: candRecIds,
@@ -6272,6 +6752,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn">RSD &gt; 20%</span>`);
                   else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">RSD 10–20%</span>`);
                   if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn">&gt;3&times;SD<sub>pool</sub></span>`);
+                  if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0)">Identical Replicates (SD=0)</span>`);
                   if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail">Mixed QC</span>`);
                   if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">Trace (${g.cutoff_label})</span>`);
 
@@ -6291,9 +6772,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   const metaPayload = encodeURIComponent(JSON.stringify({
                     scope: currentTriageScope === "single" ? "single_record" : "replicate_group",
                     triage_scope: currentTriageScope,
+                    replicate_group_key: repGroupKey,
                     resource_name: state.resource,
                     analysis_type: g.analysis_type,
                     prepared_sample: g.prepared_sample,
+                    prep_method: g.prep_method || "",
+                    group_context_label: g.group_context_label || g.prep_method || "",
                     field_sample: lin.fsName || "",
                     collected_date: lin.collectedDate || "",
                     geoid: lin.geoid || "",
@@ -6304,6 +6788,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                     n: g.n,
                     mean: g.mean,
                     sd: g.sd,
+                    within_sd: g.within_sd !== undefined ? g.within_sd : g.sd,
                     rsd_within_pct: g.rsd_within_pct,
                     dixon_q: g.dixon_q,
                     dixon_candidate_id: singleCandId,
@@ -6338,11 +6823,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         </div>
                       </td>
                       <td class="py-2.5 px-3"><div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-mono text-[var(--muted-foreground)]">n=${g.n}:</span> ${repChips}</div></td>
-                      <td class="py-2.5 px-3 font-mono text-right whitespace-nowrap"><strong>${fmtNum(g.mean, 2)}</strong> &plusmn; ${fmtNum(g.sd, 2)}</td>
+                      <td class="py-2.5 px-3 font-mono text-right whitespace-nowrap"><strong>${fmtNum(g.mean, 2)}</strong> &plusmn; ${fmtNum(g.within_sd !== undefined && g.within_sd !== null ? g.within_sd : g.sd, 2)}</td>
                       <td class="py-2.5 px-3 font-mono text-right whitespace-nowrap">
-                        <span class="${(g.rsd_within_pct || 0) > 20 ? 'text-red-500 font-bold' : ((g.rsd_within_pct || 0) > 10 ? 'text-amber-500 font-semibold' : 'text-[var(--foreground)]')}">${g.rsd_within_pct !== null ? fmtNum(g.rsd_within_pct, 1) + '%' : '—'}</span>
+                        <span class="${(g.rsd_within_pct || 0) > 20 ? 'text-red-500 font-bold' : ((g.rsd_within_pct || 0) > 10 ? 'text-amber-500 font-semibold' : 'text-[var(--foreground)]')}">${g.rsd_within_pct !== null && g.rsd_within_pct !== undefined ? `${fmtNum(g.rsd_within_pct, 1)}% (±${fmtNum(g.within_sd !== undefined && g.within_sd !== null ? g.within_sd : g.sd, 2)})` : '—'}</span>
                         <span class="text-[var(--muted-foreground)]"> vs </span>
-                        <span class="text-[var(--primary)]">${g.rsd_between_pct !== null && g.rsd_between_pct !== undefined ? fmtNum(g.rsd_between_pct, 1) + '%' : '—'}</span>
+                        <span class="text-[var(--primary)]">${g.rsd_between_pct !== null && g.rsd_between_pct !== undefined ? `${fmtNum(g.rsd_between_pct, 1)}%${g.between_sd !== null && g.between_sd !== undefined ? ` (±${fmtNum(g.between_sd, 2)})` : ''}` : 'N/A (n=1 method group)'}</span>
                       </td>
                       <td class="py-2.5 px-3 space-y-1">
                         <div class="flex flex-wrap gap-1">${badges.join("") || '<span class="text-[var(--muted-foreground)]">Pass</span>'}</div>
@@ -6410,11 +6895,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const rowsHtml = paramRows.map(p => {
         const wMed = p.within_rsd_median;
         const wMax = p.within_rsd_max;
+        const wSdMed = p.within_sd_median !== undefined && p.within_sd_median !== null ? p.within_sd_median : p.pooled_sd;
         const bRsd = p.between_rsd_pct;
+        const bSd = p.between_sd !== undefined && p.between_sd !== null ? p.between_sd : null;
         const wBarPct = wMed !== null ? Math.min(100, Math.max(3, (wMed / 40) * 100)) : 0;
         const bBarPct = bRsd !== null ? Math.min(100, Math.max(3, (bRsd / 40) * 100)) : 0;
         const wBarColor = wMed === null ? "bg-gray-400" : (wMed > 20 ? "bg-red-500" : (wMed > 10 ? "bg-amber-500" : "bg-emerald-500"));
-        const flagCnt = suppress ? p.flagged_active : p.flagged_raw;
+        const flagCnt = suppress ? (p.flagged_active ?? p.flagged_replicate_groups ?? 0) : p.flagged_raw;
         const label = formatParamLabel(p.analysis_type, p.parameter);
 
         return `
@@ -6427,9 +6914,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <td class="py-2.5 px-3 font-mono text-center">${p.n_groups} grp <span class="text-[var(--muted-foreground)]">(${p.n_obs} obs)</span></td>
             <td class="py-2.5 px-3 font-mono text-right font-semibold">${fmtNum(p.overall_mean, 2)}</td>
             <td class="py-2.5 px-3 font-mono">
-              ${wMed !== null ? `
+              ${wMed !== null && wMed !== undefined ? `
                 <div class="flex items-center justify-between gap-2">
-                  <span><strong>${fmtNum(wMed, 1)}%</strong> <span class="text-[var(--muted-foreground)]">(max ${fmtNum(wMax, 1)}%)</span></span>
+                  <span><strong>${fmtNum(wMed, 1)}%</strong>${wSdMed !== null && wSdMed !== undefined ? ` <span class="text-[var(--foreground)]">(±${fmtNum(wSdMed, 2)})</span>` : ""} <span class="text-[var(--muted-foreground)]">(max ${fmtNum(wMax, 1)}%)</span></span>
                 </div>
                 <div class="w-full h-2 rounded-full bg-[var(--content)] overflow-hidden mt-1">
                   <div class="h-full rounded-full ${wBarColor}" style="width: ${wBarPct}%"></div>
@@ -6437,17 +6924,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               ` : `<span class="text-[var(--muted-foreground)] italic">N/A (n=1)</span>`}
             </td>
             <td class="py-2.5 px-3 font-mono">
-              ${bRsd !== null ? `
+              ${bRsd !== null && bRsd !== undefined ? `
                 <div class="flex items-center justify-between gap-2">
-                  <strong class="text-[var(--primary)]">${fmtNum(bRsd, 1)}%</strong>
-                  <span class="text-[10px] text-[var(--muted-foreground)]">across ${p.n_groups} means</span>
+                  <span><strong class="text-[var(--primary)]">${fmtNum(bRsd, 1)}%</strong>${bSd !== null && bSd !== undefined ? ` <span class="text-[var(--foreground)]">(±${fmtNum(bSd, 2)})</span>` : ""}</span>
+                  <span class="text-[10px] text-[var(--muted-foreground)]">across ${p.between_k_groups || p.n_groups} means</span>
                 </div>
                 <div class="w-full h-2 rounded-full bg-[var(--content)] overflow-hidden mt-1">
                   <div class="h-full rounded-full bg-[var(--primary)]" style="width: ${bBarPct}%"></div>
                 </div>
-              ` : `<span class="text-[var(--muted-foreground)] italic">Single group</span>`}
+              ` : `<span class="text-[var(--muted-foreground)] italic">N/A (n=1 method group)</span>`}
             </td>
-            <td class="py-2.5 px-3 font-mono text-right">${p.pooled_sd !== null ? `±${fmtNum(p.pooled_sd, 2)}` : '—'}</td>
+            <td class="py-2.5 px-3 font-mono text-right">${p.pooled_sd !== null && p.pooled_sd !== undefined ? `±${fmtNum(p.pooled_sd, 2)}` : '—'}</td>
             <td class="py-2.5 px-3 font-mono text-center">${flagCnt > 0 ? `<span class="px-2 py-0.5 rounded font-bold badge-warn">${flagCnt}</span>` : '0'}</td>
             <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold ${driverBadgeClass(p.driver_tone)}">${p.driver_badge}</span></td>
           </tr>
@@ -7022,13 +7509,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     window.addSelectionToTray = function(encodedPayload) {
       let meta = {};
       try { meta = JSON.parse(decodeURIComponent(encodedPayload)); } catch (_) { return; }
-      const itemKey = `${meta.resource_name || state.resource}||${meta.analysis_type || ''}||${meta.prepared_sample || ''}||${meta.experiment || ''}||${meta.parameter || ''}||${meta.record_id || ''}`;
+      const repGroupKey = window.normalizeReplicateGroupKey
+        ? window.normalizeReplicateGroupKey(meta, meta.resource_name || state.resource)
+        : (meta.replicate_group_key || "");
+      const itemKey = `${repGroupKey || `${meta.resource_name || state.resource}||${meta.analysis_type || ''}||${meta.prepared_sample || ''}||${meta.experiment || ''}||${meta.parameter || ''}`}||${meta.record_id || ''}`;
       const existingIdx = SELECTION_TRAY.findIndex(x => x.tray_key === itemKey);
       const item = {
         tray_key: itemKey,
+        replicate_group_key: repGroupKey,
         resource_name: meta.resource_name || state.resource,
         analysis_type: meta.analysis_type || "",
         prepared_sample: meta.prepared_sample || "",
+        prep_method: meta.prep_method || meta.group_context_label || "",
         experiment: meta.experiment || "",
         parameter: meta.parameter || "",
         record_id: meta.record_id || meta.dixon_candidate_id || "",
@@ -7098,9 +7590,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (!SELECTION_TRAY.length || !window.BioCirvQcClient) return;
       const items = SELECTION_TRAY.map(it => ({
         scope: it.scope || (it.triage_scope === "single" ? "single_record" : "replicate_group"),
+        replicate_group_key: it.replicate_group_key || (window.normalizeReplicateGroupKey ? window.normalizeReplicateGroupKey(it, it.resource_name || state.resource) : ""),
         resource_name: it.resource_name || state.resource,
         analysis_type: it.analysis_type || "",
         prepared_sample_name: it.prepared_sample || "",
+        prep_method: it.prep_method || "",
         experiment_name: it.experiment || "",
         parameter_name: it.parameter || "",
         record_id: it.triage_scope === "single" ? (it.record_id || "") : "",
@@ -7325,22 +7819,24 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const res = await window.BioCirvQcClient.fetchDecisions({});
       if (res && res.ok && Array.isArray(res.decisions)) {
         res.decisions.forEach(d => {
-          const k = d.decision_key || `api::${d.id}`;
+          const repGroupKey = d.replicate_group_key || (window.normalizeReplicateGroupKey ? window.normalizeReplicateGroupKey(d, d.resource_name || state.resource) : "");
+          const k = d.decision_key || (d.scope === "replicate_group" && repGroupKey ? `grp::${repGroupKey}` : `api::${d.id}`);
           DECISIONS_STORE[k] = {
             ...(DECISIONS_STORE[k] || {}),
             key: k,
+            replicate_group_key: repGroupKey,
             api_decision_id: d.id,
             scope: d.scope || "replicate_group",
             resource_name: d.resource_name || state.resource,
             analysis_type: d.analysis_type || "",
-            prepared_sample: d.prepared_sample_name || "",
-            experiment: d.experiment_name || "",
+            prepared_sample: d.prepared_sample_name || d.prepared_sample || "",
+            experiment: d.experiment_name || d.experiment || "",
             record_id: d.record_id || "",
             record_ids: Array.isArray(d.target_record_ids) ? d.target_record_ids.join("|") : (d.target_record_ids || ""),
-            parameter: d.parameter_name || "",
+            parameter: d.parameter_name || d.parameter || "",
             decision: d.decision || "pending",
             status: d.status || "open",
-            note: d.rationale_note || "",
+            note: d.rationale_note || d.audit_note || "",
             assigned_to_email: d.assigned_to_email || "",
             reviewer_email: d.reviewer_email || "",
             synced_to_gsheet: Boolean(d.synced_to_gsheet),
