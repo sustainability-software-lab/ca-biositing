@@ -3,7 +3,6 @@ from ca_biositing.pipeline.etl.extract.sample_ids import extract as extract_samp
 from ca_biositing.pipeline.etl.extract.sample_desc import extract as extract_sample_desc
 from ca_biositing.pipeline.etl.extract.qty_field_storage import extract as extract_qty_field_storage
 from ca_biositing.pipeline.etl.extract.producers import extract as extract_producers
-from ca_biositing.pipeline.etl.extract.provider_info import extract as extract_provider
 from ca_biositing.pipeline.etl.transform.field_sampling.location_address import transform_location_address
 from ca_biositing.pipeline.etl.transform.field_sampling.field_sample import transform_field_sample
 from ca_biositing.pipeline.etl.load.location_address import load_location_address
@@ -46,7 +45,6 @@ def field_sample_etl_flow():
     sample_desc_df = extract_sample_desc()
     qty_field_storage_df = extract_qty_field_storage()
     producers_df = extract_producers()
-    provider_df = extract_provider()
 
     # Combine all data sources
     data_sources = {
@@ -54,7 +52,6 @@ def field_sample_etl_flow():
         "sample_desc": sample_desc_df,
         "qty_field_storage": qty_field_storage_df,
         "producers": producers_df,
-        "provider_info": provider_df
     }
 
     # 3. Transform & Load LocationAddress (both collection-site and lab/facility)

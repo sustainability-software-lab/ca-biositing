@@ -141,6 +141,8 @@ analysis/biocirv-ai/
 # Visualization Exports
 exports/plots/
 exports/*.html
+exports/*exploration*.txt
+exports/*exploration*.json
 
 # Quarto Audit Portal
 audit/portal/_site/
