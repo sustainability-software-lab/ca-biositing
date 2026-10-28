@@ -9,7 +9,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import json
 import os
-from typing import Annotated, Any
+from typing import Annotated, Any, Callable
 from urllib.parse import urlencode
 import urllib.request
 
@@ -22,6 +22,8 @@ from ca_biositing.datamodels.database import get_session
 from ca_biositing.datamodels.models.qc.qc_review_decision import QcReviewDecision
 from ca_biositing.webservice.config import config
 from ca_biositing.webservice.services.gsheet_sync_service import (
+    diagnose_gsheet_writeback,
+    get_gsheet_custom_writer,
     sync_pending_decisions_batch_to_gsheet,
     sync_single_decision_to_gsheet,
 )
@@ -116,38 +118,51 @@ def canonical_domain_slug(analysis_type: str | None) -> str:
     return cleaned
 
 
-def group_context_label(row: dict[str, Any]) -> str:
+def group_context_label(
+    row_or_domain: dict[str, Any] | str | None = None,
+    row: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> str:
     """Return the context / method label defining experimental conditions for a replicate group."""
-    existing = row.get("group_context_label")
+    merged: dict[str, Any] = {}
+    if isinstance(row_or_domain, dict):
+        merged.update(row_or_domain)
+    if isinstance(row, dict):
+        merged.update(row)
+    if kwargs:
+        merged.update(kwargs)
+    if isinstance(row_or_domain, str) and row_or_domain.strip():
+        merged.setdefault("analysis_type", row_or_domain.strip())
+    existing = merged.get("group_context_label")
     if isinstance(existing, str) and existing.strip():
         return existing.strip()
     domain_slug = canonical_domain_slug(
-        row.get("analysis_type") or row.get("domain")
+        merged.get("analysis_type") or merged.get("domain")
     )
     if domain_slug == "pretreatment":
         pt = (
-            str(row.get("pt_method") or "").strip()
+            str(merged.get("pt_method") or "").strip()
             or (
-                str(row.get("prep_method") or "").strip()
-                if "pt_method" not in row
+                str(merged.get("prep_method") or "").strip()
+                if "pt_method" not in merged
                 else ""
             )
             or "none"
         )
-        eh = str(row.get("eh_method") or "").strip() or "none"
+        eh = str(merged.get("eh_method") or "").strip() or "none"
         return f"{pt} · {eh}" if eh and eh != "none" else pt
     if domain_slug == "fermentation":
-        pt = str(row.get("pt_method") or "").strip()
+        pt = str(merged.get("pt_method") or "").strip()
         st = (
-            str(row.get("strain") or "").strip()
+            str(merged.get("strain") or "").strip()
             or (
-                str(row.get("prep_method") or "").strip()
-                if "strain" not in row
+                str(merged.get("prep_method") or "").strip()
+                if "strain" not in merged
                 else ""
             )
             or "no-strain"
         )
-        th = row.get("time_h")
+        th = merged.get("time_h")
         base = f"{pt} · {st}" if pt and pt != "none" else st
         if th is not None and str(th).strip() != "":
             try:
@@ -155,7 +170,28 @@ def group_context_label(row: dict[str, Any]) -> str:
             except (TypeError, ValueError):
                 return f"{base} @ {str(th).strip()}h"
         return base
-    return str(row.get("prep_method") or "").strip() or "unassigned"
+    if domain_slug == "gasification":
+        vessel = str(merged.get("vessel") or merged.get("reactor_type") or "").strip()
+        if vessel and vessel.lower() not in {"none", "n/a", "unassigned"}:
+            return (
+                vessel
+                if vessel.lower().startswith("reactor:")
+                else f"Reactor: {vessel}"
+            )
+        return str(merged.get("prep_method") or "").strip() or "unassigned"
+    return str(merged.get("prep_method") or "").strip() or "unassigned"
+
+
+def compute_canonical_method_signature(
+    domain_or_table: dict[str, Any] | str | None = None,
+    row: dict[str, Any] | None = None,
+    **kwargs: Any,
+) -> str:
+    """Return canonical domain-aware method/context signature (`group_context_label`)."""
+    if isinstance(domain_or_table, dict):
+        return group_context_label(domain_or_table, row, **kwargs)
+    slug = canonical_domain_slug(domain_or_table)
+    return group_context_label(slug, row or {}, **kwargs)
 
 
 def normalize_replicate_group_key(
@@ -398,18 +434,21 @@ def _count_assigned_open(session: Session, email: str) -> int:
     clean_email = (email or "").strip().lower()
     if not clean_email:
         return 0
-    rows = list(
-        session.exec(
-            select(QcReviewDecision).where(
-                QcReviewDecision.record_table != "portal_bug_report",
-                QcReviewDecision.assigned_to_email == clean_email,
-                QcReviewDecision.decision_status.in_(
-                    ["open", "in_review", "needs_retest"]
-                ),
-            )
-        ).all()
-    )
-    return len(rows)
+    try:
+        rows = list(
+            session.exec(
+                select(QcReviewDecision).where(
+                    QcReviewDecision.record_table != "portal_bug_report",
+                    QcReviewDecision.assigned_to_email == clean_email,
+                    QcReviewDecision.decision_status.in_(
+                        ["open", "in_review", "needs_retest"]
+                    ),
+                )
+            ).all()
+        )
+        return len(rows)
+    except Exception:
+        return 0
 
 
 @router.get("/auth/config")
@@ -1200,17 +1239,34 @@ def export_qc_decisions_csv(
     )
 
 
+CustomWriterDep = Annotated[
+    Callable[[QcReviewDecision, str, str, str, str], None] | None,
+    Depends(get_gsheet_custom_writer),
+]
+
+
+@router.get("/gsheet-health")
+@router.get("/gsheet-sync/health")
+def get_gsheet_writeback_health(
+    admin: AdminDep,
+) -> dict[str, Any]:
+    """Admin-only diagnostic endpoint: inspect Google Sheets credentials, service account, and target sheets."""
+    return diagnose_gsheet_writeback()
+
+
 @router.post("/decisions/{decision_id}/sync-gsheet")
 def sync_decision_to_gsheet_endpoint(
     decision_id: int,
     admin: AdminDep,
     session: SessionDep,
+    custom_writer: CustomWriterDep,
 ) -> dict[str, Any]:
     """Admin-only Stage 2 endpoint: sync a single resolved QC decision to Google Sheets."""
     return sync_single_decision_to_gsheet(
         session=session,
         decision_id=decision_id,
         admin_email=admin.email,
+        custom_writer=custom_writer,
     )
 
 
@@ -1218,6 +1274,7 @@ def sync_decision_to_gsheet_endpoint(
 def sync_pending_decisions_batch_endpoint(
     admin: AdminDep,
     session: SessionDep,
+    custom_writer: CustomWriterDep,
     payload: BatchGSheetSyncRequest | None = Body(default=None),
 ) -> dict[str, Any]:
     """Admin-only Stage 2 endpoint: batch-sync pending resolved QC decisions to Google Sheets."""
@@ -1226,6 +1283,7 @@ def sync_pending_decisions_batch_endpoint(
         session=session,
         admin_email=admin.email,
         decision_ids=decision_ids,
+        custom_writer=custom_writer,
     )
 
 

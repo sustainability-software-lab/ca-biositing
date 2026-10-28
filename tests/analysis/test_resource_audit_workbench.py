@@ -1384,3 +1384,300 @@ global.fetch = async function() { return { ok: false, status: 404, json: async (
         check=False,
     )
     assert proc.returncode == 0, f"Card 13 JS harness failed: {proc.stderr}\n{proc.stdout}"
+
+
+def test_wc1_wc2_wc4_wc5_workbench_gsheet_error_gasification_provenance_and_filters(
+    tmp_path: Path,
+) -> None:
+    """Verify WC-1 (GSheet sync error propagation), WC-2 (Gasification Reactor label),
+    WC-4 (Provenance & Lab Sample Lineage Note in drawer), and WC-5 (Current QC Status, rsd_gt_20, and Min RSD % slider)."""
+    from analysis.metadata.resource_audit_workbench import group_context_label
+
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    # Python WC-2 check
+    assert (
+        group_context_label(
+            {
+                "analysis_type": "Gasification",
+                "vessel": "Fluidized Bed",
+                "prep_method": "Pelletized",
+            }
+        )
+        == "Reactor: Fluidized Bed"
+    )
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html = output_html.read_text(encoding="utf-8")
+    assert 'id="filter-qc-status"' in html
+    assert 'id="filter-min-rsd"' in html
+    assert "btn-rsd-preset" in html
+    assert 'id="btn-reset-filters"' in html
+    assert '<option value="rsd_gt_20">' in html
+    assert 'id="prov-source-badge"' in html
+    assert 'id="prov-lab-note-row"' in html
+    assert 'id="prov-lab-lineage-note"' in html
+    assert 'id="prov-gsheet-sync-error"' in html
+
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+    script_body = blocks[0]
+    harness_js = tmp_path / "workbench_wc_harness.js"
+
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set(id === "prov-lab-note-row" || id === "prov-gsheet-sync-error" ? ["hidden"] : []);
+  const attrs = {};
+  return {
+    id, value: "", checked: false, disabled: false, textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    children: [],
+    classList: {
+      add(c) { classSet.add(c); },
+      remove(c) { classSet.delete(c); },
+      toggle(c) { if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c) { return classSet.has(c); }
+    },
+    appendChild(child) { this.children.push(child); return child; },
+    addEventListener() {},
+    setAttribute(k, v) { attrs[k] = String(v); if (k === "href") this.href = String(v); },
+    getAttribute(k) { return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    querySelectorAll() { return []; }
+  };
+}
+const localStore = {};
+global.localStorage = {
+  getItem(k) { return Object.prototype.hasOwnProperty.call(localStore, k) ? localStore[k] : null; },
+  setItem(k, v) { localStore[k] = String(v); },
+  removeItem(k) { delete localStore[k]; }
+};
+global.window = {
+  location: {
+    pathname: "/v1/dashboards/metadata/resource_audit_workbench.html",
+    search: "?decision_id=QC-0001",
+    href: "http://localhost:8000/v1/dashboards/metadata/resource_audit_workbench.html?decision_id=QC-0001",
+    origin: "http://localhost:8000",
+    protocol: "http:"
+  },
+  history: { replaceState() {} },
+  addEventListener() {},
+  dispatchEvent() {}
+};
+global.document = {
+  getElementById(id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll() { return []; },
+  createElement(tag) { return makeEl(tag); },
+  body: makeEl("body")
+};
+global.BroadcastChannel = function() {
+  return { postMessage() {}, close() {}, addEventListener() {} };
+};
+global.CustomEvent = function(name, opts) { return { name, detail: opts ? opts.detail : null }; };
+let mockServerDecisions = [];
+global.fetch = async function(url) {
+  if (String(url).includes("/sync-gsheet")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "sync_failed",
+        synced_to_gsheet: false,
+        sync_error: "record_id_not_found_in_sheet"
+      })
+    };
+  }
+  if (String(url).includes("/v1/qc/decisions")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ decisions: mockServerDecisions })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + "\n"
+        + script_body
+        + "\n"
+        + """
+(async () => {
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+
+  // WC-2: Gasification groupContextLabel and computeCanonicalMethodSignature return "Reactor: <vessel>"
+  assert.strictEqual(
+    hooks.groupContextLabel({ analysis_type: "Gasification", vessel: "Fluidized Bed", prep_method: "Pelletized" }),
+    "Reactor: Fluidized Bed"
+  );
+  assert.strictEqual(
+    hooks.computeCanonicalMethodSignature({ analysis_type: "Gasification", vessel: "Fluidized Bed", prep_method: "Pelletized" }),
+    "Reactor: Fluidized Bed"
+  );
+
+  // WC-1: syncSingleDecisionToGsheet must NOT mark synced_to_gsheet=true when API returns synced_to_gsheet=false
+  hooks.state.user.role = "admin";
+  const d1 = hooks.state.decisionsById["QC-0001"];
+  d1.db_id = 42;
+  d1.synced_to_gsheet = false;
+  hooks.syncSingleDecisionToGsheet("QC-0001");
+  await new Promise((r) => setTimeout(r, 30));
+  assert.strictEqual(d1.synced_to_gsheet, false, "Expected synced_to_gsheet to remain false on sync failure");
+  assert.strictEqual(d1.sync_error, "record_id_not_found_in_sheet");
+  assert.strictEqual(elements["prov-gsheet-sync-error"].style.display, "block");
+  assert.ok(elements["prov-gsheet-sync-error"].textContent.includes("record_id_not_found_in_sheet"));
+
+  // WC-1: syncBatchDecisionsToGsheet partial success without per-item results must NOT mark all candidates as failed
+  const d2 = hooks.state.decisionsById["QC-0002"];
+  d1.decision_status = "resolved";
+  d2.decision_status = "resolved";
+  d1.synced_to_gsheet = false;
+  d2.synced_to_gsheet = false;
+  d1.sync_error = "";
+  d2.sync_error = "";
+  global.fetch = async function(url) {
+    if (String(url).includes("/sync-gsheet-batch")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          status: "warning",
+          synced_count: 1,
+          failed_count: 1
+        })
+      };
+    }
+    if (String(url).includes("/v1/qc/decisions")) {
+      return { ok: true, status: 200, json: async () => ({ decisions: mockServerDecisions }) };
+    }
+    return { ok: false, status: 404, json: async () => ({}) };
+  };
+  hooks.syncBatchDecisionsToGsheet();
+  await new Promise((r) => setTimeout(r, 40));
+  assert.strictEqual(d1.sync_error || "", "", "Partial batch without per-item results must not fabricate sync_error on every candidate");
+
+  // WC-4: refreshQcStateFromApi preserves submitted_at, submitted_by_email, lab_lineage_note, and source_label
+  mockServerDecisions = [
+    {
+      id: 42,
+      decision_id: "QC-0042",
+      record_table: d1.record_table,
+      record_id: d1.record_id,
+      replicate_group_key: d1.replicate_group_key,
+      decision_status: "in_review",
+      submitted_at: "2026-10-28T14:22:00Z",
+      submitted_by_email: "field.analyst@lbl.gov",
+      lab_lineage_note: "FS: AH-FS-01 (2026-01-10) -> PS: AH-PREP-01 (Milled 2mm)",
+      source_label: "Submitted from Page 1 (Resource Overview)"
+    }
+  ];
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+  assert.strictEqual(d1.submitted_at, "2026-10-28T14:22:00Z");
+  assert.strictEqual(d1.submitted_by_email, "field.analyst@lbl.gov");
+  assert.strictEqual(d1.lab_lineage_note, "FS: AH-FS-01 (2026-01-10) -> PS: AH-PREP-01 (Milled 2mm)");
+  assert.strictEqual(d1.source_label, "Submitted from Page 1 (Resource Overview)");
+  hooks.renderContextualDrawer();
+  assert.strictEqual(elements["prov-source-badge"].textContent, "Submitted from Page 1 (Resource Overview)");
+  assert.strictEqual(elements["prov-lab-note-row"].style.display, "block");
+  assert.strictEqual(
+    elements["prov-lab-lineage-note"].textContent,
+    "FS: AH-FS-01 (2026-01-10) -> PS: AH-PREP-01 (Milled 2mm)"
+  );
+
+  // WC-5: matchesFacetFilters supports qcStatus ("pass" strictly excludes fail -> fail), flagType="rsd_gt_20", setMinRsdFilter, and resetAllFilters
+  hooks.state.filters.qcStatus = "pass";
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ current_qc_status: "fail", new_qc_status: "fail", decision: "exclude_qc_fail", rsd_pct: 12.0 }),
+    false,
+    "qcStatus='pass' must strictly filter out fail -> fail rows"
+  );
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ current_qc_status: "fail", new_qc_status: "provisional", decision: "pending", rsd_pct: 12.0 }),
+    false,
+    "qcStatus='pass' must filter out pending rows that are currently fail"
+  );
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ current_qc_status: "pass", new_qc_status: "fail", decision: "exclude_qc_fail", rsd_pct: 12.0 }),
+    false,
+    "qcStatus='pass' must filter out pass -> fail rows whose effective current status is fail"
+  );
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ current_qc_status: "pass", new_qc_status: "provisional", decision: "pending", rsd_pct: 12.0 }),
+    true
+  );
+
+  hooks.state.filters.qcStatus = "fail";
+  assert.strictEqual(hooks.matchesFacetFilters({ current_qc_status: "fail", rsd_pct: 12.0 }), true);
+  assert.strictEqual(hooks.matchesFacetFilters({ current_qc_status: "pass", rsd_pct: 12.0 }), false);
+  hooks.state.filters.qcStatus = "mixed";
+  assert.strictEqual(hooks.matchesFacetFilters({ flags: ["mixed_qc"], current_qc_status: "pass" }), true);
+  assert.strictEqual(hooks.matchesFacetFilters({ flags: ["dixon_q"], current_qc_status: "pass" }), false);
+
+  hooks.state.filters.qcStatus = "";
+  hooks.state.filters.flagType = "rsd_gt_20";
+  assert.strictEqual(hooks.matchesFacetFilters({ rsd_pct: 25.4, flags: [] }), true);
+  assert.strictEqual(hooks.matchesFacetFilters({ rsd_pct: 14.0, flags: [] }), false);
+
+  hooks.state.filters.flagType = "";
+  hooks.setMinRsdFilter(15);
+  assert.strictEqual(hooks.state.filters.minRsd, 15);
+  assert.strictEqual(hooks.matchesFacetFilters({ rsd_pct: 18.2 }), true);
+  assert.strictEqual(hooks.matchesFacetFilters({ rsd_pct: 9.5 }), false);
+
+  // WC-5: resetAllFilters resets all filters cleanly
+  hooks.state.filters.search = "moisture";
+  hooks.state.filters.resource = "almond hulls";
+  hooks.state.filters.analysisType = "proximate";
+  hooks.state.filters.parameter = "ash";
+  hooks.state.filters.assignedAnalyst = "petersmith@lbl.gov";
+  hooks.resetAllFilters();
+  assert.strictEqual(hooks.state.filters.search, "");
+  assert.strictEqual(hooks.state.filters.resource, "");
+  assert.strictEqual(hooks.state.filters.analysisType, "");
+  assert.strictEqual(hooks.state.filters.parameter, "");
+  assert.strictEqual(hooks.state.filters.flagType, "");
+  assert.strictEqual(hooks.state.filters.minRsd, 0);
+  assert.strictEqual(hooks.state.filters.qcStatus, "");
+  assert.strictEqual(hooks.state.filters.assignedAnalyst, "");
+
+  // Show-Me popover demarcates qc_fail data points with diamond+cross marker (show-me-qc-fail-diamond)
+  const grp1 = hooks.findReplicateGroupForDecision(d1);
+  assert.ok(grp1 && Array.isArray(grp1.replicates) && grp1.replicates.length > 0);
+  const origQc = grp1.replicates[0].qc_status;
+  grp1.replicates[0].qc_status = "fail";
+  hooks.openFlagShowMePopover({ decisionId: "QC-0001" });
+  const failSvg = elements["show-me-mini-svg"].innerHTML;
+  assert.ok(failSvg.includes("show-me-qc-fail-diamond"), "Expected show-me-qc-fail-diamond marker for qc_fail point");
+  assert.ok(failSvg.includes('data-qc-status="fail"'), "Expected data-qc-status='fail' attribute");
+  assert.ok(failSvg.includes("[QC_FAIL]"), "Expected [QC_FAIL] label in point tooltip");
+  grp1.replicates[0].qc_status = origQc;
+})();
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"WC workbench JS harness failed: {proc.stderr}\n{proc.stdout}"

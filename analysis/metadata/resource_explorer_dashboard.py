@@ -525,7 +525,8 @@ def build_full_dashboard_html(payload: dict) -> str:
               <option value="all" selected>All Records / Groups</option>
               <option value="active">Active Flagged Only</option>
               <option value="dixon">Dixon's Q Outlier</option>
-              <option value="rsd">High RSD &gt; 20%</option>
+              <option value="rsd_gt_10">RSD &gt; 10%</option>
+              <option value="rsd_gt_20">High RSD &gt; 20%</option>
               <option value="sd3">&gt;3&times;SD_pooled</option>
               <option value="identical">Identical Replicates</option>
               <option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>
@@ -754,17 +755,17 @@ def build_full_dashboard_html(payload: dict) -> str:
         <div id="inline-list-samples" class="h-32 overflow-y-auto space-y-0.5 pr-1"></div>
       </div>
 
-      <!-- Column 4: Multi-Select Methods / Preps / Strains -->
+      <!-- Column 4: Multi-Select Methods / Strains / Reactors -->
       <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2 flex flex-col">
         <div class="flex items-center justify-between gap-1 mb-1">
-          <span class="font-semibold text-[var(--foreground)]">4. Methods / Preps / Strains <span id="inline-count-methods" class="font-mono text-[10px] text-purple-400">(All)</span></span>
+          <span class="font-semibold text-[var(--foreground)]">4. Methods / Strains / Reactors <span id="inline-count-methods" class="font-mono text-[10px] text-purple-400">(All)</span></span>
           <div class="flex items-center gap-1 text-[10px]">
             <button type="button" onclick="checklistAction('methods', 'all')" class="px-1.5 py-0.5 rounded border border-[var(--border)] hover:border-[#00B5E2]">All</button>
             <button type="button" onclick="checklistAction('methods', 'clear')" class="px-1.5 py-0.5 rounded border border-[var(--border)] hover:border-rose-500 text-[var(--muted-foreground)] hover:text-rose-400">Clear</button>
           </div>
         </div>
-        <div class="text-[10px] text-[var(--muted-foreground)] mb-1">Filter or compare drying, milling, pretreatment, or strain conditions:</div>
-        <input id="inline-search-methods" type="text" oninput="syncChecklistSearch('methods', this.value)" placeholder="Search methods / preps..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-[11px] mb-1 focus:outline-none focus:border-[#00B5E2]" />
+        <div class="text-[10px] text-[var(--muted-foreground)] mb-1">Filter or compare drying, milling, pretreatment, strain, or reactor conditions:</div>
+        <input id="inline-search-methods" type="text" oninput="syncChecklistSearch('methods', this.value)" placeholder="Search methods / strains / reactors..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-[11px] mb-1 focus:outline-none focus:border-[#00B5E2]" />
         <div id="inline-list-methods" class="h-32 overflow-y-auto space-y-0.5 pr-1"></div>
       </div>
     </div>
@@ -1030,7 +1031,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       { id: 'xrf', label: 'XRF', title: 'XRF Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
       { id: 'pretreatment', label: 'Pretreatment', title: 'Pretreatment Hydrolysis Yields — Parameter & Resource Comparison', methodCol: 'pt_method', methodLabel: 'Method:' },
       { id: 'fermentation', label: 'Fermentation', title: 'Fermentation Bioconversion — Parameter & Resource Comparison', methodCol: 'pt_method', methodLabel: 'Method:' },
-      { id: 'gasification', label: 'Gasification', title: 'Gasification Syngas & Mass Balance — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' }
+      { id: 'gasification', label: 'Gasification', title: 'Gasification Syngas & Mass Balance — Parameter & Resource Comparison', methodCol: 'vessel', methodLabel: 'Reactor:' }
     ];
 
     function mapAnalysisTypeToDomain(at) {
@@ -1525,6 +1526,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function getSeriesValue(r, domainId) {
+      if (domainId === 'gasification') {
+        return (r.vessel && r.vessel !== 'N/A' && r.vessel !== 'none')
+          ? r.vessel
+          : (r.prep_method && r.prep_method !== 'N/A' ? r.prep_method : 'Unassigned');
+      }
       if (domainId === 'pretreatment' || domainId === 'fermentation') {
         return r.pt_method && r.pt_method !== 'N/A' ? r.pt_method : (r.strain !== 'N/A' ? r.strain : 'Standard');
       }
@@ -2230,8 +2236,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
 
       const flagParam = urlParams.get('flag');
-      if (flagParam && ['all', 'active', 'dixon', 'rsd', 'sd3', 'identical'].includes(flagParam)) {
-        explorerFlagType = flagParam;
+      if (flagParam && ['all', 'active', 'dixon', 'rsd', 'rsd_gt_10', 'rsd_gt_20', 'sd3', 'identical', 'proximate_sum'].includes(flagParam)) {
+        explorerFlagType = flagParam === 'rsd' ? 'rsd_gt_20' : flagParam;
       } else {
         explorerFlagType = 'all';
       }
@@ -4541,6 +4547,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const cleanAssignee = String(assignedToEmail || '').trim() || null;
       const allTargetIds = Array.from(new Set(targetRows.map(tr => String(tr.record_id || '')).filter(Boolean)));
       const isGroupScope = targetRows.length > 1;
+      const analystIdent = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
+        ? window.BioCirvQcClient.getAnalystIdentity()
+        : {};
+      const rawReviewer = (reviewer && !window.isPlaceholderAnalystEmail?.(reviewer)) ? reviewer : '';
+      const cleanIdentEmail = (analystIdent.email && !window.isPlaceholderAnalystEmail?.(analystIdent.email)) ? analystIdent.email : '';
+      const cleanIdentName = (analystIdent.name && !window.isPlaceholderAnalystEmail?.(analystIdent.name)) ? analystIdent.name : '';
+      const resolvedReviewer = rawReviewer || cleanIdentEmail || cleanIdentName || '';
+      const nowIso = new Date().toISOString();
       targetRows.forEach(tr => {
         const priorStatus = String(tr.qc_pass || 'pass');
         tr.qc_pass = newQcStatus;
@@ -4548,6 +4562,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         else if (newQcStatus === 'pass') tr.data_status = 'Validated';
         else tr.data_status = 'In Review';
         addRecordToExport(tr, `[${normalizedAction.toUpperCase()}] ${note}`);
+        const psMeta = (typeof PREP_SAMPLES_BY_NAME !== 'undefined' && PREP_SAMPLES_BY_NAME[tr.prepared_sample_name]) || {};
+        const fsMeta = (typeof FIELD_SAMPLES_BY_NAME !== 'undefined' && FIELD_SAMPLES_BY_NAME[tr.field_sample_name]) || {};
+        const labLineageNote = tr.note || psMeta.note || fsMeta.note || '';
         if (window.BioCirvQcClient && typeof window.BioCirvQcClient.submitDecision === 'function') {
           window.BioCirvQcClient.submitDecision({
             scope: isGroupScope ? 'replicate_group' : 'single_record',
@@ -4572,7 +4589,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             assigned_to_email: cleanAssignee,
             audit_note: note || `Interactive point/group audit (${normalizedAction})`,
             rationale: note || `Interactive point/group audit (${normalizedAction})`,
-            reviewer: reviewer || 'Explorer Interactive Reviewer',
+            lab_lineage_note: labLineageNote,
+            submitted_at: nowIso,
+            submitted_by_email: cleanIdentEmail || resolvedReviewer || null,
+            source_label: 'Page 3 Explorer',
+            reviewer: resolvedReviewer || null,
             dashboard_page: 'explorer'
           });
         }
@@ -4585,7 +4606,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const assignedToEmail = ((document.getElementById('click-popover-assignee') || {}).value || '').trim();
       const note = ((document.getElementById('click-popover-note') || {}).value || '').trim() || `Audited via interactive plot (${auditPopoverScope === 'group' ? 'Replicate Group' : 'Single Point'})`;
       const targetRows = (auditPopoverScope === 'group' && pinnedGroupRows && pinnedGroupRows.length) ? pinnedGroupRows : [pinnedRecord];
-      applyAuditDecisionToRows(targetRows, action, note, 'Explorer Interactive Reviewer', assignedToEmail);
+      const currentAnalystEmail = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
+        ? (window.BioCirvQcClient.getAnalystIdentity().email || '')
+        : '';
+      applyAuditDecisionToRows(targetRows, action, note, currentAnalystEmail, assignedToEmail);
 
       const fb = document.getElementById('click-popover-feedback');
       if (fb) {
@@ -4604,6 +4628,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const targetRows = scopeMode === 'group' ? allGrpRows : [pinnedRecord];
       const allGroupIds = Array.from(new Set(allGrpRows.map(r => String(r.record_id || '')).filter(Boolean)));
       const recIds = Array.from(new Set(targetRows.map(r => String(r.record_id || '')).filter(Boolean))).join('|');
+      const psMeta = (typeof PREP_SAMPLES_BY_NAME !== 'undefined' && PREP_SAMPLES_BY_NAME[pinnedRecord.prepared_sample_name]) || {};
+      const fsMeta = (typeof FIELD_SAMPLES_BY_NAME !== 'undefined' && FIELD_SAMPLES_BY_NAME[pinnedRecord.field_sample_name]) || {};
+      const labLineageNote = pinnedRecord.note || psMeta.note || fsMeta.note || '';
+      const currentAnalystEmail = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
+        ? (window.BioCirvQcClient.getAnalystIdentity().email || '')
+        : '';
       return {
         scope: scopeMode === 'group' ? 'replicate_group' : 'single_record',
         prefer_single: scopeMode === 'single',
@@ -4631,6 +4661,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         assigned_to_email: window.getDefaultAssigneeEmail
           ? window.getDefaultAssigneeEmail(assignedToEmail)
           : String(assignedToEmail || '').trim(),
+        lab_lineage_note: labLineageNote,
+        submitted_at: new Date().toISOString(),
+        submitted_by_email: currentAnalystEmail,
+        source_label: sourceLabel || 'Page 3 Explorer',
         title: `[${currentDomain.toUpperCase()}] ${pinnedRecord.resource_name} — ${formatParamName(pinnedRecord.parameter, currentDomain)} (${scopeMode === 'group' ? `Replicate Group n=${allGrpRows.length}` : pinnedRecord.record_id})`,
         category: 'Replicate Outlier / Interactive Plot Audit',
         severity: 'high',
@@ -4673,7 +4707,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const assignedToEmail = ((document.getElementById('pin-audit-assignee') || {}).value || '').trim();
       const note = ((document.getElementById('pin-note') || {}).value || '').trim() || `Audited via Pinned Inspector (${scope === 'group' ? 'Replicate Group' : 'Single Point'})`;
       const targetRows = (scope === 'group' && pinnedGroupRows && pinnedGroupRows.length) ? pinnedGroupRows : [pinnedRecord];
-      applyAuditDecisionToRows(targetRows, action, note, 'Explorer Pinned Inspector', assignedToEmail);
+      const currentAnalystEmail = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
+        ? (window.BioCirvQcClient.getAnalystIdentity().email || '')
+        : '';
+      applyAuditDecisionToRows(targetRows, action, note, currentAnalystEmail, assignedToEmail);
 
       const fb = document.getElementById('pin-audit-feedback');
       if (fb) {
@@ -4790,9 +4827,22 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       return null;
     }
 
-    function computeSliceStatScreening(rowsInput) {
-      const sourceRows = Array.isArray(rowsInput) ? rowsInput : filteredRows;
-      const numRows = sourceRows.filter(r => typeof r.value === 'number' && !isNaN(r.value) && r.parameter && r.parameter !== '(metadata only)');
+    function computeSliceStatScreening(rows, opts) {
+      const sourceRows = Array.isArray(rows) ? rows : filteredRows;
+      const activeStatusFilter = (document.getElementById('filter-status') || {}).value || 'qc_pass';
+      const includeFailRows = (opts && typeof opts.includeFailed === 'boolean')
+        ? opts.includeFailed
+        : (activeStatusFilter === 'qc_fail');
+      let excludedFailCount = 0;
+      const numRows = sourceRows.filter(r => {
+        if (typeof r.value !== 'number' || isNaN(r.value) || !r.parameter || r.parameter === '(metadata only)') return false;
+        const isFail = (r.qc_status === 'fail' || r.qc_pass === 'fail');
+        if (!includeFailRows && isFail) {
+          excludedFailCount += 1;
+          return false;
+        }
+        return true;
+      });
       const groupMap = {};
       numRows.forEach(r => {
         const sMethod = getSeriesValue(r, currentDomain);
@@ -5043,7 +5093,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }).sort((a, b) => (b.n_flagged - a.n_flagged) || ((b.within_rsd_max || 0) - (a.within_rsd_max || 0)));
 
       groups.sort((a, b) => (Number(b.is_flagged) - Number(a.is_flagged)) || ((b.rsd_pct || 0) - (a.rsd_pct || 0)));
-      if (!Array.isArray(rowsInput)) {
+      if (!Array.isArray(rows)) {
         lastScreenedGroups = groups;
       }
 
@@ -5057,9 +5107,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         medianBetween: medianVal(allBetween),
         flaggedCount: groups.filter(g => g.is_flagged).length,
         suppressedCount: groups.filter(g => g.is_suppressed_trace_flag).length,
-        multiRepCount: groups.filter(g => g.n >= 2).length
+        multiRepCount: groups.filter(g => g.n >= 2).length,
+        excluded_fail_count: excludedFailCount
       };
     }
+    window.computeSliceStatScreening = computeSliceStatScreening;
 
     function isExplorerGroupMatchingFlagFilter(g, flagMode) {
       if (!flagMode || flagMode === 'all') return true;
@@ -5067,7 +5119,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const activeFlag = g.is_flagged && !isTraceSuppressed;
       if (flagMode === 'active' || flagMode === 'flagged') return activeFlag;
       if (flagMode === 'dixon') return !isTraceSuppressed && g.dixon_pass === false;
-      if (flagMode === 'rsd20' || flagMode === 'rsd') return !isTraceSuppressed && g.rsd_pct !== null && g.rsd_pct > 20.0;
+      if (flagMode === 'rsd_gt_10' || flagMode === 'rsd10') return !isTraceSuppressed && g.rsd_pct !== null && g.rsd_pct > 10.0;
+      if (flagMode === 'rsd_gt_20' || flagMode === 'rsd20' || flagMode === 'rsd') return !isTraceSuppressed && g.rsd_pct !== null && g.rsd_pct > 20.0;
       if (flagMode === 'sd3x' || flagMode === 'sd3') return !isTraceSuppressed && Array.isArray(g.sd3x_candidate_ids) && g.sd3x_candidate_ids.length > 0;
       if (flagMode === 'identical') return !!g.identical_replicates || (g.n >= 2 && g.sd !== null && g.sd <= 1e-12);
       if (flagMode === 'proximate_sum' || flagMode === 'proximate') return !isTraceSuppressed && !!g.raw_proximate_sum;
@@ -5112,6 +5165,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         });
       });
       renderStatScreeningDrawer();
+    }
+
+    function escapeHtml(val) {
+      if (typeof window.escapeHtml === 'function' && window.escapeHtml !== escapeHtml) {
+        return window.escapeHtml(val);
+      }
+      return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function renderStatScreeningDrawer() {

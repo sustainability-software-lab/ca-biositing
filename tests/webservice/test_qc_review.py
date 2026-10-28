@@ -19,6 +19,8 @@ from ca_biositing.webservice.config import config
 from ca_biositing.webservice.main import app
 from ca_biositing.webservice.services.gsheet_sync_service import (
     clear_worksheet_row_state,
+    get_gsheet_custom_writer,
+    get_worksheet_row_state,
 )
 from ca_biositing.webservice.services.qc_ledger_service import (
     read_seed_csv,
@@ -302,7 +304,21 @@ def test_stage2_gsheet_sync_rbac_idempotency_and_re_edit_reset(
     analyst_batch_sync = client.post("/v1/qc/decisions/sync-gsheet-batch")
     assert analyst_batch_sync.status_code == 403
 
-    # 3. Log in as Admin and trigger Stage 2 Google Sheets writeback
+    # 3. Log in as Admin and trigger Stage 2 Google Sheets writeback with an injected mock writer
+    recorded_writes: list[tuple[str, str, str, str, str]] = []
+
+    def _mock_gsheet_writer(
+        decision: QcReviewDecision,
+        sheet_name: str,
+        worksheet_name: str,
+        qc_result: str,
+        updated_note: str,
+    ) -> None:
+        recorded_writes.append(
+            (decision.record_id, sheet_name, worksheet_name, qc_result, updated_note)
+        )
+
+    app.dependency_overrides[get_gsheet_custom_writer] = lambda: _mock_gsheet_writer
     client.post(
         "/v1/qc/auth/dev-login",
         json={"email": "qa.admin@lbl.gov"},
@@ -314,8 +330,17 @@ def test_stage2_gsheet_sync_rbac_idempotency_and_re_edit_reset(
     assert sync1_body["already_synced"] is False
     assert sync1_body["synced_to_gsheet"] is True
     assert sync1_body["gsheet_synced_at"] is not None
+    assert sync1_body["updated_at"].endswith("Z")
     note_after_first_sync = sync1_body["sheet_note"]
     assert note_after_first_sync.count(f"[QC_AUDIT id={decision_id}") == 1
+    assert len(recorded_writes) == 1
+    row_state = get_worksheet_row_state(
+        "Aim 1-Feedstock Collection and Processing Data-BioCirV",
+        "03.1-Proximate",
+        "PROX-AS-01",
+    )
+    assert row_state is not None
+    assert row_state["updated_at"].endswith("Z")
 
     # 4. Calling sync-gsheet a second time is idempotent and does NOT duplicate [QC_AUDIT ...] tags
     admin_sync_2 = client.post(f"/v1/qc/decisions/{decision_id}/sync-gsheet")
@@ -410,6 +435,64 @@ def test_stage2_gsheet_sync_rbac_idempotency_and_re_edit_reset(
     assert backslash_sync_body["synced_to_gsheet"] is True
     assert backslash_sync_body["sheet_note"].count(f"[QC_AUDIT id={decision_id}") == 1
     assert backslash_note in backslash_sync_body["sheet_note"]
+
+
+def test_stage2_gsheet_sync_unconfigured_keeps_synced_false_and_exposes_health(
+    client: TestClient,
+    sqlite_engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify unconfigured Google Sheets writeback returns synced_to_gsheet=False + sync_error and exposes /v1/qc/gsheet-health."""
+    monkeypatch.delenv("BIOSITING_GSHEET_CREDENTIALS_PATH", raising=False)
+    _seed_proximate_records(sqlite_engine)
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov"},
+    )
+    create_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "prox-as-01",
+            "replicate_group_key": "almond_shells|proximate|moisture|AS-PS-01",
+            "resource_name": "almond shells",
+            "analysis_type": "Proximate Analysis",
+            "parameter_name": "moisture",
+            "flag_type": "rsd_gt_10",
+            "decision_action": "reject_fail",
+            "new_qc_pass": "fail",
+            "review_note": "Unconfigured sync check",
+        },
+    )
+    assert create_resp.status_code == 200
+    decision_id = create_resp.json()["decision"]["id"]
+
+    # Analyst cannot access /v1/qc/gsheet-health
+    assert client.get("/v1/qc/gsheet-health").status_code == 403
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "qa.admin@lbl.gov"},
+    )
+    health_resp = client.get("/v1/qc/gsheet-health")
+    assert health_resp.status_code == 200
+    assert health_resp.json()["status"] == "unconfigured"
+
+    sync_resp = client.post(f"/v1/qc/decisions/{decision_id}/sync-gsheet")
+    assert sync_resp.status_code == 200
+    sync_body = sync_resp.json()
+    assert sync_body["status"] == "warning"
+    assert sync_body["synced_to_gsheet"] is False
+    assert "BIOSITING_GSHEET_CREDENTIALS_PATH" in (sync_body.get("sync_error") or "")
+
+    batch_resp = client.post("/v1/qc/decisions/sync-gsheet-batch")
+    assert batch_resp.status_code == 200
+    batch_body = batch_resp.json()
+    assert batch_body["status"] == "warning"
+    assert batch_body["synced_count"] == 0
+    assert batch_body["failed_count"] == 1
+    assert batch_body["failed_decision_ids"] == [decision_id]
 
 
 def test_github_issue_endpoint_fallback_and_api(
@@ -908,3 +991,231 @@ def test_assign_qc_decisions_batch_updates_existing_and_upserts_static_candidate
     seed_csv_path = tmp_path / "qc_review_decisions_seed.csv"
     csv_rows = read_seed_csv(seed_csv_path)
     assert len(csv_rows) == 2
+
+
+def test_wc1_wc2_review_fixes_gasification_prefix_sync_exceptions_and_googleapiclient(
+    client: TestClient,
+    sqlite_engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify WC-1 & WC-2 review fixes:
+    - gasification group_context_label returns 'Reactor: <vessel>' and compute_canonical_method_signature
+    - GET /v1/qc/gsheet-sync/health route alias
+    - custom_writer and batch sync exceptions caught cleanly without polluting _WORKSHEET_ROW_STATE
+    - _sync_via_googleapiclient exercised with a fake Sheets v4 service
+    """
+    from ca_biositing.webservice.services import gsheet_sync_service
+    from ca_biositing.webservice.v1.endpoints.qc_review import (
+        compute_canonical_method_signature,
+        group_context_label,
+    )
+
+    # 1. WC-2: gasification label has 'Reactor: ' prefix & compute_canonical_method_signature
+    assert (
+        group_context_label("gasification", vessel="Downdraft Fixed Bed")
+        == "Reactor: Downdraft Fixed Bed"
+    )
+    assert (
+        compute_canonical_method_signature(
+            {"analysis_type": "Gasification", "vessel": "Fluidized Bed"}
+        )
+        == "Reactor: Fluidized Bed"
+    )
+    assert (
+        compute_canonical_method_signature(
+            {
+                "analysis_type": "Fermentation (Bioconversion)",
+                "pt_method": "SHF",
+                "strain": "S. cerevisiae",
+                "time_h": 48,
+            }
+        )
+        == "SHF · S. cerevisiae @ 48h"
+    )
+
+    # 2. WC-1: /v1/qc/gsheet-sync/health route alias
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "qa.admin@lbl.gov", "name": "QA Admin"},
+    )
+    health_alias_resp = client.get("/v1/qc/gsheet-sync/health")
+    assert health_alias_resp.status_code == 200
+    assert "credentials_env_var" in health_alias_resp.json()
+
+    # 3. Seed records and create two resolved decisions
+    _seed_proximate_records(sqlite_engine)
+    d1_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "moisture",
+            "flag_type": "rsd_gt_10",
+            "decision_action": "reject_fail",
+            "new_qc_pass": "fail",
+            "review_note": "Outlier moisture",
+        },
+    )
+    assert d1_resp.status_code == 200
+    d1_id = d1_resp.json()["decision"]["id"]
+
+    d2_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-02",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "ash",
+            "flag_type": "rsd_gt_10",
+            "decision_action": "accept_pass",
+            "new_qc_pass": "pass",
+            "review_note": "Valid ash replicate",
+        },
+    )
+    assert d2_resp.status_code == 200
+    d2_id = d2_resp.json()["decision"]["id"]
+
+    # 4. custom_writer raising an exception returns status="warning" (not 500) and does NOT update _WORKSHEET_ROW_STATE
+    gsheet_sync_service.clear_worksheet_row_state()
+
+    def failing_writer(decision, sheet_name, worksheet_name, qc_result, updated_note):
+        raise RuntimeError("Simulated custom writer failure")
+
+    with Session(sqlite_engine) as session:
+        res_fail = gsheet_sync_service.sync_single_decision_to_gsheet(
+            session=session,
+            decision_id=d1_id,
+            admin_email="petersmith@lbl.gov",
+            custom_writer=failing_writer,
+        )
+        assert res_fail["status"] == "warning"
+        assert res_fail["synced_to_gsheet"] is False
+        assert "Simulated custom writer failure" in res_fail["sync_error"]
+        assert (
+            gsheet_sync_service.get_worksheet_row_state(
+                gsheet_sync_service.AIM1_GSHEET_NAME,
+                "03.1-Proximate",
+                "PROX-AS-01",
+            )
+            is None
+        )
+
+    # 5. Batch loop catches per-item exceptions and returns partial success
+    def partial_writer(decision, sheet_name, worksheet_name, qc_result, updated_note):
+        if decision.record_id == "PROX-AS-01":
+            raise RuntimeError("Row PROX-AS-01 locked")
+
+    with Session(sqlite_engine) as session:
+        batch_res = gsheet_sync_service.sync_pending_decisions_batch_to_gsheet(
+            session=session,
+            admin_email="petersmith@lbl.gov",
+            decision_ids=[d1_id, d2_id],
+            custom_writer=partial_writer,
+        )
+        assert batch_res["status"] == "warning"
+        assert batch_res["synced_count"] == 1
+        assert batch_res["failed_count"] == 1
+        assert len(batch_res["results"]) == 2
+        assert (
+            gsheet_sync_service.get_worksheet_row_state(
+                gsheet_sync_service.AIM1_GSHEET_NAME,
+                "03.1-Proximate",
+                "PROX-AS-01",
+            )
+            is None
+        )
+        assert (
+            gsheet_sync_service.get_worksheet_row_state(
+                gsheet_sync_service.AIM1_GSHEET_NAME,
+                "03.1-Proximate",
+                "PROX-AS-02",
+            )
+            is not None
+        )
+
+    # 6. Exercise _sync_via_googleapiclient directly with a fake Sheets v4 / Drive v3 service
+    import sys
+    import types
+
+    captured_batch_updates = []
+
+    class FakeDriveFilesResource:
+        def list(self, **kwargs):
+            class _Exec:
+                def execute(self_inner):
+                    return {"files": [{"id": "sheet-123", "name": gsheet_sync_service.AIM1_GSHEET_NAME}]}
+
+            return _Exec()
+
+    class FakeDriveService:
+        def files(self):
+            return FakeDriveFilesResource()
+
+    class FakeValuesResource:
+        def get(self, spreadsheetId, range):
+            class _Exec:
+                def execute(self_inner):
+                    return {
+                        "values": [
+                            ["Record_ID", "QC_Pass", "Note", "Updated_At"],
+                            ["prox-as-01", "pass", "Initial lab note", "2025-01-01T00:00:00Z"],
+                        ]
+                    }
+
+            return _Exec()
+
+        def batchUpdate(self, spreadsheetId, body):
+            captured_batch_updates.append((spreadsheetId, body))
+
+            class _Exec:
+                def execute(self_inner):
+                    return {"totalUpdatedCells": len(body.get("data", []))}
+
+            return _Exec()
+
+    class FakeSpreadsheetsResource:
+        def values(self):
+            return FakeValuesResource()
+
+    class FakeSheetsService:
+        def spreadsheets(self):
+            return FakeSpreadsheetsResource()
+
+    fake_sa_mod = types.ModuleType("google.oauth2.service_account")
+    fake_sa_mod.Credentials = types.SimpleNamespace(
+        from_service_account_file=lambda path, scopes=None: object()
+    )
+    fake_disc_mod = types.ModuleType("googleapiclient.discovery")
+    fake_disc_mod.build = lambda api, ver, credentials=None, cache_discovery=False: (
+        FakeDriveService() if api == "drive" else FakeSheetsService()
+    )
+    monkeypatch.setitem(sys.modules, "google.oauth2", types.SimpleNamespace(service_account=fake_sa_mod))
+    monkeypatch.setitem(sys.modules, "google.oauth2.service_account", fake_sa_mod)
+    monkeypatch.setitem(sys.modules, "googleapiclient", types.SimpleNamespace(discovery=fake_disc_mod))
+    monkeypatch.setitem(sys.modules, "googleapiclient.discovery", fake_disc_mod)
+
+    ok_api, err_api = gsheet_sync_service._sync_via_googleapiclient(
+        creds_path=Path("/tmp/fake-creds.json"),
+        sheet_name=gsheet_sync_service.AIM1_GSHEET_NAME,
+        worksheet_name="03.1-Proximate",
+        record_id="PROX-AS-01",
+        qc_result="fail",
+        decision_id=1,
+        resolved_by_email="petersmith@lbl.gov",
+        review_note="Outlier moisture",
+        resolved_at=None,
+        rationale_chips="instrument_drift",
+        updated_at_iso="2026-04-20T12:00:00Z",
+    )
+    assert ok_api is True
+    assert err_api is None
+    assert len(captured_batch_updates) == 1
+    sheet_id, update_body = captured_batch_updates[0]
+    assert sheet_id == "sheet-123"
+    ranges_updated = {item["range"]: item["values"][0][0] for item in update_body["data"]}
+    assert ranges_updated["'03.1-Proximate'!B2"] == "fail"
+    assert "[QC_AUDIT id=1" in ranges_updated["'03.1-Proximate'!C2"]
+    assert ranges_updated["'03.1-Proximate'!D2"] == "2026-04-20T12:00:00Z"

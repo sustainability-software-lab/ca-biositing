@@ -1932,3 +1932,279 @@ global.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
     assert "No matching database records found in snapshot." in out["emptySvgHtml"]
     assert "<circle" not in out["emptySvgHtml"]
     assert out["popClosedHidden"] is True
+
+
+def test_wc2_to_wc7_pages_1_to_3_lineage_stats_filters_and_auth(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Verify WC-2 (Gasification Reactor label), WC-3 (Two-Track Sample Lineage Timeline),
+    WC-4 (Submission Timestamps & Lab Sample Lineage Notes), WC-5 (Page 2 QC Status + Min RSD % slider),
+    WC-6 (NaN-safe computeSampleSummaryGroups), and WC-7 (Authenticated Analyst Email priority)."""
+    from analysis.metadata.resource_insights_engine import (
+        compute_dataset_outlier_screening,
+    )
+
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    # WC-2: Gasification Reactor label in Python insights engine and Page 3 DOMAINS
+    gas_screening = compute_dataset_outlier_screening(
+        {
+            "Almond Hulls": [
+                {
+                    "record_id": "gas-1",
+                    "resource_name": "Almond Hulls",
+                    "prepared_sample": "AH-PS-01",
+                    "analysis_type": "Gasification",
+                    "parameter": "Syngas Yield",
+                    "unit": "Nm3/kg",
+                    "value": 1.85,
+                    "qc_status": "pass",
+                    "vessel": "Downdraft Fixed Bed",
+                    "prep_method": "Pelletized",
+                    "experiment": "EXP-GAS-1",
+                }
+            ]
+        }
+    )["Almond Hulls"]
+    gas_grp = gas_screening["by_tab"]["fermentation"]["replicate_groups"][0]
+    assert gas_grp["prep_method"] == "Reactor: Downdraft Fixed Bed"
+    assert (
+        gas_grp["replicate_group_key"]
+        == "almond hulls::ah-ps-01::gasification::syngas yield::reactor: downdraft fixed bed::exp-gas-1"
+    )
+    assert "methodCol: 'vessel', methodLabel: 'Reactor:'" in page3
+
+    # WC-3: Literal Horizontal Sample Timeline in Page 1
+    assert 'id="lineage-timeline-tracks-wrap"' in page1
+    assert 'id="lineage-horizontal-timeline"' in page1
+    assert 'id="lineage-provider-legend"' in page1
+    assert 'id="lineage-hover-tooltip"' in page1
+    assert 'id="lineage-svg-overlay"' in page1
+    assert "Track 1 · Field Samples" in page1
+    assert "Track 2 · Prepared Samples" in page1
+    assert "window.renderTimelineSvgConnectors" in page1
+    assert "setSubMode('timelineAlignMode'" in page1
+    assert "setSubMode('timelineSortMode'" in page1
+    assert "By Date" in page1
+    assert "By Sample Order" in page1
+    assert "Unlinked Prepared Samples" in page1
+    assert "data-fs-node=" in page1
+    assert "data-ps-node=" in page1
+    assert '["prep_method", "pt_method", "eh_method", "strain", "vessel", "experiment"]' in page1
+    assert "show-me-qc-fail-diamond" in page1
+    assert "show-me-qc-fail-diamond" in page3
+    assert "|| 'local.analyst@lbl.gov'" not in page3
+    assert '|| "local.analyst@lbl.gov"' not in page3
+    assert "function computeSliceStatScreening(rows, opts)" in page3
+    assert "excluded_fail_count: excludedFailCount" in page3
+
+    # WC-5: Page 3 RSD > 10% and RSD > 20% flag filter options
+    assert '<option value="rsd_gt_10">RSD &gt; 10%</option>' in page3
+    assert '<option value="rsd_gt_20">High RSD &gt; 20%</option>' in page3
+    assert "window.escapeHtml = escapeHtml;" in page1
+    assert "function escapeHtml(" in page3
+
+    # Execute Page 1 JS in Node to verify WC-2, WC-3, WC-4, WC-6, WC-7 runtime behavior
+    m_p1_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page1, flags=re.S
+    )
+    assert m_p1_script
+    p1_script = m_p1_script.group(1)
+
+    p1_harness = tmp_path / "run_wc_p1_checks.js"
+    p1_harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set();
+  const attrs = {};
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: {
+      add(c){ classSet.add(c); },
+      remove(c){ classSet.delete(c); },
+      toggle(c){ if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c){ return classSet.has(c); }
+    },
+    addEventListener(){}, removeEventListener(){},
+    setAttribute(k, v){ attrs[k] = String(v); },
+    getAttribute(k){ return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    appendChild(){}, querySelectorAll(){ return []; },
+    getBoundingClientRect(){ return { left: 0, top: 0, width: 120, height: 36 }; },
+    focus(){}, setSelectionRange(){}
+  };
+}
+const storage = { biocirv_analyst_email: "local.analyst@lbl.gov" };
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_analysis_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_analysis_dashboard.html", protocol: "http:" },
+  history: { replaceState(){}, pushState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 1",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.fetch = async (url) => {
+  if (String(url).includes("/v1/qc/auth/me")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ email: "Verified.Session@lbl.gov", name: "Verified Session" })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + p1_script
+        + """
+(async () => {
+  // WC-2: groupContextLabel & computeCanonicalMethodSignature for gasification
+  const gasLabel = window.groupContextLabel({
+    analysis_type: "Gasification",
+    vessel: "Fluidized Bed",
+    prep_method: "Pelletized"
+  });
+  const gasCanonicalSig = window.computeCanonicalMethodSignature({
+    analysis_type: "Gasification",
+    vessel: "Fluidized Bed",
+    prep_method: "Pelletized"
+  });
+
+  // WC-3: Literal horizontal sample timeline rendered in #tab-content + case/whitespace insensitive lookup + same-date vertical stacking
+  BUNDLE.field_samples = [
+    ...(BUNDLE.field_samples || []),
+    {
+      name: "AH-FS-01B-SAME-DATE",
+      resource: "almond hulls",
+      resource_name: "Almond Hulls",
+      provider_code: "possessive",
+      provider: "Possessive",
+      collected_at: "2026-01-15",
+      sampling_site: "Orchard West",
+      sample_source: "Hull pile",
+      geoid: "06099"
+    }
+  ];
+  const lineageHtml = document.getElementById("tab-content").innerHTML;
+  window.setSubMode("timelineAlignMode", "collected");
+  window.setSubMode("timelineSortMode", "date");
+  const colAlignedHtml = document.getElementById("tab-content").innerHTML;
+  const sameDatePointMatches = (colAlignedHtml.match(/data-timeline-date="2026-01-15"/g) || []).length;
+  const hasStackedCount2 = colAlignedHtml.includes('data-date-stack-count="2"');
+  window.setSubMode("timelineAlignMode", "prep");
+  const prepAlignedHtml = document.getElementById("tab-content").innerHTML;
+  window.setSubMode("timelineSortMode", "order");
+  const orderSortedHtml = document.getElementById("tab-content").innerHTML;
+  const fsFoundCaseInsensitive = Boolean(window.lookupFieldSample && window.lookupFieldSample("  ah-fs-01 "));
+
+  // WC-6: computeSliceStatScreening(rows, opts) excludes qc_fail by default and returns excluded_fail_count
+  const sampleRows = [
+    { record_id: "r1", resource_name: "Almond Hulls", prepared_sample: "AH-PS-01", analysis_type: "Proximate Analysis", parameter: "Ash", prep_method: "Oven", experiment: "E1", value: 6.1, qc_status: "pass" },
+    { record_id: "r2", resource_name: "Almond Hulls", prepared_sample: "AH-PS-01", analysis_type: "Proximate Analysis", parameter: "Ash", prep_method: "Oven", experiment: "E1", value: 6.3, qc_status: "pass" },
+    { record_id: "r3", resource_name: "Almond Hulls", prepared_sample: "AH-PS-01", analysis_type: "Proximate Analysis", parameter: "Ash", prep_method: "Oven", experiment: "E1", value: 19.8, qc_status: "fail" }
+  ];
+  const statScreeningDefault = window.computeSliceStatScreening(sampleRows);
+  const statScreeningWithFailed = window.computeSliceStatScreening(sampleRows, { includeFailed: true });
+
+  // WC-6: window.escapeHtml escapes special HTML chars cleanly
+  const escaped = window.escapeHtml('<script>"alert"&test</script>');
+
+  // WC-7: hydrateSessionIdentity & getDefaultAssigneeEmail prioritize authenticated session email over placeholder
+  const isLocalPlaceholder = window.isPlaceholderAnalystEmail("local.analyst@lbl.gov");
+  await window.BioCirvQcClient.hydrateSessionIdentity();
+  const resolvedEmail = window.getDefaultAssigneeEmail("local.analyst@lbl.gov");
+
+  // WC-4: submitDecision (offline fallback) populates submitted_at, submitted_by_email, lab_lineage_note, source_label
+  const subRes = await window.BioCirvQcClient.submitDecision({
+    resource_name: "almond hulls",
+    prepared_sample: "AH-PS-01",
+    analysis_type: "Proximate Analysis",
+    parameter: "Ash",
+    record_id: "prox-1",
+    decision: "exclude_qc_fail",
+    note: "Elevated ash replicate",
+    lab_lineage_note: "FS: AH-FS-01 -> PS: AH-PS-01 (Oven 105C)"
+  });
+
+  console.log(JSON.stringify({
+    gasLabel,
+    gasCanonicalSig,
+    hasTimelineWrap: lineageHtml.includes("lineage-timeline-tracks-wrap"),
+    hasHorizontalTimeline: lineageHtml.includes("lineage-horizontal-timeline"),
+    hasProviderLegend: lineageHtml.includes("lineage-provider-legend"),
+    hasHoverTooltip: lineageHtml.includes("lineage-hover-tooltip"),
+    hasCollectedModeActive: colAlignedHtml.includes("Align by Field Collection Date"),
+    sameDatePointMatches,
+    hasStackedCount2,
+    hasPrepModeActive: prepAlignedHtml.includes("Prepared Sample Run Date (X-Axis)"),
+    hasOrderSortActive: orderSortedHtml.includes("By Sample Order"),
+    fsFoundCaseInsensitive,
+    statDefaultExcludedCount: statScreeningDefault.excluded_fail_count,
+    statDefaultN: statScreeningDefault.groups[0].n,
+    statWithFailedExcludedCount: statScreeningWithFailed.excluded_fail_count,
+    statWithFailedN: statScreeningWithFailed.groups[0].n,
+    isLocalPlaceholder,
+    escaped,
+    resolvedEmail,
+    subDecision: subRes.decision
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc_p1 = subprocess.run(
+        [node_bin, str(p1_harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc_p1.returncode == 0, f"WC Page 1 Node harness failed: {proc_p1.stderr}"
+    out_p1 = json.loads(proc_p1.stdout.strip().splitlines()[-1])
+
+    assert out_p1["gasLabel"] == "Reactor: Fluidized Bed"
+    assert out_p1["gasCanonicalSig"] == "Reactor: Fluidized Bed"
+    assert out_p1["hasTimelineWrap"] is True
+    assert out_p1["hasHorizontalTimeline"] is True
+    assert out_p1["hasProviderLegend"] is True
+    assert out_p1["hasHoverTooltip"] is True
+    assert out_p1["hasCollectedModeActive"] is True
+    assert out_p1["sameDatePointMatches"] == 1
+    assert out_p1["hasStackedCount2"] is True
+    assert out_p1["hasPrepModeActive"] is True
+    assert out_p1["hasOrderSortActive"] is True
+    assert out_p1["fsFoundCaseInsensitive"] is True
+    assert out_p1["statDefaultExcludedCount"] == 1
+    assert out_p1["statDefaultN"] == 2
+    assert out_p1["statWithFailedExcludedCount"] == 0
+    assert out_p1["statWithFailedN"] == 3
+    assert out_p1["isLocalPlaceholder"] is True
+    assert out_p1["escaped"] == "&lt;script&gt;&quot;alert&quot;&amp;test&lt;/script&gt;"
+    assert out_p1["resolvedEmail"] == "verified.session@lbl.gov"
+    assert out_p1["subDecision"]["submitted_at"]
+    assert out_p1["subDecision"]["submitted_by_email"] == "verified.session@lbl.gov"
+    assert (
+        out_p1["subDecision"]["lab_lineage_note"]
+        == "FS: AH-FS-01 -> PS: AH-PS-01 (Oven 105C)"
+    )
+    assert "Page 1" in out_p1["subDecision"]["source_label"]
