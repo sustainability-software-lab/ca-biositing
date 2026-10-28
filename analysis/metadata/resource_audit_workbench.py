@@ -2129,6 +2129,38 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         "gasification_record": "gasification"
       };
 
+    const DOMAIN_DEFS = [
+      { key: "proximate", label: "Proximate", analysisType: "Proximate Analysis" },
+      { key: "calorimetry", label: "Calorimetry", analysisType: "Calorimetry" },
+      { key: "compositional", label: "Compositional", analysisType: "Compositional Analysis" },
+      { key: "ultimate", label: "Ultimate", analysisType: "Ultimate Analysis" },
+      { key: "xrd", label: "XRD", analysisType: "XRD Crystallinity" },
+      { key: "icp", label: "ICP", analysisType: "ICP-OES / ICP-MS" },
+      { key: "xrf", label: "XRF", analysisType: "XRF Elemental" },
+      { key: "pretreatment", label: "Pretreatment", analysisType: "Pretreatment" },
+      { key: "fermentation", label: "Fermentation", analysisType: "Fermentation" },
+      { key: "gasification", label: "Gasification", analysisType: "Gasification" }
+    ];
+    window.DOMAIN_DEFS = DOMAIN_DEFS;
+
+    function normalizeDomainKey(raw) {
+      const s = String(raw || "").trim().toLowerCase();
+      if (!s) return "proximate";
+      if (s === "all") return "all";
+      if (s === "calorimetry_xrd" || s.includes("calorim") || s.includes("hhv") || s.includes("lhv")) return "calorimetry";
+      if (s.includes("proximate")) return "proximate";
+      if (s.includes("ultimate")) return "ultimate";
+      if (s.includes("compositional") || s.includes("structural")) return "compositional";
+      if (s.includes("xrd") || s.includes("crystallin")) return "xrd";
+      if (s === "elemental" || s.includes("icp")) return "icp";
+      if (s.includes("xrf") || s === "ash" || s.startsWith("ash ")) return "xrf";
+      if (s.includes("pretreatment") || s.includes("hydrolysis")) return "pretreatment";
+      if (s.includes("fermentation") || s.includes("bioconversion")) return "fermentation";
+      if (s.includes("gasification")) return "gasification";
+      return s;
+    }
+    window.normalizeDomainKey = normalizeDomainKey;
+
       function canonicalDomainSlug(analysisType) {
         if (!analysisType) return "unknown";
         var cleaned = String(analysisType).trim().toLowerCase();
@@ -2454,7 +2486,12 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       function matchesFacetFilters(dec) {
         var f = state.filters;
         if (f.resource && dec.resource_name !== f.resource) return false;
-        if (f.analysisType && dec.analysis_type !== f.analysisType) return false;
+        if (f.analysisType && f.analysisType !== "all") {
+          var exactMatch = dec.analysis_type === f.analysisType;
+          var slugMatch =
+            normalizeDomainKey(dec.analysis_type) === normalizeDomainKey(f.analysisType);
+          if (!exactMatch && !slugMatch) return false;
+        }
         if (f.parameter && dec.parameter_name !== f.parameter) return false;
         if (f.flagType) {
           var flags = dec.flag_types || [dec.flag_type];
@@ -3913,6 +3950,25 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       function parseDeepLinkQuery() {
         if (typeof window === "undefined" || !window.location) return;
         var params = new URLSearchParams(window.location.search || "");
+        var qDomain = params.get("domain") || params.get("analysis_type") || params.get("type");
+        if (qDomain && qDomain !== "all") {
+          var normDom = normalizeDomainKey(qDomain);
+          var selAt = document.getElementById("filter-analysis-type");
+          if (selAt) {
+            var matchedVal = "";
+            for (var oi = 0; oi < selAt.options.length; oi++) {
+              var optVal = selAt.options[oi].value;
+              if (optVal && (optVal === qDomain || normalizeDomainKey(optVal) === normDom)) {
+                matchedVal = optVal;
+                break;
+              }
+            }
+            state.filters.analysisType = matchedVal || normDom;
+            if (matchedVal) selAt.value = matchedVal;
+          } else {
+            state.filters.analysisType = normDom;
+          }
+        }
         var qDecisionId = params.get("decision_id");
         var qGroupKey = params.get("replicate_group_key");
         if (qDecisionId) {
@@ -4271,7 +4327,10 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           renderContextualDrawer: renderContextualDrawer,
           renderDiagnosticPlot: renderDiagnosticPlot,
           parseDeepLinkQuery: parseDeepLinkQuery,
-          selectDecision: selectDecision
+          selectDecision: selectDecision,
+          matchesFacetFilters: matchesFacetFilters,
+          DOMAIN_DEFS: DOMAIN_DEFS,
+          normalizeDomainKey: normalizeDomainKey
         };
       }
 

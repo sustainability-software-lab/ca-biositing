@@ -875,6 +875,23 @@ global.fetch = function (url) {
     hooks.state.decisionsById["QC-FERM-A"].review_note,
     "Initial A"
   );
+
+  // Verify Card 4: DOMAIN_DEFS, normalizeDomainKey, and matchesFacetFilters slug/label compatibility
+  assert.strictEqual(Array.isArray(hooks.DOMAIN_DEFS), true);
+  assert.strictEqual(hooks.DOMAIN_DEFS.length, 10);
+  assert.strictEqual(hooks.normalizeDomainKey("Proximate Analysis"), "proximate");
+  assert.strictEqual(hooks.normalizeDomainKey("XRD Crystallinity"), "xrd");
+  assert.strictEqual(hooks.normalizeDomainKey("Ash"), "xrf");
+  hooks.state.filters.analysisType = "proximate";
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ analysis_type: "Proximate Analysis" }),
+    true
+  );
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ analysis_type: "Calorimetry" }),
+    false
+  );
+  hooks.state.filters.analysisType = "";
 })().catch((err) => {
   console.error(err);
   process.exit(1);
