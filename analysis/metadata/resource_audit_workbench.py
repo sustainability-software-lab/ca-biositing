@@ -1017,6 +1017,8 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
                 "rsd_gt_20",
                 "iqr_outlier",
                 "proximate_sum",
+                "visualizer_flagged",
+                "stat_snapshot_flagged",
                 "analyst_flagged",
             ],
             "analysts": analysts_list,
@@ -1423,6 +1425,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       color: #92400e;
     }
 
+    .flag-rsd_gt_20 {
+      background: #ffedd5;
+      color: #9a3412;
+    }
+
     .flag-iqr_outlier {
       background: #fee2e2;
       color: #991b1b;
@@ -1431,6 +1438,18 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     .flag-proximate_sum {
       background: #fae8ff;
       color: #86198f;
+    }
+
+    .flag-visualizer_flagged {
+      background: #cffafe;
+      color: #155e75;
+      border: 1px solid #06b6d4;
+    }
+
+    .flag-stat_snapshot_flagged {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #10b981;
     }
 
     .flag-analyst_flagged {
@@ -1784,14 +1803,17 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           </select>
         </div>
         <div class="field-group">
-          <label for="filter-flag-type">Flag Type</label>
+          <label for="filter-flag-type">Flag Type / Source</label>
           <select id="filter-flag-type">
             <option value="">All Flag Types</option>
+            <option value="interactive_session">⚡ All Interactive Session Flags (Visualizer + Stat Snapshot)</option>
+            <option value="visualizer_flagged">🔬 visualizer_flagged (Page 3 Data Visualizer Flag)</option>
+            <option value="stat_snapshot_flagged">📊 stat_snapshot_flagged (Page 2 Statistical Snapshot Flag)</option>
             <option value="rsd_gt_10">rsd_gt_10 (RSD &gt; 10%)</option>
             <option value="rsd_gt_20">rsd_gt_20 (RSD &gt; 20%)</option>
             <option value="iqr_outlier">iqr_outlier (Tukey 1.5×IQR)</option>
             <option value="proximate_sum">proximate_sum (Closure &lt;95% or &gt;105%)</option>
-            <option value="analyst_flagged">analyst_flagged (Existing Fail/Flag)</option>
+            <option value="analyst_flagged">📋 analyst_flagged (Legacy GSheet Fail/Flag)</option>
           </select>
         </div>
         <div class="field-group">
@@ -1824,12 +1846,42 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           </select>
         </div>
         <div class="field-group">
-          <label for="filter-search">Search Sample / Record ID</label>
+          <label for="filter-sort-by">Sort Queue By</label>
+          <select id="filter-sort-by">
+            <option value="default">Default Queue Order (Severity / ID)</option>
+            <option value="interactive_first">⚡ Interactive Session Flags First (Visualizer &amp; Stat Snapshot)</option>
+            <option value="recent_first">🕒 Most Recently Flagged / Updated First</option>
+            <option value="rsd_desc">📈 Highest RSD % First</option>
+            <option value="flagged_by">👤 Flagged By Analyst (A → Z)</option>
+            <option value="scope">🎯 Flag Scope (Single Point vs Replicate Group)</option>
+            <option value="resource_param">🧪 Resource &amp; Parameter (A → Z)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="filter-search">Search Sample / Record / Provenance</label>
           <div style="display:flex;align-items:center;gap:6px;">
-            <input type="search" id="filter-search" placeholder="e.g. PROX-AH-004 or AH-PREP-01" style="flex:1;" />
+            <input type="search" id="filter-search" placeholder="e.g. PROX-AH-004, visualizer_flagged, analyst@lbl.gov" style="flex:1;" />
             <button type="button" class="btn" id="btn-reset-filters" onclick="window.resetAllFilters && window.resetAllFilters()" style="padding:5px 10px;font-size:11px;white-space:nowrap;" title="Reset all queue filters">↺ Reset Filters</button>
           </div>
         </div>
+      </div>
+      <div class="interactive-quick-filter-bar" style="display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:1px dashed var(--border-color);font-size:11.5px;">
+        <span style="font-weight:700;color:var(--text-muted);">Quick Session Triage:</span>
+        <button type="button" class="btn" id="btn-quick-filter-interactive" onclick="window.setQuickFlagFilter && window.setQuickFlagFilter('interactive_session')" style="padding:3px 9px;font-size:11px;">
+          ⚡ All Interactive Session Flags
+        </button>
+        <button type="button" class="btn" id="btn-quick-filter-visualizer" onclick="window.setQuickFlagFilter && window.setQuickFlagFilter('visualizer_flagged')" style="padding:3px 9px;font-size:11px;">
+          🔬 Visualizer Flags (Page 3)
+        </button>
+        <button type="button" class="btn" id="btn-quick-filter-stat-snapshot" onclick="window.setQuickFlagFilter && window.setQuickFlagFilter('stat_snapshot_flagged')" style="padding:3px 9px;font-size:11px;">
+          📊 Stat Snapshot Flags (Page 2)
+        </button>
+        <button type="button" class="btn" id="btn-quick-filter-legacy-gsheet" onclick="window.setQuickFlagFilter && window.setQuickFlagFilter('analyst_flagged')" style="padding:3px 9px;font-size:11px;">
+          📋 Legacy GSheet Fails
+        </button>
+        <button type="button" class="btn" id="btn-quick-sort-recent" onclick="window.setQueueSortBy && window.setQueueSortBy('recent_first')" style="padding:3px 9px;font-size:11px;">
+          🕒 Sort: Recently Flagged First
+        </button>
       </div>
     </section>
 
@@ -2306,6 +2358,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           qcStatus: "",
           minRsd: 0,
           assignedAnalyst: "",
+          sortBy: "default",
           search: ""
         },
         decisionsById: {},
@@ -2387,6 +2440,265 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         }
       }
 
+      function inferInteractiveFlagTypes(item) {
+        if (!item) return [];
+        var out = [];
+        function addFlag(ft) {
+          if (ft && out.indexOf(ft) === -1) out.push(ft);
+        }
+        if (Array.isArray(item.flag_types)) {
+          for (var i = 0; i < item.flag_types.length; i++) {
+            addFlag(item.flag_types[i]);
+          }
+        }
+        if (item.flag_type) {
+          addFlag(item.flag_type);
+        }
+        var srcLower = String(item.source_label || "").toLowerCase();
+        if (
+          srcLower.indexOf("visualizer") !== -1 ||
+          srcLower.indexOf("explorer") !== -1 ||
+          srcLower.indexOf("page 3") !== -1
+        ) {
+          addFlag("visualizer_flagged");
+        } else if (
+          srcLower.indexOf("statistical") !== -1 ||
+          srcLower.indexOf("snapshot") !== -1 ||
+          srcLower.indexOf("outlier") !== -1 ||
+          srcLower.indexOf("page 2") !== -1
+        ) {
+          addFlag("stat_snapshot_flagged");
+        }
+        return out;
+      }
+
+      function mergeFlagTypesIntoDecision(targetDec, incomingItem) {
+        if (!targetDec || !incomingItem) return;
+        var existingFlags = Array.isArray(targetDec.flag_types)
+          ? targetDec.flag_types.slice()
+          : targetDec.flag_type
+          ? [targetDec.flag_type]
+          : [];
+        var incomingFlags = inferInteractiveFlagTypes(incomingItem);
+        for (var fi = 0; fi < incomingFlags.length; fi++) {
+          var nf = incomingFlags[fi];
+          if (nf && existingFlags.indexOf(nf) === -1) {
+            if (nf === "visualizer_flagged" || nf === "stat_snapshot_flagged") {
+              existingFlags.unshift(nf);
+            } else {
+              existingFlags.push(nf);
+            }
+          }
+        }
+        if (existingFlags.length > 0) {
+          targetDec.flag_types = existingFlags;
+        }
+        if (
+          incomingFlags.indexOf("visualizer_flagged") !== -1 ||
+          incomingFlags.indexOf("stat_snapshot_flagged") !== -1
+        ) {
+          targetDec.flag_type =
+            incomingFlags.indexOf("visualizer_flagged") !== -1
+              ? "visualizer_flagged"
+              : "stat_snapshot_flagged";
+        }
+      }
+
+      function mergeLocalStorageDecisionsIntoState() {
+        try {
+          if (typeof localStorage === "undefined") return;
+          var combinedItems = [];
+          var keysToRead = [
+            "biocirv_pending_qc_decisions",
+            "biocirv_qc_decisions_ledger_v1",
+            "biocirv_qc_decisions_v1"
+          ];
+          for (var ki = 0; ki < keysToRead.length; ki++) {
+            var rawVal = localStorage.getItem(keysToRead[ki]);
+            if (!rawVal) continue;
+            try {
+              var parsed = JSON.parse(rawVal);
+              if (Array.isArray(parsed)) {
+                for (var ai = 0; ai < parsed.length; ai++) {
+                  if (parsed[ai]) combinedItems.push(parsed[ai]);
+                }
+              } else if (parsed && typeof parsed === "object") {
+                var objKeys = Object.keys(parsed);
+                for (var oi = 0; oi < objKeys.length; oi++) {
+                  var entry = parsed[objKeys[oi]];
+                  if (entry && typeof entry === "object") combinedItems.push(entry);
+                }
+              }
+            } catch (_innerErr) {}
+          }
+
+          for (var p = 0; p < combinedItems.length; p++) {
+            var pItem = combinedItems[p];
+            if (!pItem) continue;
+            if (pItem.record_table === "portal_bug_report" || pItem.flag_type === "bug_report") continue;
+            var pKey = pItem.replicate_group_key
+              ? normalizeReplicateGroupKey(pItem.replicate_group_key)
+              : "";
+            var matchedLocalId = null;
+            if (pKey) {
+              for (var k = 0; k < state.decisionsOrder.length; k++) {
+                var cand = state.decisionsById[state.decisionsOrder[k]];
+                if (
+                  cand &&
+                  cand.replicate_group_key &&
+                  (normalizeReplicateGroupKey(cand.replicate_group_key) === pKey ||
+                    matchesReplicateGroupKey(cand.replicate_group_key, pItem.replicate_group_key))
+                ) {
+                  matchedLocalId = cand.decision_id;
+                  break;
+                }
+              }
+            }
+            if (!matchedLocalId && pItem.record_id) {
+              for (var k2 = 0; k2 < state.decisionsOrder.length; k2++) {
+                var cand2 = state.decisionsById[state.decisionsOrder[k2]];
+                if (!cand2) continue;
+                if (
+                  String(cand2.record_id || "") === String(pItem.record_id) ||
+                  (Array.isArray(cand2.record_ids) && cand2.record_ids.indexOf(String(pItem.record_id)) !== -1)
+                ) {
+                  matchedLocalId = cand2.decision_id;
+                  break;
+                }
+              }
+            }
+            if (matchedLocalId && state.decisionsById[matchedLocalId]) {
+              var locDec = state.decisionsById[matchedLocalId];
+              mergeFlagTypesIntoDecision(locDec, pItem);
+              locDec.submitted_by_email =
+                pItem.submitted_by_email ||
+                pItem.flagged_by_email ||
+                locDec.submitted_by_email;
+              locDec.submitted_at =
+                pItem.submitted_at ||
+                pItem.flagged_at ||
+                pItem.created_at ||
+                locDec.submitted_at;
+              locDec.created_at =
+                pItem.created_at ||
+                pItem.submitted_at ||
+                pItem.flagged_at ||
+                locDec.created_at;
+              locDec.lab_lineage_note =
+                pItem.lab_lineage_note || locDec.lab_lineage_note || "";
+              locDec.source_label =
+                pItem.source_label || locDec.source_label || "";
+              if (pItem.decision_status) {
+                locDec.decision_status = pItem.decision_status;
+              }
+              if (pItem.decision_action) {
+                locDec.decision_action = pItem.decision_action;
+              }
+              if (pItem.triage_scope || pItem.scope || pItem.scope_mode) {
+                locDec.scope_mode =
+                  pItem.triage_scope || pItem.scope || pItem.scope_mode;
+              }
+              if (pItem.review_note || pItem.note) {
+                locDec.review_note = pItem.review_note || pItem.note;
+              }
+            } else {
+              var matchedGrp = findReplicateGroupForDecision(pItem);
+              var grpStats = (matchedGrp && matchedGrp.stats) || {};
+              var rawIdCandidate =
+                pItem.decision_id && String(pItem.decision_id).indexOf("QC-") === 0
+                  ? String(pItem.decision_id)
+                  : pItem.api_decision_id != null
+                  ? "QC-DB-" + String(pItem.api_decision_id).padStart(4, "0")
+                  : "QC-LOCAL-" + String(p + 1).padStart(4, "0");
+              var offId = rawIdCandidate;
+              while (state.decisionsById[offId]) {
+                offId = offId + "-LOC";
+              }
+              var offCopy = JSON.parse(JSON.stringify(pItem));
+              offCopy.decision_id = offId;
+              offCopy.db_id =
+                typeof pItem.api_decision_id === "number"
+                  ? pItem.api_decision_id
+                  : typeof pItem.db_id === "number"
+                  ? pItem.db_id
+                  : null;
+              offCopy.replicate_group_key =
+                (matchedGrp && matchedGrp.replicate_group_key) ||
+                pKey ||
+                offCopy.replicate_group_key ||
+                "";
+              offCopy.resource_name =
+                offCopy.resource_name || (matchedGrp && matchedGrp.resource_name) || "";
+              offCopy.prepared_sample =
+                offCopy.prepared_sample ||
+                offCopy.prepared_sample_name ||
+                (matchedGrp && matchedGrp.prepared_sample) ||
+                "";
+              offCopy.field_sample =
+                offCopy.field_sample ||
+                offCopy.field_sample_name ||
+                (matchedGrp && matchedGrp.field_sample) ||
+                "";
+              offCopy.analysis_type =
+                offCopy.analysis_type || (matchedGrp && matchedGrp.analysis_type) || "";
+              offCopy.parameter_name =
+                offCopy.parameter_name ||
+                offCopy.parameter ||
+                (matchedGrp && matchedGrp.parameter_name) ||
+                "";
+              offCopy.unit =
+                offCopy.unit || (matchedGrp && matchedGrp.unit) || "";
+              offCopy.rsd_pct =
+                matchedGrp && matchedGrp.rsd_pct != null
+                  ? matchedGrp.rsd_pct
+                  : grpStats.rsd_pct != null
+                  ? grpStats.rsd_pct
+                  : Number(offCopy.rsd_pct || 0);
+              offCopy.replicate_count =
+                matchedGrp && matchedGrp.replicate_count != null
+                  ? matchedGrp.replicate_count
+                  : grpStats.count != null
+                  ? grpStats.count
+                  : (Array.isArray(offCopy.record_ids) && offCopy.record_ids.length) || 1;
+              offCopy.submitted_at =
+                offCopy.submitted_at ||
+                offCopy.flagged_at ||
+                offCopy.created_at ||
+                null;
+              offCopy.created_at =
+                offCopy.created_at || offCopy.submitted_at || null;
+              offCopy.lab_lineage_note =
+                offCopy.lab_lineage_note ||
+                (matchedGrp && matchedGrp.lab_lineage_note) ||
+                "";
+              offCopy.source_label = offCopy.source_label || "";
+              offCopy.decision_status =
+                offCopy.decision_status || offCopy.status || "in_review";
+              var inferredOffFlags = inferInteractiveFlagTypes(offCopy);
+              offCopy.flag_type =
+                (inferredOffFlags.indexOf("visualizer_flagged") !== -1
+                  ? "visualizer_flagged"
+                  : inferredOffFlags.indexOf("stat_snapshot_flagged") !== -1
+                  ? "stat_snapshot_flagged"
+                  : offCopy.flag_type) || "analyst_flagged";
+              offCopy.flag_types =
+                inferredOffFlags.length > 0
+                  ? inferredOffFlags
+                  : [offCopy.flag_type];
+              offCopy.scope_mode =
+                offCopy.triage_scope ||
+                offCopy.scope ||
+                offCopy.scope_mode ||
+                "group";
+              state.decisionsById[offId] = offCopy;
+              if (state.decisionsOrder.indexOf(offId) === -1) {
+                state.decisionsOrder.push(offId);
+              }
+            }
+          }
+        } catch (_e) {}
+      }
+
       function initDecisionsFromPayload() {
         var list = WORKBENCH_DATA.decisions || [];
         state.decisionsById = {};
@@ -2396,75 +2708,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           state.decisionsById[item.decision_id] = item;
           state.decisionsOrder.push(item.decision_id);
         }
-        try {
-          var pendingRaw =
-            typeof localStorage !== "undefined"
-              ? localStorage.getItem("biocirv_pending_qc_decisions")
-              : null;
-          var pendingArr = pendingRaw ? JSON.parse(pendingRaw) : [];
-          if (Array.isArray(pendingArr)) {
-            for (var p = 0; p < pendingArr.length; p++) {
-              var pItem = pendingArr[p];
-              if (!pItem) continue;
-              var pKey = pItem.replicate_group_key
-                ? normalizeReplicateGroupKey(pItem.replicate_group_key)
-                : "";
-              var matchedLocalId = null;
-              if (pKey) {
-                for (var k = 0; k < state.decisionsOrder.length; k++) {
-                  var cand = state.decisionsById[state.decisionsOrder[k]];
-                  if (
-                    cand &&
-                    cand.replicate_group_key &&
-                    normalizeReplicateGroupKey(cand.replicate_group_key) === pKey
-                  ) {
-                    matchedLocalId = cand.decision_id;
-                    break;
-                  }
-                }
-              }
-              if (matchedLocalId && state.decisionsById[matchedLocalId]) {
-                var locDec = state.decisionsById[matchedLocalId];
-                locDec.submitted_by_email =
-                  pItem.submitted_by_email || locDec.submitted_by_email;
-                locDec.submitted_at =
-                  pItem.submitted_at || pItem.created_at || locDec.submitted_at;
-                locDec.created_at =
-                  pItem.created_at || pItem.submitted_at || locDec.created_at;
-                locDec.lab_lineage_note =
-                  pItem.lab_lineage_note || locDec.lab_lineage_note || "";
-                locDec.source_label =
-                  pItem.source_label || locDec.source_label || "";
-                if (pItem.review_note) locDec.review_note = pItem.review_note;
-              } else {
-                var offId =
-                  pItem.decision_id && !state.decisionsById[pItem.decision_id]
-                    ? pItem.decision_id
-                    : "QC-LOCAL-" + String(p + 1).padStart(4, "0");
-                while (state.decisionsById[offId]) {
-                  offId = offId + "-LOC";
-                }
-                var offCopy = JSON.parse(JSON.stringify(pItem));
-                offCopy.decision_id = offId;
-                offCopy.submitted_at =
-                  offCopy.submitted_at || offCopy.created_at || null;
-                offCopy.created_at =
-                  offCopy.created_at || offCopy.submitted_at || null;
-                offCopy.lab_lineage_note = offCopy.lab_lineage_note || "";
-                offCopy.source_label = offCopy.source_label || "";
-                offCopy.flag_type = offCopy.flag_type || "analyst_flagged";
-                offCopy.flag_types =
-                  Array.isArray(offCopy.flag_types) && offCopy.flag_types.length
-                    ? offCopy.flag_types
-                    : [offCopy.flag_type];
-                state.decisionsById[offId] = offCopy;
-                if (state.decisionsOrder.indexOf(offId) === -1) {
-                  state.decisionsOrder.push(offId);
-                }
-              }
-            }
-          }
-        } catch (_e) {}
+        mergeLocalStorageDecisionsIntoState();
         if (state.decisionsOrder.length > 0 && !state.selectedDecisionId) {
           state.selectedDecisionId = state.decisionsOrder[0];
           var firstDec = state.decisionsById[state.selectedDecisionId];
@@ -2887,10 +3131,15 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           return assigned !== "" && assigned === myEmail && status !== "resolved";
         }
         if (tabName === "unassigned") {
-          return !assigned && status === "open";
+          return (
+            !assigned &&
+            (status === "open" || status === "in_review" || status === "needs_retest")
+          );
         }
         if (tabName === "all_open") {
-          return status === "open";
+          return (
+            status === "open" || status === "in_review" || status === "needs_retest"
+          );
         }
         if (tabName === "in_review") {
           return status === "in_review" || status === "needs_retest";
@@ -2916,7 +3165,20 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (f.parameter && dec.parameter_name !== f.parameter) return false;
         if (f.flagType) {
           var flags = dec.flag_types || dec.flags || (dec.flag_type ? [dec.flag_type] : []);
-          if (f.flagType === "rsd_gt_20") {
+          var inferredFlags = inferInteractiveFlagTypes(dec);
+          for (var ifi = 0; ifi < inferredFlags.length; ifi++) {
+            if (flags.indexOf(inferredFlags[ifi]) === -1) {
+              flags = flags.concat([inferredFlags[ifi]]);
+            }
+          }
+          if (f.flagType === "interactive_session") {
+            if (
+              flags.indexOf("visualizer_flagged") === -1 &&
+              flags.indexOf("stat_snapshot_flagged") === -1
+            ) {
+              return false;
+            }
+          } else if (f.flagType === "rsd_gt_20") {
             if (flags.indexOf("rsd_gt_20") === -1 && Number(dec.rsd_pct || 0) <= 20) {
               return false;
             }
@@ -3021,13 +3283,53 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             dec.field_sample,
             dec.parameter_name,
             dec.record_id,
-            (dec.record_ids || []).join(" ")
+            (dec.record_ids || []).join(" "),
+            dec.flag_type,
+            (dec.flag_types || []).join(" "),
+            dec.source_label,
+            dec.submitted_by_email,
+            dec.assigned_to_email,
+            dec.review_note,
+            dec.scope_mode
           ]
             .join(" ")
             .toLowerCase();
           if (hay.indexOf(q) === -1) return false;
         }
         return true;
+      }
+
+      function setQuickFlagFilter(flagTypeVal) {
+        mergeLocalStorageDecisionsIntoState();
+        var nextVal = flagTypeVal || "";
+        if (state.filters.flagType === nextVal && nextVal !== "") {
+          nextVal = "";
+        }
+        state.filters.flagType = nextVal;
+        if (
+          nextVal &&
+          (state.activeQueueTab === "pending_gsheet" ||
+            state.activeQueueTab === "synced_gsheet")
+        ) {
+          state.activeQueueTab = "all_open";
+          var tabBtns = document.querySelectorAll("#queue-tabs-container .queue-tab");
+          for (var ti = 0; ti < tabBtns.length; ti++) {
+            var tName = tabBtns[ti].getAttribute("data-queue-tab");
+            tabBtns[ti].classList.toggle("active", tName === "all_open");
+          }
+        }
+        var sel = document.getElementById("filter-flag-type");
+        if (sel) sel.value = nextVal;
+        renderQueueTable();
+        refreshQcStateFromApi();
+      }
+
+      function setQueueSortBy(sortVal) {
+        var nextSort = sortVal || "default";
+        state.filters.sortBy = nextSort;
+        var sel = document.getElementById("filter-sort-by");
+        if (sel) sel.value = nextSort;
+        renderQueueTable();
       }
 
       function setMinRsdFilter(val) {
@@ -3056,6 +3358,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         state.filters.qcStatus = "";
         state.filters.minRsd = 0;
         state.filters.assignedAnalyst = "";
+        state.filters.sortBy = "default";
         state.filters.search = "";
         var filterIds = [
           "filter-resource",
@@ -3070,11 +3373,15 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           var el = document.getElementById(filterIds[fi]);
           if (el) el.value = "";
         }
+        var sortEl = document.getElementById("filter-sort-by");
+        if (sortEl) sortEl.value = "default";
         setMinRsdFilter(0);
       }
 
       if (typeof window !== "undefined") {
         window.setMinRsdFilter = setMinRsdFilter;
+        window.setQuickFlagFilter = setQuickFlagFilter;
+        window.setQueueSortBy = setQueueSortBy;
         window.resetAllFilters = resetAllFilters;
         window.computeCanonicalMethodSignature = computeCanonicalMethodSignature;
       }
@@ -3115,6 +3422,15 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (el) el.textContent = String(val);
       }
 
+      function isInteractiveFlaggedDecision(dec) {
+        if (!dec) return false;
+        var flags = inferInteractiveFlagTypes(dec);
+        return (
+          flags.indexOf("visualizer_flagged") !== -1 ||
+          flags.indexOf("stat_snapshot_flagged") !== -1
+        );
+      }
+
       function getVisibleQueueDecisionIds() {
         var visibleIds = [];
         for (var i = 0; i < state.decisionsOrder.length; i++) {
@@ -3124,6 +3440,44 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           if (!matchesQueueTab(dec, state.activeQueueTab)) continue;
           if (!matchesFacetFilters(dec)) continue;
           visibleIds.push(id);
+        }
+        var sortBy = (state.filters && state.filters.sortBy) || "default";
+        if (sortBy && sortBy !== "default" && visibleIds.length > 1) {
+          visibleIds.sort(function (idA, idB) {
+            var a = state.decisionsById[idA] || {};
+            var b = state.decisionsById[idB] || {};
+            if (sortBy === "interactive_first") {
+              var aInt = isInteractiveFlaggedDecision(a) ? 1 : 0;
+              var bInt = isInteractiveFlaggedDecision(b) ? 1 : 0;
+              if (aInt !== bInt) return bInt - aInt;
+              var aTs = String(a.submitted_at || a.created_at || "");
+              var bTs = String(b.submitted_at || b.created_at || "");
+              if (aTs !== bTs) return bTs.localeCompare(aTs);
+            } else if (sortBy === "recent_first") {
+              var aTime = String(a.submitted_at || a.created_at || "");
+              var bTime = String(b.submitted_at || b.created_at || "");
+              if (aTime !== bTime) return bTime.localeCompare(aTime);
+            } else if (sortBy === "rsd_desc") {
+              var aRsd = Number(a.rsd_pct || 0);
+              var bRsd = Number(b.rsd_pct || 0);
+              if (aRsd !== bRsd) return bRsd - aRsd;
+            } else if (sortBy === "flagged_by") {
+              var aWho = String(a.submitted_by_email || "zzzz").toLowerCase();
+              var bWho = String(b.submitted_by_email || "zzzz").toLowerCase();
+              if (aWho !== bWho) return aWho.localeCompare(bWho);
+            } else if (sortBy === "scope") {
+              var aScope = String(a.scope_mode || a.triage_scope || "group");
+              var bScope = String(b.scope_mode || b.triage_scope || "group");
+              if (aScope !== bScope) return aScope.localeCompare(bScope);
+            } else if (sortBy === "resource_param") {
+              var aKey =
+                String(a.resource_name || "") + "::" + String(a.parameter_name || "");
+              var bKey =
+                String(b.resource_name || "") + "::" + String(b.parameter_name || "");
+              if (aKey !== bKey) return aKey.localeCompare(bKey);
+            }
+            return String(idA).localeCompare(String(idB));
+          });
         }
         return visibleIds;
       }
@@ -3418,9 +3772,34 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             (decItem.decision_id === state.selectedDecisionId ? " selected" : "");
           tr.setAttribute("data-decision-id", decItem.decision_id);
 
-          var flagsHtml = (decItem.flag_types || [decItem.flag_type])
+          var rowFlagList = inferInteractiveFlagTypes(decItem);
+          if (rowFlagList.length === 0) {
+            rowFlagList = decItem.flag_types || [decItem.flag_type || "analyst_flagged"];
+          }
+          var flagsHtml = rowFlagList
             .map(function (ft) {
-              return '<span class="flag-pill flag-' + ft + '">' + ft + "</span>";
+              var badgePrefix = "";
+              var badgeTitle = ft;
+              if (ft === "visualizer_flagged") {
+                badgePrefix = "🔬 ";
+                badgeTitle = "Flagged interactively in Page 3 Data Visualizer";
+              } else if (ft === "stat_snapshot_flagged") {
+                badgePrefix = "📊 ";
+                badgeTitle = "Flagged interactively in Page 2 Statistical Snapshot";
+              } else if (ft === "analyst_flagged") {
+                badgePrefix = "📋 ";
+                badgeTitle = "Legacy GSheet QC Fail / Analyst Flag";
+              }
+              return (
+                '<span class="flag-pill flag-' +
+                escapeHtml(ft) +
+                '" title="' +
+                escapeHtml(badgeTitle) +
+                '">' +
+                badgePrefix +
+                escapeHtml(ft) +
+                "</span>"
+              );
             })
             .join("");
           var showMeBtnHtml =
@@ -3429,6 +3808,36 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             '" data-group-key="' +
             escapeHtml(decItem.replicate_group_key || "") +
             '" title="Show flagged replicate group and outlier in slice context" style="margin-left:4px;padding:1px 6px;border-radius:5px;font-size:10px;font-weight:600;background:rgba(56,189,248,0.16);color:#38bdf8;border:1px solid rgba(56,189,248,0.45);cursor:pointer;" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ decisionId: this.getAttribute(&quot;data-decision-id&quot;), replicateGroupKey: this.getAttribute(&quot;data-group-key&quot;) }, this);">👁 Show me</button>';
+          var provSummaryHtml = "";
+          if (
+            isInteractiveFlaggedDecision(decItem) ||
+            decItem.source_label ||
+            (decItem.submitted_by_email &&
+              decItem.submitted_by_email !== "auto-qc-engine@biocirv.org")
+          ) {
+            var provParts = [];
+            if (decItem.source_label) {
+              provParts.push(escapeHtml(decItem.source_label));
+            }
+            if (
+              decItem.submitted_by_email &&
+              decItem.submitted_by_email !== "auto-qc-engine@biocirv.org"
+            ) {
+              provParts.push("by " + escapeHtml(decItem.submitted_by_email));
+            }
+            var scopeTag =
+              (decItem.scope_mode || decItem.triage_scope) === "single"
+                ? "Single Point"
+                : "Replicate Group";
+            provParts.push("scope: " + scopeTag);
+            if (decItem.submitted_at) {
+              provParts.push(escapeHtml(String(decItem.submitted_at).slice(0, 19).replace("T", " ")));
+            }
+            provSummaryHtml =
+              "<div class='queue-prov-meta' style='font-size:10.5px;color:#94a3b8;margin-top:3px;'>" +
+              provParts.join(" • ") +
+              "</div>";
+          }
 
           var statusClass = "status-" + (decItem.decision_status || "open");
           var stageLabel =
@@ -3467,6 +3876,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             "<td>" +
             flagsHtml +
             showMeBtnHtml +
+            provSummaryHtml +
             "</td>" +
             "<td>" +
             escapeHtml(decItem.flag_trigger_value || "") +
@@ -4393,12 +4803,16 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               if (targetId && state.decisionsById[targetId]) {
                 var merged = state.decisionsById[targetId];
                 merged.db_id = srvDbId !== null ? srvDbId : srv.id !== undefined ? srv.id : merged.db_id || null;
+                mergeFlagTypesIntoDecision(merged, srv);
                 merged.decision_status =
                   srv.decision_status || srv.status || merged.decision_status;
                 merged.status =
                   srv.status || srv.decision_status || merged.status || merged.decision_status;
                 merged.decision_action =
                   srv.decision_action || merged.decision_action;
+                if (srv.triage_scope || srv.scope || srv.scope_mode) {
+                  merged.scope_mode = srv.triage_scope || srv.scope || srv.scope_mode;
+                }
                 merged.new_qc_pass = srv.new_qc_pass || merged.new_qc_pass;
                 merged.assigned_to_email =
                   srv.assigned_to_email !== undefined
@@ -4530,23 +4944,39 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                   "";
                 hydrated.source_label = srv.source_label || "";
                 hydrated.sync_error = srv.sync_error || null;
-                hydrated.flag_type = srv.flag_type || "analyst_flagged";
+                var inferredHydratedFlags = inferInteractiveFlagTypes(hydrated);
+                hydrated.flag_type =
+                  (inferredHydratedFlags.indexOf("visualizer_flagged") !== -1
+                    ? "visualizer_flagged"
+                    : inferredHydratedFlags.indexOf("stat_snapshot_flagged") !== -1
+                    ? "stat_snapshot_flagged"
+                    : srv.flag_type) || "analyst_flagged";
                 hydrated.flag_types =
-                  Array.isArray(srv.flag_types) && srv.flag_types.length > 0
-                    ? srv.flag_types
+                  inferredHydratedFlags.length > 0
+                    ? inferredHydratedFlags
                     : [hydrated.flag_type];
+                hydrated.scope_mode =
+                  srv.triage_scope || srv.scope || srv.scope_mode || "group";
                 state.decisionsById[did] = hydrated;
                 if (state.decisionsOrder.indexOf(did) === -1) {
                   state.decisionsOrder.push(did);
                 }
               }
             });
-            parseDeepLinkQuery();
+            mergeLocalStorageDecisionsIntoState();
+            if (!state.deepLinkParsed) {
+              state.deepLinkParsed = true;
+              parseDeepLinkQuery();
+            }
             renderQueueTable();
             renderContextualDrawer();
           })
           .catch(function () {
-            parseDeepLinkQuery();
+            mergeLocalStorageDecisionsIntoState();
+            if (!state.deepLinkParsed) {
+              state.deepLinkParsed = true;
+              parseDeepLinkQuery();
+            }
             renderQueueTable();
             renderContextualDrawer();
           });
@@ -4647,6 +5077,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         dec.resolved_at = nowUtc;
         dec.synced_to_gsheet = false;
 
+        var stage1HttpError = null;
         fetch("/v1/qc/decisions", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -4654,7 +5085,23 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           body: JSON.stringify(requestBody)
         })
           .then(function (resp) {
-            return resp.ok ? resp.json() : null;
+            if (resp && resp.ok) {
+              return resp.json();
+            }
+            if (resp) {
+              return resp
+                .json()
+                .catch(function () {
+                  return null;
+                })
+                .then(function (errBody) {
+                  stage1HttpError =
+                    (errBody && (errBody.sync_error || errBody.detail || errBody.error)) ||
+                    "HTTP " + resp.status;
+                  return null;
+                });
+            }
+            return null;
           })
           .then(function (resData) {
             if (resData && resData.decision) {
@@ -4679,16 +5126,27 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 updated_at: nowUtc
               });
             }
-            showToast(
-              "Stage 1 PostgreSQL Decision Saved (" +
-                dec.decision_id +
-                ": " +
-                dec.old_qc_pass +
-                " → " +
-                newQcPass +
-                "). Pending Admin Stage 2 Google Sheets Sync.",
-              false
-            );
+            if (stage1HttpError) {
+              showToast(
+                "Stage 1 API warning for " +
+                  dec.decision_id +
+                  " (" +
+                  stage1HttpError +
+                  "). Saved in local session state.",
+                true
+              );
+            } else {
+              showToast(
+                "Stage 1 PostgreSQL Decision Saved (" +
+                  dec.decision_id +
+                  ": " +
+                  dec.old_qc_pass +
+                  " → " +
+                  newQcPass +
+                  "). Pending Admin Stage 2 Google Sheets Sync.",
+                false
+              );
+            }
             renderQueueTable();
             renderContextualDrawer();
           });
@@ -4776,6 +5234,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         }
         var nowUtc = new Date().toISOString();
 
+        var stage1EnsureErr = null;
         function ensureDbIdPromise() {
           if (typeof dec.db_id === "number" && Number.isInteger(dec.db_id)) {
             return Promise.resolve(dec.db_id);
@@ -4806,7 +5265,23 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             })
           })
             .then(function (resp) {
-              return resp.ok ? resp.json() : null;
+              if (resp && resp.ok) {
+                return resp.json();
+              }
+              if (resp) {
+                return resp
+                  .json()
+                  .catch(function () {
+                    return null;
+                  })
+                  .then(function (errData) {
+                    stage1EnsureErr =
+                      (errData && (errData.sync_error || errData.detail || errData.error)) ||
+                      "HTTP " + resp.status;
+                    return null;
+                  });
+              }
+              return null;
             })
             .then(function (resData) {
               if (resData && resData.decision && resData.decision.id != null) {
@@ -4815,7 +5290,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               }
               return null;
             })
-            .catch(function () {
+            .catch(function (err) {
+              stage1EnsureErr = (err && err.message) || null;
               return null;
             });
         }
@@ -4825,7 +5301,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             if (dbId === null || dbId === undefined) {
               return {
                 synced_to_gsheet: false,
-                sync_error: "Unable to resolve PostgreSQL decision ID prior to GSheet sync."
+                sync_error:
+                  "Unable to resolve PostgreSQL decision ID prior to GSheet sync" +
+                  (stage1EnsureErr ? ": " + stage1EnsureErr : ".")
               };
             }
             return fetch(
@@ -4872,12 +5350,19 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               );
             } else {
               dec.synced_to_gsheet = false;
+              var specificDetail =
+                syncRes &&
+                syncRes.detail &&
+                syncRes.detail !== "Internal server error"
+                  ? syncRes.detail
+                  : null;
               var errReason =
-                (syncRes && (syncRes.sync_error || syncRes.detail)) ||
+                (syncRes && (syncRes.sync_error || specificDetail || syncRes.error)) ||
                 (syncRes &&
                   syncRes.writeback &&
                   Array.isArray(syncRes.writeback.errors) &&
                   syncRes.writeback.errors.join("; ")) ||
+                (syncRes && syncRes.detail) ||
                 "Google Sheets row write-back did not confirm any updated cells.";
               dec.sync_error = errReason;
               showToast(
@@ -5039,6 +5524,18 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       function parseDeepLinkQuery() {
         if (typeof window === "undefined" || !window.location) return;
         var params = new URLSearchParams(window.location.search || "");
+        var qFlagType = params.get("flag_type") || params.get("flagType");
+        if (qFlagType) {
+          state.filters.flagType = qFlagType;
+          var selFlag = document.getElementById("filter-flag-type");
+          if (selFlag) selFlag.value = qFlagType;
+        }
+        var qSortBy = params.get("sort_by") || params.get("sortBy");
+        if (qSortBy) {
+          state.filters.sortBy = qSortBy;
+          var selSort = document.getElementById("filter-sort-by");
+          if (selSort) selSort.value = qSortBy;
+        }
         var qDomain = params.get("domain") || params.get("analysis_type") || params.get("type");
         if (qDomain && qDomain !== "all") {
           var normDom = normalizeDomainKey(qDomain);
@@ -5063,16 +5560,23 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (qDecisionId) {
           var paddedCandidate = "QC-" + String(qDecisionId).padStart(4, "0");
           var paddedDbCandidate = "QC-DB-" + String(qDecisionId).padStart(4, "0");
+          for (var kDb = 0; kDb < state.decisionsOrder.length; kDb++) {
+            var dDb = state.decisionsById[state.decisionsOrder[kDb]];
+            if (!dDb) continue;
+            if (
+              dDb.decision_id === qDecisionId ||
+              String(dDb.db_id || "") === String(qDecisionId) ||
+              String(dDb.id || "") === String(qDecisionId) ||
+              dDb.decision_id === paddedDbCandidate
+            ) {
+              selectDecision(dDb.decision_id, false);
+              return;
+            }
+          }
           for (var k = 0; k < state.decisionsOrder.length; k++) {
             var d = state.decisionsById[state.decisionsOrder[k]];
             if (!d) continue;
-            if (
-              d.decision_id === qDecisionId ||
-              String(d.db_id || "") === String(qDecisionId) ||
-              String(d.id || "") === String(qDecisionId) ||
-              d.decision_id === paddedCandidate ||
-              d.decision_id === paddedDbCandidate
-            ) {
+            if (d.decision_id === paddedCandidate) {
               selectDecision(d.decision_id, false);
               return;
             }
@@ -5130,6 +5634,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         bindFilter("filter-flag-type", "flagType");
         bindFilter("filter-qc-status", "qcStatus");
         bindFilter("filter-assigned-analyst", "assignedAnalyst");
+        bindFilter("filter-sort-by", "sortBy");
         bindFilter("filter-search", "search");
 
         var minRsdEl = document.getElementById("filter-min-rsd");
@@ -5226,6 +5731,23 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         var refreshBtn = document.getElementById("btn-refresh-qc-state");
         if (refreshBtn) {
           refreshBtn.addEventListener("click", refreshQcStateFromApi);
+        }
+
+        if (qcBroadcastChannel) {
+          qcBroadcastChannel.onmessage = function () {
+            mergeLocalStorageDecisionsIntoState();
+            refreshQcStateFromApi();
+          };
+        }
+        if (typeof window !== "undefined" && typeof window.addEventListener === "function") {
+          window.addEventListener("storage", function () {
+            mergeLocalStorageDecisionsIntoState();
+            renderQueueTable();
+          });
+          window.addEventListener("focus", function () {
+            mergeLocalStorageDecisionsIntoState();
+            refreshQcStateFromApi();
+          });
         }
 
         var roleToggleBtn = document.getElementById("btn-toggle-role-sim");
@@ -6178,6 +6700,12 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           openFlagShowMePopover: openFlagShowMePopover,
           closeFlagShowMePopover: closeFlagShowMePopover,
           setMinRsdFilter: setMinRsdFilter,
+          setQuickFlagFilter: setQuickFlagFilter,
+          setQueueSortBy: setQueueSortBy,
+          inferInteractiveFlagTypes: inferInteractiveFlagTypes,
+          mergeFlagTypesIntoDecision: mergeFlagTypesIntoDecision,
+          isInteractiveFlaggedDecision: isInteractiveFlaggedDecision,
+          initDecisionsFromPayload: initDecisionsFromPayload,
           resetAllFilters: resetAllFilters,
           syncSingleDecisionToGsheet: syncSingleDecisionToGsheet,
           syncBatchDecisionsToGsheet: syncBatchDecisionsToGsheet

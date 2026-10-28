@@ -113,6 +113,22 @@ def _col_to_letter(col_idx_1based: int) -> str:
     return result
 
 
+def _format_utc_iso(value: Any) -> str:
+    """Safely format a `datetime`, ISO string, or `None` into a UTC `YYYY-MM-DDTHH:MM:SSZ` string."""
+    if value is None or value == "":
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    if isinstance(value, datetime):
+        if value.tzinfo is None:
+            value = value.replace(tzinfo=timezone.utc)
+        else:
+            value = value.astimezone(timezone.utc)
+        return value.strftime("%Y-%m-%dT%H:%M:%SZ")
+    text = str(value).strip()
+    if not text:
+        return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return text
+
+
 def _sync_via_googleapiclient(
     creds_path: Path,
     sheet_name: str,
@@ -209,9 +225,7 @@ def _sync_via_googleapiclient(
         )
 
     target_rec_id = str(record_id or "").strip().lower()
-    ts_str = updated_at_iso or (resolved_at or datetime.now(timezone.utc)).astimezone(
-        timezone.utc
-    ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    ts_str = updated_at_iso or _format_utc_iso(resolved_at)
 
     data_updates: list[dict[str, Any]] = []
     for row_idx, row in enumerate(all_values[1:], start=2):
@@ -280,6 +294,10 @@ def _sync_via_gspread_if_configured(
 ) -> tuple[bool, str | None]:
     """Perform live Google Sheets writeback if `BIOSITING_GSHEET_CREDENTIALS_PATH` is configured."""
     creds_path_str = os.environ.get("BIOSITING_GSHEET_CREDENTIALS_PATH", "").strip()
+    if not creds_path_str and not os.environ.get("PYTEST_CURRENT_TEST"):
+        default_repo_creds = Path(__file__).resolve().parents[6] / "credentials.json"
+        if default_repo_creds.exists():
+            creds_path_str = str(default_repo_creds)
     if not creds_path_str:
         return (
             False,
@@ -353,9 +371,7 @@ def _sync_via_gspread_if_configured(
             )
 
         target_rec_id = str(record_id or "").strip().lower()
-        ts_str = updated_at_iso or (resolved_at or datetime.now(timezone.utc)).astimezone(
-            timezone.utc
-        ).strftime("%Y-%m-%dT%H:%M:%SZ")
+        ts_str = updated_at_iso or _format_utc_iso(resolved_at)
 
         updates: list[dict[str, Any]] = []
         for row_idx, row in enumerate(all_values[1:], start=2):
@@ -414,7 +430,7 @@ def writeback_decision_to_gsheet_row(
 
     qc_result = (decision.new_qc_pass or prior_row.get("qc_result") or "pass").strip().lower()
     effective_resolved_at = decision.resolved_at or decision.updated_at or datetime.now(timezone.utc)
-    updated_at_str = effective_resolved_at.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    updated_at_str = _format_utc_iso(effective_resolved_at)
     updated_note = format_qc_audit_note(
         existing_note=prior_row.get("note", ""),
         decision_id=decision.id or decision.record_id,

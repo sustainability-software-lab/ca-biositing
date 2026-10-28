@@ -360,6 +360,12 @@ class TrayWorkbenchItem(BaseModel):
     flag_type: str = Field(default="analyst_flagged")
     flag_trigger_value: str | None = Field(default=None)
     old_qc_pass: str | None = Field(default=None)
+    decision_status: str | None = Field(default=None)
+    decision_action: str | None = Field(default=None)
+    source_label: str | None = Field(default=None)
+    scope: str | None = Field(default=None)
+    triage_scope: str | None = Field(default=None)
+    rationale_chips: list[str] | str | None = Field(default=None)
     assigned_to_email: str | None = Field(default=None)
     review_note: str = Field(default="")
 
@@ -378,6 +384,12 @@ class TrayToWorkbenchRequest(BaseModel):
     flag_type: str = Field(default="analyst_flagged")
     flag_trigger_value: str | None = Field(default=None)
     old_qc_pass: str | None = Field(default=None)
+    decision_status: str | None = Field(default=None)
+    decision_action: str | None = Field(default=None)
+    source_label: str | None = Field(default=None)
+    scope: str | None = Field(default=None)
+    triage_scope: str | None = Field(default=None)
+    rationale_chips: list[str] | str | None = Field(default=None)
     assigned_to_email: str | None = Field(default=None)
     review_note: str = Field(default="")
 
@@ -683,6 +695,7 @@ def _query_filtered_decisions(
 
 
 @router.get("/decisions")
+@router.get("/findings")
 def list_qc_decisions(
     user: AnalystDep,
     session: SessionDep,
@@ -853,12 +866,13 @@ def create_or_update_stage1_decision(
 
 
 @router.post("/tray-to-workbench")
+@router.post("/findings")
 def send_selection_tray_to_workbench(
     payload: TrayToWorkbenchRequest,
     user: AnalystDep,
     session: SessionDep,
 ) -> dict[str, Any]:
-    """Create or update open `QcReviewDecision` rows from the Products 2 & 3 Selection & Export Tray."""
+    """Create or update open/in_review `QcReviewDecision` rows from the Products 2 & 3 Selection & Export Tray."""
     items_to_process: list[TrayWorkbenchItem] = []
     if payload.items:
         items_to_process.extend(payload.items)
@@ -875,6 +889,12 @@ def send_selection_tray_to_workbench(
                 flag_type=payload.flag_type,
                 flag_trigger_value=payload.flag_trigger_value,
                 old_qc_pass=payload.old_qc_pass,
+                decision_status=payload.decision_status,
+                decision_action=payload.decision_action,
+                source_label=payload.source_label,
+                scope=payload.scope,
+                triage_scope=payload.triage_scope,
+                rationale_chips=payload.rationale_chips,
                 assigned_to_email=payload.assigned_to_email,
                 review_note=payload.review_note,
             )
@@ -902,6 +922,38 @@ def send_selection_tray_to_workbench(
             else raw_group_key
         )
 
+        effective_flag_type = (
+            item.flag_type or payload.flag_type or "analyst_flagged"
+        ).strip()
+        effective_source = (item.source_label or payload.source_label or "").strip()
+        if effective_flag_type == "analyst_flagged" and effective_source:
+            src_lower = effective_source.lower()
+            if (
+                "page 3" in src_lower
+                or "visualizer" in src_lower
+                or "explorer" in src_lower
+            ):
+                effective_flag_type = "visualizer_flagged"
+            elif (
+                "page 2" in src_lower
+                or "statistical" in src_lower
+                or "outlier" in src_lower
+                or "snapshot" in src_lower
+            ):
+                effective_flag_type = "stat_snapshot_flagged"
+
+        effective_status = (
+            item.decision_status or payload.decision_status or "open"
+        ).strip().lower()
+        effective_action = (
+            item.decision_action or payload.decision_action or "flag_for_review"
+        ).strip()
+        effective_rationale = (
+            item.rationale_chips
+            if item.rationale_chips is not None
+            else payload.rationale_chips
+        )
+
         for rid in rids:
             decision, _ = record_stage1_decision(
                 session=session,
@@ -913,13 +965,14 @@ def send_selection_tray_to_workbench(
                 resource_name=item.resource_name or payload.resource_name,
                 analysis_type=item.analysis_type or payload.analysis_type,
                 parameter_name=item.parameter_name or payload.parameter_name,
-                flag_type=item.flag_type or payload.flag_type or "analyst_flagged",
+                flag_type=effective_flag_type,
                 flag_trigger_value=item.flag_trigger_value
                 or payload.flag_trigger_value,
                 old_qc_pass=item.old_qc_pass or payload.old_qc_pass,
                 new_qc_pass=None,
-                decision_action="flag_for_review",
-                decision_status="open",
+                decision_action=effective_action,
+                decision_status=effective_status,
+                rationale_chips=effective_rationale,
                 review_note=item.review_note
                 or payload.review_note
                 or "Flagged from Selection & Export Tray",
@@ -1262,12 +1315,24 @@ def sync_decision_to_gsheet_endpoint(
     custom_writer: CustomWriterDep,
 ) -> dict[str, Any]:
     """Admin-only Stage 2 endpoint: sync a single resolved QC decision to Google Sheets."""
-    return sync_single_decision_to_gsheet(
-        session=session,
-        decision_id=decision_id,
-        admin_email=admin.email,
-        custom_writer=custom_writer,
-    )
+    try:
+        return sync_single_decision_to_gsheet(
+            session=session,
+            decision_id=decision_id,
+            admin_email=admin.email,
+            custom_writer=custom_writer,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        err_msg = f"Stage 2 Google Sheets write-back error ({type(exc).__name__}): {exc}"
+        return {
+            "status": "error",
+            "decision_id": decision_id,
+            "synced_to_gsheet": False,
+            "sync_error": err_msg,
+            "detail": err_msg,
+        }
 
 
 @router.post("/decisions/sync-gsheet-batch")
@@ -1279,12 +1344,26 @@ def sync_pending_decisions_batch_endpoint(
 ) -> dict[str, Any]:
     """Admin-only Stage 2 endpoint: batch-sync pending resolved QC decisions to Google Sheets."""
     decision_ids = payload.decision_ids if payload is not None else None
-    return sync_pending_decisions_batch_to_gsheet(
-        session=session,
-        admin_email=admin.email,
-        decision_ids=decision_ids,
-        custom_writer=custom_writer,
-    )
+    try:
+        return sync_pending_decisions_batch_to_gsheet(
+            session=session,
+            admin_email=admin.email,
+            decision_ids=decision_ids,
+            custom_writer=custom_writer,
+        )
+    except HTTPException:
+        raise
+    except Exception as exc:
+        err_msg = f"Stage 2 batch Google Sheets write-back error ({type(exc).__name__}): {exc}"
+        return {
+            "status": "error",
+            "synced_count": 0,
+            "failed_count": len(decision_ids) if decision_ids else 1,
+            "synced_to_gsheet": False,
+            "sync_error": err_msg,
+            "detail": err_msg,
+            "results": [],
+        }
 
 
 class GitHubIssueRequest(BaseModel):
