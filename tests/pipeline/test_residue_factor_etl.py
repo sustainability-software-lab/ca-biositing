@@ -169,11 +169,17 @@ class TestLoadResidueFactor:
         result = load_residue_factors.fn(None)
         assert result == {"inserted": 0, "updated": 0, "failed": 0}
 
-    def test_load_skips_null_resource_id(self):
+    @patch("ca_biositing.pipeline.etl.load.resource_information.residue_factor.Session")
+    @patch("ca_biositing.pipeline.etl.load.resource_information.residue_factor.get_engine")
+    def test_load_skips_null_resource_id(self, mock_get_engine, mock_session_cls):
         """Test that load skips records with NULL resource_id"""
         from ca_biositing.pipeline.etl.load.resource_information.residue_factor import (
             load_residue_factors,
         )
+
+        mock_session = MagicMock()
+        mock_session.execute.return_value.first.return_value = None
+        mock_session_cls.return_value.__enter__.return_value = mock_session
 
         df = pd.DataFrame({
             "resource_id": [1, np.nan, 3],
@@ -189,12 +195,19 @@ class TestLoadResidueFactor:
         # (exact counts depend on database mock, but should return dict with 3 keys)
         assert isinstance(result, dict)
         assert set(result.keys()) == {"inserted", "updated", "failed"}
+        assert result == {"inserted": 2, "updated": 0, "failed": 0}
 
-    def test_load_returns_summary_dict(self):
+    @patch("ca_biositing.pipeline.etl.load.resource_information.residue_factor.Session")
+    @patch("ca_biositing.pipeline.etl.load.resource_information.residue_factor.get_engine")
+    def test_load_returns_summary_dict(self, mock_get_engine, mock_session_cls):
         """Test that load returns proper summary dictionary"""
         from ca_biositing.pipeline.etl.load.resource_information.residue_factor import (
             load_residue_factors,
         )
+
+        mock_session = MagicMock()
+        mock_session.execute.return_value.first.return_value = None
+        mock_session_cls.return_value.__enter__.return_value = mock_session
 
         df = pd.DataFrame({
             "resource_id": [1],

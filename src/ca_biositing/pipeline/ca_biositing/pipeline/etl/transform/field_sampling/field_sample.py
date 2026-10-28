@@ -52,7 +52,6 @@ def transform_field_sample(
         Unit,
         Dataset,
         SoilType,
-        LocationAddress,
         PrimaryAgProduct,
         PreparedSample,
         Method,
@@ -186,60 +185,135 @@ def transform_field_sample(
         'processing_method': (Method, 'name'),  # New: methods column
         'primary_ag_product': (PrimaryAgProduct, 'name'),
         'dataset': (Dataset, 'name'),
-        'fieldstorage_location': (LocationAddress, 'address_line1'),  # Collection-site storage
-        'prod_location': (LocationAddress, 'address_line1'),  # Producer location -> field_sample_storage_location
     }
 
     logger.info("Normalizing joined data (swapping names for IDs)...")
 
-    # Manual normalization for Place (County) to avoid NotNullViolation on geoid
-    # and provide a resilient lookup that defaults to state-level GEOID.
-    from ca_biositing.pipeline.utils.geo_utils import get_geoid
+    from ca_biositing.pipeline.utils import engine as engine_mod
+    from ca_biositing.pipeline.utils.geo_utils import (
+        ensure_anonymous_county_addresses,
+        resolve_county_geoid,
+    )
     from sqlmodel import Session, select
-    from ca_biositing.pipeline.utils.engine import engine
 
-    with Session(engine) as session:
+    def _is_non_empty(val: object) -> bool:
+        if val is None:
+            return False
+        try:
+            if pd.isna(val):
+                return False
+        except Exception:
+            pass
+        s = str(val).strip()
+        return bool(s) and s.lower() not in {"nan", "none", "null", "n/a", "na", "-", "<na>"}
+
+    with Session(engine_mod.get_engine()) as session:
         places = session.exec(select(Place.geoid, Place.county_name)).all()
-        county_to_geoid = {p.county_name.lower(): p.geoid for p in places if p.county_name}
+        county_to_geoid = {
+            str(p.county_name).strip().lower(): str(p.geoid).strip()
+            for p in places
+            if getattr(p, "county_name", None) and getattr(p, "geoid", None)
+        }
 
-    # Handle county mapping from sampling location (02_Sample_Desc)
-    if 'sampling_city' in joined_df.columns:
-        joined_df['county'] = joined_df['sampling_city'].fillna('')
-        joined_df['county_id'] = joined_df['county'].apply(lambda x: get_geoid(x, county_to_geoid))
+    prod_cols = (
+        "prod_county",
+        "prod_latlong",
+        "prod_zip",
+        "prod_city",
+        "prod_street",
+        "prod_location",
+    )
+    storage_cols = (
+        "fieldstorage_location",
+        "field_storage_location_qty",
+        "field_storage_location",
+    )
+
+    sampling_geoids: list[str] = []
+    prod_geoids: list[str | None] = []
+    field_storage_geoids: list[str | None] = []
+
+    for _, row in joined_df.iterrows():
+        has_prod_loc = any(_is_non_empty(row.get(c)) for c in prod_cols)
+        if has_prod_loc:
+            p_geoid: str | None = resolve_county_geoid(
+                county=row.get("prod_county"),
+                latlong=row.get("prod_latlong"),
+                zip_code=row.get("prod_zip"),
+                city=row.get("prod_city"),
+                street=row.get("prod_street"),
+                location_desc=row.get("prod_location"),
+                county_to_geoid=county_to_geoid,
+            )
+        else:
+            p_geoid = None
+
+        s_geoid = resolve_county_geoid(
+            county=row.get("sampling_county"),
+            latlong=row.get("sampling_latlong"),
+            zip_code=row.get("sampling_zip"),
+            city=row.get("sampling_city"),
+            street=row.get("sampling_street"),
+            location_desc=row.get("sampling_location"),
+            county_to_geoid=county_to_geoid,
+        )
+        if s_geoid == "06000" and p_geoid not in (None, "06000"):
+            s_geoid = p_geoid
+
+        storage_val = next(
+            (row.get(c) for c in storage_cols if _is_non_empty(row.get(c))),
+            None,
+        )
+        if storage_val is not None:
+            fs_geoid: str | None = resolve_county_geoid(
+                county=storage_val,
+                city=storage_val,
+                location_desc=storage_val,
+                county_to_geoid=county_to_geoid,
+            )
+            if fs_geoid == "06000":
+                fs_geoid = s_geoid if s_geoid != "06000" else (p_geoid or "06000")
+        else:
+            fs_geoid = None
+
+        sampling_geoids.append(s_geoid)
+        prod_geoids.append(p_geoid)
+        field_storage_geoids.append(fs_geoid)
+
+    joined_df["sampling_geoid"] = sampling_geoids
+    joined_df["prod_geoid"] = prod_geoids
+    joined_df["field_storage_geoid"] = field_storage_geoids
 
     normalized_dfs = normalize_dataframes(joined_df, normalize_columns)
     normalized_df = normalized_dfs[0]
 
-    # 6b. Bridge County (Place) to LocationAddress
-    # Create generic LocationAddress for each County
-    if 'county_id' in normalized_df.columns:
-        logger.info("Bridging County (Place) to LocationAddress...")
-        from sqlmodel import Session, select
-        from ca_biositing.pipeline.utils.engine import engine
+    # 6b. Bridge County (Place) to canonical anonymous LocationAddress
+    logger.info("Bridging resolved counties to canonical anonymous LocationAddress records...")
+    all_resolved_geoids = {
+        str(g).strip()
+        for col in ("sampling_geoid", "prod_geoid", "field_storage_geoid")
+        if col in normalized_df.columns
+        for g in normalized_df[col].dropna().unique()
+        if _is_non_empty(g)
+    }
 
-        with Session(engine) as session:
-            county_ids = normalized_df['county_id'].dropna().unique()
-            place_to_address_map = {}
+    with Session(engine_mod.get_engine()) as session:
+        place_to_address_map = ensure_anonymous_county_addresses(
+            session,
+            all_resolved_geoids,
+            etl_run_id=etl_run_id,
+            lineage_group_id=lineage_group_id,
+        )
+        session.commit()
 
-            for geoid in county_ids:
-                stmt = select(LocationAddress).where(
-                    LocationAddress.geography_id == geoid,
-                    LocationAddress.address_line1 == None
-                )
-                address = session.exec(stmt).first()
-
-                if not address:
-                    logger.info(f"Creating new generic LocationAddress for county geoid: {geoid}")
-                    address = LocationAddress(geography_id=geoid, address_line1=None)
-                    session.add(address)
-                    session.flush()
-
-                place_to_address_map[geoid] = address.id
-
-            session.commit()
-
-            normalized_df['sampling_location_id'] = normalized_df['county_id'].map(place_to_address_map)
-            logger.info(f"Mapped {len(place_to_address_map)} counties to LocationAddresses")
+    normalized_df["sampling_location_id"] = normalized_df["sampling_geoid"].map(place_to_address_map)
+    normalized_df["field_sample_storage_location_id"] = normalized_df["prod_geoid"].map(
+        place_to_address_map
+    )
+    normalized_df["field_storage_location_id"] = normalized_df["field_storage_geoid"].map(
+        place_to_address_map
+    )
+    logger.info(f"Mapped {len(place_to_address_map)} counties to anonymous LocationAddresses")
 
     # 7. Coalesce Collection Timestamp
     # Use fv_date_time (from 01_Sample_IDs) as primary, fallback to sample_ts (from 02_Sample_Desc)
@@ -267,8 +341,8 @@ def transform_field_sample(
         'field_storage_method_id': 'field_storage_method_id',
         'storage_dur_value': 'field_storage_duration_value',
         'storage_dur_units_id': 'field_storage_duration_unit_id',
-        'fieldstorage_location_id': 'field_storage_location_id',  # Collection-site storage
-        'prod_location_id': 'field_sample_storage_location_id',  # Lab/facility storage
+        'field_storage_location_id': 'field_storage_location_id',  # Collection-site storage (anonymous county FK)
+        'field_sample_storage_location_id': 'field_sample_storage_location_id',  # Producer/facility storage (anonymous county FK)
         'collection_timestamp_final': 'collection_timestamp',
         'sample_notes': 'note',
         'processing_method_id': 'methods_id',  # New methods column
@@ -277,12 +351,6 @@ def transform_field_sample(
         'particle_w_cm': 'particle_width_cm',
         'particle_h_cm': 'particle_height_cm',
     }
-
-    # Preserve raw location info for linking
-    location_link_cols = ['sampling_location', 'sampling_street', 'sampling_city', 'sampling_zip']
-    for col in location_link_cols:
-        if col in normalized_df.columns:
-            rename_map[col] = col
 
     # Filter rename_map to only include columns that exist
     available_rename = {k: v for k, v in rename_map.items() if k in normalized_df.columns}
@@ -307,7 +375,7 @@ def transform_field_sample(
         return final_df
 
     except Exception as e:
-        logger.error(f"Error during FieldSample  transform: {e}")
         import traceback
-        logger.error(traceback.format_exc())
+        logger.error(f"Error during FieldSample transform: {type(e).__name__}")
+        logger.error("".join(traceback.format_tb(e.__traceback__)))
         return pd.DataFrame()

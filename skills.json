@@ -3,6 +3,7 @@
     {
       "registry": "local",
       "skills": [
+        "ca-county-map",
         "clean-branches",
         "commit",
         "create-issue",
