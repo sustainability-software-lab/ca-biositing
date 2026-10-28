@@ -280,7 +280,11 @@ def prepare_dashboard_payload(
         payload["rows"] = [r for r in payload["rows"] if _row_matches_param(r)]
 
     if target_method_set:
-        method_cols = [c for c in ("prep_method", "pt_method", "eh_method", "strain", "experiment") if c in str_cols]
+        method_cols = [
+            c
+            for c in ("prep_method", "pt_method", "eh_method", "strain", "experiment", "vessel")
+            if c in str_cols
+        ]
         method_col_specs = [(str_cols.index(c) + 1, dicts.get(c, [])) for c in method_cols]
 
         def _row_matches_method(row: list[Any]) -> bool:
@@ -481,6 +485,26 @@ def prepare_dashboard_payload(
         payload["rows"] = remapped_rows
 
     slice_qc_list = sorted(allowed_qc - {""}) if allowed_qc is not None else ["all"]
+
+    fs_prov_by_name: dict[str, str] = {}
+    for fs in payload.get("field_samples", []):
+        p_code = str(fs.get("provider_code") or fs.get("provider") or "unknown").strip() or "unknown"
+        fs["provider"] = p_code
+        fs["provider_code"] = p_code
+        fn = str(fs.get("name") or "").strip()
+        if fn:
+            fs_prov_by_name[fn] = p_code
+
+    for ps in payload.get("prepared_samples", []):
+        parent_fn = str(ps.get("field_sample_name") or ps.get("field_sample") or "").strip()
+        p_code = str(
+            ps.get("provider_code")
+            or ps.get("provider")
+            or fs_prov_by_name.get(parent_fn)
+            or "unknown"
+        ).strip() or "unknown"
+        ps["provider"] = p_code
+        ps["provider_code"] = p_code
 
     return {
         "generated_utc": payload.get("generated_utc", ""),
@@ -1003,6 +1027,7 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
       <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:9px;height:9px;border-radius:9999px;background:rgba(148,163,184,0.45);border:1.5px solid #64748b;"></span>⚪ Peer Slice Points</span>
       <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:10px;height:10px;border-radius:9999px;background:rgba(59,130,246,0.22);border:2px solid #2563eb;"></span>🔵 Target Replicate Group</span>
       <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:11px;height:11px;border-radius:9999px;background:rgba(239,68,68,0.28);border:2.5px solid #dc2626;"></span>🔴 Flagged Outlier</span>
+      <span class="inline-flex items-center gap-1"><span class="font-bold text-red-500">◆✕</span> qc_fail (Demarcated)</span>
     </div>
     <div class="flex items-center justify-between gap-2 border-t border-[var(--border)] pt-2 text-[11px]">
       <span id="show-me-stats-summary" class="font-mono text-[10px] text-[var(--muted-foreground)]"></span>
@@ -1242,7 +1267,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       const fsColIdx = strCols.indexOf("field_sample") + 1;
       const paramColIdx = strCols.indexOf("parameter") + 1;
       const unitColIdx = strCols.indexOf("unit") + 1;
-      const methodColIndices = ["prep_method", "pt_method", "eh_method", "strain", "experiment"]
+      const methodColIndices = ["prep_method", "pt_method", "eh_method", "strain", "vessel", "experiment"]
         .map(c => ({ name: c, idx: strCols.indexOf(c) + 1, dict: origDicts[c] || [] }))
         .filter(spec => spec.idx > 0);
 
@@ -2337,6 +2362,16 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
     const LOCAL_DECISIONS_STORAGE_KEY = "biocirv_qc_decisions_ledger_v1";
     const PAGE2_DECISIONS_STORAGE_KEY = "biocirv_qc_decisions_v1";
 
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+    window.escapeHtml = escapeHtml;
+
     const DOMAIN_DEFS = [
       { key: "proximate", label: "Proximate", analysisType: "Proximate Analysis" },
       { key: "calorimetry", label: "Calorimetry", analysisType: "Calorimetry" },
@@ -2454,8 +2489,20 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         }
         return base;
       }
+      if (domSlug === "gasification") {
+        const v = String(obj.vessel || obj.reactor_type || prep || "").trim();
+        if (v && !["none", "n/a", "unassigned"].includes(v.toLowerCase())) {
+          return v.toLowerCase().startsWith("reactor:") ? v : `Reactor: ${v}`;
+        }
+        return "Reactor: Unassigned";
+      }
       return prep || "unassigned";
     }
+    function computeCanonicalMethodSignature(rowOrGroup) {
+      return groupContextLabel(rowOrGroup);
+    }
+    window.groupContextLabel = groupContextLabel;
+    window.computeCanonicalMethodSignature = computeCanonicalMethodSignature;
 
     function normalizeReplicateGroupKey(
       rawKeyOrResource,
@@ -2680,26 +2727,53 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       };
     }
 
+    const PLACEHOLDER_ANALYST_EMAILS = [
+      "unassigned",
+      "none",
+      "null",
+      "anonymous",
+      "guest",
+      "local.analyst@lbl.gov",
+      "analyst@lbl.gov",
+      "explorer interactive reviewer",
+      "local analyst"
+    ];
+
+    function isPlaceholderAnalystEmail(raw) {
+      const s = String(raw || "").trim().toLowerCase();
+      return !s || PLACEHOLDER_ANALYST_EMAILS.includes(s);
+    }
+
     function getDefaultAssigneeEmail(existingEmail) {
       const cleanExisting = String(existingEmail || "").trim();
-      if (
-        cleanExisting &&
-        !["unassigned", "none", "null", "anonymous", "guest"].includes(cleanExisting.toLowerCase())
-      ) {
+      if (!isPlaceholderAnalystEmail(cleanExisting)) {
         return cleanExisting;
+      }
+      if (typeof window !== "undefined" && !isPlaceholderAnalystEmail(window.__BIOCIRV_SESSION_ANALYST_EMAIL__)) {
+        return String(window.__BIOCIRV_SESSION_ANALYST_EMAIL__).trim();
       }
       try {
         if (typeof BioCirvQcClient !== "undefined" && typeof BioCirvQcClient.getAnalystIdentity === "function") {
           const id = BioCirvQcClient.getAnalystIdentity();
           const email = String((id && id.email) || "").trim();
-          if (email && !["unassigned", "none", "null", "anonymous", "guest"].includes(email.toLowerCase())) {
+          if (!isPlaceholderAnalystEmail(email)) {
             return email;
           }
         }
       } catch (_e) {}
       try {
+        const rawId = localStorage.getItem(ANALYST_IDENTITY_STORAGE_KEY);
+        if (rawId) {
+          const parsedId = JSON.parse(rawId);
+          const storedIdEmail = String((parsedId && parsedId.email) || "").trim();
+          if (!isPlaceholderAnalystEmail(storedIdEmail)) {
+            return storedIdEmail;
+          }
+        }
+      } catch (_e) {}
+      try {
         const stored = String(localStorage.getItem("biocirv_analyst_email") || "").trim();
-        if (stored && !["unassigned", "none", "null", "anonymous", "guest"].includes(stored.toLowerCase())) {
+        if (!isPlaceholderAnalystEmail(stored)) {
           return stored;
         }
       } catch (_e) {}
@@ -2708,30 +2782,79 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
 
     window.canonicalDomainSlug = canonicalDomainSlug;
     window.groupContextLabel = groupContextLabel;
+    window.computeCanonicalMethodSignature = computeCanonicalMethodSignature;
     window.normalizeReplicateGroupKey = normalizeReplicateGroupKey;
     window.matchesReplicateGroupKey = matchesReplicateGroupKey;
     window.computeMedianNumeric = computeMedianNumeric;
     window.getOutlierSummary = getOutlierSummary;
+    window.isPlaceholderAnalystEmail = isPlaceholderAnalystEmail;
     window.getDefaultAssigneeEmail = getDefaultAssigneeEmail;
 
     const BioCirvQcClient = {
       canonicalDomainSlug,
       groupContextLabel,
+      computeCanonicalMethodSignature,
       normalizeReplicateGroupKey,
       matchesReplicateGroupKey,
       getOutlierSummary,
+      isPlaceholderAnalystEmail,
       getDefaultAssigneeEmail,
       _pendingSignInCallback: null,
 
       hasConfirmedIdentity() {
+        if (typeof window !== "undefined" && !isPlaceholderAnalystEmail(window.__BIOCIRV_SESSION_ANALYST_EMAIL__)) {
+          return true;
+        }
         try {
           const raw = localStorage.getItem(ANALYST_IDENTITY_STORAGE_KEY);
           if (!raw) return false;
           const parsed = JSON.parse(raw);
-          return Boolean(parsed && parsed.email);
+          return Boolean(parsed && !isPlaceholderAnalystEmail(parsed.email));
         } catch (_e) {
           return false;
         }
+      },
+
+      async hydrateSessionIdentity() {
+        const id = this.getAnalystIdentity();
+        const urls = [];
+        if (typeof window !== "undefined" && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
+          urls.push("/v1/qc/auth/me");
+        }
+        if (id && id.apiBase) {
+          urls.push(`${id.apiBase}/v1/qc/auth/me`);
+        }
+        for (const url of urls) {
+          try {
+            const resp = await fetch(url, { credentials: "include", headers: this.getHeaders() });
+            if (resp.ok) {
+              const data = await resp.json();
+              const sessEmail = String(
+                data.email || (data.analyst && data.analyst.email) || (data.current_analyst && data.current_analyst.email) || ""
+              ).trim().toLowerCase();
+              const sessName = String(
+                data.name || (data.analyst && data.analyst.name) || (data.current_analyst && data.current_analyst.name) || sessEmail
+              ).trim();
+              if (!isPlaceholderAnalystEmail(sessEmail)) {
+                window.__BIOCIRV_SESSION_ANALYST_EMAIL__ = sessEmail;
+                try {
+                  localStorage.setItem("biocirv_analyst_email", sessEmail);
+                } catch (_e) {}
+                if (isPlaceholderAnalystEmail(id.email)) {
+                  this.setAnalystIdentity({ email: sessEmail, name: sessName || sessEmail, apiBase: id.apiBase });
+                }
+                ["finding-modal-assigned-email", "click-popover-assignee", "pin-assignee"].forEach(domId => {
+                  const el = document.getElementById(domId);
+                  if (el && isPlaceholderAnalystEmail(el.value)) {
+                    el.value = sessEmail;
+                  }
+                });
+                return sessEmail;
+              }
+            }
+          } catch (_e) {}
+        }
+        return "";
       },
 
       ensureSignedIn(onConfirmedCallback) {
@@ -2758,21 +2881,36 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       },
 
       getAnalystIdentity() {
+        const sessionEmail = (typeof window !== "undefined" && !isPlaceholderAnalystEmail(window.__BIOCIRV_SESSION_ANALYST_EMAIL__))
+          ? String(window.__BIOCIRV_SESSION_ANALYST_EMAIL__).trim().toLowerCase()
+          : "";
         try {
           const raw = localStorage.getItem(ANALYST_IDENTITY_STORAGE_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
+            const storedEmail = String(parsed.email || "").trim().toLowerCase();
+            const effectiveEmail = (!isPlaceholderAnalystEmail(storedEmail))
+              ? storedEmail
+              : (sessionEmail || "");
             return {
-              email: (parsed.email || "local.analyst@lbl.gov").trim().toLowerCase(),
-              name: (parsed.name || "Local Analyst").trim(),
+              email: effectiveEmail,
+              name: (parsed.name || (sessionEmail ? sessionEmail : "")).trim(),
               idToken: parsed.idToken || "",
               apiBase: (parsed.apiBase || window.BIOCIRV_API_BASE || "http://localhost:8000").replace(/\\/+$/, "")
             };
           }
         } catch (_e) {}
+        const storedLegacyEmail = (() => {
+          try {
+            const s = String(localStorage.getItem("biocirv_analyst_email") || "").trim().toLowerCase();
+            return !isPlaceholderAnalystEmail(s) ? s : "";
+          } catch (_e) {
+            return "";
+          }
+        })();
         return {
-          email: "local.analyst@lbl.gov",
-          name: "Local Analyst",
+          email: sessionEmail || storedLegacyEmail || "",
+          name: sessionEmail || storedLegacyEmail || "",
           idToken: "",
           apiBase: (window.BIOCIRV_API_BASE || "http://localhost:8000").replace(/\\/+$/, "")
         };
@@ -2785,8 +2923,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       setAnalystIdentity(identity) {
         const current = this.getAnalystIdentity();
         const next = {
-          email: ((identity && identity.email) || current.email || "local.analyst@lbl.gov").trim().toLowerCase(),
-          name: ((identity && identity.name) || current.name || "Local Analyst").trim(),
+          email: ((identity && identity.email) || current.email || "").trim().toLowerCase(),
+          name: ((identity && identity.name) || current.name || "").trim(),
           idToken: (identity && identity.idToken !== undefined) ? identity.idToken : current.idToken,
           apiBase: ((identity && identity.apiBase) || current.apiBase || "http://localhost:8000").replace(/\\/+$/, ""),
           confirmedAt: new Date().toISOString()
@@ -2885,10 +3023,14 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             decision: mappedDecision,
             status: item.status || (item.decision_status === "resolved" || item.review_status === "resolved" ? "approved" : (item.decision_status || item.review_status || existing.status || "open")),
             note: item.review_note || item.rationale_note || item.audit_note || item.note || existing.note || "",
+            lab_lineage_note: item.lab_lineage_note || item.sample_note || item.prep_notes || existing.lab_lineage_note || "",
+            source_label: item.source_label || existing.source_label || "",
+            submitted_at: item.submitted_at || item.created_at || existing.submitted_at || new Date().toISOString(),
+            submitted_by_email: item.submitted_by_email || item.analyst_email || existing.submitted_by_email || "",
             assigned_to_email: nextAssignee,
             reviewer_email: item.resolved_by_email || item.reviewer_email || item.analyst_email || existing.reviewer_email || "",
             synced_to_gsheet: Boolean(item.synced_to_gsheet || existing.synced_to_gsheet),
-            updated_at: (item.updated_at || item.created_at || new Date().toISOString()).slice(0, 19).replace("T", " ")
+            updated_at: (item.updated_at || item.submitted_at || item.created_at || new Date().toISOString()).slice(0, 19).replace("T", " ")
           };
           localStorage.setItem(PAGE2_DECISIONS_STORAGE_KEY, JSON.stringify(store));
         } catch (_e) {}
@@ -3025,6 +3167,18 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           ? payload.rationale_chips
           : (Array.isArray(payload.rationale_tags) ? payload.rationale_tags : []);
         const noteText = payload.review_note || payload.audit_note || payload.note || "";
+        const submittedAtIso = payload.submitted_at || payload.created_at || new Date().toISOString();
+        const rawCandidateSubmitter = String(
+          payload.submitted_by_email || payload.analyst_email || getDefaultAssigneeEmail() || (id && !isPlaceholderAnalystEmail(id.email) ? id.email : "") || ""
+        ).trim().toLowerCase();
+        const submitterEmail = isPlaceholderAnalystEmail(rawCandidateSubmitter) ? "" : rawCandidateSubmitter;
+        const labLineageNote = String(
+          payload.lab_lineage_note || payload.sample_note || payload.prep_notes || ""
+        ).trim();
+        const defaultSourceLabel = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
+          ? "Page 3 Explorer"
+          : "Page 1/2 Visualizer";
+        const sourceLabelText = String(payload.source_label || defaultSourceLabel).trim();
 
         const body = {
           id: payload.api_decision_id || payload.id || null,
@@ -3053,6 +3207,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           rationale_tags: rationaleList,
           review_note: noteText,
           audit_note: noteText,
+          lab_lineage_note: labLineageNote || null,
+          source_label: sourceLabelText || null,
+          submitted_at: submittedAtIso,
+          submitted_by_email: submitterEmail || null,
           assigned_to_email: payload.assigned_to_email ? payload.assigned_to_email.trim().toLowerCase() : null,
           gsheet_writeback_requested: Boolean(payload.gsheet_writeback_requested)
         };
@@ -3076,10 +3234,12 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const localEntry = {
           id: Date.now() + Math.floor(Math.random() * 1000),
           ...body,
-          analyst_email: id.email,
-          reviewer_email: id.email,
+          analyst_email: submitterEmail || null,
+          submitted_by_email: submitterEmail || null,
+          reviewer_email: submitterEmail || null,
           sync_status: "local_only",
-          created_at: new Date().toISOString(),
+          submitted_at: submittedAtIso,
+          created_at: submittedAtIso,
           updated_at: new Date().toISOString()
         };
         this.upsertLocalDecision(localEntry);
@@ -3157,7 +3317,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             review_note: it.review_note || reviewNote || null
           };
         });
-        const actorEmail = ((id && id.email) || getDefaultAssigneeEmail("") || "local.analyst@lbl.gov").toLowerCase();
+        const rawActorEmail = String((id && !isPlaceholderAnalystEmail(id.email) ? id.email : "") || getDefaultAssigneeEmail("") || "").trim().toLowerCase();
+        const actorEmail = isPlaceholderAnalystEmail(rawActorEmail) ? "" : rawActorEmail;
         const nowIso = new Date().toISOString();
         const requestBody = {
           assigned_to_email: cleanEmail,
@@ -3302,7 +3463,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             record_ids: it.record_ids || "",
             decision: it.decision || "exclude_qc_fail",
             rationale_note: it.rationale_note || "",
-            reviewer_email: id.email,
+            reviewer_email: (id && !isPlaceholderAnalystEmail(id.email)) ? String(id.email).trim().toLowerCase() : (getDefaultAssigneeEmail("") || null),
             assigned_to_email: it.assigned_to_email || null,
             status: "approved",
             synced_to_gsheet: false
@@ -3417,6 +3578,16 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         )
           ? normalizeReplicateGroupKey(it, it.resource_name)
           : null;
+        const id = this.getAnalystIdentity();
+        const submittedAtIso = String(it.submitted_at || it.created_at || new Date().toISOString()).trim();
+        const rawTraySubmitter = String(
+          it.submitted_by_email || it.analyst_email || getDefaultAssigneeEmail() || (id && !isPlaceholderAnalystEmail(id.email) ? id.email : "") || ""
+        ).trim().toLowerCase();
+        const submitterEmail = isPlaceholderAnalystEmail(rawTraySubmitter) ? "" : rawTraySubmitter;
+        const labLineageNote = String(
+          it.lab_lineage_note || it.sample_note || it.prep_notes || ""
+        ).trim();
+        const effectiveSourceLabel = String(it.source_label || sourceLabel || "Selection & Export Tray").trim();
         return {
           record_table: recordTable,
           record_id: primaryRecordId,
@@ -3436,6 +3607,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           old_qc_pass: String(it.old_qc_pass || it.previous_qc_status || "pass"),
           recommended_qc_status: it.recommended_qc_status || it.new_qc_status || "provisional",
           assigned_to_email: it.assigned_to_email || null,
+          submitted_at: submittedAtIso,
+          submitted_by_email: submitterEmail || null,
+          lab_lineage_note: labLineageNote || null,
+          source_label: effectiveSourceLabel,
           review_note: reviewNote,
           note: reviewNote
         };
@@ -3479,9 +3654,26 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             if (resp.ok) {
               const data = await resp.json();
               if (Array.isArray(data.decisions)) {
-                data.decisions.forEach(d => this.upsertLocalDecision(d));
+                data.decisions.forEach((d, idx) => {
+                  const srcNorm = reqBody.items[idx] || primaryItem || {};
+                  this.upsertLocalDecision({
+                    ...srcNorm,
+                    ...d,
+                    submitted_at: d.submitted_at || d.created_at || srcNorm.submitted_at || new Date().toISOString(),
+                    submitted_by_email: d.submitted_by_email || d.analyst_email || srcNorm.submitted_by_email || null,
+                    lab_lineage_note: d.lab_lineage_note || srcNorm.lab_lineage_note || null,
+                    source_label: d.source_label || srcNorm.source_label || null
+                  });
+                });
               } else if (data.decision) {
-                this.upsertLocalDecision(data.decision);
+                this.upsertLocalDecision({
+                  ...primaryItem,
+                  ...data.decision,
+                  submitted_at: data.decision.submitted_at || data.decision.created_at || primaryItem.submitted_at || new Date().toISOString(),
+                  submitted_by_email: data.decision.submitted_by_email || data.decision.analyst_email || primaryItem.submitted_by_email || null,
+                  lab_lineage_note: data.decision.lab_lineage_note || primaryItem.lab_lineage_note || null,
+                  source_label: data.decision.source_label || primaryItem.source_label || null
+                });
               }
               const broadcastTarget = data.decisions || data.decision || reqBody;
               this.broadcastQcUpdate(broadcastTarget);
@@ -3510,6 +3702,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             target_record_ids: normIt.target_record_ids,
             new_qc_status: normIt.recommended_qc_status,
             assigned_to_email: normIt.assigned_to_email,
+            submitted_at: normIt.submitted_at,
+            submitted_by_email: normIt.submitted_by_email,
+            lab_lineage_note: normIt.lab_lineage_note,
+            source_label: normIt.source_label,
             audit_note: normIt.review_note,
             sync_to_gsheet: false
           });
@@ -3887,6 +4083,9 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       }
       renderAnalystBadge();
       window.addEventListener("biocirv:analyst-changed", renderAnalystBadge);
+      if (typeof BioCirvQcClient.hydrateSessionIdentity === "function") {
+        BioCirvQcClient.hydrateSessionIdentity();
+      }
 
       const openSigninBtn = document.getElementById("btn-open-signin-modal");
       if (openSigninBtn && signinModal) {
@@ -3933,8 +4132,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       const saveSigninBtn = document.getElementById("btn-save-signin-modal");
       if (saveSigninBtn && signinModal) {
         saveSigninBtn.addEventListener("click", () => {
-          const emailVal = (document.getElementById("signin-analyst-email") || {}).value || "local.analyst@lbl.gov";
-          const nameVal = (document.getElementById("signin-analyst-name") || {}).value || "Local Analyst";
+          const emailVal = ((document.getElementById("signin-analyst-email") || {}).value || "").trim().toLowerCase();
+          const nameVal = ((document.getElementById("signin-analyst-name") || {}).value || "").trim();
           const apiVal = (document.getElementById("signin-api-base") || {}).value || "http://localhost:8000";
           const saved = BioCirvQcClient.setAnalystIdentity({
             email: emailVal,
@@ -4078,6 +4277,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           ...explicitIds
         ]));
         const primarySingleId = clickedId || groupIds[0] || "";
+        const labLineageNote = pf.lab_lineage_note
+          || (seedRec && (seedRec.note || seedRec.lab_lineage_note))
+          || (typeof PS_LOOKUP !== "undefined" && PS_LOOKUP[prepSample] && PS_LOOKUP[prepSample].note)
+          || (typeof FS_LOOKUP !== "undefined" && FS_LOOKUP[fieldSample] && FS_LOOKUP[fieldSample].note)
+          || "";
 
         return {
           singleRecordId: primarySingleId,
@@ -4089,7 +4293,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           experiment: expName,
           parameter_name: paramName,
           analysis_type: analysisType,
-          unit: unit
+          unit: unit,
+          lab_lineage_note: labLineageNote
         };
       }
 
@@ -4276,6 +4481,13 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         if (qcSel) qcSel.value = pf.default_qc_status || pf.new_qc_status || "provisional";
         const assignInput = document.getElementById("finding-modal-assigned-email");
         if (assignInput) assignInput.value = getDefaultAssigneeEmail(pf.assigned_to_email);
+        if (typeof BioCirvQcClient.hydrateSessionIdentity === "function") {
+          BioCirvQcClient.hydrateSessionIdentity().then(() => {
+            if (assignInput && (!assignInput.value || isPlaceholderAnalystEmail(assignInput.value))) {
+              assignInput.value = getDefaultAssigneeEmail(pf.assigned_to_email);
+            }
+          });
+        }
         const noteInput = document.getElementById("finding-modal-note");
         if (noteInput) noteInput.value = pf.audit_note || pf.note || "";
         const statusEl = document.getElementById("finding-modal-status");
@@ -4348,6 +4560,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             ? (targetIds[0] || recVal)
             : (currentFindingContext.singleRecordId || targetIds[0] || recVal);
 
+          const nowIso = new Date().toISOString();
+          const currentAnalystEmail = (BioCirvQcClient.getAnalystIdentity() || {}).email || "";
+          const sourceLabel = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
+            ? "Page 3 Explorer"
+            : "Page 1/2 Visualizer";
           const res = await BioCirvQcClient.exportTrayToWorkbench({
             selection_scope: scopeVal === "single" ? "single_record" : "replicate_group",
             resource_name: resVal,
@@ -4361,6 +4578,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             recommended_qc_status: qcVal,
             assigned_to_email: assignVal,
             note: noteVal || Array.from(selectedFindingChips).join("; "),
+            lab_lineage_note: currentFindingContext.lab_lineage_note || "",
+            submitted_at: nowIso,
+            submitted_by_email: currentAnalystEmail,
+            source_label: sourceLabel,
             open_workbench: window.location.protocol === "http:" || window.location.protocol === "https:"
           });
           const statusEl = document.getElementById("finding-modal-status");
@@ -4407,6 +4628,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             ? (targetIds[0] || recVal)
             : (currentFindingContext.singleRecordId || targetIds[0] || recVal);
 
+          const nowIso = new Date().toISOString();
+          const currentAnalystEmail = (BioCirvQcClient.getAnalystIdentity() || {}).email || "";
+          const sourceLabel = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
+            ? "Page 3 Explorer"
+            : "Page 1/2 Visualizer";
           const result = await BioCirvQcClient.submitFinding({
             scope: scopeVal === "group" ? "replicate_group" : (scopeVal === "single" ? "single_record" : "finding"),
             triage_scope: scopeVal,
@@ -4422,6 +4648,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             new_qc_status: qcVal,
             rationale_tags: Array.from(selectedFindingChips),
             audit_note: noteVal || `Audit finding logged for ${resVal} (${paramVal}, scope=${scopeVal === 'group' ? 'Entire Replicate Group' : 'Single Point'})`,
+            lab_lineage_note: currentFindingContext.lab_lineage_note || "",
+            submitted_at: nowIso,
+            submitted_by_email: currentAnalystEmail,
+            source_label: sourceLabel,
             assigned_to_email: assignVal,
             gsheet_writeback_requested: gsheetSync
           });
@@ -4448,7 +4678,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
                 api_decision_id: (result.decision && result.decision.id) ? result.decision.id : undefined,
                 triage_scope: scopeVal === "single" ? "single" : "group",
                 assigned_to_email: assignVal || "",
-                note: noteVal || Array.from(selectedFindingChips).join("; ")
+                note: noteVal || Array.from(selectedFindingChips).join("; "),
+                lab_lineage_note: currentFindingContext.lab_lineage_note || "",
+                submitted_at: nowIso,
+                submitted_by_email: currentAnalystEmail,
+                source_label: sourceLabel
               },
               {
                 scope: scopeVal === "single" ? "single_record" : "replicate_group",
@@ -4490,6 +4724,176 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       }
     }
     window.closeFlagShowMePopover = closeFlagShowMePopover;
+
+    const DIXON_Q_CRIT_95_SHARED = {
+      3: 0.941, 4: 0.765, 5: 0.642, 6: 0.560, 7: 0.507, 8: 0.468, 9: 0.437, 10: 0.412,
+      11: 0.392, 12: 0.376, 13: 0.361, 14: 0.349, 15: 0.338, 16: 0.329, 17: 0.320,
+      18: 0.313, 19: 0.306, 20: 0.300, 21: 0.295, 22: 0.290, 23: 0.285, 24: 0.281,
+      25: 0.277, 26: 0.273, 27: 0.269, 28: 0.266, 29: 0.263, 30: 0.260
+    };
+
+    function computeSharedSliceStatScreening(rowsInput, opts) {
+      const options = (opts && typeof opts === "object") ? opts : {};
+      const includeFailRows = options.includeFailed === undefined
+        ? false
+        : Boolean(options.includeFailed);
+      const rawCandidateRows = Array.isArray(rowsInput)
+        ? rowsInput
+        : (typeof getFilteredRecords === "function"
+            ? getFilteredRecords()
+            : (typeof ALL_RECORDS !== "undefined" && Array.isArray(ALL_RECORDS) ? ALL_RECORDS : []));
+      let excludedFailCount = 0;
+      const rows = [];
+      for (const r of rawCandidateRows) {
+        if (!r || typeof r !== "object") continue;
+        const val = Number(r.value !== undefined ? r.value : r.val);
+        if (!Number.isFinite(val)) continue;
+        const qcVal = String(r.qc_pass || r.qc_status || r.qc || "pass").toLowerCase();
+        if (!includeFailRows && qcVal === "fail") {
+          excludedFailCount += 1;
+          continue;
+        }
+        rows.push(r);
+      }
+      const groupMap = new Map();
+      rows.forEach(r => {
+        const res = String(r.resource_name || r.resource || (typeof state !== "undefined" && state && state.resource) || "unknown").trim();
+        const rk = normalizeReplicateGroupKey(r, res);
+        if (!groupMap.has(rk)) {
+          groupMap.set(rk, {
+            replicate_group_key: rk,
+            resource_name: res,
+            analysis_type: r.analysis_type || "",
+            parameter: r.parameter || r.parameter_name || "",
+            prepared_sample: r.prepared_sample || r.prepared_sample_name || r.field_sample || "Unassigned",
+            prep_method: groupContextLabel(r),
+            experiment: r.experiment || r.experiment_name || "Unassigned",
+            unit: r.unit || "",
+            rows: []
+          });
+        }
+        groupMap.get(rk).rows.push(r);
+      });
+
+      const groups = [];
+      const rowFlagsById = {};
+      groupMap.forEach(g => {
+        const vals = g.rows.map(r => Number(r.value !== undefined ? r.value : r.val)).filter(v => Number.isFinite(v));
+        const n = vals.length;
+        const mean = n > 0 ? vals.reduce((s, v) => s + v, 0) / n : 0;
+        const variance = n > 1 ? vals.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / (n - 1) : 0;
+        const sd = Math.sqrt(variance);
+        const rsdWithinPct = (n >= 2 && Math.abs(mean) > 1e-9) ? (sd / Math.abs(mean)) * 100.0 : null;
+        const hasIdentical = n >= 2 && sd <= 1e-12;
+        const rawRsd20 = rsdWithinPct !== null && rsdWithinPct > 20.0;
+        const rawRsd10 = rsdWithinPct !== null && rsdWithinPct > 10.0;
+
+        let rawDixon = false;
+        let dixonQ = null;
+        let dixonCandidateId = null;
+        if (n >= 3) {
+          const sorted = [...g.rows].sort((a, b) => Number(a.value ?? a.val) - Number(b.value ?? b.val));
+          const vMin = Number(sorted[0].value ?? sorted[0].val);
+          const vNextMin = Number(sorted[1].value ?? sorted[1].val);
+          const vPrevMax = Number(sorted[n - 2].value ?? sorted[n - 2].val);
+          const vMax = Number(sorted[n - 1].value ?? sorted[n - 1].val);
+          const rng = vMax - vMin;
+          if (rng > 1e-12) {
+            const qLow = (vNextMin - vMin) / rng;
+            const qHigh = (vMax - vPrevMax) / rng;
+            const qCrit = DIXON_Q_CRIT_95_SHARED[Math.min(30, n)] || 0.260;
+            if (qHigh >= qLow) {
+              dixonQ = qHigh;
+              if (qHigh > qCrit) {
+                rawDixon = true;
+                dixonCandidateId = String(sorted[n - 1].record_id || sorted[n - 1].id || "");
+              }
+            } else {
+              dixonQ = qLow;
+              if (qLow > qCrit) {
+                rawDixon = true;
+                dixonCandidateId = String(sorted[0].record_id || sorted[0].id || "");
+              }
+            }
+          }
+        }
+        const rawFlagged = Boolean(rawDixon || rawRsd20);
+        const grpObj = {
+          ...g,
+          n,
+          mean,
+          sd,
+          within_sd: sd,
+          rsd_within_pct: rsdWithinPct,
+          raw_dixon: rawDixon,
+          dixon_q: dixonQ,
+          dixon_candidate_id: dixonCandidateId,
+          raw_rsd20: rawRsd20,
+          raw_rsd10: rawRsd10,
+          raw_sd3x: false,
+          sd3x_candidate_ids: [],
+          raw_proximate_sum: false,
+          proximate_sum_pct: null,
+          has_identical_replicates: hasIdentical,
+          raw_flagged: rawFlagged,
+          active_flagged: rawFlagged,
+          replicates: g.rows.map((r, idx) => ({
+            id: String(r.record_id || r.id || `${g.replicate_group_key}::rep-${idx + 1}`),
+            record_id: String(r.record_id || r.id || `${g.replicate_group_key}::rep-${idx + 1}`),
+            val: Number(r.value !== undefined ? r.value : r.val),
+            value: Number(r.value !== undefined ? r.value : r.val),
+            rep: Number(r.replicate || (idx + 1)),
+            qc: String(r.qc_pass || r.qc_status || r.qc || "pass").toLowerCase(),
+            prepared_sample: g.prepared_sample
+          }))
+        };
+        groups.push(grpObj);
+        g.rows.forEach(r => {
+          const rid = String(r.record_id || r.id || "");
+          if (rid) {
+            rowFlagsById[rid] = {
+              group: grpObj,
+              isDixonCandidate: Boolean(rawDixon && dixonCandidateId === rid),
+              isSd3xCandidate: false
+            };
+          }
+        });
+      });
+
+      const withinRsdMed = computeMedianNumeric(groups.filter(g => g.n >= 2 && g.rsd_within_pct !== null).map(g => g.rsd_within_pct));
+      const withinSdMed = computeMedianNumeric(groups.filter(g => g.n >= 2).map(g => g.sd));
+      return {
+        groups,
+        paramBreakdown: [],
+        flaggedGroups: groups.filter(g => g.raw_flagged),
+        activeFlaggedGroups: groups.filter(g => g.active_flagged),
+        dixonGroups: groups.filter(g => g.raw_dixon),
+        rsd20Groups: groups.filter(g => g.raw_rsd20),
+        rsd10Groups: groups.filter(g => g.raw_rsd10),
+        sd3xGroups: [],
+        proxSumGroups: [],
+        identicalGroups: groups.filter(g => g.has_identical_replicates),
+        withinRsdMedian: withinRsdMed,
+        withinSdMedian: withinSdMed,
+        betweenRsdMedian: null,
+        betweenSdMedian: null,
+        medianWithin: withinRsdMed,
+        medianBetween: null,
+        flaggedCount: groups.filter(g => g.raw_flagged).length,
+        suppressedCount: 0,
+        multiRepCount: groups.filter(g => g.n >= 2).length,
+        multiRepGroupsCount: groups.filter(g => g.n >= 2).length,
+        excluded_fail_count: excludedFailCount,
+        include_failed: includeFailRows,
+        rowFlagsById
+      };
+    }
+    if (typeof window.computeSliceStatScreening !== "function") {
+      window.computeSliceStatScreening = computeSharedSliceStatScreening;
+    }
+    if (typeof computeSliceStatScreening !== "function") {
+      var computeSliceStatScreening = window.computeSliceStatScreening;
+    }
 
     function collectAllPageReplicateGroupsForShowMe(preferredResource) {
       const groupsMap = new Map();
@@ -4882,24 +5286,57 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       const targetMeanX = xOf(groupMean);
       const sliceMeanX = xOf(sliceMean);
 
+      const renderQcFailDemarcation = (cxNum, cyNum, rSize, recId, titleText) => {
+        const d = rSize + 1.5;
+        const pts = `${cxNum.toFixed(1)},${(cyNum - d).toFixed(1)} ${(cxNum + d).toFixed(1)},${cyNum.toFixed(1)} ${cxNum.toFixed(1)},${(cyNum + d).toFixed(1)} ${(cxNum - d).toFixed(1)},${cyNum.toFixed(1)}`;
+        const xOff = (rSize * 0.55);
+        return [
+          `<polygon class="show-me-qc-fail-diamond show-me-pt-qc-fail" data-qc-status="fail" data-record-id="${escSvg(recId)}" points="${pts}" fill="rgba(239,68,68,0.18)" stroke="#ef4444" stroke-width="1.6" stroke-dasharray="2,1"><title>${titleText}</title></polygon>`,
+          `<line class="show-me-qc-fail-cross" data-qc-status="fail" x1="${(cxNum - xOff).toFixed(1)}" y1="${(cyNum - xOff).toFixed(1)}" x2="${(cxNum + xOff).toFixed(1)}" y2="${(cyNum + xOff).toFixed(1)}" stroke="#ef4444" stroke-width="1.5" pointer-events="none" />`,
+          `<line class="show-me-qc-fail-cross" data-qc-status="fail" x1="${(cxNum - xOff).toFixed(1)}" y1="${(cyNum + xOff).toFixed(1)}" x2="${(cxNum + xOff).toFixed(1)}" y2="${(cyNum - xOff).toFixed(1)}" stroke="#ef4444" stroke-width="1.5" pointer-events="none" />`
+        ].join("");
+      };
+
       const peerCirclesSvg = peerPoints.map((pt, idx) => {
-        const cx = xOf(pt.value).toFixed(1);
-        const cy = (44 + ((idx * 17) % 28)).toFixed(1);
-        return `<circle class="show-me-pt-peer" data-role="peer" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="4.5" fill="rgba(148,163,184,0.45)" stroke="#64748b" stroke-width="1.5"><title>${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}</title></circle>`;
+        const cxNum = xOf(pt.value);
+        const cyNum = 44 + ((idx * 17) % 28);
+        const cx = cxNum.toFixed(1);
+        const cy = cyNum.toFixed(1);
+        const isFail = String(pt.qc || "").toLowerCase() === "fail";
+        const qcTag = isFail ? " [QC_FAIL]" : "";
+        const titleText = `${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)}${qcTag} | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}`;
+        return [
+          `<circle class="show-me-pt-peer${isFail ? ' show-me-pt-qc-fail' : ''}" data-role="peer" data-qc-status="${isFail ? 'fail' : 'pass'}" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="4.5" fill="rgba(148,163,184,0.45)" stroke="${isFail ? '#ef4444' : '#64748b'}" stroke-width="1.5"><title>${titleText}</title></circle>`,
+          isFail ? renderQcFailDemarcation(cxNum, cyNum, 4.5, pt.record_id, titleText) : ""
+        ].join("");
       }).join("");
 
       const targetGroupCirclesSvg = targetReps.filter(pt => !pt.isOutlier).map((pt, idx) => {
-        const cx = xOf(pt.value).toFixed(1);
-        const cy = (92 + ((idx * 13) % 18)).toFixed(1);
-        return `<circle class="show-me-pt-target-group" data-role="target-group" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="6" fill="rgba(59,130,246,0.22)" stroke="#2563eb" stroke-width="2.5"><title>${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} (Target Replicate Group) | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}</title></circle>`;
+        const cxNum = xOf(pt.value);
+        const cyNum = 92 + ((idx * 13) % 18);
+        const cx = cxNum.toFixed(1);
+        const cy = cyNum.toFixed(1);
+        const isFail = String(pt.qc || "").toLowerCase() === "fail";
+        const qcTag = isFail ? " [QC_FAIL]" : "";
+        const titleText = `${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} (Target Replicate Group)${qcTag} | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}`;
+        return [
+          `<circle class="show-me-pt-target-group${isFail ? ' show-me-pt-qc-fail' : ''}" data-role="target-group" data-qc-status="${isFail ? 'fail' : 'pass'}" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="6" fill="rgba(59,130,246,0.22)" stroke="#2563eb" stroke-width="2.5"><title>${titleText}</title></circle>`,
+          isFail ? renderQcFailDemarcation(cxNum, cyNum, 6, pt.record_id, titleText) : ""
+        ].join("");
       }).join("");
 
       const outlierCirclesSvg = targetReps.filter(pt => pt.isOutlier).map((pt, idx) => {
-        const cx = xOf(pt.value).toFixed(1);
-        const cy = (96 + ((idx * 11) % 14)).toFixed(1);
+        const cxNum = xOf(pt.value);
+        const cyNum = 96 + ((idx * 11) % 14);
+        const cx = cxNum.toFixed(1);
+        const cy = cyNum.toFixed(1);
+        const isFail = String(pt.qc || "").toLowerCase() === "fail";
+        const qcTag = isFail ? " [QC_FAIL]" : "";
+        const titleText = `${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} (Flagged Outlier)${qcTag} | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}`;
         return [
           `<circle class="show-me-outlier-pulse-ring" data-role="outlier-ring" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="10.5" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.85" />`,
-          `<circle class="show-me-pt-outlier" data-role="outlier" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="7.5" fill="rgba(239,68,68,0.28)" stroke="#dc2626" stroke-width="3"><title>${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} (Flagged Outlier) | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}</title></circle>`
+          `<circle class="show-me-pt-outlier${isFail ? ' show-me-pt-qc-fail' : ''}" data-role="outlier" data-qc-status="${isFail ? 'fail' : 'pass'}" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="7.5" fill="rgba(239,68,68,0.28)" stroke="#dc2626" stroke-width="3"><title>${titleText}</title></circle>`,
+          isFail ? renderQcFailDemarcation(cxNum, cyNum, 7.5, pt.record_id, titleText) : ""
         ].join("");
       }).join("");
 
@@ -5313,10 +5750,35 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     const COUNTY_LOOKUP = BUNDLE.county_lookup || {};
+    function normSampleKey(val) {
+      return String(val || "").trim().toLowerCase();
+    }
     const FS_LOOKUP = {};
-    (BUNDLE.field_samples || []).forEach(fs => { FS_LOOKUP[fs.name] = fs; });
+    const FS_LOOKUP_NORM = {};
+    (BUNDLE.field_samples || []).forEach(fs => {
+      if (!fs || !fs.name) return;
+      FS_LOOKUP[fs.name] = fs;
+      const nk = normSampleKey(fs.name);
+      if (nk) FS_LOOKUP_NORM[nk] = fs;
+    });
     const PS_LOOKUP = {};
-    (BUNDLE.prepared_samples || []).forEach(ps => { PS_LOOKUP[ps.name] = ps; });
+    const PS_LOOKUP_NORM = {};
+    (BUNDLE.prepared_samples || []).forEach(ps => {
+      if (!ps || !ps.name) return;
+      PS_LOOKUP[ps.name] = ps;
+      const nk = normSampleKey(ps.name);
+      if (nk) PS_LOOKUP_NORM[nk] = ps;
+    });
+    function lookupFieldSample(name) {
+      if (!name) return null;
+      return FS_LOOKUP[name] || FS_LOOKUP_NORM[normSampleKey(name)] || null;
+    }
+    function lookupPreparedSample(name) {
+      if (!name) return null;
+      return PS_LOOKUP[name] || PS_LOOKUP_NORM[normSampleKey(name)] || null;
+    }
+    window.lookupFieldSample = lookupFieldSample;
+    window.lookupPreparedSample = lookupPreparedSample;
 
     function fmtGeoid(geoid) {
       if (!geoid) return "—";
@@ -5334,8 +5796,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       obj.value = arr[BUNDLE.str_cols.length + 2];
       obj.exp_date = arr.length > BUNDLE.str_cols.length + 3 ? arr[BUNDLE.str_cols.length + 3] : "";
       obj.time_h = arr.length > BUNDLE.str_cols.length + 4 ? arr[BUNDLE.str_cols.length + 4] : null;
-      const fsMeta = FS_LOOKUP[obj.field_sample] || {};
-      const psMeta = PS_LOOKUP[obj.prepared_sample] || {};
+      const fsMeta = lookupFieldSample(obj.field_sample) || {};
+      const psMeta = lookupPreparedSample(obj.prepared_sample) || {};
       obj.collected_date = fsMeta.collected_at ? String(fsMeta.collected_at).slice(0, 10) : "";
       obj.geoid = fsMeta.geoid ? String(fsMeta.geoid).trim() : "";
       obj.county_name = obj.geoid ? (COUNTY_LOOKUP[obj.geoid] || "") : "";
@@ -5397,7 +5859,116 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       proxGroupMode: "exp_method",
       elemSourceMode: "all",
       icpScaleMode: "split",
-      convSubTab: "all"
+      convSubTab: "all",
+      timelineAlignMode: "collected",
+      timelineSortMode: "date"
+    };
+
+    const PROVIDER_STYLE_PALETTE = {
+      ucd: { label: "UC Davis (UCD)", color: "#2563eb", bg: "rgba(37, 99, 235, 0.12)", border: "rgba(37, 99, 235, 0.45)" },
+      lbl: { label: "Berkeley Lab (LBL)", color: "#059669", bg: "rgba(5, 150, 105, 0.12)", border: "rgba(5, 150, 105, 0.45)" },
+      nrel: { label: "NREL", color: "#d97706", bg: "rgba(217, 119, 6, 0.12)", border: "rgba(217, 119, 6, 0.45)" },
+      usda: { label: "USDA", color: "#7c3aed", bg: "rgba(124, 58, 237, 0.12)", border: "rgba(124, 58, 237, 0.45)" },
+      usu: { label: "Utah State (USU)", color: "#db2777", bg: "rgba(219, 39, 119, 0.12)", border: "rgba(219, 39, 119, 0.45)" },
+      sandia: { label: "Sandia", color: "#0891b2", bg: "rgba(8, 145, 178, 0.12)", border: "rgba(8, 145, 178, 0.45)" },
+      unassigned: { label: "Unassigned / Direct", color: "#64748b", bg: "rgba(100, 116, 139, 0.10)", border: "rgba(100, 116, 139, 0.35)" }
+    };
+    const DYNAMIC_PROVIDER_COLORS = ["#0284c7", "#4f46e5", "#ea580c", "#16a34a", "#9333ea", "#e11d48"];
+
+    function getProviderStyle(rawCode) {
+      const code = String(rawCode || "").trim().toLowerCase() || "unassigned";
+      if (PROVIDER_STYLE_PALETTE[code]) {
+        return { code, ...PROVIDER_STYLE_PALETTE[code] };
+      }
+      let hash = 0;
+      for (let i = 0; i < code.length; i++) hash = ((hash << 5) - hash) + code.charCodeAt(i);
+      const hex = DYNAMIC_PROVIDER_COLORS[Math.abs(hash) % DYNAMIC_PROVIDER_COLORS.length];
+      return {
+        code,
+        label: code.toUpperCase(),
+        color: hex,
+        bg: `${hex}1f`,
+        border: `${hex}73`
+      };
+    }
+
+    window.showLineageTooltip = function(evt, el) {
+      let tip = document.getElementById("lineage-hover-tooltip") || document.getElementById("lineage-floating-tooltip");
+      if (!tip) {
+        tip = document.createElement("div");
+        tip.id = "lineage-hover-tooltip";
+        tip.setAttribute("data-legacy-id", "lineage-floating-tooltip");
+        tip.className = "fixed z-50 pointer-events-none max-w-xs rounded-xl p-3 text-xs bg-[var(--card)] text-[var(--foreground)] border border-[var(--primary)] shadow-xl space-y-1 transition-opacity duration-100";
+        document.body.appendChild(tip);
+      }
+      const encoded = el ? el.getAttribute("data-tooltip-b64") : "";
+      if (!encoded) return;
+      let decoded = "";
+      try {
+        decoded = decodeURIComponent(escape(window.atob(encoded)));
+      } catch (_e) {
+        return;
+      }
+      tip.innerHTML = decoded;
+      tip.style.display = "block";
+      const legacyTip = document.getElementById("lineage-floating-tooltip");
+      if (legacyTip && legacyTip !== tip) {
+        legacyTip.innerHTML = decoded;
+        legacyTip.style.display = "block";
+      }
+      const rect = el.getBoundingClientRect();
+      const left = Math.min((window.innerWidth || 1024) - 320, Math.max(12, rect.left));
+      const top = rect.bottom + 8 + 200 > (window.innerHeight || 768) ? Math.max(12, rect.top - (tip.offsetHeight || 160) - 8) : rect.bottom + 8;
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+    };
+
+    window.hideLineageTooltip = function() {
+      const tip = document.getElementById("lineage-hover-tooltip");
+      if (tip) tip.style.display = "none";
+      const legacyTip = document.getElementById("lineage-floating-tooltip");
+      if (legacyTip) legacyTip.style.display = "none";
+    };
+
+    window.renderTimelineSvgConnectors = function() {
+      const svg = document.getElementById("lineage-svg-overlay");
+      const wrap = document.getElementById("lineage-timeline-tracks-wrap");
+      if (!svg || !wrap) return;
+      const wrapRect = wrap.getBoundingClientRect();
+      if (wrapRect.width <= 0 || wrapRect.height <= 0) {
+        svg.innerHTML = "";
+        return;
+      }
+      svg.setAttribute("viewBox", `0 0 ${Math.round(wrapRect.width)} ${Math.round(wrapRect.height)}`);
+      const fsNodes = {};
+      wrap.querySelectorAll("[data-fs-node]").forEach(node => {
+        const name = normSampleKey(node.getAttribute("data-fs-node"));
+        if (name) fsNodes[name] = node;
+      });
+      const paths = [];
+      wrap.querySelectorAll("[data-ps-node]").forEach(psNode => {
+        const parentFs = normSampleKey(psNode.getAttribute("data-parent-fs"));
+        const fsNode = parentFs ? fsNodes[parentFs] : null;
+        if (!fsNode) return;
+        const r1 = fsNode.getBoundingClientRect();
+        const r2 = psNode.getBoundingClientRect();
+        const x1 = r1.left - wrapRect.left + r1.width / 2;
+        const y1 = r1.bottom - wrapRect.top;
+        const x2 = r2.left - wrapRect.left + r2.width / 2;
+        const y2 = r2.top - wrapRect.top;
+        if (y2 <= y1) return;
+        const ym = y1 + (y2 - y1) * 0.5;
+        const strokeColor = psNode.getAttribute("data-provider-color") || "var(--primary)";
+        const isActive = fsNode.getAttribute("data-selected") === "1" || psNode.getAttribute("data-selected") === "1";
+        const opacity = isActive ? "0.95" : "0.52";
+        const width = isActive ? "2.5" : "1.75";
+        paths.push(
+          `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${x1.toFixed(1)} ${ym.toFixed(1)}, ${x2.toFixed(1)} ${ym.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${strokeColor}" stroke-width="${width}" stroke-opacity="${opacity}" stroke-dasharray="${isActive ? 'none' : '4 2'}" />` +
+          `<circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="3" fill="${strokeColor}" fill-opacity="${opacity}" />` +
+          `<circle cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="3" fill="${strokeColor}" fill-opacity="${opacity}" />`
+        );
+      });
+      svg.innerHTML = paths.join("");
     };
 
     function renderGroupFlagBadges(g) {
@@ -6041,60 +6612,320 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         </div>
       ` : "";
 
-      const fsCards = fsList.map(fs => {
-        const isSelected = state.field_sample === fs.name;
-        const recs = filtered.filter(r => r.field_sample === fs.name);
-        const colDate = fs.collected_at ? String(fs.collected_at).slice(0, 10) : "Not recorded";
-        const geoLabel = fmtGeoid(fs.geoid);
-        const childPreps = psList.filter(p => p.field_sample_name === fs.name).length;
-        return `
-          <div onclick="setQuickFilter('field_sample', '${fs.name}')" class="cursor-pointer rounded-xl p-3.5 border transition ${isSelected ? 'bg-[var(--secondary)] border-[var(--primary)] ring-1 ring-[var(--primary)]' : 'bg-[var(--background)] border-[var(--border)] hover:border-[var(--primary)]'}">
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-mono font-bold text-sm text-[var(--foreground)]">Field: ${fs.name}</span>
-              <span class="px-2 py-0.5 text-xs rounded-full badge-info font-mono">Collected: ${colDate}</span>
-            </div>
-            <div class="text-xs text-[var(--muted-foreground)] mt-1.5 space-y-0.5">
-              <div><strong class="text-[var(--foreground)]">GEOID · County:</strong> <span class="font-mono text-[var(--primary)]">${geoLabel}</span></div>
-              <div><strong class="text-[var(--foreground)]">Sampling Site:</strong> ${fs.sampling_site || '—'} · <strong class="text-[var(--foreground)]">Source:</strong> ${fs.sample_source || '—'}</div>
-              <div><strong class="text-[var(--foreground)]">Storage / Particle:</strong> ${fs.field_storage || '—'} / ${fs.particle_size || '—'}</div>
-            </div>
-            <div class="mt-2 pt-2 border-t border-[var(--border)] flex items-center justify-between text-xs font-mono">
-              <span>${childPreps} prep(s) · ${recs.length} obs</span>
-              <span class="underline text-[var(--primary)]">${isSelected ? 'Active filter (click to clear)' : 'Filter by field sample'}</span>
-            </div>
-          </div>
-        `;
-      }).join("");
+      const rawAlignMode = state.timelineAlignMode || "collected";
+      const alignMode = (rawAlignMode === "collected" && fsList.length === 0 && psList.length > 0) ? "prep" : rawAlignMode;
+      const sortMode = state.timelineSortMode || "date";
+      const encodeTooltip = htmlStr => {
+        try {
+          return window.btoa(unescape(encodeURIComponent(htmlStr)));
+        } catch (_e) {
+          return "";
+        }
+      };
 
-      const psCards = psList.map(ps => {
-        const recs = filtered.filter(r => r.prepared_sample === ps.name);
-        const totalAll = resRecs.filter(r => r.prepared_sample === ps.name).length;
+      const resolvePsDateKey = ps => {
+        if (ps && ps.prep_date) {
+          const d = String(ps.prep_date).trim().slice(0, 10);
+          if (d) return d;
+        }
+        const recs = resRecs.filter(r => normSampleKey(r.prepared_sample) === normSampleKey(ps && ps.name));
+        const recDates = recs
+          .map(r => String(r.prep_date || r.exp_date || "").trim().slice(0, 10))
+          .filter(d => d && d !== "Unrecorded")
+          .sort();
+        return recDates[0] || "";
+      };
+
+      const sortedFsList = [...fsList].sort((a, b) => {
+        if (sortMode === "order") {
+          return String(a.name || "").localeCompare(String(b.name || ""), undefined, { numeric: true, sensitivity: "base" });
+        }
+        const da = a.collected_at ? String(a.collected_at).trim().slice(0, 10) : "9999-99-99";
+        const db = b.collected_at ? String(b.collected_at).trim().slice(0, 10) : "9999-99-99";
+        if (da !== db) return da.localeCompare(db);
+        const pa = String(a.provider_code || a.provider || "").toLowerCase();
+        const pb = String(b.provider_code || b.provider || "").toLowerCase();
+        if (pa !== pb) return pa.localeCompare(pb);
+        return String(a.name || "").localeCompare(String(b.name || ""), undefined, { numeric: true, sensitivity: "base" });
+      });
+
+      const fsOrderIndex = {};
+      sortedFsList.forEach((fs, idx) => {
+        fsOrderIndex[fs.name] = idx;
+        const nk = normSampleKey(fs.name);
+        if (nk) fsOrderIndex[nk] = idx;
+      });
+
+      const sortedPsList = [...psList].sort((a, b) => {
+        if (sortMode === "order") {
+          return String(a.name || "").localeCompare(String(b.name || ""), undefined, { numeric: true, sensitivity: "base" });
+        }
+        const fsA = lookupFieldSample(a.field_sample_name) || {};
+        const fsB = lookupFieldSample(b.field_sample_name) || {};
+        const colA = fsA.collected_at ? String(fsA.collected_at).trim().slice(0, 10) : "9999-99-99";
+        const colB = fsB.collected_at ? String(fsB.collected_at).trim().slice(0, 10) : "9999-99-99";
+        const prepA = resolvePsDateKey(a) || "9999-99-99";
+        const prepB = resolvePsDateKey(b) || "9999-99-99";
+        if (prepA !== prepB) return prepA.localeCompare(prepB);
+        if (colA !== colB) return colA.localeCompare(colB);
+        const pa = String(a.provider_code || a.provider || fsA.provider_code || fsA.provider || "").toLowerCase();
+        const pb = String(b.provider_code || b.provider || fsB.provider_code || fsB.provider || "").toLowerCase();
+        if (pa !== pb) return pa.localeCompare(pb);
+        return String(a.name || "").localeCompare(String(b.name || ""), undefined, { numeric: true, sensitivity: "base" });
+      });
+
+      const providerCodesPresent = Array.from(new Set([
+        ...sortedFsList.map(fs => (fs.provider_code || fs.provider || "unassigned").toLowerCase()),
+        ...sortedPsList.map(ps => {
+          const parentFs = lookupFieldSample(ps.field_sample_name) || {};
+          return (ps.provider_code || ps.provider || parentFs.provider_code || parentFs.provider || "unassigned").toLowerCase();
+        })
+      ].filter(Boolean)));
+
+      const providerLegendHtml = providerCodesPresent.length ? `
+        <div id="lineage-provider-legend" class="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+          <span class="text-[var(--muted-foreground)] font-semibold uppercase tracking-wider">Provider Color Legend:</span>
+          ${providerCodesPresent.map(code => {
+            const st = getProviderStyle(code);
+            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border font-semibold" style="background:${st.bg}; border-color:${st.border}; color:${st.color}"><span class="w-2 h-2 rounded-full" style="background:${st.color}"></span>${escapeHtml(st.label)} <span class="font-normal opacity-80">[${escapeHtml(st.code.toUpperCase())}]</span></span>`;
+          }).join("")}
+        </div>
+      ` : `<div id="lineage-provider-legend" class="hidden"></div>`;
+
+      const buildFsNodeCard = (fs, compactOnAxis = true) => {
+        const isSelected = normSampleKey(state.field_sample) === normSampleKey(fs.name) && state.field_sample !== "all";
+        const recs = filtered.filter(r => normSampleKey(r.field_sample) === normSampleKey(fs.name));
+        const colDate = fs.collected_at ? String(fs.collected_at).slice(0, 10) : "Date unrecorded";
+        const geoLabel = fmtGeoid(fs.geoid);
+        const childPreps = psList.filter(p => normSampleKey(p.field_sample_name) === normSampleKey(fs.name)).length;
+        const provStyle = getProviderStyle(fs.provider_code || fs.provider);
+        const tooltipHtml = [
+          `<div class="font-mono font-bold text-xs border-b border-[var(--border)] pb-1 mb-1 flex items-center justify-between gap-2"><span>🌱 Field Sample: ${escapeHtml(fs.name)}</span><span class="px-1.5 py-0.5 rounded text-[10px]" style="background:${provStyle.bg};color:${provStyle.color};border:1px solid ${provStyle.border}">${escapeHtml(provStyle.label)}</span></div>`,
+          `<div><strong>Provider:</strong> <span class="font-semibold" style="color:${provStyle.color}">${escapeHtml(provStyle.label)} (${escapeHtml(provStyle.code.toUpperCase())})</span></div>`,
+          `<div><strong>Collected Date:</strong> <span class="font-mono">${escapeHtml(colDate)}</span></div>`,
+          `<div><strong>GEOID · County:</strong> <span class="font-mono text-[var(--primary)]">${escapeHtml(geoLabel)}</span></div>`,
+          `<div><strong>Sampling Site:</strong> ${escapeHtml(fs.sampling_site || "—")}</div>`,
+          `<div><strong>Sample Source:</strong> ${escapeHtml(fs.sample_source || "—")}</div>`,
+          `<div><strong>Storage / Particle:</strong> ${escapeHtml(fs.field_storage || "—")} / ${escapeHtml(fs.particle_size || "—")}</div>`,
+          fs.note ? `<div><strong>Field Note:</strong> ${escapeHtml(fs.note)}</div>` : "",
+          `<div class="pt-1 border-t border-[var(--border)] font-mono text-[11px] text-[var(--primary)]">${childPreps} linked prepared sample(s) · ${recs.length} observation(s) (click card to filter)</div>`
+        ].filter(Boolean).join("");
+        const safeFsNameJs = String(fs.name || "").replace(/\\\\/g, "\\\\\\\\").replace(/'/g, "\\\\'");
+        return {
+          dateKey: fs.collected_at ? String(fs.collected_at).slice(0, 10) : "Unrecorded",
+          provStyle,
+          name: fs.name,
+          kind: "field",
+          cardHtml: `
+            <div data-fs-node="${escapeHtml(fs.name)}" data-provider-color="${provStyle.color}" data-selected="${isSelected ? '1' : '0'}" data-tooltip-b64="${encodeTooltip(tooltipHtml)}" onmouseenter="window.showLineageTooltip(event, this)" onmouseleave="window.hideLineageTooltip()" onclick="window.hideLineageTooltip(); setQuickFilter('field_sample', '${safeFsNameJs}')" class="cursor-pointer rounded-xl px-3 py-2 border transition relative shadow-sm hover:shadow-md ${compactOnAxis ? 'w-48 shrink-0' : ''} ${isSelected ? 'ring-2 ring-[var(--primary)]' : ''}" style="background:${provStyle.bg}; border-color:${isSelected ? 'var(--primary)' : provStyle.border}; border-left: 4px solid ${provStyle.color}">
+              <div class="flex items-center justify-between gap-1.5">
+                <span class="inline-flex items-center gap-1.5 font-bold text-xs truncate" style="color:${provStyle.color}" title="Provider: ${escapeHtml(provStyle.label)}">
+                  <span class="w-2 h-2 rounded-full shrink-0" style="background:${provStyle.color}"></span>
+                  ${escapeHtml(provStyle.label)}
+                </span>
+                <span class="px-1.5 py-0.5 text-[9px] rounded font-mono font-bold shrink-0" style="background:var(--card); color:${provStyle.color}; border:1px solid ${provStyle.border}">FIELD</span>
+              </div>
+              <div class="mt-1 font-mono font-semibold text-[11px] text-[var(--foreground)] truncate" title="Field Sample: ${escapeHtml(fs.name)}">
+                🌱 ${escapeHtml(fs.name)}
+              </div>
+              <div class="mt-1 flex items-center justify-between gap-1 text-[10px] font-mono text-[var(--muted-foreground)]">
+                <span class="truncate" title="County: ${escapeHtml(geoLabel)}">📍 ${escapeHtml(geoLabel)}</span>
+                <span class="shrink-0">${childPreps} prep · ${recs.length} obs</span>
+              </div>
+            </div>
+          `
+        };
+      };
+
+      const buildPsNodeCard = (ps, compactOnAxis = true) => {
+        const recs = filtered.filter(r => normSampleKey(r.prepared_sample) === normSampleKey(ps.name));
+        const totalAll = resRecs.filter(r => normSampleKey(r.prepared_sample) === normSampleKey(ps.name)).length;
         const passCnt = recs.filter(r => r.qc_status === "pass").length;
         const failCnt = recs.filter(r => r.qc_status === "fail").length;
-        const types = Array.from(new Set(recs.map(r => r.analysis_type.split(" ")[0]))).join(", ") || "None in current slice";
-        const isSelected = state.prepared_sample === ps.name;
-        const fsMeta = FS_LOOKUP[ps.field_sample_name] || {};
+        const types = Array.from(new Set(recs.map(r => r.analysis_type.split(" ")[0]))).join(", ") || "None in slice";
+        const isSelected = normSampleKey(state.prepared_sample) === normSampleKey(ps.name) && state.prepared_sample !== "all";
+        const parentFsObj = lookupFieldSample(ps.field_sample_name);
+        const hasParentFs = Boolean(parentFsObj);
+        const fsMeta = parentFsObj || {};
         const colDate = fsMeta.collected_at ? String(fsMeta.collected_at).slice(0, 10) : "—";
         const geoLabel = fmtGeoid(fsMeta.geoid);
-        const prepDate = ps.prep_date ? String(ps.prep_date).slice(0, 10) : "—";
+        const resolvedPrepDate = resolvePsDateKey(ps);
+        const prepDate = resolvedPrepDate || "Date unrecorded";
+        const provCode = ps.provider_code || ps.provider || fsMeta.provider_code || fsMeta.provider || "unassigned";
+        const provStyle = getProviderStyle(provCode);
+        const tooltipHtml = [
+          `<div class="font-mono font-bold text-xs border-b border-[var(--border)] pb-1 mb-1 flex items-center justify-between gap-2"><span>🧪 Prepared Sample: ${escapeHtml(ps.name)}</span><span class="px-1.5 py-0.5 rounded text-[10px]" style="background:${provStyle.bg};color:${provStyle.color};border:1px solid ${provStyle.border}">${escapeHtml(provStyle.label)}</span></div>`,
+          `<div><strong>Provider:</strong> <span class="font-semibold" style="color:${provStyle.color}">${escapeHtml(provStyle.label)} (${escapeHtml(provStyle.code.toUpperCase())})</span></div>`,
+          `<div><strong>Prepared / Run Date:</strong> <span class="font-mono">${escapeHtml(prepDate)}</span></div>`,
+          `<div><strong>Prep Method:</strong> ${escapeHtml(ps.prep_method || "—")}</div>`,
+          `<div><strong>Parent Field Sample:</strong> <span class="font-mono">${escapeHtml(ps.field_sample_name || "Unlinked / Direct")}</span> (Collected: ${escapeHtml(colDate)} · GEOID: ${escapeHtml(geoLabel)})</div>`,
+          `<div><strong>Analytical Domains:</strong> ${escapeHtml(types)}</div>`,
+          `<div><strong>Observations:</strong> <span class="font-mono">${recs.length} / ${totalAll} (${passCnt}P / ${failCnt}F)</span></div>`,
+          ps.note ? `<div><strong>Prep Note:</strong> ${escapeHtml(ps.note)}</div>` : ""
+        ].filter(Boolean).join("");
+        const safePsNameJs = String(ps.name || "").replace(/\\\\/g, "\\\\\\\\").replace(/'/g, "\\\\'");
+        const parentFsAttr = hasParentFs ? escapeHtml(parentFsObj.name) : "";
+        return {
+          dateKey: resolvedPrepDate || "Unrecorded",
+          colDateKey: fsMeta.collected_at ? String(fsMeta.collected_at).slice(0, 10) : "Unrecorded",
+          provStyle,
+          name: ps.name,
+          hasParentFs,
+          kind: "prep",
+          cardHtml: `
+            <div data-ps-node="${escapeHtml(ps.name)}" data-parent-fs="${parentFsAttr}" data-provider-color="${provStyle.color}" data-selected="${isSelected ? '1' : '0'}" data-tooltip-b64="${encodeTooltip(tooltipHtml)}" onmouseenter="window.showLineageTooltip(event, this)" onmouseleave="window.hideLineageTooltip()" onclick="window.hideLineageTooltip(); setQuickFilter('prepared_sample', '${safePsNameJs}')" class="cursor-pointer rounded-xl px-3 py-2 border transition relative shadow-sm hover:shadow-md ${compactOnAxis ? 'w-48 shrink-0' : ''} ${isSelected ? 'ring-2 ring-[var(--primary)]' : ''}" style="background:${provStyle.bg}; border-color:${isSelected ? 'var(--primary)' : provStyle.border}; border-left: 4px solid ${provStyle.color}">
+              <div class="flex items-center justify-between gap-1.5">
+                <span class="inline-flex items-center gap-1.5 font-bold text-xs truncate" style="color:${provStyle.color}" title="Provider: ${escapeHtml(provStyle.label)}">
+                  <span class="w-2 h-2 rounded-full shrink-0" style="background:${provStyle.color}"></span>
+                  ${escapeHtml(provStyle.label)}
+                </span>
+                <span class="px-1.5 py-0.5 text-[9px] rounded font-mono font-bold shrink-0" style="background:var(--card); color:${provStyle.color}; border:1px solid ${provStyle.border}">PREP</span>
+              </div>
+              <div class="mt-1 font-mono font-semibold text-[11px] text-[var(--foreground)] truncate" title="Prepared Sample: ${escapeHtml(ps.name)}">
+                🧪 ${escapeHtml(ps.name)}
+              </div>
+              <div class="mt-1 flex items-center justify-between gap-1 text-[10px] font-mono text-[var(--muted-foreground)]">
+                <span class="truncate" title="Method: ${escapeHtml(ps.prep_method || 'Standard')}">${escapeHtml(ps.prep_method || 'Standard')}</span>
+                <span class="shrink-0">${recs.length} obs (${passCnt}P/${failCnt}F)</span>
+              </div>
+            </div>
+          `
+        };
+      };
+
+      const fsBuiltNodes = sortedFsList.map(fs => buildFsNodeCard(fs, true));
+      const psBuiltNodes = sortedPsList.map(ps => buildPsNodeCard(ps, true));
+      const linkedPsList = sortedPsList.filter(ps => ps.field_sample_name && lookupFieldSample(ps.field_sample_name));
+      const orphanPsList = sortedPsList.filter(ps => !ps.field_sample_name || !lookupFieldSample(ps.field_sample_name));
+      const orphanPsCards = orphanPsList.length
+        ? orphanPsList.map(ps => buildPsNodeCard(ps, false).cardHtml).join("")
+        : "";
+
+      // Group sample nodes by unique calendar date so same-date samples share a single point on the timeline with stacked cards
+      const groupTimelineNodesByDate = nodes => {
+        const groups = [];
+        const byDate = {};
+        nodes.forEach(item => {
+          const dk = item.dateKey || "Unrecorded";
+          if (!byDate[dk]) {
+            byDate[dk] = { dateKey: dk, items: [] };
+            groups.push(byDate[dk]);
+          }
+          byDate[dk].items.push(item);
+        });
+        if (sortMode !== "order") {
+          groups.sort((a, b) => {
+            const da = a.dateKey === "Unrecorded" ? "9999-99-99" : a.dateKey;
+            const db = b.dateKey === "Unrecorded" ? "9999-99-99" : b.dateKey;
+            return da.localeCompare(db);
+          });
+        }
+        return groups;
+      };
+
+      // Build literal horizontal timeline columns (time on X-axis, one point per unique date, same-date provider cards stacked vertically)
+      const renderSingleAxisBranchTimeline = (nodes, axisLabel) => {
+        if (!nodes.length) {
+          return `<div class="py-6 text-center text-xs text-[var(--muted-foreground)]">No samples cataloged for ${escapeHtml(axisLabel)}.</div>`;
+        }
+        const dateGroups = groupTimelineNodesByDate(nodes);
+        const colsHtml = dateGroups.map(group => {
+          const stemColor = group.items[group.items.length - 1].provStyle.color;
+          const stackedCardsHtml = group.items.map(item => item.cardHtml).join("");
+          const countBadgeHtml = group.items.length > 1
+            ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-semibold bg-[var(--secondary)] text-[var(--primary)]">${group.items.length}×</span>`
+            : "";
+          return `
+            <div data-timeline-date="${escapeHtml(group.dateKey)}" data-date-stack-count="${group.items.length}" class="flex flex-col justify-end items-center shrink-0 px-2.5 min-w-[12.5rem] relative">
+              <div data-date-stack="${escapeHtml(group.dateKey)}" class="flex flex-col justify-end items-center gap-1.5 w-full">
+                ${stackedCardsHtml}
+              </div>
+              <div class="w-0.5 h-5 shrink-0" style="background:${stemColor}"></div>
+              <div class="relative z-10 flex flex-col items-center">
+                <div class="w-3.5 h-3.5 rounded-full border-2 bg-[var(--card)] shadow-sm" style="border-color:${stemColor}; background:${stemColor}"></div>
+                <span class="mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] shadow-xs whitespace-nowrap inline-flex items-center">
+                  📅 ${escapeHtml(group.dateKey)}${countBadgeHtml}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join("");
+
         return `
-          <div onclick="setQuickFilter('prepared_sample', '${ps.name}')" class="cursor-pointer rounded-xl p-3.5 border transition ${isSelected ? 'bg-[var(--secondary)] border-[var(--primary)] ring-1 ring-[var(--primary)]' : 'bg-[var(--background)] border-[var(--border)] hover:border-[var(--primary)]'}">
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-mono font-bold text-sm text-[var(--foreground)]">${ps.name}</span>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-[var(--card)] border border-[var(--border)] font-mono">${recs.length} / ${totalAll} obs</span>
-            </div>
-            <div class="text-xs text-[var(--muted-foreground)] mt-1.5 space-y-0.5">
-              <div><strong class="text-[var(--foreground)]">Prep / Run Date:</strong> <span class="font-mono text-[var(--foreground)]">${prepDate}</span> · <strong class="text-[var(--foreground)]">Method:</strong> ${ps.prep_method || '—'}</div>
-              <div><strong class="text-[var(--foreground)]">Field Parent:</strong> <span class="font-mono">${ps.field_sample_name || '—'}</span> <span class="font-mono">(Collected: ${colDate} · GEOID: ${geoLabel})</span></div>
-              <div><strong class="text-[var(--foreground)]">Domains:</strong> ${types}</div>
-            </div>
-            <div class="mt-2 pt-2 border-t border-[var(--border)] flex items-center justify-between text-xs font-mono">
-              <span>${passCnt}P / ${failCnt}F</span>
-              <span class="underline text-[var(--primary)]">${isSelected ? 'Active filter (click to clear)' : 'Filter by sample'}</span>
+          <div id="lineage-horizontal-timeline" class="relative overflow-x-auto pb-3 pt-2">
+            <div class="inline-flex items-end min-w-full relative px-4">
+              <div class="absolute left-4 right-4 bottom-[26px] h-0.5 bg-[var(--border)] pointer-events-none" style="z-index: 1;"></div>
+              <div class="sticky left-0 z-20 flex items-center pr-3 pb-1.5">
+                <span class="px-2 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] shadow-xs whitespace-nowrap">
+                  ⏱ ${escapeHtml(axisLabel)} &rarr;
+                </span>
+              </div>
+              ${colsHtml}
             </div>
           </div>
         `;
-      }).join("");
+      };
+
+      // Dual-track horizontal timeline for 'auto' mode (Track 1 · Field Samples above spine, Track 2 · Prepared Samples below spine, stacked by date)
+      const renderDualTrackHorizontalTimeline = () => {
+        const fsGroups = groupTimelineNodesByDate(fsBuiltNodes);
+        const psGroups = groupTimelineNodesByDate(psBuiltNodes);
+
+        const fsRowHtml = fsGroups.length ? fsGroups.map(group => {
+          const stemColor = group.items[group.items.length - 1].provStyle.color;
+          const countBadgeHtml = group.items.length > 1
+            ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-semibold bg-[var(--secondary)] text-[var(--primary)]">${group.items.length}×</span>`
+            : "";
+          return `
+            <div data-timeline-date="${escapeHtml(group.dateKey)}" data-date-stack-count="${group.items.length}" class="flex flex-col justify-end items-center shrink-0 px-2">
+              <div data-date-stack="${escapeHtml(group.dateKey)}" class="flex flex-col justify-end items-center gap-1.5">
+                ${group.items.map(item => item.cardHtml).join("")}
+              </div>
+              <div class="w-0.5 h-4" style="background:${stemColor}"></div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] whitespace-nowrap inline-flex items-center">📅 ${escapeHtml(group.dateKey)}${countBadgeHtml}</span>
+            </div>
+          `;
+        }).join("") : `<div class="text-xs text-[var(--muted-foreground)] py-2">No field samples cataloged.</div>`;
+
+        const psRowHtml = psGroups.length ? psGroups.map(group => {
+          const stemColor = group.items[0].provStyle.color;
+          const countBadgeHtml = group.items.length > 1
+            ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-semibold bg-[var(--secondary)] text-[var(--primary)]">${group.items.length}×</span>`
+            : "";
+          return `
+            <div data-timeline-date="${escapeHtml(group.dateKey)}" data-date-stack-count="${group.items.length}" class="flex flex-col justify-start items-center shrink-0 px-2">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] whitespace-nowrap inline-flex items-center">📅 ${escapeHtml(group.dateKey)}${countBadgeHtml}</span>
+              <div class="w-0.5 h-4" style="background:${stemColor}"></div>
+              <div data-date-stack="${escapeHtml(group.dateKey)}" class="flex flex-col justify-start items-center gap-1.5">
+                ${group.items.map(item => item.cardHtml).join("")}
+              </div>
+            </div>
+          `;
+        }).join("") : `<div class="text-xs text-[var(--muted-foreground)] py-2">No prepared samples cataloged.</div>`;
+
+        return `
+          <div id="lineage-horizontal-timeline" class="space-y-2 relative overflow-x-auto pb-2">
+            <div class="space-y-1 relative z-10">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Track 1 · Field Samples (Collection Date &amp; Provider)</div>
+              <div id="lineage-track-field" class="flex items-end gap-2 pb-2">${fsRowHtml}</div>
+            </div>
+            <div class="relative w-full h-6 flex items-center">
+              <div class="w-full h-0.5 bg-[var(--border)]"></div>
+              <span class="absolute right-2 px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]">TIME (X-AXIS) &rarr;</span>
+            </div>
+            <div class="space-y-1 relative z-10">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Track 2 · Prepared Samples (Prep / Run Date &amp; Provider)</div>
+              <div id="lineage-track-prep" class="flex items-start gap-2 pt-2">${psRowHtml}</div>
+            </div>
+          </div>
+        `;
+      };
+
+      const activeTimelineHtml = alignMode === "collected"
+        ? `<div class="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Track 1 · Field Samples — Horizontal Timeline by Field Collection Date</div>` + renderSingleAxisBranchTimeline(fsBuiltNodes, "Field Sample Collection Date (X-Axis)")
+        : (alignMode === "prep"
+          ? `<div class="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Track 2 · Prepared Samples — Horizontal Timeline by Prepared Sample Run Date</div>` + renderSingleAxisBranchTimeline(psBuiltNodes, "Prepared Sample Run Date (X-Axis)")
+          : renderDualTrackHorizontalTimeline());
 
       const byType = [
         { name: "Proximate Analysis", tbl: "proximate_record", tab: "proximate", qcDomain: "proximate", desc: "Moisture, Total Solids, Volatile Solids, Ash (% total weight)" },
@@ -6139,26 +6970,37 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         ${benchHtml}
 
         <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 class="text-base font-bold text-[var(--foreground)]">Sample Lineage: Field Sample Collection (Dates &amp; GEOID) &rarr; Prepared Samples</h2>
-              <p class="text-xs text-[var(--muted-foreground)]">${fsList.length} Field Sample(s) processed into ${psList.length} Prepared Sample(s). Click any card to filter.</p>
+              <h2 class="text-base font-bold text-[var(--foreground)]">Sample Timeline (Time on X-Axis · Provider Cards Branching by Date)</h2>
+              <p class="text-xs text-[var(--muted-foreground)]">${fsList.length} Field Sample(s) &amp; ${psList.length} Prepared Sample(s). Toggle between Field Collection Date and Prepared Sample Run Date; hover any provider card on the timeline for full sample details or click to filter.</p>
             </div>
-            <a href="resource_explorer_dashboard.html?resource=${encRes}" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
-              Compare by Collection / Prep Date in Explorer &rarr;
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5 text-xs" role="group" aria-label="Timeline Date Axis Mode">
+                <button type="button" onclick="setSubMode('timelineAlignMode', 'collected')" class="px-2.5 py-1 rounded-md font-semibold transition ${alignMode === 'collected' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}" title="Show Field Samples on horizontal timeline by collection date">🌱 Align by Field Collection Date (${fsList.length})</button>
+                <button type="button" onclick="setSubMode('timelineAlignMode', 'prep')" class="px-2.5 py-1 rounded-md font-semibold transition ${alignMode === 'prep' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}" title="Show Prepared Samples on horizontal timeline by run/prep date">🧪 Align by Prep / Run Date (${psList.length})</button>
+                <button type="button" onclick="setSubMode('timelineAlignMode', 'auto')" class="px-2.5 py-1 rounded-md font-semibold transition ${alignMode === 'auto' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}" title="Show both Field and Prepared tracks with parent-child connectors">🔗 Both Tracks (Field &rarr; Prep)</button>
+              </div>
+              <div class="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5 text-xs" role="group" aria-label="Timeline Sort Order">
+                <button type="button" onclick="setSubMode('timelineSortMode', 'date')" class="px-2 py-1 rounded-md font-semibold transition ${sortMode === 'date' ? 'bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--primary)]/40' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}">By Date</button>
+                <button type="button" onclick="setSubMode('timelineSortMode', 'order')" class="px-2 py-1 rounded-md font-semibold transition ${sortMode === 'order' ? 'bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--primary)]/40' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}">By Sample Order</button>
+              </div>
+              <a href="resource_explorer_dashboard.html?resource=${encRes}" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
+                Compare in Explorer &rarr;
+              </a>
+            </div>
           </div>
-          ${fsCards ? `
-            <div class="space-y-2">
-              <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Field Samples (Collection Date &amp; County GEOID)</div>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">${fsCards}</div>
-            </div>
-          ` : ''}
-          <div class="space-y-2">
-            <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Prepared Samples (Prep / Run Date &amp; Method)</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              ${psCards || '<div class="text-xs text-[var(--muted-foreground)]">No prepared samples cataloged.</div>'}
-            </div>
+          ${providerLegendHtml}
+          <div id="lineage-hover-tooltip" class="hidden fixed z-50 pointer-events-none max-w-xs rounded-xl p-3 text-xs bg-[var(--card)] text-[var(--foreground)] border border-[var(--primary)] shadow-xl space-y-1"></div>
+          <div id="lineage-timeline-tracks-wrap" class="relative space-y-2">
+            ${activeTimelineHtml}
+            ${orphanPsCards ? `
+              <div id="lineage-unlinked-prep-group" class="space-y-1.5 pt-3 border-t border-[var(--border)] relative z-10">
+                <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Unlinked Prepared Samples (No Field Sample Record · ${orphanPsList.length})</div>
+                <div class="flex flex-wrap gap-2.5">${orphanPsCards}</div>
+              </div>
+            ` : ''}
+            <svg id="lineage-svg-overlay" class="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style="z-index: 1;"></svg>
           </div>
         </div>
 
@@ -6778,13 +7620,26 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       renderKpiStrip(filtered);
 
       const container = document.getElementById("tab-content");
-      if (state.tab === "overview") container.innerHTML = renderOverviewTab(filtered);
+      if (state.tab === "overview") {
+        container.innerHTML = renderOverviewTab(filtered);
+        if (typeof window.renderTimelineSvgConnectors === "function") {
+          if (typeof window.requestAnimationFrame === "function") {
+            window.requestAnimationFrame(() => window.renderTimelineSvgConnectors());
+          }
+          setTimeout(() => window.renderTimelineSvgConnectors(), 40);
+        }
+      }
       else if (state.tab === "proximate") container.innerHTML = renderProximateTab(filtered);
       else if (state.tab === "compositional") container.innerHTML = renderCompositionalTab(filtered);
       else if (state.tab === "elemental") container.innerHTML = renderElementalTab(filtered);
       else if (state.tab === "conversion") container.innerHTML = renderConversionTab(filtered);
       syncUrl(opts);
     }
+    window.addEventListener("resize", () => {
+      if (state.tab === "overview" && typeof window.renderTimelineSvgConnectors === "function") {
+        window.renderTimelineSvgConnectors();
+      }
+    });
 
     window.selectResource = function(resName) {
       if (!RECORDS_BY_RESOURCE[resName]) return;
@@ -7284,15 +8139,26 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     ];
 
     const COUNTY_LOOKUP = BUNDLE.ca_counties || {};
+    function normSampleKey(val) {
+      return String(val || "").trim().toLowerCase();
+    }
     const FS_LOOKUP = {};
     (BUNDLE.field_samples || []).forEach(fs => {
+      if (!fs || !fs.name) return;
       FS_LOOKUP[`${fs.resource_name}::${fs.name}`] = fs;
+      FS_LOOKUP[`${normSampleKey(fs.resource_name)}::${normSampleKey(fs.name)}`] = fs;
       if (!FS_LOOKUP[fs.name]) FS_LOOKUP[fs.name] = fs;
+      const nk = normSampleKey(fs.name);
+      if (nk && !FS_LOOKUP[nk]) FS_LOOKUP[nk] = fs;
     });
     const PS_LOOKUP = {};
     (BUNDLE.prepared_samples || []).forEach(ps => {
+      if (!ps || !ps.name) return;
       PS_LOOKUP[`${ps.resource_name}::${ps.name}`] = ps;
+      PS_LOOKUP[`${normSampleKey(ps.resource_name)}::${normSampleKey(ps.name)}`] = ps;
       if (!PS_LOOKUP[ps.name]) PS_LOOKUP[ps.name] = ps;
+      const nk = normSampleKey(ps.name);
+      if (nk && !PS_LOOKUP[nk]) PS_LOOKUP[nk] = ps;
     });
 
     const ALL_RECORDS = BUNDLE.rows.map(arr => {
@@ -7307,8 +8173,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if ((obj.analysis_type === "ICP Elemental Analysis" || obj.analysis_type === "XRF Elemental Analysis") && obj.parameter && obj.parameter !== "(metadata only)") {
         obj.parameter = obj.parameter.charAt(0).toUpperCase() + obj.parameter.slice(1).toLowerCase();
       }
-      const fsMeta = FS_LOOKUP[`${obj.resource_name}::${obj.field_sample}`] || FS_LOOKUP[obj.field_sample] || null;
-      const psMeta = PS_LOOKUP[`${obj.resource_name}::${obj.prepared_sample}`] || PS_LOOKUP[obj.prepared_sample] || null;
+      const fsMeta = FS_LOOKUP[`${obj.resource_name}::${obj.field_sample}`] || FS_LOOKUP[`${normSampleKey(obj.resource_name)}::${normSampleKey(obj.field_sample)}`] || FS_LOOKUP[obj.field_sample] || FS_LOOKUP[normSampleKey(obj.field_sample)] || null;
+      const psMeta = PS_LOOKUP[`${obj.resource_name}::${obj.prepared_sample}`] || PS_LOOKUP[`${normSampleKey(obj.resource_name)}::${normSampleKey(obj.prepared_sample)}`] || PS_LOOKUP[obj.prepared_sample] || PS_LOOKUP[normSampleKey(obj.prepared_sample)] || null;
       obj.collected_date = fsMeta && fsMeta.collected_at ? fsMeta.collected_at : "";
       obj.geoid = fsMeta && fsMeta.geoid ? String(fsMeta.geoid) : "";
       obj.county_name = obj.geoid && COUNTY_LOOKUP[obj.geoid] ? COUNTY_LOOKUP[obj.geoid] : "";

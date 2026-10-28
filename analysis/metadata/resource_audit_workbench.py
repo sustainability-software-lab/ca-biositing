@@ -189,7 +189,21 @@ def group_context_label(row: dict[str, Any]) -> str:
             except (TypeError, ValueError):
                 return f"{base} @ {str(th).strip()}h"
         return base
+    if domain_slug == "gasification":
+        v = (
+            str(row.get("vessel") or "").strip()
+            or str(row.get("reactor_type") or "").strip()
+            or str(row.get("prep_method") or "").strip()
+        )
+        if v and v.lower() not in {"none", "n/a", "unassigned"}:
+            return v if v.lower().startswith("reactor:") else f"Reactor: {v}"
+        return "Reactor: Unassigned"
     return str(row.get("prep_method") or "").strip() or "unassigned"
+
+
+def compute_canonical_method_signature(row: dict[str, Any]) -> str:
+    """Return the canonical domain-aware method/context signature for a measurement row."""
+    return group_context_label(row)
 
 
 def resolve_record_table(analysis_type_or_slug: str | None) -> str:
@@ -760,10 +774,12 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
                     "value": val,
                     "unit": rec.get("unit", ""),
                     "qc_status": rec.get("qc_status", "pass"),
+                    "qc_pass": rec.get("qc_status", "pass"),
                     "analyst": rec.get("analyst", ""),
                     "exp_date": rec.get("exp_date", ""),
                     "experiment": rec.get("experiment", ""),
                     "prep_method": rec.get("prep_method", ""),
+                    "vessel": rec.get("vessel", ""),
                     "eh_method": rec.get("eh_method", ""),
                     "strain": rec.get("strain", ""),
                     "time_h": rec.get("time_h"),
@@ -803,6 +819,11 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
             trigger_parts.append(
                 f"RSD {group_stats['rsd_pct']:.1f}% > 10% (n={group_stats['count']})"
             )
+        if group_stats["count"] >= 2 and group_stats["rsd_pct"] > 20.0:
+            flag_types.append("rsd_gt_20")
+            trigger_parts.append(
+                f"RSD {group_stats['rsd_pct']:.1f}% > 20% (n={group_stats['count']})"
+            )
         if outlier_record_ids:
             flag_types.append("iqr_outlier")
             trigger_parts.append(
@@ -819,6 +840,13 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
                 f"Analyst flagged ({', '.join(analyst_flagged_ids)})"
             )
 
+        lab_notes_seen: list[str] = []
+        for r_item in replicate_rows:
+            n_val = str(r_item.get("note") or "").strip()
+            if n_val and n_val not in lab_notes_seen:
+                lab_notes_seen.append(n_val)
+        group_lab_note = " | ".join(lab_notes_seen)
+
         group_entry = {
             "replicate_group_key": group_key,
             "resource_name": first.get("resource_name", ""),
@@ -831,10 +859,12 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
             "analyst": first.get("analyst", ""),
             "experiment": first.get("experiment", ""),
             "prep_method": first.get("prep_method", ""),
+            "vessel": first.get("vessel", ""),
             "eh_method": first.get("eh_method", ""),
             "strain": first.get("strain", ""),
             "time_h": first.get("time_h"),
             "group_context_label": first.get("group_context_label", ""),
+            "lab_lineage_note": group_lab_note,
             "exp_date": first.get("exp_date", ""),
             "record_table": first.get("record_table", "proximate_record"),
             "rsd_pct": group_stats["rsd_pct"],
@@ -921,10 +951,13 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
                     "analyst": first.get("analyst", ""),
                     "experiment": first.get("experiment", ""),
                     "prep_method": first.get("prep_method", ""),
+                    "vessel": first.get("vessel", ""),
                     "eh_method": first.get("eh_method", ""),
                     "strain": first.get("strain", ""),
                     "time_h": first.get("time_h"),
                     "group_context_label": first.get("group_context_label", ""),
+                    "lab_lineage_note": group_lab_note,
+                    "source_label": "Auto-QC Screening",
                     "exp_date": first.get("exp_date", ""),
                     "flag_type": primary_flag,
                     "flag_types": flag_types,
@@ -947,9 +980,11 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
                     "assigned_to_email": None,
                     "submitted_by_email": "auto-qc-engine@biocirv.org",
                     "created_at": generated_utc,
+                    "submitted_at": generated_utc,
                     "resolved_by_email": None,
                     "resolved_at": None,
                     "synced_to_gsheet": False,
+                    "sync_error": None,
                     "gsheet_synced_at": None,
                     "gsheet_synced_by_email": None,
                 }
@@ -979,6 +1014,7 @@ def build_workbench_payload(snapshot: dict[str, Any]) -> dict[str, Any]:
             "parameters": parameters_list,
             "flag_types": [
                 "rsd_gt_10",
+                "rsd_gt_20",
                 "iqr_outlier",
                 "proximate_sum",
                 "analyst_flagged",
@@ -1752,10 +1788,34 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           <select id="filter-flag-type">
             <option value="">All Flag Types</option>
             <option value="rsd_gt_10">rsd_gt_10 (RSD &gt; 10%)</option>
+            <option value="rsd_gt_20">rsd_gt_20 (RSD &gt; 20%)</option>
             <option value="iqr_outlier">iqr_outlier (Tukey 1.5×IQR)</option>
             <option value="proximate_sum">proximate_sum (Closure &lt;95% or &gt;105%)</option>
             <option value="analyst_flagged">analyst_flagged (Existing Fail/Flag)</option>
           </select>
+        </div>
+        <div class="field-group">
+          <label for="filter-qc-status">Current QC Status</label>
+          <select id="filter-qc-status">
+            <option value="">All QC Statuses</option>
+            <option value="pass">pass (QC Pass)</option>
+            <option value="fail">fail (QC Fail / Rejected)</option>
+            <option value="provisional">provisional (In Review / Open)</option>
+            <option value="needs_retest">needs_retest (Lab Retest)</option>
+            <option value="mixed">mixed (Split Replicate QC)</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="filter-min-rsd" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+            <span>Min RSD % Threshold</span>
+            <strong id="filter-min-rsd-val" style="color:#38bdf8;font-family:monospace;">&ge; 0% (All)</strong>
+          </label>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="range" id="filter-min-rsd" min="0" max="50" step="1" value="0" style="flex:1;accent-color:#38bdf8;cursor:pointer;" />
+            <button type="button" class="btn btn-rsd-preset active" id="btn-rsd-preset-0" onclick="window.setMinRsdFilter && window.setMinRsdFilter(0)" style="padding:2px 6px;font-size:10.5px;">All</button>
+            <button type="button" class="btn btn-rsd-preset" id="btn-rsd-preset-10" onclick="window.setMinRsdFilter && window.setMinRsdFilter(10)" style="padding:2px 6px;font-size:10.5px;">&gt;10%</button>
+            <button type="button" class="btn btn-rsd-preset" id="btn-rsd-preset-20" onclick="window.setMinRsdFilter && window.setMinRsdFilter(20)" style="padding:2px 6px;font-size:10.5px;">&gt;20%</button>
+          </div>
         </div>
         <div class="field-group">
           <label for="filter-assigned-analyst">Assigned Analyst</label>
@@ -1765,7 +1825,10 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         </div>
         <div class="field-group">
           <label for="filter-search">Search Sample / Record ID</label>
-          <input type="search" id="filter-search" placeholder="e.g. PROX-AH-004 or AH-PREP-01" />
+          <div style="display:flex;align-items:center;gap:6px;">
+            <input type="search" id="filter-search" placeholder="e.g. PROX-AH-004 or AH-PREP-01" style="flex:1;" />
+            <button type="button" class="btn" id="btn-reset-filters" onclick="window.resetAllFilters && window.resetAllFilters()" style="padding:5px 10px;font-size:11px;white-space:nowrap;" title="Reset all queue filters">↺ Reset Filters</button>
+          </div>
         </div>
       </div>
     </section>
@@ -2023,8 +2086,16 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 <div>
                   <span class="timeline-label">1. Created / Flagged:</span>
                   <span id="prov-created-by">auto-qc-engine@biocirv.org</span>
+                  <span class="transition-badge" id="prov-source-badge" style="margin-left: 6px; display: none;"></span>
                 </div>
                 <code id="prov-created-at">__GENERATED_UTC__</code>
+              </div>
+
+              <div class="timeline-step" id="prov-lab-note-row" style="display: none;">
+                <div>
+                  <span class="timeline-label">Lab Sample / Submission Note:</span>
+                  <span id="prov-lab-lineage-note" style="color: #cbd5e1; font-style: italic;">—</span>
+                </div>
               </div>
 
               <div class="timeline-step">
@@ -2051,6 +2122,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                   <span class="timeline-label">4. Google Sheets Sync Status (Stage 2):</span>
                   <span class="status-pill status-open" id="prov-gsheet-status-badge">Pending Admin GSheet Sync</span>
                   <code id="prov-gsheet-synced-at" style="margin-left: 6px;">—</code>
+                  <div id="prov-gsheet-sync-error" style="display: none; margin-top: 4px; font-size: 11px; color: #fca5a5;"></div>
                 </div>
                 <div id="prov-gsheet-action-slot">
                   <button
@@ -2203,6 +2275,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       <span>⚪ Peer Slice Points (#64748b)</span>
       <span>🔵 Target Replicate Group (#2563eb)</span>
       <span>🔴 Flagged Outlier (#dc2626)</span>
+      <span>◆✕ QC Fail / Rejected (#f59e0b)</span>
     </div>
     <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; border-top:1px solid var(--border); padding-top:8px; font-size:11px;">
       <span id="show-me-stats-summary" style="font-family:var(--mono); font-size:10px; color:var(--muted);"></span>
@@ -2230,6 +2303,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           analysisType: "",
           parameter: "",
           flagType: "",
+          qcStatus: "",
+          minRsd: 0,
           assignedAnalyst: "",
           search: ""
         },
@@ -2247,21 +2322,25 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       };
 
       function getDefaultAssigneeEmail(existingEmail) {
+        var placeholderEmails = [
+          "unassigned",
+          "none",
+          "null",
+          "anonymous",
+          "guest",
+          "local.analyst@lbl.gov"
+        ];
         var cleanExisting = String(existingEmail || "").trim();
         if (
           cleanExisting &&
-          ["unassigned", "none", "null", "anonymous", "guest"].indexOf(
-            cleanExisting.toLowerCase()
-          ) === -1
+          placeholderEmails.indexOf(cleanExisting.toLowerCase()) === -1
         ) {
           return cleanExisting;
         }
         var userEmail = String((state.user && state.user.email) || "").trim();
         if (
           userEmail &&
-          ["unassigned", "none", "null", "anonymous", "guest"].indexOf(
-            userEmail.toLowerCase()
-          ) === -1
+          placeholderEmails.indexOf(userEmail.toLowerCase()) === -1
         ) {
           return userEmail;
         }
@@ -2271,9 +2350,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           ).trim();
           if (
             storedEmail &&
-            ["unassigned", "none", "null", "anonymous", "guest"].indexOf(
-              storedEmail.toLowerCase()
-            ) === -1
+            placeholderEmails.indexOf(storedEmail.toLowerCase()) === -1
           ) {
             return storedEmail;
           }
@@ -2319,6 +2396,75 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           state.decisionsById[item.decision_id] = item;
           state.decisionsOrder.push(item.decision_id);
         }
+        try {
+          var pendingRaw =
+            typeof localStorage !== "undefined"
+              ? localStorage.getItem("biocirv_pending_qc_decisions")
+              : null;
+          var pendingArr = pendingRaw ? JSON.parse(pendingRaw) : [];
+          if (Array.isArray(pendingArr)) {
+            for (var p = 0; p < pendingArr.length; p++) {
+              var pItem = pendingArr[p];
+              if (!pItem) continue;
+              var pKey = pItem.replicate_group_key
+                ? normalizeReplicateGroupKey(pItem.replicate_group_key)
+                : "";
+              var matchedLocalId = null;
+              if (pKey) {
+                for (var k = 0; k < state.decisionsOrder.length; k++) {
+                  var cand = state.decisionsById[state.decisionsOrder[k]];
+                  if (
+                    cand &&
+                    cand.replicate_group_key &&
+                    normalizeReplicateGroupKey(cand.replicate_group_key) === pKey
+                  ) {
+                    matchedLocalId = cand.decision_id;
+                    break;
+                  }
+                }
+              }
+              if (matchedLocalId && state.decisionsById[matchedLocalId]) {
+                var locDec = state.decisionsById[matchedLocalId];
+                locDec.submitted_by_email =
+                  pItem.submitted_by_email || locDec.submitted_by_email;
+                locDec.submitted_at =
+                  pItem.submitted_at || pItem.created_at || locDec.submitted_at;
+                locDec.created_at =
+                  pItem.created_at || pItem.submitted_at || locDec.created_at;
+                locDec.lab_lineage_note =
+                  pItem.lab_lineage_note || locDec.lab_lineage_note || "";
+                locDec.source_label =
+                  pItem.source_label || locDec.source_label || "";
+                if (pItem.review_note) locDec.review_note = pItem.review_note;
+              } else {
+                var offId =
+                  pItem.decision_id && !state.decisionsById[pItem.decision_id]
+                    ? pItem.decision_id
+                    : "QC-LOCAL-" + String(p + 1).padStart(4, "0");
+                while (state.decisionsById[offId]) {
+                  offId = offId + "-LOC";
+                }
+                var offCopy = JSON.parse(JSON.stringify(pItem));
+                offCopy.decision_id = offId;
+                offCopy.submitted_at =
+                  offCopy.submitted_at || offCopy.created_at || null;
+                offCopy.created_at =
+                  offCopy.created_at || offCopy.submitted_at || null;
+                offCopy.lab_lineage_note = offCopy.lab_lineage_note || "";
+                offCopy.source_label = offCopy.source_label || "";
+                offCopy.flag_type = offCopy.flag_type || "analyst_flagged";
+                offCopy.flag_types =
+                  Array.isArray(offCopy.flag_types) && offCopy.flag_types.length
+                    ? offCopy.flag_types
+                    : [offCopy.flag_type];
+                state.decisionsById[offId] = offCopy;
+                if (state.decisionsOrder.indexOf(offId) === -1) {
+                  state.decisionsOrder.push(offId);
+                }
+              }
+            }
+          }
+        } catch (_e) {}
         if (state.decisionsOrder.length > 0 && !state.selectedDecisionId) {
           state.selectedDecisionId = state.decisionsOrder[0];
           var firstDec = state.decisionsById[state.selectedDecisionId];
@@ -2463,7 +2609,21 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           }
           return base;
         }
+        if (domSlug === "gasification") {
+          var v =
+            String(obj.vessel || "").trim() ||
+            String(obj.reactor_type || "").trim() ||
+            prep;
+          if (v && ["none", "n/a", "unassigned"].indexOf(v.toLowerCase()) === -1) {
+            return v.toLowerCase().indexOf("reactor:") === 0 ? v : "Reactor: " + v;
+          }
+          return "Reactor: Unassigned";
+        }
         return prep || "unassigned";
+      }
+
+      function computeCanonicalMethodSignature(obj) {
+        return groupContextLabel(obj);
       }
 
       function normalizeReplicateGroupKey(
@@ -2755,8 +2915,90 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         }
         if (f.parameter && dec.parameter_name !== f.parameter) return false;
         if (f.flagType) {
-          var flags = dec.flag_types || [dec.flag_type];
-          if (flags.indexOf(f.flagType) === -1) return false;
+          var flags = dec.flag_types || dec.flags || (dec.flag_type ? [dec.flag_type] : []);
+          if (f.flagType === "rsd_gt_20") {
+            if (flags.indexOf("rsd_gt_20") === -1 && Number(dec.rsd_pct || 0) <= 20) {
+              return false;
+            }
+          } else if (f.flagType === "rsd_gt_10") {
+            if (flags.indexOf("rsd_gt_10") === -1 && Number(dec.rsd_pct || 0) <= 10) {
+              return false;
+            }
+          } else if (flags.indexOf(f.flagType) === -1) {
+            return false;
+          }
+        }
+        if (f.qcStatus) {
+          var oldSt = String(
+            dec.old_qc_pass || dec.current_qc_status || "pass"
+          ).toLowerCase();
+          var newSt = String(
+            dec.new_qc_pass || dec.new_qc_status || ""
+          ).toLowerCase();
+          var actStatus = String(dec.decision_status || "").toLowerCase();
+          var decAct = String(dec.decision_action || dec.decision || "").toLowerCase();
+          var curStatus = String(
+            decAct === "reject_fail" || decAct === "exclude_qc_fail"
+              ? "fail"
+              : (newSt && newSt !== "provisional" && newSt !== "pending" ? newSt : "") ||
+                  oldSt ||
+                  "pass"
+          ).toLowerCase();
+          var qcFlags = dec.flag_types || dec.flags || (dec.flag_type ? [dec.flag_type] : []);
+          var grp = findReplicateGroupForDecision(dec);
+          var reps = (grp && grp.replicates) || [];
+          var repStates = {};
+          for (var ri = 0; ri < reps.length; ri++) {
+            var st = String(reps[ri].qc_pass || reps[ri].qc_status || "pass").toLowerCase();
+            repStates[st] = true;
+          }
+          var distinctStates = Object.keys(repStates);
+          var isMixed =
+            distinctStates.length > 1 ||
+            curStatus === "mixed" ||
+            qcFlags.indexOf("mixed_qc") !== -1;
+          if (f.qcStatus === "mixed") {
+            if (!isMixed) return false;
+          } else if (f.qcStatus === "needs_retest") {
+            if (
+              curStatus !== "needs_retest" &&
+              actStatus !== "needs_retest" &&
+              decAct !== "needs_retest" &&
+              decAct !== "mark_needs_retest" &&
+              !repStates["needs_retest"]
+            ) {
+              return false;
+            }
+          } else if (f.qcStatus === "provisional") {
+            if (
+              curStatus !== "provisional" &&
+              actStatus !== "in_review" &&
+              !repStates["provisional"]
+            ) {
+              return false;
+            }
+          } else if (f.qcStatus === "pass" || f.qcStatus === "qc_pass") {
+            if (
+              curStatus !== "pass" ||
+              (oldSt === "fail" && newSt !== "pass") ||
+              newSt === "fail" ||
+              decAct === "reject_fail" ||
+              decAct === "exclude_qc_fail"
+            ) {
+              return false;
+            }
+          } else if (f.qcStatus === "fail" || f.qcStatus === "qc_fail") {
+            if (curStatus !== "fail" && oldSt !== "fail" && newSt !== "fail" && !repStates["fail"]) {
+              return false;
+            }
+          } else {
+            if (curStatus !== f.qcStatus && !repStates[f.qcStatus]) {
+              return false;
+            }
+          }
+        }
+        if (Number(f.minRsd || 0) > 0) {
+          if (Number(dec.rsd_pct || 0) <= Number(f.minRsd)) return false;
         }
         if (f.assignedAnalyst) {
           if (f.assignedAnalyst === "__ME__") {
@@ -2786,6 +3028,55 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           if (hay.indexOf(q) === -1) return false;
         }
         return true;
+      }
+
+      function setMinRsdFilter(val) {
+        var num = Math.max(0, Math.min(50, Number(val || 0)));
+        state.filters.minRsd = num;
+        var slider = document.getElementById("filter-min-rsd");
+        if (slider) slider.value = String(num);
+        var valEl = document.getElementById("filter-min-rsd-val");
+        if (valEl) valEl.textContent = num === 0 ? "\u2265 0% (All)" : num + "%";
+        var presets = [0, 10, 20];
+        for (var pi = 0; pi < presets.length; pi++) {
+          var pBtn = document.getElementById("btn-rsd-preset-" + presets[pi]);
+          if (pBtn && pBtn.classList) {
+            if (num === presets[pi]) pBtn.classList.add("active");
+            else pBtn.classList.remove("active");
+          }
+        }
+        renderQueueTable();
+      }
+
+      function resetAllFilters() {
+        state.filters.resource = "";
+        state.filters.analysisType = "";
+        state.filters.parameter = "";
+        state.filters.flagType = "";
+        state.filters.qcStatus = "";
+        state.filters.minRsd = 0;
+        state.filters.assignedAnalyst = "";
+        state.filters.search = "";
+        var filterIds = [
+          "filter-resource",
+          "filter-analysis-type",
+          "filter-parameter",
+          "filter-flag-type",
+          "filter-qc-status",
+          "filter-assigned-analyst",
+          "filter-search"
+        ];
+        for (var fi = 0; fi < filterIds.length; fi++) {
+          var el = document.getElementById(filterIds[fi]);
+          if (el) el.value = "";
+        }
+        setMinRsdFilter(0);
+      }
+
+      if (typeof window !== "undefined") {
+        window.setMinRsdFilter = setMinRsdFilter;
+        window.resetAllFilters = resetAllFilters;
+        window.computeCanonicalMethodSignature = computeCanonicalMethodSignature;
       }
 
       function computeQueueCounts() {
@@ -2943,9 +3234,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (bulkEmailEl) bulkEmailEl.value = targetEmail;
 
         var actorEmail =
-          (state.user && state.user.email) ||
-          getDefaultAssigneeEmail("") ||
-          "local.analyst@lbl.gov";
+          getDefaultAssigneeEmail((state.user && state.user.email) || "") ||
+          null;
         var nowIso = new Date().toISOString();
         var itemsPayload = [];
         var selectedDecisions = [];
@@ -3359,7 +3649,35 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
         // Update 4-step Audit Provenance Timeline
         setText("prov-created-by", dec.submitted_by_email || "auto-qc-engine@biocirv.org");
-        setText("prov-created-at", dec.created_at || WORKBENCH_DATA.generated_utc || "—");
+        setText(
+          "prov-created-at",
+          dec.submitted_at || dec.created_at || WORKBENCH_DATA.generated_utc || "—"
+        );
+        var provSrcBadge = document.getElementById("prov-source-badge");
+        if (provSrcBadge) {
+          if (dec.source_label) {
+            provSrcBadge.textContent = dec.source_label;
+            provSrcBadge.style.display = "inline-block";
+          } else {
+            provSrcBadge.textContent = "";
+            provSrcBadge.style.display = "none";
+          }
+        }
+        var labNoteVal =
+          dec.lab_lineage_note ||
+          (group && group.lab_lineage_note) ||
+          "";
+        var provLabRow = document.getElementById("prov-lab-note-row");
+        var provLabText = document.getElementById("prov-lab-lineage-note");
+        if (provLabRow && provLabText) {
+          if (labNoteVal) {
+            provLabText.textContent = labNoteVal;
+            provLabRow.style.display = "block";
+          } else {
+            provLabText.textContent = "";
+            provLabRow.style.display = "none";
+          }
+        }
         setText("prov-assigned-to", dec.assigned_to_email || "Unassigned");
         setText(
           "prov-scope-badge",
@@ -3380,13 +3698,26 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         setText("prov-resolved-at", dec.resolved_at || "—");
 
         var gsheetBadge = document.getElementById("prov-gsheet-status-badge");
+        var gsheetErrEl = document.getElementById("prov-gsheet-sync-error");
         if (gsheetBadge) {
           if (dec.synced_to_gsheet) {
             gsheetBadge.textContent = "Synced to GSheet";
             gsheetBadge.className = "status-pill status-synced";
+          } else if (dec.sync_error) {
+            gsheetBadge.textContent = "GSheet Sync Failed";
+            gsheetBadge.className = "status-pill status-fail";
           } else {
             gsheetBadge.textContent = "Pending Admin GSheet Sync";
             gsheetBadge.className = "status-pill status-open";
+          }
+        }
+        if (gsheetErrEl) {
+          if (!dec.synced_to_gsheet && dec.sync_error) {
+            gsheetErrEl.textContent = "Sync error: " + dec.sync_error;
+            gsheetErrEl.style.display = "block";
+          } else {
+            gsheetErrEl.textContent = "";
+            gsheetErrEl.style.display = "none";
           }
         }
         setText(
@@ -4084,7 +4415,23 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 merged.resolved_by_email =
                   srv.resolved_by_email || merged.resolved_by_email;
                 merged.resolved_at = srv.resolved_at || merged.resolved_at;
+                merged.submitted_by_email =
+                  srv.submitted_by_email || merged.submitted_by_email;
+                merged.created_at =
+                  srv.created_at || srv.submitted_at || merged.created_at;
+                merged.submitted_at =
+                  srv.submitted_at || srv.created_at || merged.submitted_at || merged.created_at;
+                merged.lab_lineage_note =
+                  srv.lab_lineage_note ||
+                  merged.lab_lineage_note ||
+                  "";
+                merged.source_label =
+                  srv.source_label ||
+                  merged.source_label ||
+                  "";
                 merged.synced_to_gsheet = Boolean(srv.synced_to_gsheet);
+                merged.sync_error =
+                  srv.sync_error !== undefined ? srv.sync_error : merged.sync_error || null;
                 merged.gsheet_synced_at =
                   srv.gsheet_synced_at || merged.gsheet_synced_at;
                 merged.gsheet_synced_by_email =
@@ -4171,6 +4518,18 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                   srv.decision_status || srv.status || "open";
                 hydrated.status =
                   srv.status || srv.decision_status || "open";
+                hydrated.submitted_by_email =
+                  srv.submitted_by_email || "analyst@lbl.gov";
+                hydrated.created_at =
+                  srv.created_at || srv.submitted_at || WORKBENCH_DATA.generated_utc || null;
+                hydrated.submitted_at =
+                  srv.submitted_at || srv.created_at || hydrated.created_at;
+                hydrated.lab_lineage_note =
+                  srv.lab_lineage_note ||
+                  (matchedGrp && matchedGrp.lab_lineage_note) ||
+                  "";
+                hydrated.source_label = srv.source_label || "";
+                hydrated.sync_error = srv.sync_error || null;
                 hydrated.flag_type = srv.flag_type || "analyst_flagged";
                 hydrated.flag_types =
                   Array.isArray(srv.flag_types) && srv.flag_types.length > 0
@@ -4461,10 +4820,13 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             });
         }
 
-        ensureDbIdPromise()
+        return ensureDbIdPromise()
           .then(function (dbId) {
             if (dbId === null || dbId === undefined) {
-              return null;
+              return {
+                synced_to_gsheet: false,
+                sync_error: "Unable to resolve PostgreSQL decision ID prior to GSheet sync."
+              };
             }
             return fetch(
               "/v1/qc/decisions/" + encodeURIComponent(dbId) + "/sync-gsheet",
@@ -4474,25 +4836,61 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 credentials: "same-origin"
               }
             ).then(function (resp) {
-              return resp.ok ? resp.json() : null;
+              return resp.json().catch(function () {
+                return {
+                  synced_to_gsheet: false,
+                  sync_error: "HTTP " + resp.status
+                };
+              });
             });
           })
-          .catch(function () {
-            return null;
+          .catch(function (err) {
+            return {
+              synced_to_gsheet: false,
+              sync_error: (err && err.message) || "Network error contacting /sync-gsheet"
+            };
           })
-          .finally(function () {
+          .then(function (syncRes) {
             dec.decision_status = "resolved";
-            dec.synced_to_gsheet = true;
-            dec.gsheet_synced_at = nowUtc;
-            dec.gsheet_synced_by_email = state.user.email || "admin@lbl.gov";
-            showToast(
-              "Stage 2 Google Sheets write-back completed for " +
-                dec.decision_id +
-                ".",
-              false
-            );
+            var syncedOk = Boolean(syncRes && syncRes.synced_to_gsheet === true);
+            if (syncedOk) {
+              dec.synced_to_gsheet = true;
+              dec.sync_error = null;
+              dec.gsheet_synced_at =
+                (syncRes.decision && syncRes.decision.gsheet_synced_at) ||
+                syncRes.gsheet_synced_at ||
+                nowUtc;
+              dec.gsheet_synced_by_email =
+                (syncRes.decision && syncRes.decision.gsheet_synced_by_email) ||
+                state.user.email ||
+                "admin@lbl.gov";
+              showToast(
+                "Stage 2 Google Sheets write-back completed for " +
+                  dec.decision_id +
+                  ".",
+                false
+              );
+            } else {
+              dec.synced_to_gsheet = false;
+              var errReason =
+                (syncRes && (syncRes.sync_error || syncRes.detail)) ||
+                (syncRes &&
+                  syncRes.writeback &&
+                  Array.isArray(syncRes.writeback.errors) &&
+                  syncRes.writeback.errors.join("; ")) ||
+                "Google Sheets row write-back did not confirm any updated cells.";
+              dec.sync_error = errReason;
+              showToast(
+                "Stage 2 Google Sheets write-back failed for " +
+                  dec.decision_id +
+                  ": " +
+                  errReason,
+                true
+              );
+            }
             renderQueueTable();
             renderContextualDrawer();
+            return syncRes;
           });
       }
 
@@ -4519,31 +4917,122 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             return typeof id === "number" && Number.isInteger(id);
           });
         var nowUtc = new Date().toISOString();
-        fetch("/v1/qc/decisions/sync-gsheet-batch", {
+        return fetch("/v1/qc/decisions/sync-gsheet-batch", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "same-origin",
           body: JSON.stringify({ decision_ids: ids.length ? ids : null })
         })
-          .catch(function () {})
-          .finally(function () {
+          .then(function (resp) {
+            return resp.json().catch(function () {
+              return { synced_count: 0, sync_error: "HTTP " + resp.status };
+            });
+          })
+          .catch(function (err) {
+            return {
+              synced_count: 0,
+              sync_error: (err && err.message) || "Network error contacting /sync-gsheet-batch"
+            };
+          })
+          .then(function (batchRes) {
+            var syncedCount = Number((batchRes && batchRes.synced_count) || 0);
+            var resultsById = {};
+            var hasPerItemResults = Boolean(
+              batchRes && Array.isArray(batchRes.results) && batchRes.results.length > 0
+            );
+            if (batchRes && Array.isArray(batchRes.results)) {
+              for (var r = 0; r < batchRes.results.length; r++) {
+                var itemRes = batchRes.results[r];
+                if (itemRes) {
+                  var resDbId =
+                    itemRes.decision && itemRes.decision.id != null
+                      ? itemRes.decision.id
+                      : itemRes.decision_id != null
+                      ? itemRes.decision_id
+                      : null;
+                  if (resDbId != null) {
+                    resultsById[String(resDbId)] = itemRes;
+                  }
+                }
+              }
+            }
+            var syncedIdSet = {};
+            if (batchRes && Array.isArray(batchRes.synced_decision_ids)) {
+              for (var si = 0; si < batchRes.synced_decision_ids.length; si++) {
+                syncedIdSet[String(batchRes.synced_decision_ids[si])] = true;
+              }
+            }
+            var failedIdSet = {};
+            if (batchRes && Array.isArray(batchRes.failed_decision_ids)) {
+              for (var fi = 0; fi < batchRes.failed_decision_ids.length; fi++) {
+                failedIdSet[String(batchRes.failed_decision_ids[fi])] = true;
+              }
+            }
+            var failedCount = 0;
+            var lastErr = (batchRes && (batchRes.sync_error || batchRes.detail)) || "";
             for (var j = 0; j < pending.length; j++) {
               var item = pending[j];
-              if (item) {
+              if (!item) continue;
+              var itemKey = item.db_id != null ? String(item.db_id) : "";
+              var matchedRes = itemKey ? resultsById[itemKey] : null;
+              var itemSynced = false;
+              var itemKnownFailed = false;
+              if (matchedRes) {
+                itemSynced = Boolean(matchedRes.synced_to_gsheet === true);
+                itemKnownFailed = !itemSynced;
+              } else if (itemKey && syncedIdSet[itemKey]) {
+                itemSynced = true;
+              } else if (itemKey && failedIdSet[itemKey]) {
+                itemKnownFailed = true;
+              } else if (!hasPerItemResults) {
+                if (syncedCount > 0 && syncedCount === pending.length) {
+                  itemSynced = true;
+                } else if (syncedCount === 0) {
+                  itemKnownFailed = true;
+                } else if (j < syncedCount) {
+                  itemSynced = true;
+                } else {
+                  itemKnownFailed = true;
+                }
+              }
+              if (itemSynced) {
                 item.synced_to_gsheet = true;
+                item.sync_error = null;
                 item.gsheet_synced_at = nowUtc;
                 item.gsheet_synced_by_email =
                   state.user.email || "admin@lbl.gov";
+              } else if (itemKnownFailed) {
+                item.synced_to_gsheet = false;
+                var itemErr =
+                  (matchedRes && matchedRes.sync_error) ||
+                  lastErr ||
+                  "GSheet write-back did not confirm updated cells.";
+                item.sync_error = itemErr;
+                lastErr = itemErr;
+                failedCount++;
               }
             }
-            showToast(
-              "Batch Stage 2 Google Sheets sync completed for " +
-                pending.length +
-                " resolved decision(s).",
-              false
-            );
+            if (failedCount === 0 && syncedCount > 0) {
+              showToast(
+                "Batch Stage 2 Google Sheets sync completed for " +
+                  syncedCount +
+                  " resolved decision(s).",
+                false
+              );
+            } else {
+              showToast(
+                "Batch Stage 2 Google Sheets sync: " +
+                  syncedCount +
+                  " synced, " +
+                  failedCount +
+                  " failed" +
+                  (lastErr ? " (" + lastErr + ")" : "."),
+                true
+              );
+            }
             renderQueueTable();
             renderContextualDrawer();
+            return batchRes;
           });
       }
 
@@ -4639,8 +5128,29 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         bindFilter("filter-analysis-type", "analysisType");
         bindFilter("filter-parameter", "parameter");
         bindFilter("filter-flag-type", "flagType");
+        bindFilter("filter-qc-status", "qcStatus");
         bindFilter("filter-assigned-analyst", "assignedAnalyst");
         bindFilter("filter-search", "search");
+
+        var minRsdEl = document.getElementById("filter-min-rsd");
+        if (minRsdEl) {
+          minRsdEl.addEventListener("input", function () {
+            setMinRsdFilter(minRsdEl.value);
+          });
+          minRsdEl.addEventListener("change", function () {
+            setMinRsdFilter(minRsdEl.value);
+          });
+        }
+        var flagSelectEl = document.getElementById("filter-flag-type");
+        if (flagSelectEl) {
+          flagSelectEl.addEventListener("change", function () {
+            if (flagSelectEl.value === "rsd_gt_10") {
+              setMinRsdFilter(10);
+            } else if (flagSelectEl.value === "rsd_gt_20") {
+              setMinRsdFilter(20);
+            }
+          });
+        }
 
         var plotStyleEl = document.getElementById("select-plot-style");
         if (plotStyleEl) {
@@ -5131,11 +5641,17 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         }
 
         var targetReps = rawReps.map(function (r, idx) {
+          var rawSt = String(
+            String(r.qc_pass || "").toLowerCase() === "fail" ||
+              String(r.qc_status || "").toLowerCase() === "fail"
+              ? "fail"
+              : r.qc_pass || r.qc_status || "pass"
+          ).toLowerCase();
           return {
             record_id: String(r.record_id || ""),
             value: Number(r.value),
             replicate_no: Number(r.replicate_no || idx + 1),
-            qc_pass: String(r.qc_pass || "pass"),
+            qc_pass: rawSt,
             prepared_sample: String(resolvedSample || ""),
             is_iqr_outlier: Boolean(r.is_iqr_outlier),
             is_analyst_flagged: Boolean(r.is_analyst_flagged),
@@ -5193,6 +5709,12 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               peerPoints.push({
                 record_id: String(pr.record_id || ""),
                 value: Number(pr.value),
+                qc_pass: String(
+                  String(pr.qc_pass || "").toLowerCase() === "fail" ||
+                    String(pr.qc_status || "").toLowerCase() === "fail"
+                    ? "fail"
+                    : pr.qc_pass || pr.qc_status || "pass"
+                ).toLowerCase(),
                 prepared_sample: String(pg.prepared_sample || "Peer Sample"),
                 replicate_group_key: pg.replicate_group_key,
                 isTargetGroup: false,
@@ -5247,12 +5769,55 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         var targetMeanX = xOf(groupMean);
         var sliceMeanX = xOf(sliceMean);
 
+        function renderQcFailDiamondOverlay(pt, cxNum, cyNum, rSize) {
+          if (String(pt.qc_pass || "pass").toLowerCase() !== "fail") return "";
+          var d = rSize + 2.2;
+          var pts =
+            cxNum.toFixed(1) + "," + (cyNum - d).toFixed(1) + " " +
+            (cxNum + d).toFixed(1) + "," + cyNum.toFixed(1) + " " +
+            cxNum.toFixed(1) + "," + (cyNum + d).toFixed(1) + " " +
+            (cxNum - d).toFixed(1) + "," + cyNum.toFixed(1);
+          var xOff = Math.max(2.5, rSize * 0.55);
+          return (
+            '<polygon class="show-me-qc-fail-diamond show-me-pt-qc-fail" data-qc-status="fail" data-record-id="' +
+            escapeHtml(pt.record_id) +
+            '" points="' +
+            pts +
+            '" fill="rgba(245,158,11,0.28)" stroke="#f59e0b" stroke-width="1.8" />' +
+            '<line class="show-me-qc-fail-cross" x1="' +
+            (cxNum - xOff).toFixed(1) +
+            '" y1="' +
+            (cyNum - xOff).toFixed(1) +
+            '" x2="' +
+            (cxNum + xOff).toFixed(1) +
+            '" y2="' +
+            (cyNum + xOff).toFixed(1) +
+            '" stroke="#ef4444" stroke-width="1.8" />' +
+            '<line class="show-me-qc-fail-cross" x1="' +
+            (cxNum - xOff).toFixed(1) +
+            '" y1="' +
+            (cyNum + xOff).toFixed(1) +
+            '" x2="' +
+            (cxNum + xOff).toFixed(1) +
+            '" y2="' +
+            (cyNum - xOff).toFixed(1) +
+            '" stroke="#ef4444" stroke-width="1.8" />'
+          );
+        }
+
         var peerCirclesSvg = peerPoints
           .map(function (pt, idx) {
-            var cx = xOf(pt.value).toFixed(1);
-            var cy = (44 + ((idx * 17) % 28)).toFixed(1);
+            var cxNum = xOf(pt.value);
+            var cyNum = 44 + ((idx * 17) % 28);
+            var cx = cxNum.toFixed(1);
+            var cy = cyNum.toFixed(1);
+            var isFail = String(pt.qc_pass || "pass").toLowerCase() === "fail";
             return (
-              '<circle class="show-me-pt-peer" data-role="peer" data-record-id="' +
+              '<circle class="show-me-pt-peer' +
+              (isFail ? " show-me-pt-qc-fail" : "") +
+              '" data-role="peer" data-qc-status="' +
+              (isFail ? "fail" : "pass") +
+              '" data-record-id="' +
               escapeHtml(pt.record_id) +
               '" cx="' +
               cx +
@@ -5266,7 +5831,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               Number(pt.value).toFixed(2) +
               " " +
               escapeHtml(resolvedUnit) +
-              "</title></circle>"
+              (isFail ? " [QC_FAIL]" : "") +
+              "</title></circle>" +
+              renderQcFailDiamondOverlay(pt, cxNum, cyNum, 4.5)
             );
           })
           .join("");
@@ -5276,10 +5843,17 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             return !pt.isOutlier;
           })
           .map(function (pt, idx) {
-            var cx = xOf(pt.value).toFixed(1);
-            var cy = (92 + ((idx * 13) % 18)).toFixed(1);
+            var cxNum = xOf(pt.value);
+            var cyNum = 92 + ((idx * 13) % 18);
+            var cx = cxNum.toFixed(1);
+            var cy = cyNum.toFixed(1);
+            var isFail = String(pt.qc_pass || "pass").toLowerCase() === "fail";
             return (
-              '<circle class="show-me-pt-target-group" data-role="target-group" data-record-id="' +
+              '<circle class="show-me-pt-target-group' +
+              (isFail ? " show-me-pt-qc-fail" : "") +
+              '" data-role="target-group" data-qc-status="' +
+              (isFail ? "fail" : "pass") +
+              '" data-record-id="' +
               escapeHtml(pt.record_id) +
               '" cx="' +
               cx +
@@ -5293,7 +5867,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               Number(pt.value).toFixed(2) +
               " " +
               escapeHtml(resolvedUnit) +
-              "</title></circle>"
+              (isFail ? " [QC_FAIL]" : "") +
+              "</title></circle>" +
+              renderQcFailDiamondOverlay(pt, cxNum, cyNum, 6)
             );
           })
           .join("");
@@ -5303,8 +5879,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             return pt.isOutlier;
           })
           .map(function (pt, idx) {
-            var cx = xOf(pt.value).toFixed(1);
-            var cy = (96 + ((idx * 11) % 14)).toFixed(1);
+            var cxNum = xOf(pt.value);
+            var cyNum = 96 + ((idx * 11) % 14);
+            var cx = cxNum.toFixed(1);
+            var cy = cyNum.toFixed(1);
+            var isFail = String(pt.qc_pass || "pass").toLowerCase() === "fail";
             return (
               '<circle class="show-me-outlier-pulse-ring" data-role="outlier-ring" data-record-id="' +
               escapeHtml(pt.record_id) +
@@ -5313,7 +5892,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               '" cy="' +
               cy +
               '" r="10.5" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.85" />' +
-              '<circle class="show-me-pt-outlier" data-role="outlier" data-record-id="' +
+              '<circle class="show-me-pt-outlier' +
+              (isFail ? " show-me-pt-qc-fail" : "") +
+              '" data-role="outlier" data-qc-status="' +
+              (isFail ? "fail" : "pass") +
+              '" data-record-id="' +
               escapeHtml(pt.record_id) +
               '" cx="' +
               cx +
@@ -5327,7 +5910,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               Number(pt.value).toFixed(2) +
               " " +
               escapeHtml(resolvedUnit) +
-              "</title></circle>"
+              (isFail ? " [QC_FAIL]" : "") +
+              "</title></circle>" +
+              renderQcFailDiamondOverlay(pt, cxNum, cyNum, 7.5)
             );
           })
           .join("");
@@ -5569,6 +6154,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           WORKBENCH_DATA: WORKBENCH_DATA,
           canonicalDomainSlug: canonicalDomainSlug,
           groupContextLabel: groupContextLabel,
+          computeCanonicalMethodSignature: computeCanonicalMethodSignature,
           normalizeReplicateGroupKey: normalizeReplicateGroupKey,
           matchesReplicateGroupKey: matchesReplicateGroupKey,
           findReplicateGroupForDecision: findReplicateGroupForDecision,
@@ -5590,7 +6176,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           bulkAssignSelected: bulkAssignSelected,
           updateBulkAssignBar: updateBulkAssignBar,
           openFlagShowMePopover: openFlagShowMePopover,
-          closeFlagShowMePopover: closeFlagShowMePopover
+          closeFlagShowMePopover: closeFlagShowMePopover,
+          setMinRsdFilter: setMinRsdFilter,
+          resetAllFilters: resetAllFilters,
+          syncSingleDecisionToGsheet: syncSingleDecisionToGsheet,
+          syncBatchDecisionsToGsheet: syncBatchDecisionsToGsheet
         };
       }
 

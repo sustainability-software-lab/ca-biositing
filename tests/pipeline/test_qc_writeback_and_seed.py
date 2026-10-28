@@ -8,6 +8,7 @@ from typing import Any, Dict, List
 from unittest.mock import patch
 
 import pandas as pd
+import pytest
 from sqlalchemy.dialects.postgresql import insert
 from sqlmodel import Session, SQLModel, create_engine, select
 
@@ -468,9 +469,9 @@ def test_idempotent_qc_audit_note_and_stage2_gsheet_writeback() -> None:
     ws = _FakeWorksheet(
         "03.1-Proximate",
         [
-            ["record_id", "resource", "parameter", "value", "qc_result", "note"],
-            ["PROX-201", "almond hulls", "ash", "6.2", "pass", "Baseline note"],
-            ["PROX-202", "almond hulls", "ash", "6.4", "pass", ""],
+            ["record_id", "resource", "parameter", "value", "qc_result", "note", "updated_at"],
+            ["PROX-201", "almond hulls", "ash", "6.2", "pass", "Baseline note", ""],
+            ["PROX-202", "almond hulls", "ash", "6.4", "pass", "", ""],
         ],
     )
     spreadsheet = _FakeSpreadsheet({"03.1-Proximate": ws})
@@ -479,10 +480,10 @@ def test_idempotent_qc_audit_note_and_stage2_gsheet_writeback() -> None:
     with Session(engine) as session:
         d1 = QcReviewDecision(
             record_table="proximate_record",
-            record_id="PROX-201",
+            record_id="prox-201",
             replicate_group_key="almond hulls::proximate::ash",
             resource_name="almond hulls",
-            analysis_type="proximate",
+            analysis_type="Proximate Analysis",
             parameter_name="ash",
             flag_type="rsd_gt_10",
             old_qc_pass="pass",
@@ -500,7 +501,7 @@ def test_idempotent_qc_audit_note_and_stage2_gsheet_writeback() -> None:
         session.refresh(d1)
         assert d1.id is not None
 
-        # First Stage 2 sync call
+        # First Stage 2 sync call (also tests case-insensitive record_id match & updated_at writeback)
         res1 = writeback_qc_decision_to_gsheet(
             session,
             decision_id=d1.id,
@@ -511,6 +512,8 @@ def test_idempotent_qc_audit_note_and_stage2_gsheet_writeback() -> None:
         assert ws.rows[1][4] == "fail"
         assert ws.rows[1][5].count(f"[QC_AUDIT id={d1.id} ") == 1
         assert "Baseline note | [QC_AUDIT " in ws.rows[1][5]
+        assert ws.rows[1][6].endswith("Z")
+        assert res1["updated_at"] == ws.rows[1][6]
 
         # Second Stage 2 sync call on the same decision is idempotent
         res2 = writeback_qc_decision_to_gsheet(
@@ -548,3 +551,84 @@ def test_idempotent_qc_audit_note_and_stage2_gsheet_writeback() -> None:
         assert batch_res["synced_count"] == 1
         assert ws.rows[2][4] == "fail"
         assert f"[QC_AUDIT id={d2.id} " in ws.rows[2][5]
+
+        # Test dry_run=True does NOT mutate worksheet or mark synced_to_gsheet=True
+        ws.rows.append(["PROX-203", "almond hulls", "ash", "6.8", "pass", "Orig note", ""])
+        d3 = QcReviewDecision(
+            record_table="proximate_record",
+            record_id="PROX-203",
+            replicate_group_key="almond hulls::proximate::ash",
+            resource_name="almond hulls",
+            analysis_type="proximate",
+            parameter_name="ash",
+            flag_type="rsd_gt_10",
+            old_qc_pass="pass",
+            new_qc_pass="fail",
+            decision_status="resolved",
+            decision_action="reject_fail",
+            review_note="Dry run check",
+            submitted_by_email="analyst@lbl.gov",
+            resolved_by_email="petersmith@lbl.gov",
+            resolved_at=datetime(2026, 10, 18, 16, 10, tzinfo=timezone.utc),
+            synced_to_gsheet=False,
+        )
+        session.add(d3)
+        session.commit()
+        session.refresh(d3)
+        assert d3.id is not None
+
+        dry_res = writeback_qc_decision_to_gsheet(
+            session,
+            decision_id=d3.id,
+            worksheet_client=client,
+            dry_run=True,
+        )
+        assert dry_res["dry_run"] is True
+        assert dry_res["synced_to_gsheet"] is False
+        assert ws.rows[3][4] == "pass"  # Unchanged in dry-run
+        assert ws.rows[3][5] == "Orig note"  # Unchanged in dry-run
+
+        dry_batch = writeback_batch_to_gsheet(
+            session,
+            worksheet_client=client,
+            dry_run=True,
+        )
+        assert dry_batch["dry_run"] is True
+        assert dry_batch["synced_count"] == 0
+        assert len(dry_batch["results"]) == 1
+        assert ws.rows[3][4] == "pass"
+
+        # Test missing/blank record_id guard raises ValueError and increments failed_count in batch
+        d_blank = QcReviewDecision(
+            record_table="proximate_record",
+            record_id="   ",
+            replicate_group_key="almond hulls::proximate::ash",
+            resource_name="almond hulls",
+            analysis_type="proximate",
+            parameter_name="ash",
+            flag_type="rsd_gt_10",
+            old_qc_pass="pass",
+            new_qc_pass="fail",
+            decision_status="resolved",
+            decision_action="reject_fail",
+            review_note="Missing record_id check",
+            submitted_by_email="analyst@lbl.gov",
+            resolved_by_email="petersmith@lbl.gov",
+            resolved_at=datetime(2026, 10, 18, 16, 15, tzinfo=timezone.utc),
+            synced_to_gsheet=False,
+        )
+        session.add(d_blank)
+        session.commit()
+        session.refresh(d_blank)
+        assert d_blank.id is not None
+
+        with pytest.raises(ValueError, match="missing record_id"):
+            writeback_qc_decision_to_gsheet(
+                session,
+                decision_id=d_blank.id,
+                worksheet_client=client,
+            )
+
+        batch_with_blank = writeback_batch_to_gsheet(session, worksheet_client=client)
+        assert batch_with_blank["synced_count"] == 1  # d3 synced
+        assert batch_with_blank["failed_count"] == 1  # d_blank failed cleanly

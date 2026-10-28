@@ -247,10 +247,32 @@ def _group_context_label(row: dict[str, Any]) -> str:
             except (TypeError, ValueError):
                 pass
         return base
+    if slug == "gasification":
+        vessel = str(row.get("vessel") or "").strip()
+        if vessel and vessel.lower() not in ("n/a", "none"):
+            return (
+                vessel
+                if vessel.lower().startswith("reactor:")
+                else f"Reactor: {vessel}"
+            )
+        return str(row.get("prep_method") or "unassigned")
     return row.get("prep_method") or "unassigned"
 
 
 group_context_label = _group_context_label
+
+
+def compute_canonical_method_signature(
+    row_or_domain: dict[str, Any] | str | None,
+    row: dict[str, Any] | None = None,
+) -> str:
+    """Return canonical domain-aware method/context signature (`group_context_label`)."""
+    if isinstance(row_or_domain, dict):
+        return _group_context_label(row_or_domain)
+    merged = dict(row or {})
+    if row_or_domain and "analysis_type" not in merged:
+        merged["analysis_type"] = str(row_or_domain)
+    return _group_context_label(merged)
 
 
 def _replicate_group_key(row: dict[str, Any]) -> tuple[str, ...]:
