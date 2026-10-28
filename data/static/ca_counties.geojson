@@ -17,7 +17,7 @@
       "id": "06001",
       "properties": {
         "geoid": "06001",
-        "county_name": "Alameda",
+        "county_name": "alameda",
         "display_name": "Alameda",
         "full_name": "Alameda County",
         "county_fips": "001",
@@ -31,9 +31,7 @@
         "centroid_lon": -121.86508,
         "centroid_lat": 37.68456,
         "area_sq_km": 1924.21,
-        "area_acres": 475483.3,
-        "GEOID": "06001",
-        "NAME": "Alameda"
+        "area_acres": 475483.3
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -182,7 +180,7 @@
       "id": "06003",
       "properties": {
         "geoid": "06003",
-        "county_name": "Alpine",
+        "county_name": "alpine",
         "display_name": "Alpine",
         "full_name": "Alpine County",
         "county_fips": "003",
@@ -196,9 +194,7 @@
         "centroid_lon": -119.84461,
         "centroid_lat": 38.63175,
         "area_sq_km": 1924.88,
-        "area_acres": 475647.8,
-        "GEOID": "06003",
-        "NAME": "Alpine"
+        "area_acres": 475647.8
       },
       "geometry": {
         "type": "Polygon",
@@ -303,7 +299,7 @@
       "id": "06005",
       "properties": {
         "geoid": "06005",
-        "county_name": "Amador",
+        "county_name": "amador",
         "display_name": "Amador",
         "full_name": "Amador County",
         "county_fips": "005",
@@ -317,9 +313,7 @@
         "centroid_lon": -120.73414,
         "centroid_lat": 38.46174,
         "area_sq_km": 1571.07,
-        "area_acres": 388219.7,
-        "GEOID": "06005",
-        "NAME": "Amador"
+        "area_acres": 388219.7
       },
       "geometry": {
         "type": "Polygon",
@@ -501,7 +495,7 @@
       "id": "06007",
       "properties": {
         "geoid": "06007",
-        "county_name": "Butte",
+        "county_name": "butte",
         "display_name": "Butte",
         "full_name": "Butte County",
         "county_fips": "007",
@@ -515,9 +509,7 @@
         "centroid_lon": -121.58935,
         "centroid_lat": 39.7245,
         "area_sq_km": 4345.83,
-        "area_acres": 1073878.7,
-        "GEOID": "06007",
-        "NAME": "Butte"
+        "area_acres": 1073878.7
       },
       "geometry": {
         "type": "Polygon",
@@ -756,7 +748,7 @@
       "id": "06009",
       "properties": {
         "geoid": "06009",
-        "county_name": "Calaveras",
+        "county_name": "calaveras",
         "display_name": "Calaveras",
         "full_name": "Calaveras County",
         "county_fips": "009",
@@ -770,9 +762,7 @@
         "centroid_lon": -120.65823,
         "centroid_lat": 38.16958,
         "area_sq_km": 2683.9,
-        "area_acres": 663206.8,
-        "GEOID": "06009",
-        "NAME": "Calaveras"
+        "area_acres": 663206.8
       },
       "geometry": {
         "type": "Polygon",
@@ -965,7 +955,7 @@
       "id": "06011",
       "properties": {
         "geoid": "06011",
-        "county_name": "Colusa",
+        "county_name": "colusa",
         "display_name": "Colusa",
         "full_name": "Colusa County",
         "county_fips": "011",
@@ -979,9 +969,7 @@
         "centroid_lon": -122.20844,
         "centroid_lat": 39.16312,
         "area_sq_km": 2995.65,
-        "area_acres": 740242.3,
-        "GEOID": "06011",
-        "NAME": "Colusa"
+        "area_acres": 740242.3
       },
       "geometry": {
         "type": "Polygon",
@@ -1139,7 +1127,7 @@
       "id": "06013",
       "properties": {
         "geoid": "06013",
-        "county_name": "Contra Costa",
+        "county_name": "contra costa",
         "display_name": "Contra Costa",
         "full_name": "Contra Costa County",
         "county_fips": "013",
@@ -1153,9 +1141,7 @@
         "centroid_lon": -121.90399,
         "centroid_lat": 37.88873,
         "area_sq_km": 1889.16,
-        "area_acres": 466820.8,
-        "GEOID": "06013",
-        "NAME": "Contra Costa"
+        "area_acres": 466820.8
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -1364,7 +1350,7 @@
       "id": "06015",
       "properties": {
         "geoid": "06015",
-        "county_name": "Del Norte",
+        "county_name": "del norte",
         "display_name": "Del Norte",
         "full_name": "Del Norte County",
         "county_fips": "015",
@@ -1378,9 +1364,7 @@
         "centroid_lon": -123.90412,
         "centroid_lat": 41.69224,
         "area_sq_km": 2624.81,
-        "area_acres": 648603.7,
-        "GEOID": "06015",
-        "NAME": "Del Norte"
+        "area_acres": 648603.7
       },
       "geometry": {
         "type": "Polygon",
@@ -1515,7 +1499,7 @@
       "id": "06017",
       "properties": {
         "geoid": "06017",
-        "county_name": "El Dorado",
+        "county_name": "el dorado",
         "display_name": "El Dorado",
         "full_name": "El Dorado County",
         "county_fips": "017",
@@ -1529,9 +1513,7 @@
         "centroid_lon": -120.52603,
         "centroid_lat": 38.78497,
         "area_sq_km": 4627.07,
-        "area_acres": 1143373.0,
-        "GEOID": "06017",
-        "NAME": "El Dorado"
+        "area_acres": 1143373.0
       },
       "geometry": {
         "type": "Polygon",
@@ -1766,7 +1748,7 @@
       "id": "06019",
       "properties": {
         "geoid": "06019",
-        "county_name": "Fresno",
+        "county_name": "fresno",
         "display_name": "Fresno",
         "full_name": "Fresno County",
         "county_fips": "019",
@@ -1780,9 +1762,7 @@
         "centroid_lon": -119.73271,
         "centroid_lat": 36.75047,
         "area_sq_km": 15570.5,
-        "area_acres": 3847553.8,
-        "GEOID": "06019",
-        "NAME": "Fresno"
+        "area_acres": 3847553.8
       },
       "geometry": {
         "type": "Polygon",
@@ -2197,7 +2177,7 @@
       "id": "06021",
       "properties": {
         "geoid": "06021",
-        "county_name": "Glenn",
+        "county_name": "glenn",
         "display_name": "Glenn",
         "full_name": "Glenn County",
         "county_fips": "021",
@@ -2211,9 +2191,7 @@
         "centroid_lon": -122.44053,
         "centroid_lat": 39.59244,
         "area_sq_km": 3436.38,
-        "area_acres": 849146.9,
-        "GEOID": "06021",
-        "NAME": "Glenn"
+        "area_acres": 849146.9
       },
       "geometry": {
         "type": "Polygon",
@@ -2328,7 +2306,7 @@
       "id": "06023",
       "properties": {
         "geoid": "06023",
-        "county_name": "Humboldt",
+        "county_name": "humboldt",
         "display_name": "Humboldt",
         "full_name": "Humboldt County",
         "county_fips": "023",
@@ -2342,9 +2320,7 @@
         "centroid_lon": -123.88359,
         "centroid_lat": 40.73217,
         "area_sq_km": 9288.73,
-        "area_acres": 2295295.6,
-        "GEOID": "06023",
-        "NAME": "Humboldt"
+        "area_acres": 2295295.6
       },
       "geometry": {
         "type": "Polygon",
@@ -2564,7 +2540,7 @@
       "id": "06025",
       "properties": {
         "geoid": "06025",
-        "county_name": "Imperial",
+        "county_name": "imperial",
         "display_name": "Imperial",
         "full_name": "Imperial County",
         "county_fips": "025",
@@ -2578,9 +2554,7 @@
         "centroid_lon": -115.30013,
         "centroid_lat": 33.02848,
         "area_sq_km": 11607.42,
-        "area_acres": 2868256.4,
-        "GEOID": "06025",
-        "NAME": "Imperial"
+        "area_acres": 2868256.4
       },
       "geometry": {
         "type": "Polygon",
@@ -2710,7 +2684,7 @@
       "id": "06027",
       "properties": {
         "geoid": "06027",
-        "county_name": "Inyo",
+        "county_name": "inyo",
         "display_name": "Inyo",
         "full_name": "Inyo County",
         "county_fips": "027",
@@ -2724,9 +2698,7 @@
         "centroid_lon": -117.49488,
         "centroid_lat": 36.61749,
         "area_sq_km": 26488.7,
-        "area_acres": 6545500.9,
-        "GEOID": "06027",
-        "NAME": "Inyo"
+        "area_acres": 6545500.9
       },
       "geometry": {
         "type": "Polygon",
@@ -2977,7 +2949,7 @@
       "id": "06029",
       "properties": {
         "geoid": "06029",
-        "county_name": "Kern",
+        "county_name": "kern",
         "display_name": "Kern",
         "full_name": "Kern County",
         "county_fips": "029",
@@ -2991,9 +2963,7 @@
         "centroid_lon": -118.72014,
         "centroid_lat": 35.30031,
         "area_sq_km": 21143.05,
-        "area_acres": 5224561.7,
-        "GEOID": "06029",
-        "NAME": "Kern"
+        "area_acres": 5224561.7
       },
       "geometry": {
         "type": "Polygon",
@@ -3107,7 +3077,7 @@
       "id": "06031",
       "properties": {
         "geoid": "06031",
-        "county_name": "Kings",
+        "county_name": "kings",
         "display_name": "Kings",
         "full_name": "Kings County",
         "county_fips": "031",
@@ -3121,9 +3091,7 @@
         "centroid_lon": -119.75808,
         "centroid_lat": 36.15989,
         "area_sq_km": 3603.43,
-        "area_acres": 890426.8,
-        "GEOID": "06031",
-        "NAME": "Kings"
+        "area_acres": 890426.8
       },
       "geometry": {
         "type": "Polygon",
@@ -3191,7 +3159,7 @@
       "id": "06033",
       "properties": {
         "geoid": "06033",
-        "county_name": "Lake",
+        "county_name": "lake",
         "display_name": "Lake",
         "full_name": "Lake County",
         "county_fips": "033",
@@ -3205,9 +3173,7 @@
         "centroid_lon": -122.79312,
         "centroid_lat": 39.12217,
         "area_sq_km": 3443.11,
-        "area_acres": 850811.8,
-        "GEOID": "06033",
-        "NAME": "Lake"
+        "area_acres": 850811.8
       },
       "geometry": {
         "type": "Polygon",
@@ -3407,7 +3373,7 @@
       "id": "06035",
       "properties": {
         "geoid": "06035",
-        "county_name": "Lassen",
+        "county_name": "lassen",
         "display_name": "Lassen",
         "full_name": "Lassen County",
         "county_fips": "035",
@@ -3421,9 +3387,7 @@
         "centroid_lon": -120.5285,
         "centroid_lat": 40.41233,
         "area_sq_km": 12225.39,
-        "area_acres": 3020959.1,
-        "GEOID": "06035",
-        "NAME": "Lassen"
+        "area_acres": 3020959.1
       },
       "geometry": {
         "type": "Polygon",
@@ -3573,7 +3537,7 @@
       "id": "06037",
       "properties": {
         "geoid": "06037",
-        "county_name": "Los Angeles",
+        "county_name": "los angeles",
         "display_name": "Los Angeles",
         "full_name": "Los Angeles County",
         "county_fips": "037",
@@ -3587,9 +3551,7 @@
         "centroid_lon": -118.14395,
         "centroid_lat": 34.2707,
         "area_sq_km": 10579.56,
-        "area_acres": 2614267.4,
-        "GEOID": "06037",
-        "NAME": "Los Angeles"
+        "area_acres": 2614267.4
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -3877,7 +3839,7 @@
       "id": "06039",
       "properties": {
         "geoid": "06039",
-        "county_name": "Madera",
+        "county_name": "madera",
         "display_name": "Madera",
         "full_name": "Madera County",
         "county_fips": "039",
@@ -3891,9 +3853,7 @@
         "centroid_lon": -119.63491,
         "centroid_lat": 37.27305,
         "area_sq_km": 5576.04,
-        "area_acres": 1377869.1,
-        "GEOID": "06039",
-        "NAME": "Madera"
+        "area_acres": 1377869.1
       },
       "geometry": {
         "type": "Polygon",
@@ -4168,7 +4128,7 @@
       "id": "06041",
       "properties": {
         "geoid": "06041",
-        "county_name": "Marin",
+        "county_name": "marin",
         "display_name": "Marin",
         "full_name": "Marin County",
         "county_fips": "041",
@@ -4182,9 +4142,7 @@
         "centroid_lon": -122.73305,
         "centroid_lat": 38.07707,
         "area_sq_km": 1362.12,
-        "area_acres": 336588.3,
-        "GEOID": "06041",
-        "NAME": "Marin"
+        "area_acres": 336588.3
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -4409,7 +4367,7 @@
       "id": "06043",
       "properties": {
         "geoid": "06043",
-        "county_name": "Mariposa",
+        "county_name": "mariposa",
         "display_name": "Mariposa",
         "full_name": "Mariposa County",
         "county_fips": "043",
@@ -4423,9 +4381,7 @@
         "centroid_lon": -119.9583,
         "centroid_lat": 37.54409,
         "area_sq_km": 3786.65,
-        "area_acres": 935702.0,
-        "GEOID": "06043",
-        "NAME": "Mariposa"
+        "area_acres": 935702.0
       },
       "geometry": {
         "type": "Polygon",
@@ -4588,7 +4544,7 @@
       "id": "06045",
       "properties": {
         "geoid": "06045",
-        "county_name": "Mendocino",
+        "county_name": "mendocino",
         "display_name": "Mendocino",
         "full_name": "Mendocino County",
         "county_fips": "045",
@@ -4602,9 +4558,7 @@
         "centroid_lon": -123.43892,
         "centroid_lat": 39.38894,
         "area_sq_km": 9099.84,
-        "area_acres": 2248618.3,
-        "GEOID": "06045",
-        "NAME": "Mendocino"
+        "area_acres": 2248618.3
       },
       "geometry": {
         "type": "Polygon",
@@ -4837,7 +4791,7 @@
       "id": "06047",
       "properties": {
         "geoid": "06047",
-        "county_name": "Merced",
+        "county_name": "merced",
         "display_name": "Merced",
         "full_name": "Merced County",
         "county_fips": "047",
@@ -4851,9 +4805,7 @@
         "centroid_lon": -120.61085,
         "centroid_lat": 37.19074,
         "area_sq_km": 5123.09,
-        "area_acres": 1265943.8,
-        "GEOID": "06047",
-        "NAME": "Merced"
+        "area_acres": 1265943.8
       },
       "geometry": {
         "type": "Polygon",
@@ -4990,7 +4942,7 @@
       "id": "06049",
       "properties": {
         "geoid": "06049",
-        "county_name": "Modoc",
+        "county_name": "modoc",
         "display_name": "Modoc",
         "full_name": "Modoc County",
         "county_fips": "049",
@@ -5004,9 +4956,7 @@
         "centroid_lon": -120.72378,
         "centroid_lat": 41.58111,
         "area_sq_km": 10886.95,
-        "area_acres": 2690224.3,
-        "GEOID": "06049",
-        "NAME": "Modoc"
+        "area_acres": 2690224.3
       },
       "geometry": {
         "type": "Polygon",
@@ -5065,7 +5015,7 @@
       "id": "06051",
       "properties": {
         "geoid": "06051",
-        "county_name": "Mono",
+        "county_name": "mono",
         "display_name": "Mono",
         "full_name": "Mono County",
         "county_fips": "051",
@@ -5079,9 +5029,7 @@
         "centroid_lon": -119.0249,
         "centroid_lat": 38.08565,
         "area_sq_km": 8112.57,
-        "area_acres": 2004660.2,
-        "GEOID": "06051",
-        "NAME": "Mono"
+        "area_acres": 2004660.2
       },
       "geometry": {
         "type": "Polygon",
@@ -5302,7 +5250,7 @@
       "id": "06053",
       "properties": {
         "geoid": "06053",
-        "county_name": "Monterey",
+        "county_name": "monterey",
         "display_name": "Monterey",
         "full_name": "Monterey County",
         "county_fips": "053",
@@ -5316,9 +5264,7 @@
         "centroid_lon": -121.49215,
         "centroid_lat": 36.35473,
         "area_sq_km": 8579.86,
-        "area_acres": 2120129.9,
-        "GEOID": "06053",
-        "NAME": "Monterey"
+        "area_acres": 2120129.9
       },
       "geometry": {
         "type": "Polygon",
@@ -5637,7 +5583,7 @@
       "id": "06055",
       "properties": {
         "geoid": "06055",
-        "county_name": "Napa",
+        "county_name": "napa",
         "display_name": "Napa",
         "full_name": "Napa County",
         "county_fips": "055",
@@ -5651,9 +5597,7 @@
         "centroid_lon": -122.32472,
         "centroid_lat": 38.5068,
         "area_sq_km": 2043.19,
-        "area_acres": 504883.7,
-        "GEOID": "06055",
-        "NAME": "Napa"
+        "area_acres": 504883.7
       },
       "geometry": {
         "type": "Polygon",
@@ -5813,7 +5757,7 @@
       "id": "06057",
       "properties": {
         "geoid": "06057",
-        "county_name": "Nevada",
+        "county_name": "nevada",
         "display_name": "Nevada",
         "full_name": "Nevada County",
         "county_fips": "057",
@@ -5827,9 +5771,7 @@
         "centroid_lon": -121.0078,
         "centroid_lat": 39.26777,
         "area_sq_km": 2521.02,
-        "area_acres": 622956.7,
-        "GEOID": "06057",
-        "NAME": "Nevada"
+        "area_acres": 622956.7
       },
       "geometry": {
         "type": "Polygon",
@@ -6011,7 +5953,7 @@
       "id": "06059",
       "properties": {
         "geoid": "06059",
-        "county_name": "Orange",
+        "county_name": "orange",
         "display_name": "Orange",
         "full_name": "Orange County",
         "county_fips": "059",
@@ -6025,9 +5967,7 @@
         "centroid_lon": -117.72647,
         "centroid_lat": 33.67204,
         "area_sq_km": 2063.21,
-        "area_acres": 509831.3,
-        "GEOID": "06059",
-        "NAME": "Orange"
+        "area_acres": 509831.3
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -6137,7 +6077,7 @@
       "id": "06061",
       "properties": {
         "geoid": "06061",
-        "county_name": "Placer",
+        "county_name": "placer",
         "display_name": "Placer",
         "full_name": "Placer County",
         "county_fips": "061",
@@ -6151,9 +6091,7 @@
         "centroid_lon": -120.74711,
         "centroid_lat": 39.01463,
         "area_sq_km": 3891.66,
-        "area_acres": 961651.2,
-        "GEOID": "06061",
-        "NAME": "Placer"
+        "area_acres": 961651.2
       },
       "geometry": {
         "type": "Polygon",
@@ -6363,7 +6301,7 @@
       "id": "06063",
       "properties": {
         "geoid": "06063",
-        "county_name": "Plumas",
+        "county_name": "plumas",
         "display_name": "Plumas",
         "full_name": "Plumas County",
         "county_fips": "063",
@@ -6377,9 +6315,7 @@
         "centroid_lon": -120.8055,
         "centroid_lat": 40.02857,
         "area_sq_km": 6769.59,
-        "area_acres": 1672802.6,
-        "GEOID": "06063",
-        "NAME": "Plumas"
+        "area_acres": 1672802.6
       },
       "geometry": {
         "type": "Polygon",
@@ -6649,7 +6585,7 @@
       "id": "06065",
       "properties": {
         "geoid": "06065",
-        "county_name": "Riverside",
+        "county_name": "riverside",
         "display_name": "Riverside",
         "full_name": "Riverside County",
         "county_fips": "065",
@@ -6663,9 +6599,7 @@
         "centroid_lon": -116.05715,
         "centroid_lat": 33.76887,
         "area_sq_km": 18915.19,
-        "area_acres": 4674044.4,
-        "GEOID": "06065",
-        "NAME": "Riverside"
+        "area_acres": 4674044.4
       },
       "geometry": {
         "type": "Polygon",
@@ -6836,7 +6770,7 @@
       "id": "06067",
       "properties": {
         "geoid": "06067",
-        "county_name": "Sacramento",
+        "county_name": "sacramento",
         "display_name": "Sacramento",
         "full_name": "Sacramento County",
         "county_fips": "067",
@@ -6850,9 +6784,7 @@
         "centroid_lon": -121.27569,
         "centroid_lat": 38.4206,
         "area_sq_km": 2537.65,
-        "area_acres": 627066.7,
-        "GEOID": "06067",
-        "NAME": "Sacramento"
+        "area_acres": 627066.7
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -7064,7 +6996,7 @@
       "id": "06069",
       "properties": {
         "geoid": "06069",
-        "county_name": "San Benito",
+        "county_name": "san benito",
         "display_name": "San Benito",
         "full_name": "San Benito County",
         "county_fips": "069",
@@ -7078,9 +7010,7 @@
         "centroid_lon": -121.0294,
         "centroid_lat": 36.5911,
         "area_sq_km": 3602.33,
-        "area_acres": 890155.5,
-        "GEOID": "06069",
-        "NAME": "San Benito"
+        "area_acres": 890155.5
       },
       "geometry": {
         "type": "Polygon",
@@ -7261,7 +7191,7 @@
       "id": "06071",
       "properties": {
         "geoid": "06071",
-        "county_name": "San Bernardino",
+        "county_name": "san bernardino",
         "display_name": "San Bernardino",
         "full_name": "San Bernardino County",
         "county_fips": "071",
@@ -7275,9 +7205,7 @@
         "centroid_lon": -116.08564,
         "centroid_lat": 34.82206,
         "area_sq_km": 52070.16,
-        "area_acres": 12866815.5,
-        "GEOID": "06071",
-        "NAME": "San Bernardino"
+        "area_acres": 12866815.5
       },
       "geometry": {
         "type": "Polygon",
@@ -7502,7 +7430,7 @@
       "id": "06073",
       "properties": {
         "geoid": "06073",
-        "county_name": "San Diego",
+        "county_name": "san diego",
         "display_name": "San Diego",
         "full_name": "San Diego County",
         "county_fips": "073",
@@ -7516,9 +7444,7 @@
         "centroid_lon": -116.69391,
         "centroid_lat": 33.00563,
         "area_sq_km": 10976.36,
-        "area_acres": 2712316.9,
-        "GEOID": "06073",
-        "NAME": "San Diego"
+        "area_acres": 2712316.9
       },
       "geometry": {
         "type": "Polygon",
@@ -7670,7 +7596,7 @@
       "id": "06075",
       "properties": {
         "geoid": "06075",
-        "county_name": "San Francisco",
+        "county_name": "san francisco",
         "display_name": "San Francisco",
         "full_name": "San Francisco County",
         "county_fips": "075",
@@ -7684,9 +7610,7 @@
         "centroid_lon": -122.44701,
         "centroid_lat": 37.75652,
         "area_sq_km": 121.54,
-        "area_acres": 30034.1,
-        "GEOID": "06075",
-        "NAME": "San Francisco"
+        "area_acres": 30034.1
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -7733,7 +7657,7 @@
       "id": "06077",
       "properties": {
         "geoid": "06077",
-        "county_name": "San Joaquin",
+        "county_name": "san joaquin",
         "display_name": "San Joaquin",
         "full_name": "San Joaquin County",
         "county_fips": "077",
@@ -7747,9 +7671,7 @@
         "centroid_lon": -121.2504,
         "centroid_lat": 37.89024,
         "area_sq_km": 3676.43,
-        "area_acres": 908465.7,
-        "GEOID": "06077",
-        "NAME": "San Joaquin"
+        "area_acres": 908465.7
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -7937,7 +7859,7 @@
       "id": "06079",
       "properties": {
         "geoid": "06079",
-        "county_name": "San Luis Obispo",
+        "county_name": "san luis obispo",
         "display_name": "San Luis Obispo",
         "full_name": "San Luis Obispo County",
         "county_fips": "079",
@@ -7951,9 +7873,7 @@
         "centroid_lon": -120.3261,
         "centroid_lat": 35.34628,
         "area_sq_km": 8596.63,
-        "area_acres": 2124272.4,
-        "GEOID": "06079",
-        "NAME": "San Luis Obispo"
+        "area_acres": 2124272.4
       },
       "geometry": {
         "type": "Polygon",
@@ -8171,7 +8091,7 @@
       "id": "06081",
       "properties": {
         "geoid": "06081",
-        "county_name": "San Mateo",
+        "county_name": "san mateo",
         "display_name": "San Mateo",
         "full_name": "San Mateo County",
         "county_fips": "081",
@@ -8185,9 +8105,7 @@
         "centroid_lon": -122.30923,
         "centroid_lat": 37.40911,
         "area_sq_km": 1178.9,
-        "area_acres": 291313.4,
-        "GEOID": "06081",
-        "NAME": "San Mateo"
+        "area_acres": 291313.4
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -8348,7 +8266,7 @@
       "id": "06083",
       "properties": {
         "geoid": "06083",
-        "county_name": "Santa Barbara",
+        "county_name": "santa barbara",
         "display_name": "Santa Barbara",
         "full_name": "Santa Barbara County",
         "county_fips": "083",
@@ -8362,9 +8280,7 @@
         "centroid_lon": -120.0344,
         "centroid_lat": 34.74319,
         "area_sq_km": 7123.21,
-        "area_acres": 1760183.2,
-        "GEOID": "06083",
-        "NAME": "Santa Barbara"
+        "area_acres": 1760183.2
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -8708,7 +8624,7 @@
       "id": "06085",
       "properties": {
         "geoid": "06085",
-        "county_name": "Santa Clara",
+        "county_name": "santa clara",
         "display_name": "Santa Clara",
         "full_name": "Santa Clara County",
         "county_fips": "085",
@@ -8722,9 +8638,7 @@
         "centroid_lon": -121.72015,
         "centroid_lat": 37.18487,
         "area_sq_km": 3362.47,
-        "area_acres": 830885.6,
-        "GEOID": "06085",
-        "NAME": "Santa Clara"
+        "area_acres": 830885.6
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -8954,7 +8868,7 @@
       "id": "06087",
       "properties": {
         "geoid": "06087",
-        "county_name": "Santa Cruz",
+        "county_name": "santa cruz",
         "display_name": "Santa Cruz",
         "full_name": "Santa Cruz County",
         "county_fips": "087",
@@ -8968,9 +8882,7 @@
         "centroid_lon": -122.03584,
         "centroid_lat": 37.07293,
         "area_sq_km": 1157.47,
-        "area_acres": 286015.9,
-        "GEOID": "06087",
-        "NAME": "Santa Cruz"
+        "area_acres": 286015.9
       },
       "geometry": {
         "type": "Polygon",
@@ -9119,7 +9031,7 @@
       "id": "06089",
       "properties": {
         "geoid": "06089",
-        "county_name": "Shasta",
+        "county_name": "shasta",
         "display_name": "Shasta",
         "full_name": "Shasta County",
         "county_fips": "089",
@@ -9133,9 +9045,7 @@
         "centroid_lon": -122.01777,
         "centroid_lat": 40.7471,
         "area_sq_km": 9961.5,
-        "area_acres": 2461539.5,
-        "GEOID": "06089",
-        "NAME": "Shasta"
+        "area_acres": 2461539.5
       },
       "geometry": {
         "type": "Polygon",
@@ -9385,7 +9295,7 @@
       "id": "06091",
       "properties": {
         "geoid": "06091",
-        "county_name": "Sierra",
+        "county_name": "sierra",
         "display_name": "Sierra",
         "full_name": "Sierra County",
         "county_fips": "091",
@@ -9399,9 +9309,7 @@
         "centroid_lon": -120.51074,
         "centroid_lat": 39.58401,
         "area_sq_km": 2492.2,
-        "area_acres": 615836.4,
-        "GEOID": "06091",
-        "NAME": "Sierra"
+        "area_acres": 615836.4
       },
       "geometry": {
         "type": "Polygon",
@@ -9545,7 +9453,7 @@
       "id": "06093",
       "properties": {
         "geoid": "06093",
-        "county_name": "Siskiyou",
+        "county_name": "siskiyou",
         "display_name": "Siskiyou",
         "full_name": "Siskiyou County",
         "county_fips": "093",
@@ -9559,9 +9467,7 @@
         "centroid_lon": -122.54244,
         "centroid_lat": 41.51342,
         "area_sq_km": 16437.08,
-        "area_acres": 4061691.8,
-        "GEOID": "06093",
-        "NAME": "Siskiyou"
+        "area_acres": 4061691.8
       },
       "geometry": {
         "type": "Polygon",
@@ -9823,7 +9729,7 @@
       "id": "06095",
       "properties": {
         "geoid": "06095",
-        "county_name": "Solano",
+        "county_name": "solano",
         "display_name": "Solano",
         "full_name": "Solano County",
         "county_fips": "095",
@@ -9837,9 +9743,7 @@
         "centroid_lon": -121.90211,
         "centroid_lat": 38.29206,
         "area_sq_km": 2192.77,
-        "area_acres": 541845.9,
-        "GEOID": "06095",
-        "NAME": "Solano"
+        "area_acres": 541845.9
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -10038,7 +9942,7 @@
       "id": "06097",
       "properties": {
         "geoid": "06097",
-        "county_name": "Sonoma",
+        "county_name": "sonoma",
         "display_name": "Sonoma",
         "full_name": "Sonoma County",
         "county_fips": "097",
@@ -10052,9 +9956,7 @@
         "centroid_lon": -122.84651,
         "centroid_lat": 38.47621,
         "area_sq_km": 4116.91,
-        "area_acres": 1017310.7,
-        "GEOID": "06097",
-        "NAME": "Sonoma"
+        "area_acres": 1017310.7
       },
       "geometry": {
         "type": "Polygon",
@@ -10272,7 +10174,7 @@
       "id": "06099",
       "properties": {
         "geoid": "06099",
-        "county_name": "Stanislaus",
+        "county_name": "stanislaus",
         "display_name": "Stanislaus",
         "full_name": "Stanislaus County",
         "county_fips": "099",
@@ -10286,9 +10188,7 @@
         "centroid_lon": -120.87453,
         "centroid_lat": 37.61189,
         "area_sq_km": 3920.69,
-        "area_acres": 968824.8,
-        "GEOID": "06099",
-        "NAME": "Stanislaus"
+        "area_acres": 968824.8
       },
       "geometry": {
         "type": "Polygon",
@@ -10424,7 +10324,7 @@
       "id": "06101",
       "properties": {
         "geoid": "06101",
-        "county_name": "Sutter",
+        "county_name": "sutter",
         "display_name": "Sutter",
         "full_name": "Sutter County",
         "county_fips": "101",
@@ -10438,9 +10338,7 @@
         "centroid_lon": -121.70993,
         "centroid_lat": 39.01703,
         "area_sq_km": 1574.64,
-        "area_acres": 389101.2,
-        "GEOID": "06101",
-        "NAME": "Sutter"
+        "area_acres": 389101.2
       },
       "geometry": {
         "type": "Polygon",
@@ -10622,7 +10520,7 @@
       "id": "06103",
       "properties": {
         "geoid": "06103",
-        "county_name": "Tehama",
+        "county_name": "tehama",
         "display_name": "Tehama",
         "full_name": "Tehama County",
         "county_fips": "103",
@@ -10636,9 +10534,7 @@
         "centroid_lon": -122.20495,
         "centroid_lat": 40.1254,
         "area_sq_km": 7672.45,
-        "area_acres": 1895904.9,
-        "GEOID": "06103",
-        "NAME": "Tehama"
+        "area_acres": 1895904.9
       },
       "geometry": {
         "type": "Polygon",
@@ -10902,7 +10798,7 @@
       "id": "06105",
       "properties": {
         "geoid": "06105",
-        "county_name": "Trinity",
+        "county_name": "trinity",
         "display_name": "Trinity",
         "full_name": "Trinity County",
         "county_fips": "105",
@@ -10916,9 +10812,7 @@
         "centroid_lon": -123.14348,
         "centroid_lat": 40.66467,
         "area_sq_km": 8311.35,
-        "area_acres": 2053778.2,
-        "GEOID": "06105",
-        "NAME": "Trinity"
+        "area_acres": 2053778.2
       },
       "geometry": {
         "type": "Polygon",
@@ -11249,7 +11143,7 @@
       "id": "06107",
       "properties": {
         "geoid": "06107",
-        "county_name": "Tulare",
+        "county_name": "tulare",
         "display_name": "Tulare",
         "full_name": "Tulare County",
         "county_fips": "107",
@@ -11263,9 +11157,7 @@
         "centroid_lon": -118.79648,
         "centroid_lat": 36.27236,
         "area_sq_km": 12532.62,
-        "area_acres": 3096876.7,
-        "GEOID": "06107",
-        "NAME": "Tulare"
+        "area_acres": 3096876.7
       },
       "geometry": {
         "type": "Polygon",
@@ -11426,7 +11318,7 @@
       "id": "06109",
       "properties": {
         "geoid": "06109",
-        "county_name": "Tuolumne",
+        "county_name": "tuolumne",
         "display_name": "Tuolumne",
         "full_name": "Tuolumne County",
         "county_fips": "109",
@@ -11440,9 +11332,7 @@
         "centroid_lon": -119.88271,
         "centroid_lat": 38.034,
         "area_sq_km": 5891.23,
-        "area_acres": 1455754.1,
-        "GEOID": "06109",
-        "NAME": "Tuolumne"
+        "area_acres": 1455754.1
       },
       "geometry": {
         "type": "Polygon",
@@ -11760,7 +11650,7 @@
       "id": "06111",
       "properties": {
         "geoid": "06111",
-        "county_name": "Ventura",
+        "county_name": "ventura",
         "display_name": "Ventura",
         "full_name": "Ventura County",
         "county_fips": "111",
@@ -11774,9 +11664,7 @@
         "centroid_lon": -119.08514,
         "centroid_lat": 34.48099,
         "area_sq_km": 4806.64,
-        "area_acres": 1187747.7,
-        "GEOID": "06111",
-        "NAME": "Ventura"
+        "area_acres": 1187747.7
       },
       "geometry": {
         "type": "MultiPolygon",
@@ -11887,7 +11775,7 @@
       "id": "06113",
       "properties": {
         "geoid": "06113",
-        "county_name": "Yolo",
+        "county_name": "yolo",
         "display_name": "Yolo",
         "full_name": "Yolo County",
         "county_fips": "113",
@@ -11901,9 +11789,7 @@
         "centroid_lon": -121.85279,
         "centroid_lat": 38.61951,
         "area_sq_km": 2649.79,
-        "area_acres": 654776.6,
-        "GEOID": "06113",
-        "NAME": "Yolo"
+        "area_acres": 654776.6
       },
       "geometry": {
         "type": "Polygon",
@@ -12109,7 +11995,7 @@
       "id": "06115",
       "properties": {
         "geoid": "06115",
-        "county_name": "Yuba",
+        "county_name": "yuba",
         "display_name": "Yuba",
         "full_name": "Yuba County",
         "county_fips": "115",
@@ -12123,9 +12009,7 @@
         "centroid_lon": -121.43306,
         "centroid_lat": 39.28108,
         "area_sq_km": 1668.28,
-        "area_acres": 412240.3,
-        "GEOID": "06115",
-        "NAME": "Yuba"
+        "area_acres": 412240.3
       },
       "geometry": {
         "type": "Polygon",

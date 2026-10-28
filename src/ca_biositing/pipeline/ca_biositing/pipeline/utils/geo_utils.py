@@ -24,7 +24,22 @@ from sqlmodel import Session, select
 af = addfips.AddFIPS()
 
 _DATA_DIR = Path(__file__).resolve().parent / "data"
-_CA_COUNTIES_GEOJSON_PATH = _DATA_DIR / "ca_counties.geojson"
+
+
+def _resolve_ca_counties_geojson_path() -> Path:
+    """Resolve the canonical data/static/ca_counties.geojson path with local fallback."""
+    candidates = [
+        Path(__file__).resolve().parents[6] / "data" / "static" / "ca_counties.geojson",
+        Path("data/static/ca_counties.geojson"),
+        _DATA_DIR / "ca_counties.geojson",
+    ]
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+    return candidates[0]
+
+
+_CA_COUNTIES_GEOJSON_PATH = _resolve_ca_counties_geojson_path()
 _CA_LOOKUP_JSON_PATH = _DATA_DIR / "ca_zip_city_county.json"
 
 # California bounding box (with slight coastal/border margin)

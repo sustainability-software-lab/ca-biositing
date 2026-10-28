@@ -53,6 +53,8 @@ data/landiq/*.sbx
 !src/ca_biositing/pipeline/ca_biositing/pipeline/temp_external_datasets/*.geojson
 !resources/assets/*.csv
 !data/static/*.csv
+!data/static/*.geojson
+!data/static/*.json
 !audit/references/*.csv
 !data/qc/
 !data/qc/qc_review_decisions_seed.csv
@@ -85,6 +87,7 @@ pgschema
 !.agents/rules/
 !.agents/skills/
 .agents/skills/*
+!.agents/skills/ca-county-map/
 !.agents/skills/clean-branches/
 !.agents/skills/commit/
 !.agents/skills/create-issue/
@@ -98,6 +101,7 @@ pgschema
 .claude/*
 !.claude/skills/
 .claude/skills/*
+!.claude/skills/ca-county-map
 !.claude/skills/clean-branches
 !.claude/skills/commit
 !.claude/skills/create-issue
