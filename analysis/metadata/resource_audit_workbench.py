@@ -1800,10 +1800,10 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               <div class="field-group">
                 <label for="select-decision-action">Stage 1 Decision Action</label>
                 <select id="select-decision-action">
+                  <option value="in_review" selected>Keep Open / In Review (Default)</option>
                   <option value="reject_fail">Flag as QC Fail (new_qc_pass = fail)</option>
                   <option value="approve_pass">Approve as QC Pass (new_qc_pass = pass)</option>
                   <option value="needs_retest">Needs Lab Retest (in_review / retest)</option>
-                  <option value="in_review">Keep Open / In Review</option>
                 </select>
               </div>
 
@@ -2003,10 +2003,10 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
       <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px; border-top: 1px solid var(--border); padding-top: 10px;">
         <button id="btn-cancel-bug-modal" type="button" class="btn">Cancel</button>
-        <button id="btn-submit-github-api" type="button" class="btn" title="Create GitHub Issue directly via /v1/qc/github-issue when server GITHUB_TOKEN is configured">
-          ⚡ Submit via API
+        <button id="btn-submit-github-api" type="button" class="btn btn-primary" title="Submit issue to PostgreSQL QC Ledger and GitHub via /v1/qc/github-issue">
+          🚀 Submit Issue
         </button>
-        <button id="btn-submit-github-url" type="button" class="btn btn-primary">
+        <button id="btn-submit-github-url" type="button" class="btn btn-primary hidden" style="display:none;">
           ↗ Open Pre-Filled GitHub Issue
         </button>
       </div>
@@ -2800,7 +2800,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           actionSel.value =
             dec.decision_action && dec.decision_action !== "open"
               ? dec.decision_action
-              : "reject_fail";
+              : "in_review";
         }
         var assignedInput = document.getElementById("input-assigned-to");
         if (assignedInput) {
@@ -3610,13 +3610,13 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           return;
         }
 
-        var actionVal = actionEl ? actionEl.value : "reject_fail";
+        var actionVal = actionEl ? actionEl.value : "in_review";
         var newQcPass =
           actionVal === "approve_pass"
             ? "pass"
             : actionVal === "reject_fail"
             ? "fail"
-            : dec.old_qc_pass || "pass";
+            : null;
         var newStatus =
           actionVal === "approve_pass" || actionVal === "reject_fail"
             ? "resolved"
@@ -4273,7 +4273,15 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 var data = await resp.json();
                 if (data.created_via_api) {
                   if (statusEl) {
-                    statusEl.innerHTML = "✓ GitHub Issue #" + escapeHtml(data.issue_number ?? "") + " created! <a href=\\"" + escapeHtml(data.issue_url ?? "") + "\\" target=\\"_blank\\" rel=\\"noopener\\">View Issue &rarr;</a>";
+                    statusEl.innerHTML = "✓ GitHub Issue #" + escapeHtml(data.issue_number ?? "") + " created &amp; recorded in PostgreSQL QC Ledger (ID #" + escapeHtml(data.decision_id ?? "") + ")! <a href=\\"" + escapeHtml(data.issue_url ?? "") + "\\" target=\\"_blank\\" rel=\\"noopener\\">View Issue &rarr;</a>";
+                    statusEl.classList.remove("hidden");
+                  }
+                  return;
+                }
+                if (data.persisted) {
+                  var ghFallbackHref = escapeHtml(data.issue_url || data.fallback_url || "");
+                  if (statusEl) {
+                    statusEl.innerHTML = "✓ Issue recorded in PostgreSQL QC Ledger (ID #" + escapeHtml(data.decision_id ?? "") + ")." + (ghFallbackHref ? " <a href=\\"" + ghFallbackHref + "\\" target=\\"_blank\\" rel=\\"noopener\\">Optional: Open on GitHub &rarr;</a>" : "");
                     statusEl.classList.remove("hidden");
                   }
                   return;
