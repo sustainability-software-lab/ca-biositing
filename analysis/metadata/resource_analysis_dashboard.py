@@ -646,7 +646,7 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
             </label>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer">
               <input id="slice-page-qc" type="checkbox" value="qc" class="slice-page-checkbox rounded" />
-              <span><strong>2. Statistical QC &amp; Lab Notes Audit</strong> <span class="text-[var(--muted-foreground)] text-[11px]">(Optional internal QC view)</span></span>
+              <span><strong>2. Statistical Snapshot</strong> <span class="text-[var(--muted-foreground)] text-[11px]">(Optional internal QC view)</span></span>
             </label>
           </div>
         </div>
@@ -4379,7 +4379,7 @@ def build_analysis_dashboard_html(
           1. Characterization &amp; AI Brief
         </a>
         <a id="nav-page-qc" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition flex items-center gap-1.5">
-          <span>2. Statistical QC &amp; Lab Notes Audit</span>
+          <span>2. Statistical Snapshot</span>
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
@@ -4394,53 +4394,107 @@ def build_analysis_dashboard_html(
       </div>
     </nav>
 
-    <!-- Streamlined Resource Header & Single-Row Filter Bar -->
-    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-3.5">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="space-y-1 flex-1 min-w-[260px]">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-[var(--primary)] inline-block"></span>
-            <h1 id="hdr-title" class="text-lg sm:text-xl font-bold text-[var(--foreground)]">BioCirV — Resource Characterization</h1>
-            <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
-            <span id="hdr-class-badge" class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]"></span>
-            <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
-            <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
+    <!-- Page 1 Reorganized Top Workspace: 3 Logical Cards -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch" id="page1-top-workspace-cards">
+        <!-- Card 1: Resource Metadata & Lab Notes -->
+        <div id="top-card-resource-metadata" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Resource Metadata &amp; Lab Notes</div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--primary)] inline-block"></span>
+              <h1 id="hdr-title" class="text-base sm:text-lg font-bold text-[var(--foreground)]">BioCirV — Resource Characterization</h1>
+              <span id="hdr-code-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
+              <span id="hdr-class-badge" class="px-2 py-0.5 text-xs font-medium rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]"></span>
+              <span id="hdr-portal-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full"></span>
+              <span id="live-qc-overlay-badge" class="hidden px-2 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
+            </div>
+            <div id="resource-switcher-wrap" class="flex items-center gap-1.5 pt-1">
+              <label for="flt-resource" class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
+              <button id="btn-prev-res" title="Previous Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&larr;</button>
+              <select id="flt-resource" class="rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold border min-w-[200px] flex-1"></select>
+              <button id="btn-next-res" title="Next Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&rarr;</button>
+            </div>
+            <p id="hdr-desc" class="text-xs text-[var(--muted-foreground)]"></p>
           </div>
-          <p id="hdr-desc" class="text-xs sm:text-sm text-[var(--muted-foreground)]"></p>
+          <div class="pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span id="active-slice-badge" class="font-mono text-[var(--muted-foreground)]"></span>
+            <span id="hdr-lab-notes-summary" class="font-mono text-[var(--foreground)]"></span>
+          </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
-            ↻ Refresh QC State
-          </button>
-          <button id="btn-toggle-ai" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
-            ✨ Hide AI Brief
-          </button>
-          <button id="btn-theme-toggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
-            ☀️ Light Mode
-          </button>
-          <button id="btn-download-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
-            ⬇ Export CSV
-          </button>
-          <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition">
-            📤 Export Slice (.HTML)
-          </button>
-          <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-400 transition">
-            🐛 Report a Bug
-          </button>
+        <!-- Card 2: Flag Counts & Statistical Snapshot -->
+        <div id="top-card-flag-counts" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">Flag Counts</span>
+              <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Scoped to selected resource &amp; analysis type</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 pt-1.5 text-xs font-mono">
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Active Flags</div>
+                <div id="p1-flag-count-val" class="text-sm font-bold text-[var(--foreground)] mt-0.5">0</div>
+              </div>
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Within-Rep RSD</div>
+                <div id="p1-within-rsd-val" class="text-xs font-bold text-[var(--foreground)] mt-0.5 truncate">—</div>
+              </div>
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Between-Sample RSD</div>
+                <div id="p1-between-rsd-val" class="text-xs font-bold text-[var(--foreground)] mt-0.5 truncate">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-[var(--border)] flex items-center justify-between gap-2">
+            <a id="hdr-qc-deep-link" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 w-full justify-center"></a>
+          </div>
+        </div>
+
+        <!-- Card 3: Unified Controls & Export -->
+        <div id="top-card-controls-export" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Unified Controls &amp; Export</div>
+            <div class="flex flex-col gap-1.5 text-xs">
+              <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+                <input id="chk-p1-suppress-trace" type="checkbox" checked class="rounded" />
+                <span class="font-medium text-[var(--foreground)]">Suppress Low-Abundance Trace</span>
+              </label>
+              <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+                <input id="chk-p1-blind-mode" type="checkbox" class="rounded" />
+                <span class="font-medium text-[var(--foreground)]">Blind Analyst Mode</span>
+              </label>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-1.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="btn-open-slice-modal" title="📤 Export Slice (.HTML)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
+                📤 Export
+              </button>
+              <button id="btn-download-csv" class="hidden px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ⬇ Export CSV
+              </button>
+              <button id="btn-refresh-qc-state" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
+                ↻ Refresh QC State
+              </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="btn-toggle-ai" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ✨ Hide AI Brief
+              </button>
+              <button id="btn-theme-toggle" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ☀️ Light Mode
+              </button>
+              <button id="btn-open-bug-modal" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-400 transition">
+                🐛 Report a Bug
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Clean Single-Row Filter Bar -->
       <div class="pt-3 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2.5">
-          <div id="resource-switcher-wrap" class="flex items-center gap-1.5">
-            <label for="flt-resource" class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
-            <button id="btn-prev-res" title="Previous Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&larr;</button>
-            <select id="flt-resource" class="rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold border min-w-[230px]"></select>
-            <button id="btn-next-res" title="Next Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&rarr;</button>
-          </div>
-
           <div class="flex items-center gap-1.5">
             <label for="flt-prepared-sample" class="text-xs font-semibold text-[var(--muted-foreground)]">Sample:</label>
             <select id="flt-prepared-sample" class="rounded-lg px-2.5 py-1.5 text-xs font-medium border min-w-[180px]"></select>
@@ -4480,12 +4534,6 @@ def build_analysis_dashboard_html(
           <button id="btn-reset-filters" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
             Reset
           </button>
-        </div>
-
-        <!-- Subtle Stat QC & Lab Notes Link Pill -->
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="active-slice-badge" class="text-xs font-mono text-[var(--muted-foreground)]"></span>
-          <a id="hdr-qc-deep-link" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5"></a>
         </div>
       </div>
     </header>
@@ -4609,12 +4657,73 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       from_date: BUNDLE.slice_from_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.from_date) || "",
       to_date: BUNDLE.slice_to_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.to_date) || "",
       repMode: "replicates",
+      suppressTraceFlags: true,
+      blindMode: false,
       showAiPanel: true,
       proxGroupMode: "ps_exp",
       elemSourceMode: "all",
       icpScaleMode: "split",
       convSubTab: "all"
     };
+
+    function renderGroupFlagBadges(g) {
+      if (!g) return "";
+      const badges = [];
+      const allowFlags = !g.below_cutoff || !state.suppressTraceFlags;
+      if (allowFlags) {
+        if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Dixon Q=${fmtNum(g.dixon_q, 3)}">⚑ Dixon Outlier</span>`);
+        if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
+        else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
+        if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+        if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
+        if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
+      }
+      if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Low-abundance trace parameter (${g.cutoff_label})">Trace (${g.cutoff_label})</span>`);
+      return badges.join(" ");
+    }
+
+    function findOutlierGroupForRecords(groupRecs, paramName) {
+      if (!groupRecs || !groupRecs.length) return null;
+      const ins = typeof getResourceInsights === "function" ? getResourceInsights() : null;
+      const out = ins && ins.outlier_screening;
+      if (!out) return null;
+      const allGroups = [];
+      if (Array.isArray(out.groups)) allGroups.push(...out.groups);
+      if (Array.isArray(out.replicate_groups)) allGroups.push(...out.replicate_groups);
+      if (out.by_tab && typeof out.by_tab === "object") {
+        Object.values(out.by_tab).forEach(t => {
+          if (t && Array.isArray(t.replicate_groups)) allGroups.push(...t.replicate_groups);
+          else if (t && Array.isArray(t.groups)) allGroups.push(...t.groups);
+        });
+      }
+      if (!allGroups.length) return null;
+      const hasAnyFlag = g => Boolean(
+        g && (g.raw_dixon || g.raw_rsd20 || g.raw_rsd10 || g.raw_sd3x || g.has_identical_replicates || g.qc_mixed || g.below_cutoff)
+      );
+      const recIdSet = new Set(groupRecs.map(r => String(r.record_id || "").trim()).filter(Boolean));
+      if (recIdSet.size > 0) {
+        const idMatches = allGroups.filter(g => {
+          const reps = Array.isArray(g.replicates) ? g.replicates : [];
+          return reps.some(rep => recIdSet.has(String(rep.id || rep.record_id || "").trim()));
+        });
+        if (idMatches.length > 0) {
+          return idMatches.find(hasAnyFlag) || idMatches[0];
+        }
+      }
+      const first = groupRecs[0];
+      const rawParam = (paramName && !String(paramName).startsWith("⚑") && !String(paramName).includes(":"))
+        ? paramName
+        : (first.parameter || "");
+      const targetParam = String(rawParam).trim().toLowerCase();
+      const targetPs = String(first.prepared_sample || "").trim().toLowerCase();
+      const targetAt = String(first.analysis_type || "").trim().toLowerCase();
+      const propMatches = allGroups.filter(g =>
+        String(g.parameter || "").trim().toLowerCase() === targetParam &&
+        (!targetPs || String(g.prepared_sample || "").trim().toLowerCase() === targetPs) &&
+        (!targetAt || String(g.analysis_type || "").trim().toLowerCase() === targetAt)
+      );
+      return propMatches.find(hasAnyFlag) || propMatches[0] || null;
+    }
 
     window.auditPage1PointOrGroup = function(encodedPayload) {
       let prefill = {};
@@ -4662,11 +4771,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         prepared_sample: x.prepared_sample,
         experiment: x.experiment
       }));
+      const resolvedParam = (paramName && !String(paramName).startsWith("⚑") && !String(paramName).includes(":"))
+        ? paramName
+        : (first.parameter || "");
       const payload = encodeURIComponent(JSON.stringify({
         scope: "replicate_group",
         resource_name: first.resource_name || state.resource,
         analysis_type: first.analysis_type || "",
-        parameter: paramName || first.parameter || "",
+        parameter: resolvedParam,
         prepared_sample: first.prepared_sample || "",
         field_sample: first.field_sample || "",
         experiment: first.experiment || "",
@@ -4675,7 +4787,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         replicates: siblings,
         group_record_ids: siblings.map(s => s.id)
       }));
-      return `<button type="button" onclick="window.auditPage1PointOrGroup('${payload}')" title="Flag/audit this replicate group (n=${siblings.length}) or a single point" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">⚑ Audit (n=${siblings.length})</button>`;
+      const matchedOutlierGroup = findOutlierGroupForRecords(groupRecs, resolvedParam);
+      const flagBadgesHtml = matchedOutlierGroup ? renderGroupFlagBadges(matchedOutlierGroup) : "";
+      const btnHtml = `<button type="button" onclick="window.auditPage1PointOrGroup('${payload}')" title="Flag/audit this replicate group (n=${siblings.length}) or a single point" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">⚑ Audit (n=${siblings.length})</button>`;
+      return flagBadgesHtml ? `<span class="inline-flex flex-wrap items-center gap-1">${flagBadgesHtml} ${btnHtml}</span>` : btnHtml;
     }
 
     function formatMdInline(text) {
@@ -4834,8 +4949,39 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       const ins = getResourceInsights();
       const outSummary = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
-      const activeFlags = outSummary.flaggedActive || 0;
+      const activeFlags = state.suppressTraceFlags
+        ? (outSummary.flaggedActive || 0)
+        : (outSummary.flaggedRaw ?? outSummary.flaggedActive ?? 0);
+      const tabOut = (state.tab && state.tab !== "overview" && ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[state.tab]) || null;
+      const scopedActiveFlags = tabOut
+        ? (state.suppressTraceFlags ? (tabOut.flagged_active ?? 0) : (tabOut.flagged_raw ?? tabOut.flagged_active ?? 0))
+        : activeFlags;
       const notesCnt = (ins && ins.curated_notes && ins.curated_notes.length) || 0;
+
+      const flagValEl = document.getElementById("p1-flag-count-val");
+      if (flagValEl) {
+        flagValEl.textContent = `${scopedActiveFlags}`;
+      }
+      const wRsdEl = document.getElementById("p1-within-rsd-val");
+      if (wRsdEl) {
+        const wMed = tabOut ? tabOut.within_rsd_median : outSummary.withinRsdMedian;
+        const wSd = tabOut ? tabOut.within_sd_median : outSummary.withinSdMedian;
+        wRsdEl.textContent = wMed !== null && wMed !== undefined
+          ? `${fmtNum(wMed, 1)}%${wSd !== null && wSd !== undefined ? ` (±${fmtNum(wSd, 2)})` : ""}`
+          : "N/A (n=1)";
+      }
+      const bRsdEl = document.getElementById("p1-between-rsd-val");
+      if (bRsdEl) {
+        const bMed = tabOut ? tabOut.between_rsd_median : outSummary.betweenRsdMedian;
+        const bSd = tabOut ? tabOut.between_sd_median : outSummary.betweenSdMedian;
+        bRsdEl.textContent = bMed !== null && bMed !== undefined
+          ? `${fmtNum(bMed, 1)}%${bSd !== null && bSd !== undefined ? ` (±${fmtNum(bSd, 2)})` : ""}`
+          : "N/A (n=1 method group)";
+      }
+      const notesSumEl = document.getElementById("hdr-lab-notes-summary");
+      if (notesSumEl) {
+        notesSumEl.textContent = `Lab Notes: ${notesCnt} curated group(s)`;
+      }
 
       const navBadge = document.getElementById("nav-qc-badge");
       if (activeFlags > 0) {
@@ -4849,11 +4995,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const hdrLink = document.getElementById("hdr-qc-deep-link");
       hdrLink.href = `${QC_PAGE_FILENAME}?resource=${encRes}`;
       if (activeFlags > 0 || notesCnt > 0) {
-        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90 transition flex items-center gap-1.5";
-        hdrLink.innerHTML = `<span>⚑ Stat QC: <strong>${activeFlags}</strong> Flagged Group(s) · <strong>${notesCnt}</strong> Bench Note(s) &rarr; Audit</span>`;
+        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90 transition flex items-center gap-1.5 w-full justify-center";
+        hdrLink.innerHTML = `<span>⚑ Statistical Snapshot: <strong>${activeFlags}</strong> Flagged Group(s) · <strong>${notesCnt}</strong> Bench Note(s) &rarr; Audit</span>`;
       } else {
-        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-pass hover:opacity-90 transition flex items-center gap-1.5";
-        hdrLink.innerHTML = `<span>✓ Stat QC: 0 Active Flags &rarr; Open Precision Audit</span>`;
+        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-pass hover:opacity-90 transition flex items-center gap-1.5 w-full justify-center";
+        hdrLink.innerHTML = `<span>✓ Statistical Snapshot: 0 Active Flags &rarr; Open Precision Audit</span>`;
       }
     }
 
@@ -4882,13 +5028,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
 
       const provStr = ins && ins.providers && ins.providers.length ? ins.providers.join(", ") : "multi-provider";
-      const colDates = Array.from(new Set(fsList.map(f => f.collected_at ? f.collected_at.slice(0, 10) : "").filter(Boolean))).sort();
       const geoids = Array.from(new Set(fsList.map(f => f.geoid).filter(Boolean))).map(fmtGeoid);
-      const colSummary = colDates.length ? ` · Collected: <span class="font-mono text-[var(--foreground)]">${colDates.join(", ")}</span>` : "";
       const geoSummary = geoids.length ? ` · GEOID: <span class="font-mono text-[var(--primary)]">${geoids.join(", ")}</span>` : "";
       document.getElementById("hdr-desc").innerHTML = `
         <strong>${fsList.length} field sample(s)</strong> &rarr; <strong>${psList.length} prepared sample(s)</strong> &rarr;
-        <strong>${resRecs.length.toLocaleString()} analytical &amp; conversion observations</strong> (Providers: <span class="font-mono">${provStr}</span>)${colSummary}${geoSummary}.
+        <strong>${resRecs.length.toLocaleString()} analytical &amp; conversion observations</strong> (Providers: <span class="font-mono">${provStr}</span>)${geoSummary}.
       `;
       updateSuiteNavLinks();
     }
@@ -5005,16 +5149,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const activePs = new Set(filtered.map(r => r.prepared_sample).filter(Boolean)).size;
       const activeFs = new Set(filtered.map(r => r.field_sample).filter(Boolean)).size;
 
-      const colDates = Array.from(new Set(filtered.map(r => r.collected_date).filter(Boolean))).sort();
-      const prepDates = Array.from(new Set(filtered.map(r => r.prep_date).filter(Boolean))).sort();
       const geoids = Array.from(new Set(filtered.map(r => r.geoid).filter(Boolean))).map(fmtGeoid);
-
-      const colDateStr = colDates.length
-        ? (colDates.length === 1 ? colDates[0] : `${colDates[0]} → ${colDates[colDates.length - 1]}`)
-        : "Not recorded";
-      const prepDateStr = prepDates.length
-        ? (prepDates.length === 1 ? prepDates[0] : `${prepDates[0]} → ${prepDates[prepDates.length - 1]}`)
-        : "Not recorded";
       const geoStr = geoids.length ? geoids.join(", ") : "Statewide / Unassigned";
 
       const sliceBadgeSuffix = BUNDLE.collaborator_slice_mode
@@ -5035,8 +5170,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         : (d.syngas_h2_ppm ? `H2: ${fmtNum(d.syngas_h2_ppm, 0)} ppm` : "Aim 2 Conversion");
 
       const kpis = [
-        { label: "Filtered Observations", value: `${filtered.length.toLocaleString()}`, sub: `${passRate}% QC Pass (${passCount}P · ${failCount}F) · Run/Prep: ${prepDateStr}` },
-        { label: "Sample Lineage & Dates", value: `${activeFs} Field → ${activePs} Prep`, sub: `Collected: ${colDateStr} · GEOID: ${geoStr}` },
+        { label: "Filtered Observations", value: `${filtered.length.toLocaleString()}`, sub: `${passRate}% QC Pass (${passCount}P · ${failCount}F)` },
+        { label: "Sample Lineage & Geography", value: `${activeFs} Field → ${activePs} Prep`, sub: `GEOID: ${geoStr}` },
         { label: "Biochemical & Ash Signature", value: polyStr, sub: ashStr },
         { label: "Peak Conversion Performance", value: convMain, sub: convSub }
       ];
@@ -5075,7 +5210,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const text = ins && ins.ai_narratives && ins.ai_narratives.tab_insights && ins.ai_narratives.tab_insights[tabKey];
       if (!text) return "";
       const out = (ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[tabKey]) || null;
-      const activeFlags = out ? out.flagged_active : 0;
+      const activeFlags = out
+        ? (state.suppressTraceFlags ? (out.flagged_active ?? 0) : (out.flagged_raw ?? out.flagged_active ?? 0))
+        : 0;
       const encRes = encodeURIComponent(state.resource);
       return `
         <div class="bg-[var(--card)] border border-[var(--primary)]/40 rounded-xl p-3.5 shadow-sm flex flex-wrap items-center justify-between gap-3">
@@ -5229,7 +5366,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const passCnt = recs.filter(r => r.qc_status === "pass").length;
         const failCnt = recs.filter(r => r.qc_status === "fail").length;
         const tabOut = ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[t.qcDomain];
-        const flagCnt = tabOut ? tabOut.flagged_active : 0;
+        const flagCnt = tabOut
+          ? (state.suppressTraceFlags ? (tabOut.flagged_active ?? 0) : (tabOut.flagged_raw ?? tabOut.flagged_active ?? 0))
+          : 0;
         const wMed = tabOut ? tabOut.within_rsd_median : null;
         return `
           <tr class="border-t border-[var(--border)] hover:bg-[var(--background)] transition text-xs">
@@ -5860,17 +5999,23 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       `;
     }
 
-    function syncUrl() {
+    function syncUrl(opts = { push: false }) {
       try {
         const u = new URL(window.location.href);
         u.searchParams.set("resource", state.resource);
         u.searchParams.set("tab", state.tab);
         u.searchParams.set("qc", state.qc_status);
-        window.history.replaceState({}, "", u.toString());
+        const stateSnapshot = { resource: state.resource, tab: state.tab, qc: state.qc_status };
+        const nextUrl = u.toString();
+        if (opts && opts.push === true && u.search !== window.location.search) {
+          window.history.pushState(stateSnapshot, "", nextUrl);
+        } else {
+          window.history.replaceState(stateSnapshot, "", nextUrl);
+        }
       } catch (_) {}
     }
 
-    function render() {
+    function render(opts = { push: false }) {
       updateHeader();
       renderAiInsightsPanel();
       const filtered = getFilteredRecords();
@@ -5882,7 +6027,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       else if (state.tab === "compositional") container.innerHTML = renderCompositionalTab(filtered);
       else if (state.tab === "elemental") container.innerHTML = renderElementalTab(filtered);
       else if (state.tab === "conversion") container.innerHTML = renderConversionTab(filtered);
-      syncUrl();
+      syncUrl(opts);
     }
 
     window.selectResource = function(resName) {
@@ -5892,12 +6037,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       state.field_sample = "all";
       initResourceSwitcher();
       initFiltersForResource();
-      render();
+      render({ push: true });
     };
 
     window.switchTab = function(tabName) {
       state.tab = tabName;
-      render();
+      render({ push: true });
     };
 
     window.setSubMode = function(key, val) {
@@ -5970,10 +6115,27 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         state.tab = btn.dataset.tab;
-        render();
+        render({ push: true });
       });
     });
 
+    const chkP1SuppressEl = document.getElementById("chk-p1-suppress-trace");
+    if (chkP1SuppressEl) {
+      chkP1SuppressEl.checked = state.suppressTraceFlags !== false;
+      chkP1SuppressEl.addEventListener("change", e => {
+        state.suppressTraceFlags = Boolean(e.target.checked);
+        render();
+      });
+    }
+    const chkP1BlindEl = document.getElementById("chk-p1-blind-mode");
+    if (chkP1BlindEl) {
+      chkP1BlindEl.checked = Boolean(state.blindMode);
+      chkP1BlindEl.addEventListener("change", e => {
+        state.blindMode = Boolean(e.target.checked);
+        document.body.classList.toggle("blind-analyst-mode", state.blindMode);
+        render();
+      });
+    }
     document.getElementById("btn-toggle-ai").addEventListener("click", () => {
       state.showAiPanel = !state.showAiPanel;
       document.getElementById("btn-toggle-ai").textContent = state.showAiPanel ? "✨ Hide AI Brief" : "✨ Show AI Brief";
@@ -6047,6 +6209,26 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
     initSliceAndBugModals("Page 1 — Characterization & AI Brief");
     initResourceSwitcher();
     initFiltersForResource();
+    window.addEventListener("popstate", () => {
+      const p = new URLSearchParams(window.location.search);
+      const resParam = (p.get("resource") || p.get("res") || DEFAULT_RESOURCE).toLowerCase();
+      const matched = ACTIVE_RESOURCES.find(r => r.toLowerCase() === resParam) || ACTIVE_RESOURCES[0];
+      const resourceChanged = matched !== state.resource;
+      state.resource = matched;
+      const tabParam = p.get("tab") || p.get("domain") || p.get("type") || "overview";
+      state.tab = ["overview", ...TABS.map(t => t.key)].includes(tabParam) ? tabParam : "overview";
+      const qcParam = p.get("qc");
+      if (qcParam && ["pass", "all", "fail"].includes(qcParam)) {
+        state.qc_status = qcParam;
+      }
+      initResourceSwitcher();
+      if (resourceChanged) {
+        state.prepared_sample = "all";
+        state.field_sample = "all";
+        initFiltersForResource();
+      }
+      render({ push: false });
+    });
     render();
     window.refreshLiveQcOverlay(false);
   </script>
@@ -6108,7 +6290,7 @@ def build_qc_outlier_dashboard_html(
           1. Characterization &amp; AI Brief
         </a>
         <a id="nav-page-qc" href="resource_qc_outlier_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm flex items-center gap-1.5">
-          <span>2. Statistical QC &amp; Lab Notes Audit</span>
+          <span>2. Statistical Snapshot</span>
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-white/20"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
@@ -6123,125 +6305,174 @@ def build_qc_outlier_dashboard_html(
       </div>
     </nav>
 
-    <!-- Header & Statistical Screening Controls -->
-    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-3.5">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="space-y-1 flex-1 min-w-[260px]">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-            <h1 id="hdr-title" class="text-lg sm:text-xl font-bold text-[var(--foreground)]">BioCirV — Statistical Replicate Precision &amp; Candidate Outlier Audit</h1>
-            <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
-            <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
-            <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
-          </div>
-          <p id="hdr-desc" class="text-xs text-[var(--muted-foreground)]">
-            Two-sided Dixon's Q (&alpha;=0.05, n&ge;3), Within-Group vs. Between-Group RSD, &gt;3&times;SD<sub>pooled</sub> replicate screening, Portal/QC status filtering, and Analyst QC Decision-Making Workbench.
-          </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
-            ↻ Refresh QC State
-          </button>
-          <button id="btn-anon-analyst" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
-            🔒 Hide Analysts
-          </button>
-          <button id="btn-theme-toggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
-            ☀️ Light Mode
-          </button>
-          <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)]">
-            📤 Export Slice (.HTML)
-          </button>
-          <button id="btn-tray-to-workbench" type="button" onclick="window.sendSelectionTrayToWorkbench('pending')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
-            ⚖️ Export to Audit Workbench
-          </button>
-          <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-500">
-            🐛 Report a Bug
-          </button>
-          <button id="btn-export-flagged-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
-            ⬇ Export Flagged Groups CSV
-          </button>
-          <button id="btn-download-records-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
-            ⬇ Export Records CSV
+    <!-- Workspace Container: Left Sticky Filter Sidebar + Right Main Content -->
+    <div class="flex flex-col lg:flex-row gap-4 items-start">
+      <!-- Left Sticky Filter Sidebar (280px) -->
+      <aside id="qc-sticky-filter-sidebar" class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-4 w-full lg:w-[280px]" style="width: 280px; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; flex-shrink: 0;">
+        <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">Filter Controls</h2>
+          <button id="btn-reset-filters" type="button" class="px-2 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
+            Reset
           </button>
         </div>
-      </div>
 
-      <!-- Resource, Portal/QC Status, Sample, Experiment, Date Range & Trace Cutoff Controls -->
-      <div class="pt-3 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <div id="resource-switcher-wrap" class="flex items-center gap-1.5">
-            <label for="flt-resource" class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
-            <button id="btn-prev-res" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">&larr;</button>
-            <select id="flt-resource" class="rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold border min-w-[220px]"></select>
-            <button id="btn-next-res" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">&rarr;</button>
+        <!-- 1. Flag Filters -->
+        <div class="space-y-2.5 border-b border-[var(--border)] pb-3.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Flag Filters</div>
+          <div class="space-y-1">
+            <label for="flt-sidebar-flag-type" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">Flag Type:</label>
+            <select id="flt-sidebar-flag-type" class="w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-[var(--border)] bg-[var(--background)]">
+              <option value="all_groups">All Replicate Groups</option>
+              <option value="flagged" selected>Active Flagged Only</option>
+              <option value="dixon">Dixon's Q Outlier</option>
+              <option value="rsd20">High RSD &gt; 20%</option>
+              <option value="sd3x">&gt;3&times;SD_pooled</option>
+              <option value="identical">Identical Replicates</option>
+            </select>
           </div>
-
-          <div class="flex items-center gap-1.5">
-            <label for="flt-portal-qc" class="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">QC / Portal Filter:</label>
-            <select id="flt-portal-qc" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-[var(--primary)]/50 min-w-[215px]">
+          <div class="space-y-1">
+            <label for="flt-portal-qc" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">QC / Portal Filter:</label>
+            <select id="flt-portal-qc" class="w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-[var(--primary)]/50 bg-[var(--background)]">
               <option value="qc_pass" selected>qc_pass = pass Only (Unquarantined)</option>
               <option value="all">All Statuses &amp; QC (Raw + Pass/Fail)</option>
               <option value="portal_compliant">Portal Compliant Only (qc_pass=pass &amp; Active)</option>
               <option value="qc_fail">qc_pass = fail Only (Quarantined)</option>
             </select>
           </div>
+        </div>
 
-          <div class="flex items-center gap-1.5">
-            <label for="flt-prepared-sample" class="text-xs font-semibold text-[var(--muted-foreground)]">Sample:</label>
-            <select id="flt-prepared-sample" class="rounded-lg px-2.5 py-1.5 text-xs font-medium border min-w-[150px]"></select>
+        <!-- 2. Choose an Analysis Type -->
+        <div class="space-y-2 border-b border-[var(--border)] pb-3.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Choose an Analysis Type</div>
+          <div class="flex flex-wrap gap-1.5" id="domain-pills"></div>
+        </div>
+
+        <!-- 3. Additional Filters -->
+        <div class="space-y-2.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Additional Filters</div>
+
+          <label class="flex items-start gap-2 text-xs font-semibold text-[var(--foreground)] cursor-pointer select-none bg-[var(--background)] p-2 rounded-lg border border-[var(--border)]" title="Suppress outlier flags on low-abundance elemental data (<100 ppm for ICP/XRF) and trace sugars (<0.5% dw or <0.5 g/L)">
+            <input id="chk-suppress-trace" type="checkbox" checked class="mt-0.5 rounded border-[var(--border)] text-[var(--primary)]" />
+            <span class="flex-1 leading-snug">
+              Suppress Low-Abundance Trace Flags (&lt;100 ppm ICP/XRF, &lt;0.5% wt)
+              <span id="sidebar-suppressed-count-badge" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono badge-info">0 suppressed</span>
+            </span>
+          </label>
+
+          <label class="flex items-center gap-2 text-xs font-semibold text-[var(--foreground)] cursor-pointer select-none bg-[var(--background)] p-2 rounded-lg border border-[var(--border)]">
+            <input id="chk-sidebar-blind-mode" type="checkbox" class="rounded border-[var(--border)] text-[var(--primary)]" />
+            <span>Blind / Anonymize Analysts</span>
+          </label>
+
+          <div class="space-y-1">
+            <label for="sidebar-search-input" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">Keyword Search:</label>
+            <input id="sidebar-search-input" type="text" placeholder="Search sample, parameter, note..." class="w-full rounded-lg px-2.5 py-1.5 text-xs border border-[var(--border)] bg-[var(--background)]" />
           </div>
 
-          <div class="flex items-center gap-1.5">
-            <label for="flt-experiment" class="text-xs font-semibold text-[var(--muted-foreground)]">Experiment:</label>
-            <select id="flt-experiment" class="rounded-lg px-2.5 py-1.5 text-xs font-medium border min-w-[130px]"></select>
+          <div id="resource-switcher-wrap" class="space-y-1">
+            <label for="flt-resource" class="block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
+            <div class="flex items-center gap-1">
+              <button id="btn-prev-res" type="button" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">&larr;</button>
+              <select id="flt-resource" class="flex-1 min-w-0 rounded-lg px-2 py-1.5 text-xs font-bold border"></select>
+              <button id="btn-next-res" type="button" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">&rarr;</button>
+            </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-1.5 bg-[var(--background)] px-2 py-1 rounded-lg border border-[var(--border)]">
-            <label for="flt-date-type" class="text-xs font-semibold text-[var(--muted-foreground)]">Date:</label>
-            <select id="flt-date-type" class="rounded px-1.5 py-0.5 text-xs font-medium border border-[var(--border)] bg-[var(--card)]">
+          <div class="space-y-1">
+            <label for="flt-prepared-sample" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">Sample:</label>
+            <select id="flt-prepared-sample" class="w-full rounded-lg px-2.5 py-1.5 text-xs font-medium border"></select>
+          </div>
+
+          <div class="space-y-1">
+            <label for="flt-experiment" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">Experiment:</label>
+            <select id="flt-experiment" class="w-full rounded-lg px-2.5 py-1.5 text-xs font-medium border"></select>
+          </div>
+
+          <div class="space-y-1.5 bg-[var(--background)] p-2 rounded-lg border border-[var(--border)]">
+            <div class="flex items-center justify-between">
+              <label for="flt-date-type" class="text-[11px] font-semibold text-[var(--muted-foreground)]">Date:</label>
+              <button id="flt-date-clear" type="button" title="Clear date filter" class="hidden px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-80">✕</button>
+            </div>
+            <select id="flt-date-type" class="w-full rounded px-1.5 py-0.5 text-xs font-medium border border-[var(--border)] bg-[var(--card)]">
               <option value="any">Collection or Run Date</option>
               <option value="collected">Collection Date Only</option>
               <option value="run">Run / Prep Date Only</option>
             </select>
-            <input id="flt-from-date" type="date" min="2020-01-01" placeholder="2024-01-01" title="From Date (inclusive, defaults to 2024-01-01 when opened)" class="rounded px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] bg-[var(--card)]" />
-            <span class="text-xs text-[var(--muted-foreground)]">&rarr;</span>
-            <input id="flt-to-date" type="date" min="2020-01-01" placeholder="2024-01-01" title="To Date (inclusive)" class="rounded px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] bg-[var(--card)]" />
-            <button id="flt-date-clear" type="button" title="Clear date filter" class="hidden px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-80">✕</button>
+            <div class="flex items-center gap-1">
+              <input id="flt-from-date" type="date" min="2020-01-01" placeholder="2024-01-01" title="From Date (inclusive, defaults to 2024-01-01 when opened)" class="flex-1 min-w-0 rounded px-1.5 py-0.5 text-[11px] font-mono border border-[var(--border)] bg-[var(--card)]" />
+              <span class="text-xs text-[var(--muted-foreground)]">&rarr;</span>
+              <input id="flt-to-date" type="date" min="2020-01-01" placeholder="2024-01-01" title="To Date (inclusive)" class="flex-1 min-w-0 rounded px-1.5 py-0.5 text-[11px] font-mono border border-[var(--border)] bg-[var(--card)]" />
+            </div>
           </div>
+        </div>
+      </aside>
 
-          <button id="btn-reset-filters" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">
-            Reset
-          </button>
+      <!-- Right Main Content Column -->
+      <div class="flex-1 min-w-0 space-y-4 w-full" style="flex: 1; min-width: 0;">
+        <!-- Header & Statistical Screening Controls -->
+        <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-3.5">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="space-y-1 flex-1 min-w-[260px]">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                <h1 id="hdr-title" class="text-lg sm:text-xl font-bold text-[var(--foreground)]">BioCirV — Statistical Replicate Precision &amp; Candidate Outlier Audit</h1>
+                <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
+                <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
+                <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
+              </div>
+              <p id="hdr-desc" class="text-xs text-[var(--muted-foreground)]">
+                Two-sided Dixon's Q (&alpha;=0.05, n&ge;3), Within-Group vs. Between-Group RSD, &gt;3&times;SD<sub>pooled</sub> replicate screening, Portal/QC status filtering, and Analyst QC Decision-Making Workbench.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
+                ↻ Refresh QC State
+              </button>
+              <button id="btn-anon-analyst" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
+                🔒 Hide Analysts
+              </button>
+              <button id="btn-theme-toggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
+                ☀️ Light Mode
+              </button>
+              <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)]">
+                📤 Export Slice (.HTML)
+              </button>
+              <button id="btn-tray-to-workbench" type="button" onclick="window.sendSelectionTrayToWorkbench('pending')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+                ⚖️ Export to Audit Workbench
+              </button>
+              <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-500">
+                🐛 Report a Bug
+              </button>
+              <button id="btn-export-flagged-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+                ⬇ Export Flagged Groups CSV
+              </button>
+              <button id="btn-download-records-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
+                ⬇ Export Records CSV
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- 5-Card Statistical Precision & QC KPI Strip -->
+        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="qc-kpi-strip"></section>
+
+        <!-- Analyst QC Decision-Making & Export Workbench Banner -->
+        <section id="qc-decision-banner" class="bg-[var(--card)] border border-[var(--primary)]/50 rounded-xl p-3.5 shadow-sm"></section>
+
+        <!-- 5 Dedicated Audit Workbench Sub-Tabs -->
+        <div class="flex flex-wrap gap-1.5 bg-[var(--card)] border border-[var(--border)] rounded-xl p-1.5 shadow-sm" id="qc-sub-tabs">
+          <button data-subtab="outliers" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">1. Candidate Outlier Replicate Groups &amp; Decisions</button>
+          <button data-subtab="rsd" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">2. Within vs. Between-Group RSD Precision</button>
+          <button data-subtab="notes" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">3. Mined Lab &amp; Field Notes Audit</button>
+          <button data-subtab="explorer" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">4. Full Record Explorer &amp; Record Decisions</button>
+          <button data-subtab="review_queue" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">5. Review Queue &amp; Audit Ledger</button>
         </div>
 
-        <label class="inline-flex items-center gap-2 text-xs font-semibold text-[var(--foreground)] cursor-pointer select-none bg-[var(--background)] px-3 py-1.5 rounded-lg border border-[var(--border)]" title="Suppress outlier flags on low-abundance elemental data (<100 ppm for ICP/XRF) and trace sugars (<0.5% dw or <0.5 g/L)">
-          <input id="chk-suppress-trace" type="checkbox" checked class="rounded border-[var(--border)] text-[var(--primary)]" />
-          <span>Suppress Low-Abundance Trace Flags (&lt;100 ppm ICP/XRF, &lt;0.5% wt)</span>
-        </label>
+        <!-- Dynamic Audit Workbench Container -->
+        <main id="qc-content" class="space-y-4"></main>
       </div>
-
-      <!-- Analysis Domain Filter Pills -->
-      <div class="pt-3 border-t border-[var(--border)] flex flex-wrap items-center gap-1.5" id="domain-pills"></div>
-    </header>
-
-    <!-- 5-Card Statistical Precision & QC KPI Strip -->
-    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="qc-kpi-strip"></section>
-
-    <!-- Analyst QC Decision-Making & Export Workbench Banner -->
-    <section id="qc-decision-banner" class="bg-[var(--card)] border border-[var(--primary)]/50 rounded-xl p-3.5 shadow-sm"></section>
-
-    <!-- 5 Dedicated Audit Workbench Sub-Tabs -->
-    <div class="flex flex-wrap gap-1.5 bg-[var(--card)] border border-[var(--border)] rounded-xl p-1.5 shadow-sm" id="qc-sub-tabs">
-      <button data-subtab="outliers" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">1. Candidate Outlier Replicate Groups &amp; Decisions</button>
-      <button data-subtab="rsd" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">2. Within vs. Between-Group RSD Precision</button>
-      <button data-subtab="notes" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">3. Mined Lab &amp; Field Notes Audit</button>
-      <button data-subtab="explorer" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">4. Full Record Explorer &amp; Record Decisions</button>
-      <button data-subtab="review_queue" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">5. Review Queue &amp; Audit Ledger</button>
     </div>
-
-    <!-- Dynamic Audit Workbench Container -->
-    <main id="qc-content" class="space-y-4"></main>
 
   </div>
 
@@ -6392,9 +6623,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       from_date: BUNDLE.slice_from_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.from_date) || "",
       to_date: BUNDLE.slice_to_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.to_date) || "",
       suppressTraceFlags: true,
-      outlierFilterMode: "flagged",
+      outlierFilterMode: urlParams.get("flag") || "flagged",
       explorerFlagFilter: "all",
-      search: "",
+      search: urlParams.get("q") || "",
       showDecisionQueueTable: false,
       queueStatusFilter: "all",
       queueScopeFilter: "all",
@@ -6403,6 +6634,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       queueResourceScope: "all",
       anonymizeAnalyst: Boolean(BUNDLE.exclude_analyst_default)
     };
+    Object.defineProperties(state, {
+      selectedResource: { get() { return this.resource; }, set(v) { this.resource = v; } },
+      selectedDomain: { get() { return this.domain; }, set(v) { this.domain = v; } },
+      activeSubtab: { get() { return this.subtab; }, set(v) { this.subtab = v; } },
+      outliersFilter: { get() { return this.outlierFilterMode; }, set(v) { this.outlierFilterMode = v; } },
+      outliersSearch: { get() { return this.search; }, set(v) { this.search = v; } },
+      blindMode: { get() { return this.anonymizeAnalyst; }, set(v) { this.anonymizeAnalyst = Boolean(v); } }
+    });
 
     function fmtNum(v, digits = 2) {
       if (v === null || v === undefined || isNaN(v)) return "—";
@@ -6613,20 +6852,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function isGroupMatchingFilter(g, mode, suppress) {
       if (suppress && g.below_cutoff) return false;
+      if (mode === "identical") return Boolean(g.has_identical_replicates || g.identical_replicates);
       const isPrimary = suppress ? g.active_flagged : g.raw_flagged;
       const isMod = suppress ? (g.active_flagged || g.active_rsd10) : (g.raw_flagged || g.raw_rsd10);
-      if (mode === "flagged") return isPrimary;
+      if (mode === "flagged" || mode === "active") return isPrimary;
       if (mode === "moderate") return isMod;
       if (mode === "dixon") return g.raw_dixon;
-      if (mode === "rsd20") return g.raw_rsd20;
-      if (mode === "sd3x") return g.raw_sd3x;
+      if (mode === "rsd20" || mode === "rsd") return g.raw_rsd20;
+      if (mode === "sd3x" || mode === "sd3") return g.raw_sd3x;
       if (mode === "unquarantined") return isPrimary && g.qc_pass_count > 0;
       if (mode === "reviewed") {
         const dKey = makeGroupDecisionKey(state.resource, g);
         const entry = DECISIONS_STORE[dKey];
         return Boolean(entry && (entry.decision !== "pending" || (entry.note && entry.note.trim())));
       }
-      if (mode === "all_groups") return true;
+      if (mode === "all_groups" || mode === "all") return true;
       return isPrimary;
     }
 
@@ -6793,6 +7033,22 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const suppressedCount = groups.filter(g => g.below_cutoff && g.raw_flagged).length;
 
       document.getElementById("nav-qc-badge").textContent = `⚑ ${primaryGroups.length}`;
+      const suppBadgeEl = document.getElementById("sidebar-suppressed-count-badge");
+      if (suppBadgeEl) suppBadgeEl.textContent = `${suppressedCount} suppressed`;
+      const chkBlindEl = document.getElementById("chk-sidebar-blind-mode");
+      if (chkBlindEl) chkBlindEl.checked = Boolean(state.anonymizeAnalyst);
+      const sidebarFlagEl = document.getElementById("flt-sidebar-flag-type");
+      if (sidebarFlagEl) {
+        const modeMap = { all: "all_groups", active: "flagged", rsd: "rsd20", sd3: "sd3x" };
+        const targetVal = modeMap[state.outlierFilterMode] || state.outlierFilterMode;
+        if (!sidebarFlagEl.options || Array.from(sidebarFlagEl.options).some(o => o.value === targetVal)) {
+          sidebarFlagEl.value = targetVal;
+        }
+      }
+      const sidebarSearchEl = document.getElementById("sidebar-search-input");
+      if (sidebarSearchEl && document.activeElement !== sidebarSearchEl) {
+        sidebarSearchEl.value = state.search || "";
+      }
 
       const portalModeLabel = {
         all: "All Statuses (Raw + Pass/Fail)",
@@ -6895,9 +7151,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const dixonGroups = groups.filter(g => isGroupMatchingFilter(g, "dixon", suppress));
       const rsd20Groups = groups.filter(g => isGroupMatchingFilter(g, "rsd20", suppress));
       const sd3xGroups = groups.filter(g => isGroupMatchingFilter(g, "sd3x", suppress));
+      const identicalGroups = groups.filter(g => isGroupMatchingFilter(g, "identical", suppress));
       const unquarGroups = groups.filter(g => isGroupMatchingFilter(g, "unquarantined", suppress));
       const reviewedGroups = groups.filter(g => isGroupMatchingFilter(g, "reviewed", suppress));
-      const displayedGroups = groups.filter(g => isGroupMatchingFilter(g, state.outlierFilterMode, suppress));
+      const qSearch = (state.search || "").trim().toLowerCase();
+      const displayedGroups = groups.filter(g => {
+        if (!isGroupMatchingFilter(g, state.outlierFilterMode, suppress)) return false;
+        if (qSearch) {
+          const hay = `${g.prepared_sample || ""} ${g.parameter || ""} ${g.experiment || ""} ${g.prep_method || ""} ${g.analysis_type || ""} ${g.note || ""} ${(g.replicates || []).map(r => r.id).join(" ")}`.toLowerCase();
+          if (!hay.includes(qSearch)) return false;
+        }
+        return true;
+      });
 
       const filterBtns = [
         { id: "flagged", label: `Primary Flagged (${primaryGroups.length})` },
@@ -6905,6 +7170,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         { id: "dixon", label: `Dixon's Q α=0.05 (${dixonGroups.length})` },
         { id: "rsd20", label: `RSD >20% (${rsd20Groups.length})` },
         { id: "sd3x", label: `>3×SD Pooled (${sd3xGroups.length})` },
+        { id: "identical", label: `Identical Replicates (${identicalGroups.length})` },
         { id: "unquarantined", label: `Unquarantined / QC Pass (${unquarGroups.length})` },
         { id: "reviewed", label: `⚖️ Reviewed / Annotated (${reviewedGroups.length})` },
         { id: "all_groups", label: `All Replicate Groups (${groups.length})` }
@@ -6970,12 +7236,15 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   }).join(" ");
 
                   const badges = [];
-                  if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail">Dixon Q=${fmtNum(g.dixon_q, 3)}</span>`);
-                  if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn">RSD &gt; 20%</span>`);
-                  else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">RSD 10–20%</span>`);
-                  if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn">&gt;3&times;SD<sub>pool</sub></span>`);
-                  if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0)">Identical Replicates (SD=0)</span>`);
-                  if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail">Mixed QC</span>`);
+                  const showActiveFlags = !g.below_cutoff || !state.suppressTraceFlags;
+                  if (showActiveFlags) {
+                    if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Dixon Q=${fmtNum(g.dixon_q, 3)}">⚑ Dixon Outlier</span>`);
+                    if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
+                    else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
+                    if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+                    if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
+                    if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
+                  }
                   if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">Trace (${g.cutoff_label})</span>`);
 
                   const qcSummary = g.qc_fail_count === 0
@@ -7286,6 +7555,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               isCandidate: isDixonCand || isSd3Cand,
               isDixonCand,
               isSd3Cand,
+              rawRsd20: Boolean(g.raw_rsd20),
+              hasIdentical: Boolean(g.has_identical_replicates),
+              qcMixed: Boolean(g.qc_mixed),
               dixonQ: g.dixon_q,
               rsdWithin: g.rsd_within_pct,
               cutoffLabel: g.cutoff_label
@@ -7379,11 +7651,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-info">Trace (${info.cutoffLabel})</span>`;
           } else if (info.isCandidate) {
             const tags = [];
-            if (info.isDixonCand) tags.push(`Dixon Q=${fmtNum(info.dixonQ, 2)}`);
-            if (info.isSd3Cand) tags.push(`>3×SD`);
-            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold badge-warn ring-1 ring-amber-500">★ ${tags.join(' · ')}</span>`;
+            if (info.isDixonCand) tags.push(`⚑ Dixon Outlier`);
+            if (info.isSd3Cand) tags.push(`⚑ >3×SD_pooled`);
+            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold badge-warn ring-1 ring-amber-500" title="Dixon Q=${fmtNum(info.dixonQ, 2)} · Within-RSD ${fmtNum(info.rsdWithin, 1)}%">${tags.join(' · ')}</span>`;
           } else if (info.isPrimary) {
-            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-warn">⚑ Grp RSD ${fmtNum(info.rsdWithin, 1)}%</span>`;
+            const pillLabel = info.rawRsd20 ? "⚑ RSD &gt; 20%" : "⚑ Outlier Flag";
+            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-warn" title="Within-group RSD ${fmtNum(info.rsdWithin, 1)}%">${pillLabel}</span>`;
           }
         }
         const qcHtml = r.qc_status === "pass"
@@ -7462,7 +7735,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 class="text-base font-bold text-[var(--foreground)]">Complete ${state.resource.toUpperCase()} Record Explorer (${flagFiltered.length} matching records)</h2>
-              <p class="text-xs text-[var(--muted-foreground)]">Includes Collection Date, GEOID, Sample Prep/Run Date, Stat Screen status, and per-record Analyst QC Review decisions &amp; email task assignment.</p>
+              <p class="text-xs text-[var(--muted-foreground)]">Includes Collection Date, GEOID, Sample Prep/Run Date, Statistical Snapshot status, and per-record Analyst QC Review decisions &amp; email task assignment.</p>
             </div>
             <input id="flt-search-input" type="text" value="${state.search.replace(/"/g, '&quot;')}" oninput="updateSearch(this.value)" placeholder="Search record ID, parameter, GEOID, date, note..." class="rounded-lg px-3 py-1.5 text-xs border min-w-[260px]" />
           </div>
@@ -7483,7 +7756,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <th class="py-2 px-2.5">Exp</th>
                   <th class="py-2 px-2.5">Parameter</th>
                   <th class="py-2 px-2.5 text-right">Value</th>
-                  <th class="py-2 px-2.5 text-center">Stat Screen</th>
+                  <th class="py-2 px-2.5 text-center">Statistical Snapshot</th>
                   <th class="py-2 px-2.5 text-center">QC</th>
                   <th class="py-2 px-2.5">Bench Note</th>
                   <th class="py-2 px-2.5">⚖️ Analyst Decision &amp; Assignee</th>
@@ -7705,14 +7978,55 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       `;
     }
 
-    function syncUrl() {
+    function syncUrl(opts = { push: false }) {
       try {
         const u = new URL(window.location.href);
-        u.searchParams.set("resource", state.resource);
-        u.searchParams.set("domain", state.domain);
-        u.searchParams.set("subtab", state.subtab);
-        u.searchParams.set("portal_qc", state.portalQcMode);
-        window.history.replaceState({}, "", u.toString());
+        if (state.resource) {
+          u.searchParams.set("resource", state.resource);
+        } else {
+          u.searchParams.delete("resource");
+        }
+        if (state.domain && state.domain !== "all") {
+          u.searchParams.set("domain", state.domain);
+        } else {
+          u.searchParams.delete("domain");
+        }
+        if (state.subtab && state.subtab !== "outliers") {
+          u.searchParams.set("subtab", state.subtab);
+        } else {
+          u.searchParams.delete("subtab");
+        }
+        if (state.portalQcMode && state.portalQcMode !== "qc_pass") {
+          u.searchParams.set("portal_qc", state.portalQcMode);
+        } else {
+          u.searchParams.delete("portal_qc");
+        }
+        if (state.outlierFilterMode && state.outlierFilterMode !== "flagged") {
+          u.searchParams.set("flag", state.outlierFilterMode);
+        } else {
+          u.searchParams.delete("flag");
+        }
+        if (state.search && state.search.trim()) {
+          u.searchParams.set("q", state.search.trim());
+        } else {
+          u.searchParams.delete("q");
+        }
+        const stateSnapshot = {
+          resource: state.resource,
+          selectedResource: state.resource,
+          domain: state.domain,
+          selectedDomain: state.domain,
+          subtab: state.subtab,
+          activeSubtab: state.subtab,
+          portalQcMode: state.portalQcMode,
+          outliersFilter: state.outlierFilterMode,
+          outliersSearch: state.search
+        };
+        if (opts && opts.push) {
+          window.history.pushState(stateSnapshot, "", u.toString());
+        } else {
+          window.history.replaceState(stateSnapshot, "", u.toString());
+        }
       } catch (_) {}
     }
 
@@ -7820,7 +8134,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       await window.syncReviewQueueWithApi();
     };
 
-    function render() {
+    function render(opts = { push: false }) {
       renderDomainPills();
       renderHeaderAndKpis();
       renderDecisionBanner();
@@ -7830,12 +8144,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       else if (state.subtab === "notes") container.innerHTML = renderNotesSubtab();
       else if (state.subtab === "explorer") container.innerHTML = renderExplorerSubtab();
       else if (state.subtab === "review_queue") container.innerHTML = renderReviewQueueSubtab();
-      syncUrl();
+      syncUrl(opts);
     }
 
     window.openReviewQueueSubtab = function() {
       state.subtab = "review_queue";
-      render();
+      render({ push: true });
     };
 
     window.setQueueFilter = function(field, val) {
@@ -8182,28 +8496,28 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       state.search = "";
       initResourceSwitcher();
       initFiltersForResource();
-      render();
+      render({ push: true });
     };
 
     window.setDomain = function(d) {
       const norm = d === "all" ? "all" : normalizeDomainKey(d);
       state.domain = DOMAIN_LABELS[norm] ? norm : "all";
-      render();
+      render({ push: true });
     };
 
     window.setOutlierFilterMode = function(mode) {
       state.outlierFilterMode = mode;
-      render();
+      render({ push: false });
     };
 
     window.setExplorerFlagFilter = function(mode) {
       state.explorerFlagFilter = mode;
-      render();
+      render({ push: false });
     };
 
     window.updateSearch = function(val) {
       state.search = val;
-      render();
+      render({ push: false });
       const inp = document.getElementById("flt-search-input");
       if (inp) {
         inp.focus();
@@ -8221,7 +8535,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       state.search = recId;
       state.explorerFlagFilter = "all";
       state.subtab = "explorer";
-      render();
+      render({ push: true });
     };
 
     window.inspectSampleParam = function(sampleName, paramName) {
@@ -8230,7 +8544,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       state.search = paramName || "";
       state.explorerFlagFilter = "all";
       state.subtab = "explorer";
-      render();
+      render({ push: true });
     };
 
     window.auditPage2PointOrGroup = function(encodedPayload) {
@@ -8294,8 +8608,32 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
     document.getElementById("chk-suppress-trace").addEventListener("change", e => {
       state.suppressTraceFlags = e.target.checked;
-      render();
+      render({ push: false });
     });
+    const sidebarFlagSelectEl = document.getElementById("flt-sidebar-flag-type");
+    if (sidebarFlagSelectEl) {
+      sidebarFlagSelectEl.addEventListener("change", e => {
+        state.outlierFilterMode = e.target.value;
+        render({ push: false });
+      });
+    }
+    const sidebarBlindChkEl = document.getElementById("chk-sidebar-blind-mode");
+    if (sidebarBlindChkEl) {
+      sidebarBlindChkEl.checked = Boolean(state.anonymizeAnalyst);
+      sidebarBlindChkEl.addEventListener("change", e => {
+        state.anonymizeAnalyst = Boolean(e.target.checked);
+        document.body.classList.toggle("blind-analyst-mode", state.anonymizeAnalyst);
+        render({ push: false });
+      });
+    }
+    const sidebarSearchInputEl = document.getElementById("sidebar-search-input");
+    if (sidebarSearchInputEl) {
+      sidebarSearchInputEl.value = state.search || "";
+      sidebarSearchInputEl.addEventListener("input", e => {
+        state.search = e.target.value;
+        render({ push: false });
+      });
+    }
     document.getElementById("btn-reset-filters").addEventListener("click", () => {
       state.domain = "all";
       state.portalQcMode = "qc_pass";
@@ -8311,14 +8649,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const fltDateClearEl = document.getElementById("flt-date-clear");
       if (fltDateClearEl) fltDateClearEl.classList.add("hidden");
       state.search = "";
+      if (sidebarSearchInputEl) sidebarSearchInputEl.value = "";
       state.outlierFilterMode = "flagged";
+      if (sidebarFlagSelectEl) sidebarFlagSelectEl.value = "flagged";
       state.explorerFlagFilter = "all";
       initFiltersForResource();
-      render();
+      render({ push: false });
     });
     document.getElementById("btn-anon-analyst").addEventListener("click", () => {
       state.anonymizeAnalyst = !state.anonymizeAnalyst;
-      render();
+      document.body.classList.toggle("blind-analyst-mode", state.anonymizeAnalyst);
+      if (sidebarBlindChkEl) sidebarBlindChkEl.checked = state.anonymizeAnalyst;
+      render({ push: false });
     });
     document.getElementById("btn-theme-toggle").addEventListener("click", () => {
       const htmlEl = document.documentElement;
@@ -8329,7 +8671,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     document.querySelectorAll(".subtab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         state.subtab = btn.dataset.subtab;
-        render();
+        render({ push: true });
       });
     });
 
@@ -8437,6 +8779,33 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
     initSliceAndBugModals("Page 2 — Statistical QC & Lab Notes Audit");
     initResourceSwitcher();
     initFiltersForResource();
+    window.addEventListener("popstate", () => {
+      const p = new URLSearchParams(window.location.search);
+      const resParam = (p.get("resource") || p.get("res") || DEFAULT_RESOURCE).toLowerCase();
+      const matchedRes = ACTIVE_RESOURCES.find(r => r.toLowerCase() === resParam) || ACTIVE_RESOURCES[0];
+      const resourceChanged = matchedRes !== state.resource;
+      state.resource = matchedRes;
+      const domParam = p.get("domain") || p.get("type") || "all";
+      const normDom = domParam === "all" ? "all" : normalizeDomainKey(domParam);
+      state.domain = DOMAIN_LABELS[normDom] ? normDom : "all";
+      const subParam = p.get("subtab") || "outliers";
+      state.subtab = ["outliers", "rsd", "notes", "explorer", "review_queue"].includes(subParam) ? subParam : "outliers";
+      const pqcParam = p.get("portal_qc") || "qc_pass";
+      state.portalQcMode = ["all", "portal_compliant", "qc_pass", "qc_fail"].includes(pqcParam) ? pqcParam : "qc_pass";
+      state.outlierFilterMode = p.get("flag") || "flagged";
+      state.search = p.get("q") || "";
+      const pqcEl = document.getElementById("flt-portal-qc");
+      if (pqcEl) pqcEl.value = state.portalQcMode;
+      const searchEl = document.getElementById("sidebar-search-input");
+      if (searchEl) searchEl.value = state.search;
+      initResourceSwitcher();
+      if (resourceChanged) {
+        state.prepared_sample = "all";
+        state.experiment = "all";
+        initFiltersForResource();
+      }
+      render({ push: false });
+    });
     render();
     window.syncReviewQueueWithApi();
     if (window.refreshLiveQcOverlay) {

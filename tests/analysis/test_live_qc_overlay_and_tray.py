@@ -1326,3 +1326,234 @@ process.exit(0);
     assert "almond hulls" in out["slicedOptionsInsightsKeys"]
     assert "rice straw" not in out["slicedOptionsInsightsKeys"]
     assert out["slicedOptionsNestedKeys"] == ["almond hulls"]
+
+
+def test_card8_landing_page_ui_and_flag_badges(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+    workbench_src = (
+        REPO_ROOT / "analysis" / "metadata" / "resource_audit_workbench.py"
+    ).read_text(encoding="utf-8")
+
+    # 1. Suite nav bar renamed to "Statistical Snapshot" across all pages
+    assert "Statistical Snapshot" in page1
+    assert "Statistical Snapshot" in page2
+    assert "Statistical Snapshot" in page3
+    assert "Statistical Snapshot" in workbench_src
+    assert "2. Stat Screen" not in page1
+    assert "2. Stat Screen" not in page2
+    assert "2. Stat Screen" not in page3
+    assert "2. Stat QC" not in workbench_src
+
+    # 2. Page 1 3-card header layout & KPI strip decluttering
+    assert 'id="top-card-resource-metadata"' in page1
+    assert 'id="top-card-flag-counts"' in page1
+    assert 'id="top-card-controls-export"' in page1
+    assert "Resource Metadata &amp; Lab Notes" in page1
+    assert "Flag Counts" in page1
+    assert "Scoped to selected resource &amp; analysis type" in page1
+    assert "Unified Controls &amp; Export" in page1
+    assert 'id="chk-p1-suppress-trace"' in page1
+    assert 'id="chk-p1-blind-mode"' in page1
+    assert "Collection & Prep Dates" not in page1
+
+    # 3. Decluttered flag badge pills & trace suppression guard on Page 1 & Page 2
+    assert "const allowFlags = !g.below_cutoff || !state.suppressTraceFlags;" in page1
+    assert "const showActiveFlags = !g.below_cutoff || !state.suppressTraceFlags;" in page2
+    assert page1.count("renderGroupFlagBadges(") >= 2
+    assert "const matchedOutlierGroup = findOutlierGroupForRecords(" in page1
+
+    # 4. Runtime execution of Page 1 renderGroupFlagBadges + buildAuditGroupBtnHtml
+    fn_block_start = page1.index("function renderGroupFlagBadges(g) {")
+    fn_block_end = page1.index("function formatMdInline(text) {")
+    fn_block_js = page1[fn_block_start:fn_block_end]
+    node_script = f"""
+const window = globalThis;
+const state = {{ resource: "almond hulls", suppressTraceFlags: true }};
+function fmtNum(v, digits = 2) {{
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return Number(v).toFixed(digits);
+}}
+let mockInsights = {{
+  outlier_screening: {{
+    by_tab: {{
+      proximate: {{
+        replicate_groups: [
+          {{
+            parameter: "ash",
+            prepared_sample: "AH-PS-1",
+            analysis_type: "Proximate Analysis",
+            replicates: [{{ id: "prox-1" }}, {{ id: "prox-2" }}, {{ id: "prox-3" }}],
+            raw_dixon: true,
+            dixon_q: 0.941,
+            raw_rsd20: true,
+            rsd_within_pct: 24.5,
+            raw_sd3x: true,
+            has_identical_replicates: true,
+            qc_mixed: true,
+            qc_pass_count: 2,
+            qc_fail_count: 1,
+            below_cutoff: false,
+            cutoff_label: "<0.5% wt"
+          }},
+          {{
+            parameter: "Cd",
+            prepared_sample: "AH-PS-1",
+            analysis_type: "ICP Elemental Analysis",
+            replicates: [{{ id: "icp-1" }}, {{ id: "icp-2" }}],
+            raw_rsd20: true,
+            rsd_within_pct: 35.0,
+            below_cutoff: true,
+            cutoff_label: "<100 ppm"
+          }}
+        ]
+      }}
+    }}
+  }}
+}};
+function getResourceInsights() {{ return mockInsights; }}
+{fn_block_js}
+const activeHtml = buildAuditGroupBtnHtml([
+  {{ record_id: "prox-1", replicate: 1, value: 5.1, qc_status: "pass", prepared_sample: "AH-PS-1", analysis_type: "Proximate Analysis", parameter: "ash" }},
+  {{ record_id: "prox-2", replicate: 2, value: 5.2, qc_status: "pass", prepared_sample: "AH-PS-1", analysis_type: "Proximate Analysis", parameter: "ash" }},
+  {{ record_id: "prox-3", replicate: 3, value: 9.8, qc_status: "fail", prepared_sample: "AH-PS-1", analysis_type: "Proximate Analysis", parameter: "ash" }}
+], "⚑ Audit");
+state.suppressTraceFlags = true;
+const traceSuppressedHtml = buildAuditGroupBtnHtml([
+  {{ record_id: "icp-1", replicate: 1, value: 0.2, qc_status: "pass", prepared_sample: "AH-PS-1", analysis_type: "ICP Elemental Analysis", parameter: "Cd" }}
+], "⚑ Audit");
+state.suppressTraceFlags = false;
+const traceUnsuppressedHtml = buildAuditGroupBtnHtml([
+  {{ record_id: "icp-1", replicate: 1, value: 0.2, qc_status: "pass", prepared_sample: "AH-PS-1", analysis_type: "ICP Elemental Analysis", parameter: "Cd" }}
+], "⚑ Audit");
+console.log(JSON.stringify({{ activeHtml, traceSuppressedHtml, traceUnsuppressedHtml }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", node_script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    out = json.loads(proc.stdout.strip())
+    assert 'title="Dixon Q=0.941"' in out["activeHtml"]
+    assert 'title="Within-group RSD 24.5% > 20%"' in out["activeHtml"]
+    assert 'title=">3×SD_pooled candidate"' in out["activeHtml"]
+    assert 'title="Mixed QC (2P/1F)"' in out["activeHtml"]
+    assert "⚑ Audit (n=3)" in out["activeHtml"]
+    assert "⚑ RSD &gt; 20%" not in out["traceSuppressedHtml"]
+    assert 'title="Low-abundance trace parameter (<100 ppm)"' in out["traceSuppressedHtml"]
+    assert "⚑ RSD &gt; 20%" in out["traceUnsuppressedHtml"]
+
+    for flag_label in [
+        "⚑ Dixon Outlier",
+        "⚑ RSD &gt; 20%",
+        "⚑ RSD 10–20%",
+        "⚑ &gt;3&times;SD_pooled",
+        "⚑ Identical Replicates",
+        "⚑ Mixed QC",
+    ]:
+        assert flag_label in page1
+        assert flag_label in page2
+
+
+def test_card9_sticky_sidebar_and_pushstate_popstate(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. Page 2 Sticky Filter Sidebar structure & controls
+    assert 'id="qc-sticky-filter-sidebar"' in page2
+    assert "position: sticky; top: 16px;" in page2
+    assert "Flag Filters" in page2
+    assert "Choose an Analysis Type" in page2
+    assert "Additional Filters" in page2
+    assert 'id="flt-sidebar-flag-type"' in page2
+    assert '<option value="identical">Identical Replicates</option>' in page2
+    assert 'id="sidebar-suppressed-count-badge"' in page2
+    assert 'id="chk-sidebar-blind-mode"' in page2
+    assert 'id="sidebar-search-input"' in page2
+    assert (
+        'if (mode === "identical") return Boolean(g.has_identical_replicates || g.identical_replicates);'
+        in page2
+    )
+
+    # 2. Page 3 Sticky Filter Sidebar structure & controls
+    assert 'id="explorer-sticky-filter-sidebar"' in page3
+    assert "position: sticky; top: 16px;" in page3
+    assert "Flag Filters" in page3
+    assert "Choose an Analysis Type" in page3
+    assert "Additional Filters" in page3
+    assert 'id="flt-explorer-flag-type"' in page3
+    assert '<option value="identical">Identical Replicates</option>' in page3
+    assert 'id="chk-explorer-suppress-trace"' in page3
+    assert 'id="explorer-suppressed-count-badge"' in page3
+    assert 'id="chk-explorer-blind-mode"' in page3
+    assert 'id="filter-search"' in page3
+    assert "function isExplorerGroupMatchingFlagFilter(g, flagMode)" in page3
+
+    # 3. History pushState + popstate listener across Page 1, Page 2, and Page 3
+    for name, html in [("page1", page1), ("page2", page2), ("page3", page3)]:
+        assert "window.history.pushState(" in html, f"{name} missing window.history.pushState"
+        assert "window.history.replaceState(" in html, (
+            f"{name} missing window.history.replaceState"
+        )
+        assert "addEventListener" in html and "popstate" in html, (
+            f"{name} missing popstate listener"
+        )
+        assert "push: true" in html, f"{name} missing interactive push: true transitions"
+        assert "push: false" in html, f"{name} missing non-push popstate/init transitions"
+
+
+def test_card10_explorer_brush_zoom_and_qc_panels(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    """Card 10: Verify Page 3 HTML5 canvas rectangular brush zoom, click-audit popover preservation,
+    canonical 6-part replicate key synchronization, method-aware Between-Sample RSD, and Lab Notes panel.
+    """
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. HTML5 2D <canvas id="plot-canvas"> rectangular brush zoom overlay & controls
+    assert 'id="canvas-zoom-brush"' in page3
+    assert 'id="btn-reset-zoom"' in page3
+    assert "resetCanvasZoom()" in page3
+    assert "state.zoomBounds" in page3
+    assert "brush.suppressNextClick" in page3
+    assert "pxToDataX" in page3 and "pxToDataY" in page3
+
+    # 2. Click-Audit Popover DOM/JS contract preserved intact
+    assert 'id="click-audit-popover"' in page3
+    assert 'id="btn-audit-scope-group"' in page3
+    assert 'id="btn-audit-scope-single"' in page3
+    assert "function openClickAuditPopover(" in page3
+    assert "function submitClickPopoverAuditFinding(" in page3
+    assert "function escalateClickPopoverToModal(" in page3
+    assert "let auditPopoverScope = 'group';" in page3
+    assert "function setAuditPopoverScope(scope)" in page3
+
+    # 3. Canonical 6-part replicate group key + statistical screening parity
+    assert "window.normalizeReplicateGroupKey(r, r.resource_name)" in page3
+    assert "const key = getReplicateGroupKey(r);" in page3
+    assert "dixonPass = !(dixonQ > qCrit && rsd !== null && rsd >= 10.0);" in page3
+    assert "3.0 * pooledSd" in page3
+    assert "Identical Replicates (SD=0)" in page3
+    assert "${g.resource_name}::${g.analysis_type}::${g.parameter}::${g.prep_method}::${g.unit}" in page3
+
+    # 4. Redesigned 3-section #stat-screening-drawer
+    assert "1. Within-Replicate vs. Between-Sample RSD Summary" in page3
+    assert "Within-Replicate RSD" in page3
+    assert "SD_within / |Mean_group| × 100%" in page3
+    assert "sqrt(Σ(n_g - 1)s_g² / Σ(n_g - 1))" in page3
+    assert "SD(group means) / |Grand Mean| × 100%" in page3
+    assert "N/A (n=1 method group)" in page3
+    assert "2. Flagged Replicate Groups" in page3
+    assert "⚑ Dixon Outlier" in page3
+    assert "⚑ RSD &gt; 20%" in page3
+    assert "⚑ &gt;3×SD_pooled" in page3
+    assert "⚑ Identical Replicates" in page3
+    assert "3. Resource Lab &amp; Sample Lineage Notes" in page3
+    assert 'id="explorer-lab-notes-panel"' in page3
