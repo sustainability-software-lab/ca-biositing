@@ -288,7 +288,7 @@ def render_login_html(timestamp_str: str) -> str:
               refreshMe();
               var nextUrl = getNextRedirectTarget() || "/v1/dashboards/index.html";
               setTimeout(function () {{
-                window.location.href = nextUrl;
+                window.location.replace(nextUrl);
               }}, 350);
             }} else {{
               showFeedback((res && res.detail) || "Google token verification failed.", true);
@@ -379,10 +379,8 @@ def render_login_html(timestamp_str: str) -> str:
             }}
             showFeedback("Active session set to " + (res.data.email || email) + " (" + (res.data.role || "analyst") + ")", false);
             refreshMe();
-            var nextUrl = getNextRedirectTarget();
-            if (nextUrl) {{
-              setTimeout(function () {{ window.location.href = nextUrl; }}, 350);
-            }}
+            var nextUrl = getNextRedirectTarget() || "/v1/dashboards/index.html";
+            setTimeout(function () {{ window.location.replace(nextUrl); }}, 350);
           }})
           .catch(function () {{
             showFeedback("Local preview session set to " + email, false);
