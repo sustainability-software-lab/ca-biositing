@@ -9,6 +9,7 @@ from __future__ import annotations
 import csv
 from datetime import datetime, timezone
 import io
+import logging
 import os
 from pathlib import Path
 import re
@@ -18,6 +19,14 @@ from typing import Any, Sequence, Type
 from sqlmodel import Session, SQLModel, select
 
 from ca_biositing.datamodels.models.qc.qc_review_decision import QcReviewDecision
+
+logger = logging.getLogger(__name__)
+
+FALLBACK_SEED_CSV_PATH = (
+    Path(tempfile.gettempdir())
+    / "ca_biositing_qc"
+    / "qc_review_decisions_seed.csv"
+)
 
 DEFAULT_SEED_CSV_PATH = (
     Path(__file__).resolve().parents[6]
@@ -379,14 +388,21 @@ def read_seed_csv(csv_path: Path | str | None = None) -> list[dict[str, str]]:
     """Read all rows from the QC review decisions seed CSV."""
     target = get_seed_csv_path(csv_path)
     if not target.exists():
+        if csv_path is None and FALLBACK_SEED_CSV_PATH.exists():
+            target = FALLBACK_SEED_CSV_PATH
+        else:
+            return []
+    try:
+        with target.open("r", encoding="utf-8", newline="") as handle:
+            reader = csv.DictReader(handle)
+            return [
+                dict(row)
+                for row in reader
+                if row.get("record_id") or row.get("decision_key")
+            ]
+    except OSError as exc:
+        logger.warning("Unable to read QC seed CSV at %s: %s", target, exc)
         return []
-    with target.open("r", encoding="utf-8", newline="") as handle:
-        reader = csv.DictReader(handle)
-        return [
-            dict(row)
-            for row in reader
-            if row.get("record_id") or row.get("decision_key")
-        ]
 
 
 def append_or_update_seed_csv(
@@ -395,7 +411,30 @@ def append_or_update_seed_csv(
 ) -> Path:
     """Upsert a `QcReviewDecision` into the seed CSV keyed by `(record_table, record_id)`."""
     target = get_seed_csv_path(csv_path)
-    target.parent.mkdir(parents=True, exist_ok=True)
+    try:
+        target.parent.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        if csv_path is None:
+            logger.warning(
+                "Primary QC seed CSV directory %s is not writable (%s); falling back to %s",
+                target.parent,
+                exc,
+                FALLBACK_SEED_CSV_PATH,
+            )
+            target = FALLBACK_SEED_CSV_PATH
+            try:
+                target.parent.mkdir(parents=True, exist_ok=True)
+            except OSError as fallback_exc:
+                logger.warning(
+                    "Fallback QC seed CSV directory %s is also not writable: %s",
+                    target.parent,
+                    fallback_exc,
+                )
+                return target
+        else:
+            logger.warning("Explicit QC seed CSV directory %s not writable: %s", target.parent, exc)
+            return target
+
     existing_rows = read_seed_csv(target)
 
     by_key: dict[tuple[str, str], dict[str, str]] = {}
@@ -422,11 +461,36 @@ def append_or_update_seed_csv(
     by_key[(decision.record_table, decision.record_id)] = new_row
     sorted_keys = sorted(by_key.keys())
 
-    with target.open("w", encoding="utf-8", newline="") as handle:
-        writer = csv.DictWriter(handle, fieldnames=SEED_CSV_COLUMNS)
-        writer.writeheader()
-        for key in sorted_keys:
-            writer.writerow(by_key[key])
+    try:
+        with target.open("w", encoding="utf-8", newline="") as handle:
+            writer = csv.DictWriter(handle, fieldnames=SEED_CSV_COLUMNS)
+            writer.writeheader()
+            for key in sorted_keys:
+                writer.writerow(by_key[key])
+    except OSError as exc:
+        if csv_path is None and target != FALLBACK_SEED_CSV_PATH:
+            logger.warning(
+                "Primary QC seed CSV file %s is not writable (%s); falling back to %s",
+                target,
+                exc,
+                FALLBACK_SEED_CSV_PATH,
+            )
+            target = FALLBACK_SEED_CSV_PATH
+            try:
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with target.open("w", encoding="utf-8", newline="") as handle:
+                    writer = csv.DictWriter(handle, fieldnames=SEED_CSV_COLUMNS)
+                    writer.writeheader()
+                    for key in sorted_keys:
+                        writer.writerow(by_key[key])
+            except OSError as fallback_exc:
+                logger.warning(
+                    "Fallback QC seed CSV file %s is also not writable: %s",
+                    target,
+                    fallback_exc,
+                )
+        else:
+            logger.warning("Unable to write QC seed CSV at %s: %s", target, exc)
 
     return target
 

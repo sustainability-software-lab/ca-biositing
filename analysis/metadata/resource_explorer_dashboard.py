@@ -877,9 +877,9 @@ def build_full_dashboard_html(payload: dict) -> str:
           <div class="mb-2">
             <label class="block text-[10px] uppercase tracking-wider font-mono text-[var(--muted-foreground)] mb-1">Audit Action / QC Status:</label>
             <select id="click-popover-action" class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs font-medium focus:outline-none focus:border-[#00B5E2]">
-              <option value="keep_note" selected>📋 Flag for Review / Keep with Audit Note (Provisional)</option>
-              <option value="flag_fail">⚑ Flag Outlier / Set QC Fail (exclude)</option>
-              <option value="approve_pass">✓ Verify &amp; Approve (Set QC Pass)</option>
+              <option value="keep_note" selected>🔬 Stage for Audit Workbench (In Review / Provisional)</option>
+              <option value="flag_fail">⚑ Stage as Recommend QC Fail (Reconcile in Workbench)</option>
+              <option value="approve_pass">✓ Stage as Recommend QC Pass (Reconcile in Workbench)</option>
             </select>
           </div>
           <div class="mb-2">
@@ -938,9 +938,9 @@ def build_full_dashboard_html(payload: dict) -> str:
                 <option value="single">Single Point Only</option>
               </select>
               <select id="pin-audit-action" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-[11px] font-medium focus:outline-none">
-                <option value="keep_note" selected>📋 Flag for Review / Note (Provisional)</option>
-                <option value="flag_fail">⚑ Flag Outlier (Fail)</option>
-                <option value="approve_pass">✓ Approve (Pass)</option>
+                <option value="keep_note" selected>🔬 Stage for Audit Workbench (In Review)</option>
+                <option value="flag_fail">⚑ Stage as Recommend Fail (In Review)</option>
+                <option value="approve_pass">✓ Stage as Recommend Pass (In Review)</option>
               </select>
             </div>
             <input id="pin-audit-assignee" type="email" placeholder="Assign reviewer email (e.g. analyst@lbl.gov, optional)..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none" />
@@ -4523,6 +4523,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function applyAuditDecisionToRows(targetRows, action, note, reviewer, assignedToEmail) {
+      if (!targetRows || !targetRows.length) return;
       const normalizedAction = String(action || 'keep_note').trim();
       const statusMap = {
         flag_fail: 'fail',
@@ -4535,9 +4536,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const decisionAction = normalizedAction === 'flag_fail'
         ? 'reject_fail'
         : (normalizedAction === 'approve_pass' ? 'approve_pass' : 'in_review');
-      const decisionStatus = (normalizedAction === 'flag_fail' || normalizedAction === 'approve_pass')
-        ? 'resolved'
-        : 'in_review';
+      const decisionStatus = 'in_review';
       const newQcPass = normalizedAction === 'flag_fail'
         ? 'fail'
         : (normalizedAction === 'approve_pass' ? 'pass' : null);
@@ -4547,6 +4546,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const cleanAssignee = String(assignedToEmail || '').trim() || null;
       const allTargetIds = Array.from(new Set(targetRows.map(tr => String(tr.record_id || '')).filter(Boolean)));
       const isGroupScope = targetRows.length > 1;
+      const triageScope = isGroupScope ? 'group' : 'single';
       const analystIdent = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
         ? window.BioCirvQcClient.getAnalystIdentity()
         : {};
@@ -4555,49 +4555,74 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const cleanIdentName = (analystIdent.name && !window.isPlaceholderAnalystEmail?.(analystIdent.name)) ? analystIdent.name : '';
       const resolvedReviewer = rawReviewer || cleanIdentEmail || cleanIdentName || '';
       const nowIso = new Date().toISOString();
+      const primaryRow = (pinnedRecord && targetRows.some(r => String(r.record_id) === String(pinnedRecord.record_id)))
+        ? pinnedRecord
+        : targetRows[0];
+      const repGroupKey = getReplicateGroupKey(primaryRow);
+
       targetRows.forEach(tr => {
         const priorStatus = String(tr.qc_pass || 'pass');
+        tr._prior_qc_pass = priorStatus;
         tr.qc_pass = newQcStatus;
-        if (newQcStatus === 'fail') tr.data_status = 'Outlier Flagged';
-        else if (newQcStatus === 'pass') tr.data_status = 'Validated';
-        else tr.data_status = 'In Review';
+        tr.flag_type = 'visualizer_flagged';
+        tr.triage_scope = triageScope;
+        tr.replicate_group_key = getReplicateGroupKey(tr);
+        tr.flagged_by_email = cleanIdentEmail || resolvedReviewer || null;
+        tr.flagged_at = nowIso;
+        tr.assigned_to_email = cleanAssignee || tr.assigned_to_email || '';
+        tr.decision_action = decisionAction;
+        tr.decision_status = decisionStatus;
+        if (newQcStatus === 'fail') tr.data_status = 'Staged for Audit (Recommend Fail)';
+        else if (newQcStatus === 'pass') tr.data_status = 'Staged for Audit (Recommend Pass)';
+        else tr.data_status = 'Staged for Audit (In Review)';
         addRecordToExport(tr, `[${normalizedAction.toUpperCase()}] ${note}`);
-        const psMeta = (typeof PREP_SAMPLES_BY_NAME !== 'undefined' && PREP_SAMPLES_BY_NAME[tr.prepared_sample_name]) || {};
-        const fsMeta = (typeof FIELD_SAMPLES_BY_NAME !== 'undefined' && FIELD_SAMPLES_BY_NAME[tr.field_sample_name]) || {};
-        const labLineageNote = tr.note || psMeta.note || fsMeta.note || '';
-        if (window.BioCirvQcClient && typeof window.BioCirvQcClient.submitDecision === 'function') {
-          window.BioCirvQcClient.submitDecision({
-            scope: isGroupScope ? 'replicate_group' : 'single_record',
-            resource_name: tr.resource_name || '',
-            analysis_type: tr.domain || currentDomain,
-            domain: tr.domain || currentDomain,
-            parameter_name: tr.parameter || '',
-            parameter: tr.parameter || '',
-            prepared_sample_name: tr.prepared_sample_name || '',
-            field_sample_name: tr.field_sample_name || '',
-            experiment_name: tr.experiment || '',
-            record_id: String(tr.record_id || ''),
-            target_record_ids: isGroupScope ? allTargetIds : [String(tr.record_id || '')],
-            action: normalizedAction,
-            decision_action: decisionAction,
-            decision_status: decisionStatus,
-            new_qc_pass: newQcPass,
-            decision: decisionCode,
-            previous_qc_status: priorStatus,
-            prior_qc_status: priorStatus,
-            new_qc_status: newQcStatus,
-            assigned_to_email: cleanAssignee,
-            audit_note: note || `Interactive point/group audit (${normalizedAction})`,
-            rationale: note || `Interactive point/group audit (${normalizedAction})`,
-            lab_lineage_note: labLineageNote,
-            submitted_at: nowIso,
-            submitted_by_email: cleanIdentEmail || resolvedReviewer || null,
-            source_label: 'Page 3 Explorer',
-            reviewer: resolvedReviewer || null,
-            dashboard_page: 'explorer'
-          });
-        }
       });
+
+      const psMeta = (typeof PREP_SAMPLES_BY_NAME !== 'undefined' && PREP_SAMPLES_BY_NAME[primaryRow.prepared_sample_name]) || {};
+      const fsMeta = (typeof FIELD_SAMPLES_BY_NAME !== 'undefined' && FIELD_SAMPLES_BY_NAME[primaryRow.field_sample_name]) || {};
+      const labLineageNote = primaryRow.note || psMeta.note || fsMeta.note || '';
+      if (window.BioCirvQcClient && typeof window.BioCirvQcClient.submitDecision === 'function') {
+        return window.BioCirvQcClient.submitDecision({
+          scope: isGroupScope ? 'replicate_group' : 'single_record',
+          triage_scope: triageScope,
+          replicate_group_key: repGroupKey,
+          flag_type: 'visualizer_flagged',
+          resource_name: primaryRow.resource_name || '',
+          analysis_type: primaryRow.domain || currentDomain,
+          domain: primaryRow.domain || currentDomain,
+          parameter_name: primaryRow.parameter || '',
+          parameter: primaryRow.parameter || '',
+          prepared_sample_name: primaryRow.prepared_sample_name || '',
+          prepared_sample: primaryRow.prepared_sample_name || '',
+          field_sample_name: primaryRow.field_sample_name || '',
+          experiment_name: primaryRow.experiment || '',
+          experiment: primaryRow.experiment || '',
+          prep_method: getSeriesValue(primaryRow, primaryRow.domain || currentDomain) || primaryRow.prep_method || '',
+          record_id: String(primaryRow.record_id || ''),
+          record_ids: allTargetIds,
+          target_record_ids: allTargetIds,
+          action: normalizedAction,
+          decision_action: decisionAction,
+          decision_status: decisionStatus,
+          new_qc_pass: newQcPass,
+          decision: decisionCode,
+          previous_qc_status: primaryRow._prior_qc_pass || 'pass',
+          prior_qc_status: primaryRow._prior_qc_pass || 'pass',
+          new_qc_status: newQcStatus,
+          assigned_to_email: cleanAssignee,
+          audit_note: note || `Interactive point/group audit (${normalizedAction})`,
+          rationale: note || `Interactive point/group audit (${normalizedAction})`,
+          lab_lineage_note: labLineageNote,
+          submitted_at: nowIso,
+          flagged_at: nowIso,
+          submitted_by_email: cleanIdentEmail || resolvedReviewer || null,
+          flagged_by_email: cleanIdentEmail || resolvedReviewer || null,
+          source_label: 'Page 3 — Interactive Data Visualizer',
+          reviewer: resolvedReviewer || null,
+          dashboard_page: 'explorer'
+        });
+      }
+      return Promise.resolve(null);
     }
 
     function submitClickPopoverAuditFinding() {
@@ -4613,14 +4638,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       const fb = document.getElementById('click-popover-feedback');
       if (fb) {
-        fb.textContent = `✓ Submitted ${action} for ${targetRows.length} observation${targetRows.length === 1 ? '' : 's'} & added to Export Tray`;
+        fb.innerHTML = `✓ Submitted ${action} for ${targetRows.length} observation${targetRows.length === 1 ? '' : 's'} &amp; added to Export Tray — <a href="resource_audit_workbench.html?flag_type=visualizer_flagged" class="underline font-bold">Open in QC Audit Workbench →</a>`;
         fb.classList.remove('hidden');
       }
       const noteEl = document.getElementById('click-popover-note');
       if (noteEl) noteEl.value = '';
       pinRecord(pinnedRecord, pinnedGroupRows, pinnedGroupStats);
       renderCurrentView();
-      setTimeout(() => closeClickAuditPopover(), 950);
+      setTimeout(() => closeClickAuditPopover(), 2600);
     }
 
     function buildFindingModalPayloadFromPinned(scopeMode, noteText, sourceLabel, assignedToEmail) {
@@ -4636,7 +4661,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         : '';
       return {
         scope: scopeMode === 'group' ? 'replicate_group' : 'single_record',
+        triage_scope: scopeMode === 'group' ? 'group' : 'single',
         prefer_single: scopeMode === 'single',
+        replicate_group_key: getReplicateGroupKey(pinnedRecord),
+        flag_type: 'visualizer_flagged',
+        decision_status: 'in_review',
         record_id: String(pinnedRecord.record_id || ''),
         group_record_ids: allGroupIds,
         all_group_record_ids: allGroupIds.join('|'),
@@ -4664,7 +4693,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         lab_lineage_note: labLineageNote,
         submitted_at: new Date().toISOString(),
         submitted_by_email: currentAnalystEmail,
-        source_label: sourceLabel || 'Page 3 Explorer',
+        source_label: sourceLabel || 'Page 3 — Interactive Data Visualizer',
         title: `[${currentDomain.toUpperCase()}] ${pinnedRecord.resource_name} — ${formatParamName(pinnedRecord.parameter, currentDomain)} (${scopeMode === 'group' ? `Replicate Group n=${allGrpRows.length}` : pinnedRecord.record_id})`,
         category: 'Replicate Outlier / Interactive Plot Audit',
         severity: 'high',
@@ -4714,7 +4743,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       const fb = document.getElementById('pin-audit-feedback');
       if (fb) {
-        fb.textContent = `✓ Submitted ${action} for ${targetRows.length} observation${targetRows.length === 1 ? '' : 's'} & added to Export Tray`;
+        fb.innerHTML = `✓ Submitted ${action} for ${targetRows.length} observation${targetRows.length === 1 ? '' : 's'} &amp; added to Export Tray — <a href="resource_audit_workbench.html?flag_type=visualizer_flagged" class="underline font-bold">Open in QC Audit Workbench →</a>`;
         fb.classList.remove('hidden');
       }
       const noteEl = document.getElementById('pin-note');
@@ -5536,27 +5565,57 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
             ? pinnedGroupRows
             : (pinnedRecord ? [pinnedRecord] : filteredRows.slice(0, 25)));
       if (!sourceRows || !sourceRows.length) return;
-      const items = sourceRows.map(r => ({
-        scope: 'replicate_group',
-        resource_name: r.resource_name || '',
-        analysis_type: r.analysis_type || currentDomain || '',
-        parameter: r.parameter || '',
-        parameter_name: r.parameter || '',
-        prepared_sample_name: r.prepared_sample_name || r.prepared_sample || '',
-        field_sample_name: r.field_sample_name || '',
-        method_or_strain: getSeriesValue(r, r.domain || currentDomain) || '',
-        experiment_name: r.experiment || '',
-        record_id: String(r.record_id || ''),
-        record_ids: [String(r.record_id || '')],
-        replicates: [{
-          record_id: String(r.record_id || ''),
-          value: r.value,
-          unit: r.unit || '',
-          qc_status: r.qc_pass || 'pass'
-        }],
-        review_note: r.audit_note || 'Exported from Interactive Data Visualizer to Audit Workbench',
-        note: r.audit_note || 'Exported from Interactive Data Visualizer to Audit Workbench'
-      }));
+      const groupedMap = new Map();
+      sourceRows.forEach(r => {
+        const repKey = r.replicate_group_key || getReplicateGroupKey(r);
+        const isSingle = r.triage_scope === 'single';
+        const mapKey = isSingle ? `single::${r.record_id}` : `group::${repKey}`;
+        if (!groupedMap.has(mapKey)) {
+          groupedMap.set(mapKey, {
+            scope: isSingle ? 'single_record' : 'replicate_group',
+            triage_scope: isSingle ? 'single' : 'group',
+            replicate_group_key: repKey,
+            flag_type: r.flag_type || 'visualizer_flagged',
+            decision_status: r.decision_status || 'in_review',
+            decision_action: r.decision_action || 'in_review',
+            source_label: 'Page 3 — Interactive Data Visualizer',
+            resource_name: r.resource_name || '',
+            analysis_type: r.analysis_type || currentDomain || '',
+            parameter: r.parameter || '',
+            parameter_name: r.parameter || '',
+            prepared_sample_name: r.prepared_sample_name || r.prepared_sample || '',
+            field_sample_name: r.field_sample_name || '',
+            method_or_strain: getSeriesValue(r, r.domain || currentDomain) || '',
+            experiment_name: r.experiment || '',
+            record_id: String(r.record_id || ''),
+            record_ids: [String(r.record_id || '')],
+            replicates: [{
+              record_id: String(r.record_id || ''),
+              value: r.value,
+              unit: r.unit || '',
+              qc_status: r.qc_pass || 'pass'
+            }],
+            assigned_to_email: r.assigned_to_email || null,
+            flagged_by_email: r.flagged_by_email || null,
+            flagged_at: r.flagged_at || new Date().toISOString(),
+            review_note: r.audit_note || 'Exported from Interactive Data Visualizer to Audit Workbench',
+            note: r.audit_note || 'Exported from Interactive Data Visualizer to Audit Workbench'
+          });
+        } else {
+          const existing = groupedMap.get(mapKey);
+          const rid = String(r.record_id || '');
+          if (rid && !existing.record_ids.includes(rid)) {
+            existing.record_ids.push(rid);
+            existing.replicates.push({
+              record_id: rid,
+              value: r.value,
+              unit: r.unit || '',
+              qc_status: r.qc_pass || 'pass'
+            });
+          }
+        }
+      });
+      const items = Array.from(groupedMap.values());
       if (window.BioCirvQcClient && typeof window.BioCirvQcClient.exportTrayToWorkbench === 'function') {
         const res = await window.BioCirvQcClient.exportTrayToWorkbench(items, 'Page 3 — Interactive Data Visualizer');
         const btn = document.getElementById('btn-tray-to-workbench');
@@ -5564,6 +5623,9 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
           const orig = btn.textContent;
           btn.textContent = `✓ Sent (${res.persisted || items.length}) to Audit Workbench`;
           setTimeout(() => { btn.textContent = orig; }, 2200);
+        }
+        if (typeof window !== 'undefined' && window.location && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+          window.location.href = '/v1/dashboards/metadata/resource_audit_workbench.html?flag_type=visualizer_flagged';
         }
       }
     }

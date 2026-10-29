@@ -1219,3 +1219,101 @@ def test_wc1_wc2_review_fixes_gasification_prefix_sync_exceptions_and_googleapic
     assert ranges_updated["'03.1-Proximate'!B2"] == "fail"
     assert "[QC_AUDIT id=1" in ranges_updated["'03.1-Proximate'!C2"]
     assert ranges_updated["'03.1-Proximate'!D2"] == "2026-04-20T12:00:00Z"
+
+
+def test_seed_csv_readonly_fallback_and_naive_datetime_gsheet_sync(
+    client: TestClient,
+    sqlite_engine,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Verify read-only seed CSV paths fall back cleanly and naive datetimes or sync exceptions never raise 500."""
+    from datetime import datetime
+    from ca_biositing.webservice.services import gsheet_sync_service, qc_ledger_service
+
+    _seed_proximate_records(sqlite_engine)
+
+    # 1. Verify _format_utc_iso handles naive datetimes, aware datetimes, and strings
+    naive_dt = datetime(2026, 4, 20, 15, 30, 0)
+    assert gsheet_sync_service._format_utc_iso(naive_dt) == "2026-04-20T15:30:00Z"
+    assert gsheet_sync_service._format_utc_iso("2026-04-20T15:30:00Z") == "2026-04-20T15:30:00Z"
+    assert gsheet_sync_service._format_utc_iso(None).endswith("Z")
+
+    # 2. Simulate an unwritable primary seed CSV path and verify fallback to FALLBACK_SEED_CSV_PATH
+    fallback_csv = tmp_path / "fallback_qc_seed.csv"
+    monkeypatch.setattr(qc_ledger_service, "FALLBACK_SEED_CSV_PATH", fallback_csv)
+
+    ro_dir = tmp_path / "ro_dir"
+    ro_dir.mkdir()
+    ro_dir.chmod(0o500)
+    unwritable_primary = ro_dir / "subdir" / "seed.csv"
+    monkeypatch.setenv("BIOSITING_QC_SEED_CSV_PATH", str(unwritable_primary))
+
+    # 3. Verify interactive flags (visualizer_flagged & stat_snapshot_flagged) via /v1/qc/findings and /v1/qc/tray-to-workbench
+    client.post("/v1/qc/auth/dev-login", json={"email": "analyst1@lbl.gov"})
+    tray_resp = client.post(
+        "/v1/qc/findings",
+        json={
+            "submitted_by_email": "analyst1@lbl.gov",
+            "assigned_to_email": "analyst1@lbl.gov",
+            "decision_status": "in_review",
+            "decision_action": "keep_note",
+            "source_label": "Page 3 — Interactive Data Visualizer",
+            "items": [
+                {
+                    "record_table": "proximate_record",
+                    "record_id": "PROX-AS-01",
+                    "record_ids": ["PROX-AS-01", "PROX-AS-02"],
+                    "replicate_group_key": "almond_shells|proximate|moisture|AS-PS-01",
+                    "resource_name": "almond shells",
+                    "analysis_type": "proximate",
+                    "parameter_name": "moisture",
+                    "flag_type": "visualizer_flagged",
+                    "decision_status": "in_review",
+                    "decision_action": "keep_note",
+                    "triage_scope": "group",
+                    "review_note": "Flagged interactively in Visualizer for workbench reconciliation",
+                },
+                {
+                    "record_table": "proximate_record",
+                    "record_id": "PROX-AS-03",
+                    "replicate_group_key": "almond_shells|proximate|moisture|AS-PS-02",
+                    "resource_name": "almond shells",
+                    "analysis_type": "proximate",
+                    "parameter_name": "moisture",
+                    "source_label": "Page 2 — Statistical Snapshot",
+                    "review_note": "Flagged from Statistical Snapshot outlier card",
+                },
+            ],
+        },
+    )
+    assert tray_resp.status_code == 200
+    tray_data = tray_resp.json()
+    assert tray_data["created_count"] == 3
+    assert fallback_csv.exists()
+    ro_dir.chmod(0o700)
+
+    decs = tray_data["decisions"]
+    assert decs[0]["flag_type"] == "visualizer_flagged"
+    assert decs[0]["decision_status"] == "in_review"
+    assert decs[0]["decision_action"] == "keep_note"
+    # Second item had default flag_type="analyst_flagged" + source_label="Page 2 — Statistical Snapshot" -> inferred stat_snapshot_flagged
+    assert decs[2]["flag_type"] == "stat_snapshot_flagged"
+    assert decs[2]["decision_status"] == "in_review"
+
+    # 4. Verify Stage 2 sync endpoint catches unexpected exceptions and returns structured JSON instead of 500
+    client.post("/v1/qc/auth/dev-login", json={"email": "qa.admin@lbl.gov"})
+
+    def _exploding_sync(*args, **kwargs):
+        raise RuntimeError("Simulated unexpected Google Drive API crash")
+
+    monkeypatch.setattr(
+        "ca_biositing.webservice.v1.endpoints.qc_review.sync_single_decision_to_gsheet",
+        _exploding_sync,
+    )
+    sync_err_resp = client.post(f"/v1/qc/decisions/{decs[0]['id']}/sync-gsheet")
+    assert sync_err_resp.status_code == 200
+    err_json = sync_err_resp.json()
+    assert err_json["status"] == "error"
+    assert err_json["synced_to_gsheet"] is False
+    assert "Simulated unexpected Google Drive API crash" in err_json["sync_error"]

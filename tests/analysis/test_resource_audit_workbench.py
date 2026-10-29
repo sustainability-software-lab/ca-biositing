@@ -1670,6 +1670,79 @@ global.fetch = async function(url) {
   assert.ok(failSvg.includes('data-qc-status="fail"'), "Expected data-qc-status='fail' attribute");
   assert.ok(failSvg.includes("[QC_FAIL]"), "Expected [QC_FAIL] label in point tooltip");
   grp1.replicates[0].qc_status = origQc;
+
+  // Interactive Session Flag Provenance, Merging onto Existing Candidates, Filtering & Sorting:
+  // 1) Server decision with visualizer_flagged matching d1's replicate_group_key merges visualizer_flagged onto d1.flag_types
+  d1.db_id = null;
+  d2.db_id = null;
+  mockServerDecisions = [
+    {
+      id: 77,
+      decision_id: "QC-0077",
+      record_table: d1.record_table,
+      record_id: d1.record_id,
+      replicate_group_key: d1.replicate_group_key,
+      flag_type: "visualizer_flagged",
+      decision_status: "in_review",
+      decision_action: "keep_note",
+      triage_scope: "single",
+      submitted_at: "2026-10-28T16:00:00Z",
+      submitted_by_email: "visualizer.user@lbl.gov",
+      source_label: "Page 3 — Interactive Data Visualizer",
+      review_note: "Flagged single replicate in Visualizer"
+    },
+    {
+      id: 78,
+      decision_id: "QC-0078",
+      record_table: d2.record_table,
+      record_id: d2.record_id,
+      replicate_group_key: d2.replicate_group_key,
+      flag_type: "stat_snapshot_flagged",
+      decision_status: "in_review",
+      decision_action: "flag_for_review",
+      triage_scope: "group",
+      submitted_at: "2026-10-28T15:00:00Z",
+      submitted_by_email: "snapshot.user@lbl.gov",
+      source_label: "Page 2 — Statistical Snapshot",
+      review_note: "Flagged group in Statistical Snapshot"
+    }
+  ];
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+  assert.ok(
+    Array.isArray(d1.flag_types) && d1.flag_types.includes("visualizer_flagged"),
+    "Expected visualizer_flagged merged into d1.flag_types alongside existing statistical flags"
+  );
+  assert.strictEqual(d1.scope_mode, "single");
+  assert.ok(
+    Array.isArray(d2.flag_types) && d2.flag_types.includes("stat_snapshot_flagged"),
+    "Expected stat_snapshot_flagged merged into d2.flag_types"
+  );
+
+  // 2) Filter by visualizer_flagged, stat_snapshot_flagged, and interactive_session
+  hooks.resetAllFilters();
+  hooks.state.activeQueueTab = "in_review";
+  hooks.setQuickFlagFilter("visualizer_flagged");
+  let visIds = hooks.getVisibleQueueDecisionIds();
+  assert.deepStrictEqual(visIds, ["QC-0001"]);
+
+  hooks.setQuickFlagFilter("stat_snapshot_flagged");
+  visIds = hooks.getVisibleQueueDecisionIds();
+  assert.deepStrictEqual(visIds, ["QC-0002"]);
+
+  hooks.setQuickFlagFilter("interactive_session");
+  visIds = hooks.getVisibleQueueDecisionIds();
+  assert.strictEqual(visIds.length, 2);
+
+  // 3) Queue Sorting: recent_first puts QC-0001 (16:00Z) before QC-0002 (15:00Z); flagged_by sorts snapshot.user before visualizer.user
+  hooks.setQueueSortBy("recent_first");
+  assert.deepStrictEqual(hooks.getVisibleQueueDecisionIds(), ["QC-0001", "QC-0002"]);
+  hooks.setQueueSortBy("flagged_by");
+  assert.deepStrictEqual(hooks.getVisibleQueueDecisionIds(), ["QC-0002", "QC-0001"]);
+  hooks.setQueueSortBy("scope");
+  assert.deepStrictEqual(hooks.getVisibleQueueDecisionIds(), ["QC-0002", "QC-0001"]);
+  hooks.resetAllFilters();
+  assert.strictEqual(hooks.state.filters.sortBy, "default");
 })();
 """
     )

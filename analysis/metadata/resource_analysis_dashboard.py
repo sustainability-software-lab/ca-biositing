@@ -3058,6 +3058,25 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         }
         this.saveLocalDecisions(list);
         this.mirrorToPage2DecisionsStore(savedItem);
+        try {
+          const pendingRaw = localStorage.getItem("biocirv_pending_qc_decisions");
+          const pendingArr = pendingRaw ? JSON.parse(pendingRaw) : [];
+          if (Array.isArray(pendingArr)) {
+            const pIdx = pendingArr.findIndex(p =>
+              p && (
+                (savedItem.id && p.id === savedItem.id) ||
+                (savedItem.replicate_group_key && p.replicate_group_key === savedItem.replicate_group_key && p.flag_type === savedItem.flag_type) ||
+                (savedItem.record_id && p.record_id === savedItem.record_id && p.flag_type === savedItem.flag_type)
+              )
+            );
+            if (pIdx >= 0) {
+              pendingArr[pIdx] = { ...pendingArr[pIdx], ...savedItem };
+            } else {
+              pendingArr.unshift(savedItem);
+            }
+            localStorage.setItem("biocirv_pending_qc_decisions", JSON.stringify(pendingArr.slice(0, 500)));
+          }
+        } catch (_e) {}
         return list;
       },
 
@@ -3125,20 +3144,21 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         ).trim().toLowerCase();
         let canonicalAction = "in_review";
         let canonicalStatus = payload.decision_status || payload.review_status || payload.status || "in_review";
+        const isStagedSessionFlag = String(payload.decision_status || payload.review_status || "").trim().toLowerCase() === "in_review";
         let canonicalNewQcPass = null;
         let legacyNewQcStatus = "provisional";
         let legacyDecision = "accept_with_note";
 
         if (rawAction === "approve_pass" || rawAction === "keep" || rawAction === "pass" || rawAction === "qc_pass" || rawAction === "trace_ignore") {
           canonicalAction = rawAction === "trace_ignore" ? "trace_ignore" : "approve_pass";
-          canonicalStatus = "resolved";
-          canonicalNewQcPass = "pass";
+          canonicalStatus = isStagedSessionFlag ? "in_review" : "resolved";
+          canonicalNewQcPass = isStagedSessionFlag ? (payload.new_qc_pass !== undefined ? payload.new_qc_pass : null) : "pass";
           legacyNewQcStatus = "pass";
           legacyDecision = rawAction === "trace_ignore" ? "trace_ignore" : "keep";
         } else if (rawAction === "reject_fail" || rawAction === "exclude_qc_fail" || rawAction === "flag_fail" || rawAction === "fail" || rawAction === "qc_fail") {
           canonicalAction = "reject_fail";
-          canonicalStatus = "resolved";
-          canonicalNewQcPass = "fail";
+          canonicalStatus = isStagedSessionFlag ? "in_review" : "resolved";
+          canonicalNewQcPass = isStagedSessionFlag ? (payload.new_qc_pass !== undefined ? payload.new_qc_pass : null) : "fail";
           legacyNewQcStatus = "fail";
           legacyDecision = "exclude_qc_fail";
         } else if (rawAction === "needs_retest" || rawAction === "re_assay" || rawAction === "retest") {
@@ -3176,19 +3196,36 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           payload.lab_lineage_note || payload.sample_note || payload.prep_notes || ""
         ).trim();
         const defaultSourceLabel = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
-          ? "Page 3 Explorer"
-          : "Page 1/2 Visualizer";
+          ? "Page 3 — Interactive Data Visualizer"
+          : ((typeof document !== "undefined" && document.title && document.title.toLowerCase().includes("statistical"))
+              ? "Page 2 — Statistical Snapshot"
+              : "Page 1/2 Visualizer");
         const sourceLabelText = String(payload.source_label || defaultSourceLabel).trim();
+        let resolvedFlagType = String(payload.flag_type || "").trim();
+        if (!resolvedFlagType || resolvedFlagType === "analyst_flagged") {
+          const srcLow = sourceLabelText.toLowerCase();
+          if (srcLow.includes("page 3") || srcLow.includes("visualizer") || srcLow.includes("explorer") || (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")) {
+            resolvedFlagType = "visualizer_flagged";
+          } else if (srcLow.includes("page 2") || srcLow.includes("statistical") || srcLow.includes("outlier") || srcLow.includes("snapshot")) {
+            resolvedFlagType = "stat_snapshot_flagged";
+          } else {
+            resolvedFlagType = resolvedFlagType || "analyst_flagged";
+          }
+        }
 
         const body = {
           id: payload.api_decision_id || payload.id || null,
           decision_id: payload.api_decision_id || payload.decision_id || payload.id || null,
           decision_key: payload.decision_key || payload.key || (repGroupKey ? `grp::${repGroupKey}` : null),
           replicate_group_key: repGroupKey,
+          record_table: payload.record_table || this.resolveRecordTable(payload.analysis_type || payload.domain || "proximate"),
           scope: payload.scope || "finding",
+          triage_scope: payload.triage_scope || (payload.scope === "single_record" ? "single" : "group"),
           resource_name: (payload.resource_name || "unknown").trim().toLowerCase(),
           analysis_type: (payload.analysis_type || "proximate").trim().toLowerCase(),
           parameter_name: (payload.parameter_name || payload.parameter || "Resource-Level Observation").trim(),
+          flag_type: resolvedFlagType,
+          flag_trigger_value: payload.flag_trigger_value || null,
           prepared_sample_name: payload.prepared_sample_name || payload.prepared_sample || null,
           field_sample_name: payload.field_sample_name || payload.field_sample || null,
           experiment_name: payload.experiment_name || payload.experiment || null,
@@ -3210,7 +3247,9 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           lab_lineage_note: labLineageNote || null,
           source_label: sourceLabelText || null,
           submitted_at: submittedAtIso,
+          flagged_at: submittedAtIso,
           submitted_by_email: submitterEmail || null,
+          flagged_by_email: submitterEmail || null,
           assigned_to_email: payload.assigned_to_email ? payload.assigned_to_email.trim().toLowerCase() : null,
           gsheet_writeback_requested: Boolean(payload.gsheet_writeback_requested)
         };
@@ -3225,6 +3264,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             const data = await resp.json();
             const mergedDec = data.decision ? { ...body, ...data.decision, api_decision_id: data.decision.id } : body;
             this.upsertLocalDecision(mergedDec);
+            this.broadcastQcUpdate(mergedDec);
             window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: mergedDec }));
             window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: mergedDec }));
             return { ok: true, source: "api", ...data, decision: mergedDec };
@@ -3243,13 +3283,19 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           updated_at: new Date().toISOString()
         };
         this.upsertLocalDecision(localEntry);
+        this.broadcastQcUpdate(localEntry);
         window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: localEntry }));
         window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: localEntry }));
         return { ok: true, source: "local", status: "saved_offline", decision: localEntry };
       },
 
       async submitFinding(payload) {
-        return this.submitDecision({ ...payload, scope: payload.scope || "finding", review_status: "open" });
+        return this.submitDecision({
+          ...payload,
+          scope: payload.scope || "finding",
+          review_status: payload.review_status || "in_review",
+          decision_status: payload.decision_status || "in_review"
+        });
       },
 
       async assignTask(decisionId, assignedToEmail, note) {
@@ -3588,6 +3634,19 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           it.lab_lineage_note || it.sample_note || it.prep_notes || ""
         ).trim();
         const effectiveSourceLabel = String(it.source_label || sourceLabel || "Selection & Export Tray").trim();
+        let effectiveFlagType = String(it.flag_type || "").trim();
+        if (!effectiveFlagType || effectiveFlagType === "analyst_flagged") {
+          const srcLow = effectiveSourceLabel.toLowerCase();
+          if (srcLow.includes("page 3") || srcLow.includes("visualizer") || srcLow.includes("explorer") || (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")) {
+            effectiveFlagType = "visualizer_flagged";
+          } else if (srcLow.includes("page 2") || srcLow.includes("statistical") || srcLow.includes("outlier") || srcLow.includes("snapshot")) {
+            effectiveFlagType = "stat_snapshot_flagged";
+          } else {
+            effectiveFlagType = effectiveFlagType || "analyst_flagged";
+          }
+        }
+        const effectiveDecisionStatus = String(it.decision_status || it.status || "in_review").trim().toLowerCase();
+        const effectiveDecisionAction = String(it.decision_action || "in_review").trim();
         return {
           record_table: recordTable,
           record_id: primaryRecordId,
@@ -3595,6 +3654,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           target_record_ids: effectiveIds,
           replicate_group_key: repGroupKey,
           selection_scope: selectionScope,
+          scope: selectionScope,
+          triage_scope: selectionScope === "single_record" ? "single" : "group",
           resource_name: String(it.resource_name || "unknown").trim().toLowerCase(),
           analysis_type: analysisType,
           parameter_name: String(it.parameter_name || it.parameter || "Observation").trim(),
@@ -3602,13 +3663,17 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           field_sample: it.field_sample || it.field_sample_name || null,
           prep_method: it.prep_method || it.group_context_label || null,
           experiment: it.experiment || it.experiment_name || null,
-          flag_type: String(it.flag_type || "analyst_flagged"),
+          flag_type: effectiveFlagType,
           flag_trigger_value: it.flag_trigger_value != null ? String(it.flag_trigger_value) : null,
           old_qc_pass: String(it.old_qc_pass || it.previous_qc_status || "pass"),
           recommended_qc_status: it.recommended_qc_status || it.new_qc_status || "provisional",
+          decision_status: effectiveDecisionStatus,
+          decision_action: effectiveDecisionAction,
           assigned_to_email: it.assigned_to_email || null,
           submitted_at: submittedAtIso,
+          flagged_at: submittedAtIso,
           submitted_by_email: submitterEmail || null,
+          flagged_by_email: submitterEmail || null,
           lab_lineage_note: labLineageNote || null,
           source_label: effectiveSourceLabel,
           review_note: reviewNote,
@@ -3695,6 +3760,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             resource_name: normIt.resource_name,
             analysis_type: normIt.analysis_type,
             parameter_name: normIt.parameter_name,
+            flag_type: normIt.flag_type,
+            flag_trigger_value: normIt.flag_trigger_value,
+            decision_status: normIt.decision_status || "in_review",
+            decision_action: normIt.decision_action || "in_review",
             prepared_sample: normIt.prepared_sample,
             field_sample: normIt.field_sample,
             experiment: normIt.experiment,
@@ -4705,13 +4774,16 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           if (statusEl) {
             const assignMsg = assignVal ? ` · Assigned to ${assignVal}` : "";
             const scopeMsg = scopeVal === "group" ? `Entire Replicate Group (${targetIds.length || 1} recs)` : `Single Point (${primaryRecId || '1 rec'})`;
+            const targetFlagParam = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
+              ? "?flag_type=visualizer_flagged"
+              : "?flag_type=stat_snapshot_flagged";
             statusEl.className = "p-2.5 rounded-lg text-xs font-mono badge-pass";
-            statusEl.innerHTML = `✓ Queued <strong>${scopeMsg}</strong> (${result.source === "api" ? "API + Seed CSV" : "Browser Local Queue"})${assignMsg}. View &amp; triage in <a href="resource_qc_outlier_dashboard.html?subtab=review_queue" class="underline font-bold">Page 2 Review Queue</a> or <a href="/v1/dashboards/metadata/resource_audit_workbench.html" class="underline font-bold">QC Audit Workbench</a>.`;
+            statusEl.innerHTML = `✓ Queued <strong>${scopeMsg}</strong> (${result.source === "api" ? "API + Seed CSV" : "Browser Local Queue"})${assignMsg}. View &amp; triage in <a href="resource_qc_outlier_dashboard.html?subtab=review_queue" class="underline font-bold">Page 2 Review Queue</a> or <a href="/v1/dashboards/metadata/resource_audit_workbench.html${targetFlagParam}" class="underline font-bold">QC Audit Workbench →</a>.`;
             statusEl.classList.remove("hidden");
           }
           setTimeout(() => {
             if (findingModal) findingModal.classList.add("hidden");
-          }, 1200);
+          }, 2500);
         });
       }
     }
@@ -9718,6 +9790,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         record_ids: meta.triage_scope === "single"
           ? (meta.record_id || meta.dixon_candidate_id || "")
           : (meta.all_group_record_ids || meta.record_ids || meta.record_id || ""),
+        flag_type: meta.flag_type || "stat_snapshot_flagged",
+        source_label: "Page 2 — Statistical Snapshot",
+        decision_status: "in_review",
+        submitted_at: new Date().toISOString(),
         note: meta.note || ""
       };
       if (existingIdx >= 0) {
@@ -9766,6 +9842,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       const items = sourceItems.map(it => ({
         scope: it.scope || (it.triage_scope === "single" ? "single_record" : "replicate_group"),
+        triage_scope: it.triage_scope === "single" ? "single" : "group",
         replicate_group_key: it.replicate_group_key || (window.normalizeReplicateGroupKey ? window.normalizeReplicateGroupKey(it, it.resource_name || state.resource) : ""),
         resource_name: it.resource_name || state.resource,
         analysis_type: it.analysis_type || "",
@@ -9773,12 +9850,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         prep_method: it.prep_method || "",
         experiment_name: it.experiment || it.experiment_name || "",
         parameter_name: it.parameter || it.parameter_name || "",
+        flag_type: it.flag_type || "stat_snapshot_flagged",
+        source_label: it.source_label || "Page 2 — Statistical Snapshot",
+        decision_status: "in_review",
         record_id: it.triage_scope === "single" ? (it.record_id || "") : "",
         target_record_ids: String(it.record_ids || it.all_group_record_ids || it.record_id || "").split(/[|,\\s]+/).map(s => s.trim()).filter(Boolean),
-        decision: it.decision || defaultDecision || "pending",
-        rationale_note: it.note || "Exported from Page 2 to Audit Workbench"
+        decision: it.decision || defaultDecision || "in_review",
+        review_note: it.note || "Flagged from Page 2 — Statistical Snapshot",
+        rationale_note: it.note || "Flagged from Page 2 — Statistical Snapshot"
       }));
-      await window.BioCirvQcClient.exportTrayToWorkbench(items, defaultDecision || "pending", "Exported from Page 2 to Audit Workbench");
+      await window.BioCirvQcClient.exportTrayToWorkbench(items, "Page 2 — Statistical Snapshot");
       await window.syncReviewQueueWithApi();
     };
 
@@ -10038,6 +10119,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           decision_key: key,
           replicate_group_key: updated.replicate_group_key || meta.replicate_group_key || key.replace(/^grp::/, ""),
           scope: updated.scope || "replicate_group",
+          triage_scope: updated.triage_scope || (updated.scope === "single_record" ? "single" : "group"),
           resource_name: updated.resource_name || meta.resource_name || state.resource,
           analysis_type: updated.analysis_type || meta.analysis_type || state.domain,
           parameter_name: updated.parameter || meta.parameter || "",
@@ -10045,6 +10127,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           experiment: updated.experiment || meta.experiment || "",
           record_id: updated.record_id || meta.record_id || "",
           record_ids: updated.record_ids || meta.record_ids || "",
+          flag_type: updated.flag_type || meta.flag_type || "stat_snapshot_flagged",
+          source_label: "Page 2 — Statistical Snapshot",
+          decision_status: "in_review",
           decision: decisionVal,
           note: updated.note || "",
           assigned_to_email: updated.assigned_to_email || preservedEmail || null
@@ -10199,6 +10284,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (!window.openSubmitFindingModal) return;
       try {
         const payload = JSON.parse(decodeURIComponent(encodedPayload));
+        payload.flag_type = payload.flag_type || "stat_snapshot_flagged";
+        payload.source_label = payload.source_label || "Page 2 — Statistical Snapshot";
+        payload.decision_status = payload.decision_status || "in_review";
         window.openSubmitFindingModal(payload);
       } catch (_) {}
     };
