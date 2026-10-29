@@ -1665,6 +1665,70 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
     .toast-status.visible {
       display: block;
     }
+
+    .kpi-strip.collapsed {
+      display: none;
+    }
+
+    .table-scroll.compact {
+      max-height: 170px;
+    }
+
+    .decision-lock-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 8px 12px;
+      margin-bottom: 10px;
+      border-radius: 6px;
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      color: #92400e;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .decision-lock-banner.visible {
+      display: flex;
+    }
+
+    .btn-revert {
+      background: #ffffff;
+      color: #92400e;
+      border: 1px solid #d97706;
+      padding: 4px 10px;
+      font-size: 11.5px;
+      font-weight: 700;
+    }
+
+    .btn-revert:hover {
+      background: #fffbeb;
+    }
+
+    .rationale-chip.disabled {
+      opacity: 0.55;
+      pointer-events: none;
+      cursor: not-allowed;
+    }
+
+    .section-collapse-bar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    th.sortable-th {
+      cursor: pointer;
+      user-select: none;
+    }
+
+    th.sortable-th:hover {
+      background: #e2e8f0;
+      color: var(--text-main);
+    }
   </style>
 </head>
 <body>
@@ -1719,7 +1783,16 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
   </div>
 
   <main class="container">
-    <section class="kpi-strip" aria-label="QC Queue Summary Metrics">
+    <div class="section-collapse-bar">
+      <button type="button" class="btn" id="btn-toggle-kpi-strip" title="Collapse or expand KPI summary cards to save vertical screen space">
+        ▲ Compact KPIs
+      </button>
+      <button type="button" class="btn" id="btn-toggle-queue-card" title="Toggle compact or expanded queue table height">
+        ↕ Compact Queue Table
+      </button>
+    </div>
+
+    <section class="kpi-strip" id="kpi-strip-section" aria-label="QC Queue Summary Metrics">
       <div class="kpi-card">
         <div class="kpi-label">Snapshot Observation Rows</div>
         <div class="kpi-value" id="kpi-total-records">__TOTAL_RECORDS__</div>
@@ -1765,7 +1838,15 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           </button>
         </div>
 
-        <div id="batch-gsheet-action-container">
+        <div id="batch-gsheet-action-container" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button
+            type="button"
+            class="btn"
+            id="btn-batch-assign-open"
+            title="Assign all currently filtered open queue items to Reviewer or Analyst of Record"
+          >
+            ⚡ Batch-Assign Filtered Open
+          </button>
           <button
             type="button"
             class="btn btn-admin"
@@ -1840,18 +1921,44 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           </div>
         </div>
         <div class="field-group">
-          <label for="filter-assigned-analyst">Assigned Analyst</label>
-          <select id="filter-assigned-analyst">
+          <label for="filter-analyst-of-record">Analyst of Record (Lab)</label>
+          <select id="filter-analyst-of-record">
+            <option value="">All Lab Analysts</option>
+          </select>
+        </div>
+        <div class="field-group">
+          <label for="filter-assigned-reviewer">Assigned Reviewer</label>
+          <select id="filter-assigned-reviewer">
+            <option value="">All Reviewers / Unassigned</option>
+          </select>
+          <select id="filter-assigned-analyst" style="display:none;" aria-hidden="true">
             <option value="">All Analysts / Unassigned</option>
           </select>
         </div>
         <div class="field-group">
-          <label for="filter-sort-by">Sort Queue By</label>
-          <select id="filter-sort-by">
+          <label for="sort-queue-select">Sort Queue By</label>
+          <select id="sort-queue-select">
+            <option value="rsd_desc" selected>RSD % (High → Low)</option>
+            <option value="rsd_asc">RSD % (Low → High)</option>
+            <option value="flag_severity">Flag Severity (RSD &gt; 20% / Multi-Flag)</option>
+            <option value="resource_asc">Resource Name (A → Z)</option>
+            <option value="sample_asc">Prepared Sample (A → Z)</option>
+            <option value="default">Default Queue Order (Severity / ID)</option>
+            <option value="interactive_first">⚡ Interactive Session Flags First (Visualizer &amp; Stat Snapshot)</option>
+            <option value="recent_first">🕒 Most Recently Flagged / Updated First</option>
+            <option value="flagged_by">👤 Flagged By Analyst (A → Z)</option>
+            <option value="scope">🎯 Flag Scope (Single Point vs Replicate Group)</option>
+            <option value="resource_param">🧪 Resource &amp; Parameter (A → Z)</option>
+          </select>
+          <select id="filter-sort-by" style="display:none;" aria-hidden="true">
             <option value="default">Default Queue Order (Severity / ID)</option>
             <option value="interactive_first">⚡ Interactive Session Flags First (Visualizer &amp; Stat Snapshot)</option>
             <option value="recent_first">🕒 Most Recently Flagged / Updated First</option>
             <option value="rsd_desc">📈 Highest RSD % First</option>
+            <option value="rsd_asc">RSD % (Low → High)</option>
+            <option value="flag_severity">Flag Severity (RSD &gt; 20% / Multi-Flag)</option>
+            <option value="resource_asc">Resource Name (A → Z)</option>
+            <option value="sample_asc">Prepared Sample (A → Z)</option>
             <option value="flagged_by">👤 Flagged By Analyst (A → Z)</option>
             <option value="scope">🎯 Flag Scope (Single Point vs Replicate Group)</option>
             <option value="resource_param">🧪 Resource &amp; Parameter (A → Z)</option>
@@ -1922,7 +2029,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             </button>
           </div>
         </div>
-        <div class="table-scroll">
+        <div class="table-scroll" id="queue-table-scroll-wrapper">
           <table id="qc-queue-table">
             <thead>
               <tr>
@@ -1936,8 +2043,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 <th>Parameter</th>
                 <th>Flag Type(s)</th>
                 <th>Trigger Diagnostic</th>
-                <th>RSD % (n)</th>
-                <th>Assigned To</th>
+                <th class="sortable-th" id="th-sort-rsd" title="Click to toggle RSD% sort direction">RSD % (n) ⇅</th>
+                <th>Analyst of Record</th>
+                <th>Assigned Reviewer</th>
                 <th>QC Transition</th>
                 <th>Stage 1 / Stage 2 Status</th>
               </tr>
@@ -2034,6 +2142,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 <input
                   type="radio"
                   name="replicate-scope-mode"
+                  class="scope-radio"
                   id="scope-entire-group"
                   value="group"
                   checked
@@ -2044,6 +2153,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 <input
                   type="radio"
                   name="replicate-scope-mode"
+                  class="scope-radio"
                   id="scope-single-replicate"
                   value="single"
                 />
@@ -2069,6 +2179,15 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               </table>
             </div>
 
+            <div id="decision-lock-banner" class="decision-lock-banner" role="region" aria-label="Decision Lock Banner">
+              <div>
+                🔒 <span id="decision-lock-text">Stage 1 Decision Committed &amp; Locked.</span>
+              </div>
+              <button type="button" class="btn btn-revert" id="btn-revert-decision">
+                ↺ Revert Decision to Open
+              </button>
+            </div>
+
             <div class="field-group">
               <label>Structured Rationale Chips (select one or more)</label>
               <div class="rationale-chips-container" id="rationale-chips-list">
@@ -2083,25 +2202,30 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
               <div class="field-group">
-                <label for="select-decision-action">Stage 1 Decision Action</label>
+                <label for="select-decision-action">Stage 1 Decision Action (5-State QC Pass)</label>
                 <select id="select-decision-action">
-                  <option value="in_review" selected>Keep Open / In Review (Default)</option>
                   <option value="reject_fail">Flag as QC Fail (new_qc_pass = fail)</option>
                   <option value="approve_pass">Approve as QC Pass (new_qc_pass = pass)</option>
-                  <option value="needs_retest">Needs Lab Retest (in_review / retest)</option>
+                  <option value="provisional">Mark Provisional Pass (new_qc_pass = provisional)</option>
+                  <option value="needs_retest">Flag for Lab Retest (new_qc_pass = retest)</option>
+                  <option value="in_review" selected>Keep In Review / Defer (new_qc_pass = in_review)</option>
                 </select>
               </div>
 
               <div class="field-group">
                 <label for="input-assigned-to">Assigned Reviewer Email</label>
-                <div style="display: flex; gap: 6px;">
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
                   <input
                     type="email"
                     id="input-assigned-to"
                     placeholder="analyst@lbl.gov"
+                    style="flex: 1; min-width: 140px;"
                   />
                   <button type="button" class="btn" id="btn-assign-to-me" title="PATCH /v1/qc/decisions/{id}/assign">
                     Assign to Me
+                  </button>
+                  <button type="button" class="btn" id="btn-assign-analyst-of-record" title="Assign to the lab Analyst of Record on this replicate group">
+                    Assign to Analyst of Record
                   </button>
                 </div>
               </div>
@@ -2357,10 +2481,13 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           flagType: "",
           qcStatus: "",
           minRsd: 0,
+          analystOfRecord: "",
+          assignedReviewer: "",
           assignedAnalyst: "",
           sortBy: "default",
           search: ""
         },
+        queueSort: "rsd_desc",
         decisionsById: {},
         decisionsOrder: [],
         selectedDecisionId: null,
@@ -3036,38 +3163,95 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         sel.value = currentVal;
       }
 
+      function getAnalystOfRecord(dec) {
+        if (!dec) return "";
+        if (dec.analyst) return String(dec.analyst);
+        var grp =
+          (WORKBENCH_DATA.replicate_groups || {})[dec.replicate_group_key] ||
+          findReplicateGroupForDecision(dec);
+        if (grp && grp.replicates && grp.replicates.length > 0) {
+          for (var i = 0; i < grp.replicates.length; i++) {
+            if (grp.replicates[i].analyst) {
+              return String(grp.replicates[i].analyst);
+            }
+          }
+        }
+        return "";
+      }
+
       function refreshAnalystFilterOptions() {
-        var sel = document.getElementById("filter-assigned-analyst");
-        if (!sel) return;
-        var currentVal = sel.value;
-        var emails = {};
+        var labAnalysts = {};
         var baseAnalysts = (WORKBENCH_DATA.facets && WORKBENCH_DATA.facets.analysts) || [];
         for (var i = 0; i < baseAnalysts.length; i++) {
-          if (baseAnalysts[i]) emails[baseAnalysts[i]] = true;
+          if (baseAnalysts[i]) labAnalysts[baseAnalysts[i]] = true;
+        }
+        var reviewerEmails = {};
+        for (var b = 0; b < baseAnalysts.length; b++) {
+          if (baseAnalysts[b]) reviewerEmails[baseAnalysts[b]] = true;
         }
         for (var j = 0; j < state.decisionsOrder.length; j++) {
           var d = state.decisionsById[state.decisionsOrder[j]];
-          if (d && d.assigned_to_email) {
-            emails[d.assigned_to_email] = true;
+          if (!d) continue;
+          var aor = getAnalystOfRecord(d);
+          if (aor) labAnalysts[aor] = true;
+          if (d.assigned_to_email) {
+            reviewerEmails[d.assigned_to_email] = true;
           }
         }
-        sel.innerHTML = "";
-        var optAll = document.createElement("option");
-        optAll.value = "";
-        optAll.textContent = "All Analysts / Unassigned";
-        sel.appendChild(optAll);
-        var optMe = document.createElement("option");
-        optMe.value = "__ME__";
-        optMe.textContent = "Assigned to Me (" + (state.user.email || "me") + ")";
-        sel.appendChild(optMe);
-        var sorted = Object.keys(emails).sort();
-        for (var k = 0; k < sorted.length; k++) {
-          var o = document.createElement("option");
-          o.value = sorted[k];
-          o.textContent = sorted[k];
-          sel.appendChild(o);
+
+        fillSelect(
+          "filter-analyst-of-record",
+          Object.keys(labAnalysts).sort(),
+          "All Lab Analysts"
+        );
+
+        var revSel = document.getElementById("filter-assigned-reviewer");
+        if (revSel) {
+          var currentRevVal = revSel.value;
+          revSel.innerHTML = "";
+          var optAllRev = document.createElement("option");
+          optAllRev.value = "";
+          optAllRev.textContent = "All Reviewers / Unassigned";
+          revSel.appendChild(optAllRev);
+          var optMeRev = document.createElement("option");
+          optMeRev.value = "__ME__";
+          optMeRev.textContent = "Assigned to Me (" + (state.user.email || "me") + ")";
+          revSel.appendChild(optMeRev);
+          var optUnassigned = document.createElement("option");
+          optUnassigned.value = "__UNASSIGNED__";
+          optUnassigned.textContent = "Unassigned Only";
+          revSel.appendChild(optUnassigned);
+          var sortedRev = Object.keys(reviewerEmails).sort();
+          for (var kr = 0; kr < sortedRev.length; kr++) {
+            var orOpt = document.createElement("option");
+            orOpt.value = sortedRev[kr];
+            orOpt.textContent = sortedRev[kr];
+            revSel.appendChild(orOpt);
+          }
+          revSel.value = currentRevVal;
         }
-        sel.value = currentVal;
+
+        var sel = document.getElementById("filter-assigned-analyst");
+        var sorted = Object.keys(reviewerEmails).sort();
+        if (sel) {
+          var currentVal = sel.value;
+          sel.innerHTML = "";
+          var optAll = document.createElement("option");
+          optAll.value = "";
+          optAll.textContent = "All Analysts / Unassigned";
+          sel.appendChild(optAll);
+          var optMe = document.createElement("option");
+          optMe.value = "__ME__";
+          optMe.textContent = "Assigned to Me (" + (state.user.email || "me") + ")";
+          sel.appendChild(optMe);
+          for (var k = 0; k < sorted.length; k++) {
+            var o = document.createElement("option");
+            o.value = sorted[k];
+            o.textContent = sorted[k];
+            sel.appendChild(o);
+          }
+          sel.value = currentVal;
+        }
 
         var dataListEl = document.getElementById("AnalystDirectoryList");
         if (dataListEl) {
@@ -3262,6 +3446,24 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (Number(f.minRsd || 0) > 0) {
           if (Number(dec.rsd_pct || 0) <= Number(f.minRsd)) return false;
         }
+        if (f.analystOfRecord) {
+          var aor = getAnalystOfRecord(dec);
+          if (aor !== f.analystOfRecord) return false;
+        }
+        if (f.assignedReviewer) {
+          var assignedEmail = (dec.assigned_to_email || "").trim();
+          if (f.assignedReviewer === "__ME__") {
+            if (assignedEmail.toLowerCase() !== (state.user.email || "").toLowerCase()) {
+              return false;
+            }
+          } else if (f.assignedReviewer === "__UNASSIGNED__") {
+            if (assignedEmail !== "") {
+              return false;
+            }
+          } else if (assignedEmail !== f.assignedReviewer) {
+            return false;
+          }
+        }
         if (f.assignedAnalyst) {
           if (f.assignedAnalyst === "__ME__") {
             if ((dec.assigned_to_email || "").toLowerCase() !== (state.user.email || "").toLowerCase()) {
@@ -3289,6 +3491,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             dec.source_label,
             dec.submitted_by_email,
             dec.assigned_to_email,
+            getAnalystOfRecord(dec),
             dec.review_note,
             dec.scope_mode
           ]
@@ -3327,8 +3530,11 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       function setQueueSortBy(sortVal) {
         var nextSort = sortVal || "default";
         state.filters.sortBy = nextSort;
+        state.queueSort = nextSort;
         var sel = document.getElementById("filter-sort-by");
         if (sel) sel.value = nextSort;
+        var sortQ = document.getElementById("sort-queue-select");
+        if (sortQ) sortQ.value = nextSort;
         renderQueueTable();
       }
 
@@ -3357,6 +3563,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         state.filters.flagType = "";
         state.filters.qcStatus = "";
         state.filters.minRsd = 0;
+        state.filters.analystOfRecord = "";
+        state.filters.assignedReviewer = "";
         state.filters.assignedAnalyst = "";
         state.filters.sortBy = "default";
         state.filters.search = "";
@@ -3366,6 +3574,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           "filter-parameter",
           "filter-flag-type",
           "filter-qc-status",
+          "filter-analyst-of-record",
+          "filter-assigned-reviewer",
           "filter-assigned-analyst",
           "filter-search"
         ];
@@ -3417,6 +3627,10 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         setText("kpi-pending-gsheet", counts.pending_gsheet);
       }
 
+      function renderKpis() {
+        computeQueueCounts();
+      }
+
       function setText(id, val) {
         var el = document.getElementById(id);
         if (el) el.textContent = String(val);
@@ -3461,6 +3675,30 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               var aRsd = Number(a.rsd_pct || 0);
               var bRsd = Number(b.rsd_pct || 0);
               if (aRsd !== bRsd) return bRsd - aRsd;
+            } else if (sortBy === "rsd_asc") {
+              var aRsdAsc = Number(a.rsd_pct || 0);
+              var bRsdAsc = Number(b.rsd_pct || 0);
+              if (aRsdAsc !== bRsdAsc) return aRsdAsc - bRsdAsc;
+            } else if (sortBy === "flag_severity") {
+              var sevA =
+                ((a.flag_types || []).indexOf("rsd_gt_20") !== -1 ? 100 : 0) +
+                ((a.flag_types || []).length || 1) * 10 +
+                Number(a.rsd_pct || 0);
+              var sevB =
+                ((b.flag_types || []).indexOf("rsd_gt_20") !== -1 ? 100 : 0) +
+                ((b.flag_types || []).length || 1) * 10 +
+                Number(b.rsd_pct || 0);
+              if (sevB !== sevA) return sevB - sevA;
+            } else if (sortBy === "resource_asc") {
+              var resCmp = String(a.resource_name || "").localeCompare(
+                String(b.resource_name || "")
+              );
+              if (resCmp !== 0) return resCmp;
+            } else if (sortBy === "sample_asc") {
+              var smpCmp = String(a.prepared_sample || "").localeCompare(
+                String(b.prepared_sample || "")
+              );
+              if (smpCmp !== 0) return smpCmp;
             } else if (sortBy === "flagged_by") {
               var aWho = String(a.submitted_by_email || "zzzz").toLowerCase();
               var bWho = String(b.submitted_by_email || "zzzz").toLowerCase();
@@ -3746,12 +3984,18 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (!tbody) return;
         tbody.innerHTML = "";
 
+        var rsdTh = document.getElementById("th-sort-rsd");
+        if (rsdTh) {
+          rsdTh.textContent =
+            state.queueSort === "rsd_asc" ? "RSD % (n) ↑" : "RSD % (n) ↓";
+        }
+
         var visibleIds = getVisibleQueueDecisionIds();
 
         if (visibleIds.length === 0) {
           var emptyTr = document.createElement("tr");
           var emptyTd = document.createElement("td");
-          emptyTd.colSpan = 12;
+          emptyTd.colSpan = 13;
           emptyTd.style.textAlign = "center";
           emptyTd.style.padding = "20px";
           emptyTd.style.color = "#64748b";
@@ -3849,6 +4093,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           if (decItem.synced_to_gsheet) {
             statusClass = "status-synced";
           }
+          var analystOfRecord = getAnalystOfRecord(decItem) || "—";
 
           tr.innerHTML =
             "<td style='text-align:center;' class='qc-row-select-cell'><input type='checkbox' class='qc-row-select-chk' data-decision-id='" +
@@ -3886,6 +4131,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             "% (n=" +
             Number(decItem.replicate_count || 1) +
             ")</td>" +
+            "<td>" +
+            escapeHtml(analystOfRecord) +
+            "</td>" +
             "<td>" +
             escapeHtml(decItem.assigned_to_email || "Unassigned") +
             "</td>" +
@@ -3950,6 +4198,57 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         renderContextualDrawer();
       }
 
+      var selectQueueRow = selectDecision;
+
+      function isDecisionLocked(dec) {
+        if (!dec) return false;
+        return (
+          String(dec.decision_status || "").toLowerCase() === "resolved" ||
+          Boolean(dec.synced_to_gsheet)
+        );
+      }
+
+      function applyDecisionLockUI(dec) {
+        var locked = isDecisionLocked(dec);
+        var lockBanner = document.getElementById("decision-lock-banner");
+        var revertBtn = document.getElementById("btn-revert-decision");
+        if (lockBanner) {
+          lockBanner.classList.toggle("hidden", !locked);
+        }
+        if (revertBtn) {
+          revertBtn.classList.toggle("hidden", !locked);
+        }
+
+        var actionSel = document.getElementById("select-decision-action");
+        if (actionSel) actionSel.disabled = locked;
+
+        var noteInput = document.getElementById("input-review-note");
+        if (noteInput) noteInput.disabled = locked;
+
+        var saveBtn = document.getElementById("btn-save-decision");
+        if (saveBtn) saveBtn.disabled = locked;
+
+        var scopeRadios = document.querySelectorAll(".scope-radio");
+        for (var r = 0; r < scopeRadios.length; r++) {
+          scopeRadios[r].disabled = locked;
+        }
+
+        var chipEls = document.querySelectorAll("#rationale-chips-list .rationale-chip");
+        for (var c = 0; c < chipEls.length; c++) {
+          chipEls[c].classList.toggle("disabled", locked);
+          if (locked) {
+            chipEls[c].setAttribute("aria-disabled", "true");
+          } else {
+            chipEls[c].removeAttribute("aria-disabled");
+          }
+        }
+
+        var repCheckboxes = document.querySelectorAll(".replicate-checkbox");
+        for (var k = 0; k < repCheckboxes.length; k++) {
+          repCheckboxes[k].disabled = locked || state.scopeMode === "group";
+        }
+      }
+
       function renderContextualDrawer() {
         var dec = state.decisionsById[state.selectedDecisionId];
         if (!dec) return;
@@ -4012,7 +4311,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               (item.unit || "") +
               ")" +
               flagSuffix;
-            coSelect.appendChild(opt);
+              coSelect.appendChild(opt);
           }
           coSelect.value = state.inspectedGroupKey || resolvedGroupKey;
         }
@@ -4043,10 +4342,12 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
 
         var actionSel = document.getElementById("select-decision-action");
         if (actionSel) {
+          var rawAct = dec.decision_action || "";
+          if (rawAct === "mark_fail") rawAct = "reject_fail";
+          if (rawAct === "retest") rawAct = "needs_retest";
+          if (rawAct === "defer") rawAct = "in_review";
           actionSel.value =
-            dec.decision_action && dec.decision_action !== "open"
-              ? dec.decision_action
-              : "in_review";
+            rawAct && rawAct !== "open" ? rawAct : "in_review";
         }
         var assignedInput = document.getElementById("input-assigned-to");
         if (assignedInput) {
@@ -4056,6 +4357,9 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (noteInput) {
           noteInput.value = dec.review_note || "";
         }
+
+        // Apply lock/revert state for resolved or synced records
+        applyDecisionLockUI(dec);
 
         // Update 4-step Audit Provenance Timeline
         setText("prov-created-by", dec.submitted_by_email || "auto-qc-engine@biocirv.org");
@@ -4145,6 +4449,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         if (!tbody) return;
         tbody.innerHTML = "";
         var reps = (group && group.replicates) || [];
+        var locked = isDecisionLocked(dec);
         for (var i = 0; i < reps.length; i++) {
           var r = reps[i];
           var tr = document.createElement("tr");
@@ -4152,7 +4457,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             tr.style.background = "rgba(239, 68, 68, 0.16)";
           }
           var checked = Boolean(state.selectedReplicateIds[r.record_id]);
-          var disabled = state.scopeMode === "group";
+          var disabled = locked || state.scopeMode === "group";
           tr.innerHTML =
             "<td><input type='checkbox' class='replicate-checkbox' data-record-id='" +
             escapeHtml(r.record_id) +
@@ -4182,7 +4487,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             escapeHtml(r.exp_date || "") +
             "</td>" +
             "<td><code>" +
-            escapeHtml(r.qc_status || "pass") +
+            escapeHtml(r.qc_pass || r.qc_status || "pass") +
             "</code></td>";
 
           tbody.appendChild(tr);
@@ -4191,6 +4496,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         var checkboxes = tbody.querySelectorAll(".replicate-checkbox");
         for (var j = 0; j < checkboxes.length; j++) {
           checkboxes[j].addEventListener("change", function (ev) {
+            if (isDecisionLocked(dec)) return;
             var recId = ev.target.getAttribute("data-record-id");
             state.selectedReplicateIds[recId] = Boolean(ev.target.checked);
           });
@@ -4985,6 +5291,13 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
       function saveStage1Decision() {
         var dec = state.decisionsById[state.selectedDecisionId];
         if (!dec) return;
+        if (isDecisionLocked(dec)) {
+          showToast(
+            "Decision is locked. Click 'Revert Decision to Open' before making changes.",
+            true
+          );
+          return;
+        }
 
         var noteEl = document.getElementById("input-review-note");
         var actionEl = document.getElementById("select-decision-action");
@@ -5000,18 +5313,24 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         }
 
         var actionVal = actionEl ? actionEl.value : "in_review";
-        var newQcPass =
-          actionVal === "approve_pass"
-            ? "pass"
-            : actionVal === "reject_fail"
-            ? "fail"
-            : null;
-        var newStatus =
-          actionVal === "approve_pass" || actionVal === "reject_fail"
-            ? "resolved"
-            : actionVal === "needs_retest"
-            ? "needs_retest"
-            : "in_review";
+        var newQcPass = null;
+        var newStatus = "in_review";
+        if (actionVal === "approve_pass") {
+          newQcPass = "pass";
+          newStatus = "resolved";
+        } else if (actionVal === "provisional") {
+          newQcPass = "provisional";
+          newStatus = "resolved";
+        } else if (actionVal === "reject_fail" || actionVal === "mark_fail") {
+          newQcPass = "fail";
+          newStatus = "resolved";
+        } else if (actionVal === "needs_retest" || actionVal === "retest") {
+          newQcPass = "retest";
+          newStatus = "needs_retest";
+        } else if (actionVal === "in_review" || actionVal === "defer") {
+          newQcPass = null;
+          newStatus = "in_review";
+        }
 
         var chosenIds = [];
         if (state.scopeMode === "single") {
@@ -5047,6 +5366,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           record_table: dec.record_table || "proximate_record",
           record_id: chosenIds[0] || dec.record_id,
           record_ids: chosenIds,
+          scope: state.scopeMode,
           replicate_group_key: dec.replicate_group_key,
           resource_name: dec.resource_name,
           analysis_type: dec.analysis_type,
@@ -5076,6 +5396,23 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         dec.resolved_by_email = state.user.email || "analyst@lbl.gov";
         dec.resolved_at = nowUtc;
         dec.synced_to_gsheet = false;
+
+        // Also update replicate rows in WORKBENCH_DATA.replicate_groups so badges update immediately
+        var repGrp =
+          (WORKBENCH_DATA.replicate_groups || {})[dec.replicate_group_key] ||
+          findReplicateGroupForDecision(dec);
+        if (repGrp && Array.isArray(repGrp.replicates) && newQcPass) {
+          for (var r = 0; r < repGrp.replicates.length; r++) {
+            var repRow = repGrp.replicates[r];
+            if (
+              state.scopeMode === "group" ||
+              chosenIds.indexOf(String(repRow.record_id)) !== -1
+            ) {
+              repRow.qc_pass = newQcPass;
+              repRow.qc_status = newQcPass;
+            }
+          }
+        }
 
         var stage1HttpError = null;
         fetch("/v1/qc/decisions", {
@@ -5123,6 +5460,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 replicate_group_key: dec.replicate_group_key,
                 record_ids: chosenIds,
                 new_qc_pass: newQcPass,
+                decision_status: newStatus,
                 updated_at: nowUtc
               });
             }
@@ -5140,25 +5478,176 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
                 "Stage 1 PostgreSQL Decision Saved (" +
                   dec.decision_id +
                   ": " +
-                  dec.old_qc_pass +
+                  (dec.old_qc_pass || "pass") +
                   " → " +
                   newQcPass +
                   "). Pending Admin Stage 2 Google Sheets Sync.",
                 false
               );
             }
+            refreshAnalystFilterOptions();
+            renderKpis();
             renderQueueTable();
             renderContextualDrawer();
           });
       }
 
-      function assignSelectedToMe() {
+      function revertCurrentDecision() {
         var dec = state.decisionsById[state.selectedDecisionId];
         if (!dec) return;
-        var myEmail = state.user.email || "analyst@lbl.gov";
-        dec.assigned_to_email = myEmail;
-        var assignedEl = document.getElementById("input-assigned-to");
-        if (assignedEl) assignedEl.value = myEmail;
+        var reason = "Reverted by reviewer in QC Workbench";
+        if (typeof window !== "undefined" && typeof window.prompt === "function") {
+          var prompted = window.prompt(
+            "Optional reason for reverting " + dec.decision_id + " back to Open:",
+            "Reverted for re-evaluation"
+          );
+          if (prompted === null) {
+            return;
+          }
+          if (prompted.trim()) {
+            reason = prompted.trim();
+          }
+        }
+
+        var numericId =
+          typeof dec.db_id === "number" && Number.isInteger(dec.db_id)
+            ? dec.db_id
+            : null;
+        var nowUtc = new Date().toISOString();
+
+        var revertPromise = numericId !== null
+          ? fetch("/v1/qc/decisions/" + encodeURIComponent(numericId) + "/revert", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "same-origin",
+              body: JSON.stringify({
+                reason: reason,
+                sync_to_gsheet: true
+              })
+            }).then(function (resp) {
+              return resp.ok ? resp.json() : null;
+            })
+          : Promise.resolve({
+              status: "ok",
+              restored_qc_pass: dec.old_qc_pass != null ? dec.old_qc_pass : null,
+              decisions: []
+            });
+
+        revertPromise
+          .then(function (revertData) {
+            if (!revertData || revertData.status !== "ok") {
+              var errReason =
+                (revertData && (revertData.detail || revertData.reason || revertData.message)) ||
+                "Server rejected revert or network unavailable";
+              showToast(
+                "Failed to revert decision " +
+                  dec.decision_id +
+                  " (" +
+                  errReason +
+                  "). Decision remains locked.",
+                true
+              );
+              renderKpis();
+              renderQueueTable();
+              renderContextualDrawer();
+              return;
+            }
+
+            var srvDec = revertData.decision || null;
+            var restoredPass =
+              srvDec && srvDec.new_qc_pass !== undefined
+                ? srvDec.new_qc_pass
+                : revertData.restored_qc_pass !== undefined
+                ? revertData.restored_qc_pass
+                : dec.old_qc_pass != null
+                ? dec.old_qc_pass
+                : null;
+
+            dec.new_qc_pass = restoredPass;
+            dec.decision_status = "open";
+            dec.decision_action = "open";
+            dec.synced_to_gsheet = false;
+            dec.gsheet_synced_at = "";
+            dec.gsheet_synced_by_email = "";
+            dec.resolved_at = "";
+            dec.resolved_by_email = "";
+            if (srvDec && srvDec.review_note) {
+              dec.review_note = srvDec.review_note;
+            }
+
+            var perRecordPass = {};
+            if (Array.isArray(revertData.decisions)) {
+              for (var dIdx = 0; dIdx < revertData.decisions.length; dIdx++) {
+                var sItem = revertData.decisions[dIdx];
+                if (sItem && sItem.record_id) {
+                  perRecordPass[String(sItem.record_id)] =
+                    sItem.new_qc_pass !== undefined
+                      ? sItem.new_qc_pass
+                      : sItem.old_qc_pass !== undefined
+                      ? sItem.old_qc_pass
+                      : null;
+                }
+              }
+            }
+
+            var repGrp =
+              (WORKBENCH_DATA.replicate_groups || {})[dec.replicate_group_key] ||
+              findReplicateGroupForDecision(dec);
+            if (repGrp && Array.isArray(repGrp.replicates)) {
+              for (var r = 0; r < repGrp.replicates.length; r++) {
+                var repRow = repGrp.replicates[r];
+                var repRid = String(repRow.record_id || "");
+                if (Object.prototype.hasOwnProperty.call(perRecordPass, repRid)) {
+                  repRow.qc_pass = perRecordPass[repRid];
+                  repRow.qc_status = perRecordPass[repRid] || "pass";
+                } else {
+                  repRow.qc_pass = restoredPass;
+                  repRow.qc_status = restoredPass || "pass";
+                }
+              }
+            }
+
+            if (qcBroadcastChannel) {
+              qcBroadcastChannel.postMessage({
+                type: "qc_decision_reverted",
+                decision_id: dec.decision_id,
+                db_id: dec.db_id,
+                replicate_group_key: dec.replicate_group_key,
+                record_ids: dec.record_ids || [dec.record_id],
+                new_qc_pass: restoredPass,
+                decision_status: "open",
+                updated_at: nowUtc
+              });
+            }
+
+            showToast("Decision reverted and returned to Open queue.", false);
+            renderKpis();
+            renderQueueTable();
+            renderContextualDrawer();
+            if (numericId !== null) {
+              refreshQcStateFromApi();
+            }
+          })
+          .catch(function () {
+            showToast(
+              "Failed to revert decision " +
+                dec.decision_id +
+                ". Decision remains locked.",
+              true
+            );
+            renderKpis();
+            renderQueueTable();
+            renderContextualDrawer();
+          });
+      }
+
+      function assignDecisionToReviewer(dec, targetAssignee, useMeKeyword) {
+        if (!dec || !targetAssignee) return Promise.resolve(null);
+        dec.assigned_to_email = targetAssignee;
+        if (dec.decision_id === state.selectedDecisionId) {
+          var assignedEl = document.getElementById("input-assigned-to");
+          if (assignedEl) assignedEl.value = targetAssignee;
+        }
 
         var hasDbId =
           typeof dec.db_id === "number" && Number.isInteger(dec.db_id);
@@ -5171,7 +5660,16 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               method: "PATCH",
               headers: { "Content-Type": "application/json" },
               credentials: "same-origin",
-              body: JSON.stringify({ assigned_to_email: "me" })
+              body: JSON.stringify({
+                assigned_to_email: useMeKeyword ? "me" : targetAssignee,
+                record_ids:
+                  Array.isArray(dec.record_ids) && dec.record_ids.length
+                    ? dec.record_ids
+                    : dec.record_id
+                    ? [dec.record_id]
+                    : [],
+                scope: dec.scope_mode || "group"
+              })
             }
           );
         } else {
@@ -5185,6 +5683,7 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               record_table: dec.record_table || "proximate_record",
               record_id: dec.record_id,
               record_ids: dec.record_ids || [dec.record_id],
+              scope: dec.scope_mode || "group",
               replicate_group_key: dec.replicate_group_key,
               resource_name: dec.resource_name,
               analysis_type: dec.analysis_type,
@@ -5196,12 +5695,12 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
               decision_status: dec.decision_status || "open",
               decision_action: dec.decision_action || "flag_for_review",
               review_note: dec.review_note || "",
-              assigned_to_email: myEmail
+              assigned_to_email: targetAssignee
             })
           });
         }
 
-        reqPromise
+        return reqPromise
           .then(function (resp) {
             return resp && resp.ok ? resp.json() : null;
           })
@@ -5209,17 +5708,94 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
             if (resData && resData.decision && resData.decision.id != null) {
               dec.db_id = Number(resData.decision.id);
             }
+            return resData;
           })
-          .catch(function () {})
-          .finally(function () {
-            showToast(
-              "Assigned " + dec.decision_id + " to " + myEmail + ".",
-              false
-            );
-            refreshAnalystFilterOptions();
-            renderQueueTable();
-            renderContextualDrawer();
+          .catch(function () {
+            return null;
           });
+      }
+
+      function assignSelectedToMe() {
+        var dec = state.decisionsById[state.selectedDecisionId];
+        if (!dec) return;
+        var myEmail = state.user.email || "analyst@lbl.gov";
+        assignDecisionToReviewer(dec, myEmail, true).finally(function () {
+          showToast(
+            "Assigned " + dec.decision_id + " to " + myEmail + ".",
+            false
+          );
+          refreshAnalystFilterOptions();
+          renderQueueTable();
+          renderContextualDrawer();
+        });
+      }
+
+      function assignSelectedToAnalystOfRecord() {
+        var dec = state.decisionsById[state.selectedDecisionId];
+        if (!dec) return;
+        var aor = getAnalystOfRecord(dec);
+        if (!aor || aor === "Unassigned") {
+          showToast("No Analyst of Record found for " + dec.decision_id + ".", true);
+          return;
+        }
+        assignDecisionToReviewer(dec, aor, false).finally(function () {
+          showToast(
+            "Assigned " + dec.decision_id + " to Analyst of Record (" + aor + ").",
+            false
+          );
+          refreshAnalystFilterOptions();
+          renderQueueTable();
+          renderContextualDrawer();
+        });
+      }
+
+      function batchAssignFilteredOpen() {
+        var visibleIds = getVisibleQueueDecisionIds();
+        var targets = [];
+        for (var i = 0; i < visibleIds.length; i++) {
+          var d = state.decisionsById[visibleIds[i]];
+          if (d && (d.decision_status || "open") === "open") {
+            targets.push(d);
+          }
+        }
+        if (targets.length === 0) {
+          showToast("No open items in current filtered queue to batch-assign.", true);
+          return;
+        }
+        var defaultAssignee = state.user.email || "analyst@lbl.gov";
+        var chosenAssignee = defaultAssignee;
+        if (typeof window !== "undefined" && typeof window.prompt === "function") {
+          var inputVal = window.prompt(
+            "Batch-assign " +
+              targets.length +
+              " open queue item(s). Enter reviewer email/handle, or 'aor' to assign each item to its Analyst of Record:",
+            defaultAssignee
+          );
+          if (inputVal === null) return;
+          if (inputVal.trim()) {
+            chosenAssignee = inputVal.trim();
+          }
+        }
+        var promises = [];
+        for (var j = 0; j < targets.length; j++) {
+          var item = targets[j];
+          var assignee =
+            chosenAssignee.toLowerCase() === "aor"
+              ? getAnalystOfRecord(item)
+              : chosenAssignee;
+          if (assignee && assignee !== "Unassigned") {
+            promises.push(assignDecisionToReviewer(item, assignee, false));
+          }
+        }
+        Promise.all(promises).finally(function () {
+          showToast(
+            "Batch-assigned " + promises.length + " open queue item(s).",
+            false
+          );
+          refreshAnalystFilterOptions();
+          renderQueueTable();
+          renderContextualDrawer();
+        });
       }
 
       function syncSingleDecisionToGsheet() {
@@ -5633,9 +6209,55 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         bindFilter("filter-parameter", "parameter");
         bindFilter("filter-flag-type", "flagType");
         bindFilter("filter-qc-status", "qcStatus");
+        bindFilter("filter-analyst-of-record", "analystOfRecord");
+        bindFilter("filter-assigned-reviewer", "assignedReviewer");
         bindFilter("filter-assigned-analyst", "assignedAnalyst");
         bindFilter("filter-sort-by", "sortBy");
         bindFilter("filter-search", "search");
+
+        var sortSelectEl = document.getElementById("sort-queue-select");
+        if (sortSelectEl) {
+          sortSelectEl.addEventListener("change", function () {
+            state.queueSort = sortSelectEl.value || "rsd_desc";
+            state.filters.sortBy = state.queueSort;
+            renderQueueTable();
+          });
+        }
+
+        var thSortRsd = document.getElementById("th-sort-rsd");
+        if (thSortRsd) {
+          thSortRsd.addEventListener("click", function () {
+            state.queueSort =
+              state.queueSort === "rsd_desc" ? "rsd_asc" : "rsd_desc";
+            state.filters.sortBy = state.queueSort;
+            if (sortSelectEl) {
+              sortSelectEl.value = state.queueSort;
+            }
+            renderQueueTable();
+          });
+        }
+
+        var toggleKpiBtn = document.getElementById("btn-toggle-kpi-strip");
+        var kpiStripSection = document.getElementById("kpi-strip-section");
+        if (toggleKpiBtn && kpiStripSection) {
+          toggleKpiBtn.addEventListener("click", function () {
+            var isCollapsed = kpiStripSection.classList.toggle("collapsed");
+            toggleKpiBtn.textContent = isCollapsed
+              ? "▸ Expand KPI Summary"
+              : "▾ Collapse KPI Summary";
+          });
+        }
+
+        var toggleQueueBtn = document.getElementById("btn-toggle-queue-card");
+        var queueScrollWrap = document.getElementById("queue-table-scroll-wrapper");
+        if (toggleQueueBtn && queueScrollWrap) {
+          toggleQueueBtn.addEventListener("click", function () {
+            var isCompact = queueScrollWrap.classList.toggle("compact");
+            toggleQueueBtn.textContent = isCompact
+              ? "▸ Expand Queue Table"
+              : "▾ Compact Queue Table";
+          });
+        }
 
         var minRsdEl = document.getElementById("filter-min-rsd");
         if (minRsdEl) {
@@ -5701,6 +6323,8 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
         var chipEls = document.querySelectorAll("#rationale-chips-list .rationale-chip");
         for (var c = 0; c < chipEls.length; c++) {
           chipEls[c].addEventListener("click", function (ev) {
+            var dec = state.decisionsById[state.selectedDecisionId];
+            if (isDecisionLocked(dec)) return;
             var chipEl = ev.currentTarget;
             var chipName = chipEl.getAttribute("data-chip");
             state.selectedChips[chipName] = !state.selectedChips[chipName];
@@ -5713,9 +6337,24 @@ def render_workbench_html(payload: dict[str, Any]) -> str:
           saveBtn.addEventListener("click", saveStage1Decision);
         }
 
+        var revertBtn = document.getElementById("btn-revert-decision");
+        if (revertBtn) {
+          revertBtn.addEventListener("click", revertCurrentDecision);
+        }
+
         var assignMeBtn = document.getElementById("btn-assign-to-me");
         if (assignMeBtn) {
           assignMeBtn.addEventListener("click", assignSelectedToMe);
+        }
+
+        var assignAorBtn = document.getElementById("btn-assign-analyst-of-record");
+        if (assignAorBtn) {
+          assignAorBtn.addEventListener("click", assignSelectedToAnalystOfRecord);
+        }
+
+        var batchAssignBtn = document.getElementById("btn-batch-assign-open");
+        if (batchAssignBtn) {
+          batchAssignBtn.addEventListener("click", batchAssignFilteredOpen);
         }
 
         var singleSyncBtn = document.getElementById("btn-sync-single-gsheet");

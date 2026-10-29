@@ -173,15 +173,34 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     ):
         assert expected_tab in html
 
-    # 2. Facet filters
+    # 2. Facet filters & toolbar controls (WC5 & WC7)
     for filter_id in (
         "filter-resource",
         "filter-analysis-type",
         "filter-parameter",
         "filter-flag-type",
+        "filter-analyst-of-record",
+        "filter-assigned-reviewer",
         "filter-assigned-analyst",
+        "sort-queue-select",
+        "btn-toggle-kpi-strip",
+        "btn-toggle-queue-card",
+        "btn-batch-assign-open",
+        "btn-assign-analyst-of-record",
+        "decision-lock-banner",
+        "btn-revert-decision",
     ):
         assert f'id="{filter_id}"' in html
+
+    # Verify 5-state QC pass options (WC2)
+    for expected_qc_opt in (
+        "new_qc_pass = fail",
+        "new_qc_pass = pass",
+        "new_qc_pass = provisional",
+        "new_qc_pass = retest",
+        "new_qc_pass = in_review",
+    ):
+        assert expected_qc_opt in html
 
     # 3. Left pane multi-view diagnostic plot controls
     assert 'id="select-plot-style"' in html
@@ -233,6 +252,16 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     # 6. Validate inline JS syntax via node --check
     script_count = _validate_inline_js_blocks(output_html)
     assert script_count >= 1
+
+    # 7. Verify WC4/WC7 review fixes:
+    # - CSS rules for collapsible KPI strip and compact queue table
+    assert ".kpi-strip.collapsed" in html
+    assert ".table-scroll.compact" in html
+    # - Queue sort controls wire to state.queueSort
+    assert "state.queueSort = sortSelectEl.value" in html
+    # - Revert handler gates on revertData.status === "ok" instead of unconditional .finally()
+    assert 'revertData.status !== "ok"' in html
+    assert "Decision remains locked." in html
 
 
 def test_generate_dashboard_gallery_and_login_portal(tmp_path: Path) -> None:

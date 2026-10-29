@@ -3536,7 +3536,6 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             headers: this.getHeaders(),
             body: JSON.stringify({
               reason: reason || "Reverted by analyst",
-              revert_to_status: "pass",
               sync_to_gsheet: true
             })
           });
@@ -5928,6 +5927,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       suppressTraceFlags: true,
       blindMode: false,
       showAiPanel: true,
+      overviewLineageExpanded: null,
       proxGroupMode: "exp_method",
       elemSourceMode: "all",
       icpScaleMode: "split",
@@ -5935,6 +5935,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       timelineAlignMode: "collected",
       timelineSortMode: "date"
     };
+
+    function stripQcAuditAnnotations(noteStr) {
+      if (!noteStr) return "";
+      let s = String(noteStr);
+      s = s.replace(/\\s*\\|\\s*\\[QC_AUDIT\\b[^\\]]*\\]/gi, "");
+      s = s.replace(/\\[QC_AUDIT\\b[^\\]]*\\]\\s*\\|\\s*/gi, "");
+      s = s.replace(/\\[QC_AUDIT\\b[^\\]]*\\]/gi, "");
+      return s.trim();
+    }
+    window.stripQcAuditAnnotations = stripQcAuditAnnotations;
 
     const PROVIDER_STYLE_PALETTE = {
       ucd: { label: "UC Davis (UCD)", color: "#2563eb", bg: "rgba(37, 99, 235, 0.12)", border: "rgba(37, 99, 235, 0.45)" },
@@ -6115,6 +6125,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       );
       return propMatches.find(hasAnyFlag) || propMatches[0] || null;
     }
+
+    function stripQcAuditAnnotations(noteStr) {
+      return String(noteStr || "")
+        .replace(/\\s*\\|?\\s*\\[QC_AUDIT\\b[^\\]]*\\]/gi, "")
+        .replace(/^\\s*\\|\\s*|\\s*\\|\\s*$/g, "")
+        .trim();
+    }
+    window.stripQcAuditAnnotations = stripQcAuditAnnotations;
 
     window.auditPage1PointOrGroup = function(encodedPayload) {
       let prefill = {};
@@ -6655,10 +6673,72 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <h2 class="text-base font-bold text-[var(--foreground)]">Statewide Biomass Catalog Benchmark Standing</h2>
               <p class="text-xs text-[var(--muted-foreground)]">Compares <strong>${state.resource}</strong> against the California biomass catalog median (vertical marker line).</p>
             </div>
-            <a href="resource_explorer_dashboard.html?resource=${encRes}" class="px-3 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
-              Compare Side-by-Side with Other Resources &rarr;
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="inline-flex flex-wrap items-center gap-2 px-2.5 py-1 rounded-lg bg-[var(--background)] border border-[var(--border)] text-[11px] font-mono text-[var(--muted-foreground)]">
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Resource Mean</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-0.5 h-3 bg-[var(--foreground)] inline-block"></span>CA Catalog Median</span>
+                ${(d.moisture_pct !== null || d.glucan_dw_pct !== null) ? `
+                  <span class="text-[var(--border)]">|</span>
+                  <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Moisture / Lignin</span>
+                  <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>VS / Glucan</span>
+                  <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Ash / Hemicellulose</span>
+                ` : ''}
+              </div>
+              <a href="resource_explorer_dashboard.html?resource=${encRes}" class="px-3 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
+                Compare Side-by-Side with Other Resources &rarr;
+              </a>
+            </div>
           </div>
+          ${(d.moisture_pct !== null || d.volatile_solids_pct !== null || d.ash_pct !== null || d.glucan_dw_pct !== null) ? (() => {
+            const mPct = d.moisture_pct || 0;
+            const vsPct = d.volatile_solids_pct || 0;
+            const aPct = d.ash_pct || 0;
+            const proxTot = Math.max(100, (mPct + vsPct + aPct) || 100);
+            const gPct = d.glucan_dw_pct || 0;
+            const xPct = (d.xylan_dw_pct || 0) + (d.arabinan_dw_pct || 0);
+            const lPct = d.lignin_dw_pct || 0;
+            const remPct = Math.max(0, 100 - (gPct + xPct + lPct));
+            return `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                ${(mPct || vsPct || aPct) ? `
+                <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3 space-y-1.5">
+                  <div class="flex flex-wrap items-center justify-between gap-1 text-xs">
+                    <span class="font-semibold text-[var(--foreground)]">Overview Proximate Mass-Balance Mini-Bar</span>
+                    <span class="font-mono text-[11px] text-[var(--muted-foreground)]">Closure: <strong>${fmtNum(mPct + vsPct + aPct, 1)}%</strong></span>
+                  </div>
+                  <div class="w-full h-3.5 rounded-full bg-[var(--content)] overflow-hidden flex border border-[var(--border)]">
+                    <div style="width: ${Math.min(100, (mPct / proxTot) * 100)}%" class="bg-[var(--primary)] h-full" title="Moisture: ${fmtNum(mPct)}%"></div>
+                    <div style="width: ${Math.min(100, (vsPct / proxTot) * 100)}%" class="bg-[var(--secondary)] h-full border-l border-[var(--border)]" title="Volatile Solids: ${fmtNum(vsPct)}%"></div>
+                    <div style="width: ${Math.min(100, (aPct / proxTot) * 100)}%" class="bg-[var(--accent)] h-full border-l border-[var(--border)]" title="Ash: ${fmtNum(aPct)}%"></div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--muted-foreground)] pt-0.5">
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Moisture ${fmtNum(mPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>Volatile Solids ${fmtNum(vsPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Ash ${fmtNum(aPct, 1)}%</span>
+                  </div>
+                </div>` : ''}
+                ${(gPct || xPct || lPct) ? `
+                <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3 space-y-1.5">
+                  <div class="flex flex-wrap items-center justify-between gap-1 text-xs">
+                    <span class="font-semibold text-[var(--foreground)]">Overview Structural Polymer Mass-Balance Mini-Bar</span>
+                    <span class="font-mono text-[11px] text-[var(--muted-foreground)]">Polymers: <strong>${fmtNum(gPct + xPct + lPct, 1)}% dw</strong></span>
+                  </div>
+                  <div class="w-full h-3.5 rounded-full bg-[var(--content)] overflow-hidden flex border border-[var(--border)]">
+                    <div style="width: ${Math.min(100, lPct)}%" class="bg-[var(--primary)] h-full" title="Lignin: ${fmtNum(lPct)}%"></div>
+                    <div style="width: ${Math.min(100, gPct)}%" class="bg-[var(--secondary)] h-full border-l border-[var(--border)]" title="Glucan: ${fmtNum(gPct)}%"></div>
+                    <div style="width: ${Math.min(100, xPct)}%" class="bg-[var(--accent)] h-full border-l border-[var(--border)]" title="Hemicellulose (Xylan+Arabinan): ${fmtNum(xPct)}%"></div>
+                    <div style="width: ${Math.min(100, remPct)}%" class="bg-[var(--card)] h-full border-l border-[var(--border)]" title="Remainder (Ash + Extractives): ${fmtNum(remPct)}%"></div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--muted-foreground)] pt-0.5">
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Lignin ${fmtNum(lPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>Glucan ${fmtNum(gPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Hemicellulose ${fmtNum(xPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--card)] border border-[var(--border)] inline-block"></span>Other ${fmtNum(remPct, 1)}%</span>
+                  </div>
+                </div>` : ''}
+              </div>
+            `;
+          })() : ''}
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             ${benchMetrics.map(b => {
               const wVal = Math.min(100, Math.max(3, (b.val / b.max) * 100));
@@ -7038,6 +7118,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         `;
       }).join("");
 
+      const isLineageOpen = state.overviewLineageExpanded !== null
+        ? Boolean(state.overviewLineageExpanded)
+        : (fsList.length <= 4);
+
       return `
         ${benchHtml}
 
@@ -7045,9 +7129,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 class="text-base font-bold text-[var(--foreground)]">Sample Timeline (Time on X-Axis · Provider Cards Branching by Date)</h2>
-              <p class="text-xs text-[var(--muted-foreground)]">${fsList.length} Field Sample(s) &amp; ${psList.length} Prepared Sample(s). Toggle between Field Collection Date and Prepared Sample Run Date; hover any provider card on the timeline for full sample details or click to filter.</p>
+              <p class="text-xs text-[var(--muted-foreground)]">${fsList.length} Field Sample(s) &amp; ${psList.length} Prepared Sample(s). Toggle between Field Collection Date and Prepared Sample Run Date; hover any provider card on the timeline for full sample details or click to filter${fsList.length > 4 ? ' · Auto-collapsed for high-sample resources' : ''}.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+              <button id="btn-toggle-overview-lineage" type="button" onclick="toggleOverviewLineage()" class="px-3 py-1 rounded-lg text-xs font-semibold bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
+                ${isLineageOpen ? '▾ Collapse Lineage Cards' : `▸ Expand Field Sample & Experiment Lineage (${fsList.length} samples · ${psList.length} preps)`}
+              </button>
               <div class="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5 text-xs" role="group" aria-label="Timeline Date Axis Mode">
                 <button type="button" onclick="setSubMode('timelineAlignMode', 'collected')" class="px-2.5 py-1 rounded-md font-semibold transition ${alignMode === 'collected' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}" title="Show Field Samples on horizontal timeline by collection date">🌱 Align by Field Collection Date (${fsList.length})</button>
                 <button type="button" onclick="setSubMode('timelineAlignMode', 'prep')" class="px-2.5 py-1 rounded-md font-semibold transition ${alignMode === 'prep' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}" title="Show Prepared Samples on horizontal timeline by run/prep date">🧪 Align by Prep / Run Date (${psList.length})</button>
@@ -7062,17 +7149,19 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               </a>
             </div>
           </div>
-          ${providerLegendHtml}
-          <div id="lineage-hover-tooltip" class="hidden fixed z-50 pointer-events-none max-w-xs rounded-xl p-3 text-xs bg-[var(--card)] text-[var(--foreground)] border border-[var(--primary)] shadow-xl space-y-1"></div>
-          <div id="lineage-timeline-tracks-wrap" class="relative space-y-2">
-            ${activeTimelineHtml}
-            ${orphanPsCards ? `
-              <div id="lineage-unlinked-prep-group" class="space-y-1.5 pt-3 border-t border-[var(--border)] relative z-10">
-                <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Unlinked Prepared Samples (No Field Sample Record · ${orphanPsList.length})</div>
-                <div class="flex flex-wrap gap-2.5">${orphanPsCards}</div>
-              </div>
-            ` : ''}
-            <svg id="lineage-svg-overlay" class="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style="z-index: 1;"></svg>
+          <div id="overview-lineage-container" class="${isLineageOpen ? 'space-y-4' : 'hidden space-y-4'}">
+            ${providerLegendHtml}
+            <div id="lineage-hover-tooltip" class="hidden fixed z-50 pointer-events-none max-w-xs rounded-xl p-3 text-xs bg-[var(--card)] text-[var(--foreground)] border border-[var(--primary)] shadow-xl space-y-1"></div>
+            <div id="lineage-timeline-tracks-wrap" class="relative space-y-2">
+              ${activeTimelineHtml}
+              ${orphanPsCards ? `
+                <div id="lineage-unlinked-prep-group" class="space-y-1.5 pt-3 border-t border-[var(--border)] relative z-10">
+                  <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Unlinked Prepared Samples (No Field Sample Record · ${orphanPsList.length})</div>
+                  <div class="flex flex-wrap gap-2.5">${orphanPsCards}</div>
+                </div>
+              ` : ''}
+              <svg id="lineage-svg-overlay" class="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style="z-index: 1;"></svg>
+            </div>
           </div>
         </div>
 
@@ -7196,6 +7285,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             ${calRecs.map(r => {
               const sibs = calRecs.filter(x => x.prepared_sample === r.prepared_sample && x.experiment === r.experiment);
+              const cleanCalNote = stripQcAuditAnnotations(r.note);
               return `
               <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-1 text-xs">
                 <div class="flex items-center justify-between font-mono">
@@ -7203,7 +7293,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <span class="flex items-center gap-1.5">${qcBadgeHtml(r.qc_status)} ${buildAuditChipHtml(r, sibs, "⚑ Audit")}</span>
                 </div>
                 <div class="text-[var(--muted-foreground)]">Sample: <span class="font-mono text-[var(--foreground)]">${r.prepared_sample}</span> · Exp: <span class="font-mono">${r.experiment}</span></div>
-                ${r.note ? `<div class="mt-1 p-2 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-[var(--foreground)]">Note: "${r.note}"</div>` : ""}
+                ${cleanCalNote ? `<div class="mt-1 p-2 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-[var(--foreground)]">Note: "${cleanCalNote}"</div>` : ""}
               </div>
             `;
             }).join("")}
@@ -7219,6 +7309,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <div>
                 <h2 class="text-base font-bold text-[var(--foreground)]">Wet-Basis Proximate Mass Balance Closure (${recs.length} Observations)</h2>
                 <p class="text-xs text-[var(--muted-foreground)]">Moisture + Volatile Solids + Ash closure across prepared samples, drying protocols, and collection/prep dates.</p>
+                <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--muted-foreground)] pt-1.5">
+                  <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Moisture (M)</span>
+                  <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>Volatile Solids (VS)</span>
+                  <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Ash</span>
+                </div>
               </div>
               <div class="inline-flex rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5">
                 <button onclick="setSubMode('proxGroupMode', 'exp_method')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'exp_method' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Experiment × Method</button>
@@ -7339,8 +7434,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <h2 class="text-base font-bold text-[var(--foreground)]">Compositional Cell-Wall Characterization (${compRecs.length} Observations)</h2>
               <p class="text-xs text-[var(--muted-foreground)] mt-0.5">Structural polysaccharides and Klason lignin (% dry weight).</p>
             </div>
-            <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4">
-              <div class="flex flex-wrap items-center justify-between text-xs mb-2 gap-2">
+            <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-2">
+              <div class="flex flex-wrap items-center justify-between text-xs gap-2">
                 <span class="font-semibold text-[var(--foreground)]">Dry-Matter Structural Polymer Closure</span>
                 <span class="font-mono text-[var(--muted-foreground)]">Glucan (${fmtNum(gMean)}%) + Xylan (${fmtNum(xMean)}%) + Lignin (${fmtNum(lMean)}%)${aMean ? ' + Arabinan (' + fmtNum(aMean) + '%)' : ''} = <strong>${fmtNum(polySum)}% dw</strong></span>
               </div>
@@ -7349,6 +7444,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                 <div style="width: ${Math.min(100, gMean)}%" class="bg-[var(--secondary)] text-[var(--secondary-foreground)] flex items-center justify-center border-l border-[var(--border)] truncate" title="Glucan: ${fmtNum(gMean)}%">${gMean > 6 ? 'Glu ' + fmtNum(gMean, 1) + '%' : ''}</div>
                 <div style="width: ${Math.min(100, xMean + aMean)}%" class="bg-[var(--accent)] text-[var(--foreground)] flex items-center justify-center border-l border-[var(--border)] truncate" title="Hemicellulose (Xylan+Arabinan): ${fmtNum(xMean + aMean)}%">${(xMean + aMean) > 5 ? 'Xyl ' + fmtNum(xMean + aMean, 1) + '%' : ''}</div>
                 <div style="width: ${Math.min(100, remSum)}%" class="bg-[var(--card)] text-[var(--muted-foreground)] flex items-center justify-center border-l border-[var(--border)] truncate">Ash + Extractives / Protein (${fmtNum(remSum, 1)}%)</div>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--muted-foreground)] pt-0.5">
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Lignin (${fmtNum(lMean, 1)}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>Glucan (${fmtNum(gMean, 1)}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Hemicellulose / Xylan+Arabinan (${fmtNum(xMean + aMean, 1)}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--card)] border border-[var(--border)] inline-block"></span>Ash + Extractives / Protein (${fmtNum(remSum, 1)}%)</span>
               </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">${cardsHtml}</div>
@@ -7718,9 +7819,19 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       state.resource = resName;
       state.prepared_sample = "all";
       state.field_sample = "all";
+      state.overviewLineageExpanded = null;
       initResourceSwitcher();
       initFiltersForResource();
       render({ push: true });
+    };
+
+    window.toggleOverviewLineage = function() {
+      const fsList = getResourceFieldSamples();
+      const currentlyOpen = state.overviewLineageExpanded !== null
+        ? Boolean(state.overviewLineageExpanded)
+        : (fsList.length <= 4);
+      state.overviewLineageExpanded = !currentlyOpen;
+      render();
     };
 
     window.switchTab = function(tabName) {
@@ -8337,6 +8448,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       outliersSearch: { get() { return this.search; }, set(v) { this.search = v; } },
       blindMode: { get() { return this.anonymizeAnalyst; }, set(v) { this.anonymizeAnalyst = Boolean(v); } }
     });
+
+    function stripQcAuditAnnotations(noteStr) {
+      return String(noteStr || "")
+        .replace(/\\s*\\|?\\s*\\[QC_AUDIT\\b[^\\]]*\\]/gi, "")
+        .replace(/^\\s*\\|\\s*|\\s*\\|\\s*$/g, "")
+        .trim();
+    }
+    window.stripQcAuditAnnotations = stripQcAuditAnnotations;
 
     function fmtNum(v, digits = 2) {
       if (v === null || v === undefined || isNaN(v)) return "—";
@@ -9040,7 +9159,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                       <td class="py-2.5 px-3 space-y-1">
                         <div class="flex flex-wrap gap-1">${badges.join("") || '<span class="text-[var(--muted-foreground)]">Pass</span>'}</div>
                         <div>${qcSummary}</div>
-                        ${g.note ? `<div class="text-[11px] font-mono text-[var(--muted-foreground)] italic truncate max-w-[190px]" title="${g.note.replace(/"/g, '&quot;')}">"${g.note}"</div>` : ""}
+                        ${(() => { const cn = stripQcAuditAnnotations(g.note); return cn ? `<div class="text-[11px] font-mono text-[var(--muted-foreground)] italic truncate max-w-[190px]" title="${cn.replace(/"/g, '&quot;')}">"${cn}"</div>` : ""; })()}
                       </td>
                       <td class="py-2.5 px-3 space-y-1.5 min-w-[300px]">
                         <div class="flex items-center gap-1 text-[10px]">
@@ -9199,8 +9318,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function renderNotesSubtab() {
       const notes = getFilteredCuratedNotes();
-      const fsList = (BUNDLE.field_samples || []).filter(fs => fs.resource_name === state.resource && fs.note);
-      const psList = (BUNDLE.prepared_samples || []).filter(ps => ps.resource_name === state.resource && ps.note);
+      const fsList = (BUNDLE.field_samples || []).filter(fs => fs.resource_name === state.resource && stripQcAuditAnnotations(fs.note));
+      const psList = (BUNDLE.prepared_samples || []).filter(ps => ps.resource_name === state.resource && stripQcAuditAnnotations(ps.note));
 
       const toneBadgeClass = tone => {
         if (tone === "danger") return "badge-fail";
@@ -9243,8 +9362,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <div class="space-y-2">
               <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Field &amp; Preparation Lineage Notes (with Collection / Prep Dates &amp; GEOID)</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                ${fsList.map(f => `<div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs"><strong class="font-mono">Field Sample ${f.name}</strong> <span class="font-mono text-[11px] text-[var(--muted-foreground)]">(Col: ${f.collected_at || 'Unrecorded'} · GEOID: ${f.geoid || '—'})</span>: "${f.note}"</div>`).join("")}
-                ${psList.map(p => `<div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs"><strong class="font-mono">Prepared Sample ${p.name}</strong> <span class="font-mono text-[11px] text-[var(--muted-foreground)]">(Prep: ${p.prep_date || 'Unrecorded'})</span>: "${p.note}"</div>`).join("")}
+                ${fsList.map(f => `<div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs"><strong class="font-mono">Field Sample ${f.name}</strong> <span class="font-mono text-[11px] text-[var(--muted-foreground)]">(Col: ${f.collected_at || 'Unrecorded'} · GEOID: ${f.geoid || '—'})</span>: "${stripQcAuditAnnotations(f.note)}"</div>`).join("")}
+                ${psList.map(p => `<div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs"><strong class="font-mono">Prepared Sample ${p.name}</strong> <span class="font-mono text-[11px] text-[var(--muted-foreground)]">(Prep: ${p.prep_date || 'Unrecorded'})</span>: "${stripQcAuditAnnotations(p.note)}"</div>`).join("")}
               </div>
             </div>
           ` : ""}
@@ -9330,7 +9449,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (state.explorerFlagFilter === "flagged") return info && info.isPrimary;
         if (state.explorerFlagFilter === "candidate") return info && info.isPrimary && info.isCandidate;
         if (state.explorerFlagFilter === "suppressed") return info && info.isSuppressed;
-        if (state.explorerFlagFilter === "has_note") return Boolean(r.note);
+        if (state.explorerFlagFilter === "has_note") return Boolean(stripQcAuditAnnotations(r.note));
         if (state.explorerFlagFilter === "reviewed") {
           const entry = DECISIONS_STORE[makeRecordDecisionKey(r.record_id)];
           return Boolean(entry && (entry.decision !== "pending" || (entry.note && entry.note.trim())));
@@ -9341,7 +9460,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const inFlaggedCnt = filtered.filter(r => outlierMap[r.record_id] && outlierMap[r.record_id].isPrimary).length;
       const candCnt = filtered.filter(r => outlierMap[r.record_id] && outlierMap[r.record_id].isPrimary && outlierMap[r.record_id].isCandidate).length;
       const suppCnt = filtered.filter(r => outlierMap[r.record_id] && outlierMap[r.record_id].isSuppressed).length;
-      const noteCnt = filtered.filter(r => Boolean(r.note)).length;
+      const noteCnt = filtered.filter(r => Boolean(stripQcAuditAnnotations(r.note))).length;
       const revCnt = filtered.filter(r => {
         const entry = DECISIONS_STORE[makeRecordDecisionKey(r.record_id)];
         return Boolean(entry && (entry.decision !== "pending" || (entry.note && entry.note.trim())));
@@ -9434,7 +9553,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <td class="py-2 px-2.5 font-mono text-right font-bold">${r.value !== null ? fmtNum(r.value, 3) : '—'} <span class="font-normal text-[10px] text-[var(--muted-foreground)]">${r.unit || ''}</span></td>
             <td class="py-2 px-2.5 text-center whitespace-nowrap">${statCell}</td>
             <td class="py-2 px-2.5 text-center">${qcHtml}</td>
-            <td class="py-2 px-2.5 text-[var(--muted-foreground)] max-w-[160px] truncate" title="${(r.note || '').replace(/"/g, '&quot;')}">${r.note || ''}</td>
+            <td class="py-2 px-2.5 text-[var(--muted-foreground)] max-w-[160px] truncate" title="${stripQcAuditAnnotations(r.note).replace(/"/g, '&quot;')}">${stripQcAuditAnnotations(r.note)}</td>
             <td class="py-2 px-2.5 min-w-[250px] space-y-1">
               <select onchange="handleDecisionChange('${safeKeyAttr}', this.value, '${metaPayload}')" class="w-full rounded px-1.5 py-1 text-[11px] font-semibold border border-[var(--border)]">
                 ${DECISION_OPTIONS.map(o => `<option value="${o.value}" ${dEntry.decision === o.value ? 'selected' : ''}>${o.label}</option>`).join("")}

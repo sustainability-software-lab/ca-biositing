@@ -39,9 +39,13 @@ from ca_biositing.webservice.services.portal_auth import (
     verify_google_id_token,
 )
 from ca_biositing.webservice.services.qc_ledger_service import (
+    GSHEET_SYNC_ELIGIBLE_STATUSES,
+    VALID_QC_PASS_STATES,
     append_or_update_seed_csv,
     export_decisions_to_csv_string,
+    normalize_analysis_domain,
     record_stage1_decision,
+    revert_qc_decision,
     serialize_decision,
 )
 
@@ -267,6 +271,18 @@ def normalize_replicate_group_key(
             return "::".join(slots)
         return "::".join(slots)
 
+    if (
+        raw_key_or_resource is not None
+        and "|" in str(raw_key_or_resource)
+        and "::" not in str(raw_key_or_resource)
+        and prepared_sample is None
+        and analysis_type is None
+        and parameter is None
+        and resource_name is None
+        and parameter_name is None
+    ):
+        return str(raw_key_or_resource).strip()
+
     res_val = (
         resource_name if resource_name is not None else (raw_key_or_resource or "")
     )
@@ -345,6 +361,26 @@ class Stage1DecisionRequest(BaseModel):
     review_note: str = Field(default="")
     audit_note: str | None = Field(default=None)
     assigned_to_email: str | None = Field(default=None)
+    scope: str | None = Field(
+        default=None,
+        description="Optional decision scope: 'group' or 'row'. Defaults to 'group' when multiple record_ids or replicate_group_key are present.",
+    )
+
+
+class RevertDecisionRequest(BaseModel):
+    """Request body for `POST /v1/qc/decisions/{id}/revert`."""
+
+    reason: str = Field(default="Reverted to open review queue")
+    note: str | None = Field(default=None)
+    review_note: str | None = Field(default=None)
+    # Retained for backward-compatible client payloads; revert_qc_decision always restores
+    # each sibling record's true frozen `old_qc_pass` and sets `decision_status = "open"`.
+    revert_to_status: str | None = Field(default=None)
+    sync_to_gsheet: bool = Field(
+        default=False,
+        description="If true and caller is admin and decision was previously synced to Google Sheets, also revert the Google Sheet cell.",
+    )
+    sync_gsheet: bool | None = Field(default=None)
 
 
 class TrayWorkbenchItem(BaseModel):
@@ -400,6 +436,14 @@ class AssignDecisionRequest(BaseModel):
     assigned_to_email: str | None = Field(
         default=None,
         description="Target analyst email, 'me', or None/empty to unassign.",
+    )
+    record_ids: list[str] | None = Field(
+        default=None,
+        description="Optional list of sibling record_ids in the replicate group to assign.",
+    )
+    scope: str | None = Field(
+        default="group",
+        description="Optional assignment scope ('group' or 'row'). Defaults to 'group'.",
     )
 
 
@@ -670,9 +714,14 @@ def _query_filtered_decisions(
         ]
 
     if analysis_type is not None and analysis_type.strip():
-        at_norm = analysis_type.strip().lower()
+        _, query_domain = normalize_analysis_domain(None, analysis_type)
         rows = [
-            r for r in rows if (r.analysis_type or "").strip().lower() == at_norm
+            r
+            for r in rows
+            if normalize_analysis_domain(r.record_table, r.analysis_type)[1]
+            == query_domain
+            or (r.analysis_type or "").strip().lower()
+            == analysis_type.strip().lower()
         ]
 
     if parameter_name is not None and parameter_name.strip():
@@ -778,12 +827,44 @@ def create_or_update_stage1_decision(
     effective_old_qc_pass = (
         payload.old_qc_pass if payload.old_qc_pass is not None else payload.previous_qc_status
     )
-    raw_new_qc_pass = (
-        payload.new_qc_pass if payload.new_qc_pass is not None else payload.new_qc_status
-    )
     effective_new_qc_pass: str | None
-    if raw_new_qc_pass is not None:
-        norm_qc = str(raw_new_qc_pass).strip().lower()
+    if payload.new_qc_pass is not None:
+        norm_qc = str(payload.new_qc_pass).strip().lower()
+        if norm_qc in {"pass", "fail", "provisional", "in_review", "retest"}:
+            effective_new_qc_pass = norm_qc
+        elif norm_qc in {
+            "qc_pass",
+            "keep",
+            "approve_pass",
+            "approve",
+            "keep_pass",
+            "flip_to_pass",
+            "trace_ignore",
+        }:
+            effective_new_qc_pass = "pass"
+        elif norm_qc in {
+            "qc_fail",
+            "exclude_qc_fail",
+            "flag_fail",
+            "reject_fail",
+            "reject",
+            "flip_to_fail",
+        }:
+            effective_new_qc_pass = "fail"
+        elif norm_qc in {
+            "re_assay",
+            "keep_note",
+            "accept_with_note",
+            "pending",
+            "open",
+            "defer",
+            "",
+        }:
+            effective_new_qc_pass = None
+        else:
+            effective_new_qc_pass = payload.new_qc_pass
+    elif payload.new_qc_status is not None:
+        norm_qc = str(payload.new_qc_status).strip().lower()
         if norm_qc in {
             "provisional",
             "in_review",
@@ -820,7 +901,7 @@ def create_or_update_stage1_decision(
         }:
             effective_new_qc_pass = "fail"
         else:
-            effective_new_qc_pass = raw_new_qc_pass
+            effective_new_qc_pass = payload.new_qc_status
     else:
         effective_new_qc_pass = None
 
@@ -855,6 +936,7 @@ def create_or_update_stage1_decision(
         rationale_chips=effective_rationale,
         review_note=effective_note,
         assigned_to_email=assigned,
+        scope=payload.scope,
     )
     serialized = serialize_decision(decision)
     return {
@@ -1004,7 +1086,7 @@ def assign_qc_decision(
     user: AnalystDep,
     session: SessionDep,
 ) -> dict[str, Any]:
-    """Assign or unassign a `QcReviewDecision` to an analyst email."""
+    """Assign or unassign a `QcReviewDecision` (and any replicate-group siblings) to an analyst email."""
     decision = session.get(QcReviewDecision, decision_id)
     if decision is None:
         raise HTTPException(
@@ -1013,22 +1095,65 @@ def assign_qc_decision(
         )
 
     raw_target = (payload.assigned_to_email or "").strip().lower()
+    resolved_assignee: str | None
     if raw_target == "me":
-        decision.assigned_to_email = user.email.lower()
+        resolved_assignee = user.email.lower()
     elif not raw_target or raw_target in {"unassigned", "none", "null"}:
-        decision.assigned_to_email = None
+        resolved_assignee = None
     else:
-        decision.assigned_to_email = raw_target
+        resolved_assignee = raw_target
 
-    decision.updated_at = datetime.now(timezone.utc)
-    session.add(decision)
+    group_decisions: list[QcReviewDecision] = [decision]
+    clean_scope = (payload.scope or "group").strip().lower()
+    if clean_scope not in {"row", "single", "single_record"}:
+        if decision.replicate_group_key and decision.replicate_group_key.strip():
+            siblings = list(
+                session.exec(
+                    select(QcReviewDecision).where(
+                        QcReviewDecision.record_table == decision.record_table,
+                        QcReviewDecision.replicate_group_key
+                        == decision.replicate_group_key,
+                    )
+                ).all()
+            )
+            for sib in siblings:
+                if all(sib.id != d.id for d in group_decisions):
+                    group_decisions.append(sib)
+        if payload.record_ids:
+            norm_rids = [
+                str(r).strip() for r in payload.record_ids if r and str(r).strip()
+            ]
+            if norm_rids:
+                by_rid = list(
+                    session.exec(
+                        select(QcReviewDecision).where(
+                            QcReviewDecision.record_table == decision.record_table,
+                            QcReviewDecision.record_id.in_(norm_rids),
+                        )
+                    ).all()
+                )
+                for sib in by_rid:
+                    if all(sib.id != d.id for d in group_decisions):
+                        group_decisions.append(sib)
+
+    now = datetime.now(timezone.utc)
+    for sib in group_decisions:
+        sib.assigned_to_email = resolved_assignee
+        sib.updated_at = now
+        session.add(sib)
+
     session.commit()
-    session.refresh(decision)
-    append_or_update_seed_csv(decision)
+    for sib in group_decisions:
+        session.refresh(sib)
+        append_or_update_seed_csv(sib)
 
     return {
         "status": "ok",
         "decision": serialize_decision(decision),
+        "decisions": [serialize_decision(d) for d in group_decisions],
+        "updated_decision_ids": [
+            d.id for d in group_decisions if d.id is not None
+        ],
     }
 
 
@@ -1182,6 +1307,7 @@ def assign_qc_decisions_batch(
                 decision_status="in_review",
                 review_note=effective_note or f"Bulk-assigned to {target_email}",
                 assigned_to_email=target_email,
+                scope="row",
             )
             all_db_rows.append(created)
             assigned_decisions.append(created)
@@ -1202,6 +1328,40 @@ def assign_qc_decisions_batch(
         "audit_history": [dict(audit_entry)],
         "decisions": serialized_list,
     }
+
+
+@router.post("/decisions/{decision_id}/revert")
+def revert_qc_decision_endpoint(
+    decision_id: int,
+    user: AnalystDep,
+    session: SessionDep,
+    payload: RevertDecisionRequest | None = Body(default=None),
+) -> dict[str, Any]:
+    """Revert a previously saved QC decision (`analyst` or `admin`) back to `open` and restore `old_qc_pass`."""
+    req = payload or RevertDecisionRequest()
+    reason = (
+        req.review_note
+        or req.note
+        or req.reason
+        or "Reverted to open review queue"
+    ).strip()
+    should_sync = (
+        req.sync_gsheet if req.sync_gsheet is not None else req.sync_to_gsheet
+    )
+    try:
+        return revert_qc_decision(
+            session=session,
+            decision_id=decision_id,
+            actor_email=user.email,
+            reason=reason,
+            sync_to_gsheet=bool(should_sync),
+            is_admin=(user.role == "admin"),
+        )
+    except LookupError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(exc),
+        ) from exc
 
 
 @router.get("/summary")
@@ -1243,7 +1403,10 @@ def get_qc_review_summary(
 
         if r.synced_to_gsheet:
             synced_to_gsheet += 1
-        elif st == "resolved":
+        elif (
+            st in GSHEET_SYNC_ELIGIBLE_STATUSES
+            and (r.new_qc_pass or "").strip().lower() in VALID_QC_PASS_STATES
+        ):
             pending_gsheet_sync += 1
 
     return {

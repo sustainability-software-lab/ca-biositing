@@ -488,9 +488,9 @@ def compute_dataset_outlier_screening(
         qc_mixed = bool(qc_pass_cnt > 0 and qc_fail_cnt > 0)
 
         notes_uniq = list(dict.fromkeys(
-            (x.get("note") or "").strip()
+            strip_qc_audit_annotations(x.get("note"))
             for x in obs_sorted
-            if (x.get("note") or "").strip()
+            if strip_qc_audit_annotations(x.get("note"))
         ))
 
         tab_resolved = (
@@ -873,9 +873,23 @@ _NOTE_SPELLING_FIXES: tuple[tuple[str, str], ...] = (
 )
 
 
+_QC_AUDIT_TAG_RE = re.compile(r"\s*\|?\s*\[QC_AUDIT\b[^\]]*\]", re.IGNORECASE)
+
+
+def strip_qc_audit_annotations(text: str | None) -> str:
+    """Remove all `[QC_AUDIT ...]` audit tags and clean leading/trailing pipe separators."""
+    if not text:
+        return ""
+    cleaned = _QC_AUDIT_TAG_RE.sub("", str(text))
+    cleaned = re.sub(r"^\s*\|\s*|\s*\|\s*$", "", cleaned).strip()
+    return cleaned
+
+
 def _clean_note_spelling(text: str) -> str:
     """Normalize common bench-note spelling typos before emitting curated insights."""
-    out = text
+    out = strip_qc_audit_annotations(text)
+    if not out:
+        return ""
     for bad, good in _NOTE_SPELLING_FIXES:
         out = out.replace(bad, good)
     return out

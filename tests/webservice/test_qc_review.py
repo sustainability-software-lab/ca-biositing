@@ -17,12 +17,15 @@ from ca_biositing.datamodels.models.aim1_records.proximate_record import (
 from ca_biositing.datamodels.models.qc.qc_review_decision import QcReviewDecision
 from ca_biositing.webservice.config import config
 from ca_biositing.webservice.main import app
+from ca_biositing.webservice.services import gsheet_sync_service
 from ca_biositing.webservice.services.gsheet_sync_service import (
     clear_worksheet_row_state,
     get_gsheet_custom_writer,
     get_worksheet_row_state,
 )
 from ca_biositing.webservice.services.qc_ledger_service import (
+    ANALYSIS_DOMAIN_REGISTRY,
+    normalize_analysis_domain,
     read_seed_csv,
     sync_seed_csv_to_db,
 )
@@ -234,11 +237,11 @@ def test_tray_to_workbench_assignment_queues_and_csv_export(
     assert mine_resp.status_code == 200
     assert mine_resp.json()["count"] == 2
 
-    # Unassign one decision via PATCH /v1/qc/decisions/{id}/assign
+    # Unassign one decision via PATCH /v1/qc/decisions/{id}/assign (row-scoped)
     first_id = tray_body["decision_ids"][0]
     assign_resp = client.patch(
         f"/v1/qc/decisions/{first_id}/assign",
-        json={"assigned_to_email": None},
+        json={"assigned_to_email": None, "scope": "row"},
     )
     assert assign_resp.status_code == 200
     assert assign_resp.json()["decision"]["assigned_to_email"] is None
@@ -375,7 +378,7 @@ def test_stage2_gsheet_sync_rbac_idempotency_and_re_edit_reset(
     assert re_edit_resp.status_code == 200
     re_edited = re_edit_resp.json()["decision"]
     assert re_edited["new_qc_pass"] == "pass"
-    assert re_edited["old_qc_pass"] == "fail"
+    assert re_edited["old_qc_pass"] == "pass"
     assert re_edited["synced_to_gsheet"] is False
     assert re_edited["gsheet_synced_at"] is None
 
@@ -1317,3 +1320,549 @@ def test_seed_csv_readonly_fallback_and_naive_datetime_gsheet_sync(
     assert err_json["status"] == "error"
     assert err_json["synced_to_gsheet"] is False
     assert "Simulated unexpected Google Drive API crash" in err_json["sync_error"]
+
+
+def test_replicate_group_fanout_and_row_scope_and_five_state_qc_pass(
+    client: TestClient,
+    sqlite_engine,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify replicate-group Stage 1 decision fan-out across all sibling rows, row-scope override, and 5-state qc_pass taxonomy."""
+    _seed_proximate_records(sqlite_engine)
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov"},
+    )
+
+    # 1. Seed 3 open sibling rows via tray-to-workbench sharing replicate_group_key
+    group_key = "almond_shells|proximate|ash|AS-PS-01"
+    tray_resp = client.post(
+        "/v1/qc/tray-to-workbench",
+        json={
+            "record_table": "proximate_record",
+            "record_ids": ["PROX-AS-01", "PROX-AS-02", "PROX-AS-03"],
+            "replicate_group_key": group_key,
+            "resource_name": "almond shells",
+            "analysis_type": "Proximate Analysis",
+            "parameter_name": "ash",
+            "flag_type": "rsd_gt_10",
+        },
+    )
+    assert tray_resp.status_code == 200
+    decision_ids = tray_resp.json()["decision_ids"]
+    assert len(decision_ids) == 3
+
+    # 2. Submit a group-scoped Stage 1 decision (mark_retest -> new_qc_pass='retest', status='needs_retest')
+    group_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "decision_id": decision_ids[0],
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "record_ids": ["PROX-AS-01", "PROX-AS-02", "PROX-AS-03"],
+            "replicate_group_key": group_key,
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "ash",
+            "decision_action": "mark_retest",
+            "review_note": "Retest all three ash replicates",
+            "scope": "group",
+        },
+    )
+    assert group_resp.status_code == 200
+    group_data = group_resp.json()
+    assert set(group_data["updated_record_ids"]) == {
+        "PROX-AS-01",
+        "PROX-AS-02",
+        "PROX-AS-03",
+    }
+    assert group_data["decision"]["new_qc_pass"] == "retest"
+    assert group_data["decision"]["decision_status"] == "needs_retest"
+
+    # Verify all 3 ProximateRecord rows in DB and all 3 QcReviewDecision rows updated
+    with Session(sqlite_engine) as session:
+        for rid in ["PROX-AS-01", "PROX-AS-02", "PROX-AS-03"]:
+            rec = session.exec(
+                select(ProximateRecord).where(ProximateRecord.record_id == rid)
+            ).first()
+            assert rec is not None
+            assert rec.qc_pass == "retest"
+            dec = session.exec(
+                select(QcReviewDecision).where(QcReviewDecision.record_id == rid)
+            ).first()
+            assert dec is not None
+            assert dec.new_qc_pass == "retest"
+            assert dec.decision_status == "needs_retest"
+            assert dec.old_qc_pass == "pass"
+
+    # Verify seed CSV contains all 3 updated rows
+    seed_csv_path = tmp_path / "qc_review_decisions_seed.csv"
+    csv_rows = read_seed_csv(seed_csv_path)
+    assert len(csv_rows) == 3
+    assert {r["new_qc_pass"] for r in csv_rows} == {"retest"}
+
+    # Verify /v1/qc/summary counts needs_retest with valid new_qc_pass in pending_gsheet_sync_count
+    summary_resp = client.get("/v1/qc/summary")
+    assert summary_resp.status_code == 200
+    assert summary_resp.json()["pending_gsheet_sync_count"] == 3
+
+    # 3. Submit a row-scoped decision on PROX-AS-02 only (scope='row', provisional)
+    row_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "decision_id": decision_ids[1],
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-02",
+            "replicate_group_key": group_key,
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "ash",
+            "decision_action": "approve_provisional",
+            "review_note": "Single replicate PROX-AS-02 acceptable as provisional",
+            "scope": "row",
+        },
+    )
+    assert row_resp.status_code == 200
+    assert row_resp.json()["updated_record_ids"] == ["PROX-AS-02"]
+
+    with Session(sqlite_engine) as session:
+        rec1 = session.exec(
+            select(ProximateRecord).where(ProximateRecord.record_id == "PROX-AS-01")
+        ).first()
+        rec2 = session.exec(
+            select(ProximateRecord).where(ProximateRecord.record_id == "PROX-AS-02")
+        ).first()
+        rec3 = session.exec(
+            select(ProximateRecord).where(ProximateRecord.record_id == "PROX-AS-03")
+        ).first()
+        assert rec1 is not None and rec1.qc_pass == "retest"
+        assert rec2 is not None and rec2.qc_pass == "provisional"
+        assert rec3 is not None and rec3.qc_pass == "retest"
+
+    # 4. Admin Stage 2 single sync on group decision syncs all 3 group members when back in group state
+    client.post(
+        "/v1/qc/decisions",
+        json={
+            "decision_id": decision_ids[0],
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "record_ids": ["PROX-AS-01", "PROX-AS-02", "PROX-AS-03"],
+            "replicate_group_key": group_key,
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "ash",
+            "decision_action": "flag_for_review",
+            "new_qc_pass": "in_review",
+            "decision_status": "in_review",
+            "review_note": "Hold group in_review",
+            "scope": "group",
+        },
+    )
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "qa.admin@lbl.gov"},
+    )
+    monkeypatch.setenv("BIOSITING_GSHEET_DRY_RUN", "1")
+    sync_resp = client.post(f"/v1/qc/decisions/{decision_ids[0]}/sync-gsheet")
+    assert sync_resp.status_code == 200
+    sync_body = sync_resp.json()
+    assert sync_body["writeback_status"] == "synced"
+    assert sync_body["synced_to_gsheet"] is True
+    assert set(sync_body["updated_record_ids"]) == {
+        "PROX-AS-01",
+        "PROX-AS-02",
+        "PROX-AS-03",
+    }
+    with Session(sqlite_engine) as session:
+        for rid in ["PROX-AS-01", "PROX-AS-02", "PROX-AS-03"]:
+            dec = session.exec(
+                select(QcReviewDecision).where(QcReviewDecision.record_id == rid)
+            ).first()
+            assert dec is not None
+            assert dec.synced_to_gsheet is True
+
+
+def test_stage2_gsheet_writeback_status_gates_synced_to_gsheet(
+    client: TestClient,
+    sqlite_engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify synced_to_gsheet remains False when Google Sheets writeback returns 'skipped' or 'not_found' (Review B3)."""
+    _seed_proximate_records(sqlite_engine)
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov"},
+    )
+    create_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "moisture",
+            "decision_action": "reject_fail",
+            "new_qc_pass": "fail",
+            "review_note": "Outlier fail",
+        },
+    )
+    assert create_resp.status_code == 200
+    decision_id = create_resp.json()["decision"]["id"]
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "qa.admin@lbl.gov"},
+    )
+
+    # Case 1: Both gspread and googleapiclient return 'skipped' (e.g. missing credentials)
+    monkeypatch.setattr(
+        gsheet_sync_service,
+        "_sync_via_gspread_if_configured",
+        lambda **kwargs: {
+            "writeback_status": "skipped",
+            "updated_record_ids": [],
+            "reason": "CREDENTIALS_PATH missing",
+        },
+    )
+    monkeypatch.setattr(
+        gsheet_sync_service,
+        "_sync_via_googleapiclient",
+        lambda **kwargs: {
+            "writeback_status": "skipped",
+            "updated_record_ids": [],
+            "reason": "No worksheet_id configured",
+        },
+    )
+
+    skip_resp = client.post(f"/v1/qc/decisions/{decision_id}/sync-gsheet")
+    assert skip_resp.status_code == 200
+    skip_body = skip_resp.json()
+    assert skip_body["writeback_status"] == "skipped"
+    assert skip_body["synced_to_gsheet"] is False
+    assert skip_body["gsheet_synced_at"] is None
+
+    # Case 2: Live writer returns 'not_found' when record_id is absent from worksheet
+    monkeypatch.setattr(
+        gsheet_sync_service,
+        "_sync_via_gspread_if_configured",
+        lambda **kwargs: {
+            "writeback_status": "not_found",
+            "updated_record_ids": [],
+            "reason": "record_ids not found in worksheet",
+        },
+    )
+    not_found_resp = client.post(f"/v1/qc/decisions/{decision_id}/sync-gsheet")
+    assert not_found_resp.status_code == 200
+    nf_body = not_found_resp.json()
+    assert nf_body["writeback_status"] == "not_found"
+    assert nf_body["synced_to_gsheet"] is False
+    assert nf_body["gsheet_synced_at"] is None
+
+    # Batch sync also gates synced_count on writeback_status == 'synced'
+    batch_nf = client.post("/v1/qc/decisions/sync-gsheet-batch")
+    assert batch_nf.status_code == 200
+    assert batch_nf.json()["synced_count"] == 0
+    assert batch_nf.json()["skipped_count"] == 1
+
+
+def test_freeze_old_qc_pass_and_revert_endpoint_including_null_qc_pass(
+    client: TestClient,
+    sqlite_engine,
+) -> None:
+    """Verify old_qc_pass stays frozen across multiple edits and POST /v1/qc/decisions/{id}/revert restores NULL or prior qc_pass (Review B4, B5, B6)."""
+    with Session(sqlite_engine) as session:
+        session.add(
+            ProximateRecord(
+                record_id="PROX-NULL-01",
+                qc_pass=None,
+                note="Original raw lab note",
+            )
+        )
+        session.commit()
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov"},
+    )
+
+    # 1. First edit on record whose original qc_pass is None (NULL): fail
+    r1 = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-NULL-01",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "moisture",
+            "decision_action": "reject_fail",
+            "new_qc_pass": "fail",
+            "review_note": "First override to fail",
+        },
+    )
+    assert r1.status_code == 200
+    d1 = r1.json()["decision"]
+    decision_id = d1["id"]
+    assert d1["old_qc_pass"] is None
+    assert d1["new_qc_pass"] == "fail"
+
+    # 2. Second edit on same decision: provisional -> old_qc_pass MUST remain None (not 'fail')
+    r2 = client.post(
+        "/v1/qc/decisions",
+        json={
+            "decision_id": decision_id,
+            "record_table": "proximate_record",
+            "record_id": "PROX-NULL-01",
+            "resource_name": "almond shells",
+            "analysis_type": "proximate",
+            "parameter_name": "moisture",
+            "decision_action": "approve_provisional",
+            "new_qc_pass": "provisional",
+            "review_note": "Second override to provisional",
+        },
+    )
+    assert r2.status_code == 200
+    d2 = r2.json()["decision"]
+    assert d2["old_qc_pass"] is None
+    assert d2["new_qc_pass"] == "provisional"
+
+    # 3. Revert decision via POST /v1/qc/decisions/{id}/revert
+    rev_resp = client.post(
+        f"/v1/qc/decisions/{decision_id}/revert",
+        json={"note": "Undoing accidental override"},
+    )
+    assert rev_resp.status_code == 200
+    rev_body = rev_resp.json()
+    assert rev_body["status"] == "ok"
+    assert rev_body["reverted_record_ids"] == ["PROX-NULL-01"]
+    rev_dec = rev_body["decision"]
+    assert rev_dec["decision_status"] == "open"
+    assert rev_dec["new_qc_pass"] is None
+    assert rev_dec["old_qc_pass"] is None
+    assert rev_dec["resolved_by_email"] is None
+    assert rev_dec["resolved_at"] is None
+    assert rev_dec["synced_to_gsheet"] is False
+    assert "[Reverted by analyst1@lbl.gov" in rev_dec["review_note"]
+
+    # Verify analytical ProximateRecord in DB has qc_pass restored to None (NULL) and revert audit note recorded
+    with Session(sqlite_engine) as session:
+        rec = session.exec(
+            select(ProximateRecord).where(ProximateRecord.record_id == "PROX-NULL-01")
+        ).first()
+        assert rec is not None
+        assert rec.qc_pass is None
+        assert "Reverted: Undoing accidental override" in (rec.note or "")
+
+
+def test_unified_analysis_domain_registry_and_query_filtering(
+    client: TestClient,
+    sqlite_engine,
+) -> None:
+    """Verify ANALYSIS_DOMAIN_REGISTRY, normalize_analysis_domain, and /v1/qc/decisions?analysis_type=... alias matching (Work Card 3)."""
+    _seed_proximate_records(sqlite_engine)
+
+    # Verify registry canonical mappings across Aim 1 and Aim 2 aliases
+    assert normalize_analysis_domain(None, "Proximate Analysis") == (
+        "proximate_record",
+        "Proximate Analysis",
+    )
+    assert normalize_analysis_domain("proximate_record", None) == (
+        "proximate_record",
+        "Proximate Analysis",
+    )
+    assert normalize_analysis_domain(None, "Ultimate Analysis") == (
+        "ultimate_record",
+        "Ultimate Analysis",
+    )
+    assert normalize_analysis_domain(None, "Compositional Analysis") == (
+        "compositional_record",
+        "Compositional Analysis",
+    )
+    assert normalize_analysis_domain(None, "FT-IR") == (
+        "ftnir_record",
+        "FT-NIR",
+    )
+    assert len(ANALYSIS_DOMAIN_REGISTRY) >= 12
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov"},
+    )
+    client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "resource_name": "almond shells",
+            "analysis_type": "Proximate Analysis",
+            "parameter_name": "moisture",
+            "decision_action": "approve_pass",
+            "new_qc_pass": "pass",
+        },
+    )
+
+    # Querying by short slug 'proximate' or human label 'Proximate Analysis' both match
+    q_slug = client.get("/v1/qc/decisions", params={"analysis_type": "proximate"})
+    assert q_slug.status_code == 200
+    assert q_slug.json()["count"] == 1
+
+    q_label = client.get(
+        "/v1/qc/decisions", params={"analysis_type": "Proximate Analysis"}
+    )
+    assert q_label.status_code == 200
+    assert q_label.json()["count"] == 1
+
+
+def test_partial_gsheet_group_sync_marks_only_matched_siblings_and_keeps_group_pending(
+    client: TestClient,
+    sqlite_engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Verify partial GSheet match (2 of 3 sibling record_ids found) only marks matched siblings synced and returns synced_to_gsheet=False with missing_record_ids."""
+    _seed_proximate_records(sqlite_engine)
+
+    # Admin login
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "qa.admin@lbl.gov"},
+    )
+
+    # Create a 3-sibling replicate group decision
+    stage1_resp = client.post(
+        "/v1/qc/decisions",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "record_ids": ["PROX-AS-01", "PROX-AS-02", "PROX-AS-03"],
+            "replicate_group_key": "proximate|almond shells|AS-PREP-01|moisture",
+            "resource_name": "almond shells",
+            "analysis_type": "Proximate Analysis",
+            "parameter_name": "moisture",
+            "decision_action": "flag_fail",
+            "new_qc_pass": "fail",
+            "scope": "group",
+        },
+    )
+    assert stage1_resp.status_code == 200
+    rep_decision_id = stage1_resp.json()["decision"]["id"]
+
+    # Simulate GSheet matching only 2 of the 3 sibling record_ids (PROX-AS-03 missing from worksheet)
+    from ca_biositing.webservice.services import gsheet_sync_service
+
+    monkeypatch.setattr(
+        gsheet_sync_service,
+        "_sync_via_gspread_if_configured",
+        lambda **kwargs: {
+            "writeback_status": "synced",
+            "updated_record_ids": ["PROX-AS-01", "PROX-AS-02"],
+            "reason": None,
+        },
+    )
+
+    sync_resp = client.post(f"/v1/qc/decisions/{rep_decision_id}/sync-gsheet")
+    assert sync_resp.status_code == 200
+    body = sync_resp.json()
+
+    assert body["synced_to_gsheet"] is False
+    assert body["partially_synced"] is True
+    assert body["writeback_status"] == "partial_sync"
+    assert set(body["updated_record_ids"]) == {"PROX-AS-01", "PROX-AS-02"}
+    assert body["missing_record_ids"] == ["PROX-AS-03"]
+    assert "PROX-AS-03" in (body["reason"] or "")
+    assert len(body["synced_decision_ids"]) == 2
+    assert len(body["unsynced_decision_ids"]) == 1
+
+    # Verify DB rows: PROX-AS-01 and PROX-AS-02 have synced_to_gsheet=True, PROX-AS-03 has synced_to_gsheet=False
+    with Session(sqlite_engine) as session:
+        rows = list(
+            session.exec(
+                select(QcReviewDecision).where(
+                    QcReviewDecision.replicate_group_key
+                    == "proximate|almond shells|AS-PREP-01|moisture"
+                )
+            ).all()
+        )
+        by_rid = {r.record_id: r for r in rows}
+        assert by_rid["PROX-AS-01"].synced_to_gsheet is True
+        assert by_rid["PROX-AS-02"].synced_to_gsheet is True
+        assert by_rid["PROX-AS-03"].synced_to_gsheet is False
+
+
+def test_assign_qc_decision_fans_out_to_replicate_group_siblings_and_respects_row_scope(
+    client: TestClient,
+    sqlite_engine,
+) -> None:
+    """Verify PATCH /v1/qc/decisions/{id}/assign fans out assigned_to_email to all siblings by default and respects scope='row'."""
+    _seed_proximate_records(sqlite_engine)
+
+    client.post(
+        "/v1/qc/auth/dev-login",
+        json={"email": "analyst1@lbl.gov"},
+    )
+
+    # Seed 3 sibling open rows via tray-to-workbench
+    tray_resp = client.post(
+        "/v1/qc/tray-to-workbench",
+        json={
+            "record_table": "proximate_record",
+            "record_id": "PROX-AS-01",
+            "record_ids": ["PROX-AS-01", "PROX-AS-02", "PROX-AS-03"],
+            "replicate_group_key": "proximate|almond shells|AS-PREP-01|moisture",
+            "resource_name": "almond shells",
+            "analysis_type": "Proximate Analysis",
+            "parameter_name": "moisture",
+        },
+    )
+    assert tray_resp.status_code == 200
+    rep_id = tray_resp.json()["decisions"][0]["id"]
+
+    # 1. Default group-scoped assignment fans out to all 3 siblings
+    assign_group_resp = client.patch(
+        f"/v1/qc/decisions/{rep_id}/assign",
+        json={"assigned_to_email": "me"},
+    )
+    assert assign_group_resp.status_code == 200
+    assign_body = assign_group_resp.json()
+    assert len(assign_body["updated_decision_ids"]) == 3
+    assert all(
+        d["assigned_to_email"] == "analyst1@lbl.gov"
+        for d in assign_body["decisions"]
+    )
+
+    with Session(sqlite_engine) as session:
+        rows = list(
+            session.exec(
+                select(QcReviewDecision).where(
+                    QcReviewDecision.replicate_group_key
+                    == "proximate|almond shells|AS-PREP-01|moisture"
+                )
+            ).all()
+        )
+        assert len(rows) == 3
+        assert all(r.assigned_to_email == "analyst1@lbl.gov" for r in rows)
+
+    # 2. Row-scoped assignment updates only the targeted decision row
+    assign_row_resp = client.patch(
+        f"/v1/qc/decisions/{rep_id}/assign",
+        json={"assigned_to_email": "analyst2@ucdavis.edu", "scope": "row"},
+    )
+    assert assign_row_resp.status_code == 200
+    assert assign_row_resp.json()["updated_decision_ids"] == [rep_id]
+
+    with Session(sqlite_engine) as session:
+        rows = list(
+            session.exec(
+                select(QcReviewDecision).where(
+                    QcReviewDecision.replicate_group_key
+                    == "proximate|almond shells|AS-PREP-01|moisture"
+                )
+            ).all()
+        )
+        by_id = {r.id: r for r in rows}
+        assert by_id[rep_id].assigned_to_email == "analyst2@ucdavis.edu"
+        other_assignees = [
+            r.assigned_to_email for r in rows if r.id != rep_id
+        ]
+        assert other_assignees == ["analyst1@lbl.gov", "analyst1@lbl.gov"]

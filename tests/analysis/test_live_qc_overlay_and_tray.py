@@ -26,6 +26,7 @@ from analysis.metadata.resource_explorer_dashboard import (  # noqa: E402
 )
 from analysis.metadata.resource_insights_engine import (  # noqa: E402
     build_resource_insights,
+    strip_qc_audit_annotations,
 )
 
 SNAPSHOT_PATH = REPO_ROOT / "tests/fixtures/minimal_dashboard_snapshot.json"
@@ -1012,8 +1013,9 @@ def test_card5a_default_in_review_status_and_assignee_persistence(
     assert "assigned_to_email: cleanAssignee" in page3_html
 
     wb_sel = re.search(
-        r'<select id="select-decision-action"[^>]*>\s*<option value="([^"]+)" selected>',
+        r'<select id="select-decision-action"[^>]*>.*?<option value="([^"]+)" selected>',
         wb_html,
+        re.S,
     )
     assert wb_sel and wb_sel.group(1) == "in_review"
 
@@ -2208,3 +2210,87 @@ global.fetch = async (url) => {
         == "FS: AH-FS-01 -> PS: AH-PS-01 (Oven 105C)"
     )
     assert "Page 1" in out_p1["subDecision"]["source_label"]
+
+
+def test_strip_qc_audit_annotations_and_pre_deduplication_note_mining() -> None:
+    """Checklist #5 & #6 (WC6 / Review B7): strip [QC_AUDIT ...] before deduplication & handle multi-tags."""
+    # Checklist #6: Multiple [QC_AUDIT ...] tags on a single note & pure [QC_AUDIT ...] note
+    multi_tagged = (
+        "Crucible weighed warm | [QC_AUDIT id=1 qc=fail by=a@lbl.gov at=2026-10-29T10:00Z chips=rsd_gt_10: High RSD] "
+        "| [QC_AUDIT id=2 qc=provisional by=b@lbl.gov at=2026-10-29T11:00Z chips=none: Re-checked]"
+    )
+    assert strip_qc_audit_annotations(multi_tagged) == "Crucible weighed warm"
+
+    only_audit_tags = (
+        "[QC_AUDIT id=10 qc=fail by=a@lbl.gov at=2026-10-29T10:00Z chips=iqr_outlier: Outlier] | "
+        "[QC_AUDIT id=11 qc=pass by=b@lbl.gov at=2026-10-29T12:00Z chips=none: Reverted]"
+    )
+    assert strip_qc_audit_annotations(only_audit_tags) == ""
+
+    # Checklist #5: Two records sharing identical bench note + distinct [QC_AUDIT ...] suffixes deduplicate into count=2
+    payload = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    note_col_idx = payload["str_cols"].index("note") + 1
+    atype_col_idx = payload["str_cols"].index("analysis_type") + 1
+    res_col_idx = payload["str_cols"].index("resource_name") + 1
+
+    note_1 = "Crucible weighed warm | [QC_AUDIT id=1 qc=fail by=a@lbl.gov at=2026-10-29T10:00Z chips=rsd_gt_10: Outlier 1]"
+    note_2 = "Crucible weighed warm | [QC_AUDIT id=2 qc=fail by=a@lbl.gov at=2026-10-29T11:00Z chips=rsd_gt_10: Outlier 2]"
+    idx_1 = len(payload["dicts"]["note"])
+    payload["dicts"]["note"].append(note_1)
+    idx_2 = len(payload["dicts"]["note"])
+    payload["dicts"]["note"].append(note_2)
+    idx_3 = len(payload["dicts"]["note"])
+    payload["dicts"]["note"].append(only_audit_tags)
+
+    almond_idx = payload["dicts"]["resource_name"].index("Almond Hulls")
+    prox_idx = payload["dicts"]["analysis_type"].index("Proximate Analysis")
+    base_row = list(payload["rows"][0])
+    row_a = list(base_row)
+    row_a[0] = "PROX-DEDUP-01"
+    row_a[res_col_idx] = almond_idx
+    row_a[atype_col_idx] = prox_idx
+    row_a[note_col_idx] = idx_1
+
+    row_b = list(base_row)
+    row_b[0] = "PROX-DEDUP-02"
+    row_b[res_col_idx] = almond_idx
+    row_b[atype_col_idx] = prox_idx
+    row_b[note_col_idx] = idx_2
+
+    row_c = list(base_row)
+    row_c[0] = "PROX-PURE-AUDIT-03"
+    row_c[res_col_idx] = almond_idx
+    row_c[atype_col_idx] = prox_idx
+    row_c[note_col_idx] = idx_3
+
+    payload["rows"].extend([row_a, row_b, row_c])
+    insights = build_resource_insights(payload)
+    almond_notes = insights["resources"]["Almond Hulls"]["curated_notes"]
+    warm_notes = [n for n in almond_notes if n["note_text"] == "Crucible weighed warm"]
+    assert len(warm_notes) == 1
+    assert warm_notes[0]["count"] == 2
+    assert set(warm_notes[0]["record_ids"]) == {"PROX-DEDUP-01", "PROX-DEDUP-02"}
+    assert not any("[QC_AUDIT" in n["note_text"] for n in almond_notes)
+
+
+def test_revert_decision_client_contract_and_ui_decluttering(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    """Checklist #7 (B4) & WC7: revertDecision omits hardcoded revert_to_status:'pass' and Explorer/Overview UI controls exist."""
+    page1 = snapshot_and_pages["page1"]
+    page3 = snapshot_and_pages["page3"]
+
+    # Checklist #7 (B4): revertDecision does not hardcode revert_to_status: "pass"
+    assert 'revert_to_status: "pass"' not in SHARED_SLICE_AND_BUG_MODALS_JS
+    assert "sync_to_gsheet: true" in SHARED_SLICE_AND_BUG_MODALS_JS
+
+    # WC6 & WC7 in Page 1 (Characterization Dashboard)
+    assert "function stripQcAuditAnnotations" in page1
+    assert "toggleOverviewLineage" in page1
+    assert "btn-toggle-overview-lineage" in page1
+
+    # WC7 in Page 3 (Multi-Resource Explorer)
+    assert 'id="btn-toggle-checklist-drawer"' in page3
+    assert "setXAxisGroupingMode" in page3
+    assert "resource_qc_outlier_dashboard.html" in page3
+    assert "resource_qc_audit_workbench.html" in page3
