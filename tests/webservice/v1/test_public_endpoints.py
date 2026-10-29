@@ -429,7 +429,8 @@ def test_public_resources_list_and_lookup_without_auth(
     assert len(body["data"]) == 1
 
     res = body["data"][0]
-    assert res["resource_id"] == 100
+    assert "id" not in res
+    assert "resource_id" not in res
     assert res["resource_name"] == "almond_hulls"
     assert res["resource_code"] == "ALM-01"
     assert res["field_sample_count"] == 1
@@ -444,20 +445,15 @@ def test_public_resources_list_and_lookup_without_auth(
     assert res["has_icp"] is True
     assert res["has_xrf"] is True
 
-    # Lookup by integer ID
-    resp_id = public_client.get("/v1/public/resources/100")
-    assert resp_id.status_code == 200
-    assert resp_id.json()["resource_name"] == "almond_hulls"
-
     # Lookup by string name (case-insensitive)
     resp_name = public_client.get("/v1/public/resources/ALMOND_HULLS")
     assert resp_name.status_code == 200
-    assert resp_name.json()["resource_id"] == 100
+    assert resp_name.json()["resource_name"] == "almond_hulls"
 
     # Lookup by resource_code
     resp_code = public_client.get("/v1/public/resources/ALM-01")
     assert resp_code.status_code == 200
-    assert resp_code.json()["resource_id"] == 100
+    assert resp_code.json()["resource_name"] == "almond_hulls"
 
     # Excluded resource 'sargassum' must return 404
     resp_sarg = public_client.get("/v1/public/resources/sargassum")
@@ -473,7 +469,11 @@ def test_public_samples_no_fanout_and_detail(
     body = resp.json()
     assert body["total"] == 1
     sample = body["data"][0]
-    assert sample["prepared_sample_id"] == 100
+    assert "id" not in sample
+    assert "prepared_sample_id" not in sample
+    assert "field_sample_id" not in sample
+    assert sample["prepared_sample_name"] == "PS-ALM-100"
+    assert sample["field_sample_name"] == "FS-ALM-100"
     assert sample["provider_codename"] == "PROV-ALPHA"
     assert sample["county_name"] == "Yolo"
     assert sample["ag_treatment_name"] == "Conventional; Irrigated"
@@ -482,13 +482,22 @@ def test_public_samples_no_fanout_and_detail(
     assert sample["replicate_record_count"] == 6
     assert sample["observation_count"] == 10
 
-    # Single sample lookup
-    resp_detail = public_client.get("/v1/public/samples/100")
+    # Single sample lookup by prepared_sample_name
+    resp_detail = public_client.get("/v1/public/samples/PS-ALM-100")
     assert resp_detail.status_code == 200
     assert resp_detail.json()["prepared_sample_name"] == "PS-ALM-100"
 
+    # Sample summary sub-route by prepared_sample_name
+    resp_sub_summary = public_client.get(
+        "/v1/public/samples/PS-ALM-100/summary",
+        params={"parameter_name": "ash"},
+    )
+    assert resp_sub_summary.status_code == 200
+    assert resp_sub_summary.json()["total"] == 1
+    assert resp_sub_summary.json()["data"][0]["mean_value"] == pytest.approx(12.0)
+
     # Nonexistent sample returns 404
-    assert public_client.get("/v1/public/samples/999").status_code == 404
+    assert public_client.get("/v1/public/samples/PS-NONEXISTENT").status_code == 404
 
 
 def test_public_observations_and_filters(
@@ -500,10 +509,15 @@ def test_public_observations_and_filters(
     body = resp.json()
     assert body["total"] == 10
 
-    # Filter by analysis_type and parameter_name
+    # Filter by analysis_type, parameter_name, and prepared_sample_name
     resp_ash = public_client.get(
         "/v1/public/analysis/observations",
-        params={"analysis_type": "proximate analysis", "parameter_name": "ash"},
+        params={
+            "analysis_type": "proximate analysis",
+            "parameter_name": "ash",
+            "prepared_sample_name": "PS-ALM-100",
+            "field_sample_name": "FS-ALM-100",
+        },
     )
     assert resp_ash.status_code == 200
     ash_data = resp_ash.json()["data"]
@@ -526,13 +540,13 @@ def test_public_sample_summaries_and_resource_summaries(
     """Verify replicate averaging in /sample-summaries and /summaries including std_dev."""
     resp_ss = public_client.get(
         "/v1/public/analysis/sample-summaries",
-        params={"parameter_name": "ash"},
+        params={"parameter_name": "ash", "prepared_sample_name": "PS-ALM-100"},
     )
     assert resp_ss.status_code == 200
     ss_rows = resp_ss.json()["data"]
     assert len(ss_rows) == 1
     ss = ss_rows[0]
-    assert ss["prepared_sample_id"] == 100
+    assert ss["prepared_sample_name"] == "PS-ALM-100"
     assert ss["mean_value"] == pytest.approx(12.0)
     assert ss["std_dev"] == pytest.approx(2.8284, rel=1e-3)
     assert ss["min_value"] == pytest.approx(10.0)
@@ -796,3 +810,33 @@ def test_public_responses_contain_no_sensitive_or_excluded_strings(
             assert forbidden not in raw_text, (
                 f"Forbidden substring '{forbidden}' leaked in {ep}"
             )
+
+
+def test_public_responses_expose_no_surrogate_database_id_fields(
+    public_client: TestClient, seeded_public_data
+):
+    """Verify no internal database integer ID fields appear in any /v1/public JSON payload."""
+    forbidden_id_keys = {
+        "id",
+        "observation_id",
+        "resource_id",
+        "prepared_sample_id",
+        "field_sample_id",
+        "experiment_id",
+        "raw_data_id",
+    }
+    paginated_endpoints = [
+        "/v1/public/resources",
+        "/v1/public/samples",
+        "/v1/public/analysis/observations",
+        "/v1/public/analysis/sample-summaries",
+        "/v1/public/analysis/summaries",
+    ]
+    for ep in paginated_endpoints:
+        resp = public_client.get(ep)
+        assert resp.status_code == 200
+        rows = resp.json()["data"]
+        assert len(rows) > 0
+        for row in rows:
+            leaked = set(row.keys()) & forbidden_id_keys
+            assert not leaked, f"Surrogate ID key(s) {sorted(leaked)} exposed in {ep}"

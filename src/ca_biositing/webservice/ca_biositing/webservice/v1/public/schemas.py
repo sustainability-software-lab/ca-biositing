@@ -30,8 +30,6 @@ class PaginatedPublicResponse(BaseModel, Generic[T]):
 class PublicResourceItem(BaseModel):
     """Resource taxonomy and Stage 1 analytical coverage (`biocirv_public.mv_resources`)."""
 
-    id: int
-    resource_id: int
     resource_name: Optional[str] = None
     resource_code: Optional[str] = None
     description: Optional[str] = None
@@ -54,17 +52,13 @@ class PublicResourceItem(BaseModel):
 class PublicSampleItem(BaseModel):
     """De-identified sample provenance and preparation metadata (`biocirv_public.mv_samples`)."""
 
-    id: int
-    prepared_sample_id: Optional[int] = None
     prepared_sample_name: Optional[str] = None
     prep_date: Optional[date] = None
     prep_method_name: Optional[str] = None
     prep_method_abbrev: Optional[str] = None
     prep_temp_c: Optional[float] = None
     drying_step: Optional[bool] = None
-    field_sample_id: Optional[int] = None
     field_sample_name: Optional[str] = None
-    resource_id: Optional[int] = None
     resource_name: Optional[str] = None
     resource_code: Optional[str] = None
     resource_class: Optional[str] = None
@@ -92,21 +86,16 @@ class PublicSampleItem(BaseModel):
 class PublicObservationItem(BaseModel):
     """Technical-replicate analytical observation (`biocirv_public.mv_analytical_observations`)."""
 
-    id: int
-    observation_id: int
     record_id: Optional[str] = None
     analysis_type: Optional[str] = None
-    resource_id: Optional[int] = None
     resource_name: Optional[str] = None
     resource_code: Optional[str] = None
     resource_class: Optional[str] = None
     resource_subclass: Optional[str] = None
     primary_ag_product: Optional[str] = None
-    prepared_sample_id: Optional[int] = None
     prepared_sample_name: Optional[str] = None
     prep_method_name: Optional[str] = None
     drying_step: Optional[bool] = None
-    field_sample_id: Optional[int] = None
     field_sample_name: Optional[str] = None
     provider_codename: Optional[str] = None
     county_name: Optional[str] = None
@@ -125,20 +114,14 @@ class PublicObservationItem(BaseModel):
     method_abbrev: Optional[str] = None
     method_category: Optional[str] = None
     method_standard: Optional[str] = None
-    experiment_id: Optional[int] = None
     experiment_name: Optional[str] = None
-    raw_data_id: Optional[int] = None
 
 
 class PublicSampleSummaryItem(BaseModel):
     """Sample-level analytical summary (`biocirv_public.mv_sample_summary`)."""
 
-    id: int
-    prepared_sample_id: Optional[int] = None
     prepared_sample_name: Optional[str] = None
-    field_sample_id: Optional[int] = None
     field_sample_name: Optional[str] = None
-    resource_id: Optional[int] = None
     resource_name: Optional[str] = None
     resource_code: Optional[str] = None
     provider_codename: Optional[str] = None
@@ -160,8 +143,6 @@ class PublicSampleSummaryItem(BaseModel):
 class PublicAnalyticalSummaryItem(BaseModel):
     """Resource- and county-level analytical summary (`biocirv_public.mv_analytical_summary`)."""
 
-    id: int
-    resource_id: Optional[int] = None
     resource_name: Optional[str] = None
     resource_code: Optional[str] = None
     resource_class: Optional[str] = None

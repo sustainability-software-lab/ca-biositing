@@ -170,7 +170,7 @@ def list_public_resources(
 @router.get(
     "/resources/{resource}",
     response_model=PublicResourceItem,
-    summary="Get a single biomass resource by ID, name, or resource code",
+    summary="Get a single biomass resource by name or resource code",
 )
 def get_public_resource(
     resource: str,
@@ -188,7 +188,7 @@ def list_public_samples(
     session: SessionDep,
     pagination: PublicPaginationDep,
     resource: Optional[str] = Query(
-        None, description="Filter by resource ID, name, or code"
+        None, description="Filter by resource name or code"
     ),
     county_name: Optional[str] = Query(
         None, description="Filter by county name (e.g. 'San Joaquin')"
@@ -220,15 +220,42 @@ def list_public_samples(
 
 
 @router.get(
-    "/samples/{prepared_sample_id}",
+    "/samples/{prepared_sample_name}",
     response_model=PublicSampleItem,
-    summary="Get a single de-identified sample by prepared_sample_id",
+    summary="Get a single de-identified sample by prepared_sample_name",
 )
 def get_public_sample(
-    prepared_sample_id: int,
+    prepared_sample_name: str,
     session: SessionDep,
 ) -> dict:
-    return PublicDatasetService.get_sample(session, prepared_sample_id)
+    return PublicDatasetService.get_sample(session, prepared_sample_name)
+
+
+@router.get(
+    "/samples/{prepared_sample_name}/summary",
+    response_model=PaginatedPublicResponse[PublicSampleSummaryItem],
+    summary="List analytical summaries for a specific prepared sample by prepared_sample_name",
+)
+def list_public_sample_summary_by_name(
+    prepared_sample_name: str,
+    session: SessionDep,
+    pagination: PublicPaginationDep,
+    analysis_type: Optional[str] = Query(
+        None,
+        description="Filter by Stage 1 analysis type (proximate, compositional, xrf, icp, calorimetry)",
+    ),
+    parameter_name: Optional[str] = Query(
+        None, description="Filter by analytical parameter name"
+    ),
+) -> dict:
+    return PublicDatasetService.list_sample_summaries(
+        session,
+        prepared_sample_name=prepared_sample_name,
+        analysis_type=analysis_type,
+        parameter_name=parameter_name,
+        skip=pagination["skip"],
+        limit=pagination["limit"],
+    )
 
 
 @router.get(
@@ -240,7 +267,7 @@ def list_public_observations(
     session: SessionDep,
     pagination: PublicPaginationDep,
     resource: Optional[str] = Query(
-        None, description="Filter by resource ID, name, or code"
+        None, description="Filter by resource name or code"
     ),
     analysis_type: Optional[str] = Query(
         None,
@@ -249,11 +276,11 @@ def list_public_observations(
     parameter_name: Optional[str] = Query(
         None, description="Filter by analytical parameter name (e.g. 'moisture', 'glucan')"
     ),
-    prepared_sample_id: Optional[int] = Query(
-        None, description="Filter by prepared_sample_id"
+    prepared_sample_name: Optional[str] = Query(
+        None, description="Filter by prepared_sample_name"
     ),
-    field_sample_id: Optional[int] = Query(
-        None, description="Filter by field_sample_id"
+    field_sample_name: Optional[str] = Query(
+        None, description="Filter by field_sample_name"
     ),
     county_name: Optional[str] = Query(
         None, description="Filter by county name"
@@ -273,8 +300,8 @@ def list_public_observations(
         resource=resource,
         analysis_type=analysis_type,
         parameter_name=parameter_name,
-        prepared_sample_id=prepared_sample_id,
-        field_sample_id=field_sample_id,
+        prepared_sample_name=prepared_sample_name,
+        field_sample_name=field_sample_name,
         county_name=county_name,
         geoid=geoid,
         provider_codename=provider_codename,
@@ -293,10 +320,10 @@ def list_public_sample_summaries(
     session: SessionDep,
     pagination: PublicPaginationDep,
     resource: Optional[str] = Query(
-        None, description="Filter by resource ID, name, or code"
+        None, description="Filter by resource name or code"
     ),
-    prepared_sample_id: Optional[int] = Query(
-        None, description="Filter by prepared_sample_id"
+    prepared_sample_name: Optional[str] = Query(
+        None, description="Filter by prepared_sample_name"
     ),
     analysis_type: Optional[str] = Query(
         None,
@@ -318,7 +345,7 @@ def list_public_sample_summaries(
     return PublicDatasetService.list_sample_summaries(
         session,
         resource=resource,
-        prepared_sample_id=prepared_sample_id,
+        prepared_sample_name=prepared_sample_name,
         analysis_type=analysis_type,
         parameter_name=parameter_name,
         county_name=county_name,
@@ -338,7 +365,7 @@ def list_public_analytical_summaries(
     session: SessionDep,
     pagination: PublicPaginationDep,
     resource: Optional[str] = Query(
-        None, description="Filter by resource ID, name, or code"
+        None, description="Filter by resource name or code"
     ),
     analysis_type: Optional[str] = Query(
         None,

@@ -57,14 +57,6 @@ def _normalize_analysis_type(analysis_type: str) -> str:
 def _apply_resource_filter(stmt, view, resource: str):
     cleaned = resource.strip()
     norm = normalize_crop_name(cleaned)
-    if cleaned.isdigit():
-        return stmt.where(
-            or_(
-                view.c.resource_id == int(cleaned),
-                normalized_sql_text(view.c.resource_name) == norm,
-                normalized_sql_text(view.c.resource_code) == norm,
-            )
-        )
     return stmt.where(
         or_(
             normalized_sql_text(view.c.resource_name) == norm,
@@ -87,14 +79,14 @@ def _paginate_and_execute(
     *,
     skip: int,
     limit: int,
-    order_by_col,
+    order_by_cols: tuple[Any, ...],
     float_fields: tuple[str, ...] = (),
 ) -> dict[str, Any]:
     clamped_skip, clamped_limit = _clamp_pagination(skip, limit)
     count_subq = stmt.subquery("filtered_count_sq")
     total = session.execute(select(func.count()).select_from(count_subq)).scalar() or 0
     rows = session.execute(
-        stmt.order_by(order_by_col).offset(clamped_skip).limit(clamped_limit)
+        stmt.order_by(*order_by_cols).offset(clamped_skip).limit(clamped_limit)
     ).all()
     return {
         "release_stage": RELEASE_STAGE,
@@ -152,7 +144,7 @@ class PublicDatasetService:
             stmt,
             skip=skip,
             limit=limit,
-            order_by_col=view.c.id,
+            order_by_cols=(view.c.resource_name,),
         )
 
     @staticmethod
@@ -160,15 +152,10 @@ class PublicDatasetService:
         view = get_biocirv_resources_view(session)
         cleaned = resource.strip()
         norm = normalize_crop_name(cleaned)
-        order_clauses = []
-        if cleaned.isdigit():
-            order_clauses.append(
-                case((view.c.resource_id == int(cleaned), 0), else_=1)
-            )
-        order_clauses.append(
-            case((normalized_sql_text(view.c.resource_code) == norm, 0), else_=1)
-        )
-        order_clauses.append(view.c.id)
+        order_clauses = [
+            case((normalized_sql_text(view.c.resource_code) == norm, 0), else_=1),
+            view.c.resource_name,
+        ]
         stmt = _apply_resource_filter(select(view), view, resource).order_by(
             *order_clauses
         )
@@ -219,23 +206,24 @@ class PublicDatasetService:
             stmt,
             skip=skip,
             limit=limit,
-            order_by_col=view.c.id,
+            order_by_cols=(view.c.prepared_sample_name, view.c.field_sample_name),
             float_fields=("prep_temp_c", "field_storage_duration_value"),
         )
 
     @staticmethod
-    def get_sample(session: Session, prepared_sample_id: int) -> dict[str, Any]:
+    def get_sample(session: Session, prepared_sample_name: str) -> dict[str, Any]:
         view = get_biocirv_samples_view(session)
+        cleaned = prepared_sample_name.strip()
         stmt = (
             select(view)
-            .where(view.c.prepared_sample_id == prepared_sample_id)
-            .order_by(view.c.id)
+            .where(func.lower(view.c.prepared_sample_name) == cleaned.lower())
+            .order_by(view.c.prepared_sample_name, view.c.field_sample_name)
         )
         row = session.execute(stmt).first()
         if row is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"Prepared sample {prepared_sample_id} not found in public dataset",
+                detail=f"Prepared sample '{cleaned}' not found in public dataset",
             )
         return _row_to_dict(
             row, float_fields=("prep_temp_c", "field_storage_duration_value")
@@ -248,8 +236,8 @@ class PublicDatasetService:
         resource: Optional[str] = None,
         analysis_type: Optional[str] = None,
         parameter_name: Optional[str] = None,
-        prepared_sample_id: Optional[int] = None,
-        field_sample_id: Optional[int] = None,
+        prepared_sample_name: Optional[str] = None,
+        field_sample_name: Optional[str] = None,
         county_name: Optional[str] = None,
         geoid: Optional[str] = None,
         provider_codename: Optional[str] = None,
@@ -272,10 +260,16 @@ class PublicDatasetService:
                 normalized_sql_text(view.c.parameter_name)
                 == normalize_crop_name(parameter_name)
             )
-        if prepared_sample_id is not None:
-            stmt = stmt.where(view.c.prepared_sample_id == prepared_sample_id)
-        if field_sample_id is not None:
-            stmt = stmt.where(view.c.field_sample_id == field_sample_id)
+        if prepared_sample_name:
+            stmt = stmt.where(
+                func.lower(view.c.prepared_sample_name)
+                == prepared_sample_name.strip().lower()
+            )
+        if field_sample_name:
+            stmt = stmt.where(
+                func.lower(view.c.field_sample_name)
+                == field_sample_name.strip().lower()
+            )
         if county_name:
             stmt = stmt.where(
                 normalized_sql_text(view.c.county_name)
@@ -295,7 +289,12 @@ class PublicDatasetService:
             stmt,
             skip=skip,
             limit=limit,
-            order_by_col=view.c.id,
+            order_by_cols=(
+                view.c.record_id,
+                view.c.analysis_type,
+                view.c.parameter_name,
+                view.c.unit_name,
+            ),
             float_fields=("value", "dimension_value"),
         )
 
@@ -304,7 +303,7 @@ class PublicDatasetService:
         session: Session,
         *,
         resource: Optional[str] = None,
-        prepared_sample_id: Optional[int] = None,
+        prepared_sample_name: Optional[str] = None,
         analysis_type: Optional[str] = None,
         parameter_name: Optional[str] = None,
         county_name: Optional[str] = None,
@@ -318,8 +317,11 @@ class PublicDatasetService:
 
         if resource:
             stmt = _apply_resource_filter(stmt, view, resource)
-        if prepared_sample_id is not None:
-            stmt = stmt.where(view.c.prepared_sample_id == prepared_sample_id)
+        if prepared_sample_name:
+            stmt = stmt.where(
+                func.lower(view.c.prepared_sample_name)
+                == prepared_sample_name.strip().lower()
+            )
         if analysis_type:
             stmt = stmt.where(
                 func.lower(view.c.analysis_type)
@@ -345,7 +347,13 @@ class PublicDatasetService:
             stmt,
             skip=skip,
             limit=limit,
-            order_by_col=view.c.id,
+            order_by_cols=(
+                view.c.prepared_sample_name,
+                view.c.analysis_type,
+                view.c.parameter_name,
+                view.c.unit_name,
+                view.c.drying_step,
+            ),
             float_fields=("mean_value", "std_dev", "min_value", "max_value"),
         )
 
@@ -389,7 +397,13 @@ class PublicDatasetService:
             stmt,
             skip=skip,
             limit=limit,
-            order_by_col=view.c.id,
+            order_by_cols=(
+                view.c.resource_name,
+                view.c.geoid,
+                view.c.analysis_type,
+                view.c.parameter_name,
+                view.c.unit_name,
+            ),
             float_fields=("mean_value", "std_dev", "min_value", "max_value"),
         )
 
@@ -406,10 +420,8 @@ class PublicDatasetService:
         stmt = (
             select(
                 view.c.analysis_type,
-                func.count(func.distinct(view.c.observation_id)).label(
-                    "observation_count"
-                ),
-                func.count(func.distinct(view.c.resource_id)).label("resource_count"),
+                func.count().label("observation_count"),
+                func.count(func.distinct(view.c.resource_name)).label("resource_count"),
                 func.count(func.distinct(view.c.parameter_name)).label("parameter_count"),
             )
             .where(view.c.analysis_type.is_not(None))
@@ -444,9 +456,7 @@ class PublicDatasetService:
                 view.c.parameter_name,
                 view.c.unit_name,
                 view.c.analysis_type,
-                func.count(func.distinct(view.c.observation_id)).label(
-                    "observation_count"
-                ),
+                func.count().label("observation_count"),
             )
             .where(view.c.parameter_name.is_not(None))
             .group_by(view.c.parameter_name, view.c.unit_name, view.c.analysis_type)
@@ -481,12 +491,10 @@ class PublicDatasetService:
                 view.c.county_name,
                 view.c.county_fips,
                 view.c.state_name,
-                func.count(func.distinct(view.c.prepared_sample_id)).label(
+                func.count(func.distinct(view.c.prepared_sample_name)).label(
                     "prepared_sample_count"
                 ),
-                func.count(func.distinct(view.c.observation_id)).label(
-                    "observation_count"
-                ),
+                func.count().label("observation_count"),
             )
             .where(view.c.county_name.is_not(None))
             .group_by(

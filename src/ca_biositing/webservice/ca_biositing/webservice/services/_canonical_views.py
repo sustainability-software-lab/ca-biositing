@@ -118,21 +118,16 @@ def get_biocirv_observations_view(session: Session):
     if _uses_postgres(session):
         return _biocirv_public_view(
             "mv_analytical_observations",
-            column("id", Integer),
-            column("observation_id", Integer),
             column("record_id", String),
             column("analysis_type", String),
-            column("resource_id", Integer),
             column("resource_name", String),
             column("resource_code", String),
             column("resource_class", String),
             column("resource_subclass", String),
             column("primary_ag_product", String),
-            column("prepared_sample_id", Integer),
             column("prepared_sample_name", String),
             column("prep_method_name", String),
             column("drying_step", Boolean),
-            column("field_sample_id", Integer),
             column("field_sample_name", String),
             column("provider_codename", String),
             column("county_name", String),
@@ -151,9 +146,7 @@ def get_biocirv_observations_view(session: Session):
             column("method_abbrev", String),
             column("method_category", String),
             column("method_standard", String),
-            column("experiment_id", Integer),
             column("experiment_name", String),
-            column("raw_data_id", Integer),
         )
     register_sqlite_udfs(session)
     return mv_analytical_observations.subquery("mv_analytical_observations")
@@ -163,17 +156,13 @@ def get_biocirv_samples_view(session: Session):
     if _uses_postgres(session):
         return _biocirv_public_view(
             "mv_samples",
-            column("id", Integer),
-            column("prepared_sample_id", Integer),
             column("prepared_sample_name", String),
             column("prep_date", Date),
             column("prep_method_name", String),
             column("prep_method_abbrev", String),
             column("prep_temp_c", Float),
             column("drying_step", Boolean),
-            column("field_sample_id", Integer),
             column("field_sample_name", String),
-            column("resource_id", Integer),
             column("resource_name", String),
             column("resource_code", String),
             column("resource_class", String),
@@ -205,8 +194,6 @@ def get_biocirv_resources_view(session: Session):
     if _uses_postgres(session):
         return _biocirv_public_view(
             "mv_resources",
-            column("id", Integer),
-            column("resource_id", Integer),
             column("resource_name", String),
             column("resource_code", String),
             column("description", String),
@@ -217,6 +204,7 @@ def get_biocirv_resources_view(session: Session):
             column("prepared_sample_count", Integer),
             column("provider_count", Integer),
             column("county_count", Integer),
+            column("replicate_record_count", Integer),
             column("observation_count", Integer),
             column("has_proximate", Boolean),
             column("has_compositional", Boolean),
@@ -232,12 +220,8 @@ def get_biocirv_sample_summary_view(session: Session):
     if _uses_postgres(session):
         return _biocirv_public_view(
             "mv_sample_summary",
-            column("id", Integer),
-            column("prepared_sample_id", Integer),
             column("prepared_sample_name", String),
-            column("field_sample_id", Integer),
             column("field_sample_name", String),
-            column("resource_id", Integer),
             column("resource_name", String),
             column("resource_code", String),
             column("provider_codename", String),
@@ -263,8 +247,6 @@ def get_biocirv_analytical_summary_view(session: Session):
     if _uses_postgres(session):
         return _biocirv_public_view(
             "mv_analytical_summary",
-            column("id", Integer),
-            column("resource_id", Integer),
             column("resource_name", String),
             column("resource_code", String),
             column("resource_class", String),
