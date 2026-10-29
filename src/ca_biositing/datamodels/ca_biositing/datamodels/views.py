@@ -589,4 +589,27 @@ def refresh_all_views(engine, log_summary=False):
                 after_count = conn.execute(text(f"SELECT COUNT(*) FROM data_portal.{view_name}")).scalar()
                 log_filter_summary(f"data_portal.{view_name}", before_count, after_count)
 
+        # 3. Refresh biocirv_public schema views in explicit dependency order.
+        # Do NOT replace this with alphabetical pg_matviews discovery:
+        # mv_analytical_observations must always be refreshed first.
+        from ca_biositing.datamodels.biocirv_public_views import (
+            BIOCIRV_PUBLIC_SCHEMA,
+            BIOCIRV_PUBLIC_VIEW_NAMES,
+        )
+
+        for view_name in BIOCIRV_PUBLIC_VIEW_NAMES:
+            before_count = None
+            if log_summary:
+                before_count = conn.execute(
+                    text(f"SELECT COUNT(*) FROM {BIOCIRV_PUBLIC_SCHEMA}.{view_name}")
+                ).scalar()
+            conn.execute(
+                text(f"REFRESH MATERIALIZED VIEW CONCURRENTLY {BIOCIRV_PUBLIC_SCHEMA}.{view_name}")
+            )
+            if log_summary:
+                after_count = conn.execute(
+                    text(f"SELECT COUNT(*) FROM {BIOCIRV_PUBLIC_SCHEMA}.{view_name}")
+                ).scalar()
+                log_filter_summary(f"{BIOCIRV_PUBLIC_SCHEMA}.{view_name}", before_count, after_count)
+
         conn.commit()
