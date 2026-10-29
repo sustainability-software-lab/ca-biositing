@@ -3,22 +3,22 @@
 Resource taxonomy and Stage 1 analytical coverage catalog (`biocirv_public.mv_resources`).
 
 Grain:
-    One row per QC-passing `resource_id` that has at least one Stage 1 analytical
+    One row per QC-passing `resource_name` that has at least one Stage 1 analytical
     observation in `mv_analytical_observations`.
 
 Aggregation Rules:
     Because `mv_analytical_observations` is at the observation grain (multiple
     parameters and replicates per sample), all entity counts use explicit
-    `COUNT(DISTINCT ...)`:
-    - `field_sample_count`: `COUNT(DISTINCT field_sample_id)`
-    - `prepared_sample_count`: `COUNT(DISTINCT prepared_sample_id)`
+    `COUNT(DISTINCT ...)` (or row count for observations):
+    - `field_sample_count`: `COUNT(DISTINCT field_sample_name)`
+    - `prepared_sample_count`: `COUNT(DISTINCT prepared_sample_name)`
     - `provider_count`: `COUNT(DISTINCT provider_codename)`
     - `county_count`: `COUNT(DISTINCT county_name)`
     - `replicate_record_count`: `COUNT(DISTINCT record_id)`
-    - `observation_count`: `COUNT(DISTINCT observation_id)`
+    - `observation_count`: `COUNT(*)`
 
 Required index:
-    CREATE UNIQUE INDEX idx_mv_biocirv_resources_id ON biocirv_public.mv_resources (id)
+    CREATE UNIQUE INDEX idx_mv_biocirv_resources_name ON biocirv_public.mv_resources (resource_name)
 """
 
 from __future__ import annotations
@@ -41,15 +41,15 @@ _obs = mv_analytical_observations.subquery("obs_for_resources")
 
 _resource_obs_agg = (
     select(
-        _obs.c.resource_id.label("resource_id"),
-        func.count(func.distinct(_obs.c.field_sample_id)).label("field_sample_count"),
-        func.count(func.distinct(_obs.c.prepared_sample_id)).label(
+        _obs.c.resource_name.label("resource_name"),
+        func.count(func.distinct(_obs.c.field_sample_name)).label("field_sample_count"),
+        func.count(func.distinct(_obs.c.prepared_sample_name)).label(
             "prepared_sample_count"
         ),
         func.count(func.distinct(_obs.c.provider_codename)).label("provider_count"),
         func.count(func.distinct(_obs.c.county_name)).label("county_count"),
         func.count(func.distinct(_obs.c.record_id)).label("replicate_record_count"),
-        func.count(func.distinct(_obs.c.observation_id)).label("observation_count"),
+        func.count().label("observation_count"),
         case(
             (
                 func.max(case((_obs.c.analysis_type == "proximate", 1), else_=0)) == 1,
@@ -87,15 +87,13 @@ _resource_obs_agg = (
             else_=False,
         ).label("has_calorimetry"),
     )
-    .where(_obs.c.resource_id.is_not(None))
-    .group_by(_obs.c.resource_id)
+    .where(_obs.c.resource_name.is_not(None))
+    .group_by(_obs.c.resource_name)
     .subquery("resource_obs_agg")
 )
 
 mv_resources = (
     select(
-        Resource.id.label("id"),
-        Resource.id.label("resource_id"),
         Resource.name.label("resource_name"),
         Resource.resource_code.label("resource_code"),
         Resource.description.label("description"),
@@ -115,7 +113,7 @@ mv_resources = (
         _resource_obs_agg.c.has_calorimetry,
     )
     .select_from(_resource_obs_agg)
-    .join(Resource, Resource.id == _resource_obs_agg.c.resource_id)
+    .join(Resource, Resource.name == _resource_obs_agg.c.resource_name)
     .outerjoin(ResourceClass, ResourceClass.id == Resource.resource_class_id)
     .outerjoin(ResourceSubclass, ResourceSubclass.id == Resource.resource_subclass_id)
     .outerjoin(PrimaryAgProduct, PrimaryAgProduct.id == Resource.primary_ag_product_id)

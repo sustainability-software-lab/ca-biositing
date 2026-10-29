@@ -127,6 +127,25 @@ def test_compile_all_biocirv_public_views_to_postgres(view_name, view_stmt):
 
 
 @pytest.mark.parametrize("view_name,view_stmt", list(ALL_PUBLIC_VIEWS.items()))
+def test_no_surrogate_database_id_columns_in_views(view_name, view_stmt):
+    """Verify no internal integer surrogate ID columns are exposed in any biocirv_public view."""
+    exposed_columns = {col.key for col in view_stmt.selected_columns}
+    forbidden_id_columns = {
+        "id",
+        "observation_id",
+        "resource_id",
+        "prepared_sample_id",
+        "field_sample_id",
+        "experiment_id",
+        "raw_data_id",
+    }
+    leaked = exposed_columns & forbidden_id_columns
+    assert not leaked, (
+        f"Surrogate database ID column(s) {sorted(leaked)} exposed in {view_name}"
+    )
+
+
+@pytest.mark.parametrize("view_name,view_stmt", list(ALL_PUBLIC_VIEWS.items()))
 def test_privacy_and_scope_redaction_in_compiled_sql(view_name, view_stmt):
     """Verify no street/coordinate/contact/note columns or Stage 2 tables leak into SQL."""
     sql = compile_pg(view_stmt).lower()
@@ -709,8 +728,22 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
 
         # --- Assert View 1: mv_analytical_observations ---
         obs_rows = session.execute(mv_analytical_observations).mappings().all()
-        obs_ids = [r["observation_id"] for r in obs_rows]
-        assert obs_ids == [1, 2, 3, 4, 5, 6, 16, 17, 18]
+        obs_keys = sorted(
+            (r["record_id"], r["parameter_name"], float(r["value"])) for r in obs_rows
+        )
+        assert obs_keys == sorted(
+            [
+                ("PROX-REP-1", "moisture", 8.0),
+                ("PROX-REP-2", "moisture", 10.0),
+                ("PROX-REP-1", "ash solids", 5.0),
+                ("PROX-REP-1", "volatile solids", 86.0),
+                ("COMP-REP-1", "glucan", 32.5),
+                ("COMP-REP-1", "xylan", 15.0),
+                ("COMP-REP-1", "lignin", 20.0),
+                ("CAL-REP-1", "higher_heating_value", 18.4),
+                ("ICP-REP-1", "calcium", 12500.0),
+            ]
+        )
         assert all(r["provider_codename"] == "PROVIDER_ALPHA" for r in obs_rows)
         assert all(r["county_name"] == "San Joaquin" for r in obs_rows)
         assert all(r["geoid"] == "06077" for r in obs_rows)
@@ -719,8 +752,8 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
         sample_rows = session.execute(mv_samples).mappings().all()
         assert len(sample_rows) == 1
         s_row = sample_rows[0]
-        assert s_row["prepared_sample_id"] == 100
-        assert s_row["field_sample_id"] == 10
+        assert s_row["prepared_sample_name"] == "PS-ALM-001"
+        assert s_row["field_sample_name"] == "FS-ALM-001"
         assert s_row["ag_treatment_name"] == "irrigated; organic"
         assert s_row["processing_method_name"] == "hulled; screened"
         # 5 distinct replicate records (PROX-REP-1, PROX-REP-2, COMP-REP-1, CAL-REP-1, ICP-REP-1)
@@ -732,7 +765,6 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
         res_rows = session.execute(mv_resources).mappings().all()
         assert len(res_rows) == 1
         r_row = res_rows[0]
-        assert r_row["resource_id"] == 1
         assert r_row["resource_name"] == "almond_hulls"
         assert r_row["field_sample_count"] == 1
         assert r_row["prepared_sample_count"] == 1

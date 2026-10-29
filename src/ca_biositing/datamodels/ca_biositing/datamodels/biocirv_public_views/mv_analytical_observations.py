@@ -26,8 +26,8 @@ Governance & Privacy Rules (from `data_portal_views/common.py`):
    lat/lon, contact IDs, or freeform `.note` columns.
 
 Required indexes:
-    CREATE UNIQUE INDEX idx_mv_biocirv_obs_id ON biocirv_public.mv_analytical_observations (id)
-    CREATE UNIQUE INDEX idx_mv_biocirv_obs_observation_id ON biocirv_public.mv_analytical_observations (observation_id)
+    CREATE UNIQUE INDEX idx_mv_biocirv_obs_natural_key
+        ON biocirv_public.mv_analytical_observations (record_id, analysis_type, parameter_name, unit_name)
 """
 
 from __future__ import annotations
@@ -166,14 +166,6 @@ _matched_replicate_total = func.coalesce(
     CalorimetryRecord.technical_replicate_total,
 )
 
-_matched_raw_data_id = func.coalesce(
-    ProximateRecord.raw_data_id,
-    CompositionalRecord.raw_data_id,
-    XrfRecord.raw_data_id,
-    IcpRecord.raw_data_id,
-    CalorimetryRecord.raw_data_id,
-)
-
 # Do NOT fall back to literal("pass"): unreviewed records with qc_pass IS NULL
 # must remain NULL so get_qc_status_filter(qc_pass) excludes them under 3-valued SQL logic.
 _matched_qc_pass = func.coalesce(
@@ -186,7 +178,6 @@ _matched_qc_pass = func.coalesce(
 
 _obs_base = (
     select(
-        Observation.id.label("observation_id"),
         Observation.record_id.label("record_id"),
         _analysis_type_expr.label("analysis_type"),
         Resource.id.label("resource_id"),
@@ -195,11 +186,9 @@ _obs_base = (
         ResourceClass.name.label("resource_class"),
         ResourceSubclass.name.label("resource_subclass"),
         PrimaryAgProduct.name.label("primary_ag_product"),
-        PreparedSample.id.label("prepared_sample_id"),
         PreparedSample.name.label("prepared_sample_name"),
         PreparationMethod.name.label("prep_method_name"),
         PreparationMethod.drying_step.label("drying_step"),
-        FieldSample.id.label("field_sample_id"),
         FieldSample.name.label("field_sample_name"),
         Provider.codename.label("provider_codename"),
         Place.county_name.label("county_name"),
@@ -220,7 +209,6 @@ _obs_base = (
         MethodStandard.name.label("method_standard"),
         _matched_experiment_id.label("experiment_id"),
         Experiment.name.label("experiment_name"),
-        _matched_raw_data_id.label("raw_data_id"),
     )
     .select_from(Observation)
     .outerjoin(Parameter, Observation.parameter_id == Parameter.id)
@@ -305,21 +293,16 @@ _qc_stats = get_sum_constraints_subquery(
 
 mv_analytical_observations = (
     select(
-        func.row_number().over(order_by=_obs_base.c.observation_id).label("id"),
-        _obs_base.c.observation_id,
         _obs_base.c.record_id,
         _obs_base.c.analysis_type,
-        _obs_base.c.resource_id,
         _obs_base.c.resource_name,
         _obs_base.c.resource_code,
         _obs_base.c.resource_class,
         _obs_base.c.resource_subclass,
         _obs_base.c.primary_ag_product,
-        _obs_base.c.prepared_sample_id,
         _obs_base.c.prepared_sample_name,
         _obs_base.c.prep_method_name,
         _obs_base.c.drying_step,
-        _obs_base.c.field_sample_id,
         _obs_base.c.field_sample_name,
         _obs_base.c.provider_codename,
         _obs_base.c.county_name,
@@ -338,9 +321,7 @@ mv_analytical_observations = (
         _obs_base.c.method_abbrev,
         _obs_base.c.method_category,
         _obs_base.c.method_standard,
-        _obs_base.c.experiment_id,
         _obs_base.c.experiment_name,
-        _obs_base.c.raw_data_id,
     )
     .select_from(_obs_base)
     .outerjoin(
