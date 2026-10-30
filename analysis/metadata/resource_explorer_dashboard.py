@@ -575,7 +575,7 @@ def build_full_dashboard_html(payload: dict) -> str:
 
           <!-- Toggle Inline 4-Column Multi-Select Checklists Drawer -->
           <button type="button" id="btn-toggle-drawer" onclick="toggleInlineChecklistDrawer()" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors">
-            <span>&#9745; Multi-Select Checklists</span>
+            <span id="btn-toggle-checklist-drawer">&#9745; Multi-Select Checklists</span>
             <span id="drawer-chevron" class="text-[10px]">&#9652;</span>
           </button>
 
@@ -669,21 +669,6 @@ def build_full_dashboard_html(payload: dict) -> str:
             </div>
           </div>
 
-          <!-- Compare By Selector (Side-by-Side Visual Comparison) -->
-          <div>
-            <label for="compare-by-select" class="block text-[11px] text-[var(--muted-foreground)] font-medium mb-1">Compare By:</label>
-            <select id="compare-by-select" onchange="onCompareByManualChange(this.value)" class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[#00B5E2]/60 rounded px-1.5 py-1 text-xs font-medium focus:outline-none">
-              <option value="auto">Auto (Resource / Method)</option>
-              <option value="resource">Resource (Side-by-Side)</option>
-              <option value="sample">Prepared Sample (Side-by-Side)</option>
-              <option value="field_sample">Field Sample (Side-by-Side)</option>
-              <option value="experiment">Experiment / Run (Side-by-Side)</option>
-              <option value="method">Method / Prep / Strain (Side-by-Side)</option>
-              <option value="collection_date">Collection Date Cohort (Side-by-Side)</option>
-              <option value="prep_date">Prep / Run Date Cohort (Side-by-Side)</option>
-            </select>
-          </div>
-
           <!-- Date Range Filter (Collection Date or Run / Prep Date) -->
           <div class="space-y-1.5 pt-2 border-t border-[var(--border)]">
             <div class="flex items-center justify-between gap-1">
@@ -706,8 +691,8 @@ def build_full_dashboard_html(payload: dict) -> str:
 
       <!-- Right Main Workspace -->
       <div class="flex-1 min-w-0 space-y-2.5 w-full" style="flex: 1; min-width: 0;">
-        <!-- Always-Accessible 4-Column Multi-Select Checklist Drawer (Open by Default for Effortless Multi-Selection) -->
-        <div id="inline-checklist-drawer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pb-2.5 border-b border-[var(--border)] text-xs">
+        <!-- Collapsible 4-Column Multi-Select Checklist Drawer (Collapsed by Default to Maximize Above-the-Fold Chart Space) -->
+        <div id="inline-checklist-drawer" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pb-2.5 border-b border-[var(--border)] text-xs">
       <!-- Column 1: Multi-Select Resources -->
       <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2 flex flex-col">
         <div class="flex items-center justify-between gap-1 mb-1">
@@ -779,7 +764,7 @@ def build_full_dashboard_html(payload: dict) -> str:
     <!-- Row 4: Main 12-Column Workspace -->
     <div id="view-charts" class="grid grid-cols-12 gap-3 pt-2.5 items-start">
       <!-- Left (col-span-8): Interactive High-DPI Canvas Plot -->
-      <div class="col-span-12 lg:col-span-8 bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 relative canvas-container">
+      <div class="col-span-12 lg:col-span-8 bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 relative canvas-container chart-canvas-wrapper">
         <!-- Quick Parameter Pill Bar for Instant Single-Parameter or Multi-Parameter Comparison with Units -->
         <div id="param-pill-bar" class="flex flex-wrap items-center gap-1 pb-2 mb-2 border-b border-[var(--border)] text-xs"></div>
 
@@ -787,15 +772,28 @@ def build_full_dashboard_html(payload: dict) -> str:
           <span id="chart-title" class="text-xs font-semibold text-[var(--foreground)]">Proximate Analysis — Side-by-Side Parameter Comparison</span>
 
           <div class="flex flex-wrap items-center gap-2">
-            <!-- X-Axis Grouping Layout Toggle (shown in Scatter tab) -->
-            <div id="xaxis-layout-controls" class="flex flex-wrap items-center gap-1 text-xs bg-[var(--card)] px-1.5 py-0.5 rounded border border-[var(--border)]">
-              <span class="text-[var(--muted-foreground)]">X-Axis:</span>
-              <button type="button" id="btn-xlayout-auto" onclick="setXLayoutMode('auto')" class="px-1.5 py-0.5 rounded text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)]" title="Auto: Resources side-by-side when 1 parameter is focused, or Parameters with Resource sub-lanes">Auto</button>
-              <button type="button" id="btn-xlayout-resources" onclick="setXLayoutMode('resources')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Place Selected Resources / Conditions directly on the X-Axis for head-to-head comparison">Resources Side-by-Side</button>
-              <button type="button" id="btn-xlayout-by_field_sample" onclick="setXLayoutMode('by_field_sample')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Group observations along the X-Axis by Field Sample">Field Sample</button>
-              <button type="button" id="btn-xlayout-by_experiment" onclick="setXLayoutMode('by_experiment')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Group observations along the X-Axis by Experiment / Run">Experiment</button>
-              <button type="button" id="btn-xlayout-params" onclick="setXLayoutMode('params')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Place Parameters on the X-Axis with Resource sub-lanes">Parameters</button>
-              <button type="button" id="btn-xlayout-dates" onclick="setXLayoutMode('dates')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Plot observations grouped chronologically by Collection Date or Run / Prep Date Cohort">Collection / Run Dates</button>
+            <!-- Unified Group X-Axis By Control (consolidates Compare By & X-Axis Layout) -->
+            <div id="xaxis-layout-controls" class="flex flex-wrap items-center gap-1 text-xs bg-[var(--card)] px-1.5 py-0.5 rounded border border-[#00B5E2]/50">
+              <span class="text-[var(--muted-foreground)] font-medium">Group X-Axis By:</span>
+              <select id="compare-by-select" onchange="onCompareByManualChange(this.value)" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-medium focus:outline-none">
+                <option value="auto">Auto (Resource / Method)</option>
+                <option value="resource">Resources Side-by-Side</option>
+                <option value="sample">Prepared Sample (Side-by-Side)</option>
+                <option value="field_sample">Field Sample</option>
+                <option value="experiment">Experiment / Run</option>
+                <option value="method">Method / Prep / Strain</option>
+                <option value="params">Parameters (with Sub-Lanes)</option>
+                <option value="collection_date">Collection Date Cohort</option>
+                <option value="prep_date">Prep / Run Date Cohort</option>
+              </select>
+              <div class="hidden xl:inline-flex items-center gap-0.5 pl-1 border-l border-[var(--border)]">
+                <button type="button" id="btn-xlayout-auto" onclick="setXLayoutMode('auto')" class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-[var(--primary)] text-[var(--primary-foreground)]" title="Auto: Resources side-by-side when 1 parameter is focused, or Parameters with Resource sub-lanes">Auto</button>
+                <button type="button" id="btn-xlayout-resources" onclick="setXLayoutMode('resources')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Place Selected Resources / Conditions directly on the X-Axis for head-to-head comparison">Resources</button>
+                <button type="button" id="btn-xlayout-by_field_sample" onclick="setXLayoutMode('by_field_sample')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Group observations along the X-Axis by Field Sample">Field Sample</button>
+                <button type="button" id="btn-xlayout-by_experiment" onclick="setXLayoutMode('by_experiment')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Group observations along the X-Axis by Experiment / Run">Experiment</button>
+                <button type="button" id="btn-xlayout-params" onclick="setXLayoutMode('params')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Place Parameters on the X-Axis with Resource sub-lanes">Parameters</button>
+                <button type="button" id="btn-xlayout-dates" onclick="setXLayoutMode('dates')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Plot observations grouped chronologically by Collection Date or Run / Prep Date Cohort">Dates</button>
+              </div>
             </div>
 
             <!-- Replicate Plot Mode Toggle (Individual Points vs Replicate Mean ± SD) -->
@@ -851,7 +849,7 @@ def build_full_dashboard_html(payload: dict) -> str:
         <div id="hover-tooltip" class="hidden pointer-events-none absolute z-20 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg p-2 shadow-lg text-xs max-w-[295px]"></div>
 
         <!-- Interactive Click-Point Audit Finding Popover -->
-        <div id="click-audit-popover" onclick="event.stopPropagation()" class="hidden absolute z-30 bg-[var(--card)] text-[var(--foreground)] border-2 border-[#00B5E2] rounded-xl p-3 shadow-2xl text-xs w-[320px] max-w-[92vw]">
+        <div id="click-audit-popover" onclick="event.stopPropagation()" style="max-height: calc(100% - 24px); overflow-y: auto;" class="hidden absolute z-30 bg-[var(--card)] text-[var(--foreground)] border-2 border-[#00B5E2] rounded-xl p-3 shadow-2xl text-xs w-[320px] max-w-[92vw] overflow-y-auto">
           <div class="flex items-start justify-between gap-2 pb-1.5 mb-2 border-b border-[var(--border)]">
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
@@ -1314,7 +1312,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     let xLayoutMode = 'auto'; // 'auto', 'resources', 'by_field_sample', 'by_experiment', 'dates', 'params'
     let yRangeMode = 'auto';  // 'auto' (fit actual parameter values), 'full' (0-100%)
     let repPlotMode = 'individual'; // 'individual' or 'mean_sd'
-    let checklistDrawerOpen = true;
+    let checklistDrawerOpen = false;
     let filteredRows = [];
     let renderedPoints = [];
     let pinnedRecord = null;
@@ -1391,6 +1389,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       params: new Set(),
       methods: new Set()
     };
+    const selectedResources = selectedFilters.resources;
     const checklistCatalog = {
       resources: { active: [], pending: [] },
       samples: [],
@@ -1441,27 +1440,47 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     ACTIVE_RESOURCES.forEach(name => { RESOURCE_CANONICAL_MAP[name.toLowerCase()] = name; });
     PENDING_RESOURCES.forEach(name => { RESOURCE_CANONICAL_MAP[name.toLowerCase()] = name; });
 
-    function toggleChecklistDrawer() {
-      checklistDrawerOpen = !checklistDrawerOpen;
+    function updateChecklistDrawerButtonLabel() {
       const drawer = document.getElementById('inline-checklist-drawer');
+      const isHidden = drawer ? drawer.classList.contains('hidden') : !checklistDrawerOpen;
+      checklistDrawerOpen = !isHidden;
+      const lbl = document.getElementById('btn-toggle-checklist-drawer');
+      const chev = document.getElementById('drawer-chevron');
       const btn = document.getElementById('btn-toggle-drawer');
-      if (drawer) drawer.classList.toggle('hidden', !checklistDrawerOpen);
-      if (btn) {
-        btn.className = checklistDrawerOpen
-          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors'
-          : 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors';
+      const domActiveCnt = (checklistCatalog.resources && checklistCatalog.resources.active)
+        ? checklistCatalog.resources.active.filter(x => x.domainCount > 0).length
+        : ACTIVE_RESOURCES.length;
+      const nFeedstocks = selectedFilters.resources.size > 0 ? selectedFilters.resources.size : domActiveCnt;
+      const totalParams = (checklistCatalog.params || []).length;
+      const nParams = selectedFilters.params.size > 0 ? selectedFilters.params.size : totalParams;
+      const fsText = `${nFeedstocks} Feedstock${nFeedstocks === 1 ? '' : 's'}`;
+      const pText = `${nParams} Parameter${nParams === 1 ? '' : 's'}`;
+      if (lbl) {
+        lbl.textContent = isHidden
+          ? `▸ Expand Feedstock & Parameter Checklist (${fsText} · ${pText})`
+          : `▾ Collapse Feedstock & Parameter Checklist (${fsText} · ${pText})`;
       }
+      if (chev) chev.innerHTML = isHidden ? '&#9662;' : '&#9652;';
+      if (btn) {
+        btn.className = isHidden
+          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors'
+          : 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors';
+      }
+    }
+
+    function toggleChecklistDrawer() {
+      toggleInlineChecklistDrawer();
     }
 
     function setXLayoutMode(mode) {
       xLayoutMode = mode;
+      const sel = document.getElementById('compare-by-select');
       if (mode === 'dates') {
         const dtVal = (document.getElementById('filter-date-type') || {}).value || 'any';
         const targetComp = dtVal === 'run' ? 'prep_date' : 'collection_date';
         if (compareByMode !== 'collection_date' && compareByMode !== 'prep_date') {
           compareByMode = targetComp;
           compareByManualOverride = true;
-          const sel = document.getElementById('compare-by-select');
           if (sel) sel.value = compareByMode;
         }
         updateXLayoutButtons();
@@ -1471,7 +1490,6 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (mode === 'by_field_sample') {
         compareByMode = 'field_sample';
         compareByManualOverride = true;
-        const sel = document.getElementById('compare-by-select');
         if (sel) sel.value = compareByMode;
         updateXLayoutButtons();
         applyFilters();
@@ -1480,8 +1498,28 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (mode === 'by_experiment') {
         compareByMode = 'experiment';
         compareByManualOverride = true;
-        const sel = document.getElementById('compare-by-select');
         if (sel) sel.value = compareByMode;
+        updateXLayoutButtons();
+        applyFilters();
+        return;
+      }
+      if (mode === 'resources') {
+        compareByMode = 'resource';
+        compareByManualOverride = true;
+        if (sel) sel.value = 'resource';
+        updateXLayoutButtons();
+        applyFilters();
+        return;
+      }
+      if (mode === 'params') {
+        if (sel) sel.value = 'params';
+        updateXLayoutButtons();
+        renderCurrentView();
+        return;
+      }
+      if (mode === 'auto') {
+        compareByManualOverride = false;
+        autoUpdateCompareBy();
         updateXLayoutButtons();
         applyFilters();
         return;
@@ -1490,14 +1528,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       renderCurrentView();
     }
 
+    function setXAxisGroupingMode(mode) {
+      onCompareByManualChange(mode);
+    }
+
     function updateXLayoutButtons() {
       ['auto', 'resources', 'by_field_sample', 'by_experiment', 'dates', 'params'].forEach(m => {
         const btn = document.getElementById(`btn-xlayout-${m}`);
         if (!btn) return;
         if (xLayoutMode === m) {
-          btn.className = 'px-1.5 py-0.5 rounded text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)]';
+          btn.className = 'px-1.5 py-0.5 rounded text-[11px] font-medium bg-[var(--primary)] text-[var(--primary-foreground)]';
         } else {
-          btn.className = 'px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]';
+          btn.className = 'px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]';
         }
       });
     }
@@ -1577,10 +1619,23 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function onCompareByManualChange(val) {
+      if (val === 'params') {
+        xLayoutMode = 'params';
+        compareByManualOverride = false;
+        const sel = document.getElementById('compare-by-select');
+        if (sel) sel.value = 'params';
+        updateXLayoutButtons();
+        renderCurrentView();
+        return;
+      }
       compareByMode = val || 'auto';
       compareByManualOverride = (compareByMode !== 'auto');
-      if (compareByMode === 'field_sample' && xLayoutMode === 'by_experiment') xLayoutMode = 'by_field_sample';
-      if (compareByMode === 'experiment' && xLayoutMode === 'by_field_sample') xLayoutMode = 'by_experiment';
+      if (compareByMode === 'auto') xLayoutMode = 'auto';
+      else if (compareByMode === 'resource') xLayoutMode = 'resources';
+      else if (compareByMode === 'field_sample') xLayoutMode = 'by_field_sample';
+      else if (compareByMode === 'experiment') xLayoutMode = 'by_experiment';
+      else if (compareByMode === 'collection_date' || compareByMode === 'prep_date') xLayoutMode = 'dates';
+      else if (xLayoutMode === 'by_field_sample' || xLayoutMode === 'by_experiment' || xLayoutMode === 'dates') xLayoutMode = 'auto';
       updateXLayoutButtons();
       applyFilters();
     }
@@ -1897,16 +1952,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function toggleInlineChecklistDrawer() {
       const drawer = document.getElementById('inline-checklist-drawer');
-      const chev = document.getElementById('drawer-chevron');
-      const btn = document.getElementById('btn-toggle-drawer');
       if (!drawer) return;
-      const isHidden = drawer.classList.toggle('hidden');
-      if (chev) chev.innerHTML = isHidden ? '&#9662;' : '&#9652;';
-      if (btn) {
-        btn.className = isHidden
-          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors'
-          : 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors';
-      }
+      drawer.classList.toggle('hidden');
+      updateChecklistDrawerButtonLabel();
     }
 
     function syncChecklistSearch(key, val) {
@@ -2628,6 +2676,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       updateDateFilterUiBadge();
       ['resources', 'samples', 'params', 'methods'].forEach(k => updatePopoverButtonLabel(k));
+      updateChecklistDrawerButtonLabel();
       renderActiveChipsBar();
       syncUrlAndNavLinks(opts);
 
@@ -4495,11 +4544,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       clickPopoverEl.classList.remove('hidden');
       const popW = 320;
-      const left = Math.max(8, Math.min(hit.x + 14, canvasEl.clientWidth - popW - 8));
-      const top = Math.max(8, Math.min(hit.y - 20, canvasEl.clientHeight - 240));
+      const wrapperW = (canvasEl.parentElement && canvasEl.parentElement.clientWidth) || canvasEl.clientWidth || 720;
+      const rightDockLeft = Math.max(12, wrapperW - popW - 12);
+      // Dock in the top-right corner of .chart-canvas-wrapper by default so the popover never
+      // occludes the clicked point or its vertical SD error whiskers; if the clicked point is
+      // inside the top-right docking zone, dock in the top-left corner instead.
+      const left = (hit.x !== undefined && hit.x + 28 >= rightDockLeft) ? 12 : rightDockLeft;
+      const top = 12;
       clickPopoverEl.style.left = `${left}px`;
       clickPopoverEl.style.top = `${top}px`;
     }
+    window.openPointAuditPopover = openClickAuditPopover;
 
     function closeClickAuditPopover() {
       if (clickPopoverEl) clickPopoverEl.classList.add('hidden');
@@ -5391,6 +5446,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <button onclick="setStatFilterMode('flagged')" class="px-2 py-0.5 rounded ${statFilterMode === 'flagged' ? 'bg-[#00B5E2] text-slate-950 font-semibold' : 'text-[var(--muted-foreground)]'}">Flagged (${stats.flaggedCount})</button>
                   <button onclick="setStatFilterMode('all')" class="px-2 py-0.5 rounded ${statFilterMode === 'all' ? 'bg-[#00B5E2] text-slate-950 font-semibold' : 'text-[var(--muted-foreground)]'}">All Multi-Rep (${stats.multiRepCount})</button>
                 </div>
+                <a href="resource_qc_outlier_dashboard.html${selectedResources.size === 1 ? '?resource=' + encodeURIComponent(Array.from(selectedResources)[0]) : ''}" class="px-2 py-1 rounded border border-[#00B5E2]/50 bg-[#00B5E2]/10 text-[#00B5E2] font-semibold hover:bg-[#00B5E2]/20 transition-colors">Open Statistical QC &amp; Outlier Dashboard ↗</a>
+                <a href="resource_qc_audit_workbench.html" class="px-2 py-1 rounded border border-amber-500/40 bg-amber-500/10 text-amber-400 font-semibold hover:bg-amber-500/20 transition-colors">Open QC Audit Workbench ↗</a>
               </div>
             </div>
 
@@ -5462,6 +5519,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <div class="flex flex-wrap items-center gap-2">
               ${flagBadge}
               ${traceBadge}
+              <a href="resource_qc_outlier_dashboard.html${selectedResources.size === 1 ? '?resource=' + encodeURIComponent(Array.from(selectedResources)[0]) : ''}" onclick="event.stopPropagation()" class="px-2 py-0.5 rounded border border-[#00B5E2]/40 bg-[#00B5E2]/10 text-[#00B5E2] text-[11px] font-semibold hover:bg-[#00B5E2]/20 transition-colors">Open Statistical QC &amp; Outlier Dashboard ↗</a>
               <span class="px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--card)] text-[11px] font-medium text-[var(--foreground)]">${statDrawerOpen ? '▾ Hide Screening' : '▸ Expand Flagged Samples & RSD Table'}</span>
             </div>
           </div>

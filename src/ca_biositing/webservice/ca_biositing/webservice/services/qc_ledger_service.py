@@ -62,6 +62,20 @@ SEED_CSV_COLUMNS: list[str] = [
     "updated_at",
 ]
 
+VALID_QC_PASS_STATES: set[str] = {
+    "pass",
+    "fail",
+    "provisional",
+    "in_review",
+    "retest",
+}
+
+GSHEET_SYNC_ELIGIBLE_STATUSES: set[str] = {
+    "resolved",
+    "needs_retest",
+    "in_review",
+}
+
 ACTION_TO_QC_PASS: dict[str, str | None] = {
     "approve_pass": "pass",
     "approve": "pass",
@@ -70,21 +84,28 @@ ACTION_TO_QC_PASS: dict[str, str | None] = {
     "flip_to_pass": "pass",
     "pass": "pass",
     "trace_ignore": "pass",
+    "accept_pass": "pass",
+    "provisional": "provisional",
+    "approve_provisional": "provisional",
+    "mark_provisional": "provisional",
     "reject_fail": "fail",
+    "mark_fail": "fail",
     "reject": "fail",
     "exclude_qc_fail": "fail",
     "flag_fail": "fail",
     "flip_to_fail": "fail",
     "fail": "fail",
-    "needs_retest": None,
-    "retest": None,
+    "needs_retest": "retest",
+    "mark_retest": "retest",
+    "retest": "retest",
     "re_assay": None,
-    "defer": None,
-    "in_review": None,
-    "provisional": None,
     "accept_with_note": None,
     "keep_note": None,
+    "in_review": "in_review",
+    "mark_in_review": "in_review",
+    "defer": "in_review",
     "flag_for_review": None,
+    "open": None,
 }
 
 ACTION_TO_STATUS: dict[str, str] = {
@@ -95,23 +116,250 @@ ACTION_TO_STATUS: dict[str, str] = {
     "flip_to_pass": "resolved",
     "pass": "resolved",
     "trace_ignore": "resolved",
+    "accept_pass": "resolved",
+    "provisional": "resolved",
+    "approve_provisional": "resolved",
+    "mark_provisional": "resolved",
     "reject_fail": "resolved",
+    "mark_fail": "resolved",
     "reject": "resolved",
     "exclude_qc_fail": "resolved",
     "flag_fail": "resolved",
     "flip_to_fail": "resolved",
     "fail": "resolved",
     "needs_retest": "needs_retest",
+    "mark_retest": "needs_retest",
     "retest": "needs_retest",
     "re_assay": "needs_retest",
     "defer": "in_review",
     "in_review": "in_review",
-    "provisional": "in_review",
+    "mark_in_review": "in_review",
     "accept_with_note": "in_review",
     "keep_note": "in_review",
     "flag_for_review": "open",
     "open": "open",
 }
+
+AIM1_GSHEET_NAME = "Aim 1-Feedstock Collection and Processing Data-BioCirV"
+AIM2_BIOCHEM_GSHEET_NAME = "Aim 2-Biomass Biochem Conversion Data-BioCirV"
+AIM2_THERMO_GSHEET_NAME = "Aim 2-Thermochem Conversion Data-BioCirV"
+
+_ANALYSIS_DOMAIN_SPECS: list[
+    tuple[str, str, tuple[str, str, str], tuple[str, ...]]
+] = [
+    (
+        "proximate_record",
+        "Proximate Analysis",
+        (AIM1_GSHEET_NAME, "03.1-Proximate", "record_id"),
+        (
+            "proximate",
+            "proximate_analysis",
+            "proximate_record",
+            "03_1_proximate",
+        ),
+    ),
+    (
+        "ultimate_record",
+        "Ultimate Analysis",
+        (AIM1_GSHEET_NAME, "03.7-Ultimate", "record_id"),
+        (
+            "ultimate",
+            "ultimate_analysis",
+            "ultimate_record",
+            "03_7_ultimate",
+        ),
+    ),
+    (
+        "compositional_record",
+        "Compositional Analysis",
+        (AIM1_GSHEET_NAME, "03.3-CmpAna", "record_id"),
+        (
+            "compositional",
+            "compositional_analysis",
+            "compositional_record",
+            "cmpana",
+            "03_3_cmpana",
+        ),
+    ),
+    (
+        "calorimetry_record",
+        "Calorimetry Analysis",
+        (AIM1_GSHEET_NAME, "03.6-Caloric", "record_id"),
+        (
+            "calorimetry",
+            "calorimetry_analysis",
+            "calorimetry_record",
+            "caloric",
+            "03_6_caloric",
+        ),
+    ),
+    (
+        "icp_record",
+        "ICP Analysis",
+        (AIM1_GSHEET_NAME, "03.5-ICP", "record_id"),
+        (
+            "icp",
+            "icp_analysis",
+            "icp_elemental_analysis",
+            "icp_elemental",
+            "icp_record",
+            "03_5_icp",
+        ),
+    ),
+    (
+        "xrf_record",
+        "XRF Analysis",
+        (AIM1_GSHEET_NAME, "03.2-XRF", "record_id"),
+        (
+            "xrf",
+            "xrf_analysis",
+            "xrf_elemental_analysis",
+            "xrf_elemental",
+            "xrf_record",
+            "03_2_xrf",
+        ),
+    ),
+    (
+        "xrd_record",
+        "XRD Analysis",
+        (AIM1_GSHEET_NAME, "03.4-XRD", "record_id"),
+        (
+            "xrd",
+            "xrd_analysis",
+            "xrd_crystallinity",
+            "xrd_record",
+            "03_4_xrd",
+        ),
+    ),
+    (
+        "ftnir_record",
+        "FT-NIR",
+        (AIM1_GSHEET_NAME, "03.8-FT-NIR", "record_id"),
+        (
+            "ftnir",
+            "ft_nir",
+            "ft_ir",
+            "ftir",
+            "ft_nir_analysis",
+            "ft_ir_analysis",
+            "ftnir_analysis",
+            "ftnir_record",
+            "03_8_ft_nir",
+        ),
+    ),
+    (
+        "rgb_record",
+        "Colorimetry / RGB",
+        (AIM1_GSHEET_NAME, "03.9-RGB", "record_id"),
+        (
+            "rgb",
+            "colorimetry",
+            "colorimetry_rgb",
+            "rgb_analysis",
+            "rgb_record",
+            "03_9_rgb",
+        ),
+    ),
+    (
+        "autoclave_record",
+        "Autoclave",
+        (AIM2_BIOCHEM_GSHEET_NAME, "01.3-Autoclave", "record_id"),
+        (
+            "autoclave",
+            "autoclave_analysis",
+            "autoclave_pretreatment",
+            "autoclave_record",
+            "01_3_autoclave",
+        ),
+    ),
+    (
+        "pretreatment_record",
+        "Pretreatment & Hydrolysis",
+        (AIM2_BIOCHEM_GSHEET_NAME, "02.1-PretreatmentData", "record_id"),
+        (
+            "pretreatment",
+            "pretreatment_analysis",
+            "pretreatment_hydrolysis",
+            "pretreatment_and_hydrolysis",
+            "pretreatment_record",
+            "02_1_pretreatmentdata",
+        ),
+    ),
+    (
+        "fermentation_record",
+        "Fermentation / Bioconversion",
+        (AIM2_BIOCHEM_GSHEET_NAME, "02.2-BioConversionData", "record_id"),
+        (
+            "fermentation",
+            "fermentation_analysis",
+            "fermentation_bioconversion",
+            "bioconversion",
+            "fermentation_record",
+            "02_2_bioconversiondata",
+        ),
+    ),
+    (
+        "gasification_record",
+        "Gasification",
+        (AIM2_THERMO_GSHEET_NAME, "02-ThermoData", "record_id"),
+        (
+            "gasification",
+            "gasification_analysis",
+            "thermochemical",
+            "gasification_record",
+            "02_thermodata",
+        ),
+    ),
+]
+
+
+def _normalize_domain_token(raw: str | None) -> str:
+    if not raw:
+        return ""
+    return re.sub(r"[^a-z0-9]+", "_", str(raw).strip().lower()).strip("_")
+
+
+ANALYSIS_DOMAIN_REGISTRY: dict[
+    str, tuple[str, str, tuple[str, str, str]]
+] = {}
+RECORD_TABLE_GSHEET_TARGET_MAP: dict[str, tuple[str, str, str]] = {}
+for _canon_table, _canon_label, _gsheet_info, _aliases in _ANALYSIS_DOMAIN_SPECS:
+    _entry = (_canon_table, _canon_label, _gsheet_info)
+    RECORD_TABLE_GSHEET_TARGET_MAP[_canon_table] = _gsheet_info
+    for _tok in (_canon_table, _canon_label, *_aliases):
+        ANALYSIS_DOMAIN_REGISTRY[_normalize_domain_token(_tok)] = _entry
+        ANALYSIS_DOMAIN_REGISTRY[str(_tok).strip().lower()] = _entry
+
+
+def normalize_analysis_domain(
+    record_table: str | None = None,
+    analysis_type: str | None = None,
+) -> tuple[str, str]:
+    """Resolve `(canonical_record_table, canonical_analysis_label)` from any table or analysis_type alias."""
+    candidates: list[str | None] = (
+        [analysis_type, record_table]
+        if (record_table or "").strip().lower() in {"", "proximate_record"}
+        and (analysis_type or "").strip()
+        else [record_table, analysis_type]
+    )
+    for candidate in candidates:
+        if not candidate:
+            continue
+        norm = _normalize_domain_token(candidate)
+        if norm in ANALYSIS_DOMAIN_REGISTRY:
+            canon_table, canon_label, _ = ANALYSIS_DOMAIN_REGISTRY[norm]
+            return canon_table, canon_label
+        if not norm.endswith("_record") and f"{norm}_record" in ANALYSIS_DOMAIN_REGISTRY:
+            canon_table, canon_label, _ = ANALYSIS_DOMAIN_REGISTRY[f"{norm}_record"]
+            return canon_table, canon_label
+        first_token = norm.split("_")[0] if norm else ""
+        if first_token and first_token in ANALYSIS_DOMAIN_REGISTRY:
+            canon_table, canon_label, _ = ANALYSIS_DOMAIN_REGISTRY[first_token]
+            return canon_table, canon_label
+
+    fallback_table = _normalize_domain_token(record_table) or "proximate_record"
+    fallback_label = (analysis_type or record_table or "Proximate Analysis").strip()
+    return fallback_table, fallback_label
 
 
 def get_seed_csv_path(csv_path: Path | str | None = None) -> Path:
@@ -230,43 +478,26 @@ def get_record_model_map() -> dict[str, Type[SQLModel]]:
         XrfRecord,
     )
 
-    return {
+    canonical_models: dict[str, Type[SQLModel]] = {
         "proximate_record": ProximateRecord,
-        "proximate": ProximateRecord,
-        "proximate_analysis": ProximateRecord,
         "ultimate_record": UltimateRecord,
-        "ultimate": UltimateRecord,
-        "ultimate_analysis": UltimateRecord,
         "compositional_record": CompositionalRecord,
-        "compositional": CompositionalRecord,
-        "compositional_analysis": CompositionalRecord,
         "calorimetry_record": CalorimetryRecord,
-        "calorimetry": CalorimetryRecord,
-        "calorimetry_analysis": CalorimetryRecord,
         "icp_record": IcpRecord,
-        "icp": IcpRecord,
-        "icp_elemental_analysis": IcpRecord,
         "xrf_record": XrfRecord,
-        "xrf": XrfRecord,
-        "xrf_elemental_analysis": XrfRecord,
         "xrd_record": XrdRecord,
-        "xrd": XrdRecord,
-        "xrd_crystallinity": XrdRecord,
         "pretreatment_record": PretreatmentRecord,
-        "pretreatment": PretreatmentRecord,
-        "pretreatment_hydrolysis": PretreatmentRecord,
         "fermentation_record": FermentationRecord,
-        "fermentation": FermentationRecord,
-        "fermentation_bioconversion": FermentationRecord,
         "gasification_record": GasificationRecord,
-        "gasification": GasificationRecord,
         "autoclave_record": AutoclaveRecord,
-        "autoclave": AutoclaveRecord,
         "ftnir_record": FtnirRecord,
-        "ftnir": FtnirRecord,
         "rgb_record": RgbRecord,
-        "rgb": RgbRecord,
     }
+    model_map: dict[str, Type[SQLModel]] = dict(canonical_models)
+    for token, (canon_table, _, _) in ANALYSIS_DOMAIN_REGISTRY.items():
+        if canon_table in canonical_models:
+            model_map[token] = canonical_models[canon_table]
+    return model_map
 
 
 def resolve_record_model(
@@ -278,7 +509,11 @@ def resolve_record_model(
     for candidate in (record_table, analysis_type):
         if not candidate:
             continue
-        norm = re.sub(r"[^a-z0-9]+", "_", str(candidate).strip().lower()).strip("_")
+        norm = _normalize_domain_token(candidate)
+        if norm in ANALYSIS_DOMAIN_REGISTRY:
+            canon_table, _, _ = ANALYSIS_DOMAIN_REGISTRY[norm]
+            if canon_table in model_map:
+                return model_map[canon_table]
         if norm in model_map:
             return model_map[norm]
         if not norm.endswith("_record") and f"{norm}_record" in model_map:
@@ -290,6 +525,8 @@ def apply_qc_decision_to_db(
     session: Session,
     decision: QcReviewDecision,
     target_record_ids: Sequence[str] | None = None,
+    *,
+    freeze_old_qc_pass: bool = False,
 ) -> list[str]:
     """Apply a Stage 1 `QcReviewDecision` to the target analytical record row(s) in PostgreSQL.
 
@@ -321,10 +558,17 @@ def apply_qc_decision_to_db(
 
     for rec in records:
         current_qc = getattr(rec, "qc_pass", None)
-        if decision.old_qc_pass is None and current_qc is not None:
+        if (
+            not freeze_old_qc_pass
+            and decision.old_qc_pass is None
+            and current_qc is not None
+        ):
             decision.old_qc_pass = str(current_qc)
 
-        if decision.new_qc_pass in {"pass", "fail"} and hasattr(rec, "qc_pass"):
+        if (
+            decision.new_qc_pass in VALID_QC_PASS_STATES
+            and hasattr(rec, "qc_pass")
+        ):
             setattr(rec, "qc_pass", decision.new_qc_pass)
 
         if hasattr(rec, "note"):
@@ -598,12 +842,15 @@ def record_stage1_decision(
     rationale_chips: Sequence[str] | str | None = None,
     review_note: str = "",
     assigned_to_email: str | None = None,
+    scope: str | None = None,
     csv_path: Path | str | None = None,
 ) -> tuple[QcReviewDecision, list[str]]:
     """Record or update a Stage 1 QC review decision (Last-Write-Wins).
 
     Persists to `qc_review_decision`, applies `new_qc_pass` and `[QC_AUDIT ...]` note
     to the analytical record table, resets `synced_to_gsheet = False`, and mirrors to seed CSV.
+    When `scope == "group"` or `len(target_ids) > 1`, fans out the decision across all
+    target replicate records and sibling `QcReviewDecision` rows in the replicate group.
     """
     now = datetime.now(timezone.utc)
     clean_action = (decision_action or "").strip().lower() or None
@@ -616,8 +863,12 @@ def record_stage1_decision(
     if resolved_status is None:
         if clean_action and clean_action in ACTION_TO_STATUS:
             resolved_status = ACTION_TO_STATUS[clean_action]
-        elif resolved_new_qc in {"pass", "fail"}:
+        elif resolved_new_qc in {"pass", "fail", "provisional"}:
             resolved_status = "resolved"
+        elif resolved_new_qc == "retest":
+            resolved_status = "needs_retest"
+        elif resolved_new_qc == "in_review":
+            resolved_status = "in_review"
         else:
             resolved_status = "open"
 
@@ -626,104 +877,308 @@ def record_stage1_decision(
     clean_table = (record_table or "proximate_record").strip().lower()
     clean_record_id = (record_id or "").strip()
 
-    existing: QcReviewDecision | None = None
+    target_ids: list[str] = []
+    if clean_record_id:
+        target_ids.append(clean_record_id)
+    if record_ids:
+        for rid in record_ids:
+            clean_rid = str(rid or "").strip()
+            if clean_rid and clean_rid not in target_ids:
+                target_ids.append(clean_rid)
+    if not clean_record_id and target_ids:
+        clean_record_id = target_ids[0]
+
+    primary_existing: QcReviewDecision | None = None
     if decision_id is not None:
-        existing = session.get(QcReviewDecision, decision_id)
-    if existing is None and clean_record_id:
-        existing = session.exec(
+        primary_existing = session.get(QcReviewDecision, decision_id)
+    if primary_existing is None and clean_record_id:
+        primary_existing = session.exec(
             select(QcReviewDecision).where(
                 QcReviewDecision.record_table == clean_table,
                 QcReviewDecision.record_id == clean_record_id,
             )
         ).first()
 
-    if existing is None:
-        decision = QcReviewDecision(
-            record_table=clean_table,
-            record_id=clean_record_id,
-            replicate_group_key=replicate_group_key,
-            resource_name=clean_resource,
-            analysis_type=analysis_type,
-            parameter_name=parameter_name,
-            flag_type=(flag_type or "analyst_flagged").strip(),
-            flag_trigger_value=flag_trigger_value,
-            old_qc_pass=old_qc_pass,
-            new_qc_pass=resolved_new_qc,
-            decision_status=resolved_status,
-            decision_action=clean_action,
-            rationale_chips=chips_norm,
-            review_note=review_note or "",
-            submitted_by_email=actor_email,
-            assigned_to_email=(
-                assigned_to_email.strip().lower()
-                if assigned_to_email and assigned_to_email.strip()
-                else None
-            ),
-            resolved_by_email=(
-                actor_email
-                if resolved_status in {"resolved", "needs_retest"}
-                else None
-            ),
-            resolved_at=(
-                now if resolved_status in {"resolved", "needs_retest"} else None
-            ),
-            synced_to_gsheet=False,
-            gsheet_synced_at=None,
-            created_at=now,
-            updated_at=now,
+    effective_group_key = replicate_group_key
+    if not effective_group_key and primary_existing is not None:
+        effective_group_key = primary_existing.replicate_group_key
+
+    clean_scope = str(scope or "").strip().lower()
+    is_group_scope = clean_scope not in {"row", "single", "single_record"} and (
+        clean_scope == "group" or len(target_ids) > 1
+    )
+
+    if is_group_scope and effective_group_key and effective_group_key.strip():
+        sibling_rows = list(
+            session.exec(
+                select(QcReviewDecision).where(
+                    QcReviewDecision.record_table == clean_table,
+                    QcReviewDecision.replicate_group_key == effective_group_key,
+                )
+            ).all()
         )
-        session.add(decision)
-    else:
-        decision = existing
-        if old_qc_pass is not None:
-            decision.old_qc_pass = old_qc_pass
-        elif decision.new_qc_pass is not None and resolved_new_qc != decision.new_qc_pass:
-            decision.old_qc_pass = decision.new_qc_pass
+        for sib in sibling_rows:
+            sib_rid = (sib.record_id or "").strip()
+            if sib_rid and sib_rid not in target_ids:
+                target_ids.append(sib_rid)
 
-        if replicate_group_key is not None:
-            decision.replicate_group_key = replicate_group_key
-        if resource_name and resource_name != "unknown":
-            decision.resource_name = clean_resource
-        if analysis_type is not None:
-            decision.analysis_type = analysis_type
-        if parameter_name is not None:
-            decision.parameter_name = parameter_name
-        if flag_type:
-            decision.flag_type = flag_type.strip()
-        if flag_trigger_value is not None:
-            decision.flag_trigger_value = flag_trigger_value
+    effective_target_ids = (
+        target_ids
+        if is_group_scope and target_ids
+        else ([clean_record_id] if clean_record_id else target_ids[:1])
+    )
 
-        decision.new_qc_pass = resolved_new_qc
-        decision.decision_status = resolved_status
-        decision.decision_action = clean_action
-        if chips_norm is not None:
-            decision.rationale_chips = chips_norm
-        decision.review_note = review_note or ""
-        if assigned_to_email is not None:
-            decision.assigned_to_email = (
-                assigned_to_email.strip().lower() if assigned_to_email.strip() else None
+    group_decisions: list[tuple[QcReviewDecision, bool]] = []
+    for idx, rid in enumerate(effective_target_ids):
+        existing: QcReviewDecision | None = None
+        if idx == 0 and primary_existing is not None and (
+            primary_existing.record_id == rid or len(effective_target_ids) == 1
+        ):
+            existing = primary_existing
+        if existing is None:
+            existing = session.exec(
+                select(QcReviewDecision).where(
+                    QcReviewDecision.record_table == clean_table,
+                    QcReviewDecision.record_id == rid,
+                )
+            ).first()
+
+        if existing is None:
+            had_prior_qc_override = False
+            sib_decision = QcReviewDecision(
+                record_table=clean_table,
+                record_id=rid,
+                replicate_group_key=effective_group_key,
+                resource_name=clean_resource,
+                analysis_type=analysis_type,
+                parameter_name=parameter_name,
+                flag_type=(flag_type or "analyst_flagged").strip(),
+                flag_trigger_value=flag_trigger_value,
+                old_qc_pass=old_qc_pass,
+                new_qc_pass=resolved_new_qc,
+                decision_status=resolved_status,
+                decision_action=clean_action,
+                rationale_chips=chips_norm,
+                review_note=review_note or "",
+                submitted_by_email=actor_email,
+                assigned_to_email=(
+                    assigned_to_email.strip().lower()
+                    if assigned_to_email and assigned_to_email.strip()
+                    else None
+                ),
+                resolved_by_email=(
+                    actor_email
+                    if resolved_status in GSHEET_SYNC_ELIGIBLE_STATUSES
+                    else None
+                ),
+                resolved_at=(
+                    now
+                    if resolved_status in GSHEET_SYNC_ELIGIBLE_STATUSES
+                    else None
+                ),
+                synced_to_gsheet=False,
+                gsheet_synced_at=None,
+                created_at=now,
+                updated_at=now,
             )
-        if resolved_status in {"resolved", "needs_retest"}:
-            decision.resolved_by_email = actor_email
-            decision.resolved_at = now
-        # Stage 1 modification resets synced_to_gsheet to False so it re-enters Admin GSheet queue
-        decision.synced_to_gsheet = False
-        decision.gsheet_synced_at = None
-        decision.updated_at = now
-        session.add(decision)
+            session.add(sib_decision)
+        else:
+            sib_decision = existing
+            had_prior_qc_override = sib_decision.new_qc_pass is not None
+            # Freeze old_qc_pass on first capture (Review B5): only populate when None and not yet overridden
+            if (
+                sib_decision.old_qc_pass is None
+                and not had_prior_qc_override
+                and old_qc_pass is not None
+            ):
+                sib_decision.old_qc_pass = old_qc_pass
+
+            if effective_group_key is not None:
+                sib_decision.replicate_group_key = effective_group_key
+            if resource_name and resource_name != "unknown":
+                sib_decision.resource_name = clean_resource
+            if analysis_type is not None:
+                sib_decision.analysis_type = analysis_type
+            if parameter_name is not None:
+                sib_decision.parameter_name = parameter_name
+            if flag_type:
+                sib_decision.flag_type = flag_type.strip()
+            if flag_trigger_value is not None:
+                sib_decision.flag_trigger_value = flag_trigger_value
+
+            sib_decision.new_qc_pass = resolved_new_qc
+            sib_decision.decision_status = resolved_status
+            sib_decision.decision_action = clean_action
+            if chips_norm is not None:
+                sib_decision.rationale_chips = chips_norm
+            sib_decision.review_note = review_note or ""
+            if assigned_to_email is not None:
+                sib_decision.assigned_to_email = (
+                    assigned_to_email.strip().lower()
+                    if assigned_to_email.strip()
+                    else None
+                )
+            if resolved_status in GSHEET_SYNC_ELIGIBLE_STATUSES:
+                sib_decision.resolved_by_email = actor_email
+                sib_decision.resolved_at = now
+            # Stage 1 modification resets synced_to_gsheet to False so it re-enters Admin GSheet queue
+            sib_decision.synced_to_gsheet = False
+            sib_decision.gsheet_synced_at = None
+            sib_decision.updated_at = now
+            session.add(sib_decision)
+
+        group_decisions.append((sib_decision, had_prior_qc_override))
 
     session.flush()
-    updated_record_ids = apply_qc_decision_to_db(
-        session=session,
-        decision=decision,
-        target_record_ids=record_ids,
-    )
-    session.add(decision)
-    session.commit()
-    session.refresh(decision)
+    updated_record_ids: list[str] = []
+    for sib_decision, had_prior_qc_override in group_decisions:
+        mod_ids = apply_qc_decision_to_db(
+            session=session,
+            decision=sib_decision,
+            target_record_ids=[sib_decision.record_id],
+            freeze_old_qc_pass=had_prior_qc_override,
+        )
+        for mid in mod_ids:
+            if mid not in updated_record_ids:
+                updated_record_ids.append(mid)
+        session.add(sib_decision)
 
-    append_or_update_seed_csv(decision, csv_path=csv_path)
-    return decision, updated_record_ids
+    session.commit()
+    for sib_decision, _ in group_decisions:
+        session.refresh(sib_decision)
+        append_or_update_seed_csv(sib_decision, csv_path=csv_path)
+
+    primary_decision = group_decisions[0][0]
+    return primary_decision, updated_record_ids
+
+
+record_qc_decision = record_stage1_decision
+
+
+def revert_qc_decision(
+    session: Session,
+    *,
+    decision_id: int,
+    actor_email: str,
+    reason: str = "Reverted to open review queue",
+    sync_to_gsheet: bool = False,
+    is_admin: bool = False,
+    csv_path: Path | str | None = None,
+) -> dict[str, Any]:
+    """Revert a resolved/synced `QcReviewDecision` (and any replicate-group siblings) back to `open`.
+
+    Restores `rec.qc_pass` on each analytical record in PostgreSQL to `sib.old_qc_pass`
+    (preserving `None` when the original pre-audit `qc_pass` was `NULL` per Review B6),
+    resets `decision_status = "open"`, and optionally writes the revert back to Google Sheets.
+    """
+    decision = session.get(QcReviewDecision, decision_id)
+    if decision is None:
+        raise KeyError(f"QC decision {decision_id} not found.")
+
+    group_decisions: list[QcReviewDecision] = [decision]
+    if decision.replicate_group_key and decision.replicate_group_key.strip():
+        siblings = list(
+            session.exec(
+                select(QcReviewDecision).where(
+                    QcReviewDecision.record_table == decision.record_table,
+                    QcReviewDecision.replicate_group_key
+                    == decision.replicate_group_key,
+                )
+            ).all()
+        )
+        for sib in siblings:
+            if all(sib.id != d.id for d in group_decisions):
+                group_decisions.append(sib)
+
+    was_synced = any(bool(d.synced_to_gsheet) for d in group_decisions)
+    now = datetime.now(timezone.utc)
+    now_iso = _format_dt(now)
+    clean_reason = (reason or "Reverted to open review queue").strip()
+    revert_tag = f"[Reverted by {actor_email} at {now_iso}: {clean_reason}]"
+
+    model_cls = resolve_record_model(decision.record_table, decision.analysis_type)
+    record_id_col = (
+        getattr(model_cls, "record_id", None) if model_cls is not None else None
+    )
+    reverted_record_ids: list[str] = []
+
+    for sib in group_decisions:
+        restored_qc: str | None = (
+            sib.old_qc_pass.strip().lower()
+            if sib.old_qc_pass is not None and sib.old_qc_pass.strip()
+            else None
+        )
+
+        if model_cls is not None and record_id_col is not None and sib.record_id:
+            rec = session.exec(
+                select(model_cls).where(record_id_col == sib.record_id)
+            ).first()
+            if rec is not None:
+                if hasattr(rec, "qc_pass"):
+                    setattr(rec, "qc_pass", restored_qc)
+                if hasattr(rec, "note"):
+                    existing_note = getattr(rec, "note", None)
+                    new_note = format_qc_audit_note(
+                        existing_note=existing_note,
+                        decision_id=sib.id or sib.record_id,
+                        new_qc_pass=(restored_qc or "reverted"),
+                        resolved_by_email=actor_email,
+                        review_note=f"Reverted: {clean_reason}",
+                        resolved_at=now,
+                        rationale_chips=sib.rationale_chips,
+                    )
+                    setattr(rec, "note", new_note)
+                if hasattr(rec, "updated_at"):
+                    setattr(rec, "updated_at", now)
+                session.add(rec)
+                reverted_record_ids.append(str(sib.record_id))
+
+        sib.decision_status = "open"
+        sib.decision_action = "open"
+        sib.new_qc_pass = restored_qc
+        sib.resolved_by_email = None
+        sib.resolved_at = None
+        sib.synced_to_gsheet = False
+        sib.gsheet_synced_at = None
+        sib.updated_at = now
+        prior_note = (sib.review_note or "").strip()
+        sib.review_note = (
+            f"{prior_note} {revert_tag}".strip() if prior_note else revert_tag
+        )
+        session.add(sib)
+
+    session.commit()
+    for sib in group_decisions:
+        session.refresh(sib)
+        append_or_update_seed_csv(sib, csv_path=csv_path)
+
+    gsheet_writeback_info: dict[str, Any] | None = None
+    if was_synced and sync_to_gsheet and is_admin:
+        from ca_biositing.webservice.services.gsheet_sync_service import (
+            writeback_decision_to_gsheet_row,
+        )
+
+        gsheet_writeback_info = writeback_decision_to_gsheet_row(
+            decision=decision,
+            target_record_ids=[d.record_id for d in group_decisions if d.record_id],
+        )
+
+    serialized = serialize_decision(decision)
+    return {
+        "status": "ok",
+        "decision_id": decision.id,
+        "decision": serialized,
+        "decisions": [serialize_decision(d) for d in group_decisions],
+        "reverted_decision_ids": [
+            d.id for d in group_decisions if d.id is not None
+        ],
+        "reverted_record_ids": reverted_record_ids,
+        "restored_qc_pass": decision.new_qc_pass,
+        "gsheet_reverted": bool(
+            gsheet_writeback_info
+            and gsheet_writeback_info.get("writeback_status") == "synced"
+        ),
+    }
 
 
 def export_decisions_to_csv_string(decisions: Sequence[QcReviewDecision]) -> str:
