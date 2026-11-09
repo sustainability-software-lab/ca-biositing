@@ -18,7 +18,6 @@ Optional: a topic, a section, or "all" to cover everything from this session.
 ## Instructions
 
 1. **Gather context** — run these in parallel to understand what changed:
-
    - `git log --oneline -20` (recent commits)
    - `git diff main...HEAD --stat` (if on a feature branch)
    - `git log --oneline --since="8 hours ago"` (today's work)
@@ -27,7 +26,6 @@ Optional: a topic, a section, or "all" to cover everything from this session.
 
 2. **Determine scope** — based on the argument and recent changes, decide which
    docs need writing or updating:
-
    - If the argument is a specific topic (e.g., "landiq", "auth", "materialized
      views"), focus there
    - If the argument is a section (e.g., "pipeline", "datamodels",
@@ -59,7 +57,6 @@ Optional: a topic, a section, or "all" to cover everything from this session.
      relevant docs page when that helps.
 
 4. **Place documentation correctly** — follow the existing layout:
-
    - System architecture → `docs/architecture.md`
    - ETL pipeline and flows → `docs/pipeline/`
    - Data models, schema, and the SQL-first workflow → `docs/datamodels/`

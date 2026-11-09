@@ -36,6 +36,7 @@ def load(df: pd.DataFrame) -> bool:
         engine = get_engine()
         with engine.connect() as conn:
             with Session(bind=conn) as session:
+                batch = []
                 for i, record in enumerate(records):
                     if i > 0 and i % 500 == 0:
                         logger.info(f"Processed {i} records...")
@@ -58,8 +59,11 @@ def load(df: pd.DataFrame) -> bool:
                             if k not in ["plant_id", "created_at", "record_id"]:
                                 setattr(existing_record, k, v)
                     else:
+                        batch = batch + [clean_record]
 
-                        stmt = insert(InfrastructureWastewaterTreatmentPlants).values(clean_record)
+                    if i > 0 and i % 1000 == 0:
+                        # load batch every 1000
+                        stmt = insert(InfrastructureWastewaterTreatmentPlants).values(batch)
                         update_dict = {
                             c.name: stmt.excluded[c.name]
                             for c in InfrastructureWastewaterTreatmentPlants.__table__.columns
@@ -70,8 +74,22 @@ def load(df: pd.DataFrame) -> bool:
                             set_=update_dict,
                         )
                         session.execute(upsert_stmt)
+                        session.commit()
+                        batch = []
+                if i % 1000 != 0:
+                    stmt = insert(InfrastructureWastewaterTreatmentPlants).values(batch)
+                    update_dict = {
+                        c.name: stmt.excluded[c.name]
+                        for c in InfrastructureWastewaterTreatmentPlants.__table__.columns
+                        if c.name not in ["plant_id", 'created_at', 'record_id']
+                    }
+                    upsert_stmt = stmt.on_conflict_do_update(
+                        index_elements=["plant_id"],
+                        set_=update_dict,
+                    )
+                    session.execute(upsert_stmt)
+                    session.commit()
 
-                session.commit()
 
         logger.info("Successfully upserted records.")
         return True

@@ -16,7 +16,6 @@ A description of the issue to create.
 ## Instructions
 
 1. Based on the description, determine:
-
    - **Type**: `feat`, `fix`, `refactor`, `docs`, `chore`, `perf`, `ci`,
      `build`, `test`
    - **Scope**: the area of the codebase affected (e.g., `data`, `pipeline`,

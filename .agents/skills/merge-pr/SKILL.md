@@ -16,13 +16,11 @@ Optional: a PR number or URL. Defaults to the current branch's PR.
 ## Instructions
 
 1. Determine the PR:
-
    - If a PR number or URL was passed, use it
    - If not, find the PR for the current branch:
      `gh pr view --json number,title,state,headRefName`
 
 2. Check PR status:
-
    - `gh pr view <number> --json state,mergeable,mergeStateStatus,statusCheckRollup,title,headRefName,isCrossRepository`
    - If checks are failing, warn the user and ask whether to proceed
    - If there are merge conflicts, tell the user and stop
@@ -30,7 +28,6 @@ Optional: a PR number or URL. Defaults to the current branch's PR.
      `origin`: skip every remote-branch deletion below
 
 3. Check for local changes and for a linked worktree:
-
    - `git status`
    - Compare `git rev-parse --git-dir` with `git rev-parse --git-common-dir`. If
      they differ, this checkout is a linked worktree, and `main` is usually
@@ -44,7 +41,6 @@ Optional: a PR number or URL. Defaults to the current branch's PR.
 
 4. Merge the PR. Use `--squash` by default (consistent with this repo's
    history).
-
    - In the main checkout:
 
      ```bash
@@ -61,7 +57,6 @@ Optional: a PR number or URL. Defaults to the current branch's PR.
      ```
 
 5. Clean up locally:
-
    - In the main checkout:
      - Switch to main if not already: `git checkout main`
      - Pull the merged changes: `git pull origin main`
@@ -74,7 +69,6 @@ Optional: a PR number or URL. Defaults to the current branch's PR.
        Do not check out `main` here.
 
 6. Verify cleanup:
-
    - `git branch -a | grep <branch-name>` to confirm the branch is gone. In a
      linked worktree the local branch remains until the worktree is removed.
 

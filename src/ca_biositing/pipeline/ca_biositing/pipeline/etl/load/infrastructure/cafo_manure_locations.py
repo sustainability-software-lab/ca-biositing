@@ -36,6 +36,7 @@ def load(df: pd.DataFrame) -> bool:
         engine = get_engine()
         with engine.connect() as conn:
             with Session(bind=conn) as session:
+                batch = []
                 for i, record in enumerate(records):
                     if i > 0 and i % 500 == 0:
                         logger.info(f"Processed {i} records...")
@@ -58,20 +59,37 @@ def load(df: pd.DataFrame) -> bool:
                             if k not in ["cafo_manure_id", "created_at", "record_id"]:
                                 setattr(existing_record, k, v)
                     else:
+                        batch = batch + [clean_record]
+                    if i > 0 and i % 1000 == 0:
+                        # load batch every 1000
+                        stmt = insert(InfrastructureCafoManureLocations).values(batch)
 
-                        stmt2 = insert(InfrastructureCafoManureLocations).values(clean_record)
                         update_dict = {
-                            c.name: stmt2.excluded[c.name]
+                            c.name: stmt.excluded[c.name]
                             for c in InfrastructureCafoManureLocations.__table__.columns
                             if c.name not in ["cafo_manure_id", 'created_at', 'record_id']
                         }
-                        upsert_stmt = stmt2.on_conflict_do_update(
+                        upsert_stmt = stmt.on_conflict_do_update(
                             index_elements=["cafo_manure_id"],
                             set_=update_dict,
                         )
                         session.execute(upsert_stmt)
+                        session.commit()
+                        batch = []
+                if i % 1000 != 0:
+                    stmt = insert(InfrastructureCafoManureLocations).values(batch)
+                    update_dict = {
+                        c.name: stmt.excluded[c.name]
+                        for c in InfrastructureCafoManureLocations.__table__.columns
+                        if c.name not in ["cafo_manure_id", 'created_at', 'record_id']
+                    }
+                    upsert_stmt = stmt.on_conflict_do_update(
+                        index_elements=["cafo_manure_id"],
+                        set_=update_dict,
+                    )
+                    session.execute(upsert_stmt)
+                    session.commit()
 
-                session.commit()
 
         logger.info("Successfully upserted records.")
         return True
