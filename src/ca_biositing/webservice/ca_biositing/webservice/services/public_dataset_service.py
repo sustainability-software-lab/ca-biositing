@@ -109,9 +109,7 @@ class PublicDatasetService:
         resource_subclass: Optional[str] = None,
         has_proximate: Optional[bool] = None,
         has_compositional: Optional[bool] = None,
-        has_xrf: Optional[bool] = None,
         has_icp: Optional[bool] = None,
-        has_calorimetry: Optional[bool] = None,
         skip: int = 0,
         limit: int = MAX_PAGE_LIMIT,
     ) -> dict[str, Any]:
@@ -132,12 +130,8 @@ class PublicDatasetService:
             stmt = stmt.where(view.c.has_proximate.is_(has_proximate))
         if has_compositional is not None:
             stmt = stmt.where(view.c.has_compositional.is_(has_compositional))
-        if has_xrf is not None:
-            stmt = stmt.where(view.c.has_xrf.is_(has_xrf))
         if has_icp is not None:
             stmt = stmt.where(view.c.has_icp.is_(has_icp))
-        if has_calorimetry is not None:
-            stmt = stmt.where(view.c.has_calorimetry.is_(has_calorimetry))
 
         return _paginate_and_execute(
             session,

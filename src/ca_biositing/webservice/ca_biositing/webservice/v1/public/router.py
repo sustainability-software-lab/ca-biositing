@@ -143,14 +143,8 @@ def list_public_resources(
     has_compositional: Optional[bool] = Query(
         None, description="Filter by presence of Compositional analysis data"
     ),
-    has_xrf: Optional[bool] = Query(
-        None, description="Filter by presence of XRF analysis data"
-    ),
     has_icp: Optional[bool] = Query(
         None, description="Filter by presence of ICP analysis data"
-    ),
-    has_calorimetry: Optional[bool] = Query(
-        None, description="Filter by presence of Calorimetry analysis data"
     ),
 ) -> dict:
     return PublicDatasetService.list_resources(
@@ -159,9 +153,7 @@ def list_public_resources(
         resource_subclass=resource_subclass,
         has_proximate=has_proximate,
         has_compositional=has_compositional,
-        has_xrf=has_xrf,
         has_icp=has_icp,
-        has_calorimetry=has_calorimetry,
         skip=pagination["skip"],
         limit=pagination["limit"],
     )
@@ -242,7 +234,7 @@ def list_public_sample_summary_by_name(
     pagination: PublicPaginationDep,
     analysis_type: Optional[str] = Query(
         None,
-        description="Filter by Stage 1 analysis type (proximate, compositional, xrf, icp, calorimetry)",
+        description="Filter by Stage 1 analysis type (proximate, compositional, icp)",
     ),
     parameter_name: Optional[str] = Query(
         None, description="Filter by analytical parameter name"
@@ -271,7 +263,7 @@ def list_public_observations(
     ),
     analysis_type: Optional[str] = Query(
         None,
-        description="Filter by Stage 1 analysis type (proximate, compositional, xrf, icp, calorimetry)",
+        description="Filter by Stage 1 analysis type (proximate, compositional, icp)",
     ),
     parameter_name: Optional[str] = Query(
         None, description="Filter by analytical parameter name (e.g. 'moisture', 'glucan')"
@@ -327,7 +319,7 @@ def list_public_sample_summaries(
     ),
     analysis_type: Optional[str] = Query(
         None,
-        description="Filter by Stage 1 analysis type (proximate, compositional, xrf, icp, calorimetry)",
+        description="Filter by Stage 1 analysis type (proximate, compositional, icp)",
     ),
     parameter_name: Optional[str] = Query(
         None, description="Filter by analytical parameter name"
@@ -369,7 +361,7 @@ def list_public_analytical_summaries(
     ),
     analysis_type: Optional[str] = Query(
         None,
-        description="Filter by Stage 1 analysis type (proximate, compositional, xrf, icp, calorimetry)",
+        description="Filter by Stage 1 analysis type (proximate, compositional, icp)",
     ),
     parameter_name: Optional[str] = Query(
         None, description="Filter by analytical parameter name"

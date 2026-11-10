@@ -437,13 +437,13 @@ def test_public_resources_list_and_lookup_without_auth(
     assert res["prepared_sample_count"] == 1
     assert res["provider_count"] == 1
     assert res["county_count"] == 1
-    assert res["replicate_record_count"] == 6
-    assert res["observation_count"] == 10
+    assert res["replicate_record_count"] == 4
+    assert res["observation_count"] == 8
     assert res["has_proximate"] is True
     assert res["has_compositional"] is True
-    assert res["has_calorimetry"] is True
     assert res["has_icp"] is True
-    assert res["has_xrf"] is True
+    assert "has_calorimetry" not in res
+    assert "has_xrf" not in res
 
     # Lookup by string name (case-insensitive)
     resp_name = public_client.get("/v1/public/resources/ALMOND_HULLS")
@@ -478,9 +478,9 @@ def test_public_samples_no_fanout_and_detail(
     assert sample["county_name"] == "Yolo"
     assert sample["ag_treatment_name"] == "Conventional; Irrigated"
     assert sample["processing_method_name"] == "Hulling"
-    # 6 distinct Stage 1 analytical records vs 10 parameter-level observations
-    assert sample["replicate_record_count"] == 6
-    assert sample["observation_count"] == 10
+    # 4 distinct Stage 1 analytical records vs 8 parameter-level observations
+    assert sample["replicate_record_count"] == 4
+    assert sample["observation_count"] == 8
 
     # Single sample lookup by prepared_sample_name
     resp_detail = public_client.get("/v1/public/samples/PS-ALM-100")
@@ -507,7 +507,7 @@ def test_public_observations_and_filters(
     resp = public_client.get("/v1/public/analysis/observations")
     assert resp.status_code == 200
     body = resp.json()
-    assert body["total"] == 10
+    assert body["total"] == 8
 
     # Filter by analysis_type, parameter_name, and prepared_sample_name
     resp_ash = public_client.get(
@@ -581,11 +581,9 @@ def test_public_discovery_endpoints(
         for r in resp_at.json()
     }
     assert at_map == {
-        "calorimetry": 1,
         "compositional": 3,
         "icp": 1,
         "proximate": 4,
-        "xrf": 1,
     }
 
     resp_params = public_client.get("/v1/public/discovery/parameters")
@@ -604,7 +602,7 @@ def test_public_discovery_endpoints(
     assert counties[0]["county_name"] == "Yolo"
     assert counties[0]["geoid"] == "06113"
     assert counties[0]["prepared_sample_count"] == 1
-    assert counties[0]["observation_count"] == 10
+    assert counties[0]["observation_count"] == 8
 
 
 def test_public_bounded_pagination_rejects_limit_over_100(
@@ -801,6 +799,8 @@ def test_public_responses_contain_no_sensitive_or_excluded_strings(
         "Jaguar",
         "pub_prox_fail",
         "pub_prox_unreviewed",
+        "pub_cal_1",
+        "pub_xrf_1",
     ]
     for ep in endpoints:
         resp = public_client.get(ep)

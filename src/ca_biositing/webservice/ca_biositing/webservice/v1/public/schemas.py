@@ -44,9 +44,7 @@ class PublicResourceItem(BaseModel):
     observation_count: int = 0
     has_proximate: bool = False
     has_compositional: bool = False
-    has_xrf: bool = False
     has_icp: bool = False
-    has_calorimetry: bool = False
 
 
 class PublicSampleItem(BaseModel):

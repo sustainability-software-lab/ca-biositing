@@ -208,9 +208,7 @@ def get_biocirv_resources_view(session: Session):
             column("observation_count", Integer),
             column("has_proximate", Boolean),
             column("has_compositional", Boolean),
-            column("has_xrf", Boolean),
             column("has_icp", Boolean),
-            column("has_calorimetry", Boolean),
         )
     register_sqlite_udfs(session)
     return mv_resources.subquery("mv_resources")
