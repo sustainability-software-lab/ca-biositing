@@ -3,14 +3,12 @@
 Primary Zenodo Stage 1 release table at the technical-replicate observation grain
 (`biocirv_public.mv_analytical_observations`).
 
-Includes strictly the 5 Stage 1 Aim 1 record types:
+Includes strictly the 3 Stage 1 Aim 1 record types:
 - `proximate` (`ProximateRecord`)
 - `compositional` (`CompositionalRecord`)
-- `xrf` (`XrfRecord`)
 - `icp` (`IcpRecord`)
-- `calorimetry` (`CalorimetryRecord`)
 
-Excludes `UltimateRecord`, `XrdRecord`, `FtnirRecord`, and Aim 2 record types.
+Excludes `XrfRecord`, `CalorimetryRecord`, `UltimateRecord`, `XrdRecord`, `FtnirRecord`, and Aim 2 record types.
 
 Governance & Privacy Rules (from `data_portal_views/common.py`):
 1. `get_resource_filter(Resource)` — excludes problematic resources (`EXCLUDED_RESOURCES`).
@@ -47,11 +45,9 @@ from ca_biositing.datamodels.data_portal_views.common import (
     get_sum_constraints_subquery,
 )
 from ca_biositing.datamodels.models.aim1_records import (
-    CalorimetryRecord,
     CompositionalRecord,
     IcpRecord,
     ProximateRecord,
-    XrfRecord,
 )
 from ca_biositing.datamodels.models.experiment_equipment.experiment import Experiment
 from ca_biositing.datamodels.models.field_sampling.field_sample import FieldSample
@@ -85,16 +81,12 @@ from ca_biositing.datamodels.models.sample_preparation.prepared_sample import (
 
 PROXIMATE_TYPES = ["proximate analysis", "proximate_record", "proximate"]
 COMPOSITIONAL_TYPES = ["compositional analysis", "compositional_record", "compositional"]
-XRF_TYPES = ["xrf analysis", "xrf_record", "xrf"]
 ICP_TYPES = ["icp analysis", "icp_record", "icp"]
-CALORIMETRY_TYPES = ["calorimetry analysis", "calorimetry_record", "calorimetry"]
 
 STAGE_1_RECORD_TYPES = (
     PROXIMATE_TYPES
     + COMPOSITIONAL_TYPES
-    + XRF_TYPES
     + ICP_TYPES
-    + CALORIMETRY_TYPES
 )
 
 _value_unit = aliased(Unit, name="value_unit")
@@ -103,67 +95,51 @@ _dimension_unit = aliased(Unit, name="dimension_unit")
 _analysis_type_expr = case(
     (func.lower(Observation.record_type).in_(PROXIMATE_TYPES), literal("proximate")),
     (func.lower(Observation.record_type).in_(COMPOSITIONAL_TYPES), literal("compositional")),
-    (func.lower(Observation.record_type).in_(XRF_TYPES), literal("xrf")),
     (func.lower(Observation.record_type).in_(ICP_TYPES), literal("icp")),
-    (func.lower(Observation.record_type).in_(CALORIMETRY_TYPES), literal("calorimetry")),
     else_=func.lower(Observation.record_type),
 )
 
 _matched_record_pk = func.coalesce(
     ProximateRecord.id,
     CompositionalRecord.id,
-    XrfRecord.id,
     IcpRecord.id,
-    CalorimetryRecord.id,
 )
 
 _matched_prepared_sample_id = func.coalesce(
     ProximateRecord.prepared_sample_id,
     CompositionalRecord.prepared_sample_id,
-    XrfRecord.prepared_sample_id,
     IcpRecord.prepared_sample_id,
-    CalorimetryRecord.prepared_sample_id,
 )
 
 _matched_resource_id = func.coalesce(
     ProximateRecord.resource_id,
     CompositionalRecord.resource_id,
-    XrfRecord.resource_id,
     IcpRecord.resource_id,
-    CalorimetryRecord.resource_id,
     FieldSample.resource_id,
 )
 
 _matched_method_id = func.coalesce(
     ProximateRecord.method_id,
     CompositionalRecord.method_id,
-    XrfRecord.method_id,
     IcpRecord.method_id,
-    CalorimetryRecord.method_id,
 )
 
 _matched_experiment_id = func.coalesce(
     ProximateRecord.experiment_id,
     CompositionalRecord.experiment_id,
-    XrfRecord.experiment_id,
     IcpRecord.experiment_id,
-    CalorimetryRecord.experiment_id,
 )
 
 _matched_replicate_no = func.coalesce(
     ProximateRecord.technical_replicate_no,
     CompositionalRecord.technical_replicate_no,
-    XrfRecord.technical_replicate_no,
     IcpRecord.technical_replicate_no,
-    CalorimetryRecord.technical_replicate_no,
 )
 
 _matched_replicate_total = func.coalesce(
     ProximateRecord.technical_replicate_total,
     CompositionalRecord.technical_replicate_total,
-    XrfRecord.technical_replicate_total,
     IcpRecord.technical_replicate_total,
-    CalorimetryRecord.technical_replicate_total,
 )
 
 # Do NOT fall back to literal("pass"): unreviewed records with qc_pass IS NULL
@@ -171,9 +147,7 @@ _matched_replicate_total = func.coalesce(
 _matched_qc_pass = func.coalesce(
     ProximateRecord.qc_pass,
     CompositionalRecord.qc_pass,
-    XrfRecord.qc_pass,
     IcpRecord.qc_pass,
-    CalorimetryRecord.qc_pass,
 )
 
 _obs_base = (
@@ -231,24 +205,10 @@ _obs_base = (
         ),
     )
     .outerjoin(
-        XrfRecord,
-        and_(
-            func.lower(Observation.record_id) == func.lower(XrfRecord.record_id),
-            func.lower(Observation.record_type).in_(XRF_TYPES),
-        ),
-    )
-    .outerjoin(
         IcpRecord,
         and_(
             func.lower(Observation.record_id) == func.lower(IcpRecord.record_id),
             func.lower(Observation.record_type).in_(ICP_TYPES),
-        ),
-    )
-    .outerjoin(
-        CalorimetryRecord,
-        and_(
-            func.lower(Observation.record_id) == func.lower(CalorimetryRecord.record_id),
-            func.lower(Observation.record_type).in_(CALORIMETRY_TYPES),
         ),
     )
     .outerjoin(PreparedSample, PreparedSample.id == _matched_prepared_sample_id)

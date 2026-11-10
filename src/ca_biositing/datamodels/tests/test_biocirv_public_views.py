@@ -161,6 +161,8 @@ def test_privacy_and_scope_redaction_in_compiled_sql(view_name, view_stmt):
         "collector_id",
         "preparer_id",
         "analyst_id",
+        "xrf_record",
+        "calorimetry_record",
         "ultimate_record",
         "xrd_record",
         "ftnir_record",
@@ -530,8 +532,18 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
             experiment_id=2,
             qc_pass="pass",
         )
-        # Stage 1 XrfRecord with colliding record_id "PROX-REP-1" and qc_pass="fail"
+        # Stage 1 CompositionalRecord with colliding record_id "PROX-REP-1" and qc_pass="fail"
         # Verifies that compound join on (record_id, record_type) prevents cross-type collision
+        comp_colliding = CompositionalRecord(
+            id=2,
+            record_id="PROX-REP-1",
+            resource_id=2,
+            prepared_sample_id=101,
+            method_id=1,
+            experiment_id=1,
+            qc_pass="fail",
+        )
+        # Deferred Stage 2 XrfRecord with colliding record_id "PROX-REP-1" and qc_pass="fail"
         xrf_colliding = XrfRecord(
             id=1,
             record_id="PROX-REP-1",
@@ -563,6 +575,7 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
                 prox_jaguar,
                 prox_sargassum,
                 prox_bad_sum,
+                comp_colliding,
                 xrf_colliding,
                 ult_colliding,
             ]
@@ -740,7 +753,6 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
                 ("COMP-REP-1", "glucan", 32.5),
                 ("COMP-REP-1", "xylan", 15.0),
                 ("COMP-REP-1", "lignin", 20.0),
-                ("CAL-REP-1", "higher_heating_value", 18.4),
                 ("ICP-REP-1", "calcium", 12500.0),
             ]
         )
@@ -756,10 +768,10 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
         assert s_row["field_sample_name"] == "FS-ALM-001"
         assert s_row["ag_treatment_name"] == "irrigated; organic"
         assert s_row["processing_method_name"] == "hulled; screened"
-        # 5 distinct replicate records (PROX-REP-1, PROX-REP-2, COMP-REP-1, CAL-REP-1, ICP-REP-1)
-        # vs 9 distinct parameter observations
-        assert s_row["replicate_record_count"] == 5
-        assert s_row["observation_count"] == 9
+        # 4 distinct replicate records (PROX-REP-1, PROX-REP-2, COMP-REP-1, ICP-REP-1)
+        # vs 8 distinct parameter observations (Calorimetry CAL-REP-1 is excluded from Stage 1)
+        assert s_row["replicate_record_count"] == 4
+        assert s_row["observation_count"] == 8
 
         # --- Assert View 3: mv_resources (COUNT(DISTINCT ...)) ---
         res_rows = session.execute(mv_resources).mappings().all()
@@ -770,13 +782,13 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
         assert r_row["prepared_sample_count"] == 1
         assert r_row["provider_count"] == 1
         assert r_row["county_count"] == 1
-        assert r_row["replicate_record_count"] == 5
-        assert r_row["observation_count"] == 9
+        assert r_row["replicate_record_count"] == 4
+        assert r_row["observation_count"] == 8
         assert r_row["has_proximate"] is True
         assert r_row["has_compositional"] is True
-        assert r_row["has_calorimetry"] is True
         assert r_row["has_icp"] is True
-        assert r_row["has_xrf"] is False
+        assert "has_xrf" not in r_row
+        assert "has_calorimetry" not in r_row
 
         # --- Assert View 4: mv_sample_summary (replicate averaging & stddev) ---
         ss_rows = session.execute(mv_sample_summary).mappings().all()
@@ -788,7 +800,6 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
             "glucan",
             "xylan",
             "lignin",
-            "higher_heating_value",
             "calcium",
         }
         moisture_row = by_param["moisture"]

@@ -9,7 +9,7 @@ Grain:
 Count Definitions:
     - `replicate_record_count`: `COUNT(DISTINCT record_id)` — number of distinct
       analytical replicate records (from `ProximateRecord`, `CompositionalRecord`,
-      `XrfRecord`, `IcpRecord`, `CalorimetryRecord`) associated with this sample.
+      `IcpRecord`) associated with this sample.
     - `observation_count`: `COUNT(*)` — number of distinct
       parameter-level `Observation` rows associated with this sample. Because a single
       analytical replicate record typically yields multiple parameter observations,

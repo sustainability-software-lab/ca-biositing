@@ -67,25 +67,11 @@ _resource_obs_agg = (
         ).label("has_compositional"),
         case(
             (
-                func.max(case((_obs.c.analysis_type == "xrf", 1), else_=0)) == 1,
-                True,
-            ),
-            else_=False,
-        ).label("has_xrf"),
-        case(
-            (
                 func.max(case((_obs.c.analysis_type == "icp", 1), else_=0)) == 1,
                 True,
             ),
             else_=False,
         ).label("has_icp"),
-        case(
-            (
-                func.max(case((_obs.c.analysis_type == "calorimetry", 1), else_=0)) == 1,
-                True,
-            ),
-            else_=False,
-        ).label("has_calorimetry"),
     )
     .where(_obs.c.resource_name.is_not(None))
     .group_by(_obs.c.resource_name)
@@ -108,9 +94,7 @@ mv_resources = (
         _resource_obs_agg.c.observation_count,
         _resource_obs_agg.c.has_proximate,
         _resource_obs_agg.c.has_compositional,
-        _resource_obs_agg.c.has_xrf,
         _resource_obs_agg.c.has_icp,
-        _resource_obs_agg.c.has_calorimetry,
     )
     .select_from(_resource_obs_agg)
     .join(Resource, Resource.name == _resource_obs_agg.c.resource_name)
