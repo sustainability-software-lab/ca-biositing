@@ -18,16 +18,34 @@ self-contained PR guided by discoverable documentation.
 
 ### Clients that must be supported
 
-| Client                                                 | Access path                          |
-| ------------------------------------------------------ | ------------------------------------ |
-| Internal agents / scripts (Claude Code, CI)            | `/mcp` with `Bearer <ApiKey>`        |
-| Researchers via Claude Desktop / IDE clients           | `/mcp` with OAuth 2.1 (or ApiKey)    |
-| Hosted connectors (claude.ai, ChatGPT)                 | `/mcp` with OAuth 2.1 (DCR + PKCE)   |
-| Anonymous public users (open data, mirrors /v1/public) | `/mcp/public`, no auth, rate-limited |
+| Client                                                 | Access path                                         |
+| ------------------------------------------------------ | --------------------------------------------------- |
+| Internal agents / scripts (Claude Code, CI)            | `/mcp` with `Bearer <ApiKey>` or `Bearer <API JWT>` |
+| Researchers via Claude Desktop / IDE clients           | `/mcp` with OAuth 2.1 (or ApiKey / API JWT)         |
+| Hosted connectors (claude.ai, ChatGPT)                 | `/mcp` with OAuth 2.1 (DCR + PKCE)                  |
+| Anonymous public users (open data, mirrors /v1/public) | `/mcp/public`, no auth, rate-limited                |
+
+### Access model
+
+**API access implies MCP access.** The single source of truth for who may use
+the authenticated `/mcp` endpoint is the existing `ApiUser` table, which already
+governs `/v1/feedstocks/*` and is managed by admins via `/v1/auth/register`.
+Every credential `/mcp` accepts resolves to an active (not `disabled`)
+`ApiUser`:
+
+- an existing `ApiKey` (same keys as the REST `X-API-Key` header);
+- an existing API JWT from `/v1/auth/token`;
+- an MCP OAuth 2.1 access token, whose Google login is matched to an `ApiUser`
+  by verified email (§5).
+
+No separate MCP user list exists, and the portal email allowlist does not grant
+MCP access. Disabling an `ApiUser` revokes REST and MCP access together.
 
 ### Success criteria
 
 1. All four client types above can connect and call tools appropriate to them.
+   Any active `ApiUser` can use `/mcp` without extra provisioning; anyone who is
+   not an active `ApiUser` cannot.
 2. In Cloud Run the app refuses to boot if OAuth configuration is missing (fail
    closed). Auth is disabled only when `dev_mode` is explicitly set.
 3. An authenticated-tier tool can never be reachable from `/mcp/public`.
@@ -47,14 +65,15 @@ self-contained PR guided by discoverable documentation.
 
 ## 2. Key decisions
 
-| Decision          | Choice                                                                                                      | Rationale                                                                                                                                            |
-| ----------------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SDK               | `mcp>=2.3,<3`, `mcp.server.mcpserver.MCPServer`                                                             | `mcp.server.fastmcp` raises `ModuleNotFoundError` in 2.x; a bounded pin prevents a relock from breaking the webservice at import time (PoC flaw).    |
-| Auth              | Native OAuth 2.1 via SDK `auth_server_provider` + `token_verifier`, embedded Google-OIDC proxy; ApiKey kept | Hosted connectors need OAuth discovery + DCR, which Google does not provide directly; reuses existing Google OIDC + portal allowlist; no new vendor. |
-| Tool registration | Per-domain modules + tier-filtered registry over the service layer                                          | Absorbs new APIs with one module each; service layer stays the single source of truth; deliberate, agent-quality tool descriptions.                  |
-| Anonymous access  | Separate mount `/mcp/public`                                                                                | SDK auth gates a whole streamable-HTTP endpoint, so public and authenticated tools cannot safely share one mount.                                    |
-| Test DB           | Shared non-prod (dev) DB with per-run namespacing + cleanup job                                             | Team choice; risks mitigated in §7.                                                                                                                  |
-| Delivery          | OAuth first (PR 1), then small follow-up PRs                                                                | The riskiest, most security-sensitive piece gets focused review; everything after is additive.                                                       |
+| Decision          | Choice                                                                                                                      | Rationale                                                                                                                                                          |
+| ----------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SDK               | `mcp>=2.3,<3`, `mcp.server.mcpserver.MCPServer`                                                                             | `mcp.server.fastmcp` raises `ModuleNotFoundError` in 2.x; a bounded pin prevents a relock from breaking the webservice at import time (PoC flaw).                  |
+| Auth              | Native OAuth 2.1 via SDK `auth_server_provider` + `token_verifier`, embedded Google-OIDC proxy; ApiKey and API JWT accepted | Hosted connectors need OAuth discovery + DCR, which Google does not provide directly; reuses existing Google OIDC client; no new vendor; we host no password form. |
+| Who gets access   | Any active `ApiUser` (Google login matched to `ApiUser` by verified email)                                                  | API access implies MCP access; one user list, one place to grant and revoke (§1 Access model).                                                                     |
+| Tool registration | Per-domain modules + tier-filtered registry over the service layer                                                          | Absorbs new APIs with one module each; service layer stays the single source of truth; deliberate, agent-quality tool descriptions.                                |
+| Anonymous access  | Separate mount `/mcp/public`                                                                                                | SDK auth gates a whole streamable-HTTP endpoint, so public and authenticated tools cannot safely share one mount.                                                  |
+| Test DB           | Shared non-prod (dev) DB with per-run namespacing + cleanup job                                                             | Team choice; risks mitigated in §7.                                                                                                                                |
+| Delivery          | OAuth first (PR 1), then small follow-up PRs                                                                                | The riskiest, most security-sensitive piece gets focused review; everything after is additive.                                                                     |
 
 ## 3. Architecture
 
@@ -63,7 +82,7 @@ src/ca_biositing/webservice/ca_biositing/webservice/mcp/
   __init__.py
   registry.py      ToolSpec + Registry; build_server(tiers) -> MCPServer
   runtime.py       handler wrapper: threadpool, session scope, output model, error mapping, logging
-  principal.py     Principal(sub, kind, scopes)
+  principal.py     Principal(api_user_id, username, kind, scopes)
   tools/
     _template.py   copy-me scaffold for new API modules
     feedstocks.py  availability + analysis tools        tier=authenticated
@@ -72,7 +91,7 @@ src/ca_biositing/webservice/ca_biositing/webservice/mcp/
     # kb.py        reserved for KB follow-up issue      tier=kb
   auth/
     provider.py    OAuthAuthorizationServerProvider (DCR + Google OIDC proxy)
-    verifier.py    TokenVerifier: OAuth access token OR existing ApiKey
+    verifier.py    TokenVerifier: MCP OAuth token, existing API JWT, or existing ApiKey
     routes.py      Google OIDC callback route
 ```
 
@@ -80,7 +99,7 @@ src/ca_biositing/webservice/ca_biositing/webservice/mcp/
 
 | Path          | Tiers served                             | Auth                                         |
 | ------------- | ---------------------------------------- | -------------------------------------------- |
-| `/mcp`        | `public`, `authenticated` (+ `kb` later) | OAuth 2.1 bearer or `Bearer <ApiKey>`        |
+| `/mcp`        | `public`, `authenticated` (+ `kb` later) | OAuth 2.1, API JWT, or `ApiKey` bearer       |
 | `/mcp/public` | `public` only                            | None; per-IP rate limit (reuse #545 limiter) |
 
 Both servers are built from the same `Registry` by filtering on tier. A tool
@@ -165,10 +184,13 @@ Handlers are plain synchronous functions `fn(session, **args)`. The wrapper:
    (`ClientRegistrationOptions(enabled=True, valid_scopes=[...], default_scopes=["data:read"])`).
 3. `provider.authorize()` persists the authorization request (PKCE challenge,
    redirect URI, scopes, state) and redirects to Google OIDC.
-4. Google redirects to our callback (`auth/routes.py`). We verify the ID token,
-   require `email_verified`, apply the existing allowlist and role resolution in
-   `services/portal_auth.py`, mint an authorization code, and redirect to the
-   client's registered redirect URI.
+4. Google redirects to our callback (`auth/routes.py`). We verify the ID token
+   and require `email_verified`. We then look up the `ApiUser` whose `email`
+   matches the Google email (case-insensitive). If there is no match, or the
+   user is `disabled`, the flow ends with an `access_denied` error that tells
+   the user to ask an admin for API access. On a match we mint an authorization
+   code bound to that `ApiUser.id` and redirect to the client's registered
+   redirect URI.
 5. `/token` exchanges the code (PKCE S256 verified) for an opaque access token
    (1 h) and a rotating refresh token.
 
@@ -176,49 +198,80 @@ Handlers are plain synchronous functions `fn(session, **args)`. The wrapper:
 
 New SQLModel tables in `datamodels`, created through an Alembic migration:
 `mcp_oauth_client`, `mcp_oauth_authorization_code`, `mcp_oauth_token`. Codes and
-tokens are stored as hashes only. Storage is Postgres-backed because Cloud Run
-runs multiple instances.
+tokens are stored as hashes only, and codes and tokens carry a foreign key to
+`api_user.id`. Storage is Postgres-backed because Cloud Run runs multiple
+instances.
+
+**`ApiUser.email` change (same PR 1 migration).** Today `api_user.email` is
+optional and not unique, so it cannot identify a user. The migration adds a
+case-insensitive unique index on `lower(email)` where `email` is not null.
+Before it runs, an admin must:
+
+1. List `ApiUser`s with a null `email` or a duplicate email (case-insensitive).
+2. Fill in or correct those emails (the Google account each person will log in
+   with) via `PATCH`/admin tooling.
+
+The migration fails fast with a clear message if duplicates remain, rather than
+silently picking one. Users with a null `email` keep REST and ApiKey/JWT access
+on `/mcp`; they only cannot complete the Google OAuth flow until an email is
+set.
 
 ### Scopes
 
 | Scope       | Granted to                                    |
 | ----------- | --------------------------------------------- |
-| `data:read` | Any allowlisted user; any valid ApiKey        |
+| `data:read` | Any active `ApiUser`, whichever credential    |
 | `kb:query`  | Reserved — not grantable until KB issue lands |
-| `admin`     | Reserved — portal `admin` role                |
+| `admin`     | Reserved — `ApiUser.is_admin`                 |
 
 ### Verifier
 
-`verifier.py` implements the SDK `TokenVerifier`:
+`verifier.py` implements the SDK `TokenVerifier`. It tries each credential type
+in order and stops at the first that resolves:
 
-1. Look up the bearer value as an OAuth access token (hash match, not expired,
-   not revoked, audience = this resource).
-2. Otherwise, try `auth_service.validate_api_key()` (existing rate limiting
-   applies); grant `data:read`.
-3. Otherwise return `None`.
+1. **MCP OAuth access token:** hash match, not expired, not revoked, audience =
+   this resource.
+2. **API JWT** (from `/v1/auth/token`): `decode_access_token()` with the
+   existing `jwt_secret_key`; resolve `sub` to an `ApiUser`.
+3. **ApiKey:** `auth_service.validate_api_key()`, then
+   `check_and_increment_rate_limit()` (existing per-key rate limit applies).
+4. Otherwise return `None`.
 
-Both paths yield one `Principal(sub, kind="oauth"|"apikey", scopes)`.
+Every path then loads the `ApiUser` and rejects it if `disabled`. This check
+runs on every request, so disabling a user takes effect immediately even for
+unexpired tokens. All paths yield one
+`Principal(api_user_id, username, kind="oauth"|"jwt"|"apikey", scopes)`.
+
+**API JWT and audience binding.** API JWTs carry no `aud` claim, so they bypass
+the audience check that applies to MCP OAuth tokens. This is accepted because we
+issue them only for this service with our own secret. It should be revisited if
+the API JWT secret is ever shared with another service. They keep their existing
+lifetime (`jwt_expire_minutes`).
 
 ### Hardening checklist
 
 - PKCE S256 mandatory; `plain` rejected.
 - Exact-match redirect URIs.
-- `validate_token_resource=True` (audience binding).
+- `validate_token_resource=True` (audience binding) for MCP OAuth tokens; see
+  the API JWT exception above.
+- `ApiUser.disabled` checked on every request for every credential type.
+- Google login without a matching active `ApiUser` is denied, never
+  auto-provisioned.
 - Revocation enabled.
 - DNS-rebinding protection on whenever not `dev_mode`.
 - No tokens, codes, or ApiKeys logged.
 
 ## 6. Delivery plan (PR sequence)
 
-| PR  | Scope                                                                                                                                                                | Depends on      |
-| --- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- |
-| 0   | `datamodels/config.py` Docker/local DB host auto-detect (standalone)                                                                                                 | —               |
-| 1   | `mcp>=2.3,<3`; registry, runtime, error mapping; `/mcp` with OAuth 2.1 + ApiKey verifier; OAuth tables + migration; `list_geoids` smoke tool; boot guard, `dev_mode` | —               |
-| 2   | Feedstock availability + analysis tools (worked example referenced by docs)                                                                                          | 1               |
-| 3   | USDA census + survey tools                                                                                                                                           | 1               |
-| 4   | `/mcp/public` mount + per-IP limit + `tools/public.py` over `PublicDatasetService`                                                                                   | 1, #545         |
-| 5   | Docs: "Adding MCP tools" guide, AGENTS.md pointer, `tools/_template.py`, client connection how-to                                                                    | 1 (parallel OK) |
-| 6   | Cloud Run deployment: Secret Manager entries for the Google OAuth client, ingress/issuer config                                                                      | 1               |
+| PR  | Scope                                                                                                                                                                                                        | Depends on      |
+| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------- |
+| 0   | `datamodels/config.py` Docker/local DB host auto-detect (standalone)                                                                                                                                         | —               |
+| 1   | `mcp>=2.3,<3`; registry, runtime, error mapping; `/mcp` with OAuth 2.1 + API JWT + ApiKey verifier; OAuth tables + `api_user.email` unique index migration; `list_geoids` smoke tool; boot guard, `dev_mode` | —               |
+| 2   | Feedstock availability + analysis tools (worked example referenced by docs)                                                                                                                                  | 1               |
+| 3   | USDA census + survey tools                                                                                                                                                                                   | 1               |
+| 4   | `/mcp/public` mount + per-IP limit + `tools/public.py` over `PublicDatasetService`                                                                                                                           | 1, #545         |
+| 5   | Docs: "Adding MCP tools" guide, AGENTS.md pointer, `tools/_template.py`, client connection how-to                                                                                                            | 1 (parallel OK) |
+| 6   | Cloud Run deployment: Secret Manager entries for the Google OAuth client, ingress/issuer config                                                                                                              | 1               |
 
 Each PR targets the 200–400 line sizing guideline. PR 1 is expected to exceed it
 because of the OAuth provider and migration; its description must explain why it
@@ -232,18 +285,21 @@ cannot be split further.
 - Guard: every registered `ToolSpec` has a tier, an output model, and a
   description of at least 40 characters; names are unique.
 - Error mapping: each row of the §4 table.
-- Verifier: OAuth token path, ApiKey fallback, rejection of expired, revoked,
-  and wrong-audience tokens.
+- Verifier: MCP OAuth token, API JWT, and ApiKey paths each resolve to the right
+  `ApiUser`; expired, revoked, and wrong-audience OAuth tokens rejected; a
+  `disabled` user is rejected on every path, including with an unexpired token.
 - Provider: PKCE S256 enforcement, exact redirect URI match, Google ID token
-  verification mocked (`email_verified` false → rejected; non-allowlisted →
-  rejected).
+  verification mocked (`email_verified` false → rejected; email with no
+  `ApiUser` → `access_denied`; email matching a disabled `ApiUser` →
+  `access_denied`; email match is case-insensitive).
+- Migration: fails with a clear message when duplicate emails exist.
 - Boot guard: simulated Cloud Run env without OAuth config → startup raises.
 
 ### Integration (shared dev DB)
 
 - Drive the ASGI app with the SDK streamable-HTTP client: unauthenticated `/mcp`
-  → 401 with metadata; ApiKey → tool call succeeds; `/mcp/public` lists only
-  public tools.
+  → 401 with metadata; ApiKey → tool call succeeds; API JWT from
+  `/v1/auth/token` → tool call succeeds; `/mcp/public` lists only public tools.
 - **Namespacing:** every row a test creates (OAuth clients/tokens, ApiUsers)
   carries a per-run `test_run_id` prefix. Session-scoped teardown deletes rows
   for the current run only.
@@ -300,10 +356,11 @@ Checklist (canonical text lives in the guide):
 
 ## 10. Risks
 
-| Risk                                                 | Mitigation                                                                                |
-| ---------------------------------------------------- | ----------------------------------------------------------------------------------------- |
-| `mcp` 2.x API churn within the major version         | Bounded pin `<3`; SDK usage isolated to `registry.py`, `runtime.py`, and `auth/`          |
-| Google OIDC proxy complexity (callback state, PKCE)  | Dedicated PR 1 review; a unit test per hardening item                                     |
-| Shared dev DB flakiness / cross-run interference     | Per-run namespacing, cleanup job, quarantine marker for reference-data tests              |
-| #545 schemas change before merge                     | PR 4 starts only after #545 merges                                                        |
-| Hosted connector differences (claude.ai vs. ChatGPT) | Manual verification with each connector before closing PR 1; document quirks in the guide |
+| Risk                                                                     | Mitigation                                                                                                                        |
+| ------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `mcp` 2.x API churn within the major version                             | Bounded pin `<3`; SDK usage isolated to `registry.py`, `runtime.py`, and `auth/`                                                  |
+| Google OIDC proxy complexity (callback state, PKCE)                      | Dedicated PR 1 review; a unit test per hardening item                                                                             |
+| Shared dev DB flakiness / cross-run interference                         | Per-run namespacing, cleanup job, quarantine marker for reference-data tests                                                      |
+| `ApiUser` emails missing, duplicated, or not the person's Google account | Pre-migration admin backfill (§5 Storage); migration fails fast on duplicates; clear `access_denied` message pointing to an admin |
+| #545 schemas change before merge                                         | PR 4 starts only after #545 merges                                                                                                |
+| Hosted connector differences (claude.ai vs. ChatGPT)                     | Manual verification with each connector before closing PR 1; document quirks in the guide                                         |
