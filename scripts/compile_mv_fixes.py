@@ -46,10 +46,7 @@ from ca_biositing.datamodels import views as ca_views
 
 # Import biocirv_public views
 from ca_biositing.datamodels.biocirv_public_views import (
-    mv_analytical_observations,
-    mv_samples,
     mv_resources,
-    mv_sample_summary,
     mv_analytical_summary,
 )
 
@@ -200,49 +197,14 @@ VIEWS = [
             "CREATE INDEX idx_usda_census_view_geoid ON ca_biositing.usda_census_view (geoid)",
         ],
     },
-    # biocirv_public schema views (explicit dependency order: mv_analytical_observations first)
-    {
-        "name": "mv_analytical_observations",
-        "schema": "biocirv_public",
-        "expr": mv_analytical_observations,
-        "indexes": [
-            "CREATE UNIQUE INDEX idx_mv_biocirv_obs_natural_key ON biocirv_public.mv_analytical_observations (record_id, analysis_type, parameter_name, unit_name)",
-            "CREATE INDEX idx_mv_biocirv_obs_resource_analysis ON biocirv_public.mv_analytical_observations (resource_name, analysis_type)",
-            "CREATE INDEX idx_mv_biocirv_obs_prepared_sample ON biocirv_public.mv_analytical_observations (prepared_sample_name)",
-            "CREATE INDEX idx_mv_biocirv_obs_field_sample ON biocirv_public.mv_analytical_observations (field_sample_name)",
-            "CREATE INDEX idx_mv_biocirv_obs_geoid_county ON biocirv_public.mv_analytical_observations (geoid, county_name)",
-            "CREATE INDEX idx_mv_biocirv_obs_parameter_name ON biocirv_public.mv_analytical_observations (parameter_name)",
-        ],
-    },
-    {
-        "name": "mv_samples",
-        "schema": "biocirv_public",
-        "expr": mv_samples,
-        "indexes": [
-            "CREATE UNIQUE INDEX idx_mv_biocirv_samples_pair ON biocirv_public.mv_samples (prepared_sample_name, field_sample_name)",
-            "CREATE INDEX idx_mv_biocirv_samples_resource_name ON biocirv_public.mv_samples (resource_name)",
-            "CREATE INDEX idx_mv_biocirv_samples_geoid_county ON biocirv_public.mv_samples (geoid, county_name)",
-            "CREATE INDEX idx_mv_biocirv_samples_provider ON biocirv_public.mv_samples (provider_codename)",
-        ],
-    },
+    # biocirv_public schema views (Stage 1 Zenodo release: 2 views)
     {
         "name": "mv_resources",
         "schema": "biocirv_public",
         "expr": mv_resources,
         "indexes": [
             "CREATE UNIQUE INDEX idx_mv_biocirv_resources_name ON biocirv_public.mv_resources (resource_name)",
-            "CREATE INDEX idx_mv_biocirv_resources_code ON biocirv_public.mv_resources (resource_code)",
             "CREATE INDEX idx_mv_biocirv_resources_class ON biocirv_public.mv_resources (resource_class)",
-        ],
-    },
-    {
-        "name": "mv_sample_summary",
-        "schema": "biocirv_public",
-        "expr": mv_sample_summary,
-        "indexes": [
-            "CREATE UNIQUE INDEX idx_mv_biocirv_sample_summary_key ON biocirv_public.mv_sample_summary (prepared_sample_name, analysis_type, parameter_name, unit_name, drying_step)",
-            "CREATE INDEX idx_mv_biocirv_sample_summary_sample ON biocirv_public.mv_sample_summary (prepared_sample_name, analysis_type)",
-            "CREATE INDEX idx_mv_biocirv_sample_summary_resource ON biocirv_public.mv_sample_summary (resource_name, analysis_type, parameter_name)",
         ],
     },
     {
@@ -250,8 +212,8 @@ VIEWS = [
         "schema": "biocirv_public",
         "expr": mv_analytical_summary,
         "indexes": [
-            "CREATE UNIQUE INDEX idx_mv_biocirv_summary_key ON biocirv_public.mv_analytical_summary (resource_name, geoid, analysis_type, parameter_name, unit_name)",
-            "CREATE INDEX idx_mv_biocirv_summary_res_geo_type ON biocirv_public.mv_analytical_summary (resource_name, geoid, analysis_type)",
+            "CREATE UNIQUE INDEX idx_mv_biocirv_summary_key ON biocirv_public.mv_analytical_summary (resource_name, analysis_type, parameter_name, unit_name)",
+            "CREATE INDEX idx_mv_biocirv_summary_res_type ON biocirv_public.mv_analytical_summary (resource_name, analysis_type)",
             "CREATE INDEX idx_mv_biocirv_summary_parameter ON biocirv_public.mv_analytical_summary (parameter_name)",
         ],
     },
@@ -325,8 +287,7 @@ def generate_migration_content(
 
     # Build DROP_VIEW_STATEMENTS
     drop_view_statements = []
-    # Drop in reverse order to handle dependencies (analysis_average depends on analysis_data;
-    # biocirv_public downstream views depend on mv_analytical_observations)
+    # Drop in reverse order to handle dependencies (analysis_average depends on analysis_data)
     for view_config in reversed(selected_views):
         view_name = view_config["name"]
         schema = view_config["schema"]
@@ -338,7 +299,7 @@ def generate_migration_content(
     for view_config in selected_views:
         view_name = view_config["name"]
         schema = view_config["schema"]
-        sql = view_sqls[view_name]
+        sql = "\n".join(line.rstrip() for line in view_sqls[view_name].splitlines())
         view_sql_defs.append(f'''{view_name.upper()}_SQL = """
 CREATE MATERIALIZED VIEW {schema}.{view_name} AS
 {sql}

@@ -15,6 +15,7 @@ and run `pixi run compile-mv-fixes` (see the package README's
 inline filter literals in individual view modules.
 """
 
+from datetime import date, datetime
 from sqlalchemy import select, func, case, literal, and_, or_, cast, String, Integer, ARRAY, text
 from sqlalchemy.dialects.postgresql import array as pg_array
 from sqlalchemy.sql import expression
@@ -42,6 +43,8 @@ from ca_biositing.datamodels.models.aim2_records.pretreatment_record import Pret
 EXCLUDED_RESOURCES = [
     "sargassum",  # excluded 2026-05: original placeholder exclusion, rationale undocumented
     "#n/a",  # excluded 2026-05: original placeholder exclusion, rationale undocumented
+    "n/a",  # excluded 2026-11: placeholder / missing resource variant
+    "",  # excluded 2026-11: blank resource name
     "lab media",  # excluded 2026-05: original placeholder exclusion, rationale undocumented
     "alfalfa",  # excluded 2026-06: see issue #409, removed for testing purposes pending Y3 blends review
     "almond hulls and shells mix",  # excluded 2026-06: see issue #409
@@ -91,6 +94,31 @@ MIN_PRODUCTION_DATA_YEAR = 2017
 def get_min_year_filter(year_col):
     """Filter to exclude production records before MIN_PRODUCTION_DATA_YEAR."""
     return year_col >= MIN_PRODUCTION_DATA_YEAR
+
+
+# Explicit ETL load-time cutoff stopgap.
+# NOTE: Analytical record `created_at` currently stores ETL load time (`now`)
+# rather than the Google Sheet analysis date (pending ETL transform updates).
+# Adjust this date forward before it arrives, or replace with an analysis-date
+# / QC-batch filter once ETLs populate the sheet date.
+MAX_ETL_LOAD_DATE = date(2026, 12, 31)
+_MAX_ETL_LOAD_DATETIME = datetime(
+    MAX_ETL_LOAD_DATE.year,
+    MAX_ETL_LOAD_DATE.month,
+    MAX_ETL_LOAD_DATE.day,
+    23,
+    59,
+    59,
+    999999,
+)
+
+
+def get_etl_load_date_filter(created_at_col):
+    """Filter to exclude analytical records with ETL load `created_at` after MAX_ETL_LOAD_DATE."""
+    return or_(
+        created_at_col.is_(None),
+        created_at_col <= _MAX_ETL_LOAD_DATETIME,
+    )
 
 
 # =============================================================================
@@ -147,17 +175,50 @@ analysis_metrics = select(
 # QC: filtered via get_qc_status_filter() - include only observations from records that are not marked as failed
 resource_analysis_map = select(
     CompositionalRecord.resource_id, CompositionalRecord.record_id, literal("compositional analysis").label("type")
-).where(get_qc_status_filter(CompositionalRecord.qc_pass)).union_all(
-    select(ProximateRecord.resource_id, ProximateRecord.record_id, literal("proximate analysis").label("type")).where(get_qc_status_filter(ProximateRecord.qc_pass)),
-    select(UltimateRecord.resource_id, UltimateRecord.record_id, literal("ultimate analysis").label("type")).where(get_qc_status_filter(UltimateRecord.qc_pass)),
-    select(XrfRecord.resource_id, XrfRecord.record_id, literal("xrf analysis").label("type")).where(get_qc_status_filter(XrfRecord.qc_pass)),
-    select(IcpRecord.resource_id, IcpRecord.record_id, literal("icp analysis").label("type")).where(get_qc_status_filter(IcpRecord.qc_pass)),
-    select(CalorimetryRecord.resource_id, CalorimetryRecord.record_id, literal("calorimetry analysis").label("type")).where(get_qc_status_filter(CalorimetryRecord.qc_pass)),
-    select(XrdRecord.resource_id, XrdRecord.record_id, literal("xrd analysis").label("type")).where(get_qc_status_filter(XrdRecord.qc_pass)),
-    select(FtnirRecord.resource_id, FtnirRecord.record_id, literal("ftnir analysis").label("type")).where(get_qc_status_filter(FtnirRecord.qc_pass)),
-    select(FermentationRecord.resource_id, FermentationRecord.record_id, literal("fermentation").label("type")).where(get_qc_status_filter(FermentationRecord.qc_pass)),
-    select(GasificationRecord.resource_id, GasificationRecord.record_id, literal("gasification").label("type")).where(get_qc_status_filter(GasificationRecord.qc_pass)),
-    select(PretreatmentRecord.resource_id, PretreatmentRecord.record_id, literal("pretreatment").label("type")).where(get_qc_status_filter(PretreatmentRecord.qc_pass))
+).where(
+    get_qc_status_filter(CompositionalRecord.qc_pass),
+    get_etl_load_date_filter(CompositionalRecord.created_at),
+).union_all(
+    select(ProximateRecord.resource_id, ProximateRecord.record_id, literal("proximate analysis").label("type")).where(
+        get_qc_status_filter(ProximateRecord.qc_pass),
+        get_etl_load_date_filter(ProximateRecord.created_at),
+    ),
+    select(UltimateRecord.resource_id, UltimateRecord.record_id, literal("ultimate analysis").label("type")).where(
+        get_qc_status_filter(UltimateRecord.qc_pass),
+        get_etl_load_date_filter(UltimateRecord.created_at),
+    ),
+    select(XrfRecord.resource_id, XrfRecord.record_id, literal("xrf analysis").label("type")).where(
+        get_qc_status_filter(XrfRecord.qc_pass),
+        get_etl_load_date_filter(XrfRecord.created_at),
+    ),
+    select(IcpRecord.resource_id, IcpRecord.record_id, literal("icp analysis").label("type")).where(
+        get_qc_status_filter(IcpRecord.qc_pass),
+        get_etl_load_date_filter(IcpRecord.created_at),
+    ),
+    select(CalorimetryRecord.resource_id, CalorimetryRecord.record_id, literal("calorimetry analysis").label("type")).where(
+        get_qc_status_filter(CalorimetryRecord.qc_pass),
+        get_etl_load_date_filter(CalorimetryRecord.created_at),
+    ),
+    select(XrdRecord.resource_id, XrdRecord.record_id, literal("xrd analysis").label("type")).where(
+        get_qc_status_filter(XrdRecord.qc_pass),
+        get_etl_load_date_filter(XrdRecord.created_at),
+    ),
+    select(FtnirRecord.resource_id, FtnirRecord.record_id, literal("ftnir analysis").label("type")).where(
+        get_qc_status_filter(FtnirRecord.qc_pass),
+        get_etl_load_date_filter(FtnirRecord.created_at),
+    ),
+    select(FermentationRecord.resource_id, FermentationRecord.record_id, literal("fermentation").label("type")).where(
+        get_qc_status_filter(FermentationRecord.qc_pass),
+        get_etl_load_date_filter(FermentationRecord.created_at),
+    ),
+    select(GasificationRecord.resource_id, GasificationRecord.record_id, literal("gasification").label("type")).where(
+        get_qc_status_filter(GasificationRecord.qc_pass),
+        get_etl_load_date_filter(GasificationRecord.created_at),
+    ),
+    select(PretreatmentRecord.resource_id, PretreatmentRecord.record_id, literal("pretreatment").label("type")).where(
+        get_qc_status_filter(PretreatmentRecord.qc_pass),
+        get_etl_load_date_filter(PretreatmentRecord.created_at),
+    ),
 ).subquery()
 
 # Direct expressions for carbon, hydrogen, nitrogen averages
@@ -216,9 +277,38 @@ def get_cn_ratio_expr():
 
 
 def get_resource_filter(resource_model):
-    """Filter to exclude problematic resources."""
+    """Filter to exclude problematic, null, or blank resources."""
     return and_(
-        func.lower(resource_model.name).not_in(EXCLUDED_RESOURCES)
+        resource_model.name.is_not(None),
+        func.trim(resource_model.name) != "",
+        func.lower(func.trim(resource_model.name)).not_in(EXCLUDED_RESOURCES),
+    )
+
+
+# =============================================================================
+# PORTAL STATUS CLASSIFICATION
+# =============================================================================
+# Controls `portal_status` in `data_portal.mv_biomass_search`.
+FULL_PORTAL_RESOURCES = [
+    "almond shells",
+    "almond hulls",
+    "almond branches",
+    "grape pomace",
+    "grape stem",
+    "walnut shells",
+    "walnut tree sticks",
+]
+DEFAULT_PORTAL_STATUS = "explore"
+
+
+def get_portal_status_expr(resource_name_col):
+    """Return SQLAlchemy CASE expression mapping resource name to portal_status."""
+    return case(
+        (
+            func.lower(func.trim(resource_name_col)).in_(FULL_PORTAL_RESOURCES),
+            literal("full"),
+        ),
+        else_=literal(DEFAULT_PORTAL_STATUS),
     )
 
 

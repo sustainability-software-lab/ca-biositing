@@ -15,6 +15,7 @@ from ca_biositing.datamodels.data_portal_views import (
     mv_biomass_fermentation,
     mv_biomass_gasification,
     mv_biomass_sample_stats,
+    mv_biomass_search,
     mv_biomass_volume_estimate,
     mv_usda_county_production,
 )
@@ -145,3 +146,11 @@ def test_mv_biomass_volume_estimate_uses_name_joins_for_units_and_parameters():
     assert "parameter_id = 5" not in sql
     assert "parameter_id = 7" not in sql
     assert "parameter_id = 3" not in sql
+
+
+def test_mv_biomass_search_exposes_portal_status():
+    sql = compile_sql(mv_biomass_search).lower()
+    assert "portal_status" in sql
+    assert "'full'" in sql
+    assert "'explore'" in sql
+    assert "almond hulls" in sql

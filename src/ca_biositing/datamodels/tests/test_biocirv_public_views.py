@@ -1,27 +1,26 @@
 """Tests for `biocirv_public` materialized view definitions.
 
 Covers:
-1. PostgreSQL dialect compilation (`literal_binds=True`) for all 5 views.
+1. PostgreSQL dialect compilation (`literal_binds=True`) for the 2 Stage 1 views
+   (`mv_resources` and `mv_analytical_summary`).
 2. Strict privacy & Stage 1 scope assertions on compiled SQL (no PII/fine-location/note
    columns, no Stage 2 analysis tables).
 3. Functional SQLite query execution verifying:
    - All `common.py` QC & privacy filters (`get_resource_filter`, `get_provider_filter`,
-     `get_qc_status_filter` including `qc_pass IS NULL` exclusion, `get_icp_filter`, and
-     `get_sum_constraints_subquery`).
+     `get_qc_status_filter` including `qc_pass IS NULL` exclusion, `get_etl_load_date_filter`,
+     `get_icp_filter`, and `get_sum_constraints_subquery`).
    - NULL-safe `coalesce(experiment_id, -1)` sum-constraint join for records with
      `experiment_id IS NULL`.
    - Collision-safe compound-predicate polymorphic outerjoin on `(record_id, record_type)`.
-   - `FieldSampleCondition` pre-aggregation preventing `(prepared_sample_id, field_sample_id)`
-     row fan-out in `mv_samples` and deterministic `ORDER BY` in `string_agg`.
-   - `COUNT(DISTINCT ...)` entity counts in `mv_resources` (including `replicate_record_count`).
-   - Technical replicate `mean_value` and `std_dev` in `mv_sample_summary` and
-     `mv_analytical_summary`.
+   - `COUNT(DISTINCT ...)` entity counts and deduplicated resource metadata in `mv_resources`.
+   - Technical replicate `mean_value` and `std_dev` in `mv_analytical_summary`.
 4. Alembic migration `0028` isolation (never drops pre-existing `data_portal` or `ca_biositing` views).
 """
 
 from __future__ import annotations
 
 import math
+from datetime import datetime
 from pathlib import Path
 
 import pytest
@@ -31,11 +30,8 @@ from sqlalchemy.orm import Session
 
 from ca_biositing.datamodels.biocirv_public_views import (
     BIOCIRV_PUBLIC_VIEW_NAMES,
-    mv_analytical_observations,
     mv_analytical_summary,
     mv_resources,
-    mv_sample_summary,
-    mv_samples,
     register_sqlite_udfs,
 )
 from ca_biositing.datamodels.models.aim1_records import (
@@ -87,10 +83,7 @@ from ca_biositing.datamodels.models.sample_preparation.prepared_sample import (
 )
 
 ALL_PUBLIC_VIEWS = {
-    "mv_analytical_observations": mv_analytical_observations,
-    "mv_samples": mv_samples,
     "mv_resources": mv_resources,
-    "mv_sample_summary": mv_sample_summary,
     "mv_analytical_summary": mv_analytical_summary,
 }
 
@@ -106,8 +99,7 @@ def compile_pg(stmt) -> str:
 
 
 def test_biocirv_public_view_names_order():
-    """Verify explicit dependency ordering places mv_analytical_observations first."""
-    assert BIOCIRV_PUBLIC_VIEW_NAMES[0] == "mv_analytical_observations"
+    """Verify BIOCIRV_PUBLIC_VIEW_NAMES matches the 2 Stage 1 materialized views."""
     assert set(BIOCIRV_PUBLIC_VIEW_NAMES) == set(ALL_PUBLIC_VIEWS.keys())
 
 
@@ -174,17 +166,35 @@ def test_privacy_and_scope_redaction_in_compiled_sql(view_name, view_stmt):
         assert token not in sql, f"Forbidden token {token!r} found in {view_name} SQL"
 
 
-def test_mv_samples_compiles_deterministic_ordered_string_agg_on_postgres():
-    """Verify mv_samples compiles string_agg with explicit ORDER BY on PostgreSQL."""
-    sql = compile_pg(mv_samples).lower()
-    assert (
-        "string_agg(distinct_ag_treatments.ag_treatment_name, '; ' order by distinct_ag_treatments.ag_treatment_name asc)"
-        in sql
-    )
-    assert (
-        "string_agg(distinct_processing_methods.processing_method_name, '; ' order by distinct_processing_methods.processing_method_name asc)"
-        in sql
-    )
+def test_biocirv_public_view_columns_match_stage1_contract():
+    """Verify each view exposes the exact minimal Stage 1 column list in order."""
+    assert [c.key for c in mv_analytical_summary.selected_columns] == [
+        "resource_name",
+        "analysis_type",
+        "parameter_name",
+        "unit_name",
+        "mean_value",
+        "std_dev",
+        "min_value",
+        "max_value",
+        "observation_count",
+        "prepared_sample_count",
+        "field_sample_count",
+        "provider_count",
+    ]
+    assert [c.key for c in mv_resources.selected_columns] == [
+        "resource_name",
+        "description",
+        "resource_class",
+        "primary_ag_product",
+        "field_sample_count",
+        "prepared_sample_count",
+        "provider_count",
+        "observation_count",
+        "has_proximate",
+        "has_compositional",
+        "has_icp",
+    ]
 
 
 def test_migration_0028_is_scoped_exclusively_to_biocirv_public():
@@ -739,41 +749,7 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
         )
         session.commit()
 
-        # --- Assert View 1: mv_analytical_observations ---
-        obs_rows = session.execute(mv_analytical_observations).mappings().all()
-        obs_keys = sorted(
-            (r["record_id"], r["parameter_name"], float(r["value"])) for r in obs_rows
-        )
-        assert obs_keys == sorted(
-            [
-                ("PROX-REP-1", "moisture", 8.0),
-                ("PROX-REP-2", "moisture", 10.0),
-                ("PROX-REP-1", "ash solids", 5.0),
-                ("PROX-REP-1", "volatile solids", 86.0),
-                ("COMP-REP-1", "glucan", 32.5),
-                ("COMP-REP-1", "xylan", 15.0),
-                ("COMP-REP-1", "lignin", 20.0),
-                ("ICP-REP-1", "calcium", 12500.0),
-            ]
-        )
-        assert all(r["provider_codename"] == "PROVIDER_ALPHA" for r in obs_rows)
-        assert all(r["county_name"] == "San Joaquin" for r in obs_rows)
-        assert all(r["geoid"] == "06077" for r in obs_rows)
-
-        # --- Assert View 2: mv_samples (no fan-out on FieldSampleCondition) ---
-        sample_rows = session.execute(mv_samples).mappings().all()
-        assert len(sample_rows) == 1
-        s_row = sample_rows[0]
-        assert s_row["prepared_sample_name"] == "PS-ALM-001"
-        assert s_row["field_sample_name"] == "FS-ALM-001"
-        assert s_row["ag_treatment_name"] == "irrigated; organic"
-        assert s_row["processing_method_name"] == "hulled; screened"
-        # 4 distinct replicate records (PROX-REP-1, PROX-REP-2, COMP-REP-1, ICP-REP-1)
-        # vs 8 distinct parameter observations (Calorimetry CAL-REP-1 is excluded from Stage 1)
-        assert s_row["replicate_record_count"] == 4
-        assert s_row["observation_count"] == 8
-
-        # --- Assert View 3: mv_resources (COUNT(DISTINCT ...)) ---
+        # --- Assert View 1: mv_resources (COUNT(DISTINCT ...)) ---
         res_rows = session.execute(mv_resources).mappings().all()
         assert len(res_rows) == 1
         r_row = res_rows[0]
@@ -781,8 +757,6 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
         assert r_row["field_sample_count"] == 1
         assert r_row["prepared_sample_count"] == 1
         assert r_row["provider_count"] == 1
-        assert r_row["county_count"] == 1
-        assert r_row["replicate_record_count"] == 4
         assert r_row["observation_count"] == 8
         assert r_row["has_proximate"] is True
         assert r_row["has_compositional"] is True
@@ -790,10 +764,10 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
         assert "has_xrf" not in r_row
         assert "has_calorimetry" not in r_row
 
-        # --- Assert View 4: mv_sample_summary (replicate averaging & stddev) ---
-        ss_rows = session.execute(mv_sample_summary).mappings().all()
-        by_param = {r["parameter_name"]: r for r in ss_rows}
-        assert set(by_param.keys()) == {
+        # --- Assert View 2: mv_analytical_summary ---
+        as_rows = session.execute(mv_analytical_summary).mappings().all()
+        as_by_param = {r["parameter_name"]: r for r in as_rows}
+        assert set(as_by_param.keys()) == {
             "moisture",
             "ash solids",
             "volatile solids",
@@ -802,24 +776,209 @@ def test_functional_execution_and_qc_governance(biocirv_engine):
             "lignin",
             "calcium",
         }
-        moisture_row = by_param["moisture"]
-        assert moisture_row["replicate_count"] == 2
-        assert float(moisture_row["mean_value"]) == pytest.approx(9.0)
-        assert float(moisture_row["std_dev"]) == pytest.approx(math.sqrt(2.0))
-        assert float(moisture_row["min_value"]) == pytest.approx(8.0)
-        assert float(moisture_row["max_value"]) == pytest.approx(10.0)
-        assert moisture_row["drying_step"] is True
-
-        # Single-replicate parameter has std_dev = None
-        assert by_param["glucan"]["replicate_count"] == 1
-        assert by_param["glucan"]["std_dev"] is None
-
-        # --- Assert View 5: mv_analytical_summary ---
-        as_rows = session.execute(mv_analytical_summary).mappings().all()
-        as_by_param = {r["parameter_name"]: r for r in as_rows}
         assert float(as_by_param["moisture"]["mean_value"]) == pytest.approx(9.0)
         assert float(as_by_param["moisture"]["std_dev"]) == pytest.approx(math.sqrt(2.0))
+        assert float(as_by_param["moisture"]["min_value"]) == pytest.approx(8.0)
+        assert float(as_by_param["moisture"]["max_value"]) == pytest.approx(10.0)
         assert as_by_param["moisture"]["observation_count"] == 2
         assert as_by_param["moisture"]["prepared_sample_count"] == 1
         assert as_by_param["moisture"]["field_sample_count"] == 1
         assert as_by_param["moisture"]["provider_count"] == 1
+
+        # --- Assert ETL Load Date Cutoff (MAX_ETL_LOAD_DATE = 2026-12-31) ---
+        prox_on_cutoff = ProximateRecord(
+            id=98,
+            record_id="PROX-ON-CUTOFF",
+            resource_id=1,
+            prepared_sample_id=100,
+            method_id=1,
+            experiment_id=None,
+            technical_replicate_no=3,
+            qc_pass="pass",
+            created_at=datetime(2026, 12, 31, 12, 0, 0),
+        )
+        obs_on_cutoff = Observation(
+            id=98,
+            record_id="PROX-ON-CUTOFF",
+            record_type="proximate_record",
+            parameter_id=1,
+            value=9.0,
+            unit_id=1,
+        )
+        prox_future = ProximateRecord(
+            id=99,
+            record_id="PROX-FUTURE",
+            resource_id=1,
+            prepared_sample_id=100,
+            method_id=1,
+            experiment_id=None,
+            technical_replicate_no=4,
+            qc_pass="pass",
+            created_at=datetime(2027, 1, 1, 12, 0, 0),
+        )
+        obs_future = Observation(
+            id=99,
+            record_id="PROX-FUTURE",
+            record_type="proximate_record",
+            parameter_id=1,
+            value=11.0,
+            unit_id=1,
+        )
+        session.add_all([prox_on_cutoff, obs_on_cutoff, prox_future, obs_future])
+        session.commit()
+
+        as_after_future = {
+            r["parameter_name"]: r
+            for r in session.execute(mv_analytical_summary).mappings().all()
+        }
+        assert as_after_future["moisture"]["observation_count"] == 3
+
+        # --- Assert Duplicate Case/Whitespace Resource Normalization & Non-Frankenstein Metadata ---
+        rc_secondary = ResourceClass(id=2, name="ZZZ Secondary Class")
+        pag_walnut = PrimaryAgProduct(id=2, name="Walnuts")
+        pag_secondary = PrimaryAgProduct(id=3, name="AAA Secondary Product")
+        res_walnut_canonical = Resource(
+            id=20,
+            name=" Walnut Shells ",
+            resource_code="WAL-01",
+            description="Primary canonical walnut description",
+            resource_class_id=1,
+            primary_ag_product_id=2,
+        )
+        res_walnut_dup = Resource(
+            id=21,
+            name="walnut shells",
+            resource_code="WAL-02",
+            description="AAA Secondary description that would win independent MIN()",
+            resource_class_id=2,
+            primary_ag_product_id=3,
+        )
+        icp_walnut_1 = IcpRecord(
+            id=20,
+            record_id="ICP-WAL-1",
+            resource_id=20,
+            prepared_sample_id=100,
+            method_id=1,
+            experiment_id=1,
+            technical_replicate_no=1,
+            qc_pass="pass",
+        )
+        icp_walnut_2 = IcpRecord(
+            id=21,
+            record_id="ICP-WAL-2",
+            resource_id=21,
+            prepared_sample_id=100,
+            method_id=1,
+            experiment_id=1,
+            technical_replicate_no=2,
+            qc_pass="pass",
+        )
+        obs_walnut_1 = Observation(
+            id=120,
+            record_id="ICP-WAL-1",
+            record_type="icp_record",
+            parameter_id=5,
+            value=1000.0,
+            unit_id=3,
+        )
+        obs_walnut_2 = Observation(
+            id=121,
+            record_id="ICP-WAL-2",
+            record_type="icp_record",
+            parameter_id=5,
+            value=2000.0,
+            unit_id=3,
+        )
+        session.add_all(
+            [
+                rc_secondary,
+                pag_walnut,
+                pag_secondary,
+                res_walnut_canonical,
+                res_walnut_dup,
+                icp_walnut_1,
+                icp_walnut_2,
+                obs_walnut_1,
+                obs_walnut_2,
+            ]
+        )
+        session.commit()
+
+        res_by_name = {
+            r["resource_name"]: r
+            for r in session.execute(mv_resources).mappings().all()
+        }
+        assert set(res_by_name.keys()) == {"almond_hulls", "walnut shells"}
+        walnut_meta = res_by_name["walnut shells"]
+        assert walnut_meta["description"] == "Primary canonical walnut description"
+        assert walnut_meta["resource_class"] == "Agricultural Byproduct"
+        assert walnut_meta["primary_ag_product"] == "Walnuts"
+        assert walnut_meta["observation_count"] == 2
+
+        walnut_summaries = [
+            r
+            for r in session.execute(mv_analytical_summary).mappings().all()
+            if "walnut" in r["resource_name"].lower()
+        ]
+        assert len(walnut_summaries) == 1
+        assert walnut_summaries[0]["resource_name"] == "walnut shells"
+        assert walnut_summaries[0]["observation_count"] == 2
+        assert float(walnut_summaries[0]["mean_value"]) == pytest.approx(1500.0)
+
+
+def test_refresh_all_views_warns_on_zero_rows_when_log_summary_is_false(
+    capsys: pytest.CaptureFixture[str],
+):
+    """Verify refresh_all_views() emits the 0-row drop warning even when log_summary=False."""
+    from ca_biositing.datamodels.views import refresh_all_views
+
+    counts = {
+        "biocirv_public.mv_resources": [36, 0],
+        "biocirv_public.mv_analytical_summary": [451, 451],
+    }
+
+    class _FakeResult:
+        def __init__(self, scalar_val=None, scalars_list=None):
+            self._scalar_val = scalar_val
+            self._scalars_list = scalars_list or []
+
+        def scalar(self):
+            return self._scalar_val
+
+        def scalars(self):
+            return self
+
+        def all(self):
+            return self._scalars_list
+
+    class _FakeConn:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def execute(self, stmt):
+            sql = str(stmt)
+            if "FROM pg_matviews" in sql:
+                return _FakeResult(scalars_list=[])
+            for table_key, seq in counts.items():
+                if f"SELECT COUNT(*) FROM {table_key}" in sql:
+                    return _FakeResult(scalar_val=seq.pop(0))
+            return _FakeResult(scalar_val=10)
+
+        def commit(self):
+            pass
+
+    class _FakeEngine:
+        def connect(self):
+            return _FakeConn()
+
+    # Call with default log_summary=False (matches production ETL callers)
+    refresh_all_views(_FakeEngine())
+    captured = capsys.readouterr().out
+    assert (
+        "[WARNING] biocirv_public.mv_resources dropped from 36 to 0 rows"
+        in captured
+    )
+    assert "mv_analytical_summary dropped" not in captured
