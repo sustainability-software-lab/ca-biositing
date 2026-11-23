@@ -25,6 +25,7 @@ from ca_biositing.webservice.services.dashboard_loader import (
 )
 from ca_biositing.webservice.services.portal_auth import get_optional_portal_user
 from ca_biositing.webservice.v1 import router as v1_router
+from ca_biositing.webservice.v1.public.router import public_rate_limit
 
 logger = logging.getLogger(__name__)
 
@@ -53,6 +54,45 @@ app.add_middleware(
     allow_methods=config.cors_allow_methods,
     allow_headers=config.cors_allow_headers,
 )
+
+
+@app.middleware("http")
+async def public_api_cors_middleware(request: Request, call_next) -> Response:
+    """Apply open read-only CORS headers (`*`) strictly to `/v1/public` endpoints.
+
+    Authenticated routes (`/v1/auth`, `/v1/feedstocks`, `/v1/portal`) remain
+    governed by the explicit `config.cors_origins` allowlist.
+    """
+    path = request.url.path
+    if path == "/v1/public" or path.startswith("/v1/public/"):
+        cors_headers = {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "86400",
+        }
+        if request.method == "OPTIONS":
+            try:
+                public_rate_limit(request)
+            except HTTPException as exc:
+                err_headers = {**cors_headers, **(exc.headers or {})}
+                return JSONResponse(
+                    status_code=exc.status_code,
+                    content={"detail": exc.detail},
+                    headers=err_headers,
+                )
+            return Response(
+                status_code=status.HTTP_204_NO_CONTENT,
+                headers=cors_headers,
+            )
+        response = await call_next(request)
+        response.headers["Access-Control-Allow-Origin"] = "*"
+        response.headers["Access-Control-Allow-Methods"] = "GET, OPTIONS"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        if "access-control-allow-credentials" in response.headers:
+            del response.headers["access-control-allow-credentials"]
+        return response
+    return await call_next(request)
 
 
 # Exception handlers
@@ -89,6 +129,18 @@ async def general_exception_handler(request: Request, exc: Exception) -> JSONRes
     Returns:
         JSONResponse with error message
     """
+    logger.exception("Unhandled exception on %s", request.url.path)
+    path = request.url.path
+    if path == "/v1/public" or path.startswith("/v1/public/"):
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={"detail": "Internal server error"},
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, OPTIONS",
+                "Access-Control-Allow-Headers": "*",
+            },
+        )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={

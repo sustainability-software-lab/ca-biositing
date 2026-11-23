@@ -11,28 +11,48 @@ from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import Session, sessionmaker
 
+from ca_biositing.datamodels.biocirv_public_views import register_sqlite_udfs
 from ca_biositing.datamodels.database import get_session
 from ca_biositing.datamodels.models import ApiUser
 from ca_biositing.webservice.dependencies import get_current_user
 from sqlmodel import SQLModel
 from ca_biositing.datamodels.models import (
+    AgTreatment,
     CalorimetryRecord,
+    CollectionMethod,
     CompositionalRecord,
+    Contact,
+    DataSource,
+    Dataset,
     DimensionType,
+    Experiment,
     FermentationRecord,
     FieldSample,
+    FieldSampleCondition,
+    FieldStorageMethod,
+    HarvestMethod,
     IcpRecord,
     LocationAddress,
+    LocationResolution,
+    Method,
+    MethodAbbrev,
+    MethodCategory,
+    MethodStandard,
     Observation,
     Parameter,
     Place,
+    PreparationMethod,
+    PreparationMethodAbbreviation,
     PreparedSample,
     PretreatmentRecord,
     PrimaryAgProduct,
+    ProcessingMethod,
     Provider,
     ProximateRecord,
     Resource,
     ResourceAvailability,
+    ResourceClass,
+    ResourceSubclass,
     ResourceUsdaCommodityMap,
     UltimateRecord,
     Unit,
@@ -60,13 +80,33 @@ def engine_fixture():
         poolclass=None,  # Disable connection pooling for in-memory DB
     )
 
+    register_sqlite_udfs(engine)
+
     # Manually create only the tables we need (avoiding Polygon with md5())
     with engine.begin() as connection:
+        Contact.__table__.create(connection, checkfirst=True)
         Unit.__table__.create(connection, checkfirst=True)
         DimensionType.__table__.create(connection, checkfirst=True)
         Parameter.__table__.create(connection, checkfirst=True)
+        MethodAbbrev.__table__.create(connection, checkfirst=True)
+        MethodCategory.__table__.create(connection, checkfirst=True)
+        MethodStandard.__table__.create(connection, checkfirst=True)
+        Method.__table__.create(connection, checkfirst=True)
         UsdaCommodity.__table__.create(connection, checkfirst=True)
         PrimaryAgProduct.__table__.create(connection, checkfirst=True)
+        ResourceClass.__table__.create(connection, checkfirst=True)
+        ResourceSubclass.__table__.create(connection, checkfirst=True)
+        ProcessingMethod.__table__.create(connection, checkfirst=True)
+        AgTreatment.__table__.create(connection, checkfirst=True)
+        HarvestMethod.__table__.create(connection, checkfirst=True)
+        FieldStorageMethod.__table__.create(connection, checkfirst=True)
+        CollectionMethod.__table__.create(connection, checkfirst=True)
+        PreparationMethodAbbreviation.__table__.create(connection, checkfirst=True)
+        PreparationMethod.__table__.create(connection, checkfirst=True)
+        Experiment.__table__.create(connection, checkfirst=True)
+        LocationResolution.__table__.create(connection, checkfirst=True)
+        DataSource.__table__.create(connection, checkfirst=True)
+        Dataset.__table__.create(connection, checkfirst=True)
         Resource.__table__.create(connection, checkfirst=True)
         ResourceUsdaCommodityMap.__table__.create(connection, checkfirst=True)
         UsdaCensusRecord.__table__.create(connection, checkfirst=True)
@@ -77,6 +117,7 @@ def engine_fixture():
         LocationAddress.__table__.create(connection, checkfirst=True)
         Provider.__table__.create(connection, checkfirst=True)
         FieldSample.__table__.create(connection, checkfirst=True)
+        FieldSampleCondition.__table__.create(connection, checkfirst=True)
         PreparedSample.__table__.create(connection, checkfirst=True)
         ProximateRecord.__table__.create(connection, checkfirst=True)
         UltimateRecord.__table__.create(connection, checkfirst=True)
