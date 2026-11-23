@@ -1,10 +1,12 @@
-import pandas as pd
-import numpy as np
 from datetime import datetime, timezone
-from prefect import task, get_run_logger
+
+import numpy as np
+import pandas as pd
+from prefect import get_run_logger, task
+from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from ca_biositing.pipeline.utils.engine import get_engine
 
 
@@ -18,6 +20,7 @@ def load(df: pd.DataFrame) -> bool:
         logger = get_run_logger()
     except Exception:
         import logging
+
         logger = logging.getLogger(__name__)
 
     if df is None or df.empty:
@@ -30,66 +33,118 @@ def load(df: pd.DataFrame) -> bool:
         from ca_biositing.datamodels.models import InfrastructureWastewaterTreatmentPlants
 
         now = datetime.now(timezone.utc)
-        table_columns = {c.name for c in InfrastructureWastewaterTreatmentPlants.__table__.columns}
+        table_columns = {
+            c.name for c in InfrastructureWastewaterTreatmentPlants.__table__.columns
+        }
         records = df.replace({np.nan: None}).to_dict(orient="records")
 
         engine = get_engine()
         with engine.connect() as conn:
             with Session(bind=conn) as session:
-                batch = []
-                for i, record in enumerate(records):
-                    if i > 0 and i % 500 == 0:
-                        logger.info(f"Processed {i} records...")
+                batch_size = 1000
+                for start in range(0, len(records), batch_size):
+                    clean_chunk = []
+                    for i, record in enumerate(records[start : start + batch_size], start=start):
+                        if i > 0 and i % 500 == 0:
+                            logger.info(f"Processed {i} records...")
 
-                    # Keep only columns that exist in the model
-                    clean_record = {k: v for k, v in record.items() if k in table_columns}
-                        # Handle timestamps
-                    clean_record['updated_at'] = now
-                    if clean_record.get('created_at') is None:
-                        clean_record['created_at'] = now
+                        clean_record = {}
+                        for k, v in record.items():
+                            if k not in table_columns or (k == "plant_id" and v is None):
+                                continue
+                            if k == "plant_id" and isinstance(v, float) and v.is_integer():
+                                v = int(v)
+                            clean_record[k] = v
 
-                    stmt1 = select(InfrastructureWastewaterTreatmentPlants).where(
-                        InfrastructureWastewaterTreatmentPlants.name == clean_record.get('name'),
-                        InfrastructureWastewaterTreatmentPlants.address_id == clean_record.get('address_id')
-                    )
-                    existing_record = session.scalars(stmt1).first()
+                        clean_record["updated_at"] = now
+                        if clean_record.get("created_at") is None:
+                            clean_record["created_at"] = now
+                        clean_chunk.append(clean_record)
 
-                    if existing_record:
-                        for k, v in clean_record.items():
-                            if k not in ["plant_id", "created_at", "record_id"]:
-                                setattr(existing_record, k, v)
-                    else:
-                        batch = batch + [clean_record]
+                    names = {
+                        r.get("name") for r in clean_chunk if r.get("name") is not None
+                    }
+                    conditions = []
+                    if names:
+                        conditions.append(
+                            InfrastructureWastewaterTreatmentPlants.name.in_(names)
+                        )
+                    if any(r.get("name") is None for r in clean_chunk):
+                        conditions.append(
+                            InfrastructureWastewaterTreatmentPlants.name.is_(None)
+                        )
 
-                    if i > 0 and i % 1000 == 0:
-                        # load batch every 1000
-                        stmt = insert(InfrastructureWastewaterTreatmentPlants).values(batch)
-                        update_dict = {
-                            c.name: stmt.excluded[c.name]
-                            for c in InfrastructureWastewaterTreatmentPlants.__table__.columns
-                            if c.name not in ["plant_id", 'created_at', 'record_id']
-                        }
+                    existing_by_key = {}
+                    if conditions:
+                        stmt1 = select(InfrastructureWastewaterTreatmentPlants).where(
+                            or_(*conditions)
+                        )
+                        for existing in session.scalars(stmt1):
+                            existing_by_key.setdefault(
+                                (existing.name, existing.address_id), existing
+                            )
+
+                    pending_by_key = {}
+                    for clean_record in clean_chunk:
+                        nat_key = (clean_record.get("name"), clean_record.get("address_id"))
+                        existing_record = existing_by_key.get(nat_key)
+                        if existing_record is not None:
+                            for k, v in clean_record.items():
+                                if k not in ("plant_id", "created_at"):
+                                    setattr(existing_record, k, v)
+                        elif nat_key in pending_by_key:
+                            prev_created = pending_by_key[nat_key]["created_at"]
+                            pending_by_key[nat_key] = {
+                                **pending_by_key[nat_key],
+                                **clean_record,
+                                "created_at": prev_created,
+                            }
+                        else:
+                            pending_by_key[nat_key] = clean_record
+
+                    # Deduplicate PKs per statement (avoids PostgreSQL CardinalityViolation on
+                    # ON CONFLICT DO UPDATE); rows without PK rely on the SERIAL sequence.
+                    pk_batch_by_id = {}
+                    no_pk_batch = []
+                    for pending in pending_by_key.values():
+                        if "plant_id" in pending:
+                            pk_id = pending["plant_id"]
+                            if pk_id in pk_batch_by_id:
+                                prev_created = pk_batch_by_id[pk_id]["created_at"]
+                                pk_batch_by_id[pk_id] = {
+                                    **pk_batch_by_id[pk_id],
+                                    **pending,
+                                    "created_at": prev_created,
+                                }
+                            else:
+                                pk_batch_by_id[pk_id] = pending
+                        else:
+                            no_pk_batch.append(pending)
+
+                    if pk_batch_by_id:
+                        pk_batch = list(pk_batch_by_id.values())
+                        stmt = insert(InfrastructureWastewaterTreatmentPlants).values(
+                            pk_batch
+                        )
+                        update_cols = set(pk_batch[0].keys()) - {"plant_id", "created_at"}
+                        update_dict = {col: stmt.excluded[col] for col in update_cols}
                         upsert_stmt = stmt.on_conflict_do_update(
                             index_elements=["plant_id"],
                             set_=update_dict,
                         )
                         session.execute(upsert_stmt)
-                        session.commit()
-                        batch = []
-                if i % 1000 != 0:
-                    stmt = insert(InfrastructureWastewaterTreatmentPlants).values(batch)
-                    update_dict = {
-                        c.name: stmt.excluded[c.name]
-                        for c in InfrastructureWastewaterTreatmentPlants.__table__.columns
-                        if c.name not in ["plant_id", 'created_at', 'record_id']
-                    }
-                    upsert_stmt = stmt.on_conflict_do_update(
-                        index_elements=["plant_id"],
-                        set_=update_dict,
-                    )
-                    session.execute(upsert_stmt)
-                    session.commit()
 
+                    if no_pk_batch:
+                        session.execute(
+                            insert(InfrastructureWastewaterTreatmentPlants).values(
+                                no_pk_batch
+                            )
+                        )
+
+                    session.flush()
+                    session.expunge_all()
+
+                session.commit()
 
         logger.info("Successfully upserted records.")
         return True

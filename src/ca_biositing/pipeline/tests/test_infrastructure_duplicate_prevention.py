@@ -19,7 +19,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timezone
 from unittest.mock import patch, MagicMock
-from sqlalchemy import select, func
+from sqlalchemy import event, select, func
 from sqlalchemy.orm import Session
 
 
@@ -333,3 +333,284 @@ def test_load_handles_null_values_without_duplicates(dataset_name, session, engi
                 f"NULL value handling created duplicates for {dataset_name}: "
                 f"expected 1 record, got {count}"
             )
+
+
+BATCHED_INFRASTRUCTURE_DATASETS = [
+    "cafo_manure_locations",
+    "crude_oil_pipelines",
+    "food_manufacturers_carb",
+    "food_manufacturers_epa",
+    "petroleum_pipelines",
+    "railways",
+    "wastewater_treatment_plants",
+]
+
+
+def _make_unique_batch_df(dataset_name: str, n_rows: int, etl_run_id: int = 1) -> pd.DataFrame:
+    """Build a DataFrame of n_rows distinct records for batch boundary testing."""
+    base_row = get_mock_data_for_dataset(dataset_name).iloc[0].to_dict()
+    rows = []
+    for idx in range(n_rows):
+        row = dict(base_row)
+        row["etl_run_id"] = etl_run_id
+        for col, val in list(row.items()):
+            if isinstance(val, str) and any(
+                k in col.lower() for k in ("name", "facility", "company")
+            ):
+                row[col] = f"{val}_{idx}"
+        rows.append(row)
+    return pd.DataFrame(rows)
+
+
+@pytest.mark.parametrize("dataset_name", BATCHED_INFRASTRUCTURE_DATASETS)
+@pytest.mark.parametrize("n_rows", [1000, 1005])
+def test_batched_load_across_chunk_boundaries_and_empty_batch_rerun(
+    dataset_name, n_rows, session, engine
+):
+    """
+    Verify exact-1000 and >1000-row loads plus full re-runs where batch is empty.
+
+    Covers:
+    - Exact 1000-row chunk boundary and 1005-row remainder flush
+    - Re-run when all records already exist (no empty-batch DEFAULT VALUES error/phantom rows)
+    - Persistence of updated fields (etl_run_id) when batch is empty
+    """
+    import importlib
+
+    load_module = importlib.import_module(LOAD_MODULE_PATH.format(name=dataset_name))
+    load_fn = load_module.load.fn
+    model_class = get_model_class_for_dataset(dataset_name)
+
+    df_initial = _make_unique_batch_df(dataset_name, n_rows=n_rows, etl_run_id=1)
+    df_rerun = _make_unique_batch_df(dataset_name, n_rows=n_rows, etl_run_id=2)
+
+    with patch.object(load_module, "get_engine", return_value=engine):
+        assert load_fn(df_initial) is True
+
+        with Session(engine) as check_session:
+            count1 = check_session.scalar(select(func.count()).select_from(model_class))
+            assert count1 == n_rows
+
+        # Re-run with updated etl_run_id: all rows match existing records (empty new-insert batch)
+        assert load_fn(df_rerun) is True
+
+        with Session(engine) as check_session:
+            count2 = check_session.scalar(select(func.count()).select_from(model_class))
+            assert count2 == n_rows
+            updated_count = check_session.scalar(
+                select(func.count())
+                .select_from(model_class)
+                .where(model_class.etl_run_id == 2)
+            )
+            assert updated_count == n_rows, (
+                f"Expected all {n_rows} existing records to commit etl_run_id=2 on rerun "
+                f"for {dataset_name}, got {updated_count}"
+            )
+
+
+@pytest.mark.parametrize("dataset_name", BATCHED_INFRASTRUCTURE_DATASETS)
+def test_batched_load_deduplicates_intra_batch_duplicates(dataset_name, session, engine):
+    """Verify duplicate records within the same batch do not insert twice or fail."""
+    import importlib
+
+    load_module = importlib.import_module(LOAD_MODULE_PATH.format(name=dataset_name))
+    load_fn = load_module.load.fn
+    model_class = get_model_class_for_dataset(dataset_name)
+
+    row1 = get_mock_data_for_dataset(dataset_name).iloc[0].to_dict()
+    t1 = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    row1["created_at"] = t1
+    row1["etl_run_id"] = 1
+
+    row2 = dict(row1)
+    row2["created_at"] = datetime(2026, 1, 2, tzinfo=timezone.utc)
+    row2["etl_run_id"] = 2
+
+    dup_df = pd.DataFrame([row1, row2])
+
+    with patch.object(load_module, "get_engine", return_value=engine):
+        assert load_fn(dup_df) is True
+
+        with Session(engine) as check_session:
+            rows = check_session.scalars(select(model_class)).all()
+            assert len(rows) == 1
+            assert rows[0].etl_run_id == 2
+
+
+BATCHED_DATASET_PKS = [
+    ("cafo_manure_locations", "cafo_manure_id"),
+    ("crude_oil_pipelines", "object_id"),
+    ("food_manufacturers_carb", "processing_facility_id"),
+    ("food_manufacturers_epa", "processing_facility_id"),
+    ("petroleum_pipelines", "object_id"),
+    ("railways", "object_id"),
+    ("wastewater_treatment_plants", "plant_id"),
+]
+
+
+@pytest.mark.parametrize("dataset_name,pk_col", BATCHED_DATASET_PKS)
+def test_batched_load_handles_explicit_and_mixed_primary_keys(
+    dataset_name, pk_col, session, engine
+):
+    """
+    Verify PK-keyed bulk upserts handle duplicate PKs in-batch, preserve created_at
+    on conflict update, and allow mixed PK / None-PK rows in the same DataFrame.
+
+    Note: SQLite allows duplicate conflict keys in a single INSERT ... ON CONFLICT
+    statement, whereas PostgreSQL raises CardinalityViolation ("ON CONFLICT DO UPDATE
+    command cannot affect row a second time"). To catch regressions even on SQLite,
+    we intercept compiled SQL parameters and assert every ON CONFLICT statement binds
+    strictly unique primary keys.
+    """
+    import importlib
+
+    load_module = importlib.import_module(LOAD_MODULE_PATH.format(name=dataset_name))
+    load_fn = load_module.load.fn
+    model_class = get_model_class_for_dataset(dataset_name)
+
+    t1 = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    t2 = datetime(2026, 1, 2, tzinfo=timezone.utc)
+    df_three = _make_unique_batch_df(dataset_name, n_rows=3, etl_run_id=1)
+    rows = df_three.to_dict(orient="records")
+
+    # Row 0, exact duplicate of Row 0, and distinct-natural-key Row 2 all share PK=101;
+    # Row 1 has PK=None (auto-assigned via SERIAL / SQLite PK autoincrement).
+    rows[0][pk_col] = 101
+    rows[0]["created_at"] = t1
+    dup_pk_same_nat = dict(rows[0])
+    dup_pk_same_nat["etl_run_id"] = 2
+    dup_pk_same_nat["created_at"] = t2
+
+    rows[2][pk_col] = 101
+    rows[2]["etl_run_id"] = 2
+    rows[2]["created_at"] = t2
+
+    rows[1][pk_col] = None
+    rows[1]["created_at"] = t1
+
+    mixed_df = pd.DataFrame([rows[0], dup_pk_same_nat, rows[2], rows[1]])
+
+    on_conflict_pk_batches: list[list[int]] = []
+
+    def _capture_on_conflict_pks(conn, cursor, statement, parameters, context, executemany):
+        if "ON CONFLICT" in statement.upper() and context and context.compiled_parameters:
+            compiled_params = context.compiled_parameters[0]
+            bound_pks = [
+                val
+                for key, val in compiled_params.items()
+                if key == pk_col or key.startswith(f"{pk_col}_m")
+            ]
+            on_conflict_pk_batches.append(bound_pks)
+
+    event.listen(engine, "before_cursor_execute", _capture_on_conflict_pks)
+    try:
+        with patch.object(load_module, "get_engine", return_value=engine):
+            assert load_fn(mixed_df) is True
+
+            assert on_conflict_pk_batches, "Expected at least one ON CONFLICT upsert statement"
+            for bound_pks in on_conflict_pk_batches:
+                assert len(bound_pks) == len(set(bound_pks)), (
+                    f"Duplicate {pk_col} values bound in a single ON CONFLICT statement "
+                    f"(would raise PostgreSQL CardinalityViolation): {bound_pks}"
+                )
+
+            with Session(engine) as check_session:
+                all_rows = check_session.scalars(select(model_class)).all()
+                assert len(all_rows) == 2
+                pk_row = check_session.get(model_class, 101)
+                assert pk_row is not None
+                assert pk_row.etl_run_id == 2
+                created_naive = pk_row.created_at.replace(tzinfo=None)
+                assert created_naive == t1.replace(tzinfo=None)
+
+            # Update explicit PK=101 on rerun and ensure created_at stays t1
+            rerun_row = dict(rows[2])
+            rerun_row["etl_run_id"] = 3
+            rerun_row["created_at"] = t2
+            assert load_fn(pd.DataFrame([rerun_row])) is True
+
+            with Session(engine) as check_session:
+                assert check_session.scalar(select(func.count()).select_from(model_class)) == 2
+                pk_row_after = check_session.get(model_class, 101)
+                assert pk_row_after.etl_run_id == 3
+                assert pk_row_after.created_at.replace(tzinfo=None) == t1.replace(tzinfo=None)
+    finally:
+        event.remove(engine, "before_cursor_execute", _capture_on_conflict_pks)
+
+
+@pytest.mark.parametrize("dataset_name", BATCHED_INFRASTRUCTURE_DATASETS)
+def test_batched_load_deduplicates_across_chunk_boundary(dataset_name, session, engine):
+    """
+    Verify a duplicate split across chunk 1 (row 0) and chunk 2 (row 1004) within
+    a single load() call updates the flushed chunk-1 row rather than duplicating.
+    """
+    import importlib
+
+    load_module = importlib.import_module(LOAD_MODULE_PATH.format(name=dataset_name))
+    load_fn = load_module.load.fn
+    model_class = get_model_class_for_dataset(dataset_name)
+
+    t1 = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    t2 = datetime(2026, 1, 2, tzinfo=timezone.utc)
+    df = _make_unique_batch_df(dataset_name, n_rows=1004, etl_run_id=1)
+    rows = df.to_dict(orient="records")
+    for r in rows:
+        r["created_at"] = t1
+
+    # Row 1004 (in the second 1000-row chunk) duplicates Row 0 with updated etl_run_id
+    cross_chunk_dup = dict(rows[0])
+    cross_chunk_dup["etl_run_id"] = 2
+    cross_chunk_dup["created_at"] = t2
+    rows.append(cross_chunk_dup)
+
+    with patch.object(load_module, "get_engine", return_value=engine):
+        assert load_fn(pd.DataFrame(rows)) is True
+
+        with Session(engine) as check_session:
+            total = check_session.scalar(select(func.count()).select_from(model_class))
+            assert total == 1004, f"Expected 1004 unique rows for {dataset_name}, got {total}"
+            updated_rows = check_session.scalars(
+                select(model_class).where(model_class.etl_run_id == 2)
+            ).all()
+            assert len(updated_rows) == 1
+            assert updated_rows[0].created_at.replace(tzinfo=None) == t1.replace(tzinfo=None)
+
+
+@pytest.mark.parametrize("dataset_name", BATCHED_INFRASTRUCTURE_DATASETS)
+def test_batched_load_rolls_back_atomically_on_mid_load_failure(
+    dataset_name, session, engine
+):
+    """
+    Verify that if chunk 2 fails after chunk 1 flushed 1000 rows, the entire load
+    rolls back cleanly rather than leaving a partially loaded dataset.
+    """
+    import importlib
+
+    load_module = importlib.import_module(LOAD_MODULE_PATH.format(name=dataset_name))
+    load_fn = load_module.load.fn
+    model_class = get_model_class_for_dataset(dataset_name)
+
+    df = _make_unique_batch_df(dataset_name, n_rows=1005, etl_run_id=1)
+
+    flush_calls = 0
+    orig_flush = Session.flush
+
+    def _fail_on_second_chunk_flush(self, *args, **kwargs):
+        nonlocal flush_calls
+        flush_calls += 1
+        if flush_calls >= 2:
+            raise RuntimeError("Simulated mid-load DB failure in chunk 2")
+        return orig_flush(self, *args, **kwargs)
+
+    with (
+        patch.object(load_module, "get_engine", return_value=engine),
+        patch.object(Session, "flush", _fail_on_second_chunk_flush),
+    ):
+        assert load_fn(df) is False
+
+    with Session(engine) as check_session:
+        remaining = check_session.scalar(select(func.count()).select_from(model_class))
+        assert remaining == 0, (
+            f"Expected atomic rollback (0 rows) after chunk-2 failure for {dataset_name}, "
+            f"found {remaining} partially committed rows"
+        )
