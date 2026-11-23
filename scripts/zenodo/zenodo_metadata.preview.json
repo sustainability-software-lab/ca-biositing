@@ -1,0 +1,368 @@
+{
+  "metadata": {
+    "title": "BioCIRV Public Biomass Characterization Dataset",
+    "upload_type": "dataset",
+    "description": "Public analytical characterization dataset (proximate, ultimate, compositional, calorimetry, XRF, XRD, ICP, and fermentation/pretreatment records) from the BioCircular Valley (BioCIRV / Cal BioScape) initiative in California's Northern San Joaquin Valley.",
+    "version": "0.1.0",
+    "access_right": "open",
+    "license": "cc-by-4.0",
+    "creators": [
+      {
+        "name": "Bailey, Andrea",
+        "affiliation": "University of California Berkeley"
+      },
+      {
+        "name": "Duong, Jenny",
+        "affiliation": "Lawrence Berkeley National Lab"
+      },
+      {
+        "name": "Gardner, James",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "orcid": "0000-0002-8106-3817"
+      },
+      {
+        "name": "Krishnamoorthy, Anagha",
+        "affiliation": "Lawrence Berkeley National Lab"
+      },
+      {
+        "name": "Smith, Peter",
+        "affiliation": "University of California Berkeley",
+        "orcid": "0000-0002-9276-5099"
+      },
+      {
+        "name": "Downey, Spencer",
+        "affiliation": "University of California Merced"
+      },
+      {
+        "name": "Duran, Maria",
+        "affiliation": "Lawrence Berkeley National Lab"
+      },
+      {
+        "name": "Duwadi, Shrijana",
+        "affiliation": "University of California Merced"
+      },
+      {
+        "name": "Gong, Meili",
+        "affiliation": "University of California Berkeley",
+        "orcid": "0000-0001-8480-9306"
+      },
+      {
+        "name": "Heeley, Kieran",
+        "affiliation": "University of California Davis"
+      },
+      {
+        "name": "Hilboldt, Jessica",
+        "affiliation": "BEAM Circular"
+      },
+      {
+        "name": "Hoffman, Beau",
+        "affiliation": "Bobolink Sustainability Group, LLC"
+      },
+      {
+        "name": "Kang, Xihui",
+        "affiliation": "Lawrence Berkeley National Lab"
+      },
+      {
+        "name": "McManus, Jim",
+        "affiliation": "Lawrence Berkeley National Lab"
+      },
+      {
+        "name": "Nasef, Ziad",
+        "affiliation": "University of California Merced"
+      },
+      {
+        "name": "Nematian, Maryam",
+        "affiliation": "University of California Berkeley"
+      },
+      {
+        "name": "Newell, Eli",
+        "affiliation": "University of California Davis"
+      },
+      {
+        "name": "Ni, Cynthia",
+        "affiliation": "BEAM Circular"
+      },
+      {
+        "name": "Odim, Rebecca",
+        "affiliation": "BEAM Circular"
+      },
+      {
+        "name": "Okonkwo, Onyinye",
+        "affiliation": "Lawrence Berkeley National Lab"
+      },
+      {
+        "name": "Poddar, Tuhin",
+        "affiliation": "University of California Berkeley"
+      },
+      {
+        "name": "Ryals, Becca",
+        "affiliation": "University of California Merced"
+      },
+      {
+        "name": "Tapia, Mariana",
+        "affiliation": "University of California Davis"
+      },
+      {
+        "name": "Teran, Isaias",
+        "affiliation": "University of California Merced"
+      },
+      {
+        "name": "Diaz, Gerardo",
+        "affiliation": "University of California Merced"
+      },
+      {
+        "name": "Scown, Corinne",
+        "affiliation": "University of California Berkeley"
+      },
+      {
+        "name": "Simmons, Blake",
+        "affiliation": "Lawrence Berkeley National Lab"
+      },
+      {
+        "name": "Spang, Edward S.",
+        "affiliation": "University of California Davis"
+      },
+      {
+        "name": "Warner, Karen",
+        "affiliation": "BEAM Circular"
+      },
+      {
+        "name": "Youtsey, Gabe",
+        "affiliation": "University of California Agriculture and Natural Resources"
+      }
+    ],
+    "contributors": [
+      {
+        "name": "Bailey, Andrea",
+        "affiliation": "University of California Berkeley",
+        "type": "DataCurator"
+      },
+      {
+        "name": "Chen, Cindy",
+        "affiliation": "UC ANR Cooperative Extension",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Culumber, Mae",
+        "affiliation": "UC ANR Cooperative Extension",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Diaz, Gerardo",
+        "affiliation": "University of California Merced",
+        "type": "ProjectLeader"
+      },
+      {
+        "name": "Downey, Spencer",
+        "affiliation": "University of California Merced",
+        "type": "Researcher"
+      },
+      {
+        "name": "Duong, Jenny",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "type": "DataCurator"
+      },
+      {
+        "name": "Duran, Maria",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "type": "Researcher"
+      },
+      {
+        "name": "Duwadi, Shrijana",
+        "affiliation": "University of California Merced",
+        "type": "Researcher"
+      },
+      {
+        "name": "Fugere-Sousa, Taylor",
+        "affiliation": "University of California Merced",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Galdi, Giuliano",
+        "affiliation": "UC ANR Cooperative Extension",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Gardner, James",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "orcid": "0000-0002-8106-3817",
+        "type": "DataCurator"
+      },
+      {
+        "name": "Gomez, Hector",
+        "affiliation": "University of California Merced",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Gong, Meili",
+        "affiliation": "University of California Berkeley",
+        "orcid": "0000-0001-8480-9306",
+        "type": "Researcher"
+      },
+      {
+        "name": "Heeley, Kieran",
+        "affiliation": "University of California Davis",
+        "type": "Researcher"
+      },
+      {
+        "name": "Hilboldt, Jessica",
+        "affiliation": "BEAM Circular",
+        "type": "Researcher"
+      },
+      {
+        "name": "Hoffman, Beau",
+        "affiliation": "Bobolink Sustainability Group, LLC",
+        "type": "Researcher"
+      },
+      {
+        "name": "Huang, Tai-Yuan",
+        "affiliation": "University of California Berkeley",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Huntington, Tyler",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "orcid": "0000-0002-3213-0382",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Kang, Xihui",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "type": "Researcher"
+      },
+      {
+        "name": "Krishnamoorthy, Anagha",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "type": "DataCurator"
+      },
+      {
+        "name": "Kuriakose, Giya",
+        "affiliation": "University of California Merced",
+        "type": "DataCollector"
+      },
+      {
+        "name": "McManus, Jim",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "type": "Researcher"
+      },
+      {
+        "name": "Nasef, Ziad",
+        "affiliation": "University of California Merced",
+        "type": "Researcher"
+      },
+      {
+        "name": "Nematian, Maryam",
+        "affiliation": "University of California Berkeley",
+        "type": "Researcher"
+      },
+      {
+        "name": "Newell, Eli",
+        "affiliation": "University of California Davis",
+        "type": "Researcher"
+      },
+      {
+        "name": "Ni, Cynthia",
+        "affiliation": "BEAM Circular",
+        "type": "Researcher"
+      },
+      {
+        "name": "Odim, Rebecca",
+        "affiliation": "BEAM Circular",
+        "type": "Researcher"
+      },
+      {
+        "name": "Okonkwo, Onyinye",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "type": "Researcher"
+      },
+      {
+        "name": "Petersen, Helle",
+        "affiliation": "University of California Agriculture and Natural Resources",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Poddar, Tuhin",
+        "affiliation": "University of California Berkeley",
+        "type": "Researcher"
+      },
+      {
+        "name": "Rachbauer, Lydia",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Ryals, Becca",
+        "affiliation": "University of California Merced",
+        "type": "Researcher"
+      },
+      {
+        "name": "Scown, Corinne",
+        "affiliation": "University of California Berkeley",
+        "type": "ProjectLeader"
+      },
+      {
+        "name": "Simmons, Blake",
+        "affiliation": "Lawrence Berkeley National Lab",
+        "type": "ProjectLeader"
+      },
+      {
+        "name": "Smith, Peter",
+        "affiliation": "University of California Berkeley",
+        "orcid": "0000-0002-9276-5099",
+        "type": "DataCurator"
+      },
+      {
+        "name": "Spang, Edward S.",
+        "affiliation": "University of California Davis",
+        "type": "ProjectLeader"
+      },
+      {
+        "name": "Tanner, Justin",
+        "affiliation": "UC ANR Cooperative Extension",
+        "type": "DataCollector"
+      },
+      {
+        "name": "Tapia, Mariana",
+        "affiliation": "University of California Davis",
+        "type": "Researcher"
+      },
+      {
+        "name": "Teran, Isaias",
+        "affiliation": "University of California Merced",
+        "type": "Researcher"
+      },
+      {
+        "name": "Warner, Karen",
+        "affiliation": "BEAM Circular",
+        "type": "ProjectLeader"
+      },
+      {
+        "name": "Youtsey, Gabe",
+        "affiliation": "University of California Agriculture and Natural Resources",
+        "type": "ProjectLeader"
+      }
+    ],
+    "keywords": [
+      "bioeconomy",
+      "biomass characterization",
+      "feedstocks",
+      "California",
+      "Northern San Joaquin Valley",
+      "proximate analysis",
+      "compositional analysis",
+      "Cal BioScape"
+    ],
+    "related_identifiers": [
+      {
+        "identifier": "10.5281/zenodo.19443582",
+        "relation": "isCompiledBy",
+        "resource_type": "software"
+      },
+      {
+        "identifier": "https://github.com/sustainability-software-lab/ca-biositing",
+        "relation": "isSupplementTo",
+        "resource_type": "software"
+      }
+    ]
+  }
+}

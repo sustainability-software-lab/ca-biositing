@@ -1,0 +1,86 @@
+# Copy to .github/workflows/zenodo-dataset-release.yml once the BioCIRV Public Schema PR is merged.
+name: Publish BioCIRV Dataset to Zenodo
+
+on:
+  workflow_dispatch:
+    inputs:
+      zenodo_environment:
+        description: "Target Zenodo environment"
+        required: true
+        default: "sandbox"
+        type: choice
+        options:
+          - sandbox
+          - production
+      release_version:
+        description: "Dataset semantic version (e.g., 2026.11.0)"
+        required: true
+        default: "0.1.0"
+        type: string
+      release_tag:
+        description: "Smartsheet 'Publication Releases' filter tag"
+        required: false
+        default: "Zenodo Dataset v1"
+        type: string
+      publish_doi:
+        description: "Immediately publish and mint DOI? (Leave false to stage a reviewable Draft on Zenodo)"
+        required: true
+        default: false
+        type: boolean
+
+jobs:
+  stage-or-publish-zenodo:
+    name: Stage / Publish Dataset (${{ inputs.zenodo_environment }})
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.zenodo_environment == 'production' && 'zenodo-production' || 'zenodo-sandbox' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Sync live contributor metadata from Smartsheet
+        env:
+          SMARTSHEET_ACCESS_TOKEN: ${{ secrets.SMARTSHEET_ACCESS_TOKEN }}
+          SMARTSHEET_SHEET_ID: ${{ vars.SMARTSHEET_SHEET_ID }}
+        run: |
+          python scripts/zenodo/sync_zenodo_authors.py \
+            --smartsheet-id "$SMARTSHEET_SHEET_ID" \
+            --citation-cff CITATION.cff \
+            --release "${{ inputs.release_tag }}" \
+            --version "${{ inputs.release_version }}" \
+            --output-json scripts/zenodo/zenodo_metadata.json \
+            --output-report scripts/zenodo/author_audit_report.md
+
+      - name: Upload Author Audit Report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zenodo-author-audit-${{ inputs.release_version }}
+          path: |
+            scripts/zenodo/zenodo_metadata.json
+            scripts/zenodo/author_audit_report.md
+
+      # Note for Peter: Hook in the 5-view BioCIRV Public Schema export step here
+      # once the public schema PR is merged (e.g., exporting CSVs to exports/zenodo_bundle/).
+
+      - name: Stage or publish dataset bundle to Zenodo REST API
+        if: env.ZENODO_TOKEN != ''
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_TOKEN }}
+          ZENODO_DEPOSITION_ID: ${{ vars.ZENODO_DEPOSITION_ID }}
+        run: |
+          ARGS=(
+            --metadata-json scripts/zenodo/zenodo_metadata.json
+            --data-dir exports/zenodo_bundle
+          )
+          if [ "${{ inputs.zenodo_environment }}" = "production" ]; then
+            ARGS+=(--production)
+          fi
+          if [ "${{ inputs.publish_doi }}" = "true" ]; then
+            ARGS+=(--publish)
+          fi
+          python scripts/zenodo/publish_zenodo_dataset.py "${ARGS[@]}"
