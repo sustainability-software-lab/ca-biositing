@@ -383,7 +383,7 @@ def build_full_dashboard_html(payload: dict) -> str:
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BioCirV — Multi-Resource Side-by-Side Parameter &amp; Analytical Explorer</title>
+  <title>BioCirV — Interactive Feedstock Data Visualizer</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     :root,
@@ -452,13 +452,13 @@ def build_full_dashboard_html(payload: dict) -> str:
           1. Characterization &amp; AI Brief
         </a>
         <a id="suite-link-2" href="resource_qc_outlier_dashboard.html" class="px-2.5 py-1 rounded-md border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#00B5E2] transition-colors font-medium">
-          2. Statistical QC &amp; Lab Notes Audit
+          2. Statistical Snapshot
         </a>
         <a id="nav-page-workbench" href="/v1/dashboards/metadata/resource_audit_workbench.html" class="px-2.5 py-1 rounded-md border border-emerald-500/40 bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-emerald-400 transition-colors font-medium">
           ⚖️ 2B. QC Audit Workbench
         </a>
         <a id="suite-link-3" href="resource_explorer_dashboard.html" class="px-2.5 py-1 rounded-md bg-[#00B5E2] text-slate-950 font-semibold transition-colors shadow-sm">
-          3. Multi-Resource Side-by-Side Explorer
+          3. Data Visualizer
         </a>
         <a id="suite-link-5" href="../audit/db_environment_drift_dashboard.html" class="px-2.5 py-1 rounded-md border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:border-[#00B5E2] transition-colors font-medium">
           4. DB Environment Drift
@@ -475,7 +475,7 @@ def build_full_dashboard_html(payload: dict) -> str:
     <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[var(--border)]">
       <div class="flex flex-wrap items-center gap-2.5">
         <div class="w-2.5 h-2.5 rounded-full bg-[#00B5E2]"></div>
-        <h2 id="dashboard-title" class="text-[var(--foreground)] font-semibold text-base tracking-tight">BioCirV Multi-Resource Side-by-Side Parameter Explorer</h2>
+        <h2 id="dashboard-title" class="text-[var(--foreground)] font-semibold text-base tracking-tight">BioCirV Interactive Feedstock Data Visualizer</h2>
         <span id="badge-count" class="text-xs px-2 py-0.5 rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] font-medium">11,974 obs</span>
         <span id="badge-resource-meta" class="hidden sm:inline-block text-xs px-2 py-0.5 rounded-full border border-[var(--border)] text-[var(--muted-foreground)] font-mono">127 resources</span>
         <span id="live-qc-overlay-badge" class="hidden text-[11px] px-2 py-0.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-mono"></span>
@@ -488,15 +488,15 @@ def build_full_dashboard_html(payload: dict) -> str:
           <button type="button" id="tab-strip" onclick="setTab('strip')" class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
             Replicate Strip Plot
           </button>
-          <button type="button" id="tab-export" onclick="setTab('export')" class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors">
-            Export Tray (<span id="tray-count">0</span>)
-          </button>
         </div>
         <button type="button" id="btn-refresh-qc-state" onclick="window.refreshLiveQcOverlay && window.refreshLiveQcOverlay(true)" class="text-xs px-2.5 py-1 rounded-md border border-emerald-500/50 bg-[var(--background)] text-[var(--foreground)] hover:border-emerald-400 transition-colors font-semibold" title="Fetch latest QC decisions from API without regenerating HTML">
           ↻ Refresh QC State
         </button>
         <button type="button" id="btn-open-slice-modal" class="text-xs px-2.5 py-1 rounded-md border border-[#00B5E2]/50 bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] transition-colors font-semibold">
-          📤 Export Slice (.html)
+          📤 Export Slice (.HTML)
+        </button>
+        <button type="button" id="btn-tray-to-workbench" onclick="exportExplorerTrayToWorkbench()" class="text-xs px-2.5 py-1 rounded-md bg-emerald-500 text-slate-950 font-semibold hover:opacity-90 transition-colors">
+          ⚖️ Export to Audit Workbench
         </button>
         <button type="button" id="btn-open-bug-modal" class="text-xs px-2.5 py-1 rounded-md border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-amber-500 transition-colors font-semibold">
           🐛 Report a Bug
@@ -507,157 +507,192 @@ def build_full_dashboard_html(payload: dict) -> str:
       </div>
     </div>
 
-    <!-- Row 2: Analysis Type Pill Bar (9 Analysis Domains) -->
-    <div id="domain-pill-bar" class="flex flex-wrap items-center gap-1.5 py-1.5 border-b border-[var(--border)] text-xs"></div>
-
-    <!-- Row 3: Multi-Select Checklist Filter Bar & Compare By Selector -->
-    <div class="flex flex-wrap items-center gap-2 py-2 border-b border-[var(--border)] text-xs relative">
-      <!-- Combined Status / QC Filter -->
-      <div class="flex items-center gap-1">
-        <span class="text-[var(--muted-foreground)] font-medium">Status / QC:</span>
-        <select id="filter-status" onchange="applyFilters()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs focus:outline-none">
-          <option value="ALL">All Statuses &amp; QC</option>
-          <option value="Portal Compliant">Portal Compliant</option>
-          <option value="Raw">Raw / Portal Excluded</option>
-          <option value="qc_pass" selected>qc_pass: pass</option>
-          <option value="qc_fail">qc_pass: fail</option>
-          <option value="qc_provisional">qc_pass: provisional/unknown</option>
-        </select>
-      </div>
-
-      <!-- Toggle Inline 4-Column Multi-Select Checklists Drawer -->
-      <button type="button" id="btn-toggle-drawer" onclick="toggleInlineChecklistDrawer()" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors">
-        <span>&#9745; Multi-Select Checklists</span>
-        <span id="drawer-chevron" class="text-[10px]">&#9652;</span>
-      </button>
-
-      <!-- Multi-Select Checklist Popover: Resources -->
-      <div class="relative inline-flex items-center gap-1" id="popover-wrap-resources">
-        <button type="button" onclick="stepResource(-1)" class="px-1.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]" title="Step to Previous Active Resource">&larr;</button>
-        <button type="button" id="btn-popover-resources" onclick="togglePopover('resources', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
-          <span id="label-popover-resources">Resources: All (43 active)</span>
-          <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
-        </button>
-        <button type="button" onclick="stepResource(1)" class="px-1.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]" title="Step to Next Active Resource">&rarr;</button>
-        <div id="panel-popover-resources" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-80 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
-          <input id="search-popover-resources" type="text" oninput="renderChecklistItems('resources', true)" placeholder="Filter resources..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
-          <div class="flex flex-wrap items-center gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[10px]">
-            <span class="text-[var(--muted-foreground)] font-mono">Presets:</span>
-            <button type="button" onclick="applyResourcePreset('hulls')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Nut Hulls</button>
-            <button type="button" onclick="applyResourcePreset('straws')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Straws</button>
-            <button type="button" onclick="applyResourcePreset('pomaces')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Pomaces</button>
-            <button type="button" onclick="selectTopDomainResources(4)" class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/25 font-medium">Top 4 in Tab</button>
+    <!-- Workspace Two-Column Layout: Sticky Left Filter Sidebar (280px) + Right Interactive Workspace -->
+    <div class="flex flex-col lg:flex-row gap-4 items-start pt-2">
+      <!-- Sticky Left Filter Sidebar -->
+      <aside id="explorer-sticky-filter-sidebar" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 shadow-sm space-y-3.5 w-full lg:w-[280px] text-xs" style="width: 280px; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; flex-shrink: 0;">
+        <!-- 1. Flag Filters -->
+        <div class="space-y-2 pb-3 border-b border-[var(--border)]">
+          <div class="flex items-center justify-between">
+            <h2 class="text-[11px] font-bold uppercase tracking-wider text-[#00B5E2]">Flag Filters</h2>
+            <button type="button" onclick="resetFilters()" class="text-[11px] px-1.5 py-0.5 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
+              Reset All
+            </button>
           </div>
-          <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="checklistAction('resources', 'domain')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]" title="Select all resources that have data in the active analysis tab">All in Tab</button>
-              <button type="button" onclick="checklistAction('resources', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">All</button>
-              <button type="button" onclick="checklistAction('resources', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
-              <button type="button" onclick="checklistAction('resources', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
-            </div>
-            <span id="count-popover-resources" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+          <div>
+            <label for="flt-explorer-flag-type" class="block text-[11px] text-[var(--muted-foreground)] font-medium mb-1">Flag Type:</label>
+            <select id="flt-explorer-flag-type" onchange="onExplorerFlagTypeChange(this.value)" class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none">
+              <option value="all" selected>All Records / Groups</option>
+              <option value="active">Active Flagged Only</option>
+              <option value="dixon">Dixon's Q Outlier</option>
+              <option value="rsd_gt_10">RSD &gt; 10%</option>
+              <option value="rsd_gt_20">High RSD &gt; 20%</option>
+              <option value="sd3">&gt;3&times;SD_pooled</option>
+              <option value="identical">Identical Replicates</option>
+              <option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>
+            </select>
           </div>
-          <div id="list-popover-resources" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+          <div>
+            <label for="filter-status" class="block text-[11px] text-[var(--muted-foreground)] font-medium mb-1">Status / QC:</label>
+            <select id="filter-status" onchange="applyFilters()" class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs focus:outline-none">
+              <option value="ALL">All Statuses &amp; QC</option>
+              <option value="Portal Compliant">Portal Compliant</option>
+              <option value="Raw">Raw / Portal Excluded</option>
+              <option value="qc_pass" selected>qc_pass: pass</option>
+              <option value="qc_fail">qc_pass: fail</option>
+              <option value="qc_provisional">qc_pass: provisional/unknown</option>
+            </select>
+          </div>
         </div>
-      </div>
 
-      <!-- Multi-Select Checklist Popover: Parameters -->
-      <div class="relative inline-flex items-center" id="popover-wrap-params">
-        <button type="button" id="btn-popover-params" onclick="togglePopover('params', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
-          <span id="label-popover-params">Params: All</span>
-          <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
-        </button>
-        <div id="panel-popover-params" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
-          <input id="search-popover-params" type="text" oninput="renderChecklistItems('params', true)" placeholder="Filter parameters..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
-          <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="checklistAction('params', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
-              <button type="button" onclick="checklistAction('params', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
-              <button type="button" onclick="checklistAction('params', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
-            </div>
-            <span id="count-popover-params" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
-          </div>
-          <div id="list-popover-params" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+        <!-- 2. Choose an Analysis Type -->
+        <div class="space-y-2 pb-3 border-b border-[var(--border)]">
+          <h2 class="text-[11px] font-bold uppercase tracking-wider text-[#00B5E2]">Choose an Analysis Type</h2>
+          <div id="domain-pill-bar" class="flex flex-wrap items-center gap-1.5 text-xs"></div>
         </div>
-      </div>
 
-      <!-- Multi-Select Checklist Popover: Prepared Samples -->
-      <div class="relative inline-flex items-center" id="popover-wrap-samples">
-        <button type="button" id="btn-popover-samples" onclick="togglePopover('samples', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
-          <span id="label-popover-samples">Samples: All</span>
-          <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
-        </button>
-        <div id="panel-popover-samples" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-80 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
-          <input id="search-popover-samples" type="text" oninput="renderChecklistItems('samples', true)" placeholder="Filter prepared samples..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
-          <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="checklistAction('samples', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
-              <button type="button" onclick="checklistAction('samples', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
-              <button type="button" onclick="checklistAction('samples', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
-            </div>
-            <span id="count-popover-samples" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+        <!-- 3. Additional Filters -->
+        <div class="space-y-2.5">
+          <h2 class="text-[11px] font-bold uppercase tracking-wider text-[#00B5E2]">Additional Filters</h2>
+
+          <label class="flex items-center justify-between gap-1.5 px-2 py-1.5 rounded bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+            <span class="flex items-center gap-1.5">
+              <input id="chk-explorer-suppress-trace" type="checkbox" checked onchange="toggleSuppressTrace(this.checked)" class="rounded" />
+              <span>Suppress trace flags</span>
+            </span>
+            <span id="explorer-suppressed-count-badge" class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-[var(--background)] text-[var(--muted-foreground)] border border-[var(--border)]">0 suppressed</span>
+          </label>
+
+          <label class="flex items-center gap-1.5 px-2 py-1.5 rounded bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+            <input id="chk-explorer-blind-mode" type="checkbox" onchange="toggleExplorerBlindMode(this.checked)" class="rounded" />
+            <span>Blind review mode (hide flags)</span>
+          </label>
+
+          <div>
+            <label for="filter-search" class="block text-[11px] text-[var(--muted-foreground)] font-medium mb-1">Keyword Search:</label>
+            <input id="filter-search" type="search" oninput="onExplorerSearchChange(this.value)" placeholder="Search sample / parameter / ID..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00B5E2]" />
           </div>
-          <div id="list-popover-samples" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
-        </div>
-      </div>
 
-      <!-- Multi-Select Checklist Popover: Methods / Preps / Strains -->
-      <div class="relative inline-flex items-center" id="popover-wrap-methods">
-        <button type="button" id="btn-popover-methods" onclick="togglePopover('methods', event)" class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
-          <span id="label-popover-methods">Methods: All</span>
-          <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
-        </button>
-        <div id="panel-popover-methods" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
-          <input id="search-popover-methods" type="text" oninput="renderChecklistItems('methods', true)" placeholder="Filter methods / preps / strains..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
-          <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
-            <div class="flex items-center gap-1">
-              <button type="button" onclick="checklistAction('methods', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
-              <button type="button" onclick="checklistAction('methods', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
-              <button type="button" onclick="checklistAction('methods', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+          <!-- Toggle Inline 4-Column Multi-Select Checklists Drawer -->
+          <button type="button" id="btn-toggle-drawer" onclick="toggleInlineChecklistDrawer()" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors">
+            <span id="btn-toggle-checklist-drawer">&#9745; Multi-Select Checklists</span>
+            <span id="drawer-chevron" class="text-[10px]">&#9652;</span>
+          </button>
+
+          <!-- Multi-Select Checklist Popover: Resources -->
+          <div class="relative flex items-center gap-1 w-full" id="popover-wrap-resources">
+            <button type="button" onclick="stepResource(-1)" class="px-1.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]" title="Step to Previous Active Resource">&larr;</button>
+            <button type="button" id="btn-popover-resources" onclick="togglePopover('resources', event)" class="flex-1 inline-flex items-center justify-between gap-1.5 px-2 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors min-w-0">
+              <span id="label-popover-resources" class="truncate">Resources: All (43 active)</span>
+              <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
+            </button>
+            <button type="button" onclick="stepResource(1)" class="px-1.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]" title="Step to Next Active Resource">&rarr;</button>
+            <div id="panel-popover-resources" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
+              <input id="search-popover-resources" type="text" oninput="renderChecklistItems('resources', true)" placeholder="Filter resources..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
+              <div class="flex flex-wrap items-center gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[10px]">
+                <span class="text-[var(--muted-foreground)] font-mono">Presets:</span>
+                <button type="button" onclick="applyResourcePreset('hulls')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Nut Hulls</button>
+                <button type="button" onclick="applyResourcePreset('straws')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Straws</button>
+                <button type="button" onclick="applyResourcePreset('pomaces')" class="px-1.5 py-0.5 rounded bg-[#00B5E2]/15 text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/25 font-medium">Pomaces</button>
+                <button type="button" onclick="selectTopDomainResources(4)" class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/25 font-medium">Top 4 in Tab</button>
+              </div>
+              <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="checklistAction('resources', 'domain')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]" title="Select all resources that have data in the active analysis tab">All in Tab</button>
+                  <button type="button" onclick="checklistAction('resources', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">All</button>
+                  <button type="button" onclick="checklistAction('resources', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
+                  <button type="button" onclick="checklistAction('resources', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+                </div>
+                <span id="count-popover-resources" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+              </div>
+              <div id="list-popover-resources" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
             </div>
-            <span id="count-popover-methods" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
           </div>
-          <div id="list-popover-methods" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+
+          <!-- Multi-Select Checklist Popover: Parameters -->
+          <div class="relative flex items-center w-full" id="popover-wrap-params">
+            <button type="button" id="btn-popover-params" onclick="togglePopover('params', event)" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
+              <span id="label-popover-params" class="truncate">Params: All</span>
+              <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
+            </button>
+            <div id="panel-popover-params" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
+              <input id="search-popover-params" type="text" oninput="renderChecklistItems('params', true)" placeholder="Filter parameters..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
+              <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="checklistAction('params', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
+                  <button type="button" onclick="checklistAction('params', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
+                  <button type="button" onclick="checklistAction('params', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+                </div>
+                <span id="count-popover-params" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+              </div>
+              <div id="list-popover-params" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+            </div>
+          </div>
+
+          <!-- Multi-Select Checklist Popover: Prepared Samples -->
+          <div class="relative flex items-center w-full" id="popover-wrap-samples">
+            <button type="button" id="btn-popover-samples" onclick="togglePopover('samples', event)" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
+              <span id="label-popover-samples" class="truncate">Samples: All</span>
+              <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
+            </button>
+            <div id="panel-popover-samples" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
+              <input id="search-popover-samples" type="text" oninput="renderChecklistItems('samples', true)" placeholder="Filter prepared samples..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
+              <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="checklistAction('samples', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
+                  <button type="button" onclick="checklistAction('samples', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
+                  <button type="button" onclick="checklistAction('samples', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+                </div>
+                <span id="count-popover-samples" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+              </div>
+              <div id="list-popover-samples" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+            </div>
+          </div>
+
+          <!-- Multi-Select Checklist Popover: Methods / Preps / Strains -->
+          <div class="relative flex items-center w-full" id="popover-wrap-methods">
+            <button type="button" id="btn-popover-methods" onclick="togglePopover('methods', event)" class="w-full inline-flex items-center justify-between gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors">
+              <span id="label-popover-methods" class="truncate">Methods: All</span>
+              <span class="text-[10px] text-[var(--muted-foreground)]">&#9662;</span>
+            </button>
+            <div id="panel-popover-methods" onclick="event.stopPropagation()" class="hidden absolute left-0 top-full mt-1 w-72 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg shadow-xl z-50 p-2">
+              <input id="search-popover-methods" type="text" oninput="renderChecklistItems('methods', true)" placeholder="Filter methods / preps / strains..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs mb-1.5 focus:outline-none focus:border-[#00B5E2]" />
+              <div class="flex items-center justify-between gap-1 pb-1.5 mb-1.5 border-b border-[var(--border)] text-[11px]">
+                <div class="flex items-center gap-1">
+                  <button type="button" onclick="checklistAction('methods', 'all')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Select All</button>
+                  <button type="button" onclick="checklistAction('methods', 'clear')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Clear</button>
+                  <button type="button" onclick="checklistAction('methods', 'invert')" class="px-1.5 py-0.5 rounded bg-[var(--background)] border border-[var(--border)] hover:border-[#00B5E2]">Invert</button>
+                </div>
+                <span id="count-popover-methods" class="font-mono text-[var(--muted-foreground)]">0 checked</span>
+              </div>
+              <div id="list-popover-methods" class="max-h-60 overflow-y-auto space-y-0.5 pr-1"></div>
+            </div>
+          </div>
+
+          <!-- Date Range Filter (Collection Date or Run / Prep Date) -->
+          <div class="space-y-1.5 pt-2 border-t border-[var(--border)]">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] text-[var(--muted-foreground)] font-medium">Date Range:</span>
+              <button id="filter-date-clear" type="button" onclick="clearDateFilter()" class="hidden px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 text-[10px] font-semibold" title="Clear date filter">&times; Clear</button>
+            </div>
+            <select id="filter-date-type" onchange="onDateFilterChange()" class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs font-medium focus:outline-none">
+              <option value="any">Col or Run/Prep</option>
+              <option value="collected">Collection Date</option>
+              <option value="run">Run / Prep Date</option>
+            </select>
+            <div class="grid grid-cols-2 gap-1">
+              <input id="filter-from-date" type="date" min="2020-01-01" placeholder="2024-01-01" onfocus="onFromDateFocus(this)" oninput="onDateFilterChange()" onchange="onDateFilterChange()" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-mono" title="From Date (defaults to 2024-01-01 when opened if empty)" />
+              <input id="filter-to-date" type="date" min="2020-01-01" oninput="onDateFilterChange()" onchange="onDateFilterChange()" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-mono" title="To Date (YYYY-MM-DD)" />
+            </div>
+            <span id="date-filter-active-badge" class="hidden inline-block text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"></span>
+          </div>
         </div>
-      </div>
+      </aside>
 
-      <!-- Compare By Selector (Side-by-Side Visual Comparison) -->
-      <div class="flex items-center gap-1 pl-1 border-l border-[var(--border)]">
-        <span class="text-[var(--muted-foreground)] font-medium">Compare By:</span>
-        <select id="compare-by-select" onchange="onCompareByManualChange(this.value)" class="bg-[var(--background)] text-[var(--foreground)] border border-[#00B5E2]/60 rounded px-1.5 py-1 text-xs font-medium focus:outline-none">
-          <option value="auto">Auto (Resource / Method)</option>
-          <option value="resource">Resource (Side-by-Side)</option>
-          <option value="sample">Prepared Sample (Side-by-Side)</option>
-          <option value="field_sample">Field Sample (Side-by-Side)</option>
-          <option value="experiment">Experiment / Run (Side-by-Side)</option>
-          <option value="method">Method / Prep / Strain (Side-by-Side)</option>
-          <option value="collection_date">Collection Date Cohort (Side-by-Side)</option>
-          <option value="prep_date">Prep / Run Date Cohort (Side-by-Side)</option>
-        </select>
-      </div>
-
-      <!-- Date Range Filter (Collection Date or Run / Prep Date) -->
-      <div class="flex flex-wrap items-center gap-1 pl-1 border-l border-[var(--border)]">
-        <span class="text-[var(--muted-foreground)] font-medium">Date:</span>
-        <select id="filter-date-type" onchange="onDateFilterChange()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-xs font-medium focus:outline-none">
-          <option value="any">Col or Run/Prep</option>
-          <option value="collected">Collection Date</option>
-          <option value="run">Run / Prep Date</option>
-        </select>
-        <input id="filter-from-date" type="date" min="2020-01-01" placeholder="2024-01-01" onfocus="onFromDateFocus(this)" oninput="onDateFilterChange()" onchange="onDateFilterChange()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-mono" title="From Date (defaults to 2024-01-01 when opened if empty)" />
-        <span class="text-[var(--muted-foreground)]">to</span>
-        <input id="filter-to-date" type="date" min="2020-01-01" oninput="onDateFilterChange()" onchange="onDateFilterChange()" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-mono" title="To Date (YYYY-MM-DD)" />
-        <button id="filter-date-clear" type="button" onclick="clearDateFilter()" class="hidden px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-400 border border-rose-500/30 hover:bg-rose-500/25 text-[10px] font-semibold" title="Clear date filter">&times; Clear</button>
-        <span id="date-filter-active-badge" class="hidden text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30"></span>
-      </div>
-
-      <button type="button" onclick="resetFilters()" class="ml-auto text-xs px-2 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-        Reset All
-      </button>
-    </div>
-
-    <!-- Row 3B: Always-Accessible 4-Column Multi-Select Checklist Drawer (Open by Default for Effortless Multi-Selection) -->
-    <div id="inline-checklist-drawer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 py-2.5 border-b border-[var(--border)] text-xs">
+      <!-- Right Main Workspace -->
+      <div class="flex-1 min-w-0 space-y-2.5 w-full" style="flex: 1; min-width: 0;">
+        <!-- Collapsible 4-Column Multi-Select Checklist Drawer (Collapsed by Default to Maximize Above-the-Fold Chart Space) -->
+        <div id="inline-checklist-drawer" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 pb-2.5 border-b border-[var(--border)] text-xs">
       <!-- Column 1: Multi-Select Resources -->
       <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2 flex flex-col">
         <div class="flex items-center justify-between gap-1 mb-1">
@@ -705,17 +740,17 @@ def build_full_dashboard_html(payload: dict) -> str:
         <div id="inline-list-samples" class="h-32 overflow-y-auto space-y-0.5 pr-1"></div>
       </div>
 
-      <!-- Column 4: Multi-Select Methods / Preps / Strains -->
+      <!-- Column 4: Multi-Select Methods / Strains / Reactors -->
       <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2 flex flex-col">
         <div class="flex items-center justify-between gap-1 mb-1">
-          <span class="font-semibold text-[var(--foreground)]">4. Methods / Preps / Strains <span id="inline-count-methods" class="font-mono text-[10px] text-purple-400">(All)</span></span>
+          <span class="font-semibold text-[var(--foreground)]">4. Methods / Strains / Reactors <span id="inline-count-methods" class="font-mono text-[10px] text-purple-400">(All)</span></span>
           <div class="flex items-center gap-1 text-[10px]">
             <button type="button" onclick="checklistAction('methods', 'all')" class="px-1.5 py-0.5 rounded border border-[var(--border)] hover:border-[#00B5E2]">All</button>
             <button type="button" onclick="checklistAction('methods', 'clear')" class="px-1.5 py-0.5 rounded border border-[var(--border)] hover:border-rose-500 text-[var(--muted-foreground)] hover:text-rose-400">Clear</button>
           </div>
         </div>
-        <div class="text-[10px] text-[var(--muted-foreground)] mb-1">Filter or compare drying, milling, pretreatment, or strain conditions:</div>
-        <input id="inline-search-methods" type="text" oninput="syncChecklistSearch('methods', this.value)" placeholder="Search methods / preps..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-[11px] mb-1 focus:outline-none focus:border-[#00B5E2]" />
+        <div class="text-[10px] text-[var(--muted-foreground)] mb-1">Filter or compare drying, milling, pretreatment, strain, or reactor conditions:</div>
+        <input id="inline-search-methods" type="text" oninput="syncChecklistSearch('methods', this.value)" placeholder="Search methods / strains / reactors..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-[11px] mb-1 focus:outline-none focus:border-[#00B5E2]" />
         <div id="inline-list-methods" class="h-32 overflow-y-auto space-y-0.5 pr-1"></div>
       </div>
     </div>
@@ -729,7 +764,7 @@ def build_full_dashboard_html(payload: dict) -> str:
     <!-- Row 4: Main 12-Column Workspace -->
     <div id="view-charts" class="grid grid-cols-12 gap-3 pt-2.5 items-start">
       <!-- Left (col-span-8): Interactive High-DPI Canvas Plot -->
-      <div class="col-span-12 lg:col-span-8 bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 relative">
+      <div class="col-span-12 lg:col-span-8 bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 relative canvas-container chart-canvas-wrapper">
         <!-- Quick Parameter Pill Bar for Instant Single-Parameter or Multi-Parameter Comparison with Units -->
         <div id="param-pill-bar" class="flex flex-wrap items-center gap-1 pb-2 mb-2 border-b border-[var(--border)] text-xs"></div>
 
@@ -737,15 +772,28 @@ def build_full_dashboard_html(payload: dict) -> str:
           <span id="chart-title" class="text-xs font-semibold text-[var(--foreground)]">Proximate Analysis — Side-by-Side Parameter Comparison</span>
 
           <div class="flex flex-wrap items-center gap-2">
-            <!-- X-Axis Grouping Layout Toggle (shown in Scatter tab) -->
-            <div id="xaxis-layout-controls" class="flex flex-wrap items-center gap-1 text-xs bg-[var(--card)] px-1.5 py-0.5 rounded border border-[var(--border)]">
-              <span class="text-[var(--muted-foreground)]">X-Axis:</span>
-              <button type="button" id="btn-xlayout-auto" onclick="setXLayoutMode('auto')" class="px-1.5 py-0.5 rounded text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)]" title="Auto: Resources side-by-side when 1 parameter is focused, or Parameters with Resource sub-lanes">Auto</button>
-              <button type="button" id="btn-xlayout-resources" onclick="setXLayoutMode('resources')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Place Selected Resources / Conditions directly on the X-Axis for head-to-head comparison">Resources Side-by-Side</button>
-              <button type="button" id="btn-xlayout-by_field_sample" onclick="setXLayoutMode('by_field_sample')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Group observations along the X-Axis by Field Sample">Field Sample</button>
-              <button type="button" id="btn-xlayout-by_experiment" onclick="setXLayoutMode('by_experiment')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Group observations along the X-Axis by Experiment / Run">Experiment</button>
-              <button type="button" id="btn-xlayout-params" onclick="setXLayoutMode('params')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Place Parameters on the X-Axis with Resource sub-lanes">Parameters</button>
-              <button type="button" id="btn-xlayout-dates" onclick="setXLayoutMode('dates')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Plot observations grouped chronologically by Collection Date or Run / Prep Date Cohort">Collection / Run Dates</button>
+            <!-- Unified Group X-Axis By Control (consolidates Compare By & X-Axis Layout) -->
+            <div id="xaxis-layout-controls" class="flex flex-wrap items-center gap-1 text-xs bg-[var(--card)] px-1.5 py-0.5 rounded border border-[#00B5E2]/50">
+              <span class="text-[var(--muted-foreground)] font-medium">Group X-Axis By:</span>
+              <select id="compare-by-select" onchange="onCompareByManualChange(this.value)" class="bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-0.5 text-xs font-medium focus:outline-none">
+                <option value="auto">Auto (Resource / Method)</option>
+                <option value="resource">Resources Side-by-Side</option>
+                <option value="sample">Prepared Sample (Side-by-Side)</option>
+                <option value="field_sample">Field Sample</option>
+                <option value="experiment">Experiment / Run</option>
+                <option value="method">Method / Prep / Strain</option>
+                <option value="params">Parameters (with Sub-Lanes)</option>
+                <option value="collection_date">Collection Date Cohort</option>
+                <option value="prep_date">Prep / Run Date Cohort</option>
+              </select>
+              <div class="hidden xl:inline-flex items-center gap-0.5 pl-1 border-l border-[var(--border)]">
+                <button type="button" id="btn-xlayout-auto" onclick="setXLayoutMode('auto')" class="px-1.5 py-0.5 rounded text-[11px] font-medium bg-[var(--primary)] text-[var(--primary-foreground)]" title="Auto: Resources side-by-side when 1 parameter is focused, or Parameters with Resource sub-lanes">Auto</button>
+                <button type="button" id="btn-xlayout-resources" onclick="setXLayoutMode('resources')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Place Selected Resources / Conditions directly on the X-Axis for head-to-head comparison">Resources</button>
+                <button type="button" id="btn-xlayout-by_field_sample" onclick="setXLayoutMode('by_field_sample')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Group observations along the X-Axis by Field Sample">Field Sample</button>
+                <button type="button" id="btn-xlayout-by_experiment" onclick="setXLayoutMode('by_experiment')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Group observations along the X-Axis by Experiment / Run">Experiment</button>
+                <button type="button" id="btn-xlayout-params" onclick="setXLayoutMode('params')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Place Parameters on the X-Axis with Resource sub-lanes">Parameters</button>
+                <button type="button" id="btn-xlayout-dates" onclick="setXLayoutMode('dates')" class="px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]" title="Plot observations grouped chronologically by Collection Date or Run / Prep Date Cohort">Dates</button>
+              </div>
             </div>
 
             <!-- Replicate Plot Mode Toggle (Individual Points vs Replicate Mean ± SD) -->
@@ -762,6 +810,7 @@ def build_full_dashboard_html(payload: dict) -> str:
               <span class="text-[var(--muted-foreground)]">Y-Range:</span>
               <button type="button" id="btn-yrange-auto" onclick="setYRangeMode('auto')" class="px-1.5 py-0.5 rounded text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)]" title="Auto-scale Y-axis to the actual measured parameter values &amp; units">Auto-Fit Values</button>
               <button type="button" id="btn-yrange-full" onclick="setYRangeMode('full')" class="px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]" title="Fix Y-axis to 0–100%">0–100%</button>
+              <button type="button" class="btn-Action px-1.5 py-0.5 rounded text-xs font-medium bg-sky-500/15 text-sky-400 border border-sky-500/40 hover:bg-sky-500/25" id="btn-reset-zoom" onclick="resetCanvasZoom()" style="display:none;">↺ Reset Zoom</button>
             </div>
 
             <!-- Strip Sort Control (shown in Strip tab) -->
@@ -793,13 +842,14 @@ def build_full_dashboard_html(payload: dict) -> str:
           </div>
         </div>
 
+        <div id="canvas-zoom-brush" style="display:none; pointer-events:none; position:absolute; border:1.5px dashed #0284c7; background:rgba(2,132,199,0.12); z-index:12;"></div>
         <canvas id="plot-canvas" width="640" height="365" style="width: 100%; height: 365px;" class="w-full h-[365px] cursor-crosshair block"></canvas>
 
         <!-- Floating Hover Tooltip -->
         <div id="hover-tooltip" class="hidden pointer-events-none absolute z-20 bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded-lg p-2 shadow-lg text-xs max-w-[295px]"></div>
 
         <!-- Interactive Click-Point Audit Finding Popover -->
-        <div id="click-audit-popover" onclick="event.stopPropagation()" class="hidden absolute z-30 bg-[var(--card)] text-[var(--foreground)] border-2 border-[#00B5E2] rounded-xl p-3 shadow-2xl text-xs w-[320px] max-w-[92vw]">
+        <div id="click-audit-popover" onclick="event.stopPropagation()" style="max-height: calc(100% - 24px); overflow-y: auto;" class="hidden absolute z-30 bg-[var(--card)] text-[var(--foreground)] border-2 border-[#00B5E2] rounded-xl p-3 shadow-2xl text-xs w-[320px] max-w-[92vw] overflow-y-auto">
           <div class="flex items-start justify-between gap-2 pb-1.5 mb-2 border-b border-[var(--border)]">
             <div class="min-w-0">
               <div class="flex items-center gap-1.5">
@@ -825,10 +875,13 @@ def build_full_dashboard_html(payload: dict) -> str:
           <div class="mb-2">
             <label class="block text-[10px] uppercase tracking-wider font-mono text-[var(--muted-foreground)] mb-1">Audit Action / QC Status:</label>
             <select id="click-popover-action" class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs font-medium focus:outline-none focus:border-[#00B5E2]">
-              <option value="flag_fail">⚑ Flag Outlier / Set QC Fail (exclude)</option>
-              <option value="approve_pass">✓ Verify &amp; Approve (Set QC Pass)</option>
-              <option value="keep_note">✎ Log Audit Note Only (Keep Status)</option>
+              <option value="keep_note" selected>🔬 Stage for Audit Workbench (In Review / Provisional)</option>
+              <option value="flag_fail">⚑ Stage as Recommend QC Fail (Reconcile in Workbench)</option>
+              <option value="approve_pass">✓ Stage as Recommend QC Pass (Reconcile in Workbench)</option>
             </select>
+          </div>
+          <div class="mb-2">
+            <input id="click-popover-assignee" type="email" placeholder="Assign reviewer email (e.g. analyst@lbl.gov, optional)..." class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00B5E2]" />
           </div>
           <div class="mb-2">
             <input id="click-popover-note" type="text" placeholder="Audit rationale / note (optional)..." onkeydown="if(event.key==='Enter'){event.preventDefault();submitClickPopoverAuditFinding();}" class="w-full bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none focus:border-[#00B5E2]" />
@@ -837,8 +890,8 @@ def build_full_dashboard_html(payload: dict) -> str:
             <button type="button" onclick="submitClickPopoverAuditFinding()" class="flex-1 bg-[#00B5E2] text-slate-950 font-semibold py-1.5 px-2.5 rounded hover:opacity-90">
               Submit Audit Finding
             </button>
-            <button type="button" onclick="addClickPopoverToExport()" class="px-2 py-1.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[#00B5E2] font-medium" title="Add selected point or replicate group to Export Tray">
-              + Tray
+            <button type="button" id="btn-qc-pop-show-me" onclick="openShowMeFromClickPopover(this)" class="btn-show-me-flag btn-audit-show-me px-2 py-1.5 rounded bg-[var(--background)] text-[#00B5E2] hover:bg-[#00B5E2]/10 border border-[#00B5E2]/40 font-semibold" title="Show replicate group and outlier in slice context">
+              👁 Show me
             </button>
             <button type="button" onclick="escalateClickPopoverToModal()" class="px-2 py-1.5 rounded bg-[var(--background)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)]" title="Open full Submit Audit Finding / Escalation modal">
               Full Modal&hellip;
@@ -883,18 +936,16 @@ def build_full_dashboard_html(payload: dict) -> str:
                 <option value="single">Single Point Only</option>
               </select>
               <select id="pin-audit-action" class="bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-1.5 py-1 text-[11px] font-medium focus:outline-none">
-                <option value="flag_fail">⚑ Flag Outlier (Fail)</option>
-                <option value="approve_pass">✓ Approve (Pass)</option>
-                <option value="keep_note">✎ Note Only</option>
+                <option value="keep_note" selected>🔬 Stage for Audit Workbench (In Review)</option>
+                <option value="flag_fail">⚑ Stage as Recommend Fail (In Review)</option>
+                <option value="approve_pass">✓ Stage as Recommend Pass (In Review)</option>
               </select>
             </div>
+            <input id="pin-audit-assignee" type="email" placeholder="Assign reviewer email (e.g. analyst@lbl.gov, optional)..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none" />
             <input id="pin-note" type="text" placeholder="Add audit note / rationale..." class="w-full bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] rounded px-2 py-1 text-xs focus:outline-none" />
             <div class="flex flex-wrap items-center gap-1.5">
               <button type="button" onclick="submitPinnedAuditFinding()" class="flex-1 bg-[#00B5E2] text-slate-950 font-semibold text-xs py-1 px-2 rounded hover:opacity-90">
                 Submit Audit
-              </button>
-              <button type="button" onclick="addPinnedToExport()" class="bg-[var(--secondary)] text-[var(--secondary-foreground)] text-xs py-1 px-2 rounded border border-[var(--border)] hover:border-[#00B5E2]">
-                + Export Tray
               </button>
               <button type="button" onclick="escalatePinnedToModal()" class="bg-[var(--card)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-xs py-1 px-2 rounded border border-[var(--border)]" title="Open full Submit Audit Finding modal">
                 Modal&hellip;
@@ -911,52 +962,6 @@ def build_full_dashboard_html(payload: dict) -> str:
       <!-- Full-Width Collapsible Statistical Precision & Candidate Outlier Drawer (Collapsed by Default) -->
       <div id="stat-screening-drawer" class="col-span-12 mt-1"></div>
     </div>
-
-    <!-- Export Tray Tab View -->
-    <div id="view-export" class="hidden pt-2.5">
-      <div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2.5 h-[340px] flex flex-col justify-between">
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border)]">
-          <span class="text-xs font-semibold text-[var(--foreground)]">Selected Records for Audit / CSV Export</span>
-          <div class="flex flex-wrap items-center gap-2">
-            <button onclick="addFilteredSliceToExport()" class="text-xs px-2.5 py-1 rounded bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] font-medium hover:border-[#00B5E2]">
-              + Add Current Slice (max 250)
-            </button>
-            <button onclick="copyExportTSV()" id="btn-copy-tsv" class="text-xs px-2.5 py-1 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] font-medium">
-              Copy TSV
-            </button>
-            <button onclick="downloadExportCSV()" class="text-xs px-2.5 py-1 rounded bg-[#00B5E2] text-slate-950 font-semibold">
-              ⬇ Export Tray (.CSV)
-            </button>
-            <button onclick="document.getElementById('btn-open-slice-modal') && document.getElementById('btn-open-slice-modal').click()" class="text-xs px-2.5 py-1 rounded border border-[#00B5E2]/50 bg-[var(--card)] text-[var(--foreground)] hover:border-[#00B5E2] font-semibold">
-              📤 Export Slice (.HTML)
-            </button>
-            <button id="btn-tray-to-workbench" onclick="exportExplorerTrayToWorkbench()" class="text-xs px-2.5 py-1 rounded bg-emerald-500 text-slate-950 font-semibold hover:opacity-90">
-              ⚖️ Export to Audit Workbench
-            </button>
-            <button onclick="clearExport()" class="text-xs px-2 py-1 rounded text-[var(--muted-foreground)] hover:text-[var(--foreground)]">
-              Clear
-            </button>
-          </div>
-        </div>
-        <div class="overflow-y-auto flex-1 my-1.5">
-          <table class="w-full text-left border-collapse text-xs">
-            <thead>
-              <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
-                <th class="py-1 px-1.5">Record ID</th>
-                <th class="py-1 px-1.5">Domain</th>
-                <th class="py-1 px-1.5">Sample</th>
-                <th class="py-1 px-1.5">Resource</th>
-                <th class="py-1 px-1.5">Method / Strain</th>
-                <th class="py-1 px-1.5">Param</th>
-                <th class="py-1 px-1.5">Value</th>
-                <th class="py-1 px-1.5">Status</th>
-                <th class="py-1 px-1.5">Note</th>
-                <th class="py-1 px-1"></th>
-              </tr>
-            </thead>
-            <tbody id="export-tbody" class="divide-y divide-[var(--border)]"></tbody>
-          </table>
-        </div>
       </div>
     </div>
 
@@ -1010,30 +1015,35 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       return trimmed;
     }
 
-    // 9 Analysis Type Pill Definitions
+    // Shared DOMAIN_DEFS and normalizeDomainKey(raw) are injected into this <script> scope
+    // via SHARED_SLICE_AND_BUG_MODALS_JS (exposed as window.DOMAIN_DEFS and window.normalizeDomainKey).
+
+    // 10 Individual Analysis Type Pill Definitions
     const DOMAINS = [
       { id: 'proximate', label: 'Proximate', title: 'Proximate Analysis — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
+      { id: 'calorimetry', label: 'Calorimetry', title: 'Calorimetry — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
       { id: 'compositional', label: 'Compositional', title: 'Compositional Biopolymers — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
       { id: 'ultimate', label: 'Ultimate', title: 'Ultimate Elemental & Fiber — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
-      { id: 'calorimetry_xrd', label: 'Calorimetry & XRD', title: 'XRD Crystallinity & Calorimetry — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
-      { id: 'icp', label: 'ICP Elements', title: 'ICP-OES Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
-      { id: 'xrf', label: 'XRF Elements', title: 'XRF Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
+      { id: 'xrd', label: 'XRD', title: 'XRD Crystallinity — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' },
+      { id: 'icp', label: 'ICP', title: 'ICP-OES Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
+      { id: 'xrf', label: 'XRF', title: 'XRF Elemental Concentration — Parameter & Resource Comparison (ppm)', methodCol: 'prep_method', methodLabel: 'Prep:' },
       { id: 'pretreatment', label: 'Pretreatment', title: 'Pretreatment Hydrolysis Yields — Parameter & Resource Comparison', methodCol: 'pt_method', methodLabel: 'Method:' },
       { id: 'fermentation', label: 'Fermentation', title: 'Fermentation Bioconversion — Parameter & Resource Comparison', methodCol: 'pt_method', methodLabel: 'Method:' },
-      { id: 'gasification', label: 'Gasification', title: 'Gasification Syngas & Mass Balance — Parameter & Resource Comparison', methodCol: 'prep_method', methodLabel: 'Prep:' }
+      { id: 'gasification', label: 'Gasification', title: 'Gasification Syngas & Mass Balance — Parameter & Resource Comparison', methodCol: 'vessel', methodLabel: 'Reactor:' }
     ];
 
     function mapAnalysisTypeToDomain(at) {
       if (at === 'Proximate Analysis') return 'proximate';
+      if (at === 'Calorimetry') return 'calorimetry';
       if (at === 'Compositional Analysis') return 'compositional';
       if (at === 'Ultimate Analysis') return 'ultimate';
-      if (at === 'Calorimetry' || at === 'XRD Crystallinity') return 'calorimetry_xrd';
+      if (at === 'XRD Crystallinity') return 'xrd';
       if (at === 'ICP Elemental Analysis') return 'icp';
       if (at === 'XRF Elemental Analysis') return 'xrf';
       if (at === 'Pretreatment & Hydrolysis') return 'pretreatment';
       if (at === 'Fermentation (Bioconversion)') return 'fermentation';
       if (at === 'Gasification') return 'gasification';
-      return 'proximate';
+      return normalizeDomainKey(at);
     }
 
     function seededRandom(seed) {
@@ -1148,7 +1158,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (domainId === 'proximate') return '%';
       if (domainId === 'compositional') return '% dw';
       if (domainId === 'ultimate') return '%';
-      if (domainId === 'calorimetry_xrd') return param === 'crystallinity' ? '%' : 'MJ/kg';
+      if (domainId === 'calorimetry') return 'MJ/kg';
+      if (domainId === 'xrd') return '%';
       if (domainId === 'icp' || domainId === 'xrf') return 'ppm';
       if (domainId === 'pretreatment') {
         if (param === 'glucose_yld') return '% of glucan';
@@ -1287,17 +1298,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       onResourceOrDomainChange(false);
     }
 
-    const urlParams = new URLSearchParams(window.location.search);
-    let currentDomain = urlParams.get('type') || urlParams.get('domain') || urlParams.get('tab') || 'proximate';
+    let urlParams = new URLSearchParams(window.location.search);
+    const rawDomainParam = urlParams.get('type') || urlParams.get('domain') || urlParams.get('tab') || 'proximate';
+    let currentDomain = normalizeDomainKey(rawDomainParam);
     if (!DOMAINS.some(d => d.id === currentDomain)) currentDomain = 'proximate';
 
-    let currentTab = 'scatter';
+    let currentTab = urlParams.get('view') === 'strip' ? 'strip' : 'scatter';
+    let explorerFlagType = urlParams.get('flag') || 'all';
+    let explorerSearchQuery = urlParams.get('q') || '';
+    let explorerBlindMode = false;
     let scaleMode = 'log';
     let fermXMode = 'param';
     let xLayoutMode = 'auto'; // 'auto', 'resources', 'by_field_sample', 'by_experiment', 'dates', 'params'
     let yRangeMode = 'auto';  // 'auto' (fit actual parameter values), 'full' (0-100%)
     let repPlotMode = 'individual'; // 'individual' or 'mean_sd'
-    let checklistDrawerOpen = true;
+    let checklistDrawerOpen = false;
     let filteredRows = [];
     let renderedPoints = [];
     let pinnedRecord = null;
@@ -1307,6 +1322,42 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     let exportRows = [];
     let activeSeriesMap = {};
     let activeCompareDimension = 'method';
+    const state = { zoomBounds: null };
+    window.state = state;
+    const brush = { active: false, startX: 0, startY: 0, curX: 0, curY: 0, suppressNextClick: false };
+    let lastPlotTransform = null;
+
+    function renderPlot() {
+      renderCurrentView();
+    }
+
+    function resetCanvasZoom() {
+      state.zoomBounds = null;
+      const btn = document.getElementById('btn-reset-zoom');
+      if (btn) btn.style.display = 'none';
+      const brushEl = document.getElementById('canvas-zoom-brush');
+      if (brushEl) brushEl.style.display = 'none';
+      renderPlot();
+    }
+
+    function onExplorerFlagTypeChange(val) {
+      explorerFlagType = val || 'all';
+      applyFilters({ push: false });
+    }
+
+    function onExplorerSearchChange(val) {
+      explorerSearchQuery = String(val || '');
+      applyFilters({ push: false });
+    }
+
+    function toggleExplorerBlindMode(checked) {
+      explorerBlindMode = !!checked;
+      document.body.classList.toggle('blind-mode', explorerBlindMode);
+      const chk = document.getElementById('chk-explorer-blind-mode');
+      if (chk && chk.checked !== explorerBlindMode) chk.checked = explorerBlindMode;
+      renderStatScreeningDrawer();
+      renderCurrentView();
+    }
 
     function setRepPlotMode(mode) {
       repPlotMode = mode === 'mean_sd' ? 'mean_sd' : 'individual';
@@ -1318,8 +1369,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function getReplicateGroupKey(r) {
       if (!r) return '';
-      const sMethod = getSeriesValue(r, r.domain || currentDomain);
-      return `${r.resource_name || ''}::${r.prepared_sample_name || ''}::${r.field_sample_name || ''}::${sMethod}::${r.experiment || ''}::${r.parameter || ''}::${r.unit || ''}`;
+      return window.normalizeReplicateGroupKey(r, r.resource_name);
     }
 
     function buildReplicateGroupsMap(rows) {
@@ -1339,6 +1389,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       params: new Set(),
       methods: new Set()
     };
+    const selectedResources = selectedFilters.resources;
     const checklistCatalog = {
       resources: { active: [], pending: [] },
       samples: [],
@@ -1389,27 +1440,47 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     ACTIVE_RESOURCES.forEach(name => { RESOURCE_CANONICAL_MAP[name.toLowerCase()] = name; });
     PENDING_RESOURCES.forEach(name => { RESOURCE_CANONICAL_MAP[name.toLowerCase()] = name; });
 
-    function toggleChecklistDrawer() {
-      checklistDrawerOpen = !checklistDrawerOpen;
+    function updateChecklistDrawerButtonLabel() {
       const drawer = document.getElementById('inline-checklist-drawer');
+      const isHidden = drawer ? drawer.classList.contains('hidden') : !checklistDrawerOpen;
+      checklistDrawerOpen = !isHidden;
+      const lbl = document.getElementById('btn-toggle-checklist-drawer');
+      const chev = document.getElementById('drawer-chevron');
       const btn = document.getElementById('btn-toggle-drawer');
-      if (drawer) drawer.classList.toggle('hidden', !checklistDrawerOpen);
-      if (btn) {
-        btn.className = checklistDrawerOpen
-          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors'
-          : 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors';
+      const domActiveCnt = (checklistCatalog.resources && checklistCatalog.resources.active)
+        ? checklistCatalog.resources.active.filter(x => x.domainCount > 0).length
+        : ACTIVE_RESOURCES.length;
+      const nFeedstocks = selectedFilters.resources.size > 0 ? selectedFilters.resources.size : domActiveCnt;
+      const totalParams = (checklistCatalog.params || []).length;
+      const nParams = selectedFilters.params.size > 0 ? selectedFilters.params.size : totalParams;
+      const fsText = `${nFeedstocks} Feedstock${nFeedstocks === 1 ? '' : 's'}`;
+      const pText = `${nParams} Parameter${nParams === 1 ? '' : 's'}`;
+      if (lbl) {
+        lbl.textContent = isHidden
+          ? `▸ Expand Feedstock & Parameter Checklist (${fsText} · ${pText})`
+          : `▾ Collapse Feedstock & Parameter Checklist (${fsText} · ${pText})`;
       }
+      if (chev) chev.innerHTML = isHidden ? '&#9662;' : '&#9652;';
+      if (btn) {
+        btn.className = isHidden
+          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors'
+          : 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors';
+      }
+    }
+
+    function toggleChecklistDrawer() {
+      toggleInlineChecklistDrawer();
     }
 
     function setXLayoutMode(mode) {
       xLayoutMode = mode;
+      const sel = document.getElementById('compare-by-select');
       if (mode === 'dates') {
         const dtVal = (document.getElementById('filter-date-type') || {}).value || 'any';
         const targetComp = dtVal === 'run' ? 'prep_date' : 'collection_date';
         if (compareByMode !== 'collection_date' && compareByMode !== 'prep_date') {
           compareByMode = targetComp;
           compareByManualOverride = true;
-          const sel = document.getElementById('compare-by-select');
           if (sel) sel.value = compareByMode;
         }
         updateXLayoutButtons();
@@ -1419,7 +1490,6 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (mode === 'by_field_sample') {
         compareByMode = 'field_sample';
         compareByManualOverride = true;
-        const sel = document.getElementById('compare-by-select');
         if (sel) sel.value = compareByMode;
         updateXLayoutButtons();
         applyFilters();
@@ -1428,8 +1498,28 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (mode === 'by_experiment') {
         compareByMode = 'experiment';
         compareByManualOverride = true;
-        const sel = document.getElementById('compare-by-select');
         if (sel) sel.value = compareByMode;
+        updateXLayoutButtons();
+        applyFilters();
+        return;
+      }
+      if (mode === 'resources') {
+        compareByMode = 'resource';
+        compareByManualOverride = true;
+        if (sel) sel.value = 'resource';
+        updateXLayoutButtons();
+        applyFilters();
+        return;
+      }
+      if (mode === 'params') {
+        if (sel) sel.value = 'params';
+        updateXLayoutButtons();
+        renderCurrentView();
+        return;
+      }
+      if (mode === 'auto') {
+        compareByManualOverride = false;
+        autoUpdateCompareBy();
         updateXLayoutButtons();
         applyFilters();
         return;
@@ -1438,22 +1528,31 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       renderCurrentView();
     }
 
+    function setXAxisGroupingMode(mode) {
+      onCompareByManualChange(mode);
+    }
+
     function updateXLayoutButtons() {
       ['auto', 'resources', 'by_field_sample', 'by_experiment', 'dates', 'params'].forEach(m => {
         const btn = document.getElementById(`btn-xlayout-${m}`);
         if (!btn) return;
         if (xLayoutMode === m) {
-          btn.className = 'px-1.5 py-0.5 rounded text-xs font-medium bg-[var(--primary)] text-[var(--primary-foreground)]';
+          btn.className = 'px-1.5 py-0.5 rounded text-[11px] font-medium bg-[var(--primary)] text-[var(--primary-foreground)]';
         } else {
-          btn.className = 'px-1.5 py-0.5 rounded text-xs font-medium text-[var(--muted-foreground)]';
+          btn.className = 'px-1.5 py-0.5 rounded text-[11px] font-medium text-[var(--muted-foreground)]';
         }
       });
     }
 
     function setYRangeMode(mode) {
       yRangeMode = mode;
+      state.zoomBounds = null;
       updateYRangeButtons();
       renderCurrentView();
+    }
+
+    function resetYRange() {
+      setYRangeMode('auto');
     }
 
     function updateYRangeButtons() {
@@ -1469,6 +1568,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function getSeriesValue(r, domainId) {
+      if (domainId === 'gasification') {
+        return (r.vessel && r.vessel !== 'N/A' && r.vessel !== 'none')
+          ? r.vessel
+          : (r.prep_method && r.prep_method !== 'N/A' ? r.prep_method : 'Unassigned');
+      }
       if (domainId === 'pretreatment' || domainId === 'fermentation') {
         return r.pt_method && r.pt_method !== 'N/A' ? r.pt_method : (r.strain !== 'N/A' ? r.strain : 'Standard');
       }
@@ -1515,10 +1619,23 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function onCompareByManualChange(val) {
+      if (val === 'params') {
+        xLayoutMode = 'params';
+        compareByManualOverride = false;
+        const sel = document.getElementById('compare-by-select');
+        if (sel) sel.value = 'params';
+        updateXLayoutButtons();
+        renderCurrentView();
+        return;
+      }
       compareByMode = val || 'auto';
       compareByManualOverride = (compareByMode !== 'auto');
-      if (compareByMode === 'field_sample' && xLayoutMode === 'by_experiment') xLayoutMode = 'by_field_sample';
-      if (compareByMode === 'experiment' && xLayoutMode === 'by_field_sample') xLayoutMode = 'by_experiment';
+      if (compareByMode === 'auto') xLayoutMode = 'auto';
+      else if (compareByMode === 'resource') xLayoutMode = 'resources';
+      else if (compareByMode === 'field_sample') xLayoutMode = 'by_field_sample';
+      else if (compareByMode === 'experiment') xLayoutMode = 'by_experiment';
+      else if (compareByMode === 'collection_date' || compareByMode === 'prep_date') xLayoutMode = 'dates';
+      else if (xLayoutMode === 'by_field_sample' || xLayoutMode === 'by_experiment' || xLayoutMode === 'dates') xLayoutMode = 'auto';
       updateXLayoutButtons();
       applyFilters();
     }
@@ -1835,16 +1952,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function toggleInlineChecklistDrawer() {
       const drawer = document.getElementById('inline-checklist-drawer');
-      const chev = document.getElementById('drawer-chevron');
-      const btn = document.getElementById('btn-toggle-drawer');
       if (!drawer) return;
-      const isHidden = drawer.classList.toggle('hidden');
-      if (chev) chev.innerHTML = isHidden ? '&#9662;' : '&#9652;';
-      if (btn) {
-        btn.className = isHidden
-          ? 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--foreground)] hover:border-[#00B5E2] font-medium transition-colors'
-          : 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded border border-[#00B5E2] bg-[#00B5E2]/15 text-[#00B5E2] font-semibold transition-colors';
-      }
+      drawer.classList.toggle('hidden');
+      updateChecklistDrawerButtonLabel();
     }
 
     function syncChecklistSearch(key, val) {
@@ -1900,7 +2010,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       autoUpdateCompareBy();
       if (key === 'resources') {
-        onResourceOrDomainChange(false);
+        onResourceOrDomainChange(false, { push: true });
       } else {
         renderChecklistItems(key, sourceListId ? [sourceListId] : []);
         applyFilters();
@@ -1944,7 +2054,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       autoUpdateCompareBy();
       if (key === 'resources') {
-        onResourceOrDomainChange(false);
+        onResourceOrDomainChange(false, { push: true });
       } else {
         renderChecklistItems(key);
         applyFilters();
@@ -1955,7 +2065,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       selectedFilters[key].delete(val);
       autoUpdateCompareBy();
       if (key === 'resources') {
-        onResourceOrDomainChange(false);
+        onResourceOrDomainChange(false, { push: true });
       } else {
         renderChecklistItems(key);
         applyFilters();
@@ -2007,7 +2117,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       `;
     }
 
-    function syncUrlAndNavLinks() {
+    function syncUrlAndNavLinks(opts = { push: false }) {
       const firstRes = selectedFilters.resources.size > 0 ? Array.from(selectedFilters.resources)[0] : null;
       const link1 = document.getElementById('suite-link-1');
       const link2 = document.getElementById('suite-link-2');
@@ -2036,15 +2146,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             : 'resource_analysis_dashboard.html';
         }
         if (link2) {
+          const domQ = currentDomain ? `domain=${encodeURIComponent(currentDomain)}` : '';
           link2.href = firstRes
-            ? `resource_qc_outlier_dashboard.html?resource=${encodeURIComponent(firstRes)}`
-            : 'resource_qc_outlier_dashboard.html';
+            ? `resource_qc_outlier_dashboard.html?resource=${encodeURIComponent(firstRes)}${domQ ? `&${domQ}` : ''}`
+            : (domQ ? `resource_qc_outlier_dashboard.html?${domQ}` : 'resource_qc_outlier_dashboard.html');
         }
       }
 
       try {
         const params = new URLSearchParams();
         if (currentDomain && currentDomain !== 'proximate') params.set('type', currentDomain);
+        if (currentTab && currentTab !== 'scatter') params.set('view', currentTab);
         if (selectedFilters.resources.size === 1) {
           params.set('resource', Array.from(selectedFilters.resources)[0]);
         } else if (selectedFilters.resources.size > 1) {
@@ -2057,6 +2169,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (xLayoutMode && xLayoutMode !== 'auto') params.set('x_layout', xLayoutMode);
         if (yRangeMode && yRangeMode !== 'auto') params.set('y_range', yRangeMode);
         if (repPlotMode && repPlotMode !== 'individual') params.set('rep_mode', repPlotMode);
+        if (explorerFlagType && explorerFlagType !== 'all') params.set('flag', explorerFlagType);
+        if (explorerSearchQuery && explorerSearchQuery.trim()) params.set('q', explorerSearchQuery.trim());
         const statusVal = document.getElementById('filter-status').value;
         if (statusVal && statusVal !== 'qc_pass') params.set('status', statusVal);
         const dtVal = (document.getElementById('filter-date-type') || {}).value || 'any';
@@ -2067,7 +2181,19 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (tdVal) params.set('to_date', tdVal);
         const qs = params.toString();
         const newUrl = window.location.pathname + (qs ? `?${qs}` : '');
-        window.history.replaceState(null, '', newUrl);
+        const stateSnapshot = {
+          type: currentDomain,
+          view: currentTab,
+          resources: Array.from(selectedFilters.resources),
+          flag: explorerFlagType,
+          q: explorerSearchQuery,
+          status: statusVal
+        };
+        if (opts && opts.push) {
+          window.history.pushState(stateSnapshot, '', newUrl);
+        } else {
+          window.history.replaceState(stateSnapshot, '', newUrl);
+        }
       } catch (e) {
         // Ignore history errors in sandboxed/file:// environments
       }
@@ -2088,13 +2214,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (samParam && samParam !== 'ALL') {
         samParam.split(',').map(s => s.trim()).filter(Boolean).forEach(s => selectedFilters.samples.add(s));
       }
-      const pParam = urlParams.get('params') || urlParams.get('param') || (Array.isArray(sf.parameters) && sf.parameters.length ? sf.parameters.join(',') : '');
+      const pParam = urlParams.get('params') || urlParams.get('param') || urlParams.get('parameter') || (Array.isArray(sf.parameters) && sf.parameters.length ? sf.parameters.join(',') : '');
       if (pParam && pParam !== 'ALL') {
         pParam.split(',').map(s => s.trim()).filter(Boolean).forEach(p => {
           const norm = (currentDomain === 'icp' || currentDomain === 'xrf') ? formatElementSymbol(p) : p;
           selectedFilters.params.add(norm);
         });
       }
+      window.__HIGHLIGHT_RK__ = String(urlParams.get('highlight_rk') || '').trim().toLowerCase();
       const mParam = urlParams.get('methods') || urlParams.get('method') || (Array.isArray(sf.methods) && sf.methods.length ? sf.methods.join(',') : '');
       if (mParam && mParam !== 'ALL') {
         mParam.split(',').map(s => s.trim()).filter(Boolean).forEach(m => selectedFilters.methods.add(m));
@@ -2106,8 +2233,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const fdEl = document.getElementById('filter-from-date');
       const tdEl = document.getElementById('filter-to-date');
       if (dtEl && ['any', 'collected', 'run'].includes(dtInit)) dtEl.value = dtInit;
-      if (fdEl && fdInit) fdEl.value = fdInit;
-      if (tdEl && tdInit) tdEl.value = tdInit;
+      if (fdEl) fdEl.value = fdInit || '';
+      if (tdEl) tdEl.value = tdInit || '';
       updateDateFilterUiBadge();
 
       const compParam = urlParams.get('compare');
@@ -2156,16 +2283,41 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (rmSel) rmSel.value = repPlotMode;
       }
 
+      const flagParam = urlParams.get('flag');
+      if (flagParam && ['all', 'active', 'dixon', 'rsd', 'rsd_gt_10', 'rsd_gt_20', 'sd3', 'identical', 'proximate_sum'].includes(flagParam)) {
+        explorerFlagType = flagParam === 'rsd' ? 'rsd_gt_20' : flagParam;
+      } else {
+        explorerFlagType = 'all';
+      }
+      const fltFlagEl = document.getElementById('flt-explorer-flag-type');
+      if (fltFlagEl) fltFlagEl.value = explorerFlagType;
+
+      explorerSearchQuery = urlParams.get('q') || '';
+      const searchEl = document.getElementById('filter-search');
+      if (searchEl) searchEl.value = explorerSearchQuery;
+
+      const viewParam = urlParams.get('view');
+      currentTab = viewParam === 'strip' ? 'strip' : 'scatter';
+      ['scatter', 'strip'].forEach(t => {
+        const btn = document.getElementById(`tab-${t}`);
+        if (!btn) return;
+        btn.className = t === currentTab
+          ? 'text-xs px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)] transition-colors'
+          : 'text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors';
+      });
+
       const initialStatus = urlParams.get('status') || urlParams.get('qc');
-      if (initialStatus) {
+      const statusSel = document.getElementById('filter-status');
+      if (initialStatus && statusSel) {
         const sLower = initialStatus.trim().toLowerCase();
-        const statusSel = document.getElementById('filter-status');
         if (sLower === 'all') statusSel.value = 'ALL';
         else if (sLower === 'pass' || sLower === 'qc_pass') statusSel.value = 'qc_pass';
         else if (sLower === 'fail' || sLower === 'qc_fail') statusSel.value = 'qc_fail';
         else if (sLower === 'provisional' || sLower === 'qc_provisional') statusSel.value = 'qc_provisional';
         else if (sLower === 'portal' || sLower === 'portal compliant') statusSel.value = 'Portal Compliant';
         else if (sLower === 'raw') statusSel.value = 'Raw';
+      } else if (statusSel) {
+        statusSel.value = 'qc_pass';
       }
     }
 
@@ -2185,11 +2337,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         selectedFilters.resources.add(list[nextIdx]);
       }
       autoUpdateCompareBy();
-      onResourceOrDomainChange(false);
+      onResourceOrDomainChange(false, { push: true });
     }
 
     function setDomain(domainId) {
       currentDomain = domainId;
+      state.zoomBounds = null;
       selectedFilters.params.clear();
       selectedFilters.methods.clear();
       if (domainId === 'icp' || domainId === 'xrf') {
@@ -2199,7 +2352,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       updateScaleButtons();
       autoUpdateCompareBy();
-      onResourceOrDomainChange(false);
+      onResourceOrDomainChange(false, { push: true });
     }
 
     function setScaleMode(mode) {
@@ -2333,7 +2486,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       `;
     }
 
-    function onResourceOrDomainChange(allowDomainFallback = false) {
+    function onResourceOrDomainChange(allowDomainFallback = false, opts = { push: false }) {
       const hasResFilter = selectedFilters.resources.size > 0;
       const dateTypeVal = (document.getElementById('filter-date-type') || {}).value || 'any';
       const fromDateVal = (document.getElementById('filter-from-date') || {}).value || '';
@@ -2404,7 +2557,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       // Populate cascading Parameter checklist catalog (with units!)
       const paramCounts = {};
       catalogSourceRows.forEach(r => {
-        if (r.parameter && (r.parameter !== '(metadata only)' || currentDomain === 'calorimetry_xrd')) {
+        if (r.parameter && (r.parameter !== '(metadata only)' || currentDomain === 'calorimetry' || currentDomain === 'xrd')) {
           paramCounts[r.parameter] = (paramCounts[r.parameter] || 0) + 1;
         }
       });
@@ -2441,14 +2594,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       ['resources', 'samples', 'params', 'methods'].forEach(k => renderChecklistItems(k));
       autoUpdateCompareBy();
-      applyFilters();
+      applyFilters(opts);
     }
 
-    function setTab(tab) {
-      currentTab = tab;
-      ['scatter', 'strip', 'export'].forEach(t => {
+    function setTab(tab, opts = { push: true }) {
+      currentTab = tab === 'export' ? 'scatter' : tab;
+      state.zoomBounds = null;
+      ['scatter', 'strip'].forEach(t => {
         const btn = document.getElementById(`tab-${t}`);
-        if (t === tab) {
+        if (!btn) return;
+        if (t === currentTab) {
           btn.className = 'text-xs px-2.5 py-1 rounded-md font-medium bg-[var(--primary)] text-[var(--primary-foreground)] transition-colors';
         } else {
           btn.className = 'text-xs px-2.5 py-1 rounded-md font-medium text-[var(--muted-foreground)] hover:text-[var(--foreground)] transition-colors';
@@ -2456,18 +2611,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       });
 
       const viewCharts = document.getElementById('view-charts');
-      const viewExport = document.getElementById('view-export');
-
-      if (tab === 'export') {
-        viewCharts.classList.add('hidden');
-        viewExport.classList.remove('hidden');
-        renderExportTable();
-      } else {
-        viewCharts.classList.remove('hidden');
-        viewExport.classList.add('hidden');
-        updateChartHeaderControls();
-        renderCurrentView();
-      }
+      if (viewCharts) viewCharts.classList.remove('hidden');
+      syncUrlAndNavLinks(opts);
+      updateChartHeaderControls();
+      renderCurrentView();
     }
 
     function updateChartHeaderControls() {
@@ -2515,7 +2662,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
     }
 
-    function applyFilters() {
+    function applyFilters(opts = { push: false }) {
       const status = document.getElementById('filter-status').value;
       const dateTypeVal = (document.getElementById('filter-date-type') || {}).value || 'any';
       const fromDateVal = (document.getElementById('filter-from-date') || {}).value || '';
@@ -2525,11 +2672,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const hasSam = selectedFilters.samples.size > 0;
       const hasParam = selectedFilters.params.size > 0;
       const hasMethod = selectedFilters.methods.size > 0;
+      const qLower = (explorerSearchQuery || '').trim().toLowerCase();
 
       updateDateFilterUiBadge();
       ['resources', 'samples', 'params', 'methods'].forEach(k => updatePopoverButtonLabel(k));
+      updateChecklistDrawerButtonLabel();
       renderActiveChipsBar();
-      syncUrlAndNavLinks();
+      syncUrlAndNavLinks(opts);
 
       // Update combined Status / QC dropdown counts for active domain + resource + date selection
       const baseDomainRows = ALL_ROWS.filter(r =>
@@ -2550,7 +2699,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       statusSel.options[4].textContent = `qc_pass: fail (${qcFailCnt})`;
       statusSel.options[5].textContent = `qc_pass: provisional/unknown (${qcProvCnt})`;
 
-      filteredRows = ALL_ROWS.filter(r => {
+      let candidateRows = ALL_ROWS.filter(r => {
         if (r.domain !== currentDomain) return false;
         if (!matchesStatusFilter(r, status)) return false;
         if (hasRes && !selectedFilters.resources.has(r.resource_name)) return false;
@@ -2558,8 +2707,25 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (hasParam && !selectedFilters.params.has(r.parameter)) return false;
         if (hasMethod && !selectedFilters.methods.has(getSeriesValue(r, currentDomain))) return false;
         if (hasDateFilter && !recordMatchesDateFilter(r, dateTypeVal, fromDateVal, toDateVal)) return false;
+        if (qLower) {
+          const hay = `${r.record_id || ''} ${r.resource_name || ''} ${r.prepared_sample_name || ''} ${r.field_sample_name || ''} ${r.parameter || ''} ${r.experiment || ''} ${r.note || ''}`.toLowerCase();
+          if (!hay.includes(qLower)) return false;
+        }
         return true;
       });
+
+      if (explorerFlagType && explorerFlagType !== 'all') {
+        const preScreen = computeSliceStatScreening(candidateRows);
+        const matchingIds = new Set();
+        preScreen.groups.forEach(g => {
+          if (isExplorerGroupMatchingFlagFilter(g, explorerFlagType)) {
+            g.rows.forEach(row => matchingIds.add(`${row.record_id}::${row.parameter}`));
+          }
+        });
+        candidateRows = candidateRows.filter(r => matchingIds.has(`${r.record_id}::${r.parameter}`));
+      }
+
+      filteredRows = candidateRows;
 
       const uniqueSamples = new Set(filteredRows.map(r => r.prepared_sample_name).filter(x => x !== 'Unassigned')).size;
       const domainTotal = ALL_ROWS.filter(r => r.domain === currentDomain).length;
@@ -2659,6 +2825,20 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function resetFilters() {
       document.getElementById('filter-status').value = 'qc_pass';
+      state.zoomBounds = null;
+      explorerFlagType = 'all';
+      explorerSearchQuery = '';
+      explorerBlindMode = false;
+      suppressTraceFlags = true;
+      document.body.classList.remove('blind-mode');
+      const fltFlagEl = document.getElementById('flt-explorer-flag-type');
+      if (fltFlagEl) fltFlagEl.value = 'all';
+      const searchEl = document.getElementById('filter-search');
+      if (searchEl) searchEl.value = '';
+      const chkBlindEl = document.getElementById('chk-explorer-blind-mode');
+      if (chkBlindEl) chkBlindEl.checked = false;
+      const chkTraceEl = document.getElementById('chk-explorer-suppress-trace');
+      if (chkTraceEl) chkTraceEl.checked = true;
       const dtEl = document.getElementById('filter-date-type');
       const fdEl = document.getElementById('filter-from-date');
       const tdEl = document.getElementById('filter-to-date');
@@ -2832,9 +3012,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           formatStatCard('Water 140°C (h2o140c)', h2o, '%')
         ].join('');
       } else if (currentDomain === 'proximate') {
-        const moist = byParam('moisture');
-        const vs = byParam('volatile solids');
-        const ash = byParam('ash');
+        const byProxBucket = b => calcStats(filteredRows.filter(r => proximateComponentBucket(r.parameter) === b && r.value !== null && !isNaN(r.value)).map(r => r.value));
+        const moist = byProxBucket('moisture');
+        const vs = byProxBucket('vs');
+        const fc = byProxBucket('fc');
+        const ash = byProxBucket('ash');
         const ts = byParam('total solids');
         grid.innerHTML = [
           formatStatCard('Moisture', moist, '%'),
@@ -2843,10 +3025,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           formatStatCard('Total Solids', ts, '%')
         ].join('');
         closureBanner.classList.remove('hidden');
-        closureLabel.textContent = 'Proximate Closure (VS + Ash):';
-        const dryClosure = (vs.mean !== null && ash.mean !== null) ? (vs.mean + ash.mean) : null;
-        closureVal.textContent = dryClosure !== null
-          ? `${dryClosure.toFixed(1)}% dw (${dryClosure >= 95 && dryClosure <= 105 ? 'Optimal' : 'Check Fixed C'})`
+        closureLabel.textContent = 'Proximate Closure (Moisture + VS + Ash):';
+        const hasProximateTerm = moist.mean !== null || ash.mean !== null || vs.mean !== null || fc.mean !== null;
+        const vsOrOneMinusFc = vs.mean !== null ? vs.mean : (fc.mean !== null ? 100 - fc.mean : 0);
+        const proximateSum = hasProximateTerm
+          ? ((moist.mean || 0) + (ash.mean || 0) + vsOrOneMinusFc)
+          : null;
+        closureVal.textContent = proximateSum !== null
+          ? `${proximateSum.toFixed(1)}% (${proximateSum >= 95 && proximateSum <= 105 ? 'Optimal 95–105%' : '⚑ Outside 95–105%'})`
           : '—';
       } else if (currentDomain === 'compositional') {
         const glucan = byParam('glucan');
@@ -2871,16 +3057,26 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           formatStatCard('ADF-Residue', byParam('adf-r'), '%'),
           formatStatCard('Dry Matter (dm)', byParam('dm'), '%')
         ].join('');
-      } else if (currentDomain === 'calorimetry_xrd') {
+      } else if (currentDomain === 'calorimetry') {
+        closureBanner.classList.add('hidden');
+        const hhv = byParam('hhv');
+        const lhv = byParam('lhv');
+        const calCnt = filteredRows.filter(r => r.analysis_type === 'Calorimetry').length;
+        const samCnt = new Set(filteredRows.map(r => r.prepared_sample_name)).size;
+        grid.innerHTML = [
+          formatStatCard('HHV (Higher Heating)', hhv, ' MJ/kg'),
+          formatStatCard('LHV (Lower Heating)', lhv, ' MJ/kg'),
+          `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">Calorimetry Runs</div><div class="text-sm font-semibold font-mono">${calCnt} runs</div><div class="text-xs text-[var(--muted-foreground)]">calorimetry_record</div></div>`,
+          `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">Prepared Samples</div><div class="text-sm font-semibold font-mono">${samCnt} samples</div><div class="text-xs text-[var(--muted-foreground)]">Active slice</div></div>`
+        ].join('');
+      } else if (currentDomain === 'xrd') {
         closureBanner.classList.add('hidden');
         const cryst = byParam('crystallinity');
-        const calCnt = filteredRows.filter(r => r.analysis_type === 'Calorimetry').length;
         const xrdCnt = filteredRows.filter(r => r.analysis_type === 'XRD Crystallinity').length;
         const samCnt = new Set(filteredRows.map(r => r.prepared_sample_name)).size;
         grid.innerHTML = [
           formatStatCard('XRD Crystallinity', cryst, '%'),
           `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">XRD Replicates</div><div class="text-sm font-semibold font-mono">${xrdCnt} obs</div><div class="text-xs text-[var(--muted-foreground)]">xrd_record table</div></div>`,
-          `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">Calorimetry Runs</div><div class="text-sm font-semibold font-mono">${calCnt} runs</div><div class="text-xs text-[var(--muted-foreground)]">calorimetry_record</div></div>`,
           `<div class="bg-[var(--background)] border border-[var(--border)] rounded-lg p-2"><div class="text-xs text-[var(--muted-foreground)]">Prepared Samples</div><div class="text-sm font-semibold font-mono">${samCnt} samples</div><div class="text-xs text-[var(--muted-foreground)]">Active slice</div></div>`
         ].join('');
       } else if (currentDomain === 'icp' || currentDomain === 'xrf') {
@@ -2965,7 +3161,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         return ['glucose_yld', 'xylose_yld'];
       }
       const counts = {};
-      const sourceRows = currentDomain === 'calorimetry_xrd' ? filteredRows : numericRows;
+      const sourceRows = (currentDomain === 'calorimetry' || currentDomain === 'xrd') ? filteredRows : numericRows;
       sourceRows.forEach(r => {
         counts[r.parameter] = (counts[r.parameter] || 0) + 1;
       });
@@ -3151,6 +3347,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const plotW = width - pad.left - pad.right;
       const plotH = height - pad.top - pad.bottom;
 
+      const resetZoomBtn = document.getElementById('btn-reset-zoom');
+      if (resetZoomBtn) resetZoomBtn.style.display = state.zoomBounds ? 'inline-flex' : 'none';
+
       renderedPoints = [];
 
       if (!filteredRows.length) {
@@ -3165,15 +3364,32 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (isTimeMode) {
         const timeRows = filteredRows.filter(r => r.time_h !== null && r.value !== null && (selectedFilters.params.size === 0 || selectedFilters.params.has(r.parameter)));
         const maxVal = timeRows.length ? Math.max(...timeRows.map(r => r.value)) : 20;
-        const yMax = computeNiceAxisMax(maxVal, yRangeMode, currentDomain);
-        const xMax = 115;
+        let yMin = 0;
+        let yMax = computeNiceAxisMax(maxVal, yRangeMode, currentDomain);
+        let xMin = 0;
+        let xMax = 115;
+        if (state.zoomBounds) {
+          if (Number.isFinite(state.zoomBounds.yMin) && Number.isFinite(state.zoomBounds.yMax) && state.zoomBounds.yMax > state.zoomBounds.yMin) {
+            yMin = state.zoomBounds.yMin;
+            yMax = state.zoomBounds.yMax;
+          }
+          if (Number.isFinite(state.zoomBounds.xMin) && Number.isFinite(state.zoomBounds.xMax) && state.zoomBounds.xMax > state.zoomBounds.xMin) {
+            xMin = Math.max(0, state.zoomBounds.xMin);
+            xMax = Math.min(115, state.zoomBounds.xMax);
+          }
+        }
+        lastPlotTransform = {
+          pad, plotW, plotH, xMin, xMax, yMin, yMax, useLog: false, mode: 'time',
+          pxToDataX: px => xMin + ((px - pad.left) / Math.max(1, plotW)) * (xMax - xMin),
+          pxToDataY: py => yMin + ((pad.top + plotH - py) / Math.max(1, plotH)) * (yMax - yMin)
+        };
 
         ctx.font = '11px system-ui, -apple-system, sans-serif';
         ctx.textAlign = 'right';
         ctx.textBaseline = 'middle';
         for (let i = 0; i <= 5; i++) {
-          const val = (yMax / 5) * i;
-          const y = pad.top + plotH - (val / yMax) * plotH;
+          const val = yMin + ((yMax - yMin) / 5) * i;
+          const y = pad.top + plotH - ((val - yMin) / Math.max(1e-9, yMax - yMin)) * plotH;
           ctx.strokeStyle = theme.grid;
           ctx.beginPath();
           ctx.moveTo(pad.left, y);
@@ -3196,12 +3412,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         ctx.lineTo(pad.left + plotW, pad.top + plotH);
         ctx.stroke();
 
-        const xTicks = [0, 24, 48, 72, 96, 115];
+        const xSpan = Math.max(1e-9, xMax - xMin);
+        const ySpan = Math.max(1e-9, yMax - yMin);
+        const timeToX = t => pad.left + ((t - xMin) / xSpan) * plotW;
+        const timeValToY = v => pad.top + plotH - ((Math.max(yMin, Math.min(yMax, v)) - yMin) / ySpan) * plotH;
+
+        const xTicks = state.zoomBounds ? [0, 0.25, 0.5, 0.75, 1.0].map(f => Math.round((xMin + f * xSpan) * 10) / 10) : [0, 24, 48, 72, 96, 115];
         ctx.textAlign = 'center';
         ctx.textBaseline = 'top';
         ctx.font = '600 11px system-ui, -apple-system, sans-serif';
         xTicks.forEach(t => {
-          const x = pad.left + (t / xMax) * plotW;
+          const x = timeToX(t);
           ctx.strokeStyle = theme.grid;
           ctx.beginPath();
           ctx.moveTo(x, pad.top);
@@ -3224,6 +3445,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         ctx.textBaseline = 'bottom';
         ctx.fillText('Fermentation Time (Hours) — Multi-Condition Kinetic Trajectories', pad.left + plotW / 2, height - 4);
 
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(pad.left, pad.top, plotW, plotH);
+        ctx.clip();
+
         Object.entries(activeSeriesMap).forEach(([sKey, cfg]) => {
           const sRows = timeRows.filter(r => getComparisonGroupValue(r, currentDomain) === sKey);
           const byHour = {};
@@ -3241,8 +3467,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             ctx.beginPath();
             hours.forEach((h, idx) => {
               const mVal = byHour[h].reduce((a, b) => a + b, 0) / byHour[h].length;
-              const hx = pad.left + (h / xMax) * plotW;
-              const hy = pad.top + plotH - (Math.max(0, mVal) / yMax) * plotH;
+              const hx = timeToX(h);
+              const hy = timeValToY(mVal);
               if (idx === 0) ctx.moveTo(hx, hy);
               else ctx.lineTo(hx, hy);
             });
@@ -3260,17 +3486,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           });
           Object.values(timeGroups).forEach(gRows => {
             const rep0 = gRows[0];
+            if (rep0.time_h < xMin || rep0.time_h > xMax) return;
             const st = calcStats(gRows.map(x => x.value));
             if (st.mean === null) return;
             const sKey = getComparisonGroupValue(rep0, currentDomain);
             const cfg = activeSeriesMap[sKey] || { color: '#00B5E2', shape: 'circle', offset: 0 };
-            const x = Math.max(pad.left + 6, Math.min(pad.left + plotW - 6, pad.left + (rep0.time_h / xMax) * plotW + cfg.offset * 12));
-            const y = pad.top + plotH - (Math.max(0, st.mean) / yMax) * plotH;
+            const x = Math.max(pad.left + 6, Math.min(pad.left + plotW - 6, timeToX(rep0.time_h) + cfg.offset * 12));
+            const y = timeValToY(st.mean);
             const isPinned = pinnedRecord && gRows.some(gr => gr.record_id === pinnedRecord.record_id && gr.parameter === pinnedRecord.parameter);
 
             if (st.n >= 2 && st.sd > 0) {
-              const yLow = pad.top + plotH - (Math.max(0, st.mean - st.sd) / yMax) * plotH;
-              const yHigh = pad.top + plotH - (Math.min(yMax, st.mean + st.sd) / yMax) * plotH;
+              const yLow = timeValToY(st.mean - st.sd);
+              const yHigh = timeValToY(st.mean + st.sd);
               ctx.save();
               ctx.strokeStyle = cfg.color;
               ctx.lineWidth = 1.9;
@@ -3295,12 +3522,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           });
         } else {
           timeRows.forEach(r => {
+            if (r.time_h < xMin || r.time_h > xMax) return;
             const gRows = repGroupsMap[getReplicateGroupKey(r)] || [r];
             const gStats = calcStats(gRows.map(x => x.value));
             const sKey = getComparisonGroupValue(r, currentDomain);
             const cfg = activeSeriesMap[sKey] || { color: '#00B5E2', shape: 'circle', offset: 0 };
-            const x = Math.max(pad.left + 6, Math.min(pad.left + plotW - 6, pad.left + (r.time_h / xMax) * plotW + cfg.offset * 12 + r.jitter * 4.0));
-            const y = pad.top + plotH - (Math.max(0, r.value) / yMax) * plotH;
+            const x = Math.max(pad.left + 6, Math.min(pad.left + plotW - 6, timeToX(r.time_h) + cfg.offset * 12 + r.jitter * 4.0));
+            const y = timeValToY(r.value);
             const isPinned = pinnedRecord && pinnedRecord.record_id === r.record_id && pinnedRecord.parameter === r.parameter;
 
             ctx.fillStyle = cfg.color;
@@ -3311,6 +3539,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             renderedPoints.push({ x, y, r, groupRows: gRows, groupStats: gStats, isGroupMean: false });
           });
         }
+        ctx.restore();
         ctx.globalAlpha = 1.0;
         return;
       }
@@ -3333,12 +3562,44 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const rawMax = scaleRows.length ? Math.max(...scaleRows.map(r => r.value)) : 100;
         yMax = computeNiceAxisMax(rawMax, yRangeMode, currentDomain);
       }
+      const totalCols = useResourceColumns ? Math.max(1, seriesKeys.length) : Math.max(1, params.length);
+      let xMin = 0;
+      let xMax = totalCols;
+      if (state.zoomBounds) {
+        if (Number.isFinite(state.zoomBounds.yMin) && Number.isFinite(state.zoomBounds.yMax) && state.zoomBounds.yMax > state.zoomBounds.yMin) {
+          yMin = state.zoomBounds.yMin;
+          yMax = state.zoomBounds.yMax;
+        }
+        const zbXMin = Number.isFinite(state.zoomBounds.xMin)
+          ? state.zoomBounds.xMin
+          : (Array.isArray(state.zoomBounds.xCatIndices) ? state.zoomBounds.xCatIndices[0] : null);
+        const zbXMax = Number.isFinite(state.zoomBounds.xMax)
+          ? state.zoomBounds.xMax
+          : (Array.isArray(state.zoomBounds.xCatIndices) ? state.zoomBounds.xCatIndices[1] + 1 : null);
+        if (Number.isFinite(zbXMin) && Number.isFinite(zbXMax) && zbXMax > zbXMin) {
+          xMin = Math.max(0, Math.min(totalCols - 0.1, zbXMin));
+          xMax = Math.max(xMin + 0.1, Math.min(totalCols, zbXMax));
+        }
+      }
+      const isXZoomed = Math.abs(xMin - 0) > 1e-4 || Math.abs(xMax - totalCols) > 1e-4;
+      const xSpan = Math.max(0.1, xMax - xMin);
+      const catIndexToX = (idx, count, twoColLeft = 0.28, twoColRight = 0.72) => {
+        if (!isXZoomed && count === 2) {
+          return pad.left + plotW * (idx === 0 ? twoColLeft : twoColRight);
+        }
+        return pad.left + (((idx + 0.5) - xMin) / xSpan) * plotW;
+      };
+      lastPlotTransform = {
+        pad, plotW, plotH, xMin, xMax, yMin, yMax, useLog, mode: 'scatter', isCategorical: true,
+        pxToDataX: px => xMin + ((px - pad.left) / Math.max(1, plotW)) * (xMax - xMin),
+        pxToDataY: py => yMin + ((pad.top + plotH - py) / Math.max(1, plotH)) * (yMax - yMin)
+      };
 
       // Draw Y gridlines & unit-aware tick labels
       ctx.font = '11px system-ui, -apple-system, sans-serif';
       ctx.textAlign = 'right';
       ctx.textBaseline = 'middle';
-      const ySteps = useLog ? Math.min(6, yMax - yMin) : 5;
+      const ySteps = useLog ? Math.min(6, Math.max(1, Math.round(yMax - yMin))) : 5;
       for (let i = 0; i <= ySteps; i++) {
         const frac = i / ySteps;
         const y = pad.top + plotH - frac * plotH;
@@ -3356,11 +3617,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           const uSuffix = primaryUnit ? ` ${primaryUnit}` : '';
           const label = realVal >= 1000 ? `${(realVal / 1000).toFixed(0)}k${uSuffix}` : (realVal >= 1 ? `${realVal.toFixed(0)}${uSuffix}` : `${realVal.toFixed(2)}${uSuffix}`);
           ctx.fillText(label, pad.left - 7, y);
-        } else if (!numericRows.length && currentDomain === 'calorimetry_xrd') {
+        } else if (!numericRows.length && (currentDomain === 'calorimetry' || currentDomain === 'xrd')) {
           const repLabel = i === 0 ? '' : (i === 5 ? '' : `Rep ${i}`);
           ctx.fillText(repLabel, pad.left - 7, y);
         } else {
-          const val = (yMax / ySteps) * i;
+          const val = yMin + ((yMax - yMin) / ySteps) * i;
           ctx.fillText(formatTickValueWithUnit(val, primaryUnit, yMax), pad.left - 7, y);
         }
       }
@@ -3384,10 +3645,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const valueToY = val => {
         if (useLog) {
           const logV = Math.log10(Math.max(Math.pow(10, yMin), val));
-          const frac = (logV - yMin) / (yMax - yMin);
+          const frac = (logV - yMin) / Math.max(1e-9, yMax - yMin);
           return pad.top + plotH - Math.max(0, Math.min(1, frac)) * plotH;
         }
-        return pad.top + plotH - Math.max(0, Math.min(1, val / yMax)) * plotH;
+        const frac = (val - yMin) / Math.max(1e-9, yMax - yMin);
+        return pad.top + plotH - Math.max(0, Math.min(1, frac)) * plotH;
       };
 
       // =========================================================================
@@ -3395,40 +3657,47 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       // =========================================================================
       if (useResourceColumns) {
         const colCount = Math.max(1, seriesKeys.length);
-        const colWidth = plotW / colCount;
+        const colWidth = plotW / Math.max(1, xSpan);
         const subParams = validParams.slice(0, 4);
         const paramPalette = ['#00B5E2', '#f59e0b', '#10b981', '#a855f7'];
         const paramShapes = ['circle', 'square', 'diamond', 'triangle'];
 
         seriesKeys.forEach((sKey, colIdx) => {
-          const cx = colCount === 2
-            ? pad.left + plotW * (colIdx === 0 ? 0.28 : 0.72)
-            : pad.left + ((colIdx + 0.5) / colCount) * plotW;
+          const cx = catIndexToX(colIdx, colCount, 0.28, 0.72);
           const sCfg = activeSeriesMap[sKey] || { color: SERIES_PALETTE[colIdx % SERIES_PALETTE.length], shape: 'circle' };
 
-          // X-axis tick
-          ctx.strokeStyle = theme.axisText;
-          ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(cx, pad.top + plotH);
-          ctx.lineTo(cx, pad.top + plotH + 4);
-          ctx.stroke();
+          if (cx >= pad.left && cx <= pad.left + plotW) {
+            // X-axis tick
+            ctx.strokeStyle = theme.axisText;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(cx, pad.top + plotH);
+            ctx.lineTo(cx, pad.top + plotH + 4);
+            ctx.stroke();
 
-          // Resource / condition label on X-axis
-          const shortLabel = sKey.length > 26 ? sKey.slice(0, 25) + '…' : sKey;
-          drawXAxisTickLabel(ctx, shortLabel, cx, pad.top + plotH, rotateLabels, theme, colCount);
+            // Resource / condition label on X-axis
+            const shortLabel = sKey.length > 26 ? sKey.slice(0, 25) + '…' : sKey;
+            drawXAxisTickLabel(ctx, shortLabel, cx, pad.top + plotH, rotateLabels, theme, colCount);
+          }
 
           // Column divider line
           if (colIdx < colCount - 1) {
-            const divX = colCount === 2
+            const divX = !isXZoomed && colCount === 2
               ? pad.left + plotW * 0.5
-              : pad.left + ((colIdx + 1) / colCount) * plotW;
-            ctx.strokeStyle = theme.grid;
-            ctx.beginPath();
-            ctx.moveTo(divX, pad.top);
-            ctx.lineTo(divX, pad.top + plotH);
-            ctx.stroke();
+              : pad.left + (((colIdx + 1) - xMin) / xSpan) * plotW;
+            if (divX >= pad.left && divX <= pad.left + plotW) {
+              ctx.strokeStyle = theme.grid;
+              ctx.beginPath();
+              ctx.moveTo(divX, pad.top);
+              ctx.lineTo(divX, pad.top + plotH);
+              ctx.stroke();
+            }
           }
+
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(pad.left, pad.top, plotW, plotH);
+          ctx.clip();
 
           // Draw bars + whiskers + replicate points for each active parameter inside this Resource column
           subParams.forEach((p, pIdx) => {
@@ -3554,6 +3823,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               });
             }
           });
+          ctx.restore();
         });
 
         // X-axis title caption for Side-by-Side Resource Mode
@@ -3580,26 +3850,30 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       // =========================================================================
       const paramIndexMap = {};
       params.forEach((p, idx) => { paramIndexMap[p] = idx; });
-      const laneWidth = plotW / Math.max(1, params.length);
+      const laneWidth = plotW / Math.max(1, xSpan);
 
       params.forEach((p, idx) => {
-        const cx = params.length === 2
-          ? pad.left + plotW * (idx === 0 ? 0.27 : 0.73)
-          : pad.left + ((idx + 0.5) / params.length) * plotW;
+        const cx = catIndexToX(idx, params.length, 0.27, 0.73);
 
-        // Tick mark on X-axis
-        ctx.strokeStyle = theme.axisText;
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(cx, pad.top + plotH);
-        ctx.lineTo(cx, pad.top + plotH + 4);
-        ctx.stroke();
+        if (cx >= pad.left && cx <= pad.left + plotW) {
+          // Tick mark on X-axis
+          ctx.strokeStyle = theme.axisText;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx, pad.top + plotH);
+          ctx.lineTo(cx, pad.top + plotH + 4);
+          ctx.stroke();
 
-        const label = xLabels[idx];
-        drawXAxisTickLabel(ctx, label, cx, pad.top + plotH, rotateLabels, theme, params.length);
+          const label = xLabels[idx];
+          drawXAxisTickLabel(ctx, label, cx, pad.top + plotH, rotateLabels, theme, params.length);
+        }
 
         // Draw side-by-side sub-lane translucent Mean Bar + ±1 SD whiskers for each active resource/series
         if (p !== '(metadata only)') {
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(pad.left, pad.top, plotW, plotH);
+          ctx.clip();
           const sEntries = Object.entries(activeSeriesMap);
           const subBarW = Math.min(28, Math.max(6, (laneWidth * 0.68) / Math.max(1, sEntries.length)));
           sEntries.forEach(([sKey, cfg]) => {
@@ -3653,6 +3927,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             }
             ctx.restore();
           });
+          ctx.restore();
         }
 
         if (p === '(metadata only)') {
@@ -3667,14 +3942,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         }
 
         if (idx < params.length - 1) {
-          const divX = params.length === 2
+          const divX = !isXZoomed && params.length === 2
             ? pad.left + plotW * 0.5
-            : pad.left + ((idx + 1) / params.length) * plotW;
-          ctx.strokeStyle = theme.grid;
-          ctx.beginPath();
-          ctx.moveTo(divX, pad.top);
-          ctx.lineTo(divX, pad.top + plotH);
-          ctx.stroke();
+            : pad.left + (((idx + 1) - xMin) / xSpan) * plotW;
+          if (divX >= pad.left && divX <= pad.left + plotW) {
+            ctx.strokeStyle = theme.grid;
+            ctx.beginPath();
+            ctx.moveTo(divX, pad.top);
+            ctx.lineTo(divX, pad.top + plotH);
+            ctx.stroke();
+          }
         }
       });
 
@@ -3686,7 +3963,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         proximate: 'Proximate Analysis Parameter (% Dry/Wet Basis)',
         compositional: 'Compositional Analysis Parameter (% Dry Weight)',
         ultimate: 'Ultimate Analysis Parameter (% Dry Weight)',
-        calorimetry_xrd: 'Calorimetry & XRD Parameter (%)',
+        calorimetry: 'Calorimetry Parameter (MJ/kg)',
+        xrd: 'XRD Crystallinity Parameter (%)',
         gasification: 'Gasification Parameter (ppm / °C / %)'
       };
       ctx.fillStyle = theme.axisText;
@@ -3695,14 +3973,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       ctx.textBaseline = 'bottom';
       ctx.fillText(xAxisTitleMap[currentDomain] || 'Analytical Parameter (with Units)', pad.left + plotW / 2, height - 3);
 
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(pad.left, pad.top, plotW, plotH);
+      ctx.clip();
       if (repPlotMode === 'mean_sd') {
         Object.values(repGroupsMap).forEach(gRows => {
           const rep0 = gRows[0];
           const pIdx = paramIndexMap[rep0.parameter];
           if (pIdx === undefined) return;
-          const baseCx = params.length === 2
-            ? pad.left + plotW * (pIdx === 0 ? 0.27 : 0.73)
-            : pad.left + ((pIdx + 0.5) / params.length) * plotW;
+          const baseCx = catIndexToX(pIdx, params.length, 0.27, 0.73);
 
           const sKey = getComparisonGroupValue(rep0, currentDomain);
           const cfg = activeSeriesMap[sKey] || { color: '#00B5E2', shape: 'circle', offset: 0 };
@@ -3748,9 +4028,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         filteredRows.forEach(r => {
           const pIdx = paramIndexMap[r.parameter];
           if (pIdx === undefined) return;
-          const baseCx = params.length === 2
-            ? pad.left + plotW * (pIdx === 0 ? 0.27 : 0.73)
-            : pad.left + ((pIdx + 0.5) / params.length) * plotW;
+          const baseCx = catIndexToX(pIdx, params.length, 0.27, 0.73);
 
           const sKey = getComparisonGroupValue(r, currentDomain);
           const cfg = activeSeriesMap[sKey] || { color: '#00B5E2', shape: 'circle', offset: 0 };
@@ -3791,6 +4069,32 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           renderedPoints.push({ x, y, r, groupRows: gRows, groupStats: gStats, isGroupMean: false });
         });
       }
+      if (window.__HIGHLIGHT_RK__) {
+        const matchedPts = renderedPoints.filter(pt => pt.r && (
+          window.matchesReplicateGroupKey
+            ? window.matchesReplicateGroupKey(getReplicateGroupKey(pt.r), window.__HIGHLIGHT_RK__)
+            : String(getReplicateGroupKey(pt.r)).toLowerCase() === window.__HIGHLIGHT_RK__
+        ));
+        matchedPts.forEach(pt => {
+          ctx.save();
+          ctx.strokeStyle = '#2563eb';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 8.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([3, 2]);
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 11.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        });
+        if (!pinnedRecord && matchedPts.length > 0) {
+          pinRecord(matchedPts[0].r, matchedPts[0].groupRows, matchedPts[0].groupStats);
+        }
+      }
+      ctx.restore();
       ctx.globalAlpha = 1.0;
     }
 
@@ -3815,7 +4119,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const plotH = height - pad.top - pad.bottom;
 
       const numericRows = filteredRows.filter(r => typeof r.value === 'number' && !isNaN(r.value));
-      const stripRows = (currentDomain === 'calorimetry_xrd' || !numericRows.length) ? filteredRows : numericRows;
+      const stripRows = (currentDomain === 'calorimetry' || currentDomain === 'xrd' || !numericRows.length) ? filteredRows : numericRows;
       renderedPoints = [];
 
       if (!stripRows.length) {
@@ -3875,7 +4179,19 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const topGroups = groupList.slice(0, 14);
 
       const rawMax = topGroups.length ? Math.max(...topGroups.map(g => g.max)) : 10;
-      const xMax = computeNiceAxisMax(rawMax, yRangeMode, currentDomain);
+      let xMinVal = 0;
+      let xMax = computeNiceAxisMax(rawMax, yRangeMode, currentDomain);
+      const resetZoomBtn = document.getElementById('btn-reset-zoom');
+      if (resetZoomBtn) resetZoomBtn.style.display = state.zoomBounds ? 'inline-flex' : 'none';
+      if (state.zoomBounds && Number.isFinite(state.zoomBounds.xMin) && Number.isFinite(state.zoomBounds.xMax) && state.zoomBounds.xMax > state.zoomBounds.xMin) {
+        xMinVal = Math.max(0, state.zoomBounds.xMin);
+        xMax = state.zoomBounds.xMax;
+      }
+      lastPlotTransform = {
+        pad, plotW, plotH, xMin: xMinVal, xMax, yMin: 0, yMax: Math.max(1, topGroups.length), useLog: false, mode: 'strip',
+        pxToDataX: px => xMinVal + ((px - pad.left) / Math.max(1, plotW)) * (xMax - xMinVal),
+        pxToDataY: py => ((py - pad.top) / Math.max(1, plotH)) * Math.max(1, topGroups.length)
+      };
       const activeParams = Array.from(new Set(topGroups.map(g => g.parameter).filter(Boolean)));
       const stripUnit = activeParams.length === 1
         ? getParamUnit(activeParams[0], currentDomain)
@@ -3893,8 +4209,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       for (let i = 0; i <= 5; i++) {
-        const val = (xMax / 5) * i;
-        const x = pad.left + (val / xMax) * plotW;
+        const val = xMinVal + ((xMax - xMinVal) / 5) * i;
+        const x = pad.left + ((val - xMinVal) / Math.max(1e-9, xMax - xMinVal)) * plotW;
         ctx.strokeStyle = theme.grid;
         ctx.beginPath();
         ctx.moveTo(x, pad.top);
@@ -3918,6 +4234,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       ctx.fillText(stripUnit ? `Measured Parameter Value (${stripUnit})` : 'Measured Parameter Value', pad.left + plotW / 2, height - 4);
 
       const rowStep = plotH / Math.max(1, topGroups.length);
+      const valToStripX = val => pad.left + ((Math.max(xMinVal, Math.min(xMax, val)) - xMinVal) / Math.max(1e-9, xMax - xMinVal)) * plotW;
       topGroups.forEach((g, idx) => {
         const y = pad.top + idx * rowStep + rowStep / 2;
         ctx.fillStyle = theme.axisText;
@@ -3926,9 +4243,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const shortLabel = g.label.length > 33 ? g.label.slice(0, 32) + '…' : g.label;
         ctx.fillText(shortLabel, pad.left - 8, y);
 
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(pad.left, pad.top, plotW, plotH);
+        ctx.clip();
+
         if (!g.isMetaGroup) {
-          const xMin = pad.left + (Math.max(0, g.min) / xMax) * plotW;
-          const xMaxBar = pad.left + (Math.min(xMax, g.max) / xMax) * plotW;
+          const xMin = valToStripX(g.min);
+          const xMaxBar = valToStripX(g.max);
           ctx.strokeStyle = theme.rangeBar;
           ctx.lineWidth = 3;
           ctx.beginPath();
@@ -3939,12 +4261,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
         if (repPlotMode === 'mean_sd' && !g.isMetaGroup) {
           const rep0 = g.rows[0];
-          const xMean = pad.left + (Math.max(0, Math.min(xMax, g.mean)) / xMax) * plotW;
+          const xMean = valToStripX(g.mean);
           const sKey = getComparisonGroupValue(rep0, currentDomain);
           const cfg = activeSeriesMap[sKey] || { color: SERIES_PALETTE[idx % SERIES_PALETTE.length] };
           if (g.st.n >= 2 && g.st.sd > 0) {
-            const xLow = pad.left + (Math.max(0, g.mean - g.st.sd) / xMax) * plotW;
-            const xHigh = pad.left + (Math.min(xMax, g.mean + g.st.sd) / xMax) * plotW;
+            const xLow = valToStripX(g.mean - g.st.sd);
+            const xHigh = valToStripX(g.mean + g.st.sd);
             ctx.save();
             ctx.strokeStyle = cfg.color;
             ctx.lineWidth = 2.0;
@@ -3972,7 +4294,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             const isMetaOnly = r.value === null || isNaN(r.value);
             const x = isMetaOnly
               ? pad.left + Math.min(plotW - 24, 34 + rIdx * 22)
-              : pad.left + (Math.max(0, Math.min(xMax, r.value)) / xMax) * plotW;
+              : valToStripX(r.value);
             const isPinned = pinnedRecord && pinnedRecord.record_id === r.record_id && pinnedRecord.parameter === r.parameter;
             const sKey = getComparisonGroupValue(r, currentDomain);
             const cfg = activeSeriesMap[sKey] || { color: SERIES_PALETTE[rIdx % SERIES_PALETTE.length] };
@@ -3995,11 +4317,38 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             renderedPoints.push({ x, y, r, groupRows: g.rows, groupStats: g.st, isGroupMean: false });
           });
         }
+        ctx.restore();
       });
+      if (window.__HIGHLIGHT_RK__) {
+        const matchedPts = renderedPoints.filter(pt => pt.r && (
+          window.matchesReplicateGroupKey
+            ? window.matchesReplicateGroupKey(getReplicateGroupKey(pt.r), window.__HIGHLIGHT_RK__)
+            : String(getReplicateGroupKey(pt.r)).toLowerCase() === window.__HIGHLIGHT_RK__
+        ));
+        matchedPts.forEach(pt => {
+          ctx.save();
+          ctx.strokeStyle = '#2563eb';
+          ctx.lineWidth = 2.2;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 8.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.setLineDash([3, 2]);
+          ctx.strokeStyle = '#dc2626';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(pt.x, pt.y, 11.5, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.restore();
+        });
+        if (!pinnedRecord && matchedPts.length > 0) {
+          pinRecord(matchedPts[0].r, matchedPts[0].groupRows, matchedPts[0].groupStats);
+        }
+      }
     }
 
-    // Canvas hover & click hit-testing
+    // Canvas hover, brush zoom & click hit-testing
     const canvasEl = document.getElementById('plot-canvas');
+    const brushEl = document.getElementById('canvas-zoom-brush');
     const tooltipEl = document.getElementById('hover-tooltip');
     const clickPopoverEl = document.getElementById('click-audit-popover');
 
@@ -4019,7 +4368,88 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       return best;
     }
 
+    canvasEl.addEventListener('mousedown', evt => {
+      if (evt.button !== 0) return;
+      const rect = canvasEl.getBoundingClientRect();
+      brush.active = true;
+      brush.startX = evt.clientX - rect.left;
+      brush.startY = evt.clientY - rect.top;
+      brush.curX = brush.startX;
+      brush.curY = brush.startY;
+      if (brushEl) {
+        brushEl.style.display = 'none';
+        brushEl.style.left = `${canvasEl.offsetLeft + brush.startX}px`;
+        brushEl.style.top = `${canvasEl.offsetTop + brush.startY}px`;
+        brushEl.style.width = '0px';
+        brushEl.style.height = '0px';
+      }
+    });
+
+    function finishCanvasBrush(evt) {
+      if (!brush.active) return;
+      const rect = canvasEl.getBoundingClientRect();
+      if (evt && typeof evt.clientX === 'number') {
+        brush.curX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+        brush.curY = Math.max(0, Math.min(rect.height, evt.clientY - rect.top));
+      }
+      brush.active = false;
+      if (brushEl) brushEl.style.display = 'none';
+      const dx = Math.abs(brush.curX - brush.startX);
+      const dy = Math.abs(brush.curY - brush.startY);
+      if (dx >= 6 && dy >= 6 && lastPlotTransform) {
+        brush.suppressNextClick = true;
+        const x0 = Math.min(brush.startX, brush.curX);
+        const x1 = Math.max(brush.startX, brush.curX);
+        const y0 = Math.min(brush.startY, brush.curY);
+        const y1 = Math.max(brush.startY, brush.curY);
+        const dataX0 = lastPlotTransform.pxToDataX(x0);
+        const dataX1 = lastPlotTransform.pxToDataX(x1);
+        const dataY0 = lastPlotTransform.pxToDataY(y1);
+        const dataY1 = lastPlotTransform.pxToDataY(y0);
+        const minX = Math.min(dataX0, dataX1);
+        const maxX = Math.max(dataX0, dataX1);
+        const xCatIndices = lastPlotTransform.isCategorical
+          ? [Math.max(0, Math.floor(minX)), Math.max(0, Math.ceil(maxX) - 1)]
+          : null;
+        state.zoomBounds = {
+          xMin: minX,
+          xMax: maxX,
+          yMin: Math.min(dataY0, dataY1),
+          yMax: Math.max(dataY0, dataY1),
+          xCatIndices
+        };
+        const resetBtn = document.getElementById('btn-reset-zoom');
+        if (resetBtn) resetBtn.style.display = 'inline-flex';
+        closeClickAuditPopover();
+        renderPlot();
+      }
+    }
+
+    canvasEl.addEventListener('mouseup', finishCanvasBrush);
+    window.addEventListener('mouseup', finishCanvasBrush);
+    canvasEl.addEventListener('dblclick', () => {
+      resetCanvasZoom();
+    });
+
     canvasEl.addEventListener('mousemove', evt => {
+      if (brush.active) {
+        const rect = canvasEl.getBoundingClientRect();
+        brush.curX = Math.max(0, Math.min(rect.width, evt.clientX - rect.left));
+        brush.curY = Math.max(0, Math.min(rect.height, evt.clientY - rect.top));
+        const dx = Math.abs(brush.curX - brush.startX);
+        const dy = Math.abs(brush.curY - brush.startY);
+        if (brushEl && (dx >= 6 && dy >= 6)) {
+          const leftPx = Math.min(brush.startX, brush.curX);
+          const topPx = Math.min(brush.startY, brush.curY);
+          brushEl.style.display = 'block';
+          brushEl.style.left = `${canvasEl.offsetLeft + leftPx}px`;
+          brushEl.style.top = `${canvasEl.offsetTop + topPx}px`;
+          brushEl.style.width = `${dx}px`;
+          brushEl.style.height = `${dy}px`;
+          tooltipEl.classList.add('hidden');
+          return;
+        }
+      }
       const hit = findNearestPoint(evt);
       if (!hit) {
         tooltipEl.classList.add('hidden');
@@ -4057,6 +4487,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     });
 
     canvasEl.addEventListener('click', evt => {
+      if (brush.suppressNextClick) {
+        brush.suppressNextClick = false;
+        return;
+      }
       const hit = findNearestPoint(evt);
       if (!hit) {
         closeClickAuditPopover();
@@ -4096,17 +4530,31 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (scopeGroupBtn) scopeGroupBtn.textContent = `Replicate Group (${gRows.length} pt${gRows.length === 1 ? '' : 's'})`;
       if (scopeSingleBtn) scopeSingleBtn.textContent = `Single Point (${r.record_id.slice(0, 14)})`;
       setAuditPopoverScope(gRows.length > 1 ? 'group' : 'single');
+      const popActionSel = document.getElementById('click-popover-action');
+      if (popActionSel) popActionSel.value = 'keep_note';
+      const popAssigneeEl = document.getElementById('click-popover-assignee');
+      if (popAssigneeEl) {
+        popAssigneeEl.value = window.getDefaultAssigneeEmail
+          ? window.getDefaultAssigneeEmail(r.assigned_to_email || '')
+          : (r.assigned_to_email || '');
+      }
 
       const fb = document.getElementById('click-popover-feedback');
       if (fb) { fb.classList.add('hidden'); fb.textContent = ''; }
 
       clickPopoverEl.classList.remove('hidden');
       const popW = 320;
-      const left = Math.max(8, Math.min(hit.x + 14, canvasEl.clientWidth - popW - 8));
-      const top = Math.max(8, Math.min(hit.y - 20, canvasEl.clientHeight - 240));
+      const wrapperW = (canvasEl.parentElement && canvasEl.parentElement.clientWidth) || canvasEl.clientWidth || 720;
+      const rightDockLeft = Math.max(12, wrapperW - popW - 12);
+      // Dock in the top-right corner of .chart-canvas-wrapper by default so the popover never
+      // occludes the clicked point or its vertical SD error whiskers; if the clicked point is
+      // inside the top-right docking zone, dock in the top-left corner instead.
+      const left = (hit.x !== undefined && hit.x + 28 >= rightDockLeft) ? 12 : rightDockLeft;
+      const top = 12;
       clickPopoverEl.style.left = `${left}px`;
       clickPopoverEl.style.top = `${top}px`;
     }
+    window.openPointAuditPopover = openClickAuditPopover;
 
     function closeClickAuditPopover() {
       if (clickPopoverEl) clickPopoverEl.classList.add('hidden');
@@ -4129,75 +4577,150 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (pinScopeSel) pinScopeSel.value = auditPopoverScope;
     }
 
-    function applyAuditDecisionToRows(targetRows, action, note, reviewer) {
+    function applyAuditDecisionToRows(targetRows, action, note, reviewer, assignedToEmail) {
+      if (!targetRows || !targetRows.length) return;
+      const normalizedAction = String(action || 'keep_note').trim();
       const statusMap = {
         flag_fail: 'fail',
         approve_pass: 'pass',
-        keep_note: 'Needs Review'
+        keep_note: 'provisional',
+        in_review: 'provisional',
+        provisional: 'provisional'
       };
-      const newQcStatus = statusMap[action] || 'fail';
+      const newQcStatus = statusMap[normalizedAction] || 'provisional';
+      const decisionAction = normalizedAction === 'flag_fail'
+        ? 'reject_fail'
+        : (normalizedAction === 'approve_pass' ? 'approve_pass' : 'in_review');
+      const decisionStatus = 'in_review';
+      const newQcPass = normalizedAction === 'flag_fail'
+        ? 'fail'
+        : (normalizedAction === 'approve_pass' ? 'pass' : null);
+      const decisionCode = normalizedAction === 'flag_fail'
+        ? 'exclude_qc_fail'
+        : (normalizedAction === 'approve_pass' ? 'keep' : 'accept_with_note');
+      const cleanAssignee = String(assignedToEmail || '').trim() || null;
       const allTargetIds = Array.from(new Set(targetRows.map(tr => String(tr.record_id || '')).filter(Boolean)));
       const isGroupScope = targetRows.length > 1;
+      const triageScope = isGroupScope ? 'group' : 'single';
+      const analystIdent = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
+        ? window.BioCirvQcClient.getAnalystIdentity()
+        : {};
+      const rawReviewer = (reviewer && !window.isPlaceholderAnalystEmail?.(reviewer)) ? reviewer : '';
+      const cleanIdentEmail = (analystIdent.email && !window.isPlaceholderAnalystEmail?.(analystIdent.email)) ? analystIdent.email : '';
+      const cleanIdentName = (analystIdent.name && !window.isPlaceholderAnalystEmail?.(analystIdent.name)) ? analystIdent.name : '';
+      const resolvedReviewer = rawReviewer || cleanIdentEmail || cleanIdentName || '';
+      const nowIso = new Date().toISOString();
+      const primaryRow = (pinnedRecord && targetRows.some(r => String(r.record_id) === String(pinnedRecord.record_id)))
+        ? pinnedRecord
+        : targetRows[0];
+      const repGroupKey = getReplicateGroupKey(primaryRow);
+
       targetRows.forEach(tr => {
         const priorStatus = String(tr.qc_pass || 'pass');
+        tr._prior_qc_pass = priorStatus;
         tr.qc_pass = newQcStatus;
-        if (newQcStatus === 'fail') tr.data_status = 'Outlier Flagged';
-        else if (newQcStatus === 'pass') tr.data_status = 'Validated';
-        addRecordToExport(tr, `[${action.toUpperCase()}] ${note}`);
-        if (window.BioCirvQcClient && typeof window.BioCirvQcClient.submitDecision === 'function') {
-          window.BioCirvQcClient.submitDecision({
-            scope: isGroupScope ? 'replicate_group' : 'single_record',
-            resource_name: tr.resource_name || '',
-            analysis_type: tr.domain || currentDomain,
-            domain: tr.domain || currentDomain,
-            parameter_name: tr.parameter || '',
-            parameter: tr.parameter || '',
-            prepared_sample_name: tr.prepared_sample_name || '',
-            field_sample_name: tr.field_sample_name || '',
-            experiment_name: tr.experiment || '',
-            record_id: String(tr.record_id || ''),
-            target_record_ids: isGroupScope ? allTargetIds : [String(tr.record_id || '')],
-            action: action,
-            decision: newQcStatus === 'pass' ? 'keep' : 'exclude_qc_fail',
-            previous_qc_status: priorStatus,
-            prior_qc_status: priorStatus,
-            new_qc_status: newQcStatus,
-            audit_note: note || `Interactive point/group audit (${action})`,
-            rationale: note || `Interactive point/group audit (${action})`,
-            reviewer: reviewer || 'Explorer Interactive Reviewer',
-            dashboard_page: 'explorer'
-          });
-        }
+        tr.flag_type = 'visualizer_flagged';
+        tr.triage_scope = triageScope;
+        tr.replicate_group_key = getReplicateGroupKey(tr);
+        tr.flagged_by_email = cleanIdentEmail || resolvedReviewer || null;
+        tr.flagged_at = nowIso;
+        tr.assigned_to_email = cleanAssignee || tr.assigned_to_email || '';
+        tr.decision_action = decisionAction;
+        tr.decision_status = decisionStatus;
+        if (newQcStatus === 'fail') tr.data_status = 'Staged for Audit (Recommend Fail)';
+        else if (newQcStatus === 'pass') tr.data_status = 'Staged for Audit (Recommend Pass)';
+        else tr.data_status = 'Staged for Audit (In Review)';
+        addRecordToExport(tr, `[${normalizedAction.toUpperCase()}] ${note}`);
       });
+
+      const psMeta = (typeof PREP_SAMPLES_BY_NAME !== 'undefined' && PREP_SAMPLES_BY_NAME[primaryRow.prepared_sample_name]) || {};
+      const fsMeta = (typeof FIELD_SAMPLES_BY_NAME !== 'undefined' && FIELD_SAMPLES_BY_NAME[primaryRow.field_sample_name]) || {};
+      const labLineageNote = primaryRow.note || psMeta.note || fsMeta.note || '';
+      if (window.BioCirvQcClient && typeof window.BioCirvQcClient.submitDecision === 'function') {
+        return window.BioCirvQcClient.submitDecision({
+          scope: isGroupScope ? 'replicate_group' : 'single_record',
+          triage_scope: triageScope,
+          replicate_group_key: repGroupKey,
+          flag_type: 'visualizer_flagged',
+          resource_name: primaryRow.resource_name || '',
+          analysis_type: primaryRow.domain || currentDomain,
+          domain: primaryRow.domain || currentDomain,
+          parameter_name: primaryRow.parameter || '',
+          parameter: primaryRow.parameter || '',
+          prepared_sample_name: primaryRow.prepared_sample_name || '',
+          prepared_sample: primaryRow.prepared_sample_name || '',
+          field_sample_name: primaryRow.field_sample_name || '',
+          experiment_name: primaryRow.experiment || '',
+          experiment: primaryRow.experiment || '',
+          prep_method: getSeriesValue(primaryRow, primaryRow.domain || currentDomain) || primaryRow.prep_method || '',
+          record_id: String(primaryRow.record_id || ''),
+          record_ids: allTargetIds,
+          target_record_ids: allTargetIds,
+          action: normalizedAction,
+          decision_action: decisionAction,
+          decision_status: decisionStatus,
+          new_qc_pass: newQcPass,
+          decision: decisionCode,
+          previous_qc_status: primaryRow._prior_qc_pass || 'pass',
+          prior_qc_status: primaryRow._prior_qc_pass || 'pass',
+          new_qc_status: newQcStatus,
+          assigned_to_email: cleanAssignee,
+          audit_note: note || `Interactive point/group audit (${normalizedAction})`,
+          rationale: note || `Interactive point/group audit (${normalizedAction})`,
+          lab_lineage_note: labLineageNote,
+          submitted_at: nowIso,
+          flagged_at: nowIso,
+          submitted_by_email: cleanIdentEmail || resolvedReviewer || null,
+          flagged_by_email: cleanIdentEmail || resolvedReviewer || null,
+          source_label: 'Page 3 — Interactive Data Visualizer',
+          reviewer: resolvedReviewer || null,
+          dashboard_page: 'explorer'
+        });
+      }
+      return Promise.resolve(null);
     }
 
     function submitClickPopoverAuditFinding() {
       if (!pinnedRecord) return;
-      const action = (document.getElementById('click-popover-action') || {}).value || 'flag_fail';
+      const action = (document.getElementById('click-popover-action') || {}).value || 'keep_note';
+      const assignedToEmail = ((document.getElementById('click-popover-assignee') || {}).value || '').trim();
       const note = ((document.getElementById('click-popover-note') || {}).value || '').trim() || `Audited via interactive plot (${auditPopoverScope === 'group' ? 'Replicate Group' : 'Single Point'})`;
       const targetRows = (auditPopoverScope === 'group' && pinnedGroupRows && pinnedGroupRows.length) ? pinnedGroupRows : [pinnedRecord];
-      applyAuditDecisionToRows(targetRows, action, note, 'Explorer Interactive Reviewer');
+      const currentAnalystEmail = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
+        ? (window.BioCirvQcClient.getAnalystIdentity().email || '')
+        : '';
+      applyAuditDecisionToRows(targetRows, action, note, currentAnalystEmail, assignedToEmail);
 
       const fb = document.getElementById('click-popover-feedback');
       if (fb) {
-        fb.textContent = `✓ Submitted ${action} for ${targetRows.length} observation${targetRows.length === 1 ? '' : 's'} & added to Export Tray`;
+        fb.innerHTML = `✓ Submitted ${action} for ${targetRows.length} observation${targetRows.length === 1 ? '' : 's'} &amp; added to Export Tray — <a href="resource_audit_workbench.html?flag_type=visualizer_flagged" class="underline font-bold">Open in QC Audit Workbench →</a>`;
         fb.classList.remove('hidden');
       }
       const noteEl = document.getElementById('click-popover-note');
       if (noteEl) noteEl.value = '';
       pinRecord(pinnedRecord, pinnedGroupRows, pinnedGroupStats);
       renderCurrentView();
-      setTimeout(() => closeClickAuditPopover(), 950);
+      setTimeout(() => closeClickAuditPopover(), 2600);
     }
 
-    function buildFindingModalPayloadFromPinned(scopeMode, noteText, sourceLabel) {
+    function buildFindingModalPayloadFromPinned(scopeMode, noteText, sourceLabel, assignedToEmail) {
       const allGrpRows = (pinnedGroupRows && pinnedGroupRows.length) ? pinnedGroupRows : [pinnedRecord];
       const targetRows = scopeMode === 'group' ? allGrpRows : [pinnedRecord];
       const allGroupIds = Array.from(new Set(allGrpRows.map(r => String(r.record_id || '')).filter(Boolean)));
       const recIds = Array.from(new Set(targetRows.map(r => String(r.record_id || '')).filter(Boolean))).join('|');
+      const psMeta = (typeof PREP_SAMPLES_BY_NAME !== 'undefined' && PREP_SAMPLES_BY_NAME[pinnedRecord.prepared_sample_name]) || {};
+      const fsMeta = (typeof FIELD_SAMPLES_BY_NAME !== 'undefined' && FIELD_SAMPLES_BY_NAME[pinnedRecord.field_sample_name]) || {};
+      const labLineageNote = pinnedRecord.note || psMeta.note || fsMeta.note || '';
+      const currentAnalystEmail = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
+        ? (window.BioCirvQcClient.getAnalystIdentity().email || '')
+        : '';
       return {
         scope: scopeMode === 'group' ? 'replicate_group' : 'single_record',
+        triage_scope: scopeMode === 'group' ? 'group' : 'single',
         prefer_single: scopeMode === 'single',
+        replicate_group_key: getReplicateGroupKey(pinnedRecord),
+        flag_type: 'visualizer_flagged',
+        decision_status: 'in_review',
         record_id: String(pinnedRecord.record_id || ''),
         group_record_ids: allGroupIds,
         all_group_record_ids: allGroupIds.join('|'),
@@ -4218,6 +4741,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         analysis_type: currentDomain,
         unit: pinnedRecord.unit || '',
         value: pinnedRecord.value,
+        default_qc_status: 'provisional',
+        assigned_to_email: window.getDefaultAssigneeEmail
+          ? window.getDefaultAssigneeEmail(assignedToEmail)
+          : String(assignedToEmail || '').trim(),
+        lab_lineage_note: labLineageNote,
+        submitted_at: new Date().toISOString(),
+        submitted_by_email: currentAnalystEmail,
+        source_label: sourceLabel || 'Page 3 — Interactive Data Visualizer',
         title: `[${currentDomain.toUpperCase()}] ${pinnedRecord.resource_name} — ${formatParamName(pinnedRecord.parameter, currentDomain)} (${scopeMode === 'group' ? `Replicate Group n=${allGrpRows.length}` : pinnedRecord.record_id})`,
         category: 'Replicate Outlier / Interactive Plot Audit',
         severity: 'high',
@@ -4228,26 +4759,46 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       };
     }
 
+    function openShowMeFromClickPopover(btnEl) {
+      if (!pinnedRecord) return;
+      const rk = getReplicateGroupKey(pinnedRecord);
+      if (typeof window.openFlagShowMePopover === 'function') {
+        window.openFlagShowMePopover({
+          replicateGroupKey: rk,
+          resource: pinnedRecord.resource_name || '',
+          analysisType: pinnedRecord.domain || currentDomain || '',
+          parameter: pinnedRecord.parameter || '',
+          preparedSample: pinnedRecord.prepared_sample_name || '',
+          outlierRecordId: String(pinnedRecord.record_id || '')
+        }, btnEl);
+      }
+    }
+
     function escalateClickPopoverToModal() {
       if (!pinnedRecord) return;
       const note = ((document.getElementById('click-popover-note') || {}).value || '').trim();
+      const assignedToEmail = ((document.getElementById('click-popover-assignee') || {}).value || '').trim();
       closeClickAuditPopover();
       if (typeof window.openSubmitFindingModal === 'function') {
-        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(auditPopoverScope, note, 'Side-by-Side Explorer interactive plot'));
+        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(auditPopoverScope, note, 'Data Visualizer interactive plot', assignedToEmail));
       }
     }
 
     function submitPinnedAuditFinding() {
       if (!pinnedRecord) return;
       const scope = (document.getElementById('pin-audit-scope') || {}).value || 'group';
-      const action = (document.getElementById('pin-audit-action') || {}).value || 'flag_fail';
+      const action = (document.getElementById('pin-audit-action') || {}).value || 'keep_note';
+      const assignedToEmail = ((document.getElementById('pin-audit-assignee') || {}).value || '').trim();
       const note = ((document.getElementById('pin-note') || {}).value || '').trim() || `Audited via Pinned Inspector (${scope === 'group' ? 'Replicate Group' : 'Single Point'})`;
       const targetRows = (scope === 'group' && pinnedGroupRows && pinnedGroupRows.length) ? pinnedGroupRows : [pinnedRecord];
-      applyAuditDecisionToRows(targetRows, action, note, 'Explorer Pinned Inspector');
+      const currentAnalystEmail = (window.BioCirvQcClient && typeof window.BioCirvQcClient.getAnalystIdentity === 'function')
+        ? (window.BioCirvQcClient.getAnalystIdentity().email || '')
+        : '';
+      applyAuditDecisionToRows(targetRows, action, note, currentAnalystEmail, assignedToEmail);
 
       const fb = document.getElementById('pin-audit-feedback');
       if (fb) {
-        fb.textContent = `✓ Submitted ${action} for ${targetRows.length} observation${targetRows.length === 1 ? '' : 's'} & added to Export Tray`;
+        fb.innerHTML = `✓ Submitted ${action} for ${targetRows.length} observation${targetRows.length === 1 ? '' : 's'} &amp; added to Export Tray — <a href="resource_audit_workbench.html?flag_type=visualizer_flagged" class="underline font-bold">Open in QC Audit Workbench →</a>`;
         fb.classList.remove('hidden');
       }
       const noteEl = document.getElementById('pin-note');
@@ -4260,8 +4811,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (!pinnedRecord) return;
       const scope = (document.getElementById('pin-audit-scope') || {}).value || 'group';
       const note = ((document.getElementById('pin-note') || {}).value || '').trim();
+      const assignedToEmail = ((document.getElementById('pin-audit-assignee') || {}).value || '').trim();
       if (typeof window.openSubmitFindingModal === 'function') {
-        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(scope, note, 'Pinned Inspector'));
+        window.openSubmitFindingModal(buildFindingModalPayloadFromPinned(scope, note, 'Pinned Inspector', assignedToEmail));
       }
     }
 
@@ -4300,6 +4852,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if (pinScopeSel) {
         pinScopeSel.options[0].text = `Audit Scope: Replicate Group (${pinnedGroupRows.length} pt${pinnedGroupRows.length === 1 ? '' : 's'})`;
         pinScopeSel.options[1].text = `Audit Scope: Single Point Only (${r.record_id.slice(0, 14)})`;
+      }
+      const pinAssigneeEl = document.getElementById('pin-audit-assignee');
+      if (pinAssigneeEl) {
+        pinAssigneeEl.value = window.getDefaultAssigneeEmail
+          ? window.getDefaultAssigneeEmail(r.assigned_to_email || pinAssigneeEl.value || '')
+          : (r.assigned_to_email || pinAssigneeEl.value || '');
       }
       document.getElementById('pinned-actions').classList.remove('hidden');
     }
@@ -4344,18 +4902,45 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       return s.length % 2 !== 0 ? s[mid] : (s[mid - 1] + s[mid]) / 2;
     }
 
-    function computeSliceStatScreening() {
-      const numRows = filteredRows.filter(r => typeof r.value === 'number' && !isNaN(r.value) && r.parameter && r.parameter !== '(metadata only)');
+    function proximateComponentBucket(paramName) {
+      const p = String(paramName || '').trim().toLowerCase();
+      if (p === 'moisture' || p === 'moisture content') return 'moisture';
+      if (p === 'ash' || p === 'ash content') return 'ash';
+      if (p === 'volatile solids' || p === 'volatile matter' || p === 'volatile solids (vs)' || p === 'vs') return 'vs';
+      if (p === 'fixed carbon' || p === 'fixed carbon (fc)' || p === 'fc') return 'fc';
+      return null;
+    }
+
+    function computeSliceStatScreening(rows, opts) {
+      const sourceRows = Array.isArray(rows) ? rows : filteredRows;
+      const activeStatusFilter = (document.getElementById('filter-status') || {}).value || 'qc_pass';
+      const includeFailRows = (opts && typeof opts.includeFailed === 'boolean')
+        ? opts.includeFailed
+        : (activeStatusFilter === 'qc_fail');
+      let excludedFailCount = 0;
+      const numRows = sourceRows.filter(r => {
+        if (typeof r.value !== 'number' || isNaN(r.value) || !r.parameter || r.parameter === '(metadata only)') return false;
+        const isFail = (r.qc_status === 'fail' || r.qc_pass === 'fail');
+        if (!includeFailRows && isFail) {
+          excludedFailCount += 1;
+          return false;
+        }
+        return true;
+      });
       const groupMap = {};
       numRows.forEach(r => {
         const sMethod = getSeriesValue(r, currentDomain);
-        const key = `${r.resource_name}::${r.prepared_sample_name}::${sMethod}::${r.experiment}::${r.parameter}::${r.unit}`;
+        const prepMethod = (window.groupContextLabel ? window.groupContextLabel(r) : (r.prep_method || sMethod)) || sMethod;
+        const key = getReplicateGroupKey(r);
         if (!groupMap[key]) {
           groupMap[key] = {
             group_key: key,
+            replicate_group_key: key,
             resource_name: r.resource_name,
-            prepared_sample: r.prepared_sample_name,
-            method_label: sMethod,
+            analysis_type: r.analysis_type || currentDomain,
+            prepared_sample: r.prepared_sample_name || r.field_sample_name || '—',
+            prep_method: prepMethod,
+            method_label: prepMethod,
             experiment: r.experiment || '—',
             parameter: r.parameter,
             unit: r.unit || '',
@@ -4365,17 +4950,85 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         groupMap[key].rows.push(r);
       });
 
-      const groups = Object.values(groupMap).map(g => {
+      // Pre-pass: compute group-level basic stats so we can calculate parameter-level pooled_sd
+      const rawGroups = Object.values(groupMap).map(g => {
         g.rows.sort((a, b) => ((Number(a.replicate) || 1) - (Number(b.replicate) || 1)) || String(a.record_id).localeCompare(String(b.record_id)));
         const vals = g.rows.map(x => Number(x.value));
         const n = vals.length;
         const mean = sampleMean(vals);
         const sd = sampleSd(vals);
+        return { ...g, vals, n, mean, sd };
+      });
+
+      // Compute parameter-level pooled_sd across all replicate groups (n >= 2) for each (parameter, unit)
+      const pooledByParam = {};
+      rawGroups.forEach(g => {
+        const pKey = `${g.parameter}::${g.unit}`;
+        if (!pooledByParam[pKey]) pooledByParam[pKey] = { sumSq: 0, sumDf: 0 };
+        if (g.n >= 2 && g.sd > 0) {
+          pooledByParam[pKey].sumSq += (g.n - 1) * g.sd * g.sd;
+          pooledByParam[pKey].sumDf += (g.n - 1);
+        }
+      });
+      const pooledSdMap = {};
+      Object.entries(pooledByParam).forEach(([pKey, acc]) => {
+        pooledSdMap[pKey] = acc.sumDf > 0 ? Math.sqrt(acc.sumSq / acc.sumDf) : 0;
+      });
+
+      // Compute Data Portal proximate_sum per (resource_name, experiment, prep_method) stratum:
+      // COALESCE(avg_moisture, 0) + COALESCE(avg_ash, 0) + COALESCE(avg_vs, 100 - COALESCE(avg_fc, 0))
+      const normalizeProxStratumPart = val => {
+        const s = String(val || '').trim();
+        return (!s || s === '—' || s === 'Unrecorded') ? 'unassigned' : s;
+      };
+      const proximateStrataAcc = {};
+      rawGroups.forEach(g => {
+        const domSlug = window.canonicalDomainSlug ? window.canonicalDomainSlug(g.analysis_type) : String(g.analysis_type || currentDomain).toLowerCase();
+        if (domSlug !== 'proximate') return;
+        const bucket = proximateComponentBucket(g.parameter);
+        if (!bucket || g.mean === null || isNaN(g.mean)) return;
+        const sKey = `${g.resource_name}::${normalizeProxStratumPart(g.experiment)}::${normalizeProxStratumPart(g.prep_method)}`;
+        if (!proximateStrataAcc[sKey]) {
+          proximateStrataAcc[sKey] = { moisture: [], ash: [], vs: [], fc: [] };
+        }
+        proximateStrataAcc[sKey][bucket].push(g.mean);
+      });
+      const proximateStrataClosure = {};
+      Object.entries(proximateStrataAcc).forEach(([sKey, buckets]) => {
+        const m = buckets.moisture.length ? sampleMean(buckets.moisture) : null;
+        const a = buckets.ash.length ? sampleMean(buckets.ash) : null;
+        const v = buckets.vs.length ? sampleMean(buckets.vs) : null;
+        const f = buckets.fc.length ? sampleMean(buckets.fc) : null;
+        if ((v === null && f === null) || (m === null && a === null)) return;
+        const vsTerm = v !== null ? v : (f !== null ? (100.0 - f) : 0.0);
+        const sumPct = (m !== null ? m : 0.0) + (a !== null ? a : 0.0) + vsTerm;
+        proximateStrataClosure[sKey] = {
+          proximate_sum_pct: sumPct,
+          out_of_bounds: sumPct > 0.0 && (sumPct < 95.0 || sumPct > 105.0)
+        };
+      });
+
+      const groups = rawGroups.map(g => {
+        const vals = g.vals;
+        const n = g.n;
+        const mean = g.mean;
+        const sd = g.sd;
+        const pKey = `${g.parameter}::${g.unit}`;
+        const pooledSd = pooledSdMap[pKey] || 0;
         const rsd = (n >= 2 && Math.abs(mean) > 1e-12) ? Math.abs(sd / mean) * 100.0 : null;
         const minV = Math.min(...vals);
         const maxV = Math.max(...vals);
+        const identicalReps = n >= 2 && (maxV - minV <= 1e-9 || new Set(vals.map(v => Number(v).toFixed(4))).size === 1);
         const cutoff = getTraceCutoff(currentDomain, g.unit);
         const belowFloor = cutoff > 0 && Math.abs(mean) < cutoff;
+
+        const domSlug = window.canonicalDomainSlug ? window.canonicalDomainSlug(g.analysis_type) : String(g.analysis_type || currentDomain).toLowerCase();
+        const proxBucket = domSlug === 'proximate' ? proximateComponentBucket(g.parameter) : null;
+        const proxStratum = proxBucket
+          ? proximateStrataClosure[`${g.resource_name}::${normalizeProxStratumPart(g.experiment)}::${normalizeProxStratumPart(g.prep_method)}`]
+          : null;
+        const proximateSumPct = proxStratum ? proxStratum.proximate_sum_pct : null;
+        const proximateSumFlag = !!(proxStratum && proxStratum.out_of_bounds);
 
         let dixonQ = null;
         const qCrit = dixonQCrit(n);
@@ -4397,7 +5050,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               dixonCandidateId = indexed[0].id;
               dixonCandidateVal = indexed[0].v;
             }
-            dixonPass = dixonQ <= qCrit;
+            // Guard Dixon outlier flag with rsd !== null && rsd >= 10.0 to match Page 2
+            dixonPass = !(dixonQ > qCrit && rsd !== null && rsd >= 10.0);
           } else {
             dixonQ = 0;
             dixonPass = true;
@@ -4406,12 +5060,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
         const sd3xIds = [];
         let maxZ = null;
-        if (n >= 3 && sd > 1e-12) {
+        const refSd = pooledSd > 1e-12 ? pooledSd : (n >= 3 && sd > 1e-12 ? sd : 0);
+        if (n >= 2 && refSd > 1e-12) {
           const zs = [];
           g.rows.forEach(x => {
-            const z = Math.abs(Number(x.value) - mean) / sd;
+            const diff = Math.abs(Number(x.value) - mean);
+            const z = diff / refSd;
             zs.push(z);
-            if (z > 3.0) sd3xIds.push(x.record_id);
+            if (pooledSd > 1e-12 ? (diff > 3.0 * pooledSd) : (n >= 3 && z > 3.0)) {
+              sd3xIds.push(x.record_id);
+            }
           });
           maxZ = Math.max(...zs);
         }
@@ -4419,7 +5077,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const rawTriggers = [];
         if (dixonPass === false) rawTriggers.push('Dixon Q (α=0.05)');
         if (rsd !== null && rsd > 20.0) rawTriggers.push('RSD_within > 20%');
-        if (sd3xIds.length > 0) rawTriggers.push('|x - mean| > 3×SD');
+        if (sd3xIds.length > 0) rawTriggers.push('|x - mean| > 3×SD_pooled');
+        if (identicalReps) rawTriggers.push('Identical Replicates (SD=0)');
+        if (proximateSumFlag) rawTriggers.push(`Proximate Sum (${proximateSumPct.toFixed(1)}% outside 95–105%)`);
 
         const isFlaggedActive = (!suppressTraceFlags || !belowFloor) && rawTriggers.length > 0;
         const isSuppressedTraceFlag = belowFloor && rawTriggers.length > 0;
@@ -4429,7 +5089,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           n,
           mean,
           sd,
+          pooled_sd: pooledSd,
           rsd_pct: rsd,
+          identical_replicates: identicalReps,
+          proximate_sum_pct: proximateSumPct,
+          raw_proximate_sum: proximateSumFlag,
+          active_proximate_sum: (!suppressTraceFlags || !belowFloor) && proximateSumFlag,
           spread: maxV - minV,
           min_abundance_cutoff: cutoff,
           below_abundance_cutoff: belowFloor,
@@ -4446,11 +5111,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         };
       });
 
-      // Compute parameter-level Within-Group vs Between-Group RSD
+      // Stratify parameter-level Within-Replicate vs Between-Sample RSD by 5-tuple:
+      // (resource_name, analysis_type, parameter, prep_method, unit)
       const byParam = {};
       groups.forEach(g => {
-        const pKey = `${g.parameter}::${g.unit}`;
-        if (!byParam[pKey]) byParam[pKey] = { parameter: g.parameter, unit: g.unit, groups: [] };
+        const pKey = `${g.resource_name}::${g.analysis_type}::${g.parameter}::${g.prep_method}::${g.unit}`;
+        if (!byParam[pKey]) {
+          byParam[pKey] = {
+            resource_name: g.resource_name,
+            analysis_type: g.analysis_type,
+            parameter: g.parameter,
+            prep_method: g.prep_method,
+            unit: g.unit,
+            groups: []
+          };
+        }
         byParam[pKey].groups.push(g);
       });
 
@@ -4460,25 +5135,40 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const withinList = gs
           .filter(x => x.rsd_pct !== null && (!suppressTraceFlags || !x.below_abundance_cutoff))
           .map(x => x.rsd_pct);
+        const withinSdList = gs
+          .filter(x => x.n >= 2 && (!suppressTraceFlags || !x.below_abundance_cutoff))
+          .map(x => x.sd);
         const gMeans = gs.map(x => x.mean);
+        const gm = sampleMean(gMeans);
+        let betweenSd = null;
         let betweenRsd = null;
         if (gs.length >= 2) {
-          const gm = sampleMean(gMeans);
-          const gsd = sampleSd(gMeans);
+          betweenSd = sampleSd(gMeans);
           const allBelow = cutoff > 0 && gs.every(x => x.below_abundance_cutoff);
-          if (Math.abs(gm) > 1e-12 && (!suppressTraceFlags || !allBelow)) {
-            betweenRsd = Math.abs(gsd / gm) * 100.0;
+          if (Math.abs(gm) > 1e-9 && (!suppressTraceFlags || !allBelow)) {
+            betweenRsd = (betweenSd / Math.abs(gm)) * 100.0;
           }
         }
-        gs.forEach(x => { x.between_group_rsd_pct = betweenRsd; });
+        gs.forEach(x => {
+          x.between_group_sd = betweenSd;
+          x.between_group_rsd_pct = betweenRsd;
+          x.k_method_groups = gs.length;
+        });
         return {
+          resource_name: pb.resource_name,
+          analysis_type: pb.analysis_type,
           parameter: pb.parameter,
+          prep_method: pb.prep_method,
           unit: pb.unit,
+          k_groups: gs.length,
           n_groups: gs.length,
           n_multi_rep_groups: gs.filter(x => x.n >= 2).length,
+          grand_mean: gm,
+          within_sd_median: medianVal(withinSdList),
           within_rsd_mean: withinList.length ? sampleMean(withinList) : null,
           within_rsd_median: medianVal(withinList),
           within_rsd_max: withinList.length ? Math.max(...withinList) : null,
+          between_sd: betweenSd,
           between_group_rsd: betweenRsd,
           n_flagged: gs.filter(x => x.is_flagged).length,
           n_trace_suppressed: gs.filter(x => x.is_suppressed_trace_flag).length,
@@ -4487,7 +5177,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }).sort((a, b) => (b.n_flagged - a.n_flagged) || ((b.within_rsd_max || 0) - (a.within_rsd_max || 0)));
 
       groups.sort((a, b) => (Number(b.is_flagged) - Number(a.is_flagged)) || ((b.rsd_pct || 0) - (a.rsd_pct || 0)));
-      lastScreenedGroups = groups;
+      if (!Array.isArray(rows)) {
+        lastScreenedGroups = groups;
+      }
 
       const allWithin = paramBreakdown.filter(p => p.within_rsd_median !== null).map(p => p.within_rsd_median);
       const allBetween = paramBreakdown.filter(p => p.between_group_rsd !== null).map(p => p.between_group_rsd);
@@ -4499,8 +5191,26 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         medianBetween: medianVal(allBetween),
         flaggedCount: groups.filter(g => g.is_flagged).length,
         suppressedCount: groups.filter(g => g.is_suppressed_trace_flag).length,
-        multiRepCount: groups.filter(g => g.n >= 2).length
+        multiRepCount: groups.filter(g => g.n >= 2).length,
+        excluded_fail_count: excludedFailCount
       };
+    }
+    window.computeSliceStatScreening = computeSliceStatScreening;
+
+    function isExplorerGroupMatchingFlagFilter(g, flagMode) {
+      if (!flagMode || flagMode === 'all') return true;
+      const isTraceSuppressed = suppressTraceFlags && g.below_abundance_cutoff && g.raw_triggered_tests.length > 0;
+      const activeFlag = g.is_flagged && !isTraceSuppressed;
+      if (flagMode === 'active' || flagMode === 'flagged') return activeFlag;
+      if (flagMode === 'dixon') return !isTraceSuppressed && g.dixon_pass === false;
+      if (flagMode === 'rsd_gt_10' || flagMode === 'rsd10') return !isTraceSuppressed && g.rsd_pct !== null && g.rsd_pct > 10.0;
+      if (flagMode === 'rsd_gt_20' || flagMode === 'rsd20' || flagMode === 'rsd') return !isTraceSuppressed && g.rsd_pct !== null && g.rsd_pct > 20.0;
+      if (flagMode === 'sd3x' || flagMode === 'sd3') return !isTraceSuppressed && Array.isArray(g.sd3x_candidate_ids) && g.sd3x_candidate_ids.length > 0;
+      if (flagMode === 'identical') return !!g.identical_replicates || (g.n >= 2 && g.sd !== null && g.sd <= 1e-12);
+      if (flagMode === 'proximate_sum' || flagMode === 'proximate') return !isTraceSuppressed && !!g.raw_proximate_sum;
+      if (flagMode === 'suppressed') return g.below_abundance_cutoff && g.raw_triggered_tests.length > 0;
+      if (flagMode === 'clean') return g.n >= 2 && !activeFlag;
+      return true;
     }
 
     function toggleStatDrawer() {
@@ -4510,7 +5220,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function toggleSuppressTrace(checked) {
       suppressTraceFlags = !!checked;
-      renderStatScreeningDrawer();
+      const sidebarChk = document.getElementById('chk-explorer-suppress-trace');
+      if (sidebarChk) sidebarChk.checked = suppressTraceFlags;
+      applyFilters({ push: false });
     }
 
     function setStatFilterMode(mode) {
@@ -4539,12 +5251,32 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       renderStatScreeningDrawer();
     }
 
+    function escapeHtml(val) {
+      if (typeof window.escapeHtml === 'function' && window.escapeHtml !== escapeHtml) {
+        return window.escapeHtml(val);
+      }
+      return String(val ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
     function renderStatScreeningDrawer() {
       const el = document.getElementById('stat-screening-drawer');
       if (!el) return;
       const stats = computeSliceStatScreening();
+      const sidebarSupBadge = document.getElementById('explorer-suppressed-count-badge');
+      if (sidebarSupBadge) {
+        sidebarSupBadge.textContent = `${stats.suppressedCount} suppressed`;
+      }
+      const sidebarSupChk = document.getElementById('chk-explorer-suppress-trace');
+      if (sidebarSupChk) {
+        sidebarSupChk.checked = suppressTraceFlags;
+      }
       const withinStr = stats.medianWithin !== null ? `${stats.medianWithin.toFixed(1)}%` : 'Singleton (n=1)';
-      const betweenStr = stats.medianBetween !== null ? `${stats.medianBetween.toFixed(1)}%` : 'Single group';
+      const betweenStr = stats.medianBetween !== null ? `${stats.medianBetween.toFixed(1)}%` : 'N/A (n=1 method group)';
 
       const flagBadge = stats.flaggedCount > 0
         ? `<span class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30">⚑ ${stats.flaggedCount} Flagged Replicate Group${stats.flaggedCount === 1 ? '' : 's'}</span>`
@@ -4556,41 +5288,30 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       let bodyHtml = '';
       if (statDrawerOpen) {
-        const paramRowsHtml = stats.paramBreakdown.slice(0, 18).map(p => {
+        const paramRowsHtml = stats.paramBreakdown.slice(0, 24).map(p => {
+          const meanWithinSd = (p.grand_mean !== null && p.within_sd_median !== null)
+            ? `${p.grand_mean.toFixed(2)} ± ${p.within_sd_median.toFixed(2)}`
+            : (p.grand_mean !== null ? `${p.grand_mean.toFixed(2)} ± —` : '—');
           const wMed = p.within_rsd_median !== null ? `${p.within_rsd_median.toFixed(1)}%` : '—';
           const wMax = p.within_rsd_max !== null ? `${p.within_rsd_max.toFixed(1)}%` : '—';
-          const bRsd = p.between_group_rsd !== null ? `${p.between_group_rsd.toFixed(1)}%` : '—';
-          let interp = '<span class="text-[var(--muted-foreground)]">Singleton / 1 group</span>';
-          if (p.within_rsd_median !== null && p.between_group_rsd !== null) {
-            if (p.between_group_rsd > p.within_rsd_median * 1.5 && p.within_rsd_median <= 15) {
-              interp = '<span class="text-emerald-600 dark:text-emerald-400 font-medium">Sample/method driven (Between &gt; Within)</span>';
-            } else if (p.within_rsd_max !== null && p.within_rsd_max > 20) {
-              interp = '<span class="text-amber-600 dark:text-amber-300 font-medium">Assay replicate scatter (&gt;20% Within-RSD)</span>';
-            } else {
-              interp = '<span class="text-[#00B5E2] font-medium">Uniformly tight precision</span>';
-            }
-          } else if (p.within_rsd_max !== null && p.within_rsd_max > 20) {
-            interp = '<span class="text-amber-600 dark:text-amber-300 font-medium">Assay replicate scatter (&gt;20% Within-RSD)</span>';
-          } else if (p.within_rsd_median !== null) {
-            interp = '<span class="text-emerald-600 dark:text-emerald-400 font-medium">High technical repeatability</span>';
-          }
-          const fCell = p.n_flagged > 0
-            ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 font-mono font-semibold">${p.n_flagged} / ${p.n_multi_rep_groups}</span>`
-            : `<span class="text-[var(--muted-foreground)] font-mono">0 / ${p.n_multi_rep_groups}</span>`;
+          const bSd = (p.k_groups >= 2 && p.between_sd !== null) ? p.between_sd.toFixed(2) : '<span class="text-[var(--muted-foreground)]">N/A (n=1 method group)</span>';
+          const bRsd = (p.k_groups >= 2 && p.between_group_rsd !== null) ? `${p.between_group_rsd.toFixed(1)}%` : '<span class="text-[var(--muted-foreground)] font-normal">N/A (n=1 method group)</span>';
+          const resLabel = explorerBlindMode ? 'Masked Resource' : `${p.resource_name} · ${p.prep_method}`;
           return `
             <tr class="border-b border-[var(--border)]">
+              <td class="py-1 px-2 font-mono text-[11px] text-[var(--muted-foreground)]">${escapeHtml(resLabel)}</td>
               <td class="py-1 px-2 font-mono font-semibold text-[var(--foreground)]">${formatParamName(p.parameter, currentDomain)} <span class="text-[var(--muted-foreground)] font-normal">(${p.unit || '—'})</span></td>
-              <td class="py-1 px-2 text-right font-mono">${p.n_multi_rep_groups} / ${p.n_groups}</td>
+              <td class="py-1 px-2 text-right font-mono">${p.n_multi_rep_groups} / ${p.k_groups}</td>
+              <td class="py-1 px-2 text-right font-mono">${meanWithinSd}</td>
               <td class="py-1 px-2 text-right font-mono font-semibold">${wMed} <span class="text-[var(--muted-foreground)] font-normal">(max ${wMax})</span></td>
+              <td class="py-1 px-2 text-right font-mono">${bSd}</td>
               <td class="py-1 px-2 text-right font-mono font-semibold text-[#00B5E2]">${bRsd}</td>
-              <td class="py-1 px-2 text-center">${fCell}</td>
-              <td class="py-1 px-2">${interp}</td>
             </tr>
           `;
         }).join('');
 
         const shownGroups = stats.groups.filter(g => statFilterMode === 'all' ? g.n >= 2 : g.is_flagged).slice(0, 40);
-        const groupRowsHtml = shownGroups.map(g => {
+        const groupRowsHtml = shownGroups.map((g, gIdx) => {
           const repBadges = g.rows.map(r => {
             const isCand = r.record_id === g.dixon_candidate_id || g.sd3x_candidate_ids.includes(r.record_id);
             const cls = isCand
@@ -4601,41 +5322,120 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           }).join(' ');
 
           const trigBadges = [];
-          if (g.dixon_pass === false && (!suppressTraceFlags || !g.below_abundance_cutoff)) {
-            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-mono">Dixon Q=${g.dixon_q.toFixed(2)} &gt; ${g.dixon_q_crit.toFixed(2)}</span>`);
+          const allowFlag = !g.below_abundance_cutoff || !suppressTraceFlags;
+          if (g.dixon_pass === false && allowFlag) {
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/30 font-mono" title="Dixon Q=${g.dixon_q.toFixed(2)} > Q_crit=${g.dixon_q_crit.toFixed(2)}">⚑ Dixon Outlier</span>`);
           }
-          if (g.rsd_pct !== null && g.rsd_pct > 20 && (!suppressTraceFlags || !g.below_abundance_cutoff)) {
-            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 font-mono">RSD=${g.rsd_pct.toFixed(1)}%</span>`);
+          if (g.rsd_pct !== null && g.rsd_pct > 20 && allowFlag) {
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-600 dark:text-amber-300 border border-amber-500/30 font-mono" title="Within-group RSD=${g.rsd_pct.toFixed(1)}%">⚑ RSD &gt; 20%</span>`);
           }
-          if (g.sd3x_candidate_ids.length > 0 && (!suppressTraceFlags || !g.below_abundance_cutoff)) {
-            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 font-mono">&gt;3×SD</span>`);
+          if (g.sd3x_candidate_ids.length > 0 && allowFlag) {
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-600 dark:text-purple-300 border border-purple-500/30 font-mono" title="Exceeds 3×Pooled SD (${(g.pooled_sd || 0).toFixed(3)})">⚑ &gt;3×SD_pooled</span>`);
+          }
+          if (g.identical_replicates && allowFlag) {
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-cyan-500/15 text-cyan-600 dark:text-cyan-300 border border-cyan-500/30 font-mono" title="Zero variance across n>=2 replicates">⚑ Identical Replicates</span>`);
+          }
+          if (g.raw_proximate_sum && allowFlag) {
+            const pSumStr = g.proximate_sum_pct !== null && g.proximate_sum_pct !== undefined ? `${g.proximate_sum_pct.toFixed(1)}%` : 'outside 95–105%';
+            trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-orange-500/15 text-orange-600 dark:text-orange-300 border border-orange-500/30 font-mono" title="Data Portal proximate_sum = ${pSumStr} (outside 95–105%)">⚑ Proximate Sum</span>`);
           }
           if (g.below_abundance_cutoff && g.raw_triggered_tests.length > 0) {
             trigBadges.push(`<span class="px-1.5 py-0.5 rounded bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)] font-mono">Trace (&lt;${g.min_abundance_cutoff} ${g.unit})</span>`);
           }
+          const hasActiveFlagBadge = trigBadges.length > 0;
           if (!trigBadges.length) {
             trigBadges.push(`<span class="text-emerald-600 dark:text-emerald-400 font-mono">Pass (Q=${g.dixon_q !== null ? g.dixon_q.toFixed(2) : '—'})</span>`);
           }
+          if (hasActiveFlagBadge || g.is_flagged) {
+            const safeShowKey = String(g.replicate_group_key || g.group_key || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowRes = String(g.resource_name || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowAt = String(g.analysis_type || currentDomain || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowParam = String(g.parameter || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowSample = String(g.prepared_sample || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            const safeShowCand = String(g.dixon_candidate_id || (g.sd3x_candidate_ids && g.sd3x_candidate_ids[0]) || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+            trigBadges.push(`<button type="button" class="btn-show-me-flag px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--card)] text-[#00B5E2] border border-[#00B5E2]/40 hover:bg-[#00B5E2]/10 transition" data-group-key="${safeShowKey}" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ replicateGroupKey: '${safeShowKey}', resource: '${safeShowRes}', analysisType: '${safeShowAt}', parameter: '${safeShowParam}', preparedSample: '${safeShowSample}', outlierRecordId: '${safeShowCand}' }, this)" title="Show flagged replicate group and outlier in slice context">👁 Show me</button>`);
+          }
 
           const targetId = g.dixon_candidate_id || (g.rows[0] && g.rows[0].record_id) || '';
+          const sampleLabel = explorerBlindMode ? `Masked Sample #${gIdx + 1}` : g.prepared_sample;
+          const subLabel = explorerBlindMode ? 'Blind Review Mode' : `${g.resource_name} · ${g.method_label}`;
+          const betweenCellStr = (g.k_method_groups >= 2 && g.between_group_rsd_pct !== null && g.between_group_rsd_pct !== undefined)
+            ? `${g.between_group_rsd_pct.toFixed(1)}%`
+            : 'N/A (n=1 method group)';
           return `
             <tr class="border-b border-[var(--border)]">
-              <td class="py-1.5 px-2 font-mono font-semibold text-[#00B5E2]">${g.prepared_sample}<div class="text-[10px] font-sans font-normal text-[var(--muted-foreground)]">${g.resource_name} · ${g.method_label}</div></td>
+              <td class="py-1.5 px-2 font-mono font-semibold text-[#00B5E2]">${escapeHtml(sampleLabel)}<div class="text-[10px] font-sans font-normal text-[var(--muted-foreground)]">${escapeHtml(subLabel)}</div></td>
               <td class="py-1.5 px-2 font-mono font-semibold">${formatParamName(g.parameter, currentDomain)} <span class="text-[var(--muted-foreground)] font-normal">(${g.unit})</span></td>
               <td class="py-1.5 px-2"><div class="flex flex-wrap gap-1">${repBadges}</div></td>
               <td class="py-1.5 px-2 text-right font-mono">${g.mean.toFixed(2)} ± ${g.sd.toFixed(2)}</td>
-              <td class="py-1.5 px-2 text-right font-mono font-semibold ${g.rsd_pct > 20 ? 'text-amber-600 dark:text-amber-300' : ''}">${g.rsd_pct !== null ? g.rsd_pct.toFixed(1) + '%' : '—'} <span class="text-[var(--muted-foreground)] font-normal">/ ${g.between_group_rsd_pct !== null && g.between_group_rsd_pct !== undefined ? g.between_group_rsd_pct.toFixed(1) + '%' : '—'}</span></td>
+              <td class="py-1.5 px-2 text-right font-mono font-semibold ${g.rsd_pct > 20 ? 'text-amber-600 dark:text-amber-300' : ''}">${g.rsd_pct !== null ? g.rsd_pct.toFixed(1) + '%' : '—'} <span class="text-[var(--muted-foreground)] font-normal">/ ${betweenCellStr}</span></td>
               <td class="py-1.5 px-2"><div class="flex flex-wrap gap-1">${trigBadges.join(' ')}</div></td>
               <td class="py-1.5 px-2 text-right"><button onclick="pinRecordById('${targetId}', '${g.parameter}')" class="px-2 py-0.5 rounded bg-[var(--card)] hover:border-[#00B5E2] border border-[var(--border)] text-[var(--foreground)] font-medium">Pin</button></td>
             </tr>
           `;
         }).join('');
 
+        // Section 3: Resource Lab & Sample Lineage Notes
+        const activeResourceNames = Array.from(new Set(filteredRows.map(r => r.resource_name).filter(Boolean)));
+        const activePrepNames = Array.from(new Set(filteredRows.map(r => r.prepared_sample_name).filter(Boolean)));
+        const activeFieldNames = Array.from(new Set(filteredRows.map(r => r.field_sample_name).filter(Boolean)));
+
+        const resourceNoteItems = [];
+        activeResourceNames.forEach((rn, idx) => {
+          const meta = (typeof RESOURCES_BY_NAME !== 'undefined' && RESOURCES_BY_NAME[rn]) ? RESOURCES_BY_NAME[rn] : null;
+          if (!meta) return;
+          const noteText = [meta.lab_notes, meta.notes, meta.description, meta.processing_notes]
+            .filter(x => x && String(x).trim() && String(x).trim() !== 'None')
+            .join(' · ');
+          if (noteText) {
+            const label = explorerBlindMode ? `Masked Resource #${idx + 1}` : rn;
+            resourceNoteItems.push(`<div class="p-2 rounded border border-[var(--border)] bg-[var(--card)]"><span class="font-mono font-semibold text-[#00B5E2]">${escapeHtml(label)}</span> <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#00B5E2]/10 text-[#00B5E2] ml-1">Resource Lab Notes</span><div class="mt-1 text-[var(--foreground)]">${escapeHtml(noteText)}</div></div>`);
+          }
+        });
+
+        const prepNoteItems = [];
+        activePrepNames.forEach((pn, idx) => {
+          const pMeta = (typeof PREP_SAMPLES_BY_NAME !== 'undefined' && PREP_SAMPLES_BY_NAME[pn]) ? PREP_SAMPLES_BY_NAME[pn] : null;
+          const rowNotes = Array.from(new Set(filteredRows.filter(r => r.prepared_sample_name === pn).map(r => r.prep_notes || r.sample_note).filter(Boolean)));
+          const noteParts = [];
+          if (pMeta) {
+            [pMeta.notes, pMeta.prep_notes, pMeta.description, pMeta.prep_method].filter(x => x && String(x).trim() && String(x).trim() !== 'None').forEach(x => noteParts.push(String(x).trim()));
+          }
+          rowNotes.forEach(x => { if (!noteParts.includes(String(x).trim())) noteParts.push(String(x).trim()); });
+          if (noteParts.length > 0) {
+            const label = explorerBlindMode ? `Masked Prep Sample #${idx + 1}` : pn;
+            prepNoteItems.push(`<div class="p-2 rounded border border-[var(--border)] bg-[var(--card)]"><span class="font-mono font-semibold text-emerald-500">${escapeHtml(label)}</span> <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-500 ml-1">Preparation Lineage</span><div class="mt-1 text-[var(--foreground)]">${escapeHtml(noteParts.join(' · '))}</div></div>`);
+          }
+        });
+
+        const fieldNoteItems = [];
+        activeFieldNames.forEach((fn, idx) => {
+          const fMeta = (typeof FIELD_SAMPLES_BY_NAME !== 'undefined' && FIELD_SAMPLES_BY_NAME[fn]) ? FIELD_SAMPLES_BY_NAME[fn] : null;
+          if (!fMeta) return;
+          const noteParts = [fMeta.notes, fMeta.field_notes, fMeta.collection_notes, fMeta.sample_source, fMeta.county]
+            .filter(x => x && String(x).trim() && String(x).trim() !== 'None');
+          if (noteParts.length > 0) {
+            const label = explorerBlindMode ? `Masked Field Sample #${idx + 1}` : fn;
+            fieldNoteItems.push(`<div class="p-2 rounded border border-[var(--border)] bg-[var(--card)]"><span class="font-mono font-semibold text-amber-500">${escapeHtml(label)}</span> <span class="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 ml-1">Field Sample Lineage</span><div class="mt-1 text-[var(--foreground)]">${escapeHtml(noteParts.join(' · '))}</div></div>`);
+          }
+        });
+
+        const obsWithNotes = filteredRows.filter(r => r.note && String(r.note).trim() && String(r.note).trim() !== 'None').slice(0, 12);
+        const obsNoteItems = obsWithNotes.map((r, idx) => {
+          const sLabel = explorerBlindMode ? `Masked Obs #${idx + 1}` : `${r.resource_name} · ${r.prepared_sample_name || r.field_sample_name || r.record_id}`;
+          return `<div class="p-2 rounded border border-[var(--border)] bg-[var(--card)]"><span class="font-mono font-semibold text-purple-400">${escapeHtml(sLabel)}</span> <span class="font-mono text-[10px] text-[var(--muted-foreground)] ml-1">(${escapeHtml(r.parameter || 'obs')})</span><div class="mt-1 text-[var(--foreground)]">${escapeHtml(String(r.note).trim())}</div></div>`;
+        });
+
+        const allNotesCombined = [...resourceNoteItems, ...prepNoteItems, ...fieldNoteItems, ...obsNoteItems];
+        const labNotesHtml = allNotesCombined.length > 0
+          ? `<div class="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[200px] overflow-y-auto p-2 rounded border border-[var(--border)] bg-[var(--background)]">${allNotesCombined.join('')}</div>`
+          : `<div class="p-3 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]">No lab, preparation, or field lineage notes recorded for the active resource slice (${activeResourceNames.length} resource${activeResourceNames.length === 1 ? '' : 's'}).</div>`;
+
         bodyHtml = `
           <div class="p-3 border-t border-[var(--border)] bg-[var(--card)] space-y-3 text-xs">
             <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[var(--border)]">
               <div class="text-[var(--muted-foreground)]">
-                Screens replicate groups (<span class="font-mono">Sample × Method × Exp × Parameter</span>) using <strong class="text-[var(--foreground)]">Dixon's Q-Test (α=0.05, n≥3)</strong>, <strong class="text-[var(--foreground)]">Within-Group RSD &gt; 20%</strong>, and <strong class="text-[var(--foreground)]">|x − mean| &gt; 3×SD</strong>, alongside <strong class="text-[var(--foreground)]">Between-Group RSD</strong> across samples/batches.
+                Screens canonical 6-part replicate groups (<span class="font-mono">Resource × Analysis × Sample × Method × Parameter × Unit</span>) using <strong class="text-[var(--foreground)]">Dixon's Q-Test (α=0.05, n≥3, RSD≥10%)</strong>, <strong class="text-[var(--foreground)]">Within-Group RSD &gt; 20%</strong>, <strong class="text-[var(--foreground)]">|x − mean| &gt; 3×SD_pooled</strong>, <strong class="text-[var(--foreground)]">Identical Replicates (SD=0)</strong>, and <strong class="text-[var(--foreground)]">Proximate Sum (Outside 95–105%)</strong>.
               </div>
               <div class="flex flex-wrap items-center gap-2">
                 <label class="inline-flex items-center gap-1.5 px-2 py-1 rounded bg-[var(--background)] border border-[var(--border)] cursor-pointer">
@@ -4646,33 +5446,40 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <button onclick="setStatFilterMode('flagged')" class="px-2 py-0.5 rounded ${statFilterMode === 'flagged' ? 'bg-[#00B5E2] text-slate-950 font-semibold' : 'text-[var(--muted-foreground)]'}">Flagged (${stats.flaggedCount})</button>
                   <button onclick="setStatFilterMode('all')" class="px-2 py-0.5 rounded ${statFilterMode === 'all' ? 'bg-[#00B5E2] text-slate-950 font-semibold' : 'text-[var(--muted-foreground)]'}">All Multi-Rep (${stats.multiRepCount})</button>
                 </div>
-                ${stats.flaggedCount > 0 ? `<button onclick="addFlaggedGroupsToExport()" class="px-2 py-1 rounded bg-[#00B5E2] text-slate-950 font-semibold hover:opacity-90">+ Add Flagged to Export Tray</button>` : ''}
+                <a href="resource_qc_outlier_dashboard.html${selectedResources.size === 1 ? '?resource=' + encodeURIComponent(Array.from(selectedResources)[0]) : ''}" class="px-2 py-1 rounded border border-[#00B5E2]/50 bg-[#00B5E2]/10 text-[#00B5E2] font-semibold hover:bg-[#00B5E2]/20 transition-colors">Open Statistical QC &amp; Outlier Dashboard ↗</a>
+                <a href="resource_qc_audit_workbench.html" class="px-2 py-1 rounded border border-amber-500/40 bg-amber-500/10 text-amber-400 font-semibold hover:bg-amber-500/20 transition-colors">Open QC Audit Workbench ↗</a>
               </div>
             </div>
 
-            <!-- Section A: Within vs Between Group RSD Table -->
+            <!-- Section 1: Within-Replicate vs. Between-Sample RSD Summary -->
             <div>
-              <div class="font-semibold text-[var(--foreground)] mb-1">1. Within-Replicate-Group vs. Between-Replicate-Group RSD by Parameter</div>
+              <div class="font-semibold text-[var(--foreground)] mb-1">1. Within-Replicate vs. Between-Sample RSD Summary</div>
+              <div class="mb-2 px-2.5 py-1.5 rounded border border-[var(--border)] bg-[var(--background)] font-mono text-[11px] text-[var(--muted-foreground)] flex flex-wrap gap-x-4 gap-y-1">
+                <span><strong class="text-[var(--foreground)]">Within-Replicate RSD</strong> = SD_within / |Mean_group| × 100%</span>
+                <span><strong class="text-[var(--foreground)]">Pooled SD</strong> = sqrt(Σ(n_g - 1)s_g² / Σ(n_g - 1))</span>
+                <span><strong class="text-[#00B5E2]">Between-Sample RSD</strong> = SD(group means) / |Grand Mean| × 100% <span class="text-[10px]">(stratified by resource, analysis_type, parameter, prep_method, unit)</span></span>
+              </div>
               <div class="overflow-x-auto max-h-[190px] overflow-y-auto border border-[var(--border)] rounded bg-[var(--background)]">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead>
                     <tr class="border-b border-[var(--border)] text-[var(--muted-foreground)]">
-                      <th class="py-1 px-2">Parameter</th>
-                      <th class="py-1 px-2 text-right">Multi-Rep / Total Groups</th>
-                      <th class="py-1 px-2 text-right">Within-Group RSD (Med / Max)</th>
-                      <th class="py-1 px-2 text-right">Between-Group RSD</th>
-                      <th class="py-1 px-2 text-center">Flagged</th>
-                      <th class="py-1 px-2">Variance Driver</th>
+                      <th class="py-1 px-2">Resource &amp; Method</th>
+                      <th class="py-1 px-2">Parameter (Unit)</th>
+                      <th class="py-1 px-2 text-right">Replicate Groups</th>
+                      <th class="py-1 px-2 text-right">Mean ± Within SD</th>
+                      <th class="py-1 px-2 text-right">Within RSD%</th>
+                      <th class="py-1 px-2 text-right">Between-Sample SD</th>
+                      <th class="py-1 px-2 text-right">Between-Sample RSD%</th>
                     </tr>
                   </thead>
-                  <tbody>${paramRowsHtml || '<tr><td colspan="6" class="py-3 text-center text-[var(--muted-foreground)]">No numeric parameter groups in current slice.</td></tr>'}</tbody>
+                  <tbody>${paramRowsHtml || '<tr><td colspan="7" class="py-3 text-center text-[var(--muted-foreground)]">No numeric parameter groups in current slice.</td></tr>'}</tbody>
                 </table>
               </div>
             </div>
 
-            <!-- Section B: Flagged Replicate Groups Table -->
+            <!-- Section 2: Flagged Replicate Groups -->
             <div>
-              <div class="font-semibold text-[var(--foreground)] mb-1">2. ${statFilterMode === 'flagged' ? 'Flagged Replicate Groups & Candidate Outlier Replicates (★)' : 'All Multi-Replicate Groups'}</div>
+              <div class="font-semibold text-[var(--foreground)] mb-1">2. Flagged Replicate Groups ${statFilterMode === 'all' ? '(Showing All Multi-Replicate Groups)' : '&amp; Candidate Outlier Replicates (★)'}</div>
               ${shownGroups.length === 0 ? `<div class="p-3 rounded border border-[var(--border)] bg-[var(--background)] text-[var(--muted-foreground)]">✓ Zero replicate groups triggered candidate outlier flags under current filter settings.</div>` : `
               <div class="overflow-x-auto max-h-[240px] overflow-y-auto border border-[var(--border)] rounded bg-[var(--background)]">
                 <table class="w-full text-left border-collapse text-xs">
@@ -4691,6 +5498,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                 </table>
               </div>`}
             </div>
+
+            <!-- Section 3: Resource Lab & Sample Lineage Notes -->
+            <div id="explorer-lab-notes-panel">
+              <div class="font-semibold text-[var(--foreground)] mb-1">3. Resource Lab &amp; Sample Lineage Notes</div>
+              ${labNotesHtml}
+            </div>
           </div>
         `;
       }
@@ -4699,13 +5512,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         <div class="rounded-lg border border-[var(--border)] bg-[var(--background)] overflow-hidden">
           <div onclick="toggleStatDrawer()" class="px-3 py-2 flex flex-wrap items-center justify-between gap-2 cursor-pointer hover:bg-[var(--secondary)]/30 transition-colors">
             <div class="flex flex-wrap items-center gap-2">
-              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-[#00B5E2]/15 text-[#00B5E2] font-semibold">Stat QC Screen</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-mono uppercase tracking-wider bg-[#00B5E2]/15 text-[#00B5E2] font-semibold">Statistical Snapshot</span>
               <span class="text-xs font-semibold text-[var(--foreground)]">Replicate Precision &amp; Candidate Outlier Screening</span>
               <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Within-RSD: <strong class="text-[var(--foreground)]">${withinStr}</strong> · Between-RSD: <strong class="text-[#00B5E2]">${betweenStr}</strong></span>
             </div>
             <div class="flex flex-wrap items-center gap-2">
               ${flagBadge}
               ${traceBadge}
+              <a href="resource_qc_outlier_dashboard.html${selectedResources.size === 1 ? '?resource=' + encodeURIComponent(Array.from(selectedResources)[0]) : ''}" onclick="event.stopPropagation()" class="px-2 py-0.5 rounded border border-[#00B5E2]/40 bg-[#00B5E2]/10 text-[#00B5E2] text-[11px] font-semibold hover:bg-[#00B5E2]/20 transition-colors">Open Statistical QC &amp; Outlier Dashboard ↗</a>
               <span class="px-2 py-0.5 rounded border border-[var(--border)] bg-[var(--card)] text-[11px] font-medium text-[var(--foreground)]">${statDrawerOpen ? '▾ Hide Screening' : '▸ Expand Flagged Samples & RSD Table'}</span>
             </div>
           </div>
@@ -4750,7 +5564,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           ...r,
           audit_note: auditNote || r.note || ''
         });
-        document.getElementById('tray-count').textContent = exportRows.length;
+        const cntEl = document.getElementById('tray-count');
+        if (cntEl) cntEl.textContent = exportRows.length;
       }
     }
 
@@ -4769,68 +5584,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function renderExportTable() {
       const tbody = document.getElementById('export-tbody');
-      if (!exportRows.length) {
-        tbody.innerHTML = `<tr><td colspan="10" class="py-8 text-center text-[var(--muted-foreground)]">No records added yet. Click points in the scatter or strip plot to inspect and add them, or click "+ Add Current Slice".</td></tr>`;
-        return;
-      }
-      tbody.innerHTML = exportRows.map((r, i) => {
-        const valStr = r.value !== null && !isNaN(r.value) ? `${r.value.toFixed(2)} ${r.unit}` : 'metadata';
-        return `
-          <tr>
-            <td class="py-1 px-1.5 font-mono text-[#00B5E2]">${r.record_id}</td>
-            <td class="py-1 px-1.5">${r.analysis_type}</td>
-            <td class="py-1 px-1.5 font-mono">${r.prepared_sample_name}</td>
-            <td class="py-1 px-1.5">${r.resource_name}</td>
-            <td class="py-1 px-1.5">${getSeriesValue(r, r.domain)}</td>
-            <td class="py-1 px-1.5 font-mono">${formatParamName(r.parameter, r.domain)}</td>
-            <td class="py-1 px-1.5 font-semibold font-mono">${valStr}</td>
-            <td class="py-1 px-1.5">${r.qc_pass} · ${r.data_status}</td>
-            <td class="py-1 px-1.5">${r.audit_note || '—'}</td>
-            <td class="py-1 px-1 text-right"><button onclick="removeExportRow(${i})" class="text-xs text-rose-500 hover:underline">Remove</button></td>
-          </tr>
-        `;
-      }).join('');
+      if (!tbody) return;
     }
 
     function removeExportRow(idx) {
       exportRows.splice(idx, 1);
-      document.getElementById('tray-count').textContent = exportRows.length;
+      const cntEl = document.getElementById('tray-count');
+      if (cntEl) cntEl.textContent = exportRows.length;
       renderExportTable();
     }
 
     function clearExport() {
       exportRows = [];
-      document.getElementById('tray-count').textContent = '0';
+      const cntEl = document.getElementById('tray-count');
+      if (cntEl) cntEl.textContent = '0';
       renderExportTable();
-    }
-
-    function copyExportTSV() {
-      if (!exportRows.length) return;
-      const cols = ['record_id', 'analysis_type', 'prepared_sample_name', 'field_sample_name', 'collected_date', 'geoid', 'county_name', 'prep_date', 'resource_name', 'pretreatment_method', 'prep_method', 'parameter', 'value', 'unit', 'qc_pass', 'data_status', 'audit_note'];
-      const lines = [cols.join('\\t')];
-      exportRows.forEach(r => {
-        lines.push(cols.map(c => r[c] ?? '').join('\\t'));
-      });
-      navigator.clipboard.writeText(lines.join('\\n'));
-      const btn = document.getElementById('btn-copy-tsv');
-      btn.textContent = 'Copied TSV!';
-      setTimeout(() => { btn.textContent = 'Copy TSV'; }, 1200);
-    }
-
-    function downloadExportCSV() {
-      if (!exportRows.length) return;
-      const cols = ['record_id', 'analysis_type', 'prepared_sample_name', 'field_sample_name', 'collected_date', 'geoid', 'county_name', 'prep_date', 'resource_name', 'pretreatment_method', 'prep_method', 'parameter', 'value', 'unit', 'qc_pass', 'data_status', 'audit_note'];
-      const lines = [cols.join(',')];
-      exportRows.forEach(r => {
-        lines.push(cols.map(c => `"${String(r[c] ?? '').replace(/"/g, '""')}"`).join(','));
-      });
-      const blob = new Blob([lines.join('\\n')], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `biocirv_${currentDomain}_export.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
     }
 
     function toggleTheme() {
@@ -4849,41 +5617,91 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 __SHARED_SLICE_AND_BUG_MODALS_JS__
 
     async function exportExplorerTrayToWorkbench() {
-      if (!exportRows || !exportRows.length) return;
-      const items = exportRows.map(r => ({
-        scope: 'replicate_group',
-        resource_name: r.resource_name || '',
-        analysis_type: r.analysis_type || currentDomain || '',
-        parameter: r.parameter || '',
-        parameter_name: r.parameter || '',
-        prepared_sample_name: r.prepared_sample_name || r.prepared_sample || '',
-        field_sample_name: r.field_sample_name || '',
-        method_or_strain: getSeriesValue(r, r.domain || currentDomain) || '',
-        experiment_name: r.experiment || '',
-        record_id: String(r.record_id || ''),
-        record_ids: [String(r.record_id || '')],
-        replicates: [{
-          record_id: String(r.record_id || ''),
-          value: r.value,
-          unit: r.unit || '',
-          qc_status: r.qc_pass || 'pass'
-        }],
-        review_note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer tray',
-        note: r.audit_note || 'Exported from Multi-Resource Side-by-Side Explorer tray'
-      }));
+      const sourceRows = (exportRows && exportRows.length)
+        ? exportRows
+        : ((pinnedGroupRows && pinnedGroupRows.length)
+            ? pinnedGroupRows
+            : (pinnedRecord ? [pinnedRecord] : filteredRows.slice(0, 25)));
+      if (!sourceRows || !sourceRows.length) return;
+      const groupedMap = new Map();
+      sourceRows.forEach(r => {
+        const repKey = r.replicate_group_key || getReplicateGroupKey(r);
+        const isSingle = r.triage_scope === 'single';
+        const mapKey = isSingle ? `single::${r.record_id}` : `group::${repKey}`;
+        if (!groupedMap.has(mapKey)) {
+          groupedMap.set(mapKey, {
+            scope: isSingle ? 'single_record' : 'replicate_group',
+            triage_scope: isSingle ? 'single' : 'group',
+            replicate_group_key: repKey,
+            flag_type: r.flag_type || 'visualizer_flagged',
+            decision_status: r.decision_status || 'in_review',
+            decision_action: r.decision_action || 'in_review',
+            source_label: 'Page 3 — Interactive Data Visualizer',
+            resource_name: r.resource_name || '',
+            analysis_type: r.analysis_type || currentDomain || '',
+            parameter: r.parameter || '',
+            parameter_name: r.parameter || '',
+            prepared_sample_name: r.prepared_sample_name || r.prepared_sample || '',
+            field_sample_name: r.field_sample_name || '',
+            method_or_strain: getSeriesValue(r, r.domain || currentDomain) || '',
+            experiment_name: r.experiment || '',
+            record_id: String(r.record_id || ''),
+            record_ids: [String(r.record_id || '')],
+            replicates: [{
+              record_id: String(r.record_id || ''),
+              value: r.value,
+              unit: r.unit || '',
+              qc_status: r.qc_pass || 'pass'
+            }],
+            assigned_to_email: r.assigned_to_email || null,
+            flagged_by_email: r.flagged_by_email || null,
+            flagged_at: r.flagged_at || new Date().toISOString(),
+            review_note: r.audit_note || 'Exported from Interactive Data Visualizer to Audit Workbench',
+            note: r.audit_note || 'Exported from Interactive Data Visualizer to Audit Workbench'
+          });
+        } else {
+          const existing = groupedMap.get(mapKey);
+          const rid = String(r.record_id || '');
+          if (rid && !existing.record_ids.includes(rid)) {
+            existing.record_ids.push(rid);
+            existing.replicates.push({
+              record_id: rid,
+              value: r.value,
+              unit: r.unit || '',
+              qc_status: r.qc_pass || 'pass'
+            });
+          }
+        }
+      });
+      const items = Array.from(groupedMap.values());
       if (window.BioCirvQcClient && typeof window.BioCirvQcClient.exportTrayToWorkbench === 'function') {
-        const res = await window.BioCirvQcClient.exportTrayToWorkbench(items, 'Page 3 — Multi-Resource Side-by-Side Explorer');
+        const res = await window.BioCirvQcClient.exportTrayToWorkbench(items, 'Page 3 — Interactive Data Visualizer');
         const btn = document.getElementById('btn-tray-to-workbench');
         if (btn) {
           const orig = btn.textContent;
           btn.textContent = `✓ Sent (${res.persisted || items.length}) to Audit Workbench`;
           setTimeout(() => { btn.textContent = orig; }, 2200);
         }
+        if (typeof window !== 'undefined' && window.location && (window.location.protocol === 'http:' || window.location.protocol === 'https:')) {
+          window.location.href = '/v1/dashboards/metadata/resource_audit_workbench.html?flag_type=visualizer_flagged';
+        }
       }
     }
 
-    initSliceAndBugModals("Page 3 — Multi-Resource Side-by-Side Explorer");
+    initSliceAndBugModals("Page 3 — Interactive Data Visualizer");
     window.addEventListener('resize', () => renderCurrentView());
+    window.addEventListener('popstate', () => {
+      urlParams = new URLSearchParams(window.location.search);
+      const rawDom = urlParams.get('type') || urlParams.get('domain') || urlParams.get('tab') || 'proximate';
+      currentDomain = normalizeDomainKey(rawDom);
+      if (!DOMAINS.some(d => d.id === currentDomain)) currentDomain = 'proximate';
+      selectedFilters.resources.clear();
+      selectedFilters.samples.clear();
+      selectedFilters.params.clear();
+      selectedFilters.methods.clear();
+      initFromUrlParams();
+      onResourceOrDomainChange(false, { push: false });
+    });
     initFromUrlParams();
     onResourceOrDomainChange(true);
     if (typeof window.refreshLiveQcOverlay === 'function') {
@@ -4990,11 +5808,12 @@ def build_quick_widget_html(payload: dict) -> str:
         <span class="text-[var(--muted-foreground)] font-medium">Analysis:</span>
         <select id="w-domain" onchange="onWidgetDomainOrResourceChange()" class="rounded px-1.5 py-0.5 border border-[var(--border)] text-xs">
           <option value="proximate" selected>Proximate</option>
+          <option value="calorimetry">Calorimetry</option>
           <option value="compositional">Compositional</option>
           <option value="ultimate">Ultimate</option>
-          <option value="calorimetry_xrd">Calorimetry &amp; XRD</option>
-          <option value="icp">ICP Elements</option>
-          <option value="xrf">XRF Elements</option>
+          <option value="xrd">XRD</option>
+          <option value="icp">ICP</option>
+          <option value="xrf">XRF</option>
           <option value="pretreatment">Pretreatment</option>
           <option value="fermentation">Fermentation</option>
           <option value="gasification">Gasification</option>
@@ -5070,9 +5889,10 @@ def build_quick_widget_html(payload: dict) -> str:
 
     function mapDomain(at) {
       if (at === 'Proximate Analysis') return 'proximate';
+      if (at === 'Calorimetry') return 'calorimetry';
       if (at === 'Compositional Analysis') return 'compositional';
       if (at === 'Ultimate Analysis') return 'ultimate';
-      if (at === 'Calorimetry' || at === 'XRD Crystallinity') return 'calorimetry_xrd';
+      if (at === 'XRD Crystallinity') return 'xrd';
       if (at === 'ICP Elemental Analysis') return 'icp';
       if (at === 'XRF Elemental Analysis') return 'xrf';
       if (at === 'Pretreatment & Hydrolysis') return 'pretreatment';

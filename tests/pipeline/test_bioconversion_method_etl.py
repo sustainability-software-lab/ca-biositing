@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 import pytest
 import pandas as pd
 import numpy as np
@@ -5,7 +7,9 @@ from ca_biositing.pipeline.etl.transform.analysis.bioconversion_method import tr
 from ca_biositing.datamodels.models import BioconversionMethod, Strain
 
 class TestBioconversionMethodETL:
-    def test_transform_bioconversion_method(self):
+    @patch("ca_biositing.pipeline.etl.transform.analysis.bioconversion_method.normalize_dataframes")
+    @patch("ca_biositing.pipeline.etl.transform.analysis.bioconversion_method.get_run_logger")
+    def test_transform_bioconversion_method(self, _mock_logger, mock_normalize):
         # Mock raw data from 03.3-BioConversionMethods
 
         raw_data = {
@@ -21,11 +25,14 @@ class TestBioconversionMethodETL:
         }
         raw_df = pd.DataFrame(raw_data)
 
-        # We need to mock the normalization lookup for Strain
-        # Since normalize_dataframes hits the DB, we might need a more integrated test or mock it.
-        # For now, let's just check if the transformation logic handles columns correctly.
+        def fake_normalize(df, normalize_columns):
+            df_out = df.copy()
+            df_out["strain_name_id"] = [1, 2]
+            return [df_out]
 
-        transformed_df = transform_bioconversion_method(raw_df, etl_run_id="1", lineage_group_id="10")
+        mock_normalize.side_effect = fake_normalize
+
+        transformed_df = transform_bioconversion_method.fn(raw_df, etl_run_id="1", lineage_group_id="10")
 
         assert not transformed_df.empty
         assert 'name' in transformed_df.columns

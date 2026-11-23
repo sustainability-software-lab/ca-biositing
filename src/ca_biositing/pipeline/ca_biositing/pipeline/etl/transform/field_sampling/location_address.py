@@ -1,130 +1,185 @@
 """
-ETL Transform for LocationAddress ( workflow).
+ETL Transform for LocationAddress (FieldSample county-only workflow).
 
-Transforms raw sample metadata from four worksheets into unique LocationAddress records.
-Handles two types of locations:
-1. Collection-site locations (from 02_Sample_Desc sampling_location fields)
-2. Lab/facility storage locations (from 04_Producers producer location fields)
+Transforms raw sample metadata from SampleMetadata worksheets into unique
+county-level anonymous LocationAddress records using the 6-tier offline-first
+county resolver (`resolve_county_geoid`).
 """
 
+from __future__ import annotations
+
+import logging
+from typing import Dict, Optional
+
 import pandas as pd
-from typing import Optional, Dict
-from prefect import task, get_run_logger
+from prefect import get_run_logger, task
+
 from ca_biositing.pipeline.utils.cleaning_functions import cleaning as cleaning_mod
+from ca_biositing.pipeline.utils.geo_utils import resolve_county_geoid
+
+
+def _is_non_empty(val: object) -> bool:
+    """Return True when ``val`` contains a non-missing, non-blank value."""
+    if val is None:
+        return False
+    try:
+        if pd.isna(val):
+            return False
+    except Exception:
+        pass
+    s = str(val).strip()
+    return bool(s) and s.lower() not in {"nan", "none", "null", "n/a", "na", "-", "<na>"}
+
+
+def _build_anonymous_row(geoid: str, location_type: str) -> dict[str, object]:
+    """Construct a county-only anonymous LocationAddress record dict."""
+    return {
+        "geography_id": geoid,
+        "address_line1": None,
+        "address_line2": None,
+        "city": None,
+        "zip": None,
+        "lat": None,
+        "lon": None,
+        "is_anonymous": True,
+        "location_type": location_type,
+    }
+
 
 @task
 def transform_location_address(
     data_sources: Dict[str, pd.DataFrame],
     etl_run_id: str | None = None,
-    lineage_group_id: str | None = None
+    lineage_group_id: str | None = None,
 ) -> Optional[pd.DataFrame]:
-    """
-    Extracts unique locations from multi-worksheet sample metadata.
+    """Extract unique county-level anonymous LocationAddress records from sample metadata.
 
-    Combines:
-    - Collection locations from 02_Sample_Desc (sampling_location, sampling_street, sampling_city, sampling_zip)
-    - Producer/facility locations from 04_Producers (prod_location, prod_street, prod_city, prod_zip)
+    Combines county resolution across:
+    - Collection locations from ``02_Sample_Desc``
+    - Producer/facility locations from ``04_Producers``
+    - Field storage locations from ``03_Qty_FieldStorage``
 
-    Returns deduplicated LocationAddress records for both location types.
+    All sub-county columns are unconditionally set to ``None`` and
+    ``is_anonymous`` is forced to ``True``. Raw sub-county columns are never
+    included in the returned DataFrame or logged.
     """
     try:
         logger = get_run_logger()
     except Exception:
-        import logging
         logger = logging.getLogger(__name__)
 
-    # Expect both sample_desc and producers in data_sources
     sample_desc = data_sources.get("sample_desc", pd.DataFrame())
     producers = data_sources.get("producers", pd.DataFrame())
+    qty_field_storage = data_sources.get("qty_field_storage", pd.DataFrame())
 
-    if sample_desc.empty and producers.empty:
-        logger.warning("Both 'sample_desc' and 'producers' data sources are empty.")
+    if sample_desc.empty and producers.empty and qty_field_storage.empty:
+        logger.warning("LocationAddress data sources are empty.")
         return pd.DataFrame()
 
-    logger.info("Extracting unique LocationAddress records from multi-worksheet sources...")
+    logger.info("Extracting unique county-level LocationAddress records from multi-worksheet sources...")
     logger.info(f"  - sample_desc: {len(sample_desc)} rows")
     logger.info(f"  - producers: {len(producers)} rows")
+    logger.info(f"  - qty_field_storage: {len(qty_field_storage)} rows")
 
-    # Clean both data sources
-    clean_sample_desc = cleaning_mod.standard_clean(sample_desc) if not sample_desc.empty else pd.DataFrame()
-    clean_producers = cleaning_mod.standard_clean(producers) if not producers.empty else pd.DataFrame()
+    clean_sample_desc = (
+        cleaning_mod.standard_clean(sample_desc) if not sample_desc.empty else pd.DataFrame()
+    )
+    clean_producers = (
+        cleaning_mod.standard_clean(producers) if not producers.empty else pd.DataFrame()
+    )
+    clean_qty_storage = (
+        cleaning_mod.standard_clean(qty_field_storage)
+        if not qty_field_storage.empty
+        else pd.DataFrame()
+    )
 
-    locations_list = []
+    candidate_rows: list[dict[str, object]] = []
 
-    # 1. Extract collection-site locations from sample_desc
+    # 1. Extract collection-site counties from sample_desc
     if not clean_sample_desc.empty:
-        logger.info("Extracting collection-site locations from sample_desc...")
-        location_cols = ['sampling_location', 'sampling_street', 'sampling_city', 'sampling_zip']
-        available_cols = [c for c in location_cols if c in clean_sample_desc.columns]
-
+        sample_cols = [
+            "sampling_county",
+            "sampling_latlong",
+            "sampling_zip",
+            "sampling_city",
+            "sampling_street",
+            "sampling_location",
+        ]
+        available_cols = [c for c in sample_cols if c in clean_sample_desc.columns]
         if available_cols:
-            collection_locations = clean_sample_desc[available_cols].drop_duplicates().dropna(how='all')
+            subset = clean_sample_desc[available_cols].drop_duplicates().dropna(how="all")
+            for _, row in subset.iterrows():
+                if not any(_is_non_empty(row.get(c)) for c in available_cols):
+                    continue
+                geoid = resolve_county_geoid(
+                    county=row.get("sampling_county"),
+                    latlong=row.get("sampling_latlong"),
+                    zip_code=row.get("sampling_zip"),
+                    city=row.get("sampling_city"),
+                    street=row.get("sampling_street"),
+                    location_desc=row.get("sampling_location"),
+                )
+                candidate_rows.append(_build_anonymous_row(geoid, "collection_site"))
 
-            if not collection_locations.empty:
-                # Rename to LocationAddress model fields
-                rename_map = {
-                    'sampling_street': 'address_line1',
-                    'sampling_city': 'city',
-                    'sampling_zip': 'zip'
-                }
-                available_rename = {k: v for k, v in rename_map.items() if k in collection_locations.columns}
-                collection_locations = collection_locations.rename(columns=available_rename)
-
-                # Add location type indicator
-                collection_locations['location_type'] = 'collection_site'
-
-                locations_list.append(collection_locations)
-                logger.info(f"Extracted {len(collection_locations)} unique collection-site locations")
-
-    # 2. Extract producer/facility locations from producers
+    # 2. Extract producer/facility counties from producers
     if not clean_producers.empty:
-        logger.info("Extracting producer/facility locations from producers...")
-        producer_cols = ['prod_location', 'prod_street', 'prod_city', 'prod_zip']
+        producer_cols = [
+            "prod_county",
+            "prod_latlong",
+            "prod_zip",
+            "prod_city",
+            "prod_street",
+            "prod_location",
+        ]
         available_cols = [c for c in producer_cols if c in clean_producers.columns]
-
         if available_cols:
-            producer_locations = clean_producers[available_cols].drop_duplicates().dropna(how='all')
+            subset = clean_producers[available_cols].drop_duplicates().dropna(how="all")
+            for _, row in subset.iterrows():
+                if not any(_is_non_empty(row.get(c)) for c in available_cols):
+                    continue
+                geoid = resolve_county_geoid(
+                    county=row.get("prod_county"),
+                    latlong=row.get("prod_latlong"),
+                    zip_code=row.get("prod_zip"),
+                    city=row.get("prod_city"),
+                    street=row.get("prod_street"),
+                    location_desc=row.get("prod_location"),
+                )
+                candidate_rows.append(_build_anonymous_row(geoid, "facility_storage"))
 
-            if not producer_locations.empty:
-                # Rename to LocationAddress model fields
-                rename_map = {
-                    'prod_street': 'address_line1',
-                    'prod_city': 'city',
-                    'prod_zip': 'zip',
-                    'prod_location': 'location_name'  # Keep producer name for reference
-                }
-                available_rename = {k: v for k, v in rename_map.items() if k in producer_locations.columns}
-                producer_locations = producer_locations.rename(columns=available_rename)
+    # 3. Extract field storage counties from qty_field_storage
+    if not clean_qty_storage.empty:
+        storage_cols = ["fieldstorage_location", "field_storage_location"]
+        available_cols = [c for c in storage_cols if c in clean_qty_storage.columns]
+        if available_cols:
+            subset = clean_qty_storage[available_cols].drop_duplicates().dropna(how="all")
+            for _, row in subset.iterrows():
+                val = next(
+                    (row.get(c) for c in available_cols if _is_non_empty(row.get(c))),
+                    None,
+                )
+                if val is None:
+                    continue
+                geoid = resolve_county_geoid(county=val, city=val, location_desc=val)
+                candidate_rows.append(_build_anonymous_row(geoid, "collection_site"))
 
-                # Add location type indicator
-                producer_locations['location_type'] = 'facility_storage'
-
-                locations_list.append(producer_locations)
-                logger.info(f"Extracted {len(producer_locations)} unique producer/facility locations")
-
-    # Combine all locations
-    if locations_list:
-        all_locations = pd.concat(locations_list, ignore_index=True)
-        all_locations = all_locations.drop_duplicates().dropna(how='all')
-
-        logger.info(f"Total unique locations after deduplication: {len(all_locations)}")
-
-        # Determine is_anonymous: True if address_line1 is missing/empty
-        if 'address_line1' in all_locations.columns:
-            all_locations['is_anonymous'] = all_locations['address_line1'].isna() | (all_locations['address_line1'] == "")
-        else:
-            all_locations['is_anonymous'] = True
-
-    else:
+    if not candidate_rows:
         logger.warning("No location data found in any source.")
-        all_locations = pd.DataFrame()
+        return pd.DataFrame()
 
-    # Add lineage tracking metadata
-    if not all_locations.empty:
-        if etl_run_id:
-            all_locations['etl_run_id'] = etl_run_id
-        if lineage_group_id:
-            all_locations['lineage_group_id'] = lineage_group_id
+    all_locations = (
+        pd.DataFrame(candidate_rows)
+        .drop_duplicates(subset=["geography_id"], keep="first")
+        .reset_index(drop=True)
+    )
+    all_locations["is_anonymous"] = True
 
-    logger.info(f"Successfully transformed {len(all_locations)} unique location candidate records.")
+    if etl_run_id:
+        all_locations["etl_run_id"] = etl_run_id
+    if lineage_group_id:
+        all_locations["lineage_group_id"] = lineage_group_id
+
+    logger.info(
+        f"Successfully transformed {len(all_locations)} unique anonymous county location records."
+    )
     return all_locations

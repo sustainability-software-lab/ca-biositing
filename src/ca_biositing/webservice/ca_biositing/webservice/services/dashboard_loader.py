@@ -53,7 +53,7 @@ BUILTIN_LOGIN_HTML = """<!DOCTYPE html>
           .then(function (r) { return r.json(); })
           .then(function (res) {
             if (res && res.authenticated) {
-              window.location.href = getNextUrl();
+              window.location.replace(getNextUrl());
             } else {
               document.getElementById("login-msg").textContent = (res && res.detail) || "Login failed.";
             }

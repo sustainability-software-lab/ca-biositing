@@ -20,9 +20,9 @@ DESCRIPTIONS: dict[str, str] = {
         "mined bench notes audit trail, and anonymized CSV export."
     ),
     "resource_explorer_dashboard.html": (
-        "Product 3 (Multi-Resource Side-by-Side Parameter Explorer): High-DPI HTML5 Canvas explorer with always-accessible "
+        "Product 3 (Interactive Data Visualizer): High-DPI HTML5 Canvas visualizer with always-accessible "
         "Multi-Select Checklists (Resources, Parameters & Units, Samples, Methods/Preps), Compare By grouping selector, "
-        "and filtered CSV/JSON slice export."
+        "rectangular brush zoom, and filtered CSV/JSON/HTML slice export."
     ),
     "resource_audit_workbench.html": (
         "Product 4 (Resource QC & Data Audit Workbench): Interactive two-stage QC review workbench with Queue & Task "
@@ -288,7 +288,7 @@ def render_login_html(timestamp_str: str) -> str:
               refreshMe();
               var nextUrl = getNextRedirectTarget() || "/v1/dashboards/index.html";
               setTimeout(function () {{
-                window.location.href = nextUrl;
+                window.location.replace(nextUrl);
               }}, 350);
             }} else {{
               showFeedback((res && res.detail) || "Google token verification failed.", true);
@@ -379,10 +379,8 @@ def render_login_html(timestamp_str: str) -> str:
             }}
             showFeedback("Active session set to " + (res.data.email || email) + " (" + (res.data.role || "analyst") + ")", false);
             refreshMe();
-            var nextUrl = getNextRedirectTarget();
-            if (nextUrl) {{
-              setTimeout(function () {{ window.location.href = nextUrl; }}, 350);
-            }}
+            var nextUrl = getNextRedirectTarget() || "/v1/dashboards/index.html";
+            setTimeout(function () {{ window.location.replace(nextUrl); }}, 350);
           }})
           .catch(function () {{
             showFeedback("Local preview session set to " + email, false);
@@ -585,14 +583,14 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
             <strong>384 prepared samples</strong>, and <strong>11,974 observations</strong> across our 5-product architecture:
             <strong>Product 1 (Characterization &amp; AI Brief)</strong>,
             <strong>Product 2 (Statistical QC &amp; Lab Notes Audit)</strong>,
-            <strong>Product 3 (Multi-Resource Side-by-Side Explorer)</strong>,
+            <strong>Product 3 (Interactive Data Visualizer)</strong>,
             <strong>Product 4 (Interactive Resource QC &amp; Data Audit Workbench)</strong>, and
             <strong>Product 5 (Admin-Only Local vs. Staging vs. Prod DB Drift Dashboard)</strong>.
           </p>
           <div class="d-flex flex-wrap gap-2 mt-3">
             <a href="metadata/resource_analysis_dashboard.html" class="btn btn-sm btn-info text-dark fw-bold" target="_blank">📊 1. Characterization &amp; AI Brief</a>
             <a href="metadata/resource_qc_outlier_dashboard.html" class="btn btn-sm btn-warning text-dark fw-bold" target="_blank">🔬 2. Statistical QC &amp; Outlier Audit</a>
-            <a href="metadata/resource_explorer_dashboard.html" class="btn btn-sm btn-light text-dark fw-bold" target="_blank">⚖️ 3. Side-by-Side Explorer</a>
+            <a href="metadata/resource_explorer_dashboard.html" class="btn btn-sm btn-light text-dark fw-bold" target="_blank">⚖️ 3. Interactive Data Visualizer</a>
             <a href="metadata/resource_audit_workbench.html" class="btn btn-sm btn-success text-white fw-bold" target="_blank" id="hero-link-product4">
               🛡️ 4. QC Audit Workbench
               <span class="badge bg-warning text-dark ms-1" id="badge-my-assigned-reviews">My Assigned Reviews (0)</span>
@@ -616,7 +614,7 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
             Open Product 4: QC Audit Workbench &rarr;
           </a>
           <a href="metadata/resource_explorer_dashboard.html" class="btn btn-outline-info text-white fw-semibold px-3 py-2" target="_blank">
-            Open Product 3: Multi-Select Comparison &rarr;
+            Open Product 3: Interactive Data Visualizer &rarr;
           </a>
         </div>
       </div>
@@ -652,7 +650,7 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
       <div class="card h-100 shadow-sm">
         <div class="card-body d-flex flex-column">
           <span class="badge bg-light text-dark align-self-start mb-2">Product 3</span>
-          <h5 class="card-title fw-bold">Multi-Resource Side-by-Side Explorer</h5>
+          <h5 class="card-title fw-bold">Interactive Data Visualizer</h5>
           <p class="card-text text-muted small flex-grow-1">{DESCRIPTIONS["resource_explorer_dashboard.html"]}</p>
           <a href="metadata/resource_explorer_dashboard.html" class="btn btn-primary w-100 mt-2">Open Product 3</a>
         </div>
@@ -773,8 +771,8 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
     <div id="bug-modal-status" class="hidden small font-monospace p-2 rounded border border-secondary mb-2"></div>
     <div class="d-flex justify-content-end gap-2 border-top border-secondary pt-2">
       <button id="btn-cancel-bug-modal" type="button" class="btn btn-sm btn-outline-light">Cancel</button>
-      <button id="btn-submit-github-api" type="button" class="btn btn-sm btn-outline-info">⚡ Submit via API</button>
-      <button id="btn-submit-github-url" type="button" class="btn btn-sm btn-warning fw-bold text-dark">↗ Open Pre-Filled GitHub Issue</button>
+      <button id="btn-submit-github-api" type="button" class="btn btn-sm btn-warning fw-bold text-dark">🚀 Submit Issue</button>
+      <button id="btn-submit-github-url" type="button" class="btn btn-sm btn-warning fw-bold text-dark hidden" style="display:none;">↗ Open Pre-Filled GitHub Issue</button>
     </div>
   </div>
 </div>
@@ -981,7 +979,14 @@ def generate_gallery(base_dir: str = ".", output_dir: str | None = None) -> tupl
             var data = await resp.json();
             if (data.created_via_api) {{
               if (statusEl) {{
-                statusEl.textContent = "✓ GitHub Issue #" + (data.issue_number ?? "") + " created!";
+                statusEl.textContent = "✓ GitHub Issue #" + (data.issue_number ?? "") + " created & recorded in PostgreSQL QC Ledger (ID #" + (data.decision_id ?? "") + ")!";
+                statusEl.classList.remove("hidden");
+              }}
+              return;
+            }}
+            if (data.persisted) {{
+              if (statusEl) {{
+                statusEl.textContent = "✓ Issue recorded in PostgreSQL QC Ledger (ID #" + (data.decision_id ?? "") + ").";
                 statusEl.classList.remove("hidden");
               }}
               return;

@@ -87,6 +87,21 @@ For this repository the minimum verification is `pixi run pre-commit-all` plus
 the tests for every package you changed — see [code-quality.md](code-quality.md)
 and [testing-patterns.md](testing-patterns.md).
 
+## 6. Data Integrity & Zero Fabricated Fallbacks
+
+**Never fabricate, synthesize, or hardcode demo/fallback data in user-facing
+portal or dashboard code.**
+
+- Every value, point, replicate group, and summary statistic rendered to a user
+  in the portal or HTML dashboards must trace directly to verifiable database
+  records.
+- When a filter, lookup, or deep link matches zero records, render an explicit
+  empty state ("No matching database records found") rather than falling back to
+  another record or inventing synthetic sample rows.
+- Using synthetic/fake fixture data inside unit and integration tests is fine —
+  just never put synthetic fallback data into production or dashboard rendering
+  paths.
+
 ---
 
 **These guidelines are working if:** diffs contain fewer unnecessary changes,

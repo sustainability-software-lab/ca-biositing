@@ -33,7 +33,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-RUN useradd -m appuser
+RUN useradd -m appuser && mkdir -p /app/data/qc && chown -R appuser:appuser /app/data
 
 WORKDIR /app
 EXPOSE 8080

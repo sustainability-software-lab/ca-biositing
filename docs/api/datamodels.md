@@ -34,6 +34,7 @@ running.
 - [Data Sources Metadata](#data-sources-metadata)
 - [Sample Preparation](#sample-preparation)
 - [Infrastructure](#infrastructure)
+- [QC Review & Audit Ledger](#qc-review-audit-ledger)
 
 ---
 
@@ -236,6 +237,20 @@ running.
 ## Infrastructure
 
 ::: ca_biositing.datamodels.models.infrastructure
+    options:
+      show_bases: true
+      show_submodules: true
+      show_root_heading: false
+      show_root_full_path: false
+      show_if_no_docstring: true
+      show_labels: false
+      show_attribute_values: false
+      filters:
+        - "!^_"
+
+## QC Review & Audit Ledger
+
+::: ca_biositing.datamodels.models.qc
     options:
       show_bases: true
       show_submodules: true

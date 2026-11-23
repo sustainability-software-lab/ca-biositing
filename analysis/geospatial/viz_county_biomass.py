@@ -59,20 +59,23 @@ with engine.connect() as conn:
 df_biomass['county'] = df_biomass['county'].str.replace(' County', '', regex=False).str.lower()
 
 # %% [markdown]
-# ## 2. Load Geospatial Data
+# ## 2. Load Canonical Geospatial Data (`EPSG:4326`)
 #
-# We load the California counties shapefile/GeoJSON. We'll use the provided `ca_counties.csv` which has FIPS codes, and fetch the actual geometry using `geopandas` or a known URL if needed. Actually, `plotly.express` has built-in US county geometries if we use FIPS codes. Let's get the FIPS codes.
+# We load the canonical California county metadata (`data/static/ca_counties.csv`)
+# and county boundary geometries (`data/static/ca_counties.geojson`, standardized
+# to project standard `EPSG:4326` / WGS 84 with 5-digit `geoid` feature IDs).
 
 # %%
-# Load county FIPS mapping
-df_counties = pd.read_csv('data/static/ca_counties.csv')
-df_counties['county_name'] = df_counties['county_name'].str.lower()
+import json
 
-# Merge biomass data with FIPS codes
+df_counties = pd.read_csv('data/static/ca_counties.csv', dtype=str)
+df_counties['county_name'] = df_counties['county_name'].str.lower().str.strip()
+
+with open('data/static/ca_counties.geojson', encoding='utf-8') as f:
+    ca_counties_geojson = json.load(f)
+
+# Merge biomass data with canonical 5-digit geoid
 df_merged = pd.merge(df_biomass, df_counties, left_on='county', right_on='county_name', how='inner')
-
-# Ensure FIPS is a 5-digit string (State FIPS + County FIPS)
-df_merged['fips'] = df_merged['state_fips'].astype(str).str.zfill(2) + df_merged['county_fips'].astype(str).str.zfill(3)
 
 # %% [markdown]
 # ## 3. Apply LBNL Branding and Generate Plot
@@ -84,11 +87,12 @@ df_merged['fips'] = df_merged['state_fips'].astype(str).str.zfill(2) + df_merged
 pio.templates["lbnl"] = get_lbnl_template_plotly()
 pio.templates.default = "lbnl"
 
-# Create choropleth map
+# Create choropleth map against local canonical EPSG:4326 GeoJSON
 fig = px.choropleth(
     df_merged,
-    geojson="https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json",
-    locations='fips',
+    geojson=ca_counties_geojson,
+    locations='geoid',
+    featureidkey='id',
     color='total_production',
     color_continuous_scale=[
         [0, LBNL_COLORS["secondary"]["light_gray"]],
@@ -96,9 +100,9 @@ fig = px.choropleth(
     ],
     scope="usa",
     hover_name="county_name",
-    hover_data={"fips": False, "total_production": ":,.0f"},
-    labels={'total_production': 'Total Production (dt)'},
-    title="Total Biomass Production by County in California"
+    hover_data={"geoid": True, "region_name": True, "total_production": ":,.0f"},
+    labels={'total_production': 'Total Production (dt)', 'geoid': 'GEOID', 'region_name': 'Region'},
+    title="Total Biomass Production by County in California (EPSG:4326)"
 )
 
 fig.update_geos(fitbounds="locations", visible=False)
