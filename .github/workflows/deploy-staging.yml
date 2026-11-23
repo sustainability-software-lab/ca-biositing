@@ -51,6 +51,9 @@ jobs:
           pixi-version: v0.63.2
           environments: deployment
 
+      - name: Install Pulumi CLI
+        run: pixi run -e deployment install-pulumi
+
       - name: Preview infrastructure changes
         run: pixi run -e deployment cloud-plan-direct
 
@@ -113,6 +116,9 @@ jobs:
         with:
           pixi-version: v0.63.2
           environments: deployment
+
+      - name: Install Pulumi CLI
+        run: pixi run -e deployment install-pulumi
 
       - name: Deploy infrastructure
         env:
