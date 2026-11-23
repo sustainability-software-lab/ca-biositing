@@ -26,6 +26,7 @@ from analysis.metadata.resource_explorer_dashboard import (  # noqa: E402
 )
 from analysis.metadata.resource_insights_engine import (  # noqa: E402
     build_resource_insights,
+    strip_qc_audit_annotations,
 )
 
 SNAPSHOT_PATH = REPO_ROOT / "tests/fixtures/minimal_dashboard_snapshot.json"
@@ -96,15 +97,19 @@ def test_replicate_group_default_selection_and_one_click_toggle(
 def test_unified_export_tray_and_export_to_audit_workbench(
     snapshot_and_pages: dict[str, str],
 ) -> None:
+    page1 = snapshot_and_pages["page1"]
     page2 = snapshot_and_pages["page2"]
     page3 = snapshot_and_pages["page3"]
 
+    assert "📤 Export Slice (.HTML)" in page1, "page1 missing Export Slice (.HTML) button"
+    assert "window.openSliceExportModal" in page1, "page1 missing window.openSliceExportModal"
+
     for name, html in [("page2", page2), ("page3", page3)]:
-        assert "⬇ Export Tray (.CSV)" in html, f"{name} missing CSV tray button"
-        assert "📤 Export Slice (.HTML)" in html, f"{name} missing HTML slice tray button"
+        assert "📤 Export Slice (.HTML)" in html, f"{name} missing HTML slice export button"
         assert "⚖️ Export to Audit Workbench" in html, (
             f"{name} missing Export to Audit Workbench button"
         )
+        assert 'id="btn-open-slice-modal"' in html, f"{name} missing #btn-open-slice-modal"
         assert 'id="btn-tray-to-workbench"' in html, f"{name} missing #btn-tray-to-workbench"
         assert 'id="btn-finding-export-workbench"' in html, (
             f"{name} missing #btn-finding-export-workbench in modal"
@@ -113,6 +118,24 @@ def test_unified_export_tray_and_export_to_audit_workbench(
             f"{name} missing POST /v1/qc/tray-to-workbench endpoint"
         )
         assert "exportTrayToWorkbench" in html, f"{name} missing exportTrayToWorkbench helper"
+        assert "window.openSliceExportModal" in html, f"{name} missing window.openSliceExportModal"
+        # Legacy multi-select Export Tray UI must be removed
+        assert 'id="qc-selection-export-tray"' not in html, (
+            f"{name} still contains legacy #qc-selection-export-tray section"
+        )
+        assert "renderSelectionExportTray" not in html, (
+            f"{name} still contains legacy renderSelectionExportTray()"
+        )
+        assert "⬇ Export Tray (.CSV)" not in html, (
+            f"{name} still contains legacy CSV tray button"
+        )
+        assert "📌 Add to Tray" not in html, f"{name} still contains legacy Add to Tray button"
+        assert 'id="tab-export"' not in html, f"{name} still contains legacy #tab-export"
+        assert 'id="view-export"' not in html, f"{name} still contains legacy #view-export"
+        assert "+ Export Tray" not in html, f"{name} still contains legacy + Export Tray button"
+        assert "+ Add Flagged to Export Tray" not in html, (
+            f"{name} still contains legacy + Add Flagged to Export Tray button"
+        )
 
 
 def test_tray_to_workbench_contract_and_unified_overlay_execution(
@@ -337,3 +360,1937 @@ def test_cli_output_flag_leaves_repo_clean(tmp_path: Path) -> None:
     )
     assert res_explorer.returncode == 0, res_explorer.stderr
     assert out_explorer.exists()
+
+
+def test_card3_page2_kpi_labels_and_sd_display(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    assert "${outSummary.flaggedActive || 0}</strong> active outlier group(s)" in page1
+    assert "outSummary.suppressedTrace ? `(${outSummary.suppressedTrace} trace" in page1
+    assert "${out.flagged_active_groups" not in page1
+    assert "${out.suppressed_low_abundance_groups" not in page1
+    assert "Flag Counts (" in page2
+    assert "Within-Replicate RSD & SD" in page2
+    assert "Between-Sample RSD & SD (Method-Stratified)" in page2
+    assert "N/A (n=1 method group)" in page2
+    assert "Identical Replicates (SD=0)" in page2
+    assert "Collection & Prep Dates" not in page2
+
+
+def test_card3_get_outlier_summary_and_live_overlay_replicate_groups(
+    tmp_path: Path,
+) -> None:
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    harness = (
+        """
+global.window = global;
+global.window.location = { protocol: "http:", search: "", href: "" };
+global.BroadcastChannel = class BroadcastChannel { constructor(name) { this.name = name; } postMessage() {} close() {} };
+global.CustomEvent = class CustomEvent { constructor(name, opts) { this.type = name; this.detail = opts && opts.detail; } };
+global.window.dispatchEvent = () => {};
+global.window.addEventListener = () => {};
+global.localStorage = {
+  _s: {},
+  getItem(k) { return this._s[k] || null; },
+  setItem(k, v) { this._s[k] = String(v); }
+};
+global.document = {
+  title: "Test",
+  readyState: "complete",
+  getElementById() { return null; },
+  querySelectorAll() { return []; },
+  createElement() { return { style: {}, classList: { add(){}, remove(){} }, appendChild(){} }; },
+  body: { appendChild(){} }
+};
+global.BUNDLE = {
+  insights: {
+    "almond hulls": {
+      outlier_screening: {
+        summary: {
+          flagged_replicate_groups: 2,
+          overall_within_rsd_median: 14.2,
+          overall_within_sd_median: 1.05,
+          overall_between_rsd_median: 8.6,
+          overall_between_sd_median: 0.72,
+          rsd_defined_groups: 5,
+          suppressed_low_abundance_groups: 1
+        },
+        by_tab: {
+          proximate: {
+            flagged_active: 1,
+            replicate_groups: [
+              {
+                analysis_type: "Proximate Analysis",
+                prepared_sample: "AH-PS-01",
+                prep_method: "Dried 60C",
+                experiment: "EXP-01",
+                parameter: "Ash",
+                n: 3,
+                mean: 10.0,
+                sd: 3.5,
+                within_sd: 3.5,
+                rsd_within_pct: 35.0,
+                raw_dixon: true,
+                dixon_candidate_id: "prox-3",
+                raw_rsd20: true,
+                raw_rsd10: true,
+                raw_sd3x: false,
+                below_cutoff: false,
+                raw_flagged: true,
+                active_flagged: true,
+                flagged_active: true,
+                qc_pass_count: 3,
+                qc_fail_count: 0,
+                replicates: [
+                  { id: "prox-1", rep: 1, val: 8.0, qc: "pass" },
+                  { id: "prox-2", rep: 2, val: 8.2, qc: "pass" },
+                  { id: "prox-3", rep: 3, val: 13.8, qc: "pass" }
+                ]
+              },
+              {
+                analysis_type: "Proximate Analysis",
+                prepared_sample: "AH-PS-02",
+                prep_method: "Dried 60C",
+                experiment: "EXP-01",
+                parameter: "Volatile Matter",
+                n: 3,
+                mean: 70.0,
+                sd: 8.5,
+                within_sd: 8.5,
+                rsd_within_pct: 12.14,
+                raw_dixon: true,
+                dixon_candidate_id: null,
+                raw_rsd20: false,
+                raw_rsd10: true,
+                raw_sd3x: false,
+                below_cutoff: false,
+                raw_flagged: true,
+                active_flagged: true,
+                flagged_active: true,
+                qc_pass_count: 3,
+                qc_fail_count: 0,
+                replicates: [
+                  { id: "prox-vm-1", rep: 1, val: 65.0, qc: "pass" },
+                  { id: "prox-vm-2", rep: 2, val: 65.4, qc: "pass" },
+                  { id: "prox-vm-3", rep: 3, val: 79.6, qc: "pass" }
+                ]
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+};
+"""
+        + SHARED_SLICE_AND_BUG_MODALS_JS
+        + """
+const sumNested = window.getOutlierSummary(global.BUNDLE.insights["almond hulls"]);
+
+// Fallback when summary block is absent and only by_tab.replicate_groups + param_rsd_table exist
+const sumFallback = window.getOutlierSummary({
+  outlier_screening: {
+    by_tab: {
+      proximate: {
+        replicate_groups: [
+          { n: 3, rsd_within_pct: 4.0, within_sd: 0.25, active_flagged: true, raw_flagged: true, below_cutoff: false },
+          { n: 3, rsd_within_pct: 6.0, within_sd: 0.45, active_flagged: false, raw_flagged: true, below_cutoff: true }
+        ],
+        param_rsd_table: [
+          { between_rsd_pct: 11.5, between_sd: 0.88, below_cutoff: false }
+        ]
+      }
+    }
+  }
+});
+
+// Verify 6-part replicate_group_key alignment with pt_method-first for Pretreatment and Ash->xrf
+const ptKey = window.normalizeReplicateGroupKey({
+  resource_name: "Almond Hulls",
+  prepared_sample: "AH-PS-01",
+  analysis_type: "Pretreatment",
+  parameter: "Glucose",
+  pt_method: "Dilute Acid",
+  prep_method: "Wiley Milled",
+  eh_method: "CTec3",
+  experiment: "EXP-PT-1"
+});
+const ashItem = window.BioCirvQcClient.normalizeTrayWorkbenchItem({
+  resource_name: "Almond Hulls",
+  prepared_sample: "AH-PS-01",
+  analysis_type: "Ash",
+  parameter: "CaO",
+  prep_method: "600C Ashing",
+  experiment: "EXP-XRF-1",
+  record_id: "xrf-1"
+});
+const fermNoPtKey = window.normalizeReplicateGroupKey({
+  resource_name: "Corn Stover",
+  prepared_sample: "CS-PREP-01",
+  analysis_type: "Fermentation (Bioconversion)",
+  parameter: "Ethanol",
+  prep_method: "Wiley Milled",
+  strain: "S. cerevisiae",
+  time_h: 48,
+  experiment: "EXP-FERM-01"
+});
+
+// Apply live QC overlay to quarantine outliers prox-3 and prox-vm-3 -> active_flagged and raw_dixon should drop to false
+const overlayRes = window.applyLiveQcDecisionsOverlay([
+  { record_id: "prox-3", new_qc_pass: "fail", decision_status: "reject_fail" },
+  { record_id: "prox-vm-3", new_qc_pass: "fail", decision_status: "reject_fail" }
+]);
+const grpAfter = global.BUNDLE.insights["almond hulls"].outlier_screening.by_tab.proximate.replicate_groups[0];
+const grpNoCandAfter = global.BUNDLE.insights["almond hulls"].outlier_screening.by_tab.proximate.replicate_groups[1];
+const sumAfter = window.getOutlierSummary(global.BUNDLE.insights["almond hulls"]);
+
+console.log(JSON.stringify({
+  sumNested,
+  sumFallback,
+  ptKey,
+  ashKey: ashItem.replicate_group_key,
+  fermNoPtKey,
+  overlayRes,
+  grpAfter: {
+    qc_pass_count: grpAfter.qc_pass_count,
+    qc_fail_count: grpAfter.qc_fail_count,
+    within_sd: grpAfter.within_sd,
+    rsd_within_pct: grpAfter.rsd_within_pct,
+    raw_dixon: grpAfter.raw_dixon,
+    active_flagged: grpAfter.active_flagged,
+    flagged_active: grpAfter.flagged_active
+  },
+  grpNoCandAfter: {
+    qc_pass_count: grpNoCandAfter.qc_pass_count,
+    qc_fail_count: grpNoCandAfter.qc_fail_count,
+    within_sd: grpNoCandAfter.within_sd,
+    rsd_within_pct: grpNoCandAfter.rsd_within_pct,
+    raw_dixon: grpNoCandAfter.raw_dixon,
+    active_flagged: grpNoCandAfter.active_flagged,
+    flagged_active: grpNoCandAfter.flagged_active
+  },
+  sumAfter
+}));
+"""
+    )
+    harness_path = tmp_path / "run_card3_test.js"
+    harness_path.write_text(harness, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_path)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    # Nested summary schema compatibility
+    assert out["sumNested"]["flaggedActive"] == 2
+    assert out["sumNested"]["withinRsdMedian"] == 14.2
+    assert out["sumNested"]["withinSdMedian"] == 1.05
+    assert out["sumNested"]["betweenRsdMedian"] == 8.6
+    assert out["sumNested"]["betweenSdMedian"] == 0.72
+    assert out["sumNested"]["rsdDefinedGroups"] == 5
+    assert out["sumNested"]["suppressedTrace"] == 1
+
+    # Fallback computation from by_tab
+    assert out["sumFallback"]["flaggedActive"] == 1
+    assert out["sumFallback"]["suppressedTrace"] == 1
+    assert out["sumFallback"]["withinRsdMedian"] == 5.0
+    assert out["sumFallback"]["withinSdMedian"] == 0.35
+    assert out["sumFallback"]["betweenRsdMedian"] == 11.5
+    assert out["sumFallback"]["betweenSdMedian"] == 0.88
+
+    # 6-part key parity across Card 1, Card 2, and Card 3 (pt_method first for Pretreatment; Ash -> xrf)
+    from analysis.metadata.resource_audit_workbench import (
+        normalize_replicate_group_key as card2_normalize_key,
+    )
+    from analysis.metadata.resource_insights_engine import (
+        compute_dataset_outlier_screening,
+    )
+
+    pt_row = {
+        "record_id": "pt-1",
+        "resource_name": "Almond Hulls",
+        "prepared_sample": "AH-PS-01",
+        "analysis_type": "Pretreatment",
+        "parameter": "Glucose",
+        "unit": "g/L",
+        "value": 12.4,
+        "qc_status": "pass",
+        "pt_method": "Dilute Acid",
+        "prep_method": "Wiley Milled",
+        "eh_method": "CTec3",
+        "experiment": "EXP-PT-1",
+    }
+    ash_row = {
+        "record_id": "xrf-1",
+        "resource_name": "Almond Hulls",
+        "prepared_sample": "AH-PS-01",
+        "analysis_type": "Ash",
+        "parameter": "CaO",
+        "unit": "%",
+        "value": 4.2,
+        "qc_status": "pass",
+        "prep_method": "600C Ashing",
+        "experiment": "EXP-XRF-1",
+    }
+    card1_screening = compute_dataset_outlier_screening(
+        {"Almond Hulls": [pt_row, ash_row]}
+    )["Almond Hulls"]
+    card1_pt_key = card1_screening["by_tab"]["pretreatment"]["replicate_groups"][0][
+        "replicate_group_key"
+    ]
+    card1_ash_key = card1_screening["by_tab"]["elemental"]["replicate_groups"][0][
+        "replicate_group_key"
+    ]
+    card2_pt_key = card2_normalize_key(pt_row)
+    card2_ash_key = card2_normalize_key(ash_row)
+
+    expected_pt_key = "almond hulls::ah-ps-01::pretreatment::glucose::dilute acid · ctec3::exp-pt-1"
+    expected_ash_key = "almond hulls::ah-ps-01::xrf::cao::600c ashing::exp-xrf-1"
+    expected_ferm_no_pt_key = "corn stover::cs-prep-01::fermentation::ethanol::s. cerevisiae @ 48h::exp-ferm-01"
+    ferm_no_pt_row = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Fermentation (Bioconversion)",
+        "parameter": "Ethanol",
+        "prep_method": "Wiley Milled",
+        "strain": "S. cerevisiae",
+        "time_h": 48,
+        "experiment": "EXP-FERM-01",
+    }
+    assert out["ptKey"] == expected_pt_key == card1_pt_key == card2_pt_key
+    assert out["ashKey"] == expected_ash_key == card1_ash_key == card2_ash_key
+    assert out["fermNoPtKey"] == expected_ferm_no_pt_key == card2_normalize_key(ferm_no_pt_row)
+
+    # Live overlay on replicate_groups recomputes within_sd, rsd_within_pct, raw_dixon, and active_flagged
+    assert out["grpAfter"]["qc_pass_count"] == 2
+    assert out["grpAfter"]["qc_fail_count"] == 1
+    assert out["grpAfter"]["rsd_within_pct"] < 5.0
+    assert out["grpAfter"]["within_sd"] < 0.2
+    assert out["grpAfter"]["raw_dixon"] is False
+    assert out["grpAfter"]["active_flagged"] is False
+    assert out["grpAfter"]["flagged_active"] is False
+
+    # Even when dixon_candidate_id is null, dropping rsd_within_pct < 10% clears raw_dixon and active_flagged
+    assert out["grpNoCandAfter"]["qc_pass_count"] == 2
+    assert out["grpNoCandAfter"]["qc_fail_count"] == 1
+    assert out["grpNoCandAfter"]["rsd_within_pct"] < 1.0
+    assert out["grpNoCandAfter"]["raw_dixon"] is False
+    assert out["grpNoCandAfter"]["active_flagged"] is False
+    assert out["grpNoCandAfter"]["flagged_active"] is False
+    assert out["sumAfter"]["flaggedActive"] == 0
+
+
+def test_card4_individual_analytical_domain_filters_and_cross_page_parity(
+    tmp_path: Path,
+) -> None:
+    """Verify Card 4: byte-identical DOMAIN_DEFS/normalizeDomainKey across all 3 generators,
+    10 individual domain pills on Page 2 & Page 3, and Page 2 filtering across shared by_tab keys."""
+    node_bin = shutil.which("node")
+    if node_bin is None:
+        pytest.skip("node binary not available in PATH")
+
+    from analysis.metadata.resource_audit_workbench import (
+        build_resource_audit_workbench,
+    )
+
+    payload = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    insights = build_resource_insights(payload)
+    bundle = prepare_dashboard_payload(payload, insights)
+    res_key = next(
+        (k for k in bundle.get("insights", {}) if k.lower() == "almond hulls"),
+        "almond hulls",
+    )
+    bundle.setdefault("insights", {}).setdefault(res_key, {}).setdefault(
+        "outlier_screening", {}
+    )["by_tab"] = {
+        "proximate": {
+            "replicate_groups": [
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::proximate::ash::oven-105c::exp-01",
+                    "analysis_type": "Proximate Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Ash",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": True,
+                    "raw_flagged": True,
+                    "below_cutoff": False,
+                },
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::calorimetry::hhv::bomb::exp-01",
+                    "analysis_type": "Calorimetry",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "HHV",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": False,
+                    "raw_flagged": False,
+                    "below_cutoff": False,
+                },
+            ],
+            "param_rsd_table": [
+                {"analysis_type": "Proximate Analysis", "parameter": "Ash", "within_rsd_pct": 5.0},
+                {"analysis_type": "Calorimetry", "parameter": "HHV", "within_rsd_pct": 1.2},
+            ],
+        },
+        "compositional": {
+            "replicate_groups": [
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::compositional::glucan::nrel::exp-01",
+                    "analysis_type": "Compositional Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Glucan",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": False,
+                    "raw_flagged": False,
+                    "below_cutoff": False,
+                },
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::ultimate::carbon::chn::exp-01",
+                    "analysis_type": "Ultimate Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Carbon",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": True,
+                    "raw_flagged": True,
+                    "below_cutoff": False,
+                },
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::xrd::crystallinity::powder::exp-01",
+                    "analysis_type": "XRD Crystallinity",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Crystallinity",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": False,
+                    "raw_flagged": False,
+                    "below_cutoff": False,
+                },
+            ],
+            "param_rsd_table": [
+                {"analysis_type": "Compositional Analysis", "parameter": "Glucan", "within_rsd_pct": 2.1},
+                {"analysis_type": "Ultimate Analysis", "parameter": "Carbon", "within_rsd_pct": 3.4},
+                {"analysis_type": "XRD Crystallinity", "parameter": "Crystallinity", "within_rsd_pct": 4.0},
+            ],
+        },
+        "elemental": {
+            "replicate_groups": [
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::icp::ca::microwave::exp-01",
+                    "analysis_type": "ICP Elemental Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "Ca",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": False,
+                    "raw_flagged": False,
+                    "below_cutoff": False,
+                },
+                {
+                    "replicate_group_key": "almond hulls::ah-ps-01::xrf::k::pellet::exp-01",
+                    "analysis_type": "XRF Elemental Analysis",
+                    "prepared_sample": "AH-PS-01",
+                    "experiment": "EXP-01",
+                    "parameter": "K",
+                    "n": 3,
+                    "qc_pass_count": 3,
+                    "qc_fail_count": 0,
+                    "active_flagged": True,
+                    "raw_flagged": True,
+                    "below_cutoff": False,
+                },
+            ],
+            "param_rsd_table": [
+                {"analysis_type": "ICP Elemental Analysis", "parameter": "Ca", "within_rsd_pct": 1.5},
+                {"analysis_type": "XRF Elemental Analysis", "parameter": "K", "within_rsd_pct": 6.2},
+            ],
+        },
+    }
+
+    page2_html = build_qc_outlier_dashboard_html(bundle, default_resource="almond hulls")
+    page3_html = build_full_dashboard_html(payload)
+    wb_path = tmp_path / "wb.html"
+    build_resource_audit_workbench(snapshot_path=SNAPSHOT_PATH, output_path=wb_path)
+    wb_html = wb_path.read_text(encoding="utf-8")
+
+    # 1. Verify byte-identical DOMAIN_DEFS and normalizeDomainKey block across all 3 generators
+    domain_defs_pattern = re.compile(
+        r"(const DOMAIN_DEFS = \[.*?\];\s*window\.DOMAIN_DEFS = DOMAIN_DEFS;\s*function normalizeDomainKey\(raw\) \{.*?\}\s*window\.normalizeDomainKey = normalizeDomainKey;)",
+        re.S,
+    )
+    m_p2 = domain_defs_pattern.search(page2_html)
+    m_p3 = domain_defs_pattern.search(page3_html)
+    m_wb = domain_defs_pattern.search(wb_html)
+    assert m_p2 and m_p3 and m_wb, "Expected DOMAIN_DEFS + normalizeDomainKey in all 3 generators"
+    assert m_p2.group(1) == m_p3.group(1) == m_wb.group(1), (
+        "DOMAIN_DEFS and normalizeDomainKey must be byte-identical across Page 1/2, Page 3, and Product 4"
+    )
+
+    # 2. Verify Page 3 splits Calorimetry and XRD (no paired calorimetry_xrd pill, axis title, or branch)
+    assert "{ id: 'calorimetry', label: 'Calorimetry'" in page3_html
+    assert "{ id: 'xrd', label: 'XRD'" in page3_html
+    assert "calorimetry: 'Calorimetry Parameter (MJ/kg)'" in page3_html
+    assert "xrd: 'XRD Crystallinity Parameter (%)'" in page3_html
+    page3_own_source = page3_html.replace(SHARED_SLICE_AND_BUG_MODALS_JS, "")
+    assert "calorimetry_xrd" not in page3_own_source
+
+    # 3. Execute Page 2 inline JS in Node to verify individual domain pill rendering and shared-by_tab filtering
+    m_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2_html, flags=re.S
+    )
+    assert m_script
+    p2_script = m_script.group(1)
+
+    harness_js = tmp_path / "run_card4_domain_checks.js"
+    harness_js.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    addEventListener(){}, removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html?resource=almond+hulls&domain=calorimetry_xrd", search: "?resource=almond+hulls&domain=calorimetry_xrd", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html" },
+  history: { replaceState(){} },
+  addEventListener(){}
+};
+global.document = {
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.localStorage = { getItem(){ return null; }, setItem(){}, removeItem(){} };
+global.fetch = async () => ({ ok: false, status: 401, json: async () => ({}) });
+"""
+        + p2_script
+        + """
+const pillsHtml = document.getElementById("domain-pills").innerHTML;
+// Verify legacy URL ?domain=calorimetry_xrd normalized to "calorimetry"
+const initialDom = state.domain;
+
+const byDom = {};
+["all", ...window.DOMAIN_DEFS.map(d => d.key)].forEach(k => {
+  window.setDomain(k);
+  byDom[k] = {
+    groups: getAllDomainOutlierGroups().map(g => g.parameter),
+    params: getAllDomainParamRsdRows().map(p => p.parameter),
+    navExplorerHref: document.getElementById("nav-page-explorer").href
+  };
+});
+
+console.log(JSON.stringify({
+  domainKeys: window.DOMAIN_DEFS.map(d => d.key),
+  initialDom,
+  pillsHtml,
+  byDom,
+  normTests: {
+    ash: window.normalizeDomainKey("Ash"),
+    xrf: window.normalizeDomainKey("XRF Elemental Analysis"),
+    icp: window.normalizeDomainKey("ICP Elemental Analysis"),
+    elemental: window.normalizeDomainKey("elemental"),
+    calXrd: window.normalizeDomainKey("calorimetry_xrd"),
+    xrd: window.normalizeDomainKey("XRD Crystallinity"),
+    ferm: window.normalizeDomainKey("Fermentation (Bioconversion)")
+  }
+}));
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert out["domainKeys"] == [
+        "proximate",
+        "calorimetry",
+        "compositional",
+        "ultimate",
+        "xrd",
+        "icp",
+        "xrf",
+        "pretreatment",
+        "fermentation",
+        "gasification",
+    ]
+    assert out["initialDom"] == "calorimetry"
+    assert out["normTests"] == {
+        "ash": "xrf",
+        "xrf": "xrf",
+        "icp": "icp",
+        "elemental": "icp",
+        "calXrd": "calorimetry",
+        "xrd": "xrd",
+        "ferm": "fermentation",
+    }
+    # Compositional, Ultimate, and XRD are cleanly separated even though they share by_tab.compositional
+    assert out["byDom"]["compositional"]["groups"] == ["Glucan"]
+    assert out["byDom"]["ultimate"]["groups"] == ["Carbon"]
+    assert out["byDom"]["xrd"]["groups"] == ["Crystallinity"]
+    assert out["byDom"]["proximate"]["groups"] == ["Ash"]
+    assert out["byDom"]["calorimetry"]["groups"] == ["HHV"]
+    assert out["byDom"]["icp"]["groups"] == ["Ca"]
+    assert out["byDom"]["xrf"]["groups"] == ["K"]
+    assert len(out["byDom"]["all"]["groups"]) == 7
+    assert "type=xrd" in out["byDom"]["xrd"]["navExplorerHref"]
+
+
+def test_card5a_default_in_review_status_and_assignee_persistence(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Verify Card 5a defaults to provisional/keep_note/in_review across all 4 surfaces and persists assignee emails on Pages 2 & 3."""
+    from analysis.metadata.resource_audit_workbench import (
+        build_resource_audit_workbench,
+    )
+
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1_html = snapshot_and_pages["page1"]
+    page2_html = snapshot_and_pages["page2"]
+    page3_html = snapshot_and_pages["page3"]
+    wb_path = tmp_path / "wb_card5a.html"
+    build_resource_audit_workbench(snapshot_path=SNAPSHOT_PATH, output_path=wb_path)
+    wb_html = wb_path.read_text(encoding="utf-8")
+
+    # 1. Verify HTML dropdown defaults across Shared Modal (Pages 1-3), Page 3 Popover & Pinned Inspector, and Product 4 Drawer
+    modal_sel = re.search(
+        r'<select id="finding-modal-qc-status"[^>]*>\s*<option value="([^"]+)" selected>',
+        page1_html,
+    )
+    assert modal_sel and modal_sel.group(1) == "provisional"
+
+    pop_sel = re.search(
+        r'<select id="click-popover-action"[^>]*>\s*<option value="([^"]+)" selected>',
+        page3_html,
+    )
+    assert pop_sel and pop_sel.group(1) == "keep_note"
+    assert 'id="click-popover-assignee"' in page3_html
+
+    pin_sel = re.search(
+        r'<select id="pin-audit-action"[^>]*>\s*<option value="([^"]+)" selected>',
+        page3_html,
+    )
+    assert pin_sel and pin_sel.group(1) == "keep_note"
+    assert 'id="pin-audit-assignee"' in page3_html
+    assert "(document.getElementById('click-popover-action') || {}).value || 'keep_note'" in page3_html
+    assert "(document.getElementById('pin-audit-action') || {}).value || 'keep_note'" in page3_html
+    assert "default_qc_status: 'provisional'" in page3_html
+    assert "assigned_to_email: cleanAssignee" in page3_html
+
+    wb_sel = re.search(
+        r'<select id="select-decision-action"[^>]*>.*?<option value="([^"]+)" selected>',
+        wb_html,
+        re.S,
+    )
+    assert wb_sel and wb_sel.group(1) == "in_review"
+
+    # 2. Execute Page 2 + Shared Modal JS in Node to verify default status & Page 2 assignee persistence
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2_html, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    p2_harness = tmp_path / "run_card5a_p2.js"
+    p2_harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    addEventListener(ev, fn){ this["_on_" + ev] = fn; },
+    removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+const storage = {};
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+const listeners = {};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(ev, fn){ (listeners[ev] = listeners[ev] || []).push(fn); },
+  dispatchEvent(ev){ (listeners[ev.type] || []).forEach(fn => fn(ev)); }
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+const apiCalls = [];
+let nextApiId = 500;
+global.fetch = async (url, opts) => {
+  const method = (opts && opts.method) || "GET";
+  const body = (opts && opts.body) ? JSON.parse(opts.body) : null;
+  apiCalls.push({ url, method, body });
+  if (String(url).includes("/v1/qc/decisions/") && String(url).endsWith("/assign")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "ok",
+        decision: { id: 500, assigned_to_email: body.assigned_to_email, decision_status: "in_review" }
+      })
+    };
+  }
+  if (String(url).endsWith("/v1/qc/decisions") && method === "POST") {
+    const id = body.id || (++nextApiId);
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "ok",
+        decision: {
+          id,
+          record_id: body.record_id,
+          replicate_group_key: body.replicate_group_key,
+          resource_name: body.resource_name,
+          analysis_type: body.analysis_type,
+          parameter_name: body.parameter_name,
+          decision_action: body.decision_action,
+          decision_status: body.decision_status,
+          new_qc_pass: body.new_qc_pass,
+          assigned_to_email: body.assigned_to_email,
+          review_note: body.review_note
+        }
+      })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + p2_script
+        + """
+(async () => {
+  // 1. Open shared finding modal with empty payload and verify default status is "provisional"
+  window.openSubmitFindingModal({ resource_name: "almond hulls", parameter_name: "Ash", record_id: "rec-901" });
+  const modalDefaultQc = document.getElementById("finding-modal-qc-status").value;
+
+  // 2. Submit a finding with default provisional status and assignee email
+  const findingRes = await window.BioCirvQcClient.submitFinding({
+    scope: "replicate_group",
+    resource_name: "almond hulls",
+    analysis_type: "proximate",
+    parameter_name: "Ash",
+    record_id: "rec-901",
+    target_record_ids: ["rec-901", "rec-902"],
+    new_qc_status: modalDefaultQc,
+    assigned_to_email: "Reviewer1@lbl.gov",
+    audit_note: "Default provisional check"
+  });
+
+  // 3. Test Page 2 inline triage row: set assignee first, then change decision, then update assignee
+  const metaObj = {
+    scope: "replicate_group",
+    replicate_group_key: "almond hulls::ah-01::proximate::moisture::oven::exp-1",
+    resource_name: "almond hulls",
+    analysis_type: "proximate",
+    prepared_sample: "AH-01",
+    experiment: "EXP-1",
+    parameter: "Moisture",
+    record_id: "rec-910",
+    record_ids: "rec-910|rec-911"
+  };
+  const encodedMeta = encodeURIComponent(JSON.stringify(metaObj));
+  const rowKey = "grp::almond hulls::ah-01::proximate::moisture::oven::exp-1";
+
+  window.handleDecisionAssignee(rowKey, "pi.reviewer@lbl.gov", encodedMeta);
+  await new Promise(r => setTimeout(r, 20));
+  window.handleDecisionChange(rowKey, "accept_with_note", encodedMeta);
+  await new Promise(r => setTimeout(r, 20));
+  const afterDecisionEntry = JSON.parse(global.localStorage.getItem("biocirv_qc_decisions_v1"))[rowKey];
+
+  window.handleDecisionAssignee(rowKey, "lead.analyst@lbl.gov", encodedMeta);
+  await new Promise(r => setTimeout(r, 20));
+  const afterReassignEntry = JSON.parse(global.localStorage.getItem("biocirv_qc_decisions_v1"))[rowKey];
+
+  console.log(JSON.stringify({
+    modalDefaultQc,
+    findingSubmittedBody: apiCalls[0].body,
+    findingDecision: findingRes.decision,
+    afterDecisionEntry,
+    afterReassignEntry,
+    apiCalls
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc_p2 = subprocess.run(
+        [node_bin, str(p2_harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc_p2.returncode == 0, f"Page 2 Node harness failed: {proc_p2.stderr}"
+    out_p2 = json.loads(proc_p2.stdout.strip().splitlines()[-1])
+
+    assert out_p2["modalDefaultQc"] == "provisional"
+    post_calls = [c for c in out_p2["apiCalls"] if c["method"] == "POST"]
+    assert len(post_calls) >= 1
+    first_post_body = post_calls[0]["body"]
+    assert first_post_body["decision_action"] == "in_review"
+    assert first_post_body["decision_status"] == "in_review"
+    assert first_post_body["new_qc_pass"] is None
+    assert first_post_body["new_qc_status"] == "provisional"
+    assert first_post_body["decision"] == "accept_with_note"
+    assert first_post_body["assigned_to_email"] == "reviewer1@lbl.gov"
+
+    assert out_p2["afterDecisionEntry"]["decision"] == "accept_with_note"
+    assert out_p2["afterDecisionEntry"]["assigned_to_email"] == "pi.reviewer@lbl.gov"
+    assert out_p2["afterDecisionEntry"]["api_decision_id"] is not None
+
+    assert out_p2["afterReassignEntry"]["assigned_to_email"] == "lead.analyst@lbl.gov"
+    assign_patch_calls = [
+        c for c in out_p2["apiCalls"] if c["method"] == "PATCH" and "/assign" in c["url"]
+    ]
+    assert len(assign_patch_calls) >= 1
+    assert assign_patch_calls[-1]["body"]["assigned_to_email"] == "lead.analyst@lbl.gov"
+
+
+def test_card6_open_slice_export_modal_and_sliced_bundle_insights(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Verify Card 6: window.openSliceExportModal opens #modal-export-slice & preselects resource, and buildClientSideSlicedBundle filters insights to selectedResources."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page2_html = snapshot_and_pages["page2"]
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2_html, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    harness = tmp_path / "run_card6_slice_modal.js"
+    harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  const classes = new Set(id === "modal-export-slice" ? ["hidden"] : []);
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    checked: true,
+    options: [],
+    classList: {
+      add(c){ classes.add(c); },
+      remove(c){ classes.delete(c); },
+      toggle(c){ if (classes.has(c)) classes.delete(c); else classes.add(c); },
+      contains(c){ return classes.has(c); }
+    },
+    addEventListener(ev, fn){ this["_on_" + ev] = fn; },
+    removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+global.localStorage = { getItem(){ return null; }, setItem(){}, removeItem(){} };
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 2",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){}, outerHTML: "<html></html>" },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
+"""
+        + p2_script
+        + """
+// 1. Verify window.openSliceExportModal and BioCirvQcClient.openSliceExportModal exist and open #modal-export-slice
+const modalEl = document.getElementById("modal-export-slice");
+const beforeHidden = modalEl.classList.contains("hidden");
+window.openSliceExportModal({ resource: "almond hulls" });
+const afterHidden = modalEl.classList.contains("hidden");
+const selectedResVal = document.getElementById("slice-modal-resource").value;
+const checklistHtml = document.getElementById("slice-modal-resources-list").innerHTML;
+const previewHtml = document.getElementById("slice-preview-count").textContent || document.getElementById("slice-preview-count").innerHTML;
+
+// 2. Test buildClientSideSlicedBundle with both top-level and nested insights.resources structures
+const baseTopLevel = {
+  resources: ["almond hulls", "rice straw"],
+  by_resource: {
+    "almond hulls": { sample_count: 2 },
+    "rice straw": { sample_count: 3 }
+  },
+  insights: {
+    schema_version: "1.0.0",
+    "almond hulls": { headline: "Almond insight" },
+    "rice straw": { headline: "Rice insight" },
+    resources: {
+      "almond hulls": { summary: "Nested almond" },
+      "rice straw": { summary: "Nested rice" }
+    }
+  },
+  qc_Index: {
+    resources: ["almond hulls", "rice straw"],
+    by_resource: {
+      "almond hulls": { raw_records: [{ record_id: "r1", prepared_sample: "S1", experiment: "E1", analysis_type: "Proximate Analysis" }] },
+      "rice straw": { raw_records: [{ record_id: "r2", prepared_sample: "S2", experiment: "E2", analysis_type: "Proximate Analysis" }] }
+    }
+  }
+};
+
+const slicedPositional = buildClientSideSlicedBundle(baseTopLevel, ["almond hulls"], "all", "all", "", "");
+const slicedOptions = buildClientSideSlicedBundle(baseTopLevel, { selectedResources: ["almond hulls"] });
+
+console.log(JSON.stringify({
+  hasOpenSliceFn: typeof window.openSliceExportModal === "function",
+  hasClientOpenSliceFn: typeof (window.BioCirvQcClient && window.BioCirvQcClient.openSliceExportModal) === "function",
+  beforeHidden,
+  afterHidden,
+  selectedResVal,
+  checklistHasAlmondChecked: checklistHtml.toLowerCase().includes('data-slice-res="almond hulls"') && checklistHtml.includes("checked"),
+  previewHasAlmond: previewHtml.toLowerCase().includes("almond hulls"),
+  slicedPositionalInsightsKeys: Object.keys(slicedPositional.insights),
+  slicedPositionalNestedKeys: Object.keys(slicedPositional.insights.resources || {}),
+  slicedOptionsInsightsKeys: Object.keys(slicedOptions.insights),
+  slicedOptionsNestedKeys: Object.keys(slicedOptions.insights.resources || {})
+}));
+process.exit(0);
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Card 6 Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert out["hasOpenSliceFn"] is True
+    assert out["hasClientOpenSliceFn"] is True
+    assert out["beforeHidden"] is True
+    assert out["afterHidden"] is False
+    assert out["selectedResVal"].lower() == "almond hulls"
+    assert out["checklistHasAlmondChecked"] is True
+    assert out["previewHasAlmond"] is True
+    assert "almond hulls" in out["slicedPositionalInsightsKeys"]
+    assert "rice straw" not in out["slicedPositionalInsightsKeys"]
+    assert out["slicedPositionalNestedKeys"] == ["almond hulls"]
+    assert "almond hulls" in out["slicedOptionsInsightsKeys"]
+    assert "rice straw" not in out["slicedOptionsInsightsKeys"]
+    assert out["slicedOptionsNestedKeys"] == ["almond hulls"]
+
+
+def test_card8_landing_page_ui_and_flag_badges(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+    workbench_src = (
+        REPO_ROOT / "analysis" / "metadata" / "resource_audit_workbench.py"
+    ).read_text(encoding="utf-8")
+
+    # 1. Suite nav bar renamed to "Statistical Snapshot" across all pages
+    assert "Statistical Snapshot" in page1
+    assert "Statistical Snapshot" in page2
+    assert "Statistical Snapshot" in page3
+    assert "Statistical Snapshot" in workbench_src
+    assert "2. Stat Screen" not in page1
+    assert "2. Stat Screen" not in page2
+    assert "2. Stat Screen" not in page3
+    assert "2. Stat QC" not in workbench_src
+
+    # 2. Page 1 3-card header layout & KPI strip decluttering
+    assert 'id="top-card-resource-metadata"' in page1
+    assert 'id="top-card-flag-counts"' in page1
+    assert 'id="top-card-controls-export"' in page1
+    assert "Resource Metadata &amp; Lab Notes" in page1
+    assert "Flag Counts" in page1
+    assert "Scoped to selected resource &amp; analysis type" in page1
+    assert "Unified Controls &amp; Export" in page1
+    assert 'id="chk-p1-suppress-trace"' in page1
+    assert 'id="chk-p1-blind-mode"' in page1
+    assert "Collection & Prep Dates" not in page1
+
+    # 3. Decluttered flag badge pills & trace suppression guard on Page 1 & Page 2
+    assert "const allowFlags = !g.below_cutoff || !state.suppressTraceFlags;" in page1
+    assert "const showActiveFlags = !g.below_cutoff || !state.suppressTraceFlags;" in page2
+    assert page1.count("renderGroupFlagBadges(") >= 2
+    assert "const matchedOutlierGroup = findOutlierGroupForRecords(" in page1
+
+    # 4. Runtime execution of Page 1 renderGroupFlagBadges + buildAuditGroupBtnHtml
+    fn_block_start = page1.index("function renderGroupFlagBadges(g) {")
+    fn_block_end = page1.index("function formatMdInline(text) {")
+    fn_block_js = page1[fn_block_start:fn_block_end]
+    node_script = f"""
+const window = globalThis;
+const state = {{ resource: "almond hulls", suppressTraceFlags: true }};
+function fmtNum(v, digits = 2) {{
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return Number(v).toFixed(digits);
+}}
+let mockInsights = {{
+  outlier_screening: {{
+    by_tab: {{
+      proximate: {{
+        replicate_groups: [
+          {{
+            parameter: "ash",
+            prepared_sample: "AH-PS-1",
+            analysis_type: "Proximate Analysis",
+            replicates: [{{ id: "prox-1" }}, {{ id: "prox-2" }}, {{ id: "prox-3" }}],
+            raw_dixon: true,
+            dixon_q: 0.941,
+            raw_rsd20: true,
+            rsd_within_pct: 24.5,
+            raw_sd3x: true,
+            has_identical_replicates: true,
+            qc_mixed: true,
+            qc_pass_count: 2,
+            qc_fail_count: 1,
+            below_cutoff: false,
+            cutoff_label: "<0.5% wt"
+          }},
+          {{
+            parameter: "Cd",
+            prepared_sample: "AH-PS-1",
+            analysis_type: "ICP Elemental Analysis",
+            replicates: [{{ id: "icp-1" }}, {{ id: "icp-2" }}],
+            raw_rsd20: true,
+            rsd_within_pct: 35.0,
+            below_cutoff: true,
+            cutoff_label: "<100 ppm"
+          }}
+        ]
+      }}
+    }}
+  }}
+}};
+function getResourceInsights() {{ return mockInsights; }}
+{fn_block_js}
+const activeHtml = buildAuditGroupBtnHtml([
+  {{ record_id: "prox-1", replicate: 1, value: 5.1, qc_status: "pass", prepared_sample: "AH-PS-1", analysis_type: "Proximate Analysis", parameter: "ash" }},
+  {{ record_id: "prox-2", replicate: 2, value: 5.2, qc_status: "pass", prepared_sample: "AH-PS-1", analysis_type: "Proximate Analysis", parameter: "ash" }},
+  {{ record_id: "prox-3", replicate: 3, value: 9.8, qc_status: "fail", prepared_sample: "AH-PS-1", analysis_type: "Proximate Analysis", parameter: "ash" }}
+], "⚑ Audit");
+state.suppressTraceFlags = true;
+const traceSuppressedHtml = buildAuditGroupBtnHtml([
+  {{ record_id: "icp-1", replicate: 1, value: 0.2, qc_status: "pass", prepared_sample: "AH-PS-1", analysis_type: "ICP Elemental Analysis", parameter: "Cd" }}
+], "⚑ Audit");
+state.suppressTraceFlags = false;
+const traceUnsuppressedHtml = buildAuditGroupBtnHtml([
+  {{ record_id: "icp-1", replicate: 1, value: 0.2, qc_status: "pass", prepared_sample: "AH-PS-1", analysis_type: "ICP Elemental Analysis", parameter: "Cd" }}
+], "⚑ Audit");
+console.log(JSON.stringify({{ activeHtml, traceSuppressedHtml, traceUnsuppressedHtml }}));
+"""
+    proc = subprocess.run(
+        ["node", "-e", node_script],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    out = json.loads(proc.stdout.strip())
+    assert 'title="Dixon Q=0.941"' in out["activeHtml"]
+    assert 'title="Within-group RSD 24.5% > 20%"' in out["activeHtml"]
+    assert 'title=">3×SD_pooled candidate"' in out["activeHtml"]
+    assert 'title="Mixed QC (2P/1F)"' in out["activeHtml"]
+    assert "⚑ Audit (n=3)" in out["activeHtml"]
+    assert "⚑ RSD &gt; 20%" not in out["traceSuppressedHtml"]
+    assert 'title="Low-abundance trace parameter (<100 ppm)"' in out["traceSuppressedHtml"]
+    assert "⚑ RSD &gt; 20%" in out["traceUnsuppressedHtml"]
+
+    for flag_label in [
+        "⚑ Dixon Outlier",
+        "⚑ RSD &gt; 20%",
+        "⚑ RSD 10–20%",
+        "⚑ &gt;3&times;SD_pooled",
+        "⚑ Identical Replicates",
+        "⚑ Mixed QC",
+    ]:
+        assert flag_label in page1
+        assert flag_label in page2
+
+
+def test_card9_sticky_sidebar_and_pushstate_popstate(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. Page 2 Sticky Filter Sidebar structure & controls
+    assert 'id="qc-sticky-filter-sidebar"' in page2
+    assert "position: sticky; top: 16px;" in page2
+    assert "Flag Filters" in page2
+    assert "Choose an Analysis Type" in page2
+    assert "Additional Filters" in page2
+    assert 'id="flt-sidebar-flag-type"' in page2
+    assert '<option value="identical">Identical Replicates</option>' in page2
+    assert 'id="sidebar-suppressed-count-badge"' in page2
+    assert 'id="chk-sidebar-blind-mode"' in page2
+    assert 'id="sidebar-search-input"' in page2
+    assert (
+        'if (mode === "identical") return Boolean(g.has_identical_replicates || g.identical_replicates);'
+        in page2
+    )
+
+    # 2. Page 3 Sticky Filter Sidebar structure & controls
+    assert 'id="explorer-sticky-filter-sidebar"' in page3
+    assert "position: sticky; top: 16px;" in page3
+    assert "Flag Filters" in page3
+    assert "Choose an Analysis Type" in page3
+    assert "Additional Filters" in page3
+    assert 'id="flt-explorer-flag-type"' in page3
+    assert '<option value="identical">Identical Replicates</option>' in page3
+    assert 'id="chk-explorer-suppress-trace"' in page3
+    assert 'id="explorer-suppressed-count-badge"' in page3
+    assert 'id="chk-explorer-blind-mode"' in page3
+    assert 'id="filter-search"' in page3
+    assert "function isExplorerGroupMatchingFlagFilter(g, flagMode)" in page3
+
+    # 3. History pushState + popstate listener across Page 1, Page 2, and Page 3
+    for name, html in [("page1", page1), ("page2", page2), ("page3", page3)]:
+        assert "window.history.pushState(" in html, f"{name} missing window.history.pushState"
+        assert "window.history.replaceState(" in html, (
+            f"{name} missing window.history.replaceState"
+        )
+        assert "addEventListener" in html and "popstate" in html, (
+            f"{name} missing popstate listener"
+        )
+        assert "push: true" in html, f"{name} missing interactive push: true transitions"
+        assert "push: false" in html, f"{name} missing non-push popstate/init transitions"
+
+
+def test_card10_explorer_brush_zoom_and_qc_panels(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    """Card 10: Verify Page 3 HTML5 canvas rectangular brush zoom, click-audit popover preservation,
+    canonical 6-part replicate key synchronization, method-aware Between-Sample RSD, and Lab Notes panel.
+    """
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. HTML5 2D <canvas id="plot-canvas"> rectangular brush zoom overlay & controls
+    assert 'id="canvas-zoom-brush"' in page3
+    assert 'id="btn-reset-zoom"' in page3
+    assert "resetCanvasZoom()" in page3
+    assert "state.zoomBounds" in page3
+    assert "brush.suppressNextClick" in page3
+    assert "pxToDataX" in page3 and "pxToDataY" in page3
+
+    # 2. Click-Audit Popover DOM/JS contract preserved intact
+    assert 'id="click-audit-popover"' in page3
+    assert 'id="btn-audit-scope-group"' in page3
+    assert 'id="btn-audit-scope-single"' in page3
+    assert "function openClickAuditPopover(" in page3
+    assert "function submitClickPopoverAuditFinding(" in page3
+    assert "function escalateClickPopoverToModal(" in page3
+    assert "let auditPopoverScope = 'group';" in page3
+    assert "function setAuditPopoverScope(scope)" in page3
+
+    # 3. Canonical 6-part replicate group key + statistical screening parity
+    assert "window.normalizeReplicateGroupKey(r, r.resource_name)" in page3
+    assert "const key = getReplicateGroupKey(r);" in page3
+    assert "dixonPass = !(dixonQ > qCrit && rsd !== null && rsd >= 10.0);" in page3
+    assert "3.0 * pooledSd" in page3
+    assert "Identical Replicates (SD=0)" in page3
+    assert "${g.resource_name}::${g.analysis_type}::${g.parameter}::${g.prep_method}::${g.unit}" in page3
+
+    # 4. Redesigned 3-section #stat-screening-drawer
+    assert "1. Within-Replicate vs. Between-Sample RSD Summary" in page3
+    assert "Within-Replicate RSD" in page3
+    assert "SD_within / |Mean_group| × 100%" in page3
+    assert "sqrt(Σ(n_g - 1)s_g² / Σ(n_g - 1))" in page3
+    assert "SD(group means) / |Grand Mean| × 100%" in page3
+    assert "N/A (n=1 method group)" in page3
+    assert "2. Flagged Replicate Groups" in page3
+    assert "⚑ Dixon Outlier" in page3
+    assert "⚑ RSD &gt; 20%" in page3
+    assert "⚑ &gt;3×SD_pooled" in page3
+    assert "⚑ Identical Replicates" in page3
+    assert "3. Resource Lab &amp; Sample Lineage Notes" in page3
+    assert 'id="explorer-lab-notes-panel"' in page3
+
+
+def test_card11_proximate_sum_portal_parity_and_data_visualizer_rename(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    """Card 11: Verify Data Portal proximate_sum parity across Page 1, Page 2, and Page 3,
+    and Page 3 rename to Interactive Data Visualizer / 3. Data Visualizer.
+    """
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    # 1. Suite nav bar renamed to "3. Data Visualizer" across Page 1, Page 2, Page 3
+    assert "3. Data Visualizer" in page1
+    assert "3. Data Visualizer" in page2
+    assert "3. Data Visualizer" in page3
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page1
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page2
+    assert "3. Multi-Resource Side-by-Side Explorer" not in page3
+
+    # 2. Page 3 title & header renamed to Interactive Feedstock Data Visualizer
+    assert "<title>BioCirV — Interactive Feedstock Data Visualizer</title>" in page3
+    assert "BioCirV Interactive Feedstock Data Visualizer" in page3
+
+    # 3. Proximate Sum badge & filter option across Page 1, Page 2, Page 3
+    assert "⚑ Proximate Sum" in page1
+    assert "⚑ Proximate Sum" in page2
+    assert "⚑ Proximate Sum" in page3
+    assert 'proxGroupMode: "exp_method"' in page1
+    assert "By Experiment × Method" in page1
+    assert '<option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>' in page2
+    assert '<option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>' in page3
+    assert "Proximate Closure (Moisture + VS + Ash):" in page3
+    assert "out_of_bounds: sumPct > 0.0 && (sumPct < 95.0 || sumPct > 105.0)" in page3
+
+
+def test_card12_default_assignee_email_and_assign_batch(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Card 12: Verify window.getDefaultAssigneeEmail auto-fill across Pages 1–3 and BioCirvQcClient.assignBatch."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    assert "function getDefaultAssigneeEmail(" in page1
+    assert "function getDefaultAssigneeEmail(" in page2
+    assert "function getDefaultAssigneeEmail(" in page3
+    assert "getDefaultAssigneeEmail(pf.assigned_to_email)" in page1
+    assert "window.getDefaultAssigneeEmail(dEntry.assigned_to_email)" in page2
+    assert "window.getDefaultAssigneeEmail(" in page3
+    assert "async assignBatch(" in page1
+
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    harness = tmp_path / "run_card12_overlay_checks.js"
+    harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: { add(){}, remove(){}, toggle(){}, contains(){ return false; } },
+    addEventListener(){}, removeEventListener(){}, setAttribute(){}, getAttribute(){ return null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+const storage = {};
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 2",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+const apiCalls = [];
+global.fetch = async (url, opts) => {
+  const method = (opts && opts.method) || "GET";
+  const body = (opts && opts.body) ? JSON.parse(opts.body) : null;
+  apiCalls.push({ url, method, body });
+  if (String(url).includes("/v1/qc/auth/me")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ email: "Auto.Analyst@lbl.gov", name: "Auto Analyst", role: "analyst", authenticated: true })
+    };
+  }
+  if (String(url).endsWith("/v1/qc/decisions/assign-batch") && method === "POST") {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "ok",
+        assigned_count: (body.items || []).length,
+        assigned_to_email: body.assigned_to_email,
+        decisions: (body.items || []).map((it, idx) => ({
+          id: it.id || (700 + idx),
+          record_table: it.record_table,
+          record_id: it.record_id,
+          replicate_group_key: it.replicate_group_key,
+          assigned_to_email: body.assigned_to_email,
+          decision_status: "in_review",
+          decision_action: "in_review"
+        }))
+      })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + p2_script
+        + """
+(async () => {
+  window.BioCirvQcClient.setAnalystIdentity({
+    email: "Auto.Analyst@lbl.gov",
+    name: "Auto Analyst",
+    role: "analyst",
+    confirmed: true
+  });
+
+  // 1. Verify getDefaultAssigneeEmail falls back to currentUser.email when empty, and preserves explicit email
+  const fallbackEmail = window.getDefaultAssigneeEmail("");
+  const explicitEmail = window.getDefaultAssigneeEmail("custom.reviewer@lbl.gov");
+
+  // 2. Open Submit Finding modal with no assigned_to_email -> auto-fills #finding-modal-assigned-email
+  window.openSubmitFindingModal({ resource_name: "almond hulls", parameter_name: "Ash", record_id: "rec-101" });
+  const modalAssignedVal = document.getElementById("finding-modal-assigned-email").value;
+
+  // 3. Verify Page 2 getDecisionEntry defaults assigned_to_email to current analyst
+  const defaultEntry = getDecisionEntry("grp::almond hulls::ah-01::proximate::ash::oven::exp-1");
+
+  // 4. Verify BioCirvQcClient.assignBatch posts to /v1/qc/decisions/assign-batch and updates live decisions cache
+  const batchRes = await window.BioCirvQcClient.assignBatch(
+    [
+      { record_table: "proximate_record", record_id: "rec-101", resource_name: "almond hulls", analysis_type: "proximate", parameter_name: "Ash" },
+      { record_table: "proximate_record", record_id: "rec-102", resource_name: "almond hulls", analysis_type: "proximate", parameter_name: "Moisture" }
+    ],
+    "Team.Lead@lbl.gov",
+    "Batch review note"
+  );
+
+  console.log(JSON.stringify({
+    fallbackEmail,
+    explicitEmail,
+    modalAssignedVal,
+    defaultEntryAssignee: defaultEntry.assigned_to_email,
+    batchRes,
+    batchApiCalls: apiCalls.filter(c => String(c.url).endsWith("/v1/qc/decisions/assign-batch"))
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Card 12 overlay Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert out["fallbackEmail"] == "auto.analyst@lbl.gov"
+    assert out["explicitEmail"] == "custom.reviewer@lbl.gov"
+    assert out["modalAssignedVal"] == "auto.analyst@lbl.gov"
+    assert out["defaultEntryAssignee"] == "auto.analyst@lbl.gov"
+    assert out["batchRes"]["ok"] is True
+    assert out["batchRes"]["assigned_count"] == 2
+    assert len(out["batchApiCalls"]) == 1
+    assert out["batchApiCalls"][0]["body"]["assigned_to_email"] == "team.lead@lbl.gov"
+    assert out["batchApiCalls"][0]["body"]["review_note"] == "Batch review note"
+    assert len(out["batchApiCalls"][0]["body"]["items"]) == 2
+
+
+def test_card13_show_me_mini_plot_popover_pages_1_to_3(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Card 13: Verify #audit-flag-show-me-popover, window.openFlagShowMePopover, and '👁 Show me' buttons across Pages 1–3."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    for page_html in (page1, page2, page3):
+        assert 'id="audit-flag-show-me-popover"' in page_html
+        assert "background-color: var(--card, #0f172a)" in page_html
+        assert "opacity: 1" in page_html
+        assert 'id="show-me-mini-svg"' in page_html
+        assert 'id="show-me-proximate-bar"' in page_html
+        assert 'id="show-me-open-visualizer-link"' in page_html
+        assert "function openFlagShowMePopover(" in page_html
+        assert "function closeFlagShowMePopover(" in page_html
+        assert "btn-show-me-flag" in page_html
+        assert "👁 Show me" in page_html
+        assert "REC-OUTLIER-1" not in page_html
+        assert "Sample-01" not in page_html
+
+    assert 'id="btn-qc-pop-show-me"' in page3
+    assert "window.__HIGHLIGHT_RK__" in page3
+
+    m_p2_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page2, flags=re.S
+    )
+    assert m_p2_script
+    p2_script = m_p2_script.group(1)
+
+    harness = tmp_path / "run_card13_show_me_checks.js"
+    harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set(id === "audit-flag-show-me-popover" || id === "show-me-proximate-bar" ? ["hidden"] : []);
+  const attrs = {};
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: {
+      add(c){ classSet.add(c); },
+      remove(c){ classSet.delete(c); },
+      toggle(c){ if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c){ return classSet.has(c); }
+    },
+    addEventListener(){}, removeEventListener(){},
+    setAttribute(k, v){ attrs[k] = String(v); if (k === "href") this.href = String(v); },
+    getAttribute(k){ return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    appendChild(){}, querySelectorAll(){ return []; }, focus(){}, setSelectionRange(){}
+  };
+}
+const storage = {};
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_qc_outlier_dashboard.html", protocol: "http:" },
+  history: { replaceState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 2",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.fetch = async () => ({ ok: false, status: 404, json: async () => ({}) });
+"""
+        + p2_script
+        + """
+(() => {
+  // 1. Open Show Me popover for a real replicate group from the snapshot
+  const resKey = Object.keys(BUNDLE.insights || {})[0];
+  const ins = BUNDLE.insights[resKey];
+  const byTab = (ins.outlier_screening && ins.outlier_screening.by_tab) || {};
+  let realGrp = null;
+  for (const tKey of Object.keys(byTab)) {
+    const grps = (byTab[tKey] && byTab[tKey].replicate_groups) || [];
+    if (grps.length > 0) {
+      realGrp = grps.find(g => g.raw_flagged || g.active_flagged) || grps[0];
+      break;
+    }
+  }
+  const realRk = window.normalizeReplicateGroupKey(realGrp, resKey);
+  const res1 = window.openFlagShowMePopover({
+    replicateGroupKey: realRk,
+    resource: resKey,
+    analysisType: realGrp.analysis_type,
+    parameter: realGrp.parameter,
+    preparedSample: realGrp.prepared_sample,
+    outlierRecordId: String(realGrp.dixon_candidate_id || (realGrp.replicates && realGrp.replicates[0] && realGrp.replicates[0].id) || "")
+  });
+  const popEl = document.getElementById("audit-flag-show-me-popover");
+  const svgHtml1 = document.getElementById("show-me-mini-svg").innerHTML;
+  const vizHref1 = document.getElementById("show-me-open-visualizer-link").getAttribute("href");
+
+  // 2. Open Show Me popover with proximate_sum flag active on a real group
+  const res2 = window.openFlagShowMePopover({
+    replicateGroupKey: realRk,
+    resource: resKey,
+    analysisType: "proximate",
+    parameter: realGrp.parameter,
+    preparedSample: realGrp.prepared_sample,
+    flags: ["proximate_sum"],
+    proximateSumPct: 108.6
+  });
+  const proxBarEl = document.getElementById("show-me-proximate-bar");
+  const proxBar2Hidden = proxBarEl.classList.contains("hidden");
+  const proxBar2Html = proxBarEl.innerHTML;
+
+  // 3. Verify nonexistent replicateGroupKey renders honest empty state and zero synthetic data
+  const emptyRes = window.openFlagShowMePopover({
+    replicateGroupKey: "nonexistent::missing-sample::proximate::ash::none::none",
+    resource: "nonexistent_resource",
+    analysisType: "proximate",
+    parameter: "ash"
+  });
+  const emptySvgHtml = document.getElementById("show-me-mini-svg").innerHTML;
+
+  // 4. Close popover
+  window.closeFlagShowMePopover();
+  const popClosedHidden = popEl.classList.contains("hidden");
+
+  console.log(JSON.stringify({
+    res1,
+    svgHtml1,
+    vizHref1,
+    res2,
+    proxBar2Hidden,
+    proxBar2Html,
+    emptyRes,
+    emptySvgHtml,
+    popClosedHidden
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc = subprocess.run(
+        [node_bin, str(harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc.returncode == 0, f"Card 13 overlay Node harness failed: {proc.stderr}"
+    out = json.loads(proc.stdout.strip().splitlines()[-1])
+
+    assert 'class="show-me-pt-target-group"' in out["svgHtml1"] or 'class="show-me-pt-outlier"' in out["svgHtml1"]
+    assert 'class="show-me-outlier-pulse-ring"' in out["svgHtml1"]
+    assert 'r="10.5"' in out["svgHtml1"]
+    assert 'stroke="#60a5fa"' in out["svgHtml1"]
+    assert 'stroke="#dc2626"' in out["svgHtml1"]
+    assert "resource_explorer_dashboard.html?resource=" in out["vizHref1"]
+    assert "&highlight_rk=" in out["vizHref1"]
+    assert out["proxBar2Hidden"] is False
+    assert "95–105%" in out["proxBar2Html"]
+    assert 'data-role="proximate-stacked-bar"' in out["proxBar2Html"]
+    assert "Proximate Closure" in out["proxBar2Html"]
+    assert out["emptyRes"]["empty"] is True
+    assert "No matching database records found in snapshot." in out["emptySvgHtml"]
+    assert "<circle" not in out["emptySvgHtml"]
+    assert out["popClosedHidden"] is True
+
+
+def test_wc2_to_wc7_pages_1_to_3_lineage_stats_filters_and_auth(
+    snapshot_and_pages: dict[str, str], tmp_path: Path
+) -> None:
+    """Verify WC-2 (Gasification Reactor label), WC-3 (Two-Track Sample Lineage Timeline),
+    WC-4 (Submission Timestamps & Lab Sample Lineage Notes), WC-5 (Page 2 QC Status + Min RSD % slider),
+    WC-6 (NaN-safe computeSampleSummaryGroups), and WC-7 (Authenticated Analyst Email priority)."""
+    from analysis.metadata.resource_insights_engine import (
+        compute_dataset_outlier_screening,
+    )
+
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    page1 = snapshot_and_pages["page1"]
+    page2 = snapshot_and_pages["page2"]
+    page3 = snapshot_and_pages["page3"]
+
+    # WC-2: Gasification Reactor label in Python insights engine and Page 3 DOMAINS
+    gas_screening = compute_dataset_outlier_screening(
+        {
+            "Almond Hulls": [
+                {
+                    "record_id": "gas-1",
+                    "resource_name": "Almond Hulls",
+                    "prepared_sample": "AH-PS-01",
+                    "analysis_type": "Gasification",
+                    "parameter": "Syngas Yield",
+                    "unit": "Nm3/kg",
+                    "value": 1.85,
+                    "qc_status": "pass",
+                    "vessel": "Downdraft Fixed Bed",
+                    "prep_method": "Pelletized",
+                    "experiment": "EXP-GAS-1",
+                }
+            ]
+        }
+    )["Almond Hulls"]
+    gas_grp = gas_screening["by_tab"]["fermentation"]["replicate_groups"][0]
+    assert gas_grp["prep_method"] == "Reactor: Downdraft Fixed Bed"
+    assert (
+        gas_grp["replicate_group_key"]
+        == "almond hulls::ah-ps-01::gasification::syngas yield::reactor: downdraft fixed bed::exp-gas-1"
+    )
+    assert "methodCol: 'vessel', methodLabel: 'Reactor:'" in page3
+
+    # WC-3: Literal Horizontal Sample Timeline in Page 1
+    assert 'id="lineage-timeline-tracks-wrap"' in page1
+    assert 'id="lineage-horizontal-timeline"' in page1
+    assert 'id="lineage-provider-legend"' in page1
+    assert 'id="lineage-hover-tooltip"' in page1
+    assert 'id="lineage-svg-overlay"' in page1
+    assert "Track 1 · Field Samples" in page1
+    assert "Track 2 · Prepared Samples" in page1
+    assert "window.renderTimelineSvgConnectors" in page1
+    assert "setSubMode('timelineAlignMode'" in page1
+    assert "setSubMode('timelineSortMode'" in page1
+    assert "By Date" in page1
+    assert "By Sample Order" in page1
+    assert "Unlinked Prepared Samples" in page1
+    assert "data-fs-node=" in page1
+    assert "data-ps-node=" in page1
+    assert '["prep_method", "pt_method", "eh_method", "strain", "vessel", "experiment"]' in page1
+    assert "show-me-qc-fail-diamond" in page1
+    assert "show-me-qc-fail-diamond" in page3
+    assert "|| 'local.analyst@lbl.gov'" not in page3
+    assert '|| "local.analyst@lbl.gov"' not in page3
+    assert "function computeSliceStatScreening(rows, opts)" in page3
+    assert "excluded_fail_count: excludedFailCount" in page3
+
+    # WC-5: Page 3 RSD > 10% and RSD > 20% flag filter options
+    assert '<option value="rsd_gt_10">RSD &gt; 10%</option>' in page3
+    assert '<option value="rsd_gt_20">High RSD &gt; 20%</option>' in page3
+    assert "window.escapeHtml = escapeHtml;" in page1
+    assert "function escapeHtml(" in page3
+
+    # Execute Page 1 JS in Node to verify WC-2, WC-3, WC-4, WC-6, WC-7 runtime behavior
+    m_p1_script = re.search(
+        r"<script>\s*(const BUNDLE = .*?)</script>", page1, flags=re.S
+    )
+    assert m_p1_script
+    p1_script = m_p1_script.group(1)
+
+    p1_harness = tmp_path / "run_wc_p1_checks.js"
+    p1_harness.write_text(
+        """
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set();
+  const attrs = {};
+  return {
+    id, value: "", textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    options: [{ value: "provisional" }, { value: "fail" }, { value: "pass" }, { value: "re_assay" }],
+    classList: {
+      add(c){ classSet.add(c); },
+      remove(c){ classSet.delete(c); },
+      toggle(c){ if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c){ return classSet.has(c); }
+    },
+    addEventListener(){}, removeEventListener(){},
+    setAttribute(k, v){ attrs[k] = String(v); },
+    getAttribute(k){ return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    appendChild(){}, querySelectorAll(){ return []; },
+    getBoundingClientRect(){ return { left: 0, top: 0, width: 120, height: 36 }; },
+    focus(){}, setSelectionRange(){}
+  };
+}
+const storage = { biocirv_analyst_email: "local.analyst@lbl.gov" };
+global.localStorage = {
+  getItem(k){ return Object.prototype.hasOwnProperty.call(storage, k) ? storage[k] : null; },
+  setItem(k, v){ storage[k] = String(v); },
+  removeItem(k){ delete storage[k]; }
+};
+global.window = {
+  location: { href: "http://localhost:8000/v1/dashboards/metadata/resource_analysis_dashboard.html", search: "", origin: "http://localhost:8000", pathname: "/v1/dashboards/metadata/resource_analysis_dashboard.html", protocol: "http:" },
+  history: { replaceState(){}, pushState(){} },
+  addEventListener(){},
+  dispatchEvent(){}
+};
+global.CustomEvent = function(type, init) { this.type = type; this.detail = init && init.detail; };
+global.document = {
+  title: "Test Page 1",
+  readyState: "complete",
+  documentElement: { getAttribute(){ return "dark"; }, setAttribute(){} },
+  body: makeEl("body"),
+  getElementById(id) { if (!elements[id]) elements[id] = makeEl(id); return elements[id]; },
+  querySelectorAll(){ return []; },
+  createElement(t){ return makeEl(t); }
+};
+global.fetch = async (url) => {
+  if (String(url).includes("/v1/qc/auth/me")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ email: "Verified.Session@lbl.gov", name: "Verified Session" })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + p1_script
+        + """
+(async () => {
+  // WC-2: groupContextLabel & computeCanonicalMethodSignature for gasification
+  const gasLabel = window.groupContextLabel({
+    analysis_type: "Gasification",
+    vessel: "Fluidized Bed",
+    prep_method: "Pelletized"
+  });
+  const gasCanonicalSig = window.computeCanonicalMethodSignature({
+    analysis_type: "Gasification",
+    vessel: "Fluidized Bed",
+    prep_method: "Pelletized"
+  });
+
+  // WC-3: Literal horizontal sample timeline rendered in #tab-content + case/whitespace insensitive lookup + same-date vertical stacking
+  BUNDLE.field_samples = [
+    ...(BUNDLE.field_samples || []),
+    {
+      name: "AH-FS-01B-SAME-DATE",
+      resource: "almond hulls",
+      resource_name: "Almond Hulls",
+      provider_code: "possessive",
+      provider: "Possessive",
+      collected_at: "2026-01-15",
+      sampling_site: "Orchard West",
+      sample_source: "Hull pile",
+      geoid: "06099"
+    }
+  ];
+  const lineageHtml = document.getElementById("tab-content").innerHTML;
+  window.setSubMode("timelineAlignMode", "collected");
+  window.setSubMode("timelineSortMode", "date");
+  const colAlignedHtml = document.getElementById("tab-content").innerHTML;
+  const sameDatePointMatches = (colAlignedHtml.match(/data-timeline-date="2026-01-15"/g) || []).length;
+  const hasStackedCount2 = colAlignedHtml.includes('data-date-stack-count="2"');
+  window.setSubMode("timelineAlignMode", "prep");
+  const prepAlignedHtml = document.getElementById("tab-content").innerHTML;
+  window.setSubMode("timelineSortMode", "order");
+  const orderSortedHtml = document.getElementById("tab-content").innerHTML;
+  const fsFoundCaseInsensitive = Boolean(window.lookupFieldSample && window.lookupFieldSample("  ah-fs-01 "));
+
+  // WC-6: computeSliceStatScreening(rows, opts) excludes qc_fail by default and returns excluded_fail_count
+  const sampleRows = [
+    { record_id: "r1", resource_name: "Almond Hulls", prepared_sample: "AH-PS-01", analysis_type: "Proximate Analysis", parameter: "Ash", prep_method: "Oven", experiment: "E1", value: 6.1, qc_status: "pass" },
+    { record_id: "r2", resource_name: "Almond Hulls", prepared_sample: "AH-PS-01", analysis_type: "Proximate Analysis", parameter: "Ash", prep_method: "Oven", experiment: "E1", value: 6.3, qc_status: "pass" },
+    { record_id: "r3", resource_name: "Almond Hulls", prepared_sample: "AH-PS-01", analysis_type: "Proximate Analysis", parameter: "Ash", prep_method: "Oven", experiment: "E1", value: 19.8, qc_status: "fail" }
+  ];
+  const statScreeningDefault = window.computeSliceStatScreening(sampleRows);
+  const statScreeningWithFailed = window.computeSliceStatScreening(sampleRows, { includeFailed: true });
+
+  // WC-6: window.escapeHtml escapes special HTML chars cleanly
+  const escaped = window.escapeHtml('<script>"alert"&test</script>');
+
+  // WC-7: hydrateSessionIdentity & getDefaultAssigneeEmail prioritize authenticated session email over placeholder
+  const isLocalPlaceholder = window.isPlaceholderAnalystEmail("local.analyst@lbl.gov");
+  await window.BioCirvQcClient.hydrateSessionIdentity();
+  const resolvedEmail = window.getDefaultAssigneeEmail("local.analyst@lbl.gov");
+
+  // WC-4: submitDecision (offline fallback) populates submitted_at, submitted_by_email, lab_lineage_note, source_label
+  const subRes = await window.BioCirvQcClient.submitDecision({
+    resource_name: "almond hulls",
+    prepared_sample: "AH-PS-01",
+    analysis_type: "Proximate Analysis",
+    parameter: "Ash",
+    record_id: "prox-1",
+    decision: "exclude_qc_fail",
+    note: "Elevated ash replicate",
+    lab_lineage_note: "FS: AH-FS-01 -> PS: AH-PS-01 (Oven 105C)"
+  });
+
+  console.log(JSON.stringify({
+    gasLabel,
+    gasCanonicalSig,
+    hasTimelineWrap: lineageHtml.includes("lineage-timeline-tracks-wrap"),
+    hasHorizontalTimeline: lineageHtml.includes("lineage-horizontal-timeline"),
+    hasProviderLegend: lineageHtml.includes("lineage-provider-legend"),
+    hasHoverTooltip: lineageHtml.includes("lineage-hover-tooltip"),
+    hasCollectedModeActive: colAlignedHtml.includes("Align by Field Collection Date"),
+    sameDatePointMatches,
+    hasStackedCount2,
+    hasPrepModeActive: prepAlignedHtml.includes("Prepared Sample Run Date (X-Axis)"),
+    hasOrderSortActive: orderSortedHtml.includes("By Sample Order"),
+    fsFoundCaseInsensitive,
+    statDefaultExcludedCount: statScreeningDefault.excluded_fail_count,
+    statDefaultN: statScreeningDefault.groups[0].n,
+    statWithFailedExcludedCount: statScreeningWithFailed.excluded_fail_count,
+    statWithFailedN: statScreeningWithFailed.groups[0].n,
+    isLocalPlaceholder,
+    escaped,
+    resolvedEmail,
+    subDecision: subRes.decision
+  }));
+  process.exit(0);
+})();
+""",
+        encoding="utf-8",
+    )
+    proc_p1 = subprocess.run(
+        [node_bin, str(p1_harness)],
+        capture_output=True,
+        text=True,
+        check=False,
+        timeout=15,
+    )
+    assert proc_p1.returncode == 0, f"WC Page 1 Node harness failed: {proc_p1.stderr}"
+    out_p1 = json.loads(proc_p1.stdout.strip().splitlines()[-1])
+
+    assert out_p1["gasLabel"] == "Reactor: Fluidized Bed"
+    assert out_p1["gasCanonicalSig"] == "Reactor: Fluidized Bed"
+    assert out_p1["hasTimelineWrap"] is True
+    assert out_p1["hasHorizontalTimeline"] is True
+    assert out_p1["hasProviderLegend"] is True
+    assert out_p1["hasHoverTooltip"] is True
+    assert out_p1["hasCollectedModeActive"] is True
+    assert out_p1["sameDatePointMatches"] == 1
+    assert out_p1["hasStackedCount2"] is True
+    assert out_p1["hasPrepModeActive"] is True
+    assert out_p1["hasOrderSortActive"] is True
+    assert out_p1["fsFoundCaseInsensitive"] is True
+    assert out_p1["statDefaultExcludedCount"] == 1
+    assert out_p1["statDefaultN"] == 2
+    assert out_p1["statWithFailedExcludedCount"] == 0
+    assert out_p1["statWithFailedN"] == 3
+    assert out_p1["isLocalPlaceholder"] is True
+    assert out_p1["escaped"] == "&lt;script&gt;&quot;alert&quot;&amp;test&lt;/script&gt;"
+    assert out_p1["resolvedEmail"] == "verified.session@lbl.gov"
+    assert out_p1["subDecision"]["submitted_at"]
+    assert out_p1["subDecision"]["submitted_by_email"] == "verified.session@lbl.gov"
+    assert (
+        out_p1["subDecision"]["lab_lineage_note"]
+        == "FS: AH-FS-01 -> PS: AH-PS-01 (Oven 105C)"
+    )
+    assert "Page 1" in out_p1["subDecision"]["source_label"]
+
+
+def test_strip_qc_audit_annotations_and_pre_deduplication_note_mining() -> None:
+    """Checklist #5 & #6 (WC6 / Review B7): strip [QC_AUDIT ...] before deduplication & handle multi-tags."""
+    # Checklist #6: Multiple [QC_AUDIT ...] tags on a single note & pure [QC_AUDIT ...] note
+    multi_tagged = (
+        "Crucible weighed warm | [QC_AUDIT id=1 qc=fail by=a@lbl.gov at=2026-10-29T10:00Z chips=rsd_gt_10: High RSD] "
+        "| [QC_AUDIT id=2 qc=provisional by=b@lbl.gov at=2026-10-29T11:00Z chips=none: Re-checked]"
+    )
+    assert strip_qc_audit_annotations(multi_tagged) == "Crucible weighed warm"
+
+    only_audit_tags = (
+        "[QC_AUDIT id=10 qc=fail by=a@lbl.gov at=2026-10-29T10:00Z chips=iqr_outlier: Outlier] | "
+        "[QC_AUDIT id=11 qc=pass by=b@lbl.gov at=2026-10-29T12:00Z chips=none: Reverted]"
+    )
+    assert strip_qc_audit_annotations(only_audit_tags) == ""
+
+    # Checklist #5: Two records sharing identical bench note + distinct [QC_AUDIT ...] suffixes deduplicate into count=2
+    payload = json.loads(SNAPSHOT_PATH.read_text(encoding="utf-8"))
+    note_col_idx = payload["str_cols"].index("note") + 1
+    atype_col_idx = payload["str_cols"].index("analysis_type") + 1
+    res_col_idx = payload["str_cols"].index("resource_name") + 1
+
+    note_1 = "Crucible weighed warm | [QC_AUDIT id=1 qc=fail by=a@lbl.gov at=2026-10-29T10:00Z chips=rsd_gt_10: Outlier 1]"
+    note_2 = "Crucible weighed warm | [QC_AUDIT id=2 qc=fail by=a@lbl.gov at=2026-10-29T11:00Z chips=rsd_gt_10: Outlier 2]"
+    idx_1 = len(payload["dicts"]["note"])
+    payload["dicts"]["note"].append(note_1)
+    idx_2 = len(payload["dicts"]["note"])
+    payload["dicts"]["note"].append(note_2)
+    idx_3 = len(payload["dicts"]["note"])
+    payload["dicts"]["note"].append(only_audit_tags)
+
+    almond_idx = payload["dicts"]["resource_name"].index("Almond Hulls")
+    prox_idx = payload["dicts"]["analysis_type"].index("Proximate Analysis")
+    base_row = list(payload["rows"][0])
+    row_a = list(base_row)
+    row_a[0] = "PROX-DEDUP-01"
+    row_a[res_col_idx] = almond_idx
+    row_a[atype_col_idx] = prox_idx
+    row_a[note_col_idx] = idx_1
+
+    row_b = list(base_row)
+    row_b[0] = "PROX-DEDUP-02"
+    row_b[res_col_idx] = almond_idx
+    row_b[atype_col_idx] = prox_idx
+    row_b[note_col_idx] = idx_2
+
+    row_c = list(base_row)
+    row_c[0] = "PROX-PURE-AUDIT-03"
+    row_c[res_col_idx] = almond_idx
+    row_c[atype_col_idx] = prox_idx
+    row_c[note_col_idx] = idx_3
+
+    payload["rows"].extend([row_a, row_b, row_c])
+    insights = build_resource_insights(payload)
+    almond_notes = insights["resources"]["Almond Hulls"]["curated_notes"]
+    warm_notes = [n for n in almond_notes if n["note_text"] == "Crucible weighed warm"]
+    assert len(warm_notes) == 1
+    assert warm_notes[0]["count"] == 2
+    assert set(warm_notes[0]["record_ids"]) == {"PROX-DEDUP-01", "PROX-DEDUP-02"}
+    assert not any("[QC_AUDIT" in n["note_text"] for n in almond_notes)
+
+
+def test_revert_decision_client_contract_and_ui_decluttering(
+    snapshot_and_pages: dict[str, str],
+) -> None:
+    """Checklist #7 (B4) & WC7: revertDecision omits hardcoded revert_to_status:'pass' and Explorer/Overview UI controls exist."""
+    page1 = snapshot_and_pages["page1"]
+    page3 = snapshot_and_pages["page3"]
+
+    # Checklist #7 (B4): revertDecision does not hardcode revert_to_status: "pass"
+    assert 'revert_to_status: "pass"' not in SHARED_SLICE_AND_BUG_MODALS_JS
+    assert "sync_to_gsheet: true" in SHARED_SLICE_AND_BUG_MODALS_JS
+
+    # WC6 & WC7 in Page 1 (Characterization Dashboard)
+    assert "function stripQcAuditAnnotations" in page1
+    assert "toggleOverviewLineage" in page1
+    assert "btn-toggle-overview-lineage" in page1
+
+    # WC7 in Page 3 (Multi-Resource Explorer)
+    assert 'id="btn-toggle-checklist-drawer"' in page3
+    assert "setXAxisGroupingMode" in page3
+    assert "resource_qc_outlier_dashboard.html" in page3
+    assert "resource_qc_audit_workbench.html" in page3

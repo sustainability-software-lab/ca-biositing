@@ -604,13 +604,13 @@ Cloud Storage bucket (`gs://biocirv-{env}-dashboards/`), and served behind an
 isolated FastAPI portal authentication layer with a two-stage Quality Control
 (QC) review workflow.
 
-| Product                                             | File Path                                     | Purpose                                                                                                                                                                                                                                         |
-| :-------------------------------------------------- | :-------------------------------------------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Product 1: Resource Characterization & AI Brief** | `metadata/resource_analysis_dashboard.html`   | Single-resource characterization dashboard with executive synthesis brief, KPI cards, and 5 analytical domain tabs (`Proximate`, `Compositional & Ultimate`, `Calorimetry & XRD`, `Elemental ICP & XRF`, `Conversion`).                         |
-| **Product 2: Statistical QC & Outlier Screening**   | `metadata/resource_qc_outlier_dashboard.html` | Within-group ($\text{RSD}_{\text{within}}$) vs. between-group ($\text{RSD}_{\text{between}}$) replicate precision scatter/ratio charts, 3-test outlier screening (`Dixon's Q`, `RSD > 20%`, `>3×SD_pooled`), and mined bench notes audit trail. |
-| **Product 3: Multi-Resource Side-by-Side Explorer** | `metadata/resource_explorer_dashboard.html`   | High-DPI HTML5 `<canvas>` explorer with multi-select checklist popovers, replicate-group-default point selection, and unified Selection & Export Tray.                                                                                          |
-| **Product 4: QC Audit Workbench**                   | `metadata/resource_audit_workbench.html`      | Interactive two-stage QC triage and governance workspace (`Approve Pass`, `Reject / Fail`, `Revert to Pass`, analyst assignment, rationale tags, and admin-only Stage 2 Google Sheets writeback).                                               |
-| **Product 5: Environment & Schema Drift Monitor**   | `db_environment_drift_dashboard.html`         | Database schema, table row count, and environment drift verification dashboard.                                                                                                                                                                 |
+| Product                                             | File Path                                     | Purpose                                                                                                                                                                                                                                                                                                                               |
+| :-------------------------------------------------- | :-------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Product 1: Resource Characterization & AI Brief** | `metadata/resource_analysis_dashboard.html`   | Single-resource characterization dashboard with executive synthesis brief, KPI cards, sticky left filter sidebar, 10 individual analytical domain pills, proximate mass-balance closure (`95–105%` parity with `mv_biomass_proximate_data.py`), and contextual `"👁 Show me"` flag mini-plots.                                         |
+| **Product 2: Statistical Snapshot**                 | `metadata/resource_qc_outlier_dashboard.html` | Within-group ($\text{RSD}_{\text{within}}$) vs. method-stratified between-sample ($\text{RSD}_{\text{between}}$, $\text{SD}_{\text{between}}$) replicate precision scatter/ratio charts, 3-test outlier screening (`Dixon's Q` guarded by $\text{RSD} \ge 10\%$, `RSD > 20%`, `>3×SD_pooled`), and mined bench notes audit trail.     |
+| **Product 3: Interactive Data Visualizer**          | `metadata/resource_explorer_dashboard.html`   | High-DPI HTML5 `<canvas>` visualizer with 2D rectangular brush zoom (`#canvas-zoom-brush`), sticky left filter sidebar, 3-section statistical screening & lab notes drawer, canonical 6-part `replicate_group_key` point selection, `"📤 Export Slice (.HTML)"` collaborator export, and `"👁 Show me"` `?highlight_rk=` deep-linking. |
+| **Product 4: QC Audit Workbench**                   | `metadata/resource_audit_workbench.html`      | Default dark-mode two-stage QC triage and governance workspace (`in_review` default workflow state, `Approve Pass`, `Reject / Fail`, `Revert to Pass`, auto-filled analyst assignee, multi-row bulk assignment up to 500 items, contextual `"👁 Show me"` mini-plots, and admin-only Stage 2 Google Sheets writeback).                 |
+| **Product 5: Environment & Schema Drift Monitor**   | `db_environment_drift_dashboard.html`         | Database schema, table row count, and environment drift verification dashboard.                                                                                                                                                                                                                                                       |
 
 ```mermaid
 graph TD
@@ -626,10 +626,11 @@ graph TD
     end
 
     subgraph STAGE1["3. STAGE 1: IMMEDIATE POSTGRESQL + LIVE OVERLAY"]
-        TRAY["Pages 2 & 3 Selection Tray"] -->|POST /v1/qc/tray-to-workbench| QC_API["FastAPI /v1/qc/* Endpoints<br/>(Role: analyst or admin)"]
-        WB["Product 4: QC Audit Workbench"] -->|POST /v1/qc/decisions| QC_API
-        QC_API -->|Upsert Ledger + Update Record| PG["PostgreSQL:<br/>qc_review_decision (synced_to_gsheet=False)<br/>+ 10 Aim 1/Aim 2 *_record tables"]
-        PG -->|GET /v1/qc/decisions + BroadcastChannel| OVERLAY["Live In-Memory QC Overlay<br/>(Pages 1, 2, 3 & Product 4)"]
+        TRAY["Pages 2 & 3 Audit Escalation"] -->|POST /v1/qc/tray-to-workbench| QC_API["FastAPI /v1/qc/* Endpoints<br/>(Role: analyst or admin)"]
+        WB["Product 4: QC Audit Workbench"] -->|POST /v1/qc/decisions & assign-batch| QC_API
+        BUG["Header Submit Issue Modal"] -->|POST /v1/qc/github-issue| QC_API
+        QC_API -->|Upsert Ledger + Bug Reports + Update Record| PG["PostgreSQL:<br/>qc_review_decision (synced_to_gsheet=False)<br/>+ 10 Aim 1/Aim 2 *_record tables"]
+        PG -->|GET /v1/qc/decisions + BroadcastChannel| OVERLAY["Live In-Memory QC Overlay & Show-Me Mini-Plot<br/>(Pages 1, 2, 3 & Product 4)"]
         ETL_PROTECT["Prefect ETL Loaders<br/>(qc_protected_records.py)"] -.->|Preserve qc_pass where synced_to_gsheet=False| PG
     end
 
@@ -650,6 +651,38 @@ explicit **`↻ Refresh QC State`** header button, with zero background
 `setInterval` polling.
 
 ## Architecture Decisions
+
+### 2026-10-27: Canonical 6-Part Replicate Keys, Proximate Mass-Balance Parity & Contextual Audit Mini-Plots (Accepted)
+
+- **Decision:** Standardize replicate cohort keys across Python generators,
+  FastAPI `/v1/qc/*` routes, and browser overlays on the 6-part key
+  `{resource}::{sample}::{domain_slug}::{param}::{context_label}::{experiment}`;
+  guard Dixon's Q outlier screening with $\text{RSD}_{\text{within}} \ge 10\%$
+  and stratify between-sample precision by the 5-tuple
+  `(resource, domain, parameter, units, method_or_strain)`; align
+  `proximate_sum` closure (`95–105%`) with `mv_biomass_proximate_data.py` by
+  averaging replicates per component (`moisture`, `volatile_matter`,
+  `fixed_carbon`, `ash`) within `(resource_name, experiment, prep_method)`
+  before summing; persist portal bug submissions in PostgreSQL via
+  `qc_review_decision` (`record_table="portal_bug_report"`,
+  `flag_type="bug_report"`); support bulk analyst assignment
+  (`POST /v1/qc/decisions/assign-batch`, capped at 500 items); and embed an
+  interactive `"👁 Show me"` mini-plot popover across all 4 biomass dashboard
+  products with `?highlight_rk=` deep-linking into the Interactive Data
+  Visualizer.
+- **Why:** Earlier 3-part keys (`resource::sample::param`) collapsed distinct
+  experiments or methods into false replicate cohorts and caused `decision_id`
+  collisions; unguarded Dixon's Q flagged tight replicates ($\text{RSD} < 10\%$)
+  as outliers; summing unaveraged proximate replicates produced false $>105\%$
+  mass-balance flags; and analysts triaging flags in the QC Audit Workbench
+  needed immediate visual distribution context without losing their place in the
+  queue.
+- **Result:** Zero `decision_id` collisions across multi-experiment replicate
+  cohorts, 100% proximate mass-balance parity between the data portal and QC
+  dashboards, durable in-database bug report tracking (`GET /v1/qc/bug-issues`),
+  single-click bulk queue assignment, and zero-synthetic-data contextual
+  mini-plots with 1-click pulse-highlighted deep links into
+  `resource_explorer_dashboard.html`.
 
 ### 2026-10-19: GCS Dashboard Artifact Store, Isolated Portal Auth & Two-Stage QC Governance (Accepted)
 

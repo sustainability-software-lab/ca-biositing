@@ -47,7 +47,7 @@ except ImportError:
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_OUTPUT_DIR = REPO_ROOT / "exports" / "plots" / "metadata"
-GITHUB_ISSUES_NEW_URL = "https://github.com/sustainability-software-lab/ca-biositing/issues/new"
+GITHUB_ISSUES_NEW_URL = "https://github.com/uw-ssec/ca-biositing/issues/new"
 
 
 def build_github_bug_issue_url(
@@ -280,7 +280,11 @@ def prepare_dashboard_payload(
         payload["rows"] = [r for r in payload["rows"] if _row_matches_param(r)]
 
     if target_method_set:
-        method_cols = [c for c in ("prep_method", "pt_method", "eh_method", "strain", "experiment") if c in str_cols]
+        method_cols = [
+            c
+            for c in ("prep_method", "pt_method", "eh_method", "strain", "experiment", "vessel")
+            if c in str_cols
+        ]
         method_col_specs = [(str_cols.index(c) + 1, dicts.get(c, [])) for c in method_cols]
 
         def _row_matches_method(row: list[Any]) -> bool:
@@ -482,6 +486,26 @@ def prepare_dashboard_payload(
 
     slice_qc_list = sorted(allowed_qc - {""}) if allowed_qc is not None else ["all"]
 
+    fs_prov_by_name: dict[str, str] = {}
+    for fs in payload.get("field_samples", []):
+        p_code = str(fs.get("provider_code") or fs.get("provider") or "unknown").strip() or "unknown"
+        fs["provider"] = p_code
+        fs["provider_code"] = p_code
+        fn = str(fs.get("name") or "").strip()
+        if fn:
+            fs_prov_by_name[fn] = p_code
+
+    for ps in payload.get("prepared_samples", []):
+        parent_fn = str(ps.get("field_sample_name") or ps.get("field_sample") or "").strip()
+        p_code = str(
+            ps.get("provider_code")
+            or ps.get("provider")
+            or fs_prov_by_name.get(parent_fn)
+            or "unknown"
+        ).strip() or "unknown"
+        ps["provider"] = p_code
+        ps["provider_code"] = p_code
+
     return {
         "generated_utc": payload.get("generated_utc", ""),
         "excluded_resources": payload.get("excluded_resources", []),
@@ -642,11 +666,11 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
             </label>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer">
               <input id="slice-page-explorer" type="checkbox" value="explorer" checked class="slice-page-checkbox rounded" />
-              <span><strong>3. Multi-Resource Side-by-Side Explorer</strong> <span class="badge-pass px-1.5 py-0.5 rounded font-mono text-[10px] ml-1">Default</span></span>
+              <span><strong>3. Data Visualizer</strong> <span class="badge-pass px-1.5 py-0.5 rounded font-mono text-[10px] ml-1">Default</span></span>
             </label>
             <label class="flex items-center gap-2 p-2 rounded-lg bg-[var(--background)] border border-[var(--border)] cursor-pointer">
               <input id="slice-page-qc" type="checkbox" value="qc" class="slice-page-checkbox rounded" />
-              <span><strong>2. Statistical QC &amp; Lab Notes Audit</strong> <span class="text-[var(--muted-foreground)] text-[11px]">(Optional internal QC view)</span></span>
+              <span><strong>2. Statistical Snapshot</strong> <span class="text-[var(--muted-foreground)] text-[11px]">(Optional internal QC view)</span></span>
             </label>
           </div>
         </div>
@@ -784,10 +808,10 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
         <button id="btn-cancel-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">
           Cancel
         </button>
-        <button id="btn-submit-github-api" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)]">
-          ⚡ Submit via API
+        <button id="btn-submit-github-api" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+          🚀 Submit Issue
         </button>
-        <button id="btn-submit-github-url" class="px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+        <button id="btn-submit-github-url" style="display:none;" class="hidden px-4 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
           🚀 Open Pre-Filled GitHub Issue &rarr;
         </button>
       </div>
@@ -923,9 +947,10 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
         <div>
           <label for="finding-modal-qc-status" class="block font-semibold text-[var(--foreground)] mb-1">Recommended QC Status</label>
           <select id="finding-modal-qc-status" class="w-full rounded-lg px-2.5 py-2 text-xs font-semibold border border-[var(--border)]">
-            <option value="fail">Flag for QC Fail (qc_fail)</option>
-            <option value="provisional">Needs Verification / Provisional</option>
-            <option value="pass">Confirm QC Pass (qc_pass)</option>
+            <option value="provisional" selected>provisional — Flagged for Analyst / PI Review (Default)</option>
+            <option value="fail">qc_fail — Exclude from Portal Slice</option>
+            <option value="pass">qc_pass — Verified Valid Replicate</option>
+            <option value="re_assay">re_assay — Flag for Bench Re-Assay</option>
           </select>
         </div>
       </div>
@@ -981,13 +1006,41 @@ SHARED_SLICE_AND_BUG_MODALS_HTML = """
       </div>
     </div>
   </div>
+
+  <!-- Shared Contextual Flag "Show me" Mini-Plot Popover (Card 13) -->
+  <div id="audit-flag-show-me-popover" class="hidden fixed z-[65] w-[460px] max-w-[94vw] rounded-2xl border-2 border-[var(--primary)] bg-[var(--card)] text-[var(--foreground)] shadow-2xl p-4 space-y-2.5" style="background-color: var(--card, #0f172a); color: var(--foreground, #f8fafc); opacity: 1; backdrop-filter: none; box-shadow: 0 24px 48px rgba(2, 6, 23, 0.85);" role="dialog" aria-label="Contextual Flag Slice Mini-Plot">
+    <div class="flex items-start justify-between gap-2 border-b border-[var(--border)] pb-2">
+      <div>
+        <div id="show-me-popover-title" class="text-xs font-bold text-[var(--foreground)] flex items-center gap-1.5">
+          <span>👁 Contextual Slice Mini-Plot</span>
+        </div>
+        <div id="show-me-popover-subtitle" class="text-[11px] font-mono text-[var(--muted-foreground)] mt-0.5"></div>
+      </div>
+      <button id="btn-close-show-me-popover" type="button" onclick="window.closeFlagShowMePopover && window.closeFlagShowMePopover()" class="px-2 py-0.5 rounded text-xs font-mono bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]" title="Close mini-plot popover">✕</button>
+    </div>
+    <div id="show-me-flag-pills" class="flex flex-wrap items-center gap-1 text-[10px] font-mono"></div>
+    <div id="show-me-mini-svg-wrap" class="rounded-xl border border-[var(--border)] bg-[var(--background)] p-2" style="background-color: var(--background, #020617); opacity: 1;">
+      <svg id="show-me-mini-svg" viewBox="0 0 420 150" width="100%" height="150" role="img" aria-label="Flagged Replicate Group vs Peer Slice Distribution"></svg>
+    </div>
+    <div id="show-me-proximate-bar" class="hidden rounded-xl border border-amber-500/40 bg-amber-500/10 p-2.5 text-[11px] font-mono space-y-1"></div>
+    <div id="show-me-legend" class="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-[var(--muted-foreground)] pt-0.5">
+      <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:9px;height:9px;border-radius:9999px;background:rgba(148,163,184,0.45);border:1.5px solid #64748b;"></span>⚪ Peer Slice Points</span>
+      <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:10px;height:10px;border-radius:9999px;background:rgba(59,130,246,0.22);border:2px solid #2563eb;"></span>🔵 Target Replicate Group</span>
+      <span class="inline-flex items-center gap-1"><span style="display:inline-block;width:11px;height:11px;border-radius:9999px;background:rgba(239,68,68,0.28);border:2.5px solid #dc2626;"></span>🔴 Flagged Outlier</span>
+      <span class="inline-flex items-center gap-1"><span class="font-bold text-red-500">◆✕</span> qc_fail (Demarcated)</span>
+    </div>
+    <div class="flex items-center justify-between gap-2 border-t border-[var(--border)] pt-2 text-[11px]">
+      <span id="show-me-stats-summary" class="font-mono text-[10px] text-[var(--muted-foreground)]"></span>
+      <a id="show-me-open-visualizer-link" href="resource_explorer_dashboard.html" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 whitespace-nowrap">Open in Data Visualizer ↗</a>
+    </div>
+  </div>
 """
 
 SHARED_SLICE_AND_BUG_MODALS_JS = """
-    var GITHUB_ISSUES_NEW_URL = "https://github.com/sustainability-software-lab/ca-biositing/issues/new";
+    var GITHUB_ISSUES_NEW_URL = "https://github.com/uw-ssec/ca-biositing/issues/new";
 
     function buildGitHubBugIssueUrl(opts) {
-      const repoNewUrl = GITHUB_ISSUES_NEW_URL || "https://github.com/sustainability-software-lab/ca-biositing/issues/new";
+      const repoNewUrl = GITHUB_ISSUES_NEW_URL || "https://github.com/uw-ssec/ca-biositing/issues/new";
       const o = opts || {};
       const cat = o.category || "UI / Chart Rendering Bug";
       const res = o.resource || (typeof state !== "undefined" && state.resource) || "all resources";
@@ -1150,12 +1203,29 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
     window.initDateFilterInputs = initDateFilterInputs;
 
     function buildClientSideSlicedBundle(baseBundle, targetRes, qcStatuses, maskAnalyst, extraFilters, selectedPages) {
-      const targetResources = normalizeFilterTokenArray(targetRes);
+      if (targetRes && typeof targetRes === "object" && !Array.isArray(targetRes) && !(targetRes instanceof Set)) {
+        const optsObj = targetRes;
+        targetRes = optsObj.resources || optsObj.selectedResources || optsObj.resource || optsObj.targetRes || [];
+        qcStatuses = qcStatuses !== undefined ? qcStatuses : (optsObj.qcStatuses || optsObj.qc_statuses || ["pass"]);
+        maskAnalyst = maskAnalyst !== undefined ? maskAnalyst : (optsObj.maskAnalyst !== undefined ? optsObj.maskAnalyst : optsObj.exclude_analyst_default);
+        extraFilters = extraFilters || optsObj.extraFilters || optsObj.filters || optsObj;
+        selectedPages = selectedPages || optsObj.selectedPages || optsObj.pages;
+      }
+      const ef = extraFilters || {};
+      let targetResources = normalizeFilterTokenArray(targetRes);
+      if (targetResources.length === 0 && (ef.resources || ef.selectedResources || ef.resource)) {
+        targetResources = normalizeFilterTokenArray(ef.resources || ef.selectedResources || ef.resource);
+      }
       const targetResSet = new Set(targetResources);
       const allowedSet = new Set();
-      (qcStatuses || ["pass"]).forEach(s => {
+      const qcStatusList = Array.isArray(qcStatuses)
+        ? qcStatuses
+        : (typeof qcStatuses === "string" && qcStatuses.trim() ? [qcStatuses.trim()] : ["pass"]);
+      qcStatusList.forEach(s => {
         const tok = String(s).trim().toLowerCase();
-        if (tok === "pass" || tok === "qc_pass") allowedSet.add("pass");
+        if (tok === "all") {
+          ["pass", "fail", "unscored", "provisional", "unknown", ""].forEach(v => allowedSet.add(v));
+        } else if (tok === "pass" || tok === "qc_pass") allowedSet.add("pass");
         else if (tok === "fail" || tok === "qc_fail") allowedSet.add("fail");
         else if (tok === "unscored" || tok === "provisional" || tok === "unknown") {
           allowedSet.add("unscored");
@@ -1165,7 +1235,6 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         } else if (tok) allowedSet.add(tok);
       });
 
-      const ef = extraFilters || {};
       const psFilterList = normalizeFilterTokenArray(ef.prepared_samples || ef.preparedSamples);
       const psFilterSet = new Set(psFilterList);
       const fsFilterList = normalizeFilterTokenArray(ef.field_samples || ef.fieldSamples);
@@ -1186,8 +1255,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       const normPages = normalizeFilterTokenArray(selectedPages).filter(p => pageOrder.includes(p));
       const effectivePages = normPages.length ? normPages : ["char", "explorer"];
 
-      const strCols = baseBundle.str_cols.slice();
-      const origDicts = JSON.parse(JSON.stringify(baseBundle.dicts));
+      const strCols = (baseBundle.str_cols || []).slice();
+      const origDicts = JSON.parse(JSON.stringify(baseBundle.dicts || {}));
       if (maskAnalyst && origDicts.analyst) {
         origDicts.analyst = origDicts.analyst.map(a => (a !== "Unassigned" && a !== "") ? "—" : a);
       }
@@ -1198,7 +1267,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       const fsColIdx = strCols.indexOf("field_sample") + 1;
       const paramColIdx = strCols.indexOf("parameter") + 1;
       const unitColIdx = strCols.indexOf("unit") + 1;
-      const methodColIndices = ["prep_method", "pt_method", "eh_method", "strain", "experiment"]
+      const methodColIndices = ["prep_method", "pt_method", "eh_method", "strain", "vessel", "experiment"]
         .map(c => ({ name: c, idx: strCols.indexOf(c) + 1, dict: origDicts[c] || [] }))
         .filter(spec => spec.idx > 0);
 
@@ -1383,7 +1452,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
 
       const resources = JSON.parse(JSON.stringify(
         (baseBundle.resources || []).filter(r => {
-          const rName = String(r.name || "").trim().toLowerCase();
+          const rName = String((r && typeof r === "object" ? r.name : r) || "").trim().toLowerCase();
           return survivingResSet.size === 0 || survivingResSet.has(rName);
         })
       ));
@@ -1391,11 +1460,29 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const rName = String(er || "").trim().toLowerCase();
         return survivingResSet.size === 0 || survivingResSet.has(rName);
       });
+      const nonResourceInsightKeys = new Set([
+        "schema_version",
+        "generated_at",
+        "generated_utc",
+        "model_metadata",
+        "catalog_medians"
+      ]);
       const filteredInsights = {};
-      if (baseBundle.insights) {
+      if (baseBundle.insights && typeof baseBundle.insights === "object") {
         Object.keys(baseBundle.insights).forEach(k => {
-          if (survivingResSet.size === 0 || survivingResSet.has(k.trim().toLowerCase())) {
-            filteredInsights[k] = JSON.parse(JSON.stringify(baseBundle.insights[k]));
+          const val = baseBundle.insights[k];
+          if (k === "resources" && val && typeof val === "object" && !Array.isArray(val)) {
+            const subRes = {};
+            Object.keys(val).forEach(rk => {
+              if (survivingResSet.size === 0 || survivingResSet.has(rk.trim().toLowerCase())) {
+                subRes[rk] = JSON.parse(JSON.stringify(val[rk]));
+              }
+            });
+            filteredInsights.resources = subRes;
+          } else if (nonResourceInsightKeys.has(k)) {
+            filteredInsights[k] = JSON.parse(JSON.stringify(val));
+          } else if (survivingResSet.size === 0 || survivingResSet.has(k.trim().toLowerCase())) {
+            filteredInsights[k] = JSON.parse(JSON.stringify(val));
           }
         });
       }
@@ -1510,6 +1597,24 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
     }
     window.switchCollaboratorSlicePage = switchCollaboratorSlicePage;
 
+    function openSliceExportModal(opts) {
+      if (typeof window._sliceModalOpenImpl === "function") {
+        return window._sliceModalOpenImpl(opts);
+      }
+      if (document.getElementById("modal-export-slice")) {
+        initSliceAndBugModals("Dashboard");
+        if (typeof window._sliceModalOpenImpl === "function") {
+          return window._sliceModalOpenImpl(opts);
+        }
+      }
+      const modalEl = document.getElementById("modal-export-slice");
+      if (modalEl && modalEl.classList) {
+        modalEl.classList.remove("hidden");
+      }
+      return modalEl;
+    }
+    window.openSliceExportModal = openSliceExportModal;
+
     function initSliceAndBugModals(pageLabel) {
       if (!document.getElementById("modal-export-slice")) {
         if (document.readyState === "loading") {
@@ -1525,7 +1630,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const m = document.getElementById(id);
         if (m) m.classList.add("hidden");
       });
-      ["panel-popover-resources", "panel-popover-params", "panel-popover-samples", "panel-popover-methods"].forEach(id => {
+      ["panel-popover-resources", "panel-popover-params", "panel-popover-samples", "panel-popover-methods", "audit-flag-show-me-popover"].forEach(id => {
         const p = document.getElementById(id);
         if (p) p.classList.add("hidden");
       });
@@ -1782,21 +1887,60 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         previewEl.textContent = `Slice preview: ${sliced.rows.length.toLocaleString()} observation(s) across ${resLabel} · Pages: [${pageNames}] · QC: [${qcSt.join(", ").toUpperCase()}] · 0 non-selected resources included.`;
       }
 
+      function openSliceExportModalImpl(opts) {
+        selectedSliceResources.clear();
+        let explicitResources = [];
+        if (typeof opts === "string" && opts.trim()) {
+          explicitResources = normalizeFilterTokenArray(opts);
+        } else if (Array.isArray(opts)) {
+          explicitResources = normalizeFilterTokenArray(opts);
+        } else if (opts && typeof opts === "object") {
+          explicitResources = normalizeFilterTokenArray(
+            opts.resources || opts.selectedResources || opts.resource || ""
+          );
+        }
+        if (explicitResources.length > 0) {
+          const knownByLower = {};
+          activeResourcesList.forEach(r => {
+            knownByLower[String(r || "").trim().toLowerCase()] = r;
+          });
+          explicitResources.forEach(er => {
+            const norm = String(er || "").trim().toLowerCase();
+            if (!norm) return;
+            const matched = knownByLower[norm] || er;
+            if (!activeResourcesList.includes(matched)) {
+              activeResourcesList.push(matched);
+            }
+            selectedSliceResources.add(matched);
+          });
+        } else {
+          getPageDefaultResources().forEach(r => selectedSliceResources.add(r));
+        }
+        const pageDates = getPageDateInputs();
+        const dtModal = document.getElementById("slice-date-type");
+        const fromModal = document.getElementById("slice-from-date");
+        const toModal = document.getElementById("slice-to-date");
+        if (dtModal && pageDates.date_type) dtModal.value = pageDates.date_type;
+        if (fromModal) fromModal.value = pageDates.from_date || "";
+        if (toModal) toModal.value = pageDates.to_date || "";
+        syncHiddenResourceSelect();
+        renderSliceModalResourceCheckboxes();
+        updateSlicePreviewCount();
+        const modalEl = sliceModal || document.getElementById("modal-export-slice");
+        if (modalEl) {
+          modalEl.classList.remove("hidden");
+        }
+        return modalEl;
+      }
+      window._sliceModalOpenImpl = openSliceExportModalImpl;
+      window.openSliceExportModal = openSliceExportModalImpl;
+      if (window.BioCirvQcClient) {
+        window.BioCirvQcClient.openSliceExportModal = openSliceExportModalImpl;
+      }
+
       if (openSliceBtn && sliceModal) {
         openSliceBtn.addEventListener("click", () => {
-          selectedSliceResources.clear();
-          getPageDefaultResources().forEach(r => selectedSliceResources.add(r));
-          const pageDates = getPageDateInputs();
-          const dtModal = document.getElementById("slice-date-type");
-          const fromModal = document.getElementById("slice-from-date");
-          const toModal = document.getElementById("slice-to-date");
-          if (dtModal && pageDates.date_type) dtModal.value = pageDates.date_type;
-          if (fromModal) fromModal.value = pageDates.from_date || "";
-          if (toModal) toModal.value = pageDates.to_date || "";
-          syncHiddenResourceSelect();
-          renderSliceModalResourceCheckboxes();
-          updateSlicePreviewCount();
-          sliceModal.classList.remove("hidden");
+          openSliceExportModalImpl();
         });
       }
 
@@ -2146,11 +2290,23 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
               if (data.created_via_api) {
                 if (statusEl) {
                   statusEl.className = "text-xs font-mono p-2.5 rounded-lg badge-pass";
-                  statusEl.innerHTML = `✓ GitHub Issue #${escBugHtml(data.issue_number ?? "")} created directly via API! <a href="${escBugHtml(data.issue_url ?? "")}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue on GitHub &rarr;</a>`;
+                  statusEl.innerHTML = `✓ GitHub Issue #${escBugHtml(data.issue_number ?? "")} created &amp; recorded in PostgreSQL QC Ledger (ID #${escBugHtml(data.decision_id ?? "")})! <a href="${escBugHtml(data.issue_url ?? "")}" target="_blank" rel="noopener" class="underline font-bold ml-1">View Issue on GitHub &rarr;</a>`;
                   statusEl.classList.remove("hidden");
                 }
                 if (window.showQcToast) {
-                  window.showQcToast(`Created GitHub Issue #${data.issue_number ?? ""} directly via API`, "pass");
+                  window.showQcToast(`Created GitHub Issue #${data.issue_number ?? ""} & saved to PostgreSQL (ID #${data.decision_id ?? ""})`, "pass");
+                }
+                return;
+              }
+              if (data.persisted) {
+                const ghFallbackHref = escBugHtml(data.issue_url || data.fallback_url || "");
+                if (statusEl) {
+                  statusEl.className = "text-xs font-mono p-2.5 rounded-lg badge-pass";
+                  statusEl.innerHTML = `✓ Issue recorded in PostgreSQL QC Ledger (ID #${escBugHtml(data.decision_id ?? "")}).${ghFallbackHref ? ` <a href="${ghFallbackHref}" target="_blank" rel="noopener" class="underline font-bold ml-1">Optional: Open on GitHub &rarr;</a>` : ""}`;
+                  statusEl.classList.remove("hidden");
+                }
+                if (window.showQcToast) {
+                  window.showQcToast(`Issue recorded in PostgreSQL QC Ledger (ID #${data.decision_id ?? ""})`, "pass");
                 }
                 return;
               }
@@ -2206,18 +2362,499 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
     const LOCAL_DECISIONS_STORAGE_KEY = "biocirv_qc_decisions_ledger_v1";
     const PAGE2_DECISIONS_STORAGE_KEY = "biocirv_qc_decisions_v1";
 
+    function escapeHtml(s) {
+      return String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+    window.escapeHtml = escapeHtml;
+
+    const DOMAIN_DEFS = [
+      { key: "proximate", label: "Proximate", analysisType: "Proximate Analysis" },
+      { key: "calorimetry", label: "Calorimetry", analysisType: "Calorimetry" },
+      { key: "compositional", label: "Compositional", analysisType: "Compositional Analysis" },
+      { key: "ultimate", label: "Ultimate", analysisType: "Ultimate Analysis" },
+      { key: "xrd", label: "XRD", analysisType: "XRD Crystallinity" },
+      { key: "icp", label: "ICP", analysisType: "ICP-OES / ICP-MS" },
+      { key: "xrf", label: "XRF", analysisType: "XRF Elemental" },
+      { key: "pretreatment", label: "Pretreatment", analysisType: "Pretreatment" },
+      { key: "fermentation", label: "Fermentation", analysisType: "Fermentation" },
+      { key: "gasification", label: "Gasification", analysisType: "Gasification" }
+    ];
+    window.DOMAIN_DEFS = DOMAIN_DEFS;
+
+    function normalizeDomainKey(raw) {
+      const s = String(raw || "").trim().toLowerCase();
+      if (!s) return "proximate";
+      if (s === "all") return "all";
+      if (s === "calorimetry_xrd" || s.includes("calorim") || s.includes("hhv") || s.includes("lhv")) return "calorimetry";
+      if (s.includes("proximate")) return "proximate";
+      if (s.includes("ultimate")) return "ultimate";
+      if (s.includes("compositional") || s.includes("structural")) return "compositional";
+      if (s.includes("xrd") || s.includes("crystallin")) return "xrd";
+      if (s === "elemental" || s.includes("icp")) return "icp";
+      if (s.includes("xrf") || s === "ash" || s.startsWith("ash ")) return "xrf";
+      if (s.includes("pretreatment") || s.includes("hydrolysis")) return "pretreatment";
+      if (s.includes("fermentation") || s.includes("bioconversion")) return "fermentation";
+      if (s.includes("gasification")) return "gasification";
+      return s;
+    }
+    window.normalizeDomainKey = normalizeDomainKey;
+
+    const CANONICAL_DOMAIN_LOOKUP = {
+      "proximate analysis": "proximate",
+      "proximate": "proximate",
+      "ultimate analysis": "ultimate",
+      "ultimate": "ultimate",
+      "compositional analysis": "compositional",
+      "compositional": "compositional",
+      "calorimetry": "calorimetry",
+      "calorimetry analysis": "calorimetry",
+      "calorimetry_xrd": "calorimetry",
+      "xrd": "xrd",
+      "xrd analysis": "xrd",
+      "icp": "icp",
+      "icp-oes / icp-ms": "icp",
+      "icp elemental analysis": "icp",
+      "icp analysis": "icp",
+      "xrf": "xrf",
+      "xrf elemental": "xrf",
+      "xrf elemental analysis": "xrf",
+      "xrf analysis": "xrf",
+      "ash": "xrf",
+      "pretreatment": "pretreatment",
+      "pretreatment & hydrolysis": "pretreatment",
+      "fermentation": "fermentation",
+      "fermentation (bioconversion)": "fermentation",
+      "gasification": "gasification"
+    };
+
+    const CANONICAL_DOMAIN_SLUGS = [
+      "proximate",
+      "ultimate",
+      "compositional",
+      "calorimetry",
+      "xrd",
+      "icp",
+      "xrf",
+      "pretreatment",
+      "fermentation",
+      "gasification"
+    ];
+
+    function canonicalDomainSlug(analysisType) {
+      let cleaned = String(analysisType || "").trim().toLowerCase();
+      if (!cleaned) return "unknown";
+      if (cleaned.endsWith("_record")) {
+        cleaned = cleaned.slice(0, -"_record".length).trim();
+      }
+      if (CANONICAL_DOMAIN_LOOKUP[cleaned]) {
+        return CANONICAL_DOMAIN_LOOKUP[cleaned];
+      }
+      for (let i = 0; i < CANONICAL_DOMAIN_SLUGS.length; i++) {
+        if (cleaned.indexOf(CANONICAL_DOMAIN_SLUGS[i]) !== -1) {
+          return CANONICAL_DOMAIN_SLUGS[i];
+        }
+      }
+      return cleaned;
+    }
+
+    function groupContextLabel(obj) {
+      if (!obj || typeof obj !== "object") return "unassigned";
+      if (typeof obj.group_context_label === "string" && obj.group_context_label.trim() !== "") {
+        return obj.group_context_label.trim();
+      }
+      const domSlug = canonicalDomainSlug(obj.analysis_type || obj.domain || "");
+      const hasPtKey = Object.prototype.hasOwnProperty.call(obj, "pt_method");
+      const hasStrainKey = Object.prototype.hasOwnProperty.call(obj, "strain");
+      const prep = String(obj.prep_method || "").trim();
+      const ptRaw = String(obj.pt_method || "").trim();
+      if (domSlug === "pretreatment") {
+        const pt = ptRaw || (!hasPtKey ? prep : "") || "none";
+        const eh = String(obj.eh_method || "").trim() || "none";
+        return eh && eh !== "none" ? `${pt} \u00b7 ${eh}` : pt;
+      }
+      if (domSlug === "fermentation") {
+        const fermPt = ptRaw;
+        const strain = String(obj.strain || "").trim() || (!hasStrainKey ? prep : "") || "no-strain";
+        const base = fermPt && fermPt !== "none" ? `${fermPt} \u00b7 ${strain}` : strain;
+        const th = obj.time_h;
+        if (th !== null && th !== undefined && String(th).trim() !== "") {
+          const numTh = Number(th);
+          const thFmt = Number.isFinite(numTh) ? String(numTh) : String(th).trim();
+          return `${base} @ ${thFmt}h`;
+        }
+        return base;
+      }
+      if (domSlug === "gasification") {
+        const v = String(obj.vessel || obj.reactor_type || prep || "").trim();
+        if (v && !["none", "n/a", "unassigned"].includes(v.toLowerCase())) {
+          return v.toLowerCase().startsWith("reactor:") ? v : `Reactor: ${v}`;
+        }
+        return "Reactor: Unassigned";
+      }
+      return prep || "unassigned";
+    }
+    function computeCanonicalMethodSignature(rowOrGroup) {
+      return groupContextLabel(rowOrGroup);
+    }
+    window.groupContextLabel = groupContextLabel;
+    window.computeCanonicalMethodSignature = computeCanonicalMethodSignature;
+
+    function normalizeReplicateGroupKey(
+      rawKeyOrResource,
+      preparedSample,
+      analysisType,
+      parameter,
+      prepMethod,
+      experiment
+    ) {
+      if (
+        typeof rawKeyOrResource === "string" &&
+        rawKeyOrResource.indexOf("::") !== -1 &&
+        preparedSample === undefined &&
+        analysisType === undefined &&
+        parameter === undefined
+      ) {
+        let s = rawKeyOrResource.trim();
+        const isLegacyGrp = s.toLowerCase().indexOf("grp::") === 0;
+        if (isLegacyGrp) {
+          s = s.slice(5);
+        }
+        const parts = s.split("::").map(p => String(p || "").trim().toLowerCase());
+        if (isLegacyGrp && parts.length === 5) {
+          // Legacy grp::{resource}::{analysis_type}::{prepared_sample}::{experiment}::{parameter}
+          return [
+            parts[0],
+            parts[2],
+            canonicalDomainSlug(parts[1]),
+            parts[4],
+            "unassigned",
+            parts[3]
+          ].join("::");
+        }
+        if (parts.length >= 3) {
+          parts[2] = canonicalDomainSlug(parts[2]);
+        }
+        if (parts.length === 4 || parts.length === 6) {
+          return parts.join("::");
+        }
+        if (parts.length === 5) {
+          parts.push("");
+          return parts.join("::");
+        }
+        if (parts.length > 6) {
+          return parts.slice(0, 6).join("::");
+        }
+        return parts.join("::");
+      }
+      if (rawKeyOrResource && typeof rawKeyOrResource === "object") {
+        const obj = rawKeyOrResource;
+        if (
+          typeof obj.replicate_group_key === "string" &&
+          obj.replicate_group_key.indexOf("::") !== -1 &&
+          !obj.resource_name &&
+          !obj.resource
+        ) {
+          return normalizeReplicateGroupKey(obj.replicate_group_key);
+        }
+        return [
+          String(obj.resource_name || obj.resource || "").trim().toLowerCase(),
+          String(obj.prepared_sample || obj.prepared_sample_name || "").trim().toLowerCase(),
+          canonicalDomainSlug(obj.analysis_type || obj.domain || ""),
+          String(obj.parameter_name || obj.parameter || "").trim().toLowerCase(),
+          String(groupContextLabel(obj) || "").trim().toLowerCase(),
+          String(obj.experiment || obj.experiment_name || "").trim().toLowerCase()
+        ].join("::");
+      }
+      return [
+        String(rawKeyOrResource || "").trim().toLowerCase(),
+        String(preparedSample || "").trim().toLowerCase(),
+        canonicalDomainSlug(analysisType || ""),
+        String(parameter || "").trim().toLowerCase(),
+        String(prepMethod || "unassigned").trim().toLowerCase(),
+        String(experiment || "").trim().toLowerCase()
+      ].join("::");
+    }
+
+    function matchesReplicateGroupKey(a, b) {
+      if (!a || !b) return false;
+      const na = normalizeReplicateGroupKey(String(a));
+      const nb = normalizeReplicateGroupKey(String(b));
+      if (!na || !nb) return false;
+      if (na === nb) return true;
+      const pa = na.split("::");
+      const pb = nb.split("::");
+      if (pa.length >= 4 && pb.length >= 4) {
+        const samePrefix = pa.slice(0, 4).join("::") === pb.slice(0, 4).join("::");
+        if (!samePrefix) return false;
+        if (pa.length === 4 || pb.length === 4) return true;
+        if ((pa[4] === "unassigned" || pb[4] === "unassigned") && pa[5] === pb[5]) return true;
+      }
+      return false;
+    }
+
+    function computeMedianNumeric(vals) {
+      const clean = (vals || [])
+        .filter(v => typeof v === "number" && Number.isFinite(v))
+        .slice()
+        .sort((a, b) => a - b);
+      if (!clean.length) return null;
+      const mid = Math.floor(clean.length / 2);
+      return clean.length % 2 === 1 ? clean[mid] : (clean[mid - 1] + clean[mid]) / 2.0;
+    }
+
+    function getOutlierSummary(insOrOut) {
+      const out = (insOrOut && insOrOut.outlier_screening) ? insOrOut.outlier_screening : (insOrOut || {});
+      const s = (out && out.summary && typeof out.summary === "object") ? out.summary : out;
+      const firstNum = (...cands) => {
+        for (const c of cands) {
+          if (typeof c === "number" && Number.isFinite(c)) return c;
+        }
+        return null;
+      };
+      const allGroups = [];
+      const allParams = [];
+      if (out && out.by_tab && typeof out.by_tab === "object") {
+        Object.values(out.by_tab).forEach(t => {
+          const grps = (t && (t.replicate_groups || t.groups)) || [];
+          if (Array.isArray(grps)) allGroups.push(...grps);
+          const prms = (t && (t.param_rsd_table || t.parameters)) || [];
+          if (Array.isArray(prms)) allParams.push(...prms);
+        });
+      }
+      const multiRepGroups = allGroups.filter(
+        g => g && (g.n || 0) >= 2 && typeof g.rsd_within_pct === "number" && Number.isFinite(g.rsd_within_pct)
+      );
+      const flaggedActive = firstNum(
+        s && s.flagged_active,
+        s && s.flagged_active_groups,
+        s && s.flagged_replicate_groups,
+        out && out.flagged_active,
+        out && out.flagged_active_groups,
+        out && out.flagged_replicate_groups
+      ) ?? (allGroups.length ? allGroups.filter(g => Boolean(g && (g.active_flagged ?? g.flagged_active))).length : 0);
+      const flaggedRaw = firstNum(
+        s && s.flagged_raw,
+        s && s.flagged_raw_groups,
+        out && out.flagged_raw,
+        out && out.flagged_raw_groups
+      ) ?? (allGroups.length ? allGroups.filter(g => Boolean(g && g.raw_flagged)).length : 0);
+      const suppressedTrace = firstNum(
+        s && s.suppressed_trace,
+        s && s.suppressed_low_abundance_groups,
+        s && s.suppressed_below_cutoff_groups,
+        out && out.suppressed_trace,
+        out && out.suppressed_low_abundance_groups,
+        out && out.suppressed_below_cutoff_groups
+      ) ?? Math.max(0, flaggedRaw - flaggedActive);
+      const totalGroups = firstNum(
+        s && s.total_groups,
+        s && s.total_replicate_groups,
+        out && out.total_groups,
+        out && out.total_replicate_groups
+      ) ?? allGroups.length;
+      const rsdDefinedGroups = firstNum(
+        s && s.rsd_defined_groups,
+        s && s.multi_rep_groups,
+        out && out.rsd_defined_groups
+      ) ?? multiRepGroups.length;
+      const withinRsdMedian = firstNum(
+        s && s.overall_within_rsd_median,
+        s && s.within_rsd_median,
+        s && s.median_within_rsd_pct,
+        out && out.overall_within_rsd_median,
+        out && out.within_rsd_median,
+        out && out.median_within_rsd_pct
+      ) ?? computeMedianNumeric(multiRepGroups.map(g => g.rsd_within_pct));
+      const withinSdMedian = firstNum(
+        s && s.overall_within_sd_median,
+        s && s.within_sd_median,
+        out && out.overall_within_sd_median,
+        out && out.within_sd_median
+      ) ?? computeMedianNumeric(multiRepGroups.map(g => (typeof g.within_sd === "number" ? g.within_sd : g.sd)));
+      const betweenRsdMedian = firstNum(
+        s && s.overall_between_rsd_median,
+        s && s.between_rsd_median,
+        s && s.median_between_rsd_pct,
+        out && out.overall_between_rsd_median,
+        out && out.between_rsd_median,
+        out && out.median_between_rsd_pct
+      ) ?? computeMedianNumeric(
+        (allParams.length ? allParams : multiRepGroups).map(
+          x => (typeof x.between_rsd_pct === "number" ? x.between_rsd_pct : x.rsd_between_pct)
+        )
+      );
+      const betweenSdMedian = firstNum(
+        s && s.overall_between_sd_median,
+        s && s.between_sd_median,
+        out && out.overall_between_sd_median,
+        out && out.between_sd_median
+      ) ?? computeMedianNumeric(
+        (allParams.length ? allParams : multiRepGroups).map(
+          x => (typeof x.between_sd === "number" ? x.between_sd : x.pooled_sd)
+        )
+      );
+      const dixonActive = firstNum(
+        s && s.dixon_flagged,
+        s && s.dixon_active,
+        s && s.dixon_q_groups_active,
+        out && out.dixon_flagged,
+        out && out.dixon_active,
+        out && out.dixon_q_groups_active
+      ) ?? allGroups.filter(g => Boolean(g && g.raw_dixon && !g.below_cutoff)).length;
+      const dixonRaw = firstNum(
+        s && s.dixon_raw,
+        s && s.dixon_q_groups_raw,
+        out && out.dixon_raw,
+        out && out.dixon_q_groups_raw
+      ) ?? allGroups.filter(g => Boolean(g && g.raw_dixon)).length;
+      return {
+        flaggedActive,
+        flaggedRaw,
+        suppressedTrace,
+        totalGroups,
+        rsdDefinedGroups,
+        withinRsdMedian,
+        withinSdMedian,
+        betweenRsdMedian,
+        betweenSdMedian,
+        dixonActive,
+        dixonRaw
+      };
+    }
+
+    const PLACEHOLDER_ANALYST_EMAILS = [
+      "unassigned",
+      "none",
+      "null",
+      "anonymous",
+      "guest",
+      "local.analyst@lbl.gov",
+      "analyst@lbl.gov",
+      "explorer interactive reviewer",
+      "local analyst"
+    ];
+
+    function isPlaceholderAnalystEmail(raw) {
+      const s = String(raw || "").trim().toLowerCase();
+      return !s || PLACEHOLDER_ANALYST_EMAILS.includes(s);
+    }
+
+    function getDefaultAssigneeEmail(existingEmail) {
+      const cleanExisting = String(existingEmail || "").trim();
+      if (!isPlaceholderAnalystEmail(cleanExisting)) {
+        return cleanExisting;
+      }
+      if (typeof window !== "undefined" && !isPlaceholderAnalystEmail(window.__BIOCIRV_SESSION_ANALYST_EMAIL__)) {
+        return String(window.__BIOCIRV_SESSION_ANALYST_EMAIL__).trim();
+      }
+      try {
+        if (typeof BioCirvQcClient !== "undefined" && typeof BioCirvQcClient.getAnalystIdentity === "function") {
+          const id = BioCirvQcClient.getAnalystIdentity();
+          const email = String((id && id.email) || "").trim();
+          if (!isPlaceholderAnalystEmail(email)) {
+            return email;
+          }
+        }
+      } catch (_e) {}
+      try {
+        const rawId = localStorage.getItem(ANALYST_IDENTITY_STORAGE_KEY);
+        if (rawId) {
+          const parsedId = JSON.parse(rawId);
+          const storedIdEmail = String((parsedId && parsedId.email) || "").trim();
+          if (!isPlaceholderAnalystEmail(storedIdEmail)) {
+            return storedIdEmail;
+          }
+        }
+      } catch (_e) {}
+      try {
+        const stored = String(localStorage.getItem("biocirv_analyst_email") || "").trim();
+        if (!isPlaceholderAnalystEmail(stored)) {
+          return stored;
+        }
+      } catch (_e) {}
+      return "";
+    }
+
+    window.canonicalDomainSlug = canonicalDomainSlug;
+    window.groupContextLabel = groupContextLabel;
+    window.computeCanonicalMethodSignature = computeCanonicalMethodSignature;
+    window.normalizeReplicateGroupKey = normalizeReplicateGroupKey;
+    window.matchesReplicateGroupKey = matchesReplicateGroupKey;
+    window.computeMedianNumeric = computeMedianNumeric;
+    window.getOutlierSummary = getOutlierSummary;
+    window.isPlaceholderAnalystEmail = isPlaceholderAnalystEmail;
+    window.getDefaultAssigneeEmail = getDefaultAssigneeEmail;
+
     const BioCirvQcClient = {
+      canonicalDomainSlug,
+      groupContextLabel,
+      computeCanonicalMethodSignature,
+      normalizeReplicateGroupKey,
+      matchesReplicateGroupKey,
+      getOutlierSummary,
+      isPlaceholderAnalystEmail,
+      getDefaultAssigneeEmail,
       _pendingSignInCallback: null,
 
       hasConfirmedIdentity() {
+        if (typeof window !== "undefined" && !isPlaceholderAnalystEmail(window.__BIOCIRV_SESSION_ANALYST_EMAIL__)) {
+          return true;
+        }
         try {
           const raw = localStorage.getItem(ANALYST_IDENTITY_STORAGE_KEY);
           if (!raw) return false;
           const parsed = JSON.parse(raw);
-          return Boolean(parsed && parsed.email);
+          return Boolean(parsed && !isPlaceholderAnalystEmail(parsed.email));
         } catch (_e) {
           return false;
         }
+      },
+
+      async hydrateSessionIdentity() {
+        const id = this.getAnalystIdentity();
+        const urls = [];
+        if (typeof window !== "undefined" && (window.location.protocol === "http:" || window.location.protocol === "https:")) {
+          urls.push("/v1/qc/auth/me");
+        }
+        if (id && id.apiBase) {
+          urls.push(`${id.apiBase}/v1/qc/auth/me`);
+        }
+        for (const url of urls) {
+          try {
+            const resp = await fetch(url, { credentials: "include", headers: this.getHeaders() });
+            if (resp.ok) {
+              const data = await resp.json();
+              const sessEmail = String(
+                data.email || (data.analyst && data.analyst.email) || (data.current_analyst && data.current_analyst.email) || ""
+              ).trim().toLowerCase();
+              const sessName = String(
+                data.name || (data.analyst && data.analyst.name) || (data.current_analyst && data.current_analyst.name) || sessEmail
+              ).trim();
+              if (!isPlaceholderAnalystEmail(sessEmail)) {
+                window.__BIOCIRV_SESSION_ANALYST_EMAIL__ = sessEmail;
+                try {
+                  localStorage.setItem("biocirv_analyst_email", sessEmail);
+                } catch (_e) {}
+                if (isPlaceholderAnalystEmail(id.email)) {
+                  this.setAnalystIdentity({ email: sessEmail, name: sessName || sessEmail, apiBase: id.apiBase });
+                }
+                ["finding-modal-assigned-email", "click-popover-assignee", "pin-assignee"].forEach(domId => {
+                  const el = document.getElementById(domId);
+                  if (el && isPlaceholderAnalystEmail(el.value)) {
+                    el.value = sessEmail;
+                  }
+                });
+                return sessEmail;
+              }
+            }
+          } catch (_e) {}
+        }
+        return "";
       },
 
       ensureSignedIn(onConfirmedCallback) {
@@ -2244,21 +2881,36 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       },
 
       getAnalystIdentity() {
+        const sessionEmail = (typeof window !== "undefined" && !isPlaceholderAnalystEmail(window.__BIOCIRV_SESSION_ANALYST_EMAIL__))
+          ? String(window.__BIOCIRV_SESSION_ANALYST_EMAIL__).trim().toLowerCase()
+          : "";
         try {
           const raw = localStorage.getItem(ANALYST_IDENTITY_STORAGE_KEY);
           if (raw) {
             const parsed = JSON.parse(raw);
+            const storedEmail = String(parsed.email || "").trim().toLowerCase();
+            const effectiveEmail = (!isPlaceholderAnalystEmail(storedEmail))
+              ? storedEmail
+              : (sessionEmail || "");
             return {
-              email: (parsed.email || "local.analyst@lbl.gov").trim().toLowerCase(),
-              name: (parsed.name || "Local Analyst").trim(),
+              email: effectiveEmail,
+              name: (parsed.name || (sessionEmail ? sessionEmail : "")).trim(),
               idToken: parsed.idToken || "",
               apiBase: (parsed.apiBase || window.BIOCIRV_API_BASE || "http://localhost:8000").replace(/\\/+$/, "")
             };
           }
         } catch (_e) {}
+        const storedLegacyEmail = (() => {
+          try {
+            const s = String(localStorage.getItem("biocirv_analyst_email") || "").trim().toLowerCase();
+            return !isPlaceholderAnalystEmail(s) ? s : "";
+          } catch (_e) {
+            return "";
+          }
+        })();
         return {
-          email: "local.analyst@lbl.gov",
-          name: "Local Analyst",
+          email: sessionEmail || storedLegacyEmail || "",
+          name: sessionEmail || storedLegacyEmail || "",
           idToken: "",
           apiBase: (window.BIOCIRV_API_BASE || "http://localhost:8000").replace(/\\/+$/, "")
         };
@@ -2271,8 +2923,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       setAnalystIdentity(identity) {
         const current = this.getAnalystIdentity();
         const next = {
-          email: ((identity && identity.email) || current.email || "local.analyst@lbl.gov").trim().toLowerCase(),
-          name: ((identity && identity.name) || current.name || "Local Analyst").trim(),
+          email: ((identity && identity.email) || current.email || "").trim().toLowerCase(),
+          name: ((identity && identity.name) || current.name || "").trim(),
           idToken: (identity && identity.idToken !== undefined) ? identity.idToken : current.idToken,
           apiBase: ((identity && identity.apiBase) || current.apiBase || "http://localhost:8000").replace(/\\/+$/, ""),
           confirmedAt: new Date().toISOString()
@@ -2321,33 +2973,64 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         try {
           const raw = localStorage.getItem(PAGE2_DECISIONS_STORAGE_KEY);
           const store = raw ? JSON.parse(raw) : {};
-          const key = item.decision_key || item.key || (item.id ? `api::${item.id}` : `finding::${Date.now()}`);
+          const repGroupKey = item.replicate_group_key || item.group_key || (
+            (item.resource_name || item.prepared_sample_name || item.prepared_sample || item.parameter_name || item.parameter)
+              ? normalizeReplicateGroupKey(item, item.resource_name)
+              : null
+          );
+          const key = item.decision_key || item.key || (
+            (item.scope === "replicate_group" || item.triage_scope === "group" || (!item.scope && repGroupKey)) && repGroupKey
+              ? `grp::${repGroupKey}`
+              : (item.id ? `api::${item.id}` : `finding::${Date.now()}`)
+          );
           const existing = store[key] || {};
           const normScope = (item.scope === "finding" || item.scope === "ad_hoc_finding")
             ? "ad_hoc_finding"
             : ((item.scope === "single" || item.scope === "single_record") ? "single_record" : "replicate_group");
+          const rawAct = String(item.decision || item.decision_action || item.new_qc_status || item.new_qc_pass || "").trim().toLowerCase();
+          let mappedDecision = existing.decision || "accept_with_note";
+          if (rawAct === "keep" || rawAct === "approve_pass" || rawAct === "pass" || item.new_qc_pass === "pass" || item.new_qc_status === "pass") {
+            mappedDecision = "keep";
+          } else if (rawAct === "trace_ignore") {
+            mappedDecision = "trace_ignore";
+          } else if (rawAct === "re_assay" || rawAct === "needs_retest" || rawAct === "retest") {
+            mappedDecision = "re_assay";
+          } else if (rawAct === "exclude_qc_fail" || rawAct === "flag_fail" || rawAct === "reject_fail" || rawAct === "fail" || item.new_qc_pass === "fail" || item.new_qc_status === "fail") {
+            mappedDecision = "exclude_qc_fail";
+          } else if (rawAct === "accept_with_note" || rawAct === "keep_note" || rawAct === "in_review" || rawAct === "provisional") {
+            mappedDecision = "accept_with_note";
+          }
+          const nextAssignee = (item.assigned_to_email !== undefined && item.assigned_to_email !== null && String(item.assigned_to_email).trim() !== "")
+            ? String(item.assigned_to_email).trim()
+            : (existing.assigned_to_email || "");
           store[key] = {
             ...existing,
             key,
-            api_decision_id: item.id || existing.api_decision_id || null,
+            replicate_group_key: repGroupKey || existing.replicate_group_key || "",
+            api_decision_id: item.api_decision_id || item.id || existing.api_decision_id || null,
             scope: normScope,
             triage_scope: normScope === "single_record" ? "single" : "group",
             resource_name: item.resource_name || existing.resource_name || "",
             analysis_type: item.analysis_type || existing.analysis_type || "",
             prepared_sample: item.prepared_sample_name || item.prepared_sample || existing.prepared_sample || "",
+            prep_method: item.prep_method || existing.prep_method || "",
             experiment: item.experiment_name || item.experiment || existing.experiment || "",
             record_id: item.record_id || existing.record_id || "",
             record_ids: Array.isArray(item.target_record_ids)
               ? item.target_record_ids.join("|")
-              : (item.target_record_ids || item.record_ids || item.record_id || existing.record_ids || ""),
+              : (item.target_record_ids || (Array.isArray(item.record_ids) ? item.record_ids.join("|") : item.record_ids) || item.record_id || existing.record_ids || ""),
             parameter: item.parameter_name || item.parameter || existing.parameter || "Resource-Level Observation",
-            decision: item.decision || (item.new_qc_status === "fail" ? "exclude_qc_fail" : (existing.decision || "exclude_qc_fail")),
-            status: item.status || (item.review_status === "resolved" ? "approved" : (item.review_status || existing.status || "open")),
-            note: item.rationale_note || item.audit_note || item.note || existing.note || "",
-            assigned_to_email: item.assigned_to_email ?? existing.assigned_to_email ?? "",
-            reviewer_email: item.reviewer_email || item.analyst_email || existing.reviewer_email || "",
+            decision: mappedDecision,
+            status: item.status || (item.decision_status === "resolved" || item.review_status === "resolved" ? "approved" : (item.decision_status || item.review_status || existing.status || "open")),
+            note: item.review_note || item.rationale_note || item.audit_note || item.note || existing.note || "",
+            lab_lineage_note: item.lab_lineage_note || item.sample_note || item.prep_notes || existing.lab_lineage_note || "",
+            source_label: item.source_label || existing.source_label || "",
+            submitted_at: item.submitted_at || item.created_at || existing.submitted_at || new Date().toISOString(),
+            submitted_by_email: item.submitted_by_email || item.analyst_email || existing.submitted_by_email || "",
+            assigned_to_email: nextAssignee,
+            reviewer_email: item.resolved_by_email || item.reviewer_email || item.analyst_email || existing.reviewer_email || "",
             synced_to_gsheet: Boolean(item.synced_to_gsheet || existing.synced_to_gsheet),
-            updated_at: (item.updated_at || item.created_at || new Date().toISOString()).slice(0, 19).replace("T", " ")
+            updated_at: (item.updated_at || item.submitted_at || item.created_at || new Date().toISOString()).slice(0, 19).replace("T", " ")
           };
           localStorage.setItem(PAGE2_DECISIONS_STORAGE_KEY, JSON.stringify(store));
         } catch (_e) {}
@@ -2375,6 +3058,25 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         }
         this.saveLocalDecisions(list);
         this.mirrorToPage2DecisionsStore(savedItem);
+        try {
+          const pendingRaw = localStorage.getItem("biocirv_pending_qc_decisions");
+          const pendingArr = pendingRaw ? JSON.parse(pendingRaw) : [];
+          if (Array.isArray(pendingArr)) {
+            const pIdx = pendingArr.findIndex(p =>
+              p && (
+                (savedItem.id && p.id === savedItem.id) ||
+                (savedItem.replicate_group_key && p.replicate_group_key === savedItem.replicate_group_key && p.flag_type === savedItem.flag_type) ||
+                (savedItem.record_id && p.record_id === savedItem.record_id && p.flag_type === savedItem.flag_type)
+              )
+            );
+            if (pIdx >= 0) {
+              pendingArr[pIdx] = { ...pendingArr[pIdx], ...savedItem };
+            } else {
+              pendingArr.unshift(savedItem);
+            }
+            localStorage.setItem("biocirv_pending_qc_decisions", JSON.stringify(pendingArr.slice(0, 500)));
+          }
+        } catch (_e) {}
         return list;
       },
 
@@ -2432,21 +3134,123 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
 
       async submitDecision(payload) {
         const id = this.getAnalystIdentity();
+        const repGroupKey = payload.replicate_group_key || payload.group_key || (
+          (payload.resource_name || payload.prepared_sample_name || payload.prepared_sample || payload.parameter_name || payload.parameter)
+            ? normalizeReplicateGroupKey(payload, payload.resource_name)
+            : null
+        );
+        const rawAction = String(
+          payload.decision_action || payload.action || payload.decision || payload.new_qc_status || payload.new_qc_pass || "in_review"
+        ).trim().toLowerCase();
+        let canonicalAction = "in_review";
+        let canonicalStatus = payload.decision_status || payload.review_status || payload.status || "in_review";
+        const isStagedSessionFlag = String(payload.decision_status || payload.review_status || "").trim().toLowerCase() === "in_review";
+        let canonicalNewQcPass = null;
+        let legacyNewQcStatus = "provisional";
+        let legacyDecision = "accept_with_note";
+
+        if (rawAction === "approve_pass" || rawAction === "keep" || rawAction === "pass" || rawAction === "qc_pass" || rawAction === "trace_ignore") {
+          canonicalAction = rawAction === "trace_ignore" ? "trace_ignore" : "approve_pass";
+          canonicalStatus = isStagedSessionFlag ? "in_review" : "resolved";
+          canonicalNewQcPass = isStagedSessionFlag ? (payload.new_qc_pass !== undefined ? payload.new_qc_pass : null) : "pass";
+          legacyNewQcStatus = "pass";
+          legacyDecision = rawAction === "trace_ignore" ? "trace_ignore" : "keep";
+        } else if (rawAction === "reject_fail" || rawAction === "exclude_qc_fail" || rawAction === "flag_fail" || rawAction === "fail" || rawAction === "qc_fail") {
+          canonicalAction = "reject_fail";
+          canonicalStatus = isStagedSessionFlag ? "in_review" : "resolved";
+          canonicalNewQcPass = isStagedSessionFlag ? (payload.new_qc_pass !== undefined ? payload.new_qc_pass : null) : "fail";
+          legacyNewQcStatus = "fail";
+          legacyDecision = "exclude_qc_fail";
+        } else if (rawAction === "needs_retest" || rawAction === "re_assay" || rawAction === "retest") {
+          canonicalAction = "needs_retest";
+          canonicalStatus = "needs_retest";
+          canonicalNewQcPass = null;
+          legacyNewQcStatus = "re_assay";
+          legacyDecision = "re_assay";
+        } else {
+          canonicalAction = "in_review";
+          if (!canonicalStatus || canonicalStatus === "pending" || canonicalStatus === "provisional" || canonicalStatus === "open") {
+            canonicalStatus = "in_review";
+          }
+          canonicalNewQcPass = null;
+          legacyNewQcStatus = "provisional";
+          legacyDecision = "accept_with_note";
+        }
+
+        const targetRecs = Array.isArray(payload.target_record_ids)
+          ? payload.target_record_ids
+          : (Array.isArray(payload.record_ids)
+            ? payload.record_ids
+            : (payload.record_ids ? String(payload.record_ids).split("|").map(s => s.trim()).filter(Boolean) : (payload.record_id ? [String(payload.record_id)] : [])));
+        const primaryRecId = payload.record_id || targetRecs[0] || repGroupKey || null;
+        const rationaleList = Array.isArray(payload.rationale_chips)
+          ? payload.rationale_chips
+          : (Array.isArray(payload.rationale_tags) ? payload.rationale_tags : []);
+        const noteText = payload.review_note || payload.audit_note || payload.note || "";
+        const submittedAtIso = payload.submitted_at || payload.created_at || new Date().toISOString();
+        const rawCandidateSubmitter = String(
+          payload.submitted_by_email || payload.analyst_email || getDefaultAssigneeEmail() || (id && !isPlaceholderAnalystEmail(id.email) ? id.email : "") || ""
+        ).trim().toLowerCase();
+        const submitterEmail = isPlaceholderAnalystEmail(rawCandidateSubmitter) ? "" : rawCandidateSubmitter;
+        const labLineageNote = String(
+          payload.lab_lineage_note || payload.sample_note || payload.prep_notes || ""
+        ).trim();
+        const defaultSourceLabel = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
+          ? "Page 3 — Interactive Data Visualizer"
+          : ((typeof document !== "undefined" && document.title && document.title.toLowerCase().includes("statistical"))
+              ? "Page 2 — Statistical Snapshot"
+              : "Page 1/2 Visualizer");
+        const sourceLabelText = String(payload.source_label || defaultSourceLabel).trim();
+        let resolvedFlagType = String(payload.flag_type || "").trim();
+        if (!resolvedFlagType || resolvedFlagType === "analyst_flagged") {
+          const srcLow = sourceLabelText.toLowerCase();
+          if (srcLow.includes("page 3") || srcLow.includes("visualizer") || srcLow.includes("explorer") || (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")) {
+            resolvedFlagType = "visualizer_flagged";
+          } else if (srcLow.includes("page 2") || srcLow.includes("statistical") || srcLow.includes("outlier") || srcLow.includes("snapshot")) {
+            resolvedFlagType = "stat_snapshot_flagged";
+          } else {
+            resolvedFlagType = resolvedFlagType || "analyst_flagged";
+          }
+        }
+
         const body = {
-          decision_key: payload.decision_key || payload.key || null,
+          id: payload.api_decision_id || payload.id || null,
+          decision_id: payload.api_decision_id || payload.decision_id || payload.id || null,
+          decision_key: payload.decision_key || payload.key || (repGroupKey ? `grp::${repGroupKey}` : null),
+          replicate_group_key: repGroupKey,
+          record_table: payload.record_table || this.resolveRecordTable(payload.analysis_type || payload.domain || "proximate"),
           scope: payload.scope || "finding",
+          triage_scope: payload.triage_scope || (payload.scope === "single_record" ? "single" : "group"),
           resource_name: (payload.resource_name || "unknown").trim().toLowerCase(),
           analysis_type: (payload.analysis_type || "proximate").trim().toLowerCase(),
           parameter_name: (payload.parameter_name || payload.parameter || "Resource-Level Observation").trim(),
-          record_id: payload.record_id || null,
-          target_record_ids: payload.target_record_ids || (payload.record_id ? [payload.record_id] : []),
-          previous_qc_status: payload.previous_qc_status || "pass",
-          new_qc_status: payload.new_qc_status || "fail",
-          decision: payload.decision || (payload.new_qc_status === "keep" ? "keep" : "exclude_qc_fail"),
-          rationale_tags: payload.rationale_tags || [],
-          audit_note: payload.audit_note || payload.note || "",
+          flag_type: resolvedFlagType,
+          flag_trigger_value: payload.flag_trigger_value || null,
+          prepared_sample_name: payload.prepared_sample_name || payload.prepared_sample || null,
+          field_sample_name: payload.field_sample_name || payload.field_sample || null,
+          experiment_name: payload.experiment_name || payload.experiment || null,
+          record_id: primaryRecId,
+          record_ids: targetRecs,
+          target_record_ids: targetRecs,
+          old_qc_pass: payload.old_qc_pass || payload.previous_qc_status || "pass",
+          previous_qc_status: payload.previous_qc_status || payload.old_qc_pass || "pass",
+          new_qc_pass: canonicalNewQcPass,
+          new_qc_status: legacyNewQcStatus,
+          decision_action: canonicalAction,
+          decision: payload.decision || legacyDecision,
+          decision_status: canonicalStatus,
+          status: canonicalStatus,
+          rationale_chips: rationaleList,
+          rationale_tags: rationaleList,
+          review_note: noteText,
+          audit_note: noteText,
+          lab_lineage_note: labLineageNote || null,
+          source_label: sourceLabelText || null,
+          submitted_at: submittedAtIso,
+          flagged_at: submittedAtIso,
+          submitted_by_email: submitterEmail || null,
+          flagged_by_email: submitterEmail || null,
           assigned_to_email: payload.assigned_to_email ? payload.assigned_to_email.trim().toLowerCase() : null,
-          status: payload.review_status || payload.status || "open",
           gsheet_writeback_requested: Boolean(payload.gsheet_writeback_requested)
         };
 
@@ -2458,30 +3262,40 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           });
           if (resp.ok) {
             const data = await resp.json();
-            if (data.decision) this.upsertLocalDecision(data.decision);
-            window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: data.decision }));
-            window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: data.decision }));
-            return { ok: true, source: "api", ...data };
+            const mergedDec = data.decision ? { ...body, ...data.decision, api_decision_id: data.decision.id } : body;
+            this.upsertLocalDecision(mergedDec);
+            this.broadcastQcUpdate(mergedDec);
+            window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: mergedDec }));
+            window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: mergedDec }));
+            return { ok: true, source: "api", ...data, decision: mergedDec };
           }
         } catch (_e) {}
 
         const localEntry = {
           id: Date.now() + Math.floor(Math.random() * 1000),
           ...body,
-          analyst_email: id.email,
-          reviewer_email: id.email,
+          analyst_email: submitterEmail || null,
+          submitted_by_email: submitterEmail || null,
+          reviewer_email: submitterEmail || null,
           sync_status: "local_only",
-          created_at: new Date().toISOString(),
+          submitted_at: submittedAtIso,
+          created_at: submittedAtIso,
           updated_at: new Date().toISOString()
         };
         this.upsertLocalDecision(localEntry);
+        this.broadcastQcUpdate(localEntry);
         window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: localEntry }));
         window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: localEntry }));
         return { ok: true, source: "local", status: "saved_offline", decision: localEntry };
       },
 
       async submitFinding(payload) {
-        return this.submitDecision({ ...payload, scope: payload.scope || "finding", review_status: "open" });
+        return this.submitDecision({
+          ...payload,
+          scope: payload.scope || "finding",
+          review_status: payload.review_status || "in_review",
+          decision_status: payload.decision_status || "in_review"
+        });
       },
 
       async assignTask(decisionId, assignedToEmail, note) {
@@ -2523,37 +3337,137 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         return this.assignTask(decisionId, assignedToEmail, note);
       },
 
+      async assignBatch(items, assignedToEmail, reviewNote) {
+        const id = this.getAnalystIdentity();
+        const cleanEmail = getDefaultAssigneeEmail(assignedToEmail).toLowerCase();
+        const normalizedItems = (Array.isArray(items) ? items : []).map(it => {
+          const repGroupKey = it.replicate_group_key || it.group_key || (
+            (it.resource_name || it.prepared_sample_name || it.prepared_sample || it.parameter_name || it.parameter)
+              ? normalizeReplicateGroupKey(it, it.resource_name)
+              : null
+          );
+          return {
+            decision_id: it.api_decision_id || it.db_id || it.decision_id || it.id || null,
+            record_table: it.record_table || `${canonicalDomainSlug(it.analysis_type || "proximate")}_record`,
+            record_id: it.record_id ? String(it.record_id) : null,
+            record_ids: Array.isArray(it.record_ids)
+              ? it.record_ids.map(String)
+              : (it.record_ids ? String(it.record_ids).split(/[|,\\s]+/).map(s => s.trim()).filter(Boolean) : (it.record_id ? [String(it.record_id)] : [])),
+            replicate_group_key: repGroupKey,
+            resource_name: it.resource_name || "unknown",
+            analysis_type: it.analysis_type || null,
+            parameter_name: it.parameter_name || it.parameter || null,
+            flag_type: it.flag_type || "statistical_outlier",
+            flag_trigger_value: it.flag_trigger_value || null,
+            old_qc_pass: it.old_qc_pass || null,
+            review_note: it.review_note || reviewNote || null
+          };
+        });
+        const rawActorEmail = String((id && !isPlaceholderAnalystEmail(id.email) ? id.email : "") || getDefaultAssigneeEmail("") || "").trim().toLowerCase();
+        const actorEmail = isPlaceholderAnalystEmail(rawActorEmail) ? "" : rawActorEmail;
+        const nowIso = new Date().toISOString();
+        const requestBody = {
+          assigned_to_email: cleanEmail,
+          assigned_by_email: actorEmail,
+          review_note: reviewNote || null,
+          items: normalizedItems
+        };
+        try {
+          const resp = await fetch(`${id.apiBase}/v1/qc/decisions/assign-batch`, {
+            method: "POST",
+            headers: this.getHeaders(),
+            body: JSON.stringify(requestBody)
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            const decisionsList = data.decisions || [];
+            decisionsList.forEach(d => this.upsertLocalDecision(d));
+            window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: data }));
+            window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: data }));
+            return { ok: true, source: "api", ...data };
+          }
+        } catch (_e) {}
+
+        const localAssigned = normalizedItems.map(it => {
+          const localEntry = {
+            id: it.decision_id || (Date.now() + Math.floor(Math.random() * 1000)),
+            decision_id: it.decision_id,
+            record_table: it.record_table,
+            record_id: it.record_id,
+            record_ids: it.record_ids,
+            replicate_group_key: it.replicate_group_key,
+            resource_name: it.resource_name,
+            analysis_type: it.analysis_type,
+            parameter_name: it.parameter_name,
+            flag_type: it.flag_type,
+            assigned_to_email: cleanEmail,
+            assigned_by_email: actorEmail,
+            decision_status: "in_review",
+            status: "in_review",
+            review_note: it.review_note || `Bulk-assigned to ${cleanEmail}`,
+            audit_history: [
+              {
+                action: "bulk_assign",
+                assigned_to_email: cleanEmail,
+                assigned_by_email: actorEmail,
+                actor_email: actorEmail,
+                timestamp: nowIso
+              }
+            ],
+            updated_at: nowIso
+          };
+          this.upsertLocalDecision(localEntry);
+          return localEntry;
+        });
+        window.dispatchEvent(new CustomEvent("biocirv:decisions-updated", { detail: localAssigned }));
+        window.dispatchEvent(new CustomEvent("biocirv-decisions-updated", { detail: localAssigned }));
+        return {
+          ok: true,
+          source: "local",
+          status: "assigned",
+          assigned_count: localAssigned.length,
+          assigned_to_email: cleanEmail,
+          decisions: localAssigned
+        };
+      },
+
       async approveDecisions(itemsOrPayload, syncToGsheet = true) {
         const id = this.getAnalystIdentity();
         let requestBody;
         if (Array.isArray(itemsOrPayload)) {
           requestBody = {
             sync_to_gsheet: Boolean(syncToGsheet),
-            items: itemsOrPayload.map(e => ({
-              decision_key: e.key || e.decision_key || null,
-              scope: e.scope || (e.triage_scope === "single" ? "single_record" : "replicate_group"),
-              resource_name: e.resource_name || "",
-              analysis_type: e.analysis_type || "",
-              prepared_sample_name: e.prepared_sample || e.prepared_sample_name || "",
-              field_sample_name: e.field_sample || e.field_sample_name || "",
-              experiment_name: e.experiment || e.experiment_name || "",
-              record_id: e.record_id || (e.triage_scope === "single" ? (e.dixon_candidate_id || "") : ""),
-              record_ids: e.record_ids || e.all_group_record_ids || e.record_id || "",
-              parameter_name: e.parameter || e.parameter_name || "",
-              decision: (!e.decision || e.decision === "pending") ? "exclude_qc_fail" : e.decision,
-              rationale_note: e.note || e.rationale_note || e.audit_note || "",
-              assigned_to_email: e.assigned_to_email || null,
-              anomaly_flags_json: e.dixon_q ? JSON.stringify({ dixon_q: e.dixon_q, rsd_within_pct: e.rsd_within_pct }) : ""
-            }))
+            items: itemsOrPayload.map(e => {
+              const repGroupKey = e.replicate_group_key || normalizeReplicateGroupKey(e, e.resource_name);
+              return {
+                decision_key: e.key || e.decision_key || (repGroupKey ? `grp::${repGroupKey}` : null),
+                replicate_group_key: repGroupKey,
+                scope: e.scope || (e.triage_scope === "single" ? "single_record" : "replicate_group"),
+                resource_name: e.resource_name || "",
+                analysis_type: e.analysis_type || "",
+                prepared_sample_name: e.prepared_sample || e.prepared_sample_name || "",
+                field_sample_name: e.field_sample || e.field_sample_name || "",
+                experiment_name: e.experiment || e.experiment_name || "",
+                record_id: e.record_id || (e.triage_scope === "single" ? (e.dixon_candidate_id || "") : ""),
+                record_ids: e.record_ids || e.all_group_record_ids || e.record_id || "",
+                parameter_name: e.parameter || e.parameter_name || "",
+                decision: (!e.decision || e.decision === "pending") ? "exclude_qc_fail" : e.decision,
+                rationale_note: e.note || e.rationale_note || e.audit_note || "",
+                assigned_to_email: e.assigned_to_email || null,
+                anomaly_flags_json: e.dixon_q ? JSON.stringify({ dixon_q: e.dixon_q, rsd_within_pct: e.rsd_within_pct }) : ""
+              };
+            })
           };
         } else if (itemsOrPayload && Array.isArray(itemsOrPayload.items)) {
           requestBody = itemsOrPayload;
         } else {
           const p = itemsOrPayload || {};
+          const repGroupKey = p.replicate_group_key || normalizeReplicateGroupKey(p, p.resource_name);
           requestBody = {
             sync_to_gsheet: Boolean(p.sync_to_gsheet ?? syncToGsheet),
             items: [{
-              decision_key: p.key || p.decision_key || null,
+              decision_key: p.key || p.decision_key || (repGroupKey ? `grp::${repGroupKey}` : null),
+              replicate_group_key: repGroupKey,
               scope: p.scope || "single_record",
               resource_name: p.resource_name || "",
               analysis_type: p.analysis_type || "",
@@ -2595,7 +3509,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             record_ids: it.record_ids || "",
             decision: it.decision || "exclude_qc_fail",
             rationale_note: it.rationale_note || "",
-            reviewer_email: id.email,
+            reviewer_email: (id && !isPlaceholderAnalystEmail(id.email)) ? String(id.email).trim().toLowerCase() : (getDefaultAssigneeEmail("") || null),
             assigned_to_email: it.assigned_to_email || null,
             status: "approved",
             synced_to_gsheet: false
@@ -2622,7 +3536,6 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             headers: this.getHeaders(),
             body: JSON.stringify({
               reason: reason || "Reverted by analyst",
-              revert_to_status: "pass",
               sync_to_gsheet: true
             })
           });
@@ -2705,11 +3618,34 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           it.review_note || it.note || it.audit_note ||
           (sourceLabel ? `Flagged from ${sourceLabel}` : "Flagged from Selection & Export Tray")
         ).trim();
-        const repGroupKey = it.replicate_group_key || it.group_key || (
-          (it.resource_name || it.prepared_sample_name || it.prepared_sample || it.parameter_name || it.parameter)
-            ? `${String(it.resource_name || "unknown").trim().toLowerCase()}::${String(it.prepared_sample_name || it.prepared_sample || "all").trim()}::${String(it.parameter_name || it.parameter || "Observation").trim()}`
-            : null
-        );
+        const repGroupKey = (
+          it.resource_name || it.prepared_sample_name || it.prepared_sample || it.parameter_name || it.parameter || it.replicate_group_key || it.group_key
+        )
+          ? normalizeReplicateGroupKey(it, it.resource_name)
+          : null;
+        const id = this.getAnalystIdentity();
+        const submittedAtIso = String(it.submitted_at || it.created_at || new Date().toISOString()).trim();
+        const rawTraySubmitter = String(
+          it.submitted_by_email || it.analyst_email || getDefaultAssigneeEmail() || (id && !isPlaceholderAnalystEmail(id.email) ? id.email : "") || ""
+        ).trim().toLowerCase();
+        const submitterEmail = isPlaceholderAnalystEmail(rawTraySubmitter) ? "" : rawTraySubmitter;
+        const labLineageNote = String(
+          it.lab_lineage_note || it.sample_note || it.prep_notes || ""
+        ).trim();
+        const effectiveSourceLabel = String(it.source_label || sourceLabel || "Selection & Export Tray").trim();
+        let effectiveFlagType = String(it.flag_type || "").trim();
+        if (!effectiveFlagType || effectiveFlagType === "analyst_flagged") {
+          const srcLow = effectiveSourceLabel.toLowerCase();
+          if (srcLow.includes("page 3") || srcLow.includes("visualizer") || srcLow.includes("explorer") || (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")) {
+            effectiveFlagType = "visualizer_flagged";
+          } else if (srcLow.includes("page 2") || srcLow.includes("statistical") || srcLow.includes("outlier") || srcLow.includes("snapshot")) {
+            effectiveFlagType = "stat_snapshot_flagged";
+          } else {
+            effectiveFlagType = effectiveFlagType || "analyst_flagged";
+          }
+        }
+        const effectiveDecisionStatus = String(it.decision_status || it.status || "in_review").trim().toLowerCase();
+        const effectiveDecisionAction = String(it.decision_action || "in_review").trim();
         return {
           record_table: recordTable,
           record_id: primaryRecordId,
@@ -2717,17 +3653,28 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           target_record_ids: effectiveIds,
           replicate_group_key: repGroupKey,
           selection_scope: selectionScope,
+          scope: selectionScope,
+          triage_scope: selectionScope === "single_record" ? "single" : "group",
           resource_name: String(it.resource_name || "unknown").trim().toLowerCase(),
           analysis_type: analysisType,
           parameter_name: String(it.parameter_name || it.parameter || "Observation").trim(),
           prepared_sample: it.prepared_sample || it.prepared_sample_name || null,
           field_sample: it.field_sample || it.field_sample_name || null,
+          prep_method: it.prep_method || it.group_context_label || null,
           experiment: it.experiment || it.experiment_name || null,
-          flag_type: String(it.flag_type || "analyst_flagged"),
+          flag_type: effectiveFlagType,
           flag_trigger_value: it.flag_trigger_value != null ? String(it.flag_trigger_value) : null,
           old_qc_pass: String(it.old_qc_pass || it.previous_qc_status || "pass"),
-          recommended_qc_status: it.recommended_qc_status || it.new_qc_status || "fail",
+          recommended_qc_status: it.recommended_qc_status || it.new_qc_status || "provisional",
+          decision_status: effectiveDecisionStatus,
+          decision_action: effectiveDecisionAction,
           assigned_to_email: it.assigned_to_email || null,
+          submitted_at: submittedAtIso,
+          flagged_at: submittedAtIso,
+          submitted_by_email: submitterEmail || null,
+          flagged_by_email: submitterEmail || null,
+          lab_lineage_note: labLineageNote || null,
+          source_label: effectiveSourceLabel,
           review_note: reviewNote,
           note: reviewNote
         };
@@ -2771,9 +3718,26 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             if (resp.ok) {
               const data = await resp.json();
               if (Array.isArray(data.decisions)) {
-                data.decisions.forEach(d => this.upsertLocalDecision(d));
+                data.decisions.forEach((d, idx) => {
+                  const srcNorm = reqBody.items[idx] || primaryItem || {};
+                  this.upsertLocalDecision({
+                    ...srcNorm,
+                    ...d,
+                    submitted_at: d.submitted_at || d.created_at || srcNorm.submitted_at || new Date().toISOString(),
+                    submitted_by_email: d.submitted_by_email || d.analyst_email || srcNorm.submitted_by_email || null,
+                    lab_lineage_note: d.lab_lineage_note || srcNorm.lab_lineage_note || null,
+                    source_label: d.source_label || srcNorm.source_label || null
+                  });
+                });
               } else if (data.decision) {
-                this.upsertLocalDecision(data.decision);
+                this.upsertLocalDecision({
+                  ...primaryItem,
+                  ...data.decision,
+                  submitted_at: data.decision.submitted_at || data.decision.created_at || primaryItem.submitted_at || new Date().toISOString(),
+                  submitted_by_email: data.decision.submitted_by_email || data.decision.analyst_email || primaryItem.submitted_by_email || null,
+                  lab_lineage_note: data.decision.lab_lineage_note || primaryItem.lab_lineage_note || null,
+                  source_label: data.decision.source_label || primaryItem.source_label || null
+                });
               }
               const broadcastTarget = data.decisions || data.decision || reqBody;
               this.broadcastQcUpdate(broadcastTarget);
@@ -2795,6 +3759,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             resource_name: normIt.resource_name,
             analysis_type: normIt.analysis_type,
             parameter_name: normIt.parameter_name,
+            flag_type: normIt.flag_type,
+            flag_trigger_value: normIt.flag_trigger_value,
+            decision_status: normIt.decision_status || "in_review",
+            decision_action: normIt.decision_action || "in_review",
             prepared_sample: normIt.prepared_sample,
             field_sample: normIt.field_sample,
             experiment: normIt.experiment,
@@ -2802,6 +3770,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             target_record_ids: normIt.target_record_ids,
             new_qc_status: normIt.recommended_qc_status,
             assigned_to_email: normIt.assigned_to_email,
+            submitted_at: normIt.submitted_at,
+            submitted_by_email: normIt.submitted_by_email,
+            lab_lineage_note: normIt.lab_lineage_note,
+            source_label: normIt.source_label,
             audit_note: normIt.review_note,
             sync_to_gsheet: false
           });
@@ -2817,6 +3789,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           decision: fallbackDecisions[0] || null,
           decisions: fallbackDecisions
         };
+      },
+
+      openSliceExportModal(opts) {
+        return window.openSliceExportModal ? window.openSliceExportModal(opts) : null;
       }
     };
     window.BioCirvQcClient = BioCirvQcClient;
@@ -2959,18 +3935,28 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         Object.values(BUNDLE.insights).forEach(ins => {
           const byTab = ins && ins.outlier_screening && ins.outlier_screening.by_tab;
           if (!byTab || typeof byTab !== "object") return;
+          let totalFlaggedActive = 0;
+          let anyResourceOverlaid = false;
           Object.values(byTab).forEach(tabObj => {
-            const groups = tabObj && tabObj.groups;
+            const groups = (tabObj && (tabObj.replicate_groups || tabObj.groups)) || null;
             if (!Array.isArray(groups)) return;
+            let tabFlaggedActive = 0;
+            let anyTabOverlaid = false;
             groups.forEach(g => {
               if (!Array.isArray(g.replicates)) return;
               let passCnt = 0;
               let failCnt = 0;
+              let anyOverlaid = false;
               const passVals = [];
               const allVals = [];
               g.replicates.forEach(rep => {
                 if (!rep._baseline_qc) rep._baseline_qc = rep.qc || "pass";
                 const overQc = recordQcOverlay.get(String(rep.id || ""));
+                if (overQc) {
+                  anyOverlaid = true;
+                  anyTabOverlaid = true;
+                  anyResourceOverlaid = true;
+                }
                 rep.qc = overQc || rep._baseline_qc;
                 if (rep.qc === "fail") {
                   failCnt += 1;
@@ -2990,14 +3976,60 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
                 if (activeVals.length > 1) {
                   const variance = activeVals.reduce((s, v) => s + Math.pow(v - meanVal, 2), 0) / (activeVals.length - 1);
                   g.sd = Math.sqrt(variance);
+                  g.within_sd = g.sd;
                   g.rsd_within_pct = Math.abs(meanVal) > 1e-9 ? (g.sd / Math.abs(meanVal)) * 100.0 : 0.0;
                 } else {
                   g.sd = 0.0;
+                  g.within_sd = 0.0;
                   g.rsd_within_pct = 0.0;
                 }
               }
+              if (g._baseline_raw_dixon === undefined) {
+                g._baseline_raw_dixon = Boolean(g.raw_dixon);
+              }
+              if (anyOverlaid) {
+                const rsdNow = g.rsd_within_pct || 0;
+                g.raw_rsd20 = rsdNow > 20.0;
+                g.raw_rsd10 = rsdNow > 10.0;
+                const dixonStillPassing = g._baseline_raw_dixon && rsdNow >= 10.0 && (
+                  g.dixon_candidate_id
+                    ? g.replicates.some(r => String(r.id) === String(g.dixon_candidate_id) && r.qc !== "fail")
+                    : passCnt > 0
+                );
+                g.raw_dixon = Boolean(dixonStillPassing);
+                if (passCnt === 0) {
+                  g.raw_dixon = false;
+                  g.raw_proximate_sum = false;
+                  g.active_proximate_sum = false;
+                  g.active_flagged = false;
+                  g.flagged_active = false;
+                } else if (!g.below_cutoff) {
+                  g.active_proximate_sum = Boolean(g.raw_proximate_sum);
+                  g.active_flagged = Boolean(g.raw_dixon || g.raw_rsd20 || g.raw_sd3x || g.raw_proximate_sum);
+                  g.flagged_active = g.active_flagged;
+                }
+              }
+              if (g.active_flagged || g.flagged_active) {
+                tabFlaggedActive += 1;
+                totalFlaggedActive += 1;
+              }
             });
+            if (anyTabOverlaid) {
+              tabObj.flagged_active = tabFlaggedActive;
+              tabObj.flagged_active_groups = tabFlaggedActive;
+              tabObj.flagged_replicate_groups = tabFlaggedActive;
+            }
           });
+          if (anyResourceOverlaid && ins && ins.outlier_screening) {
+            ins.outlier_screening.flagged_active = totalFlaggedActive;
+            ins.outlier_screening.flagged_active_groups = totalFlaggedActive;
+            ins.outlier_screening.flagged_replicate_groups = totalFlaggedActive;
+            if (ins.outlier_screening.summary && typeof ins.outlier_screening.summary === "object") {
+              ins.outlier_screening.summary.flagged_active = totalFlaggedActive;
+              ins.outlier_screening.summary.flagged_active_groups = totalFlaggedActive;
+              ins.outlier_screening.summary.flagged_replicate_groups = totalFlaggedActive;
+            }
+          }
         });
       }
 
@@ -3119,6 +4151,9 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       }
       renderAnalystBadge();
       window.addEventListener("biocirv:analyst-changed", renderAnalystBadge);
+      if (typeof BioCirvQcClient.hydrateSessionIdentity === "function") {
+        BioCirvQcClient.hydrateSessionIdentity();
+      }
 
       const openSigninBtn = document.getElementById("btn-open-signin-modal");
       if (openSigninBtn && signinModal) {
@@ -3165,8 +4200,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
       const saveSigninBtn = document.getElementById("btn-save-signin-modal");
       if (saveSigninBtn && signinModal) {
         saveSigninBtn.addEventListener("click", () => {
-          const emailVal = (document.getElementById("signin-analyst-email") || {}).value || "local.analyst@lbl.gov";
-          const nameVal = (document.getElementById("signin-analyst-name") || {}).value || "Local Analyst";
+          const emailVal = ((document.getElementById("signin-analyst-email") || {}).value || "").trim().toLowerCase();
+          const nameVal = ((document.getElementById("signin-analyst-name") || {}).value || "").trim();
           const apiVal = (document.getElementById("signin-api-base") || {}).value || "http://localhost:8000";
           const saved = BioCirvQcClient.setAnalystIdentity({
             email: emailVal,
@@ -3229,22 +4264,6 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         analysis_type: "",
         unit: ""
       };
-
-      function normalizeDomainKey(rawDom) {
-        const s = String(rawDom || "").trim().toLowerCase();
-        if (!s) return "proximate";
-        if (s.includes("prox")) return "proximate";
-        if (s.includes("ult")) return "ultimate";
-        if (s.includes("comp")) return "compositional";
-        if (s.includes("xrf") || s.includes("ash")) return "ash";
-        if (s.includes("icp") || s.includes("elem")) return "icp";
-        if (s.includes("calor")) return "calorimetry";
-        if (s.includes("ftnir") || s.includes("nir")) return "ftnir";
-        if (s.includes("xrd")) return "xrd";
-        if (s.includes("ferm")) return "fermentation";
-        if (s.includes("pretreat") || s.includes("hydro") || s.includes("conv")) return "pretreatment";
-        return s;
-      }
 
       function discoverSiblingReplicates(pf, fallbackRes) {
         const allPool = (typeof ALL_RECORDS !== "undefined" && Array.isArray(ALL_RECORDS))
@@ -3326,6 +4345,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           ...explicitIds
         ]));
         const primarySingleId = clickedId || groupIds[0] || "";
+        const labLineageNote = pf.lab_lineage_note
+          || (seedRec && (seedRec.note || seedRec.lab_lineage_note))
+          || (typeof PS_LOOKUP !== "undefined" && PS_LOOKUP[prepSample] && PS_LOOKUP[prepSample].note)
+          || (typeof FS_LOOKUP !== "undefined" && FS_LOOKUP[fieldSample] && FS_LOOKUP[fieldSample].note)
+          || "";
 
         return {
           singleRecordId: primarySingleId,
@@ -3337,7 +4361,8 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           experiment: expName,
           parameter_name: paramName,
           analysis_type: analysisType,
-          unit: unit
+          unit: unit,
+          lab_lineage_note: labLineageNote
         };
       }
 
@@ -3521,9 +4546,16 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
         const paramInput = document.getElementById("finding-modal-parameter");
         if (paramInput) paramInput.value = discovered.parameter_name || pf.parameter_name || pf.parameter || "";
         const qcSel = document.getElementById("finding-modal-qc-status");
-        if (qcSel) qcSel.value = pf.new_qc_status || "fail";
+        if (qcSel) qcSel.value = pf.default_qc_status || pf.new_qc_status || "provisional";
         const assignInput = document.getElementById("finding-modal-assigned-email");
-        if (assignInput) assignInput.value = pf.assigned_to_email || "";
+        if (assignInput) assignInput.value = getDefaultAssigneeEmail(pf.assigned_to_email);
+        if (typeof BioCirvQcClient.hydrateSessionIdentity === "function") {
+          BioCirvQcClient.hydrateSessionIdentity().then(() => {
+            if (assignInput && (!assignInput.value || isPlaceholderAnalystEmail(assignInput.value))) {
+              assignInput.value = getDefaultAssigneeEmail(pf.assigned_to_email);
+            }
+          });
+        }
         const noteInput = document.getElementById("finding-modal-note");
         if (noteInput) noteInput.value = pf.audit_note || pf.note || "";
         const statusEl = document.getElementById("finding-modal-status");
@@ -3547,7 +4579,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           const domVal = (document.getElementById("finding-modal-domain") || {}).value || "proximate";
           const paramVal = ((document.getElementById("finding-modal-parameter") || {}).value || "").trim() || "Observation";
           const recVal = ((document.getElementById("finding-modal-record-id") || {}).value || "").trim() || "(unspecified)";
-          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "fail";
+          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "provisional";
           const noteVal = ((document.getElementById("finding-modal-note") || {}).value || "").trim();
           const scopeLabel = scopeVal === "group"
             ? `Entire Replicate Group (${currentFindingContext.groupRecordIds.length || 1} replicates)`
@@ -3584,7 +4616,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           const domVal = (document.getElementById("finding-modal-domain") || {}).value || "proximate";
           const paramVal = ((document.getElementById("finding-modal-parameter") || {}).value || "").trim() || "Observation";
           const recVal = ((document.getElementById("finding-modal-record-id") || {}).value || "").trim() || null;
-          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "fail";
+          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "provisional";
           const assignVal = ((document.getElementById("finding-modal-assigned-email") || {}).value || "").trim() || null;
           const noteVal = ((document.getElementById("finding-modal-note") || {}).value || "").trim();
 
@@ -3596,6 +4628,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             ? (targetIds[0] || recVal)
             : (currentFindingContext.singleRecordId || targetIds[0] || recVal);
 
+          const nowIso = new Date().toISOString();
+          const currentAnalystEmail = (BioCirvQcClient.getAnalystIdentity() || {}).email || "";
+          const sourceLabel = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
+            ? "Page 3 Explorer"
+            : "Page 1/2 Visualizer";
           const res = await BioCirvQcClient.exportTrayToWorkbench({
             selection_scope: scopeVal === "single" ? "single_record" : "replicate_group",
             resource_name: resVal,
@@ -3609,6 +4646,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             recommended_qc_status: qcVal,
             assigned_to_email: assignVal,
             note: noteVal || Array.from(selectedFindingChips).join("; "),
+            lab_lineage_note: currentFindingContext.lab_lineage_note || "",
+            submitted_at: nowIso,
+            submitted_by_email: currentAnalystEmail,
+            source_label: sourceLabel,
             open_workbench: window.location.protocol === "http:" || window.location.protocol === "https:"
           });
           const statusEl = document.getElementById("finding-modal-status");
@@ -3642,7 +4683,7 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           const domVal = (document.getElementById("finding-modal-domain") || {}).value || "proximate";
           const paramVal = ((document.getElementById("finding-modal-parameter") || {}).value || "").trim() || "Resource-Level Observation";
           const recVal = ((document.getElementById("finding-modal-record-id") || {}).value || "").trim() || null;
-          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "fail";
+          const qcVal = (document.getElementById("finding-modal-qc-status") || {}).value || "provisional";
           const assignVal = ((document.getElementById("finding-modal-assigned-email") || {}).value || "").trim() || null;
           const noteVal = ((document.getElementById("finding-modal-note") || {}).value || "").trim();
           const gsheetSync = Boolean((document.getElementById("finding-modal-gsheet-sync") || {}).checked);
@@ -3655,6 +4696,11 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             ? (targetIds[0] || recVal)
             : (currentFindingContext.singleRecordId || targetIds[0] || recVal);
 
+          const nowIso = new Date().toISOString();
+          const currentAnalystEmail = (BioCirvQcClient.getAnalystIdentity() || {}).email || "";
+          const sourceLabel = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
+            ? "Page 3 Explorer"
+            : "Page 1/2 Visualizer";
           const result = await BioCirvQcClient.submitFinding({
             scope: scopeVal === "group" ? "replicate_group" : (scopeVal === "single" ? "single_record" : "finding"),
             triage_scope: scopeVal,
@@ -3670,6 +4716,10 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
             new_qc_status: qcVal,
             rationale_tags: Array.from(selectedFindingChips),
             audit_note: noteVal || `Audit finding logged for ${resVal} (${paramVal}, scope=${scopeVal === 'group' ? 'Entire Replicate Group' : 'Single Point'})`,
+            lab_lineage_note: currentFindingContext.lab_lineage_note || "",
+            submitted_at: nowIso,
+            submitted_by_email: currentAnalystEmail,
+            source_label: sourceLabel,
             assigned_to_email: assignVal,
             gsheet_writeback_requested: gsheetSync
           });
@@ -3677,23 +4727,39 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           window.refreshLiveQcOverlay(false);
 
           if (typeof upsertDecisionEntry === "function") {
+            const repGroupKey = normalizeReplicateGroupKey(
+              {
+                ...currentFindingContext,
+                resource_name: resVal,
+                analysis_type: currentFindingContext.analysis_type || domVal,
+                parameter: paramVal
+              },
+              resVal
+            );
             const localKey = scopeVal === "single" && primaryRecId
               ? `rec::${primaryRecId}`
-              : `grp::${resVal}::${currentFindingContext.analysis_type || domVal}::${currentFindingContext.prepared_sample || 'sample'}::${currentFindingContext.experiment || 'exp'}::${paramVal}`;
+              : `grp::${repGroupKey}`;
             upsertDecisionEntry(
               localKey,
               {
-                decision: qcVal === "pass" ? "keep" : (qcVal === "provisional" ? "re_assay" : "exclude_qc_fail"),
+                decision: qcVal === "pass" ? "keep" : (qcVal === "provisional" || qcVal === "in_review" ? "accept_with_note" : (qcVal === "re_assay" ? "re_assay" : "exclude_qc_fail")),
+                api_decision_id: (result.decision && result.decision.id) ? result.decision.id : undefined,
                 triage_scope: scopeVal === "single" ? "single" : "group",
                 assigned_to_email: assignVal || "",
-                note: noteVal || Array.from(selectedFindingChips).join("; ")
+                note: noteVal || Array.from(selectedFindingChips).join("; "),
+                lab_lineage_note: currentFindingContext.lab_lineage_note || "",
+                submitted_at: nowIso,
+                submitted_by_email: currentAnalystEmail,
+                source_label: sourceLabel
               },
               {
                 scope: scopeVal === "single" ? "single_record" : "replicate_group",
+                replicate_group_key: repGroupKey,
                 resource_name: resVal,
                 analysis_type: currentFindingContext.analysis_type || domVal,
                 prepared_sample: currentFindingContext.prepared_sample || "",
                 field_sample: currentFindingContext.field_sample || "",
+                prep_method: currentFindingContext.prep_method || "",
                 experiment: currentFindingContext.experiment || "",
                 parameter: paramVal,
                 record_id: primaryRecId || "",
@@ -3707,16 +4773,805 @@ SHARED_SLICE_AND_BUG_MODALS_JS = """
           if (statusEl) {
             const assignMsg = assignVal ? ` · Assigned to ${assignVal}` : "";
             const scopeMsg = scopeVal === "group" ? `Entire Replicate Group (${targetIds.length || 1} recs)` : `Single Point (${primaryRecId || '1 rec'})`;
+            const targetFlagParam = (typeof DOMAINS !== "undefined" && typeof currentDomain !== "undefined")
+              ? "?flag_type=visualizer_flagged"
+              : "?flag_type=stat_snapshot_flagged";
             statusEl.className = "p-2.5 rounded-lg text-xs font-mono badge-pass";
-            statusEl.innerHTML = `✓ Queued <strong>${scopeMsg}</strong> (${result.source === "api" ? "API + Seed CSV" : "Browser Local Queue"})${assignMsg}. View &amp; triage in <a href="resource_qc_outlier_dashboard.html?subtab=review_queue" class="underline font-bold">Page 2 Review Queue</a> or <a href="/v1/dashboards/metadata/resource_audit_workbench.html" class="underline font-bold">QC Audit Workbench</a>.`;
+            statusEl.innerHTML = `✓ Queued <strong>${scopeMsg}</strong> (${result.source === "api" ? "API + Seed CSV" : "Browser Local Queue"})${assignMsg}. View &amp; triage in <a href="resource_qc_outlier_dashboard.html?subtab=review_queue" class="underline font-bold">Page 2 Review Queue</a> or <a href="/v1/dashboards/metadata/resource_audit_workbench.html${targetFlagParam}" class="underline font-bold">QC Audit Workbench →</a>.`;
             statusEl.classList.remove("hidden");
           }
           setTimeout(() => {
             if (findingModal) findingModal.classList.add("hidden");
-          }, 1200);
+          }, 2500);
         });
       }
     }
+
+    function closeFlagShowMePopover() {
+      const pop = document.getElementById("audit-flag-show-me-popover");
+      if (pop) {
+        pop.classList.add("hidden");
+        if (pop.style) pop.style.display = "none";
+      }
+    }
+    window.closeFlagShowMePopover = closeFlagShowMePopover;
+
+    const DIXON_Q_CRIT_95_SHARED = {
+      3: 0.941, 4: 0.765, 5: 0.642, 6: 0.560, 7: 0.507, 8: 0.468, 9: 0.437, 10: 0.412,
+      11: 0.392, 12: 0.376, 13: 0.361, 14: 0.349, 15: 0.338, 16: 0.329, 17: 0.320,
+      18: 0.313, 19: 0.306, 20: 0.300, 21: 0.295, 22: 0.290, 23: 0.285, 24: 0.281,
+      25: 0.277, 26: 0.273, 27: 0.269, 28: 0.266, 29: 0.263, 30: 0.260
+    };
+
+    function computeSharedSliceStatScreening(rowsInput, opts) {
+      const options = (opts && typeof opts === "object") ? opts : {};
+      const includeFailRows = options.includeFailed === undefined
+        ? false
+        : Boolean(options.includeFailed);
+      const rawCandidateRows = Array.isArray(rowsInput)
+        ? rowsInput
+        : (typeof getFilteredRecords === "function"
+            ? getFilteredRecords()
+            : (typeof ALL_RECORDS !== "undefined" && Array.isArray(ALL_RECORDS) ? ALL_RECORDS : []));
+      let excludedFailCount = 0;
+      const rows = [];
+      for (const r of rawCandidateRows) {
+        if (!r || typeof r !== "object") continue;
+        const val = Number(r.value !== undefined ? r.value : r.val);
+        if (!Number.isFinite(val)) continue;
+        const qcVal = String(r.qc_pass || r.qc_status || r.qc || "pass").toLowerCase();
+        if (!includeFailRows && qcVal === "fail") {
+          excludedFailCount += 1;
+          continue;
+        }
+        rows.push(r);
+      }
+      const groupMap = new Map();
+      rows.forEach(r => {
+        const res = String(r.resource_name || r.resource || (typeof state !== "undefined" && state && state.resource) || "unknown").trim();
+        const rk = normalizeReplicateGroupKey(r, res);
+        if (!groupMap.has(rk)) {
+          groupMap.set(rk, {
+            replicate_group_key: rk,
+            resource_name: res,
+            analysis_type: r.analysis_type || "",
+            parameter: r.parameter || r.parameter_name || "",
+            prepared_sample: r.prepared_sample || r.prepared_sample_name || r.field_sample || "Unassigned",
+            prep_method: groupContextLabel(r),
+            experiment: r.experiment || r.experiment_name || "Unassigned",
+            unit: r.unit || "",
+            rows: []
+          });
+        }
+        groupMap.get(rk).rows.push(r);
+      });
+
+      const groups = [];
+      const rowFlagsById = {};
+      groupMap.forEach(g => {
+        const vals = g.rows.map(r => Number(r.value !== undefined ? r.value : r.val)).filter(v => Number.isFinite(v));
+        const n = vals.length;
+        const mean = n > 0 ? vals.reduce((s, v) => s + v, 0) / n : 0;
+        const variance = n > 1 ? vals.reduce((s, v) => s + Math.pow(v - mean, 2), 0) / (n - 1) : 0;
+        const sd = Math.sqrt(variance);
+        const rsdWithinPct = (n >= 2 && Math.abs(mean) > 1e-9) ? (sd / Math.abs(mean)) * 100.0 : null;
+        const hasIdentical = n >= 2 && sd <= 1e-12;
+        const rawRsd20 = rsdWithinPct !== null && rsdWithinPct > 20.0;
+        const rawRsd10 = rsdWithinPct !== null && rsdWithinPct > 10.0;
+
+        let rawDixon = false;
+        let dixonQ = null;
+        let dixonCandidateId = null;
+        if (n >= 3) {
+          const sorted = [...g.rows].sort((a, b) => Number(a.value ?? a.val) - Number(b.value ?? b.val));
+          const vMin = Number(sorted[0].value ?? sorted[0].val);
+          const vNextMin = Number(sorted[1].value ?? sorted[1].val);
+          const vPrevMax = Number(sorted[n - 2].value ?? sorted[n - 2].val);
+          const vMax = Number(sorted[n - 1].value ?? sorted[n - 1].val);
+          const rng = vMax - vMin;
+          if (rng > 1e-12) {
+            const qLow = (vNextMin - vMin) / rng;
+            const qHigh = (vMax - vPrevMax) / rng;
+            const qCrit = DIXON_Q_CRIT_95_SHARED[Math.min(30, n)] || 0.260;
+            if (qHigh >= qLow) {
+              dixonQ = qHigh;
+              if (qHigh > qCrit) {
+                rawDixon = true;
+                dixonCandidateId = String(sorted[n - 1].record_id || sorted[n - 1].id || "");
+              }
+            } else {
+              dixonQ = qLow;
+              if (qLow > qCrit) {
+                rawDixon = true;
+                dixonCandidateId = String(sorted[0].record_id || sorted[0].id || "");
+              }
+            }
+          }
+        }
+        const rawFlagged = Boolean(rawDixon || rawRsd20);
+        const grpObj = {
+          ...g,
+          n,
+          mean,
+          sd,
+          within_sd: sd,
+          rsd_within_pct: rsdWithinPct,
+          raw_dixon: rawDixon,
+          dixon_q: dixonQ,
+          dixon_candidate_id: dixonCandidateId,
+          raw_rsd20: rawRsd20,
+          raw_rsd10: rawRsd10,
+          raw_sd3x: false,
+          sd3x_candidate_ids: [],
+          raw_proximate_sum: false,
+          proximate_sum_pct: null,
+          has_identical_replicates: hasIdentical,
+          raw_flagged: rawFlagged,
+          active_flagged: rawFlagged,
+          replicates: g.rows.map((r, idx) => ({
+            id: String(r.record_id || r.id || `${g.replicate_group_key}::rep-${idx + 1}`),
+            record_id: String(r.record_id || r.id || `${g.replicate_group_key}::rep-${idx + 1}`),
+            val: Number(r.value !== undefined ? r.value : r.val),
+            value: Number(r.value !== undefined ? r.value : r.val),
+            rep: Number(r.replicate || (idx + 1)),
+            qc: String(r.qc_pass || r.qc_status || r.qc || "pass").toLowerCase(),
+            prepared_sample: g.prepared_sample
+          }))
+        };
+        groups.push(grpObj);
+        g.rows.forEach(r => {
+          const rid = String(r.record_id || r.id || "");
+          if (rid) {
+            rowFlagsById[rid] = {
+              group: grpObj,
+              isDixonCandidate: Boolean(rawDixon && dixonCandidateId === rid),
+              isSd3xCandidate: false
+            };
+          }
+        });
+      });
+
+      const withinRsdMed = computeMedianNumeric(groups.filter(g => g.n >= 2 && g.rsd_within_pct !== null).map(g => g.rsd_within_pct));
+      const withinSdMed = computeMedianNumeric(groups.filter(g => g.n >= 2).map(g => g.sd));
+      return {
+        groups,
+        paramBreakdown: [],
+        flaggedGroups: groups.filter(g => g.raw_flagged),
+        activeFlaggedGroups: groups.filter(g => g.active_flagged),
+        dixonGroups: groups.filter(g => g.raw_dixon),
+        rsd20Groups: groups.filter(g => g.raw_rsd20),
+        rsd10Groups: groups.filter(g => g.raw_rsd10),
+        sd3xGroups: [],
+        proxSumGroups: [],
+        identicalGroups: groups.filter(g => g.has_identical_replicates),
+        withinRsdMedian: withinRsdMed,
+        withinSdMedian: withinSdMed,
+        betweenRsdMedian: null,
+        betweenSdMedian: null,
+        medianWithin: withinRsdMed,
+        medianBetween: null,
+        flaggedCount: groups.filter(g => g.raw_flagged).length,
+        suppressedCount: 0,
+        multiRepCount: groups.filter(g => g.n >= 2).length,
+        multiRepGroupsCount: groups.filter(g => g.n >= 2).length,
+        excluded_fail_count: excludedFailCount,
+        include_failed: includeFailRows,
+        rowFlagsById
+      };
+    }
+    if (typeof window.computeSliceStatScreening !== "function") {
+      window.computeSliceStatScreening = computeSharedSliceStatScreening;
+    }
+    if (typeof computeSliceStatScreening !== "function") {
+      var computeSliceStatScreening = window.computeSliceStatScreening;
+    }
+
+    function collectAllPageReplicateGroupsForShowMe(preferredResource) {
+      const groupsMap = new Map();
+      const addNormalizedGroup = (rawGrp, fallbackRes) => {
+        if (!rawGrp || typeof rawGrp !== "object") return;
+        const res = String(rawGrp.resource_name || rawGrp.resource || fallbackRes || "").trim();
+        const at = String(rawGrp.analysis_type || rawGrp.domain || "").trim();
+        const param = String(rawGrp.parameter || rawGrp.parameter_name || "").trim();
+        const sample = String(rawGrp.prepared_sample || rawGrp.prepared_sample_name || rawGrp.field_sample || "").trim();
+        const method = String(rawGrp.prep_method || rawGrp.method_label || rawGrp.group_context_label || "").trim();
+        const exp = String(rawGrp.experiment || rawGrp.experiment_name || "").trim();
+        const unit = String(rawGrp.unit || "").trim();
+        const key = String(
+          rawGrp.replicate_group_key || rawGrp.group_key ||
+          normalizeReplicateGroupKey({
+            resource_name: res,
+            prepared_sample: sample,
+            analysis_type: at,
+            parameter: param,
+            prep_method: method,
+            experiment: exp
+          }, res)
+        ).trim().toLowerCase();
+        if (!key) return;
+
+        const rawReps = Array.isArray(rawGrp.replicates)
+          ? rawGrp.replicates
+          : (Array.isArray(rawGrp.rows) ? rawGrp.rows : []);
+        const reps = rawReps.map((r, idx) => ({
+          record_id: String(r.record_id || r.id || `${key}::rep-${idx + 1}`),
+          value: Number(r.value !== undefined ? r.value : r.val),
+          replicate: Number(r.replicate !== undefined ? r.replicate : (r.replicate_no !== undefined ? r.replicate_no : (r.rep !== undefined ? r.rep : (idx + 1)))),
+          qc: String(r.qc_pass || r.qc_status || r.qc || "pass").toLowerCase(),
+          prepared_sample: String(r.prepared_sample_name || r.prepared_sample || sample || "—"),
+          is_iqr_outlier: Boolean(r.is_iqr_outlier),
+          is_analyst_flagged: Boolean(r.is_analyst_flagged)
+        })).filter(r => typeof r.value === "number" && !Number.isNaN(r.value));
+
+        if (!reps.length && typeof rawGrp.mean === "number" && !Number.isNaN(rawGrp.mean)) {
+          reps.push({
+            record_id: String(rawGrp.dixon_candidate_id || `${key}::rep-1`),
+            value: Number(rawGrp.mean),
+            replicate: 1,
+            qc: "pass",
+            prepared_sample: sample || "—",
+            is_iqr_outlier: false,
+            is_analyst_flagged: false
+          });
+        }
+        if (!reps.length) return;
+
+        const vals = reps.map(r => r.value);
+        const meanVal = typeof rawGrp.mean === "number" && !Number.isNaN(rawGrp.mean)
+          ? rawGrp.mean
+          : (typeof rawGrp.mean_value === "number" && !Number.isNaN(rawGrp.mean_value)
+              ? rawGrp.mean_value
+              : vals.reduce((s, v) => s + v, 0) / vals.length);
+        const sdVal = typeof rawGrp.within_sd === "number" && !Number.isNaN(rawGrp.within_sd)
+          ? rawGrp.within_sd
+          : (typeof rawGrp.sd === "number" && !Number.isNaN(rawGrp.sd)
+              ? rawGrp.sd
+              : (typeof rawGrp.sd_value === "number" && !Number.isNaN(rawGrp.sd_value)
+                  ? rawGrp.sd_value
+                  : (vals.length >= 2 ? Math.sqrt(vals.reduce((s, v) => s + Math.pow(v - meanVal, 2), 0) / (vals.length - 1)) : 0)));
+        const rsdVal = typeof rawGrp.rsd_within_pct === "number"
+          ? rawGrp.rsd_within_pct
+          : (typeof rawGrp.rsd_pct === "number"
+              ? rawGrp.rsd_pct
+              : (vals.length >= 2 && Math.abs(meanVal) > 1e-9 ? (sdVal / Math.abs(meanVal)) * 100.0 : 0));
+
+        const flags = [];
+        if (rawGrp.raw_dixon || rawGrp.dixon_pass === false) flags.push("dixon_outlier");
+        if (rawGrp.raw_rsd20 || rsdVal > 20.0) flags.push("rsd_gt_20");
+        else if (rawGrp.raw_rsd10 || rsdVal > 10.0) flags.push("rsd_gt_10");
+        if (rawGrp.raw_sd3x || (Array.isArray(rawGrp.sd3x_candidate_ids) && rawGrp.sd3x_candidate_ids.length > 0)) flags.push("sd_gt_3x_pooled");
+        if (rawGrp.raw_proximate_sum || rawGrp.active_proximate_sum) flags.push("proximate_sum");
+        if (rawGrp.has_identical_replicates || rawGrp.identical_replicates) flags.push("identical_replicates");
+        if (rawGrp.qc_mixed) flags.push("qc_mixed");
+
+        const existing = groupsMap.get(key);
+        if (!existing || reps.length >= existing.replicates.length) {
+          groupsMap.set(key, {
+            replicate_group_key: key,
+            resource_name: res,
+            analysis_type: at,
+            domain_slug: canonicalDomainSlug(at),
+            parameter: param,
+            prepared_sample: sample,
+            prep_method: method,
+            experiment: exp,
+            unit: unit,
+            n: reps.length,
+            mean: meanVal,
+            sd: sdVal,
+            rsd_pct: rsdVal,
+            dixon_candidate_id: rawGrp.dixon_candidate_id || null,
+            sd3x_candidate_ids: Array.isArray(rawGrp.sd3x_candidate_ids) ? rawGrp.sd3x_candidate_ids : [],
+            raw_proximate_sum: Boolean(rawGrp.raw_proximate_sum || rawGrp.active_proximate_sum),
+            proximate_sum_pct: typeof rawGrp.proximate_sum_pct === "number" ? rawGrp.proximate_sum_pct : null,
+            flags: flags,
+            replicates: reps
+          });
+        }
+      };
+
+      const ingestInsightsObj = (insObj, resKey) => {
+        const out = insObj && insObj.outlier_screening;
+        if (!out || typeof out !== "object") return;
+        if (Array.isArray(out.groups)) out.groups.forEach(g => addNormalizedGroup(g, resKey));
+        if (Array.isArray(out.replicate_groups)) out.replicate_groups.forEach(g => addNormalizedGroup(g, resKey));
+        if (out.by_tab && typeof out.by_tab === "object") {
+          Object.values(out.by_tab).forEach(tabObj => {
+            if (!tabObj || typeof tabObj !== "object") return;
+            if (Array.isArray(tabObj.replicate_groups)) tabObj.replicate_groups.forEach(g => addNormalizedGroup(g, resKey));
+            if (Array.isArray(tabObj.groups)) tabObj.groups.forEach(g => addNormalizedGroup(g, resKey));
+          });
+        }
+      };
+
+      const defaultRes = preferredResource || (typeof state !== "undefined" && state && state.resource) || "";
+      if (typeof getResourceInsights === "function") {
+        try {
+          const ins = getResourceInsights(defaultRes);
+          if (ins) ingestInsightsObj(ins, defaultRes);
+        } catch (_e) {}
+      }
+      if (typeof INSIGHTS_DATA !== "undefined" && INSIGHTS_DATA && typeof INSIGHTS_DATA === "object") {
+        Object.entries(INSIGHTS_DATA).forEach(([rKey, insObj]) => ingestInsightsObj(insObj, rKey));
+      }
+      if (typeof BUNDLE !== "undefined" && BUNDLE && BUNDLE.insights && typeof BUNDLE.insights === "object") {
+        Object.entries(BUNDLE.insights).forEach(([rKey, insObj]) => ingestInsightsObj(insObj, rKey));
+      }
+      if (typeof lastScreenedGroups !== "undefined" && Array.isArray(lastScreenedGroups) && lastScreenedGroups.length) {
+        lastScreenedGroups.forEach(g => addNormalizedGroup(g, g.resource_name || defaultRes));
+      } else if (typeof computeSliceStatScreening === "function") {
+        try {
+          const screened = computeSliceStatScreening();
+          if (screened && Array.isArray(screened.groups)) {
+            screened.groups.forEach(g => addNormalizedGroup(g, g.resource_name || defaultRes));
+          }
+        } catch (_e) {}
+      }
+      if (typeof ALL_ROWS !== "undefined" && Array.isArray(ALL_ROWS) && ALL_ROWS.length && typeof computeSliceStatScreening === "function") {
+        try {
+          const allScreened = computeSliceStatScreening(ALL_ROWS);
+          if (allScreened && Array.isArray(allScreened.groups)) {
+            allScreened.groups.forEach(g => addNormalizedGroup(g, g.resource_name || defaultRes));
+          }
+        } catch (_e) {}
+      }
+      if (typeof getResourceRecords === "function") {
+        try {
+          const rawRecs = getResourceRecords(defaultRes) || [];
+          const byKey = new Map();
+          rawRecs.forEach(r => {
+            if (!r || typeof r.value !== "number" || Number.isNaN(r.value)) return;
+            const k = normalizeReplicateGroupKey(r, r.resource_name || defaultRes);
+            if (!byKey.has(k)) {
+              byKey.set(k, {
+                replicate_group_key: k,
+                resource_name: r.resource_name || defaultRes,
+                analysis_type: r.analysis_type || "",
+                parameter: r.parameter || "",
+                prepared_sample: r.prepared_sample || r.field_sample || "",
+                prep_method: groupContextLabel(r),
+                experiment: r.experiment || "",
+                unit: r.unit || "",
+                replicates: []
+              });
+            }
+            byKey.get(k).replicates.push({
+              id: r.record_id,
+              val: r.value,
+              rep: r.replicate || (byKey.get(k).replicates.length + 1),
+              qc: r.qc_status || r.qc_pass || "pass",
+              prepared_sample: r.prepared_sample || r.field_sample || ""
+            });
+          });
+          byKey.forEach(g => addNormalizedGroup(g, defaultRes));
+        } catch (_e) {}
+      }
+      return Array.from(groupsMap.values());
+    }
+
+    function openFlagShowMePopover(opts, anchorEl) {
+      const pop = document.getElementById("audit-flag-show-me-popover");
+      const svgEl = document.getElementById("show-me-mini-svg");
+      if (!pop || !svgEl) return null;
+
+      const escSvg = (s) => String(s ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+      const o = typeof opts === "string" ? { replicateGroupKey: opts } : (opts || {});
+      const preferredRes = o.resource || o.resource_name || (typeof state !== "undefined" && state && state.resource) || "";
+      const allGroups = collectAllPageReplicateGroupsForShowMe(preferredRes);
+
+      const reqKey = String(o.replicateGroupKey || o.replicate_group_key || "").trim().toLowerCase();
+      const rLow = String(o.resource || o.resource_name || "").trim().toLowerCase();
+      const hasExplicitSelector = Boolean(reqKey || rLow || o.parameter || o.preparedSample || o.prepared_sample);
+      let targetGroup = null;
+      if (reqKey) {
+        targetGroup = allGroups.find(g => g.replicate_group_key === reqKey)
+          || allGroups.find(g => matchesReplicateGroupKey(g.replicate_group_key, reqKey));
+      } else if (rLow || o.parameter || o.preparedSample || o.prepared_sample) {
+        const pLow = String(o.parameter || "").trim().toLowerCase();
+        const sLow = String(o.preparedSample || o.prepared_sample || "").trim().toLowerCase();
+        const atSlug = o.analysisType ? canonicalDomainSlug(o.analysisType) : "";
+        targetGroup = allGroups.find(g =>
+          (!rLow || String(g.resource_name || "").trim().toLowerCase() === rLow) &&
+          (!atSlug || g.domain_slug === atSlug) &&
+          (!pLow || String(g.parameter || "").trim().toLowerCase() === pLow) &&
+          (!sLow || String(g.prepared_sample || "").trim().toLowerCase() === sLow) &&
+          (g.flags && g.flags.length > 0)
+        ) || allGroups.find(g =>
+          (!rLow || String(g.resource_name || "").trim().toLowerCase() === rLow) &&
+          (!atSlug || g.domain_slug === atSlug) &&
+          (!pLow || String(g.parameter || "").trim().toLowerCase() === pLow) &&
+          (!sLow || String(g.prepared_sample || "").trim().toLowerCase() === sLow)
+        );
+      }
+      if (!targetGroup && !hasExplicitSelector && allGroups.length > 0) {
+        targetGroup = allGroups.find(g => g.flags && g.flags.length > 0) || allGroups[0];
+      }
+
+      if (!targetGroup || !Array.isArray(targetGroup.replicates) || targetGroup.replicates.length === 0) {
+        svgEl.innerHTML = [
+          `<rect x="28" y="18" width="368" height="102" rx="8" fill="rgba(15,23,42,0.04)" stroke="rgba(148,163,184,0.22)" stroke-width="1" />`,
+          `<text x="210" y="74" text-anchor="middle" font-size="11" font-family="monospace" fill="#94a3b8">No matching database records found in snapshot.</text>`
+        ].join("");
+        const subEl = document.getElementById("show-me-popover-subtitle");
+        if (subEl) subEl.textContent = "No matching database records found";
+        const pillsEl = document.getElementById("show-me-flag-pills");
+        if (pillsEl) pillsEl.innerHTML = "";
+        const statsEl = document.getElementById("show-me-stats-summary");
+        if (statsEl) statsEl.textContent = "No matching database records found";
+        const proxBarEl = document.getElementById("show-me-proximate-bar");
+        if (proxBarEl) {
+          proxBarEl.classList.add("hidden");
+          if (proxBarEl.style) proxBarEl.style.display = "none";
+          proxBarEl.innerHTML = "";
+        }
+        pop.classList.remove("hidden");
+        if (pop.style) pop.style.display = "block";
+        return {
+          empty: true,
+          replicateGroupKey: reqKey,
+          peerCount: 0,
+          targetGroupCount: 0,
+          outlierCount: 0,
+          hasProximateBar: false
+        };
+      }
+
+      const resolvedResource = o.resource || targetGroup.resource_name || preferredRes || "";
+      const resolvedAnalysisType = o.analysisType || targetGroup.analysis_type || "";
+      const resolvedDomSlug = canonicalDomainSlug(resolvedAnalysisType);
+      const resolvedParameter = o.parameter || targetGroup.parameter || "";
+      const resolvedMethod = o.method || targetGroup.prep_method || "";
+      const resolvedSample = o.preparedSample || targetGroup.prepared_sample || "";
+      const resolvedUnit = o.unit || targetGroup.unit || "";
+      const activeFlags = Array.from(new Set([
+        ...(Array.isArray(o.flags) ? o.flags : (o.flags ? [o.flags] : [])),
+        ...(Array.isArray(targetGroup.flags) ? targetGroup.flags : [])
+      ].filter(Boolean)));
+
+      // Find peer groups in the same slice (progressively broadening if narrow slice has only the target group)
+      const normStr = (v) => String(v || "").trim().toLowerCase();
+      const targetKey = targetGroup.replicate_group_key;
+      let peerGroups = allGroups.filter(g =>
+        g.replicate_group_key !== targetKey &&
+        normStr(g.resource_name) === normStr(resolvedResource) &&
+        g.domain_slug === resolvedDomSlug &&
+        normStr(g.parameter) === normStr(resolvedParameter) &&
+        (!resolvedMethod || normStr(g.prep_method) === normStr(resolvedMethod))
+      );
+      if (peerGroups.length === 0) {
+        peerGroups = allGroups.filter(g =>
+          g.replicate_group_key !== targetKey &&
+          normStr(g.resource_name) === normStr(resolvedResource) &&
+          normStr(g.parameter) === normStr(resolvedParameter)
+        );
+      }
+      if (peerGroups.length === 0) {
+        peerGroups = allGroups.filter(g =>
+          g.replicate_group_key !== targetKey &&
+          normStr(g.parameter) === normStr(resolvedParameter)
+        );
+      }
+      if (peerGroups.length === 0) {
+        peerGroups = allGroups.filter(g =>
+          g.replicate_group_key !== targetKey &&
+          normStr(g.resource_name) === normStr(resolvedResource) &&
+          g.domain_slug === resolvedDomSlug
+        );
+      }
+      if (peerGroups.length === 0) {
+        peerGroups = allGroups.filter(g => g.replicate_group_key !== targetKey);
+      }
+
+      // Build target group replicate points with explicit outlier identification
+      const targetReps = targetGroup.replicates.map(r => ({ ...r }));
+
+      const groupMean = targetReps.reduce((s, r) => s + Number(r.value), 0) / (targetReps.length || 1);
+      const candId = String(o.outlierRecordId || targetGroup.dixon_candidate_id || "").trim();
+      const sd3Set = new Set((targetGroup.sd3x_candidate_ids || []).map(x => String(x)));
+
+      targetReps.forEach(r => {
+        r.isTargetGroup = true;
+        r.isOutlier = Boolean(
+          (candId && String(r.record_id) === candId) ||
+          sd3Set.has(String(r.record_id)) ||
+          r.is_iqr_outlier ||
+          r.is_analyst_flagged
+        );
+      });
+
+      // Ensure clear distinction between target group sibling points and outlier candidate when n >= 2
+      if (targetReps.length >= 2) {
+        const outlierCnt = targetReps.filter(r => r.isOutlier).length;
+        if (outlierCnt === 0 || outlierCnt === targetReps.length) {
+          let furthestIdx = 0;
+          let maxDist = -1;
+          targetReps.forEach((r, idx) => {
+            const dist = Math.abs(Number(r.value) - groupMean) + (r.qc === "fail" ? 1e-6 : 0);
+            if (dist > maxDist) {
+              maxDist = dist;
+              furthestIdx = idx;
+            }
+          });
+          targetReps.forEach((r, idx) => {
+            r.isOutlier = (idx === furthestIdx);
+          });
+        }
+      } else if (targetReps.length === 1) {
+        targetReps[0].isOutlier = true;
+      }
+
+      const peerPoints = [];
+      peerGroups.slice(0, 25).forEach(pg => {
+        (pg.replicates || []).forEach(pr => {
+          if (typeof pr.value === "number" && !Number.isNaN(pr.value)) {
+            peerPoints.push({
+              record_id: String(pr.record_id || ""),
+              value: Number(pr.value),
+              replicate: Number(pr.replicate || 1),
+              qc: String(pr.qc || "pass"),
+              prepared_sample: String(pr.prepared_sample || pg.prepared_sample || "Peer Sample"),
+              replicate_group_key: pg.replicate_group_key,
+              isTargetGroup: false,
+              isOutlier: false
+            });
+          }
+        });
+      });
+
+      const allPoints = [...peerPoints, ...targetReps];
+      const allVals = allPoints.map(p => Number(p.value)).filter(v => !Number.isNaN(v));
+      const sliceMean = allVals.length ? allVals.reduce((s, v) => s + v, 0) / allVals.length : groupMean;
+      const sliceSd = allVals.length >= 2
+        ? Math.sqrt(allVals.reduce((s, v) => s + Math.pow(v - sliceMean, 2), 0) / (allVals.length - 1))
+        : (targetGroup.sd || 0);
+
+      let minVal = allVals.length ? Math.min(...allVals) : 0;
+      let maxVal = allVals.length ? Math.max(...allVals) : 10;
+      if (Math.abs(maxVal - minVal) < 1e-9) {
+        minVal -= 1;
+        maxVal += 1;
+      } else {
+        const pad = (maxVal - minVal) * 0.12;
+        minVal -= pad;
+        maxVal += pad;
+      }
+
+      const svgW = 420;
+      const svgH = 150;
+      const padL = 28;
+      const padR = 24;
+      const plotW = svgW - padL - padR;
+      const xOf = (val) => {
+        const t = (Number(val) - minVal) / ((maxVal - minVal) || 1);
+        return Math.max(padL, Math.min(svgW - padR, padL + t * plotW));
+      };
+
+      const bandX1 = xOf(sliceMean - sliceSd);
+      const bandX2 = xOf(sliceMean + sliceSd);
+      const bandW = Math.max(2, bandX2 - bandX1);
+      const targetMeanX = xOf(groupMean);
+      const sliceMeanX = xOf(sliceMean);
+
+      const renderQcFailDemarcation = (cxNum, cyNum, rSize, recId, titleText) => {
+        const d = rSize + 1.5;
+        const pts = `${cxNum.toFixed(1)},${(cyNum - d).toFixed(1)} ${(cxNum + d).toFixed(1)},${cyNum.toFixed(1)} ${cxNum.toFixed(1)},${(cyNum + d).toFixed(1)} ${(cxNum - d).toFixed(1)},${cyNum.toFixed(1)}`;
+        const xOff = (rSize * 0.55);
+        return [
+          `<polygon class="show-me-qc-fail-diamond show-me-pt-qc-fail" data-qc-status="fail" data-record-id="${escSvg(recId)}" points="${pts}" fill="rgba(239,68,68,0.18)" stroke="#ef4444" stroke-width="1.6" stroke-dasharray="2,1"><title>${titleText}</title></polygon>`,
+          `<line class="show-me-qc-fail-cross" data-qc-status="fail" x1="${(cxNum - xOff).toFixed(1)}" y1="${(cyNum - xOff).toFixed(1)}" x2="${(cxNum + xOff).toFixed(1)}" y2="${(cyNum + xOff).toFixed(1)}" stroke="#ef4444" stroke-width="1.5" pointer-events="none" />`,
+          `<line class="show-me-qc-fail-cross" data-qc-status="fail" x1="${(cxNum - xOff).toFixed(1)}" y1="${(cyNum + xOff).toFixed(1)}" x2="${(cxNum + xOff).toFixed(1)}" y2="${(cyNum - xOff).toFixed(1)}" stroke="#ef4444" stroke-width="1.5" pointer-events="none" />`
+        ].join("");
+      };
+
+      const peerCirclesSvg = peerPoints.map((pt, idx) => {
+        const cxNum = xOf(pt.value);
+        const cyNum = 44 + ((idx * 17) % 28);
+        const cx = cxNum.toFixed(1);
+        const cy = cyNum.toFixed(1);
+        const isFail = String(pt.qc || "").toLowerCase() === "fail";
+        const qcTag = isFail ? " [QC_FAIL]" : "";
+        const titleText = `${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)}${qcTag} | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}`;
+        return [
+          `<circle class="show-me-pt-peer${isFail ? ' show-me-pt-qc-fail' : ''}" data-role="peer" data-qc-status="${isFail ? 'fail' : 'pass'}" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="4.5" fill="rgba(148,163,184,0.45)" stroke="${isFail ? '#ef4444' : '#64748b'}" stroke-width="1.5"><title>${titleText}</title></circle>`,
+          isFail ? renderQcFailDemarcation(cxNum, cyNum, 4.5, pt.record_id, titleText) : ""
+        ].join("");
+      }).join("");
+
+      const targetGroupCirclesSvg = targetReps.filter(pt => !pt.isOutlier).map((pt, idx) => {
+        const cxNum = xOf(pt.value);
+        const cyNum = 92 + ((idx * 13) % 18);
+        const cx = cxNum.toFixed(1);
+        const cy = cyNum.toFixed(1);
+        const isFail = String(pt.qc || "").toLowerCase() === "fail";
+        const qcTag = isFail ? " [QC_FAIL]" : "";
+        const titleText = `${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} (Target Replicate Group)${qcTag} | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}`;
+        return [
+          `<circle class="show-me-pt-target-group${isFail ? ' show-me-pt-qc-fail' : ''}" data-role="target-group" data-qc-status="${isFail ? 'fail' : 'pass'}" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="6" fill="rgba(59,130,246,0.22)" stroke="#2563eb" stroke-width="2.5"><title>${titleText}</title></circle>`,
+          isFail ? renderQcFailDemarcation(cxNum, cyNum, 6, pt.record_id, titleText) : ""
+        ].join("");
+      }).join("");
+
+      const outlierCirclesSvg = targetReps.filter(pt => pt.isOutlier).map((pt, idx) => {
+        const cxNum = xOf(pt.value);
+        const cyNum = 96 + ((idx * 11) % 14);
+        const cx = cxNum.toFixed(1);
+        const cy = cyNum.toFixed(1);
+        const isFail = String(pt.qc || "").toLowerCase() === "fail";
+        const qcTag = isFail ? " [QC_FAIL]" : "";
+        const titleText = `${escSvg(pt.record_id)} | ${escSvg(pt.prepared_sample)} (Flagged Outlier)${qcTag} | ${Number(pt.value).toFixed(2)} ${escSvg(resolvedUnit)}`;
+        return [
+          `<circle class="show-me-outlier-pulse-ring" data-role="outlier-ring" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="10.5" fill="none" stroke="#dc2626" stroke-width="1.5" stroke-dasharray="3,2" opacity="0.85" />`,
+          `<circle class="show-me-pt-outlier${isFail ? ' show-me-pt-qc-fail' : ''}" data-role="outlier" data-qc-status="${isFail ? 'fail' : 'pass'}" data-record-id="${escSvg(pt.record_id)}" cx="${cx}" cy="${cy}" r="7.5" fill="rgba(239,68,68,0.28)" stroke="#dc2626" stroke-width="3"><title>${titleText}</title></circle>`,
+          isFail ? renderQcFailDemarcation(cxNum, cyNum, 7.5, pt.record_id, titleText) : ""
+        ].join("");
+      }).join("");
+
+      svgEl.innerHTML = [
+        `<rect x="${padL}" y="18" width="${plotW}" height="102" rx="8" fill="rgba(15,23,42,0.04)" stroke="rgba(148,163,184,0.22)" stroke-width="1" />`,
+        `<rect class="show-me-slice-sd-band" x="${bandX1.toFixed(1)}" y="22" width="${bandW.toFixed(1)}" height="94" fill="rgba(96,165,250,0.16)" stroke="#60a5fa" stroke-width="1" stroke-dasharray="3,3" />`,
+        `<line class="show-me-slice-mean-line" x1="${sliceMeanX.toFixed(1)}" y1="20" x2="${sliceMeanX.toFixed(1)}" y2="118" stroke="#64748b" stroke-width="1.2" stroke-dasharray="2,2" />`,
+        `<line class="show-me-target-mean-line" x1="${targetMeanX.toFixed(1)}" y1="20" x2="${targetMeanX.toFixed(1)}" y2="118" stroke="#2563eb" stroke-width="2" stroke-dasharray="4,3" />`,
+        `<text x="${padL + 4}" y="33" font-size="9" font-family="monospace" fill="#64748b">Peer Slice (n=${peerPoints.length})</text>`,
+        `<text x="${padL + 4}" y="82" font-size="9" font-family="monospace" fill="#2563eb">Target Replicate Group (${escSvg(resolvedSample)}, n=${targetReps.length})</text>`,
+        peerCirclesSvg,
+        targetGroupCirclesSvg,
+        outlierCirclesSvg,
+        `<line x1="${padL}" y1="124" x2="${svgW - padR}" y2="124" stroke="#94a3b8" stroke-width="1" />`,
+        `<text x="${padL}" y="138" font-size="9" font-family="monospace" fill="#64748b">${minVal.toFixed(2)} ${escSvg(resolvedUnit)}</text>`,
+        `<text x="${(svgW / 2).toFixed(1)}" y="138" text-anchor="middle" font-size="9" font-family="monospace" fill="#2563eb">Grp Mean: ${groupMean.toFixed(2)} ${escSvg(resolvedUnit)}</text>`,
+        `<text x="${svgW - padR}" y="138" text-anchor="end" font-size="9" font-family="monospace" fill="#64748b">${maxVal.toFixed(2)} ${escSvg(resolvedUnit)}</text>`
+      ].join("");
+
+      const subEl = document.getElementById("show-me-popover-subtitle");
+      if (subEl) {
+        subEl.textContent = `${resolvedResource} • ${resolvedAnalysisType} • ${resolvedParameter}${resolvedUnit ? " (" + resolvedUnit + ")" : ""} • ${resolvedSample}`;
+      }
+
+      const pillsEl = document.getElementById("show-me-flag-pills");
+      if (pillsEl) {
+        const pillList = activeFlags.length ? activeFlags : ["flagged_group"];
+        pillsEl.innerHTML = pillList.map(f => `<span class="px-1.5 py-0.5 rounded badge-warn font-semibold">⚑ ${escSvg(f)}</span>`).join(" ");
+      }
+
+      const statsEl = document.getElementById("show-me-stats-summary");
+      if (statsEl) {
+        const rsdTxt = typeof targetGroup.rsd_pct === "number" ? `${targetGroup.rsd_pct.toFixed(1)}%` : "—";
+        statsEl.textContent = `Group Mean ${groupMean.toFixed(2)} (RSD ${rsdTxt}) vs Slice Mean ${sliceMean.toFixed(2)} ± ${sliceSd.toFixed(2)}`;
+      }
+
+      // Optional Proximate Sum Proportional 100% Stacked Horizontal Bar (#show-me-proximate-bar)
+      const proxBarEl = document.getElementById("show-me-proximate-bar");
+      const hasProximateFlag = Boolean(
+        activeFlags.some(f => String(f).toLowerCase().includes("proximate")) ||
+        targetGroup.raw_proximate_sum ||
+        typeof o.proximateSumPct === "number" ||
+        typeof targetGroup.proximate_sum_pct === "number"
+      );
+      if (proxBarEl) {
+        if (hasProximateFlag) {
+          const normProxBucket = (pName) => {
+            const p = String(pName || "").trim().toLowerCase();
+            if (p === "moisture" || p === "moisture content") return "moisture";
+            if (p === "ash" || p === "ash content") return "ash";
+            if (p === "volatile solids" || p === "volatile matter" || p === "volatile solids (vs)" || p === "vs") return "vs";
+            if (p === "fixed carbon" || p === "fixed carbon (fc)" || p === "fc") return "fc";
+            return null;
+          };
+          const bucketVals = { moisture: [], ash: [], vs: [], fc: [] };
+          const targetExpNorm = normStr(targetGroup.experiment || "unassigned");
+          const targetMethodNorm = normStr(targetGroup.prep_method || "unassigned");
+          allGroups.forEach(g => {
+            if (g.domain_slug !== "proximate") return;
+            if (normStr(g.resource_name) !== normStr(resolvedResource)) return;
+            if (normStr(g.experiment || "unassigned") !== targetExpNorm) return;
+            if (normStr(g.prep_method || "unassigned") !== targetMethodNorm) return;
+            const b = normProxBucket(g.parameter);
+            if (!b) return;
+            if (Array.isArray(g.replicates) && g.replicates.length) {
+              g.replicates.forEach(r => {
+                if (typeof r.value === "number" && !Number.isNaN(r.value)) bucketVals[b].push(Number(r.value));
+              });
+            } else if (typeof g.mean === "number" && !Number.isNaN(g.mean)) {
+              bucketVals[b].push(Number(g.mean));
+            }
+          });
+          const avgOf = (arr) => arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : null;
+          const comps = o.proximateComponents || targetGroup.proximate_components || {};
+          const moistVal = typeof comps.moisture === "number" ? comps.moisture : avgOf(bucketVals.moisture);
+          const ashVal = typeof comps.ash === "number" ? comps.ash : avgOf(bucketVals.ash);
+          const vsRaw = typeof comps.vs === "number" ? comps.vs : (typeof comps.volatile_solids === "number" ? comps.volatile_solids : avgOf(bucketVals.vs));
+          const fcRaw = typeof comps.fc === "number" ? comps.fc : (typeof comps.fixed_carbon === "number" ? comps.fixed_carbon : avgOf(bucketVals.fc));
+          const vsOrFcVal = vsRaw !== null ? vsRaw : (fcRaw !== null ? Math.max(0, 100.0 - fcRaw) : null);
+          const computedSum = (moistVal !== null || ashVal !== null || vsOrFcVal !== null)
+            ? Number(((moistVal || 0) + (ashVal || 0) + (vsOrFcVal || 0)).toFixed(2))
+            : null;
+          const sumPct = typeof o.proximateSumPct === "number"
+            ? o.proximateSumPct
+            : (typeof targetGroup.proximate_sum_pct === "number" ? targetGroup.proximate_sum_pct : computedSum);
+
+          proxBarEl.classList.remove("hidden");
+          if (proxBarEl.style) proxBarEl.style.display = "block";
+          if (typeof sumPct === "number" && !Number.isNaN(sumPct) && sumPct > 0) {
+            const scaleMax = Math.max(120, sumPct * 1.05);
+            const bandLeftPct = ((95.0 / scaleMax) * 100).toFixed(2);
+            const bandWidthPct = (((105.0 - 95.0) / scaleMax) * 100).toFixed(2);
+            const hasComponentBreakdown = moistVal !== null || ashVal !== null || vsOrFcVal !== null;
+            const mW = hasComponentBreakdown && moistVal ? Math.max(0, (moistVal / scaleMax) * 100).toFixed(2) : "0";
+            const aW = hasComponentBreakdown && ashVal ? Math.max(0, (ashVal / scaleMax) * 100).toFixed(2) : "0";
+            const vW = hasComponentBreakdown && vsOrFcVal ? Math.max(0, (vsOrFcVal / scaleMax) * 100).toFixed(2) : "0";
+            const totalW = Math.min(100, Math.max(0, (sumPct / scaleMax) * 100)).toFixed(2);
+            const barSegmentsHtml = hasComponentBreakdown
+              ? [
+                  moistVal ? `<div class="h-full bg-sky-400" style="width:${mW}%" title="Moisture: ${moistVal.toFixed(2)}%"></div>` : "",
+                  ashVal ? `<div class="h-full bg-amber-400" style="width:${aW}%" title="Ash: ${ashVal.toFixed(2)}%"></div>` : "",
+                  vsOrFcVal ? `<div class="h-full bg-purple-400" style="width:${vW}%" title="VS / (100 - FC): ${vsOrFcVal.toFixed(2)}%"></div>` : ""
+                ].join("")
+              : `<div class="h-full bg-amber-500/80" style="width:${totalW}%" title="Proximate Sum: ${sumPct.toFixed(2)}%"></div>`;
+            const detailLine = hasComponentBreakdown
+              ? `Moisture (${moistVal !== null ? moistVal.toFixed(1) + "%" : "—"}) + Ash (${ashVal !== null ? ashVal.toFixed(1) + "%" : "—"}) + VS / (100 - FC) (${vsOrFcVal !== null ? vsOrFcVal.toFixed(1) + "%" : "—"}) = ${sumPct.toFixed(2)}% (Target: 95%–105%)`
+              : `Proximate Closure Sum = ${sumPct.toFixed(2)}% (Target Acceptance Band: 95%–105%)`;
+            proxBarEl.innerHTML = [
+              `<div class="flex items-center justify-between gap-2 font-bold text-amber-600 dark:text-amber-300">`,
+              `  <span>⚖️ Proximate Mass-Balance Closure (95–105% Band)</span>`,
+              `  <span class="px-1.5 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 text-[10px] font-mono">Proximate Closure: ${sumPct.toFixed(2)}%</span>`,
+              `</div>`,
+              `<div class="relative w-full h-3.5 rounded bg-slate-900/30 border border-[var(--border)] overflow-hidden my-1.5" data-role="proximate-stacked-bar">`,
+              `  <div class="flex h-full w-full">${barSegmentsHtml}</div>`,
+              `  <div class="absolute top-0 bottom-0 border-x border-dashed border-emerald-400 bg-emerald-500/15 pointer-events-none" style="left:${bandLeftPct}%;width:${bandWidthPct}%;" title="95%–105% Acceptance Band"></div>`,
+              `</div>`,
+              `<div class="text-[10px] text-[var(--muted-foreground)]">${detailLine}</div>`
+            ].join("");
+          } else {
+            proxBarEl.innerHTML = `<div class="text-[10px] text-[var(--muted-foreground)]">Proximate closure sum unavailable for this slice in snapshot.</div>`;
+          }
+        } else {
+          proxBarEl.classList.add("hidden");
+          if (proxBarEl.style) proxBarEl.style.display = "none";
+          proxBarEl.innerHTML = "";
+        }
+      }
+
+      const vizLink = document.getElementById("show-me-open-visualizer-link");
+      if (vizLink) {
+        const href = `resource_explorer_dashboard.html?resource=${encodeURIComponent(resolvedResource)}&resources=${encodeURIComponent(resolvedResource)}&domain=${encodeURIComponent(resolvedDomSlug)}&type=${encodeURIComponent(resolvedDomSlug)}&parameter=${encodeURIComponent(resolvedParameter)}&params=${encodeURIComponent(resolvedParameter)}&highlight_rk=${encodeURIComponent(targetKey)}`;
+        vizLink.setAttribute("href", href);
+        vizLink.href = href;
+      }
+
+      pop.classList.remove("hidden");
+      if (pop.style) {
+        pop.style.display = "block";
+        if (anchorEl && typeof anchorEl.getBoundingClientRect === "function") {
+          try {
+            const rect = anchorEl.getBoundingClientRect();
+            const topPx = Math.max(16, Math.min((window.innerHeight || 800) - 340, rect.bottom + 8));
+            const leftPx = Math.max(16, Math.min((window.innerWidth || 1200) - 480, rect.left));
+            pop.style.top = `${topPx}px`;
+            pop.style.left = `${leftPx}px`;
+          } catch (_e) {}
+        } else {
+          pop.style.top = "96px";
+          pop.style.right = "32px";
+        }
+      }
+
+      return {
+        replicateGroupKey: targetGroup.replicate_group_key,
+        resource: resolvedResource,
+        analysisType: resolvedAnalysisType,
+        parameter: resolvedParameter,
+        peerCount: peerPoints.length,
+        targetGroupCount: targetReps.filter(r => !r.isOutlier).length,
+        outlierCount: targetReps.filter(r => r.isOutlier).length,
+        hasProximateBar: hasProximateFlag
+      };
+    }
+    window.openFlagShowMePopover = openFlagShowMePopover;
 """
 
 
@@ -3766,11 +5621,11 @@ def build_analysis_dashboard_html(
           1. Characterization &amp; AI Brief
         </a>
         <a id="nav-page-qc" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition flex items-center gap-1.5">
-          <span>2. Statistical QC &amp; Lab Notes Audit</span>
+          <span>2. Statistical Snapshot</span>
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
-          3. Multi-Resource Side-by-Side Explorer
+          3. Data Visualizer
         </a>
         <a id="nav-page-drift" href="../audit/db_environment_drift_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
           4. DB Environment Drift
@@ -3781,53 +5636,107 @@ def build_analysis_dashboard_html(
       </div>
     </nav>
 
-    <!-- Streamlined Resource Header & Single-Row Filter Bar -->
-    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-3.5">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="space-y-1 flex-1 min-w-[260px]">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-[var(--primary)] inline-block"></span>
-            <h1 id="hdr-title" class="text-lg sm:text-xl font-bold text-[var(--foreground)]">BioCirV — Resource Characterization</h1>
-            <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
-            <span id="hdr-class-badge" class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]"></span>
-            <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
-            <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
+    <!-- Page 1 Reorganized Top Workspace: 3 Logical Cards -->
+    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-4">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch" id="page1-top-workspace-cards">
+        <!-- Card 1: Resource Metadata & Lab Notes -->
+        <div id="top-card-resource-metadata" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Resource Metadata &amp; Lab Notes</div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-[var(--primary)] inline-block"></span>
+              <h1 id="hdr-title" class="text-base sm:text-lg font-bold text-[var(--foreground)]">BioCirV — Resource Characterization</h1>
+              <span id="hdr-code-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
+              <span id="hdr-class-badge" class="px-2 py-0.5 text-xs font-medium rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]"></span>
+              <span id="hdr-portal-badge" class="px-2 py-0.5 text-xs font-semibold rounded-full"></span>
+              <span id="live-qc-overlay-badge" class="hidden px-2 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
+            </div>
+            <div id="resource-switcher-wrap" class="flex items-center gap-1.5 pt-1">
+              <label for="flt-resource" class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
+              <button id="btn-prev-res" title="Previous Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&larr;</button>
+              <select id="flt-resource" class="rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold border min-w-[200px] flex-1"></select>
+              <button id="btn-next-res" title="Next Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&rarr;</button>
+            </div>
+            <p id="hdr-desc" class="text-xs text-[var(--muted-foreground)]"></p>
           </div>
-          <p id="hdr-desc" class="text-xs sm:text-sm text-[var(--muted-foreground)]"></p>
+          <div class="pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-xs">
+            <span id="active-slice-badge" class="font-mono text-[var(--muted-foreground)]"></span>
+            <span id="hdr-lab-notes-summary" class="font-mono text-[var(--foreground)]"></span>
+          </div>
         </div>
 
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
-            ↻ Refresh QC State
-          </button>
-          <button id="btn-toggle-ai" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
-            ✨ Hide AI Brief
-          </button>
-          <button id="btn-theme-toggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
-            ☀️ Light Mode
-          </button>
-          <button id="btn-download-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
-            ⬇ Export CSV
-          </button>
-          <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition">
-            📤 Export Slice (.html)
-          </button>
-          <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-400 transition">
-            🐛 Report a Bug
-          </button>
+        <!-- Card 2: Flag Counts & Statistical Snapshot -->
+        <div id="top-card-flag-counts" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-1">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">Flag Counts</span>
+              <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Scoped to selected resource &amp; analysis type</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2 pt-1.5 text-xs font-mono">
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Active Flags</div>
+                <div id="p1-flag-count-val" class="text-sm font-bold text-[var(--foreground)] mt-0.5">0</div>
+              </div>
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Within-Rep RSD</div>
+                <div id="p1-within-rsd-val" class="text-xs font-bold text-[var(--foreground)] mt-0.5 truncate">—</div>
+              </div>
+              <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2">
+                <div class="text-[10px] font-sans text-[var(--muted-foreground)]">Between-Sample RSD</div>
+                <div id="p1-between-rsd-val" class="text-xs font-bold text-[var(--foreground)] mt-0.5 truncate">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-[var(--border)] flex items-center justify-between gap-2">
+            <a id="hdr-qc-deep-link" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 w-full justify-center"></a>
+          </div>
+        </div>
+
+        <!-- Card 3: Unified Controls & Export -->
+        <div id="top-card-controls-export" class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-2.5 flex flex-col justify-between">
+          <div class="space-y-2">
+            <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Unified Controls &amp; Export</div>
+            <div class="flex flex-col gap-1.5 text-xs">
+              <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+                <input id="chk-p1-suppress-trace" type="checkbox" checked class="rounded" />
+                <span class="font-medium text-[var(--foreground)]">Suppress Low-Abundance Trace</span>
+              </label>
+              <label class="inline-flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[var(--card)] border border-[var(--border)] cursor-pointer">
+                <input id="chk-p1-blind-mode" type="checkbox" class="rounded" />
+                <span class="font-medium text-[var(--foreground)]">Blind Analyst Mode</span>
+              </label>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-1.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="btn-open-slice-modal" title="📤 Export Slice (.HTML)" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 transition">
+                📤 Export
+              </button>
+              <button id="btn-download-csv" class="hidden px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ⬇ Export CSV
+              </button>
+              <button id="btn-refresh-qc-state" type="button" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
+                ↻ Refresh QC State
+              </button>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button id="btn-toggle-ai" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ✨ Hide AI Brief
+              </button>
+              <button id="btn-theme-toggle" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90 transition">
+                ☀️ Light Mode
+              </button>
+              <button id="btn-open-bug-modal" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-400 transition">
+                🐛 Report a Bug
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Clean Single-Row Filter Bar -->
       <div class="pt-3 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3">
         <div class="flex flex-wrap items-center gap-2.5">
-          <div id="resource-switcher-wrap" class="flex items-center gap-1.5">
-            <label for="flt-resource" class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
-            <button id="btn-prev-res" title="Previous Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&larr;</button>
-            <select id="flt-resource" class="rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold border min-w-[230px]"></select>
-            <button id="btn-next-res" title="Next Resource" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-80">&rarr;</button>
-          </div>
-
           <div class="flex items-center gap-1.5">
             <label for="flt-prepared-sample" class="text-xs font-semibold text-[var(--muted-foreground)]">Sample:</label>
             <select id="flt-prepared-sample" class="rounded-lg px-2.5 py-1.5 text-xs font-medium border min-w-[180px]"></select>
@@ -3867,12 +5776,6 @@ def build_analysis_dashboard_html(
           <button id="btn-reset-filters" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
             Reset
           </button>
-        </div>
-
-        <!-- Subtle Stat QC & Lab Notes Link Pill -->
-        <div class="flex flex-wrap items-center gap-2">
-          <span id="active-slice-badge" class="text-xs font-mono text-[var(--muted-foreground)]"></span>
-          <a id="hdr-qc-deep-link" href="__QC_PAGE_FILENAME__" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5"></a>
         </div>
       </div>
     </header>
@@ -3918,10 +5821,35 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     const COUNTY_LOOKUP = BUNDLE.county_lookup || {};
+    function normSampleKey(val) {
+      return String(val || "").trim().toLowerCase();
+    }
     const FS_LOOKUP = {};
-    (BUNDLE.field_samples || []).forEach(fs => { FS_LOOKUP[fs.name] = fs; });
+    const FS_LOOKUP_NORM = {};
+    (BUNDLE.field_samples || []).forEach(fs => {
+      if (!fs || !fs.name) return;
+      FS_LOOKUP[fs.name] = fs;
+      const nk = normSampleKey(fs.name);
+      if (nk) FS_LOOKUP_NORM[nk] = fs;
+    });
     const PS_LOOKUP = {};
-    (BUNDLE.prepared_samples || []).forEach(ps => { PS_LOOKUP[ps.name] = ps; });
+    const PS_LOOKUP_NORM = {};
+    (BUNDLE.prepared_samples || []).forEach(ps => {
+      if (!ps || !ps.name) return;
+      PS_LOOKUP[ps.name] = ps;
+      const nk = normSampleKey(ps.name);
+      if (nk) PS_LOOKUP_NORM[nk] = ps;
+    });
+    function lookupFieldSample(name) {
+      if (!name) return null;
+      return FS_LOOKUP[name] || FS_LOOKUP_NORM[normSampleKey(name)] || null;
+    }
+    function lookupPreparedSample(name) {
+      if (!name) return null;
+      return PS_LOOKUP[name] || PS_LOOKUP_NORM[normSampleKey(name)] || null;
+    }
+    window.lookupFieldSample = lookupFieldSample;
+    window.lookupPreparedSample = lookupPreparedSample;
 
     function fmtGeoid(geoid) {
       if (!geoid) return "—";
@@ -3939,8 +5867,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       obj.value = arr[BUNDLE.str_cols.length + 2];
       obj.exp_date = arr.length > BUNDLE.str_cols.length + 3 ? arr[BUNDLE.str_cols.length + 3] : "";
       obj.time_h = arr.length > BUNDLE.str_cols.length + 4 ? arr[BUNDLE.str_cols.length + 4] : null;
-      const fsMeta = FS_LOOKUP[obj.field_sample] || {};
-      const psMeta = PS_LOOKUP[obj.prepared_sample] || {};
+      const fsMeta = lookupFieldSample(obj.field_sample) || {};
+      const psMeta = lookupPreparedSample(obj.prepared_sample) || {};
       obj.collected_date = fsMeta.collected_at ? String(fsMeta.collected_at).slice(0, 10) : "";
       obj.geoid = fsMeta.geoid ? String(fsMeta.geoid).trim() : "";
       obj.county_name = obj.geoid ? (COUNTY_LOOKUP[obj.geoid] || "") : "";
@@ -3996,12 +5924,215 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       from_date: BUNDLE.slice_from_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.from_date) || "",
       to_date: BUNDLE.slice_to_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.to_date) || "",
       repMode: "replicates",
+      suppressTraceFlags: true,
+      blindMode: false,
       showAiPanel: true,
-      proxGroupMode: "ps_exp",
+      overviewLineageExpanded: null,
+      proxGroupMode: "exp_method",
       elemSourceMode: "all",
       icpScaleMode: "split",
-      convSubTab: "all"
+      convSubTab: "all",
+      timelineAlignMode: "collected",
+      timelineSortMode: "date"
     };
+
+    function stripQcAuditAnnotations(noteStr) {
+      if (!noteStr) return "";
+      let s = String(noteStr);
+      s = s.replace(/\\s*\\|\\s*\\[QC_AUDIT\\b[^\\]]*\\]/gi, "");
+      s = s.replace(/\\[QC_AUDIT\\b[^\\]]*\\]\\s*\\|\\s*/gi, "");
+      s = s.replace(/\\[QC_AUDIT\\b[^\\]]*\\]/gi, "");
+      return s.trim();
+    }
+    window.stripQcAuditAnnotations = stripQcAuditAnnotations;
+
+    const PROVIDER_STYLE_PALETTE = {
+      ucd: { label: "UC Davis (UCD)", color: "#2563eb", bg: "rgba(37, 99, 235, 0.12)", border: "rgba(37, 99, 235, 0.45)" },
+      lbl: { label: "Berkeley Lab (LBL)", color: "#059669", bg: "rgba(5, 150, 105, 0.12)", border: "rgba(5, 150, 105, 0.45)" },
+      nrel: { label: "NREL", color: "#d97706", bg: "rgba(217, 119, 6, 0.12)", border: "rgba(217, 119, 6, 0.45)" },
+      usda: { label: "USDA", color: "#7c3aed", bg: "rgba(124, 58, 237, 0.12)", border: "rgba(124, 58, 237, 0.45)" },
+      usu: { label: "Utah State (USU)", color: "#db2777", bg: "rgba(219, 39, 119, 0.12)", border: "rgba(219, 39, 119, 0.45)" },
+      sandia: { label: "Sandia", color: "#0891b2", bg: "rgba(8, 145, 178, 0.12)", border: "rgba(8, 145, 178, 0.45)" },
+      unassigned: { label: "Unassigned / Direct", color: "#64748b", bg: "rgba(100, 116, 139, 0.10)", border: "rgba(100, 116, 139, 0.35)" }
+    };
+    const DYNAMIC_PROVIDER_COLORS = ["#0284c7", "#4f46e5", "#ea580c", "#16a34a", "#9333ea", "#e11d48"];
+
+    function getProviderStyle(rawCode) {
+      const code = String(rawCode || "").trim().toLowerCase() || "unassigned";
+      if (PROVIDER_STYLE_PALETTE[code]) {
+        return { code, ...PROVIDER_STYLE_PALETTE[code] };
+      }
+      let hash = 0;
+      for (let i = 0; i < code.length; i++) hash = ((hash << 5) - hash) + code.charCodeAt(i);
+      const hex = DYNAMIC_PROVIDER_COLORS[Math.abs(hash) % DYNAMIC_PROVIDER_COLORS.length];
+      return {
+        code,
+        label: code.toUpperCase(),
+        color: hex,
+        bg: `${hex}1f`,
+        border: `${hex}73`
+      };
+    }
+
+    window.showLineageTooltip = function(evt, el) {
+      let tip = document.getElementById("lineage-hover-tooltip") || document.getElementById("lineage-floating-tooltip");
+      if (!tip) {
+        tip = document.createElement("div");
+        tip.id = "lineage-hover-tooltip";
+        tip.setAttribute("data-legacy-id", "lineage-floating-tooltip");
+        tip.className = "fixed z-50 pointer-events-none max-w-xs rounded-xl p-3 text-xs bg-[var(--card)] text-[var(--foreground)] border border-[var(--primary)] shadow-xl space-y-1 transition-opacity duration-100";
+        document.body.appendChild(tip);
+      }
+      const encoded = el ? el.getAttribute("data-tooltip-b64") : "";
+      if (!encoded) return;
+      let decoded = "";
+      try {
+        decoded = decodeURIComponent(escape(window.atob(encoded)));
+      } catch (_e) {
+        return;
+      }
+      tip.innerHTML = decoded;
+      tip.style.display = "block";
+      const legacyTip = document.getElementById("lineage-floating-tooltip");
+      if (legacyTip && legacyTip !== tip) {
+        legacyTip.innerHTML = decoded;
+        legacyTip.style.display = "block";
+      }
+      const rect = el.getBoundingClientRect();
+      const left = Math.min((window.innerWidth || 1024) - 320, Math.max(12, rect.left));
+      const top = rect.bottom + 8 + 200 > (window.innerHeight || 768) ? Math.max(12, rect.top - (tip.offsetHeight || 160) - 8) : rect.bottom + 8;
+      tip.style.left = `${left}px`;
+      tip.style.top = `${top}px`;
+    };
+
+    window.hideLineageTooltip = function() {
+      const tip = document.getElementById("lineage-hover-tooltip");
+      if (tip) tip.style.display = "none";
+      const legacyTip = document.getElementById("lineage-floating-tooltip");
+      if (legacyTip) legacyTip.style.display = "none";
+    };
+
+    window.renderTimelineSvgConnectors = function() {
+      const svg = document.getElementById("lineage-svg-overlay");
+      const wrap = document.getElementById("lineage-timeline-tracks-wrap");
+      if (!svg || !wrap) return;
+      const wrapRect = wrap.getBoundingClientRect();
+      if (wrapRect.width <= 0 || wrapRect.height <= 0) {
+        svg.innerHTML = "";
+        return;
+      }
+      svg.setAttribute("viewBox", `0 0 ${Math.round(wrapRect.width)} ${Math.round(wrapRect.height)}`);
+      const fsNodes = {};
+      wrap.querySelectorAll("[data-fs-node]").forEach(node => {
+        const name = normSampleKey(node.getAttribute("data-fs-node"));
+        if (name) fsNodes[name] = node;
+      });
+      const paths = [];
+      wrap.querySelectorAll("[data-ps-node]").forEach(psNode => {
+        const parentFs = normSampleKey(psNode.getAttribute("data-parent-fs"));
+        const fsNode = parentFs ? fsNodes[parentFs] : null;
+        if (!fsNode) return;
+        const r1 = fsNode.getBoundingClientRect();
+        const r2 = psNode.getBoundingClientRect();
+        const x1 = r1.left - wrapRect.left + r1.width / 2;
+        const y1 = r1.bottom - wrapRect.top;
+        const x2 = r2.left - wrapRect.left + r2.width / 2;
+        const y2 = r2.top - wrapRect.top;
+        if (y2 <= y1) return;
+        const ym = y1 + (y2 - y1) * 0.5;
+        const strokeColor = psNode.getAttribute("data-provider-color") || "var(--primary)";
+        const isActive = fsNode.getAttribute("data-selected") === "1" || psNode.getAttribute("data-selected") === "1";
+        const opacity = isActive ? "0.95" : "0.52";
+        const width = isActive ? "2.5" : "1.75";
+        paths.push(
+          `<path d="M ${x1.toFixed(1)} ${y1.toFixed(1)} C ${x1.toFixed(1)} ${ym.toFixed(1)}, ${x2.toFixed(1)} ${ym.toFixed(1)}, ${x2.toFixed(1)} ${y2.toFixed(1)}" fill="none" stroke="${strokeColor}" stroke-width="${width}" stroke-opacity="${opacity}" stroke-dasharray="${isActive ? 'none' : '4 2'}" />` +
+          `<circle cx="${x1.toFixed(1)}" cy="${y1.toFixed(1)}" r="3" fill="${strokeColor}" fill-opacity="${opacity}" />` +
+          `<circle cx="${x2.toFixed(1)}" cy="${y2.toFixed(1)}" r="3" fill="${strokeColor}" fill-opacity="${opacity}" />`
+        );
+      });
+      svg.innerHTML = paths.join("");
+    };
+
+    function renderGroupFlagBadges(g) {
+      if (!g) return "";
+      const badges = [];
+      const allowFlags = !g.below_cutoff || !state.suppressTraceFlags;
+      if (allowFlags) {
+        if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Dixon Q=${fmtNum(g.dixon_q, 3)}">⚑ Dixon Outlier</span>`);
+        if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
+        else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
+        if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+        if (g.raw_proximate_sum) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Proximate Mass-Balance Sum = ${fmtNum(g.proximate_sum_pct, 1)}% (Data Portal requires Moisture + Ash + VS [or 100 - FC] within 95–105% per resource/experiment/method)">⚑ Proximate Sum (${fmtNum(g.proximate_sum_pct, 1)}%)</span>`);
+        if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
+        if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
+      }
+      if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Low-abundance trace parameter (${g.cutoff_label})">Trace (${g.cutoff_label})</span>`);
+      if (badges.length > 0) {
+        const resName = (typeof state !== "undefined" && state && state.resource) || g.resource_name || "";
+        const repKey = (typeof window !== "undefined" && window.normalizeReplicateGroupKey)
+          ? window.normalizeReplicateGroupKey(g, resName)
+          : [resName, g.prepared_sample || "", g.analysis_type || "", g.parameter || "", g.prep_method || "", g.experiment || ""].map(v => String(v || "").trim().toLowerCase()).join("::");
+        const safeKey = String(repKey).replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeRes = String(resName).replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeAt = String(g.analysis_type || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeParam = String(g.parameter || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeSample = String(g.prepared_sample || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        const safeCand = String(g.dixon_candidate_id || ((g.sd3x_candidate_ids && g.sd3x_candidate_ids[0]) || "")).replace(/"/g, "&quot;").replace(/'/g, "\\'");
+        badges.push(`<button type="button" class="btn-show-me-flag px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--card)] text-[var(--primary)] border border-[var(--primary)]/40 hover:bg-[var(--primary)]/10 transition" data-group-key="${safeKey}" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ replicateGroupKey: '${safeKey}', resource: '${safeRes}', analysisType: '${safeAt}', parameter: '${safeParam}', preparedSample: '${safeSample}', outlierRecordId: '${safeCand}' }, this)" title="Show flagged replicate group and outlier in slice context">👁 Show me</button>`);
+      }
+      return badges.join(" ");
+    }
+
+    function findOutlierGroupForRecords(groupRecs, paramName) {
+      if (!groupRecs || !groupRecs.length) return null;
+      const ins = typeof getResourceInsights === "function" ? getResourceInsights() : null;
+      const out = ins && ins.outlier_screening;
+      if (!out) return null;
+      const allGroups = [];
+      if (Array.isArray(out.groups)) allGroups.push(...out.groups);
+      if (Array.isArray(out.replicate_groups)) allGroups.push(...out.replicate_groups);
+      if (out.by_tab && typeof out.by_tab === "object") {
+        Object.values(out.by_tab).forEach(t => {
+          if (t && Array.isArray(t.replicate_groups)) allGroups.push(...t.replicate_groups);
+          else if (t && Array.isArray(t.groups)) allGroups.push(...t.groups);
+        });
+      }
+      if (!allGroups.length) return null;
+      const hasAnyFlag = g => Boolean(
+        g && (g.raw_dixon || g.raw_rsd20 || g.raw_rsd10 || g.raw_sd3x || g.raw_proximate_sum || g.has_identical_replicates || g.qc_mixed || g.below_cutoff)
+      );
+      const recIdSet = new Set(groupRecs.map(r => String(r.record_id || "").trim()).filter(Boolean));
+      if (recIdSet.size > 0) {
+        const idMatches = allGroups.filter(g => {
+          const reps = Array.isArray(g.replicates) ? g.replicates : [];
+          return reps.some(rep => recIdSet.has(String(rep.id || rep.record_id || "").trim()));
+        });
+        if (idMatches.length > 0) {
+          return idMatches.find(hasAnyFlag) || idMatches[0];
+        }
+      }
+      const first = groupRecs[0];
+      const rawParam = (paramName && !String(paramName).startsWith("⚑") && !String(paramName).includes(":"))
+        ? paramName
+        : (first.parameter || "");
+      const targetParam = String(rawParam).trim().toLowerCase();
+      const targetPs = String(first.prepared_sample || "").trim().toLowerCase();
+      const targetAt = String(first.analysis_type || "").trim().toLowerCase();
+      const propMatches = allGroups.filter(g =>
+        String(g.parameter || "").trim().toLowerCase() === targetParam &&
+        (!targetPs || String(g.prepared_sample || "").trim().toLowerCase() === targetPs) &&
+        (!targetAt || String(g.analysis_type || "").trim().toLowerCase() === targetAt)
+      );
+      return propMatches.find(hasAnyFlag) || propMatches[0] || null;
+    }
+
+    function stripQcAuditAnnotations(noteStr) {
+      return String(noteStr || "")
+        .replace(/\\s*\\|?\\s*\\[QC_AUDIT\\b[^\\]]*\\]/gi, "")
+        .replace(/^\\s*\\|\\s*|\\s*\\|\\s*$/g, "")
+        .trim();
+    }
+    window.stripQcAuditAnnotations = stripQcAuditAnnotations;
 
     window.auditPage1PointOrGroup = function(encodedPayload) {
       let prefill = {};
@@ -4049,11 +6180,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         prepared_sample: x.prepared_sample,
         experiment: x.experiment
       }));
+      const resolvedParam = (paramName && !String(paramName).startsWith("⚑") && !String(paramName).includes(":"))
+        ? paramName
+        : (first.parameter || "");
       const payload = encodeURIComponent(JSON.stringify({
         scope: "replicate_group",
         resource_name: first.resource_name || state.resource,
         analysis_type: first.analysis_type || "",
-        parameter: paramName || first.parameter || "",
+        parameter: resolvedParam,
         prepared_sample: first.prepared_sample || "",
         field_sample: first.field_sample || "",
         experiment: first.experiment || "",
@@ -4062,7 +6196,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         replicates: siblings,
         group_record_ids: siblings.map(s => s.id)
       }));
-      return `<button type="button" onclick="window.auditPage1PointOrGroup('${payload}')" title="Flag/audit this replicate group (n=${siblings.length}) or a single point" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">⚑ Audit (n=${siblings.length})</button>`;
+      const matchedOutlierGroup = findOutlierGroupForRecords(groupRecs, resolvedParam);
+      const flagBadgesHtml = matchedOutlierGroup ? renderGroupFlagBadges(matchedOutlierGroup) : "";
+      const btnHtml = `<button type="button" onclick="window.auditPage1PointOrGroup('${payload}')" title="Flag/audit this replicate group (n=${siblings.length}) or a single point" class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--secondary)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">⚑ Audit (n=${siblings.length})</button>`;
+      return flagBadgesHtml ? `<span class="inline-flex flex-wrap items-center gap-1">${flagBadgesHtml} ${btnHtml}</span>` : btnHtml;
     }
 
     function formatMdInline(text) {
@@ -4220,9 +6357,40 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
 
       const ins = getResourceInsights();
-      const out = (ins && ins.outlier_screening) || {};
-      const activeFlags = out.flagged_active_groups || 0;
+      const outSummary = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
+      const activeFlags = state.suppressTraceFlags
+        ? (outSummary.flaggedActive || 0)
+        : (outSummary.flaggedRaw ?? outSummary.flaggedActive ?? 0);
+      const tabOut = (state.tab && state.tab !== "overview" && ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[state.tab]) || null;
+      const scopedActiveFlags = tabOut
+        ? (state.suppressTraceFlags ? (tabOut.flagged_active ?? 0) : (tabOut.flagged_raw ?? tabOut.flagged_active ?? 0))
+        : activeFlags;
       const notesCnt = (ins && ins.curated_notes && ins.curated_notes.length) || 0;
+
+      const flagValEl = document.getElementById("p1-flag-count-val");
+      if (flagValEl) {
+        flagValEl.textContent = `${scopedActiveFlags}`;
+      }
+      const wRsdEl = document.getElementById("p1-within-rsd-val");
+      if (wRsdEl) {
+        const wMed = tabOut ? tabOut.within_rsd_median : outSummary.withinRsdMedian;
+        const wSd = tabOut ? tabOut.within_sd_median : outSummary.withinSdMedian;
+        wRsdEl.textContent = wMed !== null && wMed !== undefined
+          ? `${fmtNum(wMed, 1)}%${wSd !== null && wSd !== undefined ? ` (±${fmtNum(wSd, 2)})` : ""}`
+          : "N/A (n=1)";
+      }
+      const bRsdEl = document.getElementById("p1-between-rsd-val");
+      if (bRsdEl) {
+        const bMed = tabOut ? tabOut.between_rsd_median : outSummary.betweenRsdMedian;
+        const bSd = tabOut ? tabOut.between_sd_median : outSummary.betweenSdMedian;
+        bRsdEl.textContent = bMed !== null && bMed !== undefined
+          ? `${fmtNum(bMed, 1)}%${bSd !== null && bSd !== undefined ? ` (±${fmtNum(bSd, 2)})` : ""}`
+          : "N/A (n=1 method group)";
+      }
+      const notesSumEl = document.getElementById("hdr-lab-notes-summary");
+      if (notesSumEl) {
+        notesSumEl.textContent = `Lab Notes: ${notesCnt} curated group(s)`;
+      }
 
       const navBadge = document.getElementById("nav-qc-badge");
       if (activeFlags > 0) {
@@ -4236,11 +6404,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const hdrLink = document.getElementById("hdr-qc-deep-link");
       hdrLink.href = `${QC_PAGE_FILENAME}?resource=${encRes}`;
       if (activeFlags > 0 || notesCnt > 0) {
-        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90 transition flex items-center gap-1.5";
-        hdrLink.innerHTML = `<span>⚑ Stat QC: <strong>${activeFlags}</strong> Flagged Group(s) · <strong>${notesCnt}</strong> Bench Note(s) &rarr; Audit</span>`;
+        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90 transition flex items-center gap-1.5 w-full justify-center";
+        hdrLink.innerHTML = `<span>⚑ Statistical Snapshot: <strong>${activeFlags}</strong> Flagged Group(s) · <strong>${notesCnt}</strong> Bench Note(s) &rarr; Audit</span>`;
       } else {
-        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-pass hover:opacity-90 transition flex items-center gap-1.5";
-        hdrLink.innerHTML = `<span>✓ Stat QC: 0 Active Flags &rarr; Open Precision Audit</span>`;
+        hdrLink.className = "px-3 py-1.5 rounded-lg text-xs font-semibold badge-pass hover:opacity-90 transition flex items-center gap-1.5 w-full justify-center";
+        hdrLink.innerHTML = `<span>✓ Statistical Snapshot: 0 Active Flags &rarr; Open Precision Audit</span>`;
       }
     }
 
@@ -4269,13 +6437,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
 
       const provStr = ins && ins.providers && ins.providers.length ? ins.providers.join(", ") : "multi-provider";
-      const colDates = Array.from(new Set(fsList.map(f => f.collected_at ? f.collected_at.slice(0, 10) : "").filter(Boolean))).sort();
       const geoids = Array.from(new Set(fsList.map(f => f.geoid).filter(Boolean))).map(fmtGeoid);
-      const colSummary = colDates.length ? ` · Collected: <span class="font-mono text-[var(--foreground)]">${colDates.join(", ")}</span>` : "";
       const geoSummary = geoids.length ? ` · GEOID: <span class="font-mono text-[var(--primary)]">${geoids.join(", ")}</span>` : "";
       document.getElementById("hdr-desc").innerHTML = `
         <strong>${fsList.length} field sample(s)</strong> &rarr; <strong>${psList.length} prepared sample(s)</strong> &rarr;
-        <strong>${resRecs.length.toLocaleString()} analytical &amp; conversion observations</strong> (Providers: <span class="font-mono">${provStr}</span>)${colSummary}${geoSummary}.
+        <strong>${resRecs.length.toLocaleString()} analytical &amp; conversion observations</strong> (Providers: <span class="font-mono">${provStr}</span>)${geoSummary}.
       `;
       updateSuiteNavLinks();
     }
@@ -4297,6 +6463,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const d = ins.diagnostics || {};
       const p = ins.percentiles || {};
       const out = ins.outlier_screening || {};
+      const outSummary = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
       const notes = ins.curated_notes || [];
       const encRes = encodeURIComponent(state.resource);
 
@@ -4307,6 +6474,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         p.titer_3hp_g_l ? { label: "3-HP Titer", val: `${d.titer_3hp_g_l} g/L`, pct: `${p.titer_3hp_g_l}th %ile` } : null
       ].filter(Boolean);
 
+      const withinRsdLabel = outSummary.withinRsdMedian !== null && outSummary.withinRsdMedian !== undefined
+        ? `${outSummary.withinRsdMedian}%${outSummary.withinSdMedian !== null && outSummary.withinSdMedian !== undefined ? ` (±${fmtNum(outSummary.withinSdMedian, 2)})` : ''}`
+        : 'n=1';
+
       panel.innerHTML = `
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--border)] pb-2.5">
           <div class="flex items-center gap-2">
@@ -4314,7 +6485,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <h2 class="text-sm font-bold text-[var(--foreground)]">Synthesized Feedstock Meaning &amp; Stoichiometric Summary</h2>
           </div>
           <a href="${QC_PAGE_FILENAME}?resource=${encRes}" class="text-xs font-semibold text-[var(--primary)] hover:underline">
-            View Full Statistical Outlier Screen (${out.flagged_active_groups || 0} flags) &amp; Mined Bench Notes (${notes.length}) &rarr;
+            View Full Statistical Outlier Screen (${outSummary.flaggedActive || 0} flags) &amp; Mined Bench Notes (${notes.length}) &rarr;
           </a>
         </div>
 
@@ -4339,7 +6510,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">2. Stoichiometric Closure &amp; Precision Overview</span>
-              <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Within-Rep RSD: ${out.overall_within_rsd_median !== null && out.overall_within_rsd_median !== undefined ? out.overall_within_rsd_median + '%' : 'n=1'}</span>
+              <span class="text-[11px] font-mono text-[var(--muted-foreground)]">Within-Rep RSD: ${withinRsdLabel}</span>
             </div>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
               <div class="bg-[var(--card)] border border-[var(--border)] rounded-lg p-2.5">
@@ -4361,8 +6532,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             </div>
             <div class="p-2.5 rounded-lg bg-[var(--card)] border border-[var(--border)] flex flex-wrap items-center justify-between gap-2 text-xs">
               <span class="text-[var(--muted-foreground)]">
-                Statistical Screen: <strong>${out.flagged_active_groups || 0}</strong> active outlier group(s)
-                ${out.suppressed_low_abundance_groups ? `(${out.suppressed_low_abundance_groups} trace &lt;100 ppm suppressed)` : ''} ·
+                Statistical Screen: <strong>${outSummary.flaggedActive || 0}</strong> active outlier group(s)
+                ${outSummary.suppressedTrace ? `(${outSummary.suppressedTrace} trace &lt;100 ppm suppressed)` : ''} ·
                 <strong>${notes.length}</strong> distinct lab note group(s)
               </span>
               <a href="${QC_PAGE_FILENAME}?resource=${encRes}" class="px-2.5 py-1 rounded bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] font-semibold hover:border-[var(--primary)]">
@@ -4387,16 +6558,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const activePs = new Set(filtered.map(r => r.prepared_sample).filter(Boolean)).size;
       const activeFs = new Set(filtered.map(r => r.field_sample).filter(Boolean)).size;
 
-      const colDates = Array.from(new Set(filtered.map(r => r.collected_date).filter(Boolean))).sort();
-      const prepDates = Array.from(new Set(filtered.map(r => r.prep_date).filter(Boolean))).sort();
       const geoids = Array.from(new Set(filtered.map(r => r.geoid).filter(Boolean))).map(fmtGeoid);
-
-      const colDateStr = colDates.length
-        ? (colDates.length === 1 ? colDates[0] : `${colDates[0]} → ${colDates[colDates.length - 1]}`)
-        : "Not recorded";
-      const prepDateStr = prepDates.length
-        ? (prepDates.length === 1 ? prepDates[0] : `${prepDates[0]} → ${prepDates[prepDates.length - 1]}`)
-        : "Not recorded";
       const geoStr = geoids.length ? geoids.join(", ") : "Statewide / Unassigned";
 
       const sliceBadgeSuffix = BUNDLE.collaborator_slice_mode
@@ -4417,8 +6579,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         : (d.syngas_h2_ppm ? `H2: ${fmtNum(d.syngas_h2_ppm, 0)} ppm` : "Aim 2 Conversion");
 
       const kpis = [
-        { label: "Filtered Observations", value: `${filtered.length.toLocaleString()}`, sub: `${passRate}% QC Pass (${passCount}P · ${failCount}F) · Run/Prep: ${prepDateStr}` },
-        { label: "Sample Lineage & Dates", value: `${activeFs} Field → ${activePs} Prep`, sub: `Collected: ${colDateStr} · GEOID: ${geoStr}` },
+        { label: "Filtered Observations", value: `${filtered.length.toLocaleString()}`, sub: `${passRate}% QC Pass (${passCount}P · ${failCount}F)` },
+        { label: "Sample Lineage & Geography", value: `${activeFs} Field → ${activePs} Prep`, sub: `GEOID: ${geoStr}` },
         { label: "Biochemical & Ash Signature", value: polyStr, sub: ashStr },
         { label: "Peak Conversion Performance", value: convMain, sub: convSub }
       ];
@@ -4457,7 +6619,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const text = ins && ins.ai_narratives && ins.ai_narratives.tab_insights && ins.ai_narratives.tab_insights[tabKey];
       if (!text) return "";
       const out = (ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[tabKey]) || null;
-      const activeFlags = out ? out.flagged_active : 0;
+      const activeFlags = out
+        ? (state.suppressTraceFlags ? (out.flagged_active ?? 0) : (out.flagged_raw ?? out.flagged_active ?? 0))
+        : 0;
       const encRes = encodeURIComponent(state.resource);
       return `
         <div class="bg-[var(--card)] border border-[var(--primary)]/40 rounded-xl p-3.5 shadow-sm flex flex-wrap items-center justify-between gap-3">
@@ -4509,10 +6673,72 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <h2 class="text-base font-bold text-[var(--foreground)]">Statewide Biomass Catalog Benchmark Standing</h2>
               <p class="text-xs text-[var(--muted-foreground)]">Compares <strong>${state.resource}</strong> against the California biomass catalog median (vertical marker line).</p>
             </div>
-            <a href="resource_explorer_dashboard.html?resource=${encRes}" class="px-3 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
-              Compare Side-by-Side with Other Resources &rarr;
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+              <div class="inline-flex flex-wrap items-center gap-2 px-2.5 py-1 rounded-lg bg-[var(--background)] border border-[var(--border)] text-[11px] font-mono text-[var(--muted-foreground)]">
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Resource Mean</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-0.5 h-3 bg-[var(--foreground)] inline-block"></span>CA Catalog Median</span>
+                ${(d.moisture_pct !== null || d.glucan_dw_pct !== null) ? `
+                  <span class="text-[var(--border)]">|</span>
+                  <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Moisture / Lignin</span>
+                  <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>VS / Glucan</span>
+                  <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Ash / Hemicellulose</span>
+                ` : ''}
+              </div>
+              <a href="resource_explorer_dashboard.html?resource=${encRes}" class="px-3 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
+                Compare Side-by-Side with Other Resources &rarr;
+              </a>
+            </div>
           </div>
+          ${(d.moisture_pct !== null || d.volatile_solids_pct !== null || d.ash_pct !== null || d.glucan_dw_pct !== null) ? (() => {
+            const mPct = d.moisture_pct || 0;
+            const vsPct = d.volatile_solids_pct || 0;
+            const aPct = d.ash_pct || 0;
+            const proxTot = Math.max(100, (mPct + vsPct + aPct) || 100);
+            const gPct = d.glucan_dw_pct || 0;
+            const xPct = (d.xylan_dw_pct || 0) + (d.arabinan_dw_pct || 0);
+            const lPct = d.lignin_dw_pct || 0;
+            const remPct = Math.max(0, 100 - (gPct + xPct + lPct));
+            return `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                ${(mPct || vsPct || aPct) ? `
+                <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3 space-y-1.5">
+                  <div class="flex flex-wrap items-center justify-between gap-1 text-xs">
+                    <span class="font-semibold text-[var(--foreground)]">Overview Proximate Mass-Balance Mini-Bar</span>
+                    <span class="font-mono text-[11px] text-[var(--muted-foreground)]">Closure: <strong>${fmtNum(mPct + vsPct + aPct, 1)}%</strong></span>
+                  </div>
+                  <div class="w-full h-3.5 rounded-full bg-[var(--content)] overflow-hidden flex border border-[var(--border)]">
+                    <div style="width: ${Math.min(100, (mPct / proxTot) * 100)}%" class="bg-[var(--primary)] h-full" title="Moisture: ${fmtNum(mPct)}%"></div>
+                    <div style="width: ${Math.min(100, (vsPct / proxTot) * 100)}%" class="bg-[var(--secondary)] h-full border-l border-[var(--border)]" title="Volatile Solids: ${fmtNum(vsPct)}%"></div>
+                    <div style="width: ${Math.min(100, (aPct / proxTot) * 100)}%" class="bg-[var(--accent)] h-full border-l border-[var(--border)]" title="Ash: ${fmtNum(aPct)}%"></div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--muted-foreground)] pt-0.5">
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Moisture ${fmtNum(mPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>Volatile Solids ${fmtNum(vsPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Ash ${fmtNum(aPct, 1)}%</span>
+                  </div>
+                </div>` : ''}
+                ${(gPct || xPct || lPct) ? `
+                <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3 space-y-1.5">
+                  <div class="flex flex-wrap items-center justify-between gap-1 text-xs">
+                    <span class="font-semibold text-[var(--foreground)]">Overview Structural Polymer Mass-Balance Mini-Bar</span>
+                    <span class="font-mono text-[11px] text-[var(--muted-foreground)]">Polymers: <strong>${fmtNum(gPct + xPct + lPct, 1)}% dw</strong></span>
+                  </div>
+                  <div class="w-full h-3.5 rounded-full bg-[var(--content)] overflow-hidden flex border border-[var(--border)]">
+                    <div style="width: ${Math.min(100, lPct)}%" class="bg-[var(--primary)] h-full" title="Lignin: ${fmtNum(lPct)}%"></div>
+                    <div style="width: ${Math.min(100, gPct)}%" class="bg-[var(--secondary)] h-full border-l border-[var(--border)]" title="Glucan: ${fmtNum(gPct)}%"></div>
+                    <div style="width: ${Math.min(100, xPct)}%" class="bg-[var(--accent)] h-full border-l border-[var(--border)]" title="Hemicellulose (Xylan+Arabinan): ${fmtNum(xPct)}%"></div>
+                    <div style="width: ${Math.min(100, remPct)}%" class="bg-[var(--card)] h-full border-l border-[var(--border)]" title="Remainder (Ash + Extractives): ${fmtNum(remPct)}%"></div>
+                  </div>
+                  <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--muted-foreground)] pt-0.5">
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Lignin ${fmtNum(lPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>Glucan ${fmtNum(gPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Hemicellulose ${fmtNum(xPct, 1)}%</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--card)] border border-[var(--border)] inline-block"></span>Other ${fmtNum(remPct, 1)}%</span>
+                  </div>
+                </div>` : ''}
+              </div>
+            `;
+          })() : ''}
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             ${benchMetrics.map(b => {
               const wVal = Math.min(100, Math.max(3, (b.val / b.max) * 100));
@@ -4538,60 +6764,320 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         </div>
       ` : "";
 
-      const fsCards = fsList.map(fs => {
-        const isSelected = state.field_sample === fs.name;
-        const recs = filtered.filter(r => r.field_sample === fs.name);
-        const colDate = fs.collected_at ? String(fs.collected_at).slice(0, 10) : "Not recorded";
-        const geoLabel = fmtGeoid(fs.geoid);
-        const childPreps = psList.filter(p => p.field_sample_name === fs.name).length;
-        return `
-          <div onclick="setQuickFilter('field_sample', '${fs.name}')" class="cursor-pointer rounded-xl p-3.5 border transition ${isSelected ? 'bg-[var(--secondary)] border-[var(--primary)] ring-1 ring-[var(--primary)]' : 'bg-[var(--background)] border-[var(--border)] hover:border-[var(--primary)]'}">
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-mono font-bold text-sm text-[var(--foreground)]">Field: ${fs.name}</span>
-              <span class="px-2 py-0.5 text-xs rounded-full badge-info font-mono">Collected: ${colDate}</span>
-            </div>
-            <div class="text-xs text-[var(--muted-foreground)] mt-1.5 space-y-0.5">
-              <div><strong class="text-[var(--foreground)]">GEOID · County:</strong> <span class="font-mono text-[var(--primary)]">${geoLabel}</span></div>
-              <div><strong class="text-[var(--foreground)]">Sampling Site:</strong> ${fs.sampling_site || '—'} · <strong class="text-[var(--foreground)]">Source:</strong> ${fs.sample_source || '—'}</div>
-              <div><strong class="text-[var(--foreground)]">Storage / Particle:</strong> ${fs.field_storage || '—'} / ${fs.particle_size || '—'}</div>
-            </div>
-            <div class="mt-2 pt-2 border-t border-[var(--border)] flex items-center justify-between text-xs font-mono">
-              <span>${childPreps} prep(s) · ${recs.length} obs</span>
-              <span class="underline text-[var(--primary)]">${isSelected ? 'Active filter (click to clear)' : 'Filter by field sample'}</span>
-            </div>
-          </div>
-        `;
-      }).join("");
+      const rawAlignMode = state.timelineAlignMode || "collected";
+      const alignMode = (rawAlignMode === "collected" && fsList.length === 0 && psList.length > 0) ? "prep" : rawAlignMode;
+      const sortMode = state.timelineSortMode || "date";
+      const encodeTooltip = htmlStr => {
+        try {
+          return window.btoa(unescape(encodeURIComponent(htmlStr)));
+        } catch (_e) {
+          return "";
+        }
+      };
 
-      const psCards = psList.map(ps => {
-        const recs = filtered.filter(r => r.prepared_sample === ps.name);
-        const totalAll = resRecs.filter(r => r.prepared_sample === ps.name).length;
+      const resolvePsDateKey = ps => {
+        if (ps && ps.prep_date) {
+          const d = String(ps.prep_date).trim().slice(0, 10);
+          if (d) return d;
+        }
+        const recs = resRecs.filter(r => normSampleKey(r.prepared_sample) === normSampleKey(ps && ps.name));
+        const recDates = recs
+          .map(r => String(r.prep_date || r.exp_date || "").trim().slice(0, 10))
+          .filter(d => d && d !== "Unrecorded")
+          .sort();
+        return recDates[0] || "";
+      };
+
+      const sortedFsList = [...fsList].sort((a, b) => {
+        if (sortMode === "order") {
+          return String(a.name || "").localeCompare(String(b.name || ""), undefined, { numeric: true, sensitivity: "base" });
+        }
+        const da = a.collected_at ? String(a.collected_at).trim().slice(0, 10) : "9999-99-99";
+        const db = b.collected_at ? String(b.collected_at).trim().slice(0, 10) : "9999-99-99";
+        if (da !== db) return da.localeCompare(db);
+        const pa = String(a.provider_code || a.provider || "").toLowerCase();
+        const pb = String(b.provider_code || b.provider || "").toLowerCase();
+        if (pa !== pb) return pa.localeCompare(pb);
+        return String(a.name || "").localeCompare(String(b.name || ""), undefined, { numeric: true, sensitivity: "base" });
+      });
+
+      const fsOrderIndex = {};
+      sortedFsList.forEach((fs, idx) => {
+        fsOrderIndex[fs.name] = idx;
+        const nk = normSampleKey(fs.name);
+        if (nk) fsOrderIndex[nk] = idx;
+      });
+
+      const sortedPsList = [...psList].sort((a, b) => {
+        if (sortMode === "order") {
+          return String(a.name || "").localeCompare(String(b.name || ""), undefined, { numeric: true, sensitivity: "base" });
+        }
+        const fsA = lookupFieldSample(a.field_sample_name) || {};
+        const fsB = lookupFieldSample(b.field_sample_name) || {};
+        const colA = fsA.collected_at ? String(fsA.collected_at).trim().slice(0, 10) : "9999-99-99";
+        const colB = fsB.collected_at ? String(fsB.collected_at).trim().slice(0, 10) : "9999-99-99";
+        const prepA = resolvePsDateKey(a) || "9999-99-99";
+        const prepB = resolvePsDateKey(b) || "9999-99-99";
+        if (prepA !== prepB) return prepA.localeCompare(prepB);
+        if (colA !== colB) return colA.localeCompare(colB);
+        const pa = String(a.provider_code || a.provider || fsA.provider_code || fsA.provider || "").toLowerCase();
+        const pb = String(b.provider_code || b.provider || fsB.provider_code || fsB.provider || "").toLowerCase();
+        if (pa !== pb) return pa.localeCompare(pb);
+        return String(a.name || "").localeCompare(String(b.name || ""), undefined, { numeric: true, sensitivity: "base" });
+      });
+
+      const providerCodesPresent = Array.from(new Set([
+        ...sortedFsList.map(fs => (fs.provider_code || fs.provider || "unassigned").toLowerCase()),
+        ...sortedPsList.map(ps => {
+          const parentFs = lookupFieldSample(ps.field_sample_name) || {};
+          return (ps.provider_code || ps.provider || parentFs.provider_code || parentFs.provider || "unassigned").toLowerCase();
+        })
+      ].filter(Boolean)));
+
+      const providerLegendHtml = providerCodesPresent.length ? `
+        <div id="lineage-provider-legend" class="flex flex-wrap items-center gap-2 text-[11px] font-mono">
+          <span class="text-[var(--muted-foreground)] font-semibold uppercase tracking-wider">Provider Color Legend:</span>
+          ${providerCodesPresent.map(code => {
+            const st = getProviderStyle(code);
+            return `<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border font-semibold" style="background:${st.bg}; border-color:${st.border}; color:${st.color}"><span class="w-2 h-2 rounded-full" style="background:${st.color}"></span>${escapeHtml(st.label)} <span class="font-normal opacity-80">[${escapeHtml(st.code.toUpperCase())}]</span></span>`;
+          }).join("")}
+        </div>
+      ` : `<div id="lineage-provider-legend" class="hidden"></div>`;
+
+      const buildFsNodeCard = (fs, compactOnAxis = true) => {
+        const isSelected = normSampleKey(state.field_sample) === normSampleKey(fs.name) && state.field_sample !== "all";
+        const recs = filtered.filter(r => normSampleKey(r.field_sample) === normSampleKey(fs.name));
+        const colDate = fs.collected_at ? String(fs.collected_at).slice(0, 10) : "Date unrecorded";
+        const geoLabel = fmtGeoid(fs.geoid);
+        const childPreps = psList.filter(p => normSampleKey(p.field_sample_name) === normSampleKey(fs.name)).length;
+        const provStyle = getProviderStyle(fs.provider_code || fs.provider);
+        const tooltipHtml = [
+          `<div class="font-mono font-bold text-xs border-b border-[var(--border)] pb-1 mb-1 flex items-center justify-between gap-2"><span>🌱 Field Sample: ${escapeHtml(fs.name)}</span><span class="px-1.5 py-0.5 rounded text-[10px]" style="background:${provStyle.bg};color:${provStyle.color};border:1px solid ${provStyle.border}">${escapeHtml(provStyle.label)}</span></div>`,
+          `<div><strong>Provider:</strong> <span class="font-semibold" style="color:${provStyle.color}">${escapeHtml(provStyle.label)} (${escapeHtml(provStyle.code.toUpperCase())})</span></div>`,
+          `<div><strong>Collected Date:</strong> <span class="font-mono">${escapeHtml(colDate)}</span></div>`,
+          `<div><strong>GEOID · County:</strong> <span class="font-mono text-[var(--primary)]">${escapeHtml(geoLabel)}</span></div>`,
+          `<div><strong>Sampling Site:</strong> ${escapeHtml(fs.sampling_site || "—")}</div>`,
+          `<div><strong>Sample Source:</strong> ${escapeHtml(fs.sample_source || "—")}</div>`,
+          `<div><strong>Storage / Particle:</strong> ${escapeHtml(fs.field_storage || "—")} / ${escapeHtml(fs.particle_size || "—")}</div>`,
+          fs.note ? `<div><strong>Field Note:</strong> ${escapeHtml(fs.note)}</div>` : "",
+          `<div class="pt-1 border-t border-[var(--border)] font-mono text-[11px] text-[var(--primary)]">${childPreps} linked prepared sample(s) · ${recs.length} observation(s) (click card to filter)</div>`
+        ].filter(Boolean).join("");
+        const safeFsNameJs = String(fs.name || "").replace(/\\\\/g, "\\\\\\\\").replace(/'/g, "\\\\'");
+        return {
+          dateKey: fs.collected_at ? String(fs.collected_at).slice(0, 10) : "Unrecorded",
+          provStyle,
+          name: fs.name,
+          kind: "field",
+          cardHtml: `
+            <div data-fs-node="${escapeHtml(fs.name)}" data-provider-color="${provStyle.color}" data-selected="${isSelected ? '1' : '0'}" data-tooltip-b64="${encodeTooltip(tooltipHtml)}" onmouseenter="window.showLineageTooltip(event, this)" onmouseleave="window.hideLineageTooltip()" onclick="window.hideLineageTooltip(); setQuickFilter('field_sample', '${safeFsNameJs}')" class="cursor-pointer rounded-xl px-3 py-2 border transition relative shadow-sm hover:shadow-md ${compactOnAxis ? 'w-48 shrink-0' : ''} ${isSelected ? 'ring-2 ring-[var(--primary)]' : ''}" style="background:${provStyle.bg}; border-color:${isSelected ? 'var(--primary)' : provStyle.border}; border-left: 4px solid ${provStyle.color}">
+              <div class="flex items-center justify-between gap-1.5">
+                <span class="inline-flex items-center gap-1.5 font-bold text-xs truncate" style="color:${provStyle.color}" title="Provider: ${escapeHtml(provStyle.label)}">
+                  <span class="w-2 h-2 rounded-full shrink-0" style="background:${provStyle.color}"></span>
+                  ${escapeHtml(provStyle.label)}
+                </span>
+                <span class="px-1.5 py-0.5 text-[9px] rounded font-mono font-bold shrink-0" style="background:var(--card); color:${provStyle.color}; border:1px solid ${provStyle.border}">FIELD</span>
+              </div>
+              <div class="mt-1 font-mono font-semibold text-[11px] text-[var(--foreground)] truncate" title="Field Sample: ${escapeHtml(fs.name)}">
+                🌱 ${escapeHtml(fs.name)}
+              </div>
+              <div class="mt-1 flex items-center justify-between gap-1 text-[10px] font-mono text-[var(--muted-foreground)]">
+                <span class="truncate" title="County: ${escapeHtml(geoLabel)}">📍 ${escapeHtml(geoLabel)}</span>
+                <span class="shrink-0">${childPreps} prep · ${recs.length} obs</span>
+              </div>
+            </div>
+          `
+        };
+      };
+
+      const buildPsNodeCard = (ps, compactOnAxis = true) => {
+        const recs = filtered.filter(r => normSampleKey(r.prepared_sample) === normSampleKey(ps.name));
+        const totalAll = resRecs.filter(r => normSampleKey(r.prepared_sample) === normSampleKey(ps.name)).length;
         const passCnt = recs.filter(r => r.qc_status === "pass").length;
         const failCnt = recs.filter(r => r.qc_status === "fail").length;
-        const types = Array.from(new Set(recs.map(r => r.analysis_type.split(" ")[0]))).join(", ") || "None in current slice";
-        const isSelected = state.prepared_sample === ps.name;
-        const fsMeta = FS_LOOKUP[ps.field_sample_name] || {};
+        const types = Array.from(new Set(recs.map(r => r.analysis_type.split(" ")[0]))).join(", ") || "None in slice";
+        const isSelected = normSampleKey(state.prepared_sample) === normSampleKey(ps.name) && state.prepared_sample !== "all";
+        const parentFsObj = lookupFieldSample(ps.field_sample_name);
+        const hasParentFs = Boolean(parentFsObj);
+        const fsMeta = parentFsObj || {};
         const colDate = fsMeta.collected_at ? String(fsMeta.collected_at).slice(0, 10) : "—";
         const geoLabel = fmtGeoid(fsMeta.geoid);
-        const prepDate = ps.prep_date ? String(ps.prep_date).slice(0, 10) : "—";
+        const resolvedPrepDate = resolvePsDateKey(ps);
+        const prepDate = resolvedPrepDate || "Date unrecorded";
+        const provCode = ps.provider_code || ps.provider || fsMeta.provider_code || fsMeta.provider || "unassigned";
+        const provStyle = getProviderStyle(provCode);
+        const tooltipHtml = [
+          `<div class="font-mono font-bold text-xs border-b border-[var(--border)] pb-1 mb-1 flex items-center justify-between gap-2"><span>🧪 Prepared Sample: ${escapeHtml(ps.name)}</span><span class="px-1.5 py-0.5 rounded text-[10px]" style="background:${provStyle.bg};color:${provStyle.color};border:1px solid ${provStyle.border}">${escapeHtml(provStyle.label)}</span></div>`,
+          `<div><strong>Provider:</strong> <span class="font-semibold" style="color:${provStyle.color}">${escapeHtml(provStyle.label)} (${escapeHtml(provStyle.code.toUpperCase())})</span></div>`,
+          `<div><strong>Prepared / Run Date:</strong> <span class="font-mono">${escapeHtml(prepDate)}</span></div>`,
+          `<div><strong>Prep Method:</strong> ${escapeHtml(ps.prep_method || "—")}</div>`,
+          `<div><strong>Parent Field Sample:</strong> <span class="font-mono">${escapeHtml(ps.field_sample_name || "Unlinked / Direct")}</span> (Collected: ${escapeHtml(colDate)} · GEOID: ${escapeHtml(geoLabel)})</div>`,
+          `<div><strong>Analytical Domains:</strong> ${escapeHtml(types)}</div>`,
+          `<div><strong>Observations:</strong> <span class="font-mono">${recs.length} / ${totalAll} (${passCnt}P / ${failCnt}F)</span></div>`,
+          ps.note ? `<div><strong>Prep Note:</strong> ${escapeHtml(ps.note)}</div>` : ""
+        ].filter(Boolean).join("");
+        const safePsNameJs = String(ps.name || "").replace(/\\\\/g, "\\\\\\\\").replace(/'/g, "\\\\'");
+        const parentFsAttr = hasParentFs ? escapeHtml(parentFsObj.name) : "";
+        return {
+          dateKey: resolvedPrepDate || "Unrecorded",
+          colDateKey: fsMeta.collected_at ? String(fsMeta.collected_at).slice(0, 10) : "Unrecorded",
+          provStyle,
+          name: ps.name,
+          hasParentFs,
+          kind: "prep",
+          cardHtml: `
+            <div data-ps-node="${escapeHtml(ps.name)}" data-parent-fs="${parentFsAttr}" data-provider-color="${provStyle.color}" data-selected="${isSelected ? '1' : '0'}" data-tooltip-b64="${encodeTooltip(tooltipHtml)}" onmouseenter="window.showLineageTooltip(event, this)" onmouseleave="window.hideLineageTooltip()" onclick="window.hideLineageTooltip(); setQuickFilter('prepared_sample', '${safePsNameJs}')" class="cursor-pointer rounded-xl px-3 py-2 border transition relative shadow-sm hover:shadow-md ${compactOnAxis ? 'w-48 shrink-0' : ''} ${isSelected ? 'ring-2 ring-[var(--primary)]' : ''}" style="background:${provStyle.bg}; border-color:${isSelected ? 'var(--primary)' : provStyle.border}; border-left: 4px solid ${provStyle.color}">
+              <div class="flex items-center justify-between gap-1.5">
+                <span class="inline-flex items-center gap-1.5 font-bold text-xs truncate" style="color:${provStyle.color}" title="Provider: ${escapeHtml(provStyle.label)}">
+                  <span class="w-2 h-2 rounded-full shrink-0" style="background:${provStyle.color}"></span>
+                  ${escapeHtml(provStyle.label)}
+                </span>
+                <span class="px-1.5 py-0.5 text-[9px] rounded font-mono font-bold shrink-0" style="background:var(--card); color:${provStyle.color}; border:1px solid ${provStyle.border}">PREP</span>
+              </div>
+              <div class="mt-1 font-mono font-semibold text-[11px] text-[var(--foreground)] truncate" title="Prepared Sample: ${escapeHtml(ps.name)}">
+                🧪 ${escapeHtml(ps.name)}
+              </div>
+              <div class="mt-1 flex items-center justify-between gap-1 text-[10px] font-mono text-[var(--muted-foreground)]">
+                <span class="truncate" title="Method: ${escapeHtml(ps.prep_method || 'Standard')}">${escapeHtml(ps.prep_method || 'Standard')}</span>
+                <span class="shrink-0">${recs.length} obs (${passCnt}P/${failCnt}F)</span>
+              </div>
+            </div>
+          `
+        };
+      };
+
+      const fsBuiltNodes = sortedFsList.map(fs => buildFsNodeCard(fs, true));
+      const psBuiltNodes = sortedPsList.map(ps => buildPsNodeCard(ps, true));
+      const linkedPsList = sortedPsList.filter(ps => ps.field_sample_name && lookupFieldSample(ps.field_sample_name));
+      const orphanPsList = sortedPsList.filter(ps => !ps.field_sample_name || !lookupFieldSample(ps.field_sample_name));
+      const orphanPsCards = orphanPsList.length
+        ? orphanPsList.map(ps => buildPsNodeCard(ps, false).cardHtml).join("")
+        : "";
+
+      // Group sample nodes by unique calendar date so same-date samples share a single point on the timeline with stacked cards
+      const groupTimelineNodesByDate = nodes => {
+        const groups = [];
+        const byDate = {};
+        nodes.forEach(item => {
+          const dk = item.dateKey || "Unrecorded";
+          if (!byDate[dk]) {
+            byDate[dk] = { dateKey: dk, items: [] };
+            groups.push(byDate[dk]);
+          }
+          byDate[dk].items.push(item);
+        });
+        if (sortMode !== "order") {
+          groups.sort((a, b) => {
+            const da = a.dateKey === "Unrecorded" ? "9999-99-99" : a.dateKey;
+            const db = b.dateKey === "Unrecorded" ? "9999-99-99" : b.dateKey;
+            return da.localeCompare(db);
+          });
+        }
+        return groups;
+      };
+
+      // Build literal horizontal timeline columns (time on X-axis, one point per unique date, same-date provider cards stacked vertically)
+      const renderSingleAxisBranchTimeline = (nodes, axisLabel) => {
+        if (!nodes.length) {
+          return `<div class="py-6 text-center text-xs text-[var(--muted-foreground)]">No samples cataloged for ${escapeHtml(axisLabel)}.</div>`;
+        }
+        const dateGroups = groupTimelineNodesByDate(nodes);
+        const colsHtml = dateGroups.map(group => {
+          const stemColor = group.items[group.items.length - 1].provStyle.color;
+          const stackedCardsHtml = group.items.map(item => item.cardHtml).join("");
+          const countBadgeHtml = group.items.length > 1
+            ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-semibold bg-[var(--secondary)] text-[var(--primary)]">${group.items.length}×</span>`
+            : "";
+          return `
+            <div data-timeline-date="${escapeHtml(group.dateKey)}" data-date-stack-count="${group.items.length}" class="flex flex-col justify-end items-center shrink-0 px-2.5 min-w-[12.5rem] relative">
+              <div data-date-stack="${escapeHtml(group.dateKey)}" class="flex flex-col justify-end items-center gap-1.5 w-full">
+                ${stackedCardsHtml}
+              </div>
+              <div class="w-0.5 h-5 shrink-0" style="background:${stemColor}"></div>
+              <div class="relative z-10 flex flex-col items-center">
+                <div class="w-3.5 h-3.5 rounded-full border-2 bg-[var(--card)] shadow-sm" style="border-color:${stemColor}; background:${stemColor}"></div>
+                <span class="mt-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] shadow-xs whitespace-nowrap inline-flex items-center">
+                  📅 ${escapeHtml(group.dateKey)}${countBadgeHtml}
+                </span>
+              </div>
+            </div>
+          `;
+        }).join("");
+
         return `
-          <div onclick="setQuickFilter('prepared_sample', '${ps.name}')" class="cursor-pointer rounded-xl p-3.5 border transition ${isSelected ? 'bg-[var(--secondary)] border-[var(--primary)] ring-1 ring-[var(--primary)]' : 'bg-[var(--background)] border-[var(--border)] hover:border-[var(--primary)]'}">
-            <div class="flex items-center justify-between gap-2">
-              <span class="font-mono font-bold text-sm text-[var(--foreground)]">${ps.name}</span>
-              <span class="px-2 py-0.5 text-xs rounded-full bg-[var(--card)] border border-[var(--border)] font-mono">${recs.length} / ${totalAll} obs</span>
-            </div>
-            <div class="text-xs text-[var(--muted-foreground)] mt-1.5 space-y-0.5">
-              <div><strong class="text-[var(--foreground)]">Prep / Run Date:</strong> <span class="font-mono text-[var(--foreground)]">${prepDate}</span> · <strong class="text-[var(--foreground)]">Method:</strong> ${ps.prep_method || '—'}</div>
-              <div><strong class="text-[var(--foreground)]">Field Parent:</strong> <span class="font-mono">${ps.field_sample_name || '—'}</span> <span class="font-mono">(Collected: ${colDate} · GEOID: ${geoLabel})</span></div>
-              <div><strong class="text-[var(--foreground)]">Domains:</strong> ${types}</div>
-            </div>
-            <div class="mt-2 pt-2 border-t border-[var(--border)] flex items-center justify-between text-xs font-mono">
-              <span>${passCnt}P / ${failCnt}F</span>
-              <span class="underline text-[var(--primary)]">${isSelected ? 'Active filter (click to clear)' : 'Filter by sample'}</span>
+          <div id="lineage-horizontal-timeline" class="relative overflow-x-auto pb-3 pt-2">
+            <div class="inline-flex items-end min-w-full relative px-4">
+              <div class="absolute left-4 right-4 bottom-[26px] h-0.5 bg-[var(--border)] pointer-events-none" style="z-index: 1;"></div>
+              <div class="sticky left-0 z-20 flex items-center pr-3 pb-1.5">
+                <span class="px-2 py-1 rounded-md text-[10px] font-mono font-bold uppercase tracking-wider bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] shadow-xs whitespace-nowrap">
+                  ⏱ ${escapeHtml(axisLabel)} &rarr;
+                </span>
+              </div>
+              ${colsHtml}
             </div>
           </div>
         `;
-      }).join("");
+      };
+
+      // Dual-track horizontal timeline for 'auto' mode (Track 1 · Field Samples above spine, Track 2 · Prepared Samples below spine, stacked by date)
+      const renderDualTrackHorizontalTimeline = () => {
+        const fsGroups = groupTimelineNodesByDate(fsBuiltNodes);
+        const psGroups = groupTimelineNodesByDate(psBuiltNodes);
+
+        const fsRowHtml = fsGroups.length ? fsGroups.map(group => {
+          const stemColor = group.items[group.items.length - 1].provStyle.color;
+          const countBadgeHtml = group.items.length > 1
+            ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-semibold bg-[var(--secondary)] text-[var(--primary)]">${group.items.length}×</span>`
+            : "";
+          return `
+            <div data-timeline-date="${escapeHtml(group.dateKey)}" data-date-stack-count="${group.items.length}" class="flex flex-col justify-end items-center shrink-0 px-2">
+              <div data-date-stack="${escapeHtml(group.dateKey)}" class="flex flex-col justify-end items-center gap-1.5">
+                ${group.items.map(item => item.cardHtml).join("")}
+              </div>
+              <div class="w-0.5 h-4" style="background:${stemColor}"></div>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] whitespace-nowrap inline-flex items-center">📅 ${escapeHtml(group.dateKey)}${countBadgeHtml}</span>
+            </div>
+          `;
+        }).join("") : `<div class="text-xs text-[var(--muted-foreground)] py-2">No field samples cataloged.</div>`;
+
+        const psRowHtml = psGroups.length ? psGroups.map(group => {
+          const stemColor = group.items[0].provStyle.color;
+          const countBadgeHtml = group.items.length > 1
+            ? `<span class="ml-1 px-1.5 py-0.2 rounded-full text-[9px] font-mono font-semibold bg-[var(--secondary)] text-[var(--primary)]">${group.items.length}×</span>`
+            : "";
+          return `
+            <div data-timeline-date="${escapeHtml(group.dateKey)}" data-date-stack-count="${group.items.length}" class="flex flex-col justify-start items-center shrink-0 px-2">
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[var(--card)] text-[var(--foreground)] border border-[var(--border)] whitespace-nowrap inline-flex items-center">📅 ${escapeHtml(group.dateKey)}${countBadgeHtml}</span>
+              <div class="w-0.5 h-4" style="background:${stemColor}"></div>
+              <div data-date-stack="${escapeHtml(group.dateKey)}" class="flex flex-col justify-start items-center gap-1.5">
+                ${group.items.map(item => item.cardHtml).join("")}
+              </div>
+            </div>
+          `;
+        }).join("") : `<div class="text-xs text-[var(--muted-foreground)] py-2">No prepared samples cataloged.</div>`;
+
+        return `
+          <div id="lineage-horizontal-timeline" class="space-y-2 relative overflow-x-auto pb-2">
+            <div class="space-y-1 relative z-10">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Track 1 · Field Samples (Collection Date &amp; Provider)</div>
+              <div id="lineage-track-field" class="flex items-end gap-2 pb-2">${fsRowHtml}</div>
+            </div>
+            <div class="relative w-full h-6 flex items-center">
+              <div class="w-full h-0.5 bg-[var(--border)]"></div>
+              <span class="absolute right-2 px-2 py-0.5 rounded text-[10px] font-mono bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]">TIME (X-AXIS) &rarr;</span>
+            </div>
+            <div class="space-y-1 relative z-10">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Track 2 · Prepared Samples (Prep / Run Date &amp; Provider)</div>
+              <div id="lineage-track-prep" class="flex items-start gap-2 pt-2">${psRowHtml}</div>
+            </div>
+          </div>
+        `;
+      };
+
+      const activeTimelineHtml = alignMode === "collected"
+        ? `<div class="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Track 1 · Field Samples — Horizontal Timeline by Field Collection Date</div>` + renderSingleAxisBranchTimeline(fsBuiltNodes, "Field Sample Collection Date (X-Axis)")
+        : (alignMode === "prep"
+          ? `<div class="text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)] mb-1">Track 2 · Prepared Samples — Horizontal Timeline by Prepared Sample Run Date</div>` + renderSingleAxisBranchTimeline(psBuiltNodes, "Prepared Sample Run Date (X-Axis)")
+          : renderDualTrackHorizontalTimeline());
 
       const byType = [
         { name: "Proximate Analysis", tbl: "proximate_record", tab: "proximate", qcDomain: "proximate", desc: "Moisture, Total Solids, Volatile Solids, Ash (% total weight)" },
@@ -4611,7 +7097,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const passCnt = recs.filter(r => r.qc_status === "pass").length;
         const failCnt = recs.filter(r => r.qc_status === "fail").length;
         const tabOut = ins && ins.outlier_screening && ins.outlier_screening.by_tab && ins.outlier_screening.by_tab[t.qcDomain];
-        const flagCnt = tabOut ? tabOut.flagged_active : 0;
+        const flagCnt = tabOut
+          ? (state.suppressTraceFlags ? (tabOut.flagged_active ?? 0) : (tabOut.flagged_raw ?? tabOut.flagged_active ?? 0))
+          : 0;
         const wMed = tabOut ? tabOut.within_rsd_median : null;
         return `
           <tr class="border-t border-[var(--border)] hover:bg-[var(--background)] transition text-xs">
@@ -4630,29 +7118,49 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         `;
       }).join("");
 
+      const isLineageOpen = state.overviewLineageExpanded !== null
+        ? Boolean(state.overviewLineageExpanded)
+        : (fsList.length <= 4);
+
       return `
         ${benchHtml}
 
         <div class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
-          <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 class="text-base font-bold text-[var(--foreground)]">Sample Lineage: Field Sample Collection (Dates &amp; GEOID) &rarr; Prepared Samples</h2>
-              <p class="text-xs text-[var(--muted-foreground)]">${fsList.length} Field Sample(s) processed into ${psList.length} Prepared Sample(s). Click any card to filter.</p>
+              <h2 class="text-base font-bold text-[var(--foreground)]">Sample Timeline (Time on X-Axis · Provider Cards Branching by Date)</h2>
+              <p class="text-xs text-[var(--muted-foreground)]">${fsList.length} Field Sample(s) &amp; ${psList.length} Prepared Sample(s). Toggle between Field Collection Date and Prepared Sample Run Date; hover any provider card on the timeline for full sample details or click to filter${fsList.length > 4 ? ' · Auto-collapsed for high-sample resources' : ''}.</p>
             </div>
-            <a href="resource_explorer_dashboard.html?resource=${encRes}" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
-              Compare by Collection / Prep Date in Explorer &rarr;
-            </a>
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btn-toggle-overview-lineage" type="button" onclick="toggleOverviewLineage()" class="px-3 py-1 rounded-lg text-xs font-semibold bg-[var(--background)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
+                ${isLineageOpen ? '▾ Collapse Lineage Cards' : `▸ Expand Field Sample & Experiment Lineage (${fsList.length} samples · ${psList.length} preps)`}
+              </button>
+              <div class="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5 text-xs" role="group" aria-label="Timeline Date Axis Mode">
+                <button type="button" onclick="setSubMode('timelineAlignMode', 'collected')" class="px-2.5 py-1 rounded-md font-semibold transition ${alignMode === 'collected' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}" title="Show Field Samples on horizontal timeline by collection date">🌱 Align by Field Collection Date (${fsList.length})</button>
+                <button type="button" onclick="setSubMode('timelineAlignMode', 'prep')" class="px-2.5 py-1 rounded-md font-semibold transition ${alignMode === 'prep' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}" title="Show Prepared Samples on horizontal timeline by run/prep date">🧪 Align by Prep / Run Date (${psList.length})</button>
+                <button type="button" onclick="setSubMode('timelineAlignMode', 'auto')" class="px-2.5 py-1 rounded-md font-semibold transition ${alignMode === 'auto' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}" title="Show both Field and Prepared tracks with parent-child connectors">🔗 Both Tracks (Field &rarr; Prep)</button>
+              </div>
+              <div class="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5 text-xs" role="group" aria-label="Timeline Sort Order">
+                <button type="button" onclick="setSubMode('timelineSortMode', 'date')" class="px-2 py-1 rounded-md font-semibold transition ${sortMode === 'date' ? 'bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--primary)]/40' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}">By Date</button>
+                <button type="button" onclick="setSubMode('timelineSortMode', 'order')" class="px-2 py-1 rounded-md font-semibold transition ${sortMode === 'order' ? 'bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--primary)]/40' : 'text-[var(--muted-foreground)] hover:text-[var(--foreground)]'}">By Sample Order</button>
+              </div>
+              <a href="resource_explorer_dashboard.html?resource=${encRes}" class="px-2.5 py-1 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
+                Compare in Explorer &rarr;
+              </a>
+            </div>
           </div>
-          ${fsCards ? `
-            <div class="space-y-2">
-              <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Field Samples (Collection Date &amp; County GEOID)</div>
-              <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">${fsCards}</div>
-            </div>
-          ` : ''}
-          <div class="space-y-2">
-            <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Prepared Samples (Prep / Run Date &amp; Method)</div>
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-              ${psCards || '<div class="text-xs text-[var(--muted-foreground)]">No prepared samples cataloged.</div>'}
+          <div id="overview-lineage-container" class="${isLineageOpen ? 'space-y-4' : 'hidden space-y-4'}">
+            ${providerLegendHtml}
+            <div id="lineage-hover-tooltip" class="hidden fixed z-50 pointer-events-none max-w-xs rounded-xl p-3 text-xs bg-[var(--card)] text-[var(--foreground)] border border-[var(--primary)] shadow-xl space-y-1"></div>
+            <div id="lineage-timeline-tracks-wrap" class="relative space-y-2">
+              ${activeTimelineHtml}
+              ${orphanPsCards ? `
+                <div id="lineage-unlinked-prep-group" class="space-y-1.5 pt-3 border-t border-[var(--border)] relative z-10">
+                  <div class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Unlinked Prepared Samples (No Field Sample Record · ${orphanPsList.length})</div>
+                  <div class="flex flex-wrap gap-2.5">${orphanPsCards}</div>
+                </div>
+              ` : ''}
+              <svg id="lineage-svg-overlay" class="absolute inset-0 w-full h-full pointer-events-none hidden md:block" style="z-index: 1;"></svg>
             </div>
           </div>
         </div>
@@ -4685,6 +7193,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
       const groupKeyFn = r => {
         if (state.repMode === "field_exp_mean_sd") return `Field: ${r.field_sample || r.prepared_sample} · ${r.experiment}`;
+        if (state.proxGroupMode === "exp_method") return `${r.experiment || 'unassigned'} · ${r.prep_method || 'unassigned'}`;
         if (state.proxGroupMode === "ps_exp") return `${r.prepared_sample} · ${r.experiment}`;
         if (state.proxGroupMode === "by_date") return `Col: ${r.collected_date || '—'} · Prep: ${r.prep_date || '—'} (${r.prepared_sample})`;
         return r.prepared_sample;
@@ -4694,23 +7203,29 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const params = ["moisture", "total solids", "volatile solids", "ash"];
 
       const massBalanceHtml = groups.map(g => {
-        const gRecs = recs.filter(r => groupKeyFn(r) === g);
-        const mStat = calcStats(gRecs.filter(r => r.parameter === "moisture").map(r => r.value));
-        const tsStat = calcStats(gRecs.filter(r => r.parameter === "total solids").map(r => r.value));
-        const vsStat = calcStats(gRecs.filter(r => r.parameter === "volatile solids").map(r => r.value));
-        const ashStat = calcStats(gRecs.filter(r => r.parameter === "ash").map(r => r.value));
+        const gRecs = recs.filter(r => groupKeyFn(r) === g && String(r.qc_status || "pass").toLowerCase() !== "fail");
+        const mStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "moisture").map(r => r.value));
+        const tsStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "total solids").map(r => r.value));
+        const vsStat = calcStats(gRecs.filter(r => ["volatile solids", "volatile matter"].includes(String(r.parameter || "").toLowerCase())).map(r => r.value));
+        const fcStat = calcStats(gRecs.filter(r => String(r.parameter || "").toLowerCase() === "fixed carbon").map(r => r.value));
+        const ashStat = calcStats(gRecs.filter(r => ["ash", "ash solids"].includes(String(r.parameter || "").toLowerCase())).map(r => r.value));
 
-        const m = mStat.mean || 0;
-        const vs = vsStat.mean || 0;
-        const ash = ashStat.mean || 0;
-        const sumWet = m + vs + ash;
+        const m = mStat.mean !== null && mStat.mean !== undefined ? mStat.mean : 0;
+        const vs = vsStat.mean !== null && vsStat.mean !== undefined ? vsStat.mean : (fcStat.mean !== null && fcStat.mean !== undefined ? (100 - fcStat.mean) : 0);
+        const ash = ashStat.mean !== null && ashStat.mean !== undefined ? ashStat.mean : 0;
+        const sumWet = Number((m + vs + ash).toFixed(2));
+        const outOfBounds = sumWet > 0 && (sumWet < 95.0 || sumWet > 105.0);
+        const proxBadge = outOfBounds
+          ? `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Data Portal proximate_sum = ${fmtNum(sumWet, 1)}% (outside 95–105%)">⚑ Proximate Sum (${fmtNum(sumWet, 1)}%)</span>`
+          : `<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-pass" title="Data Portal proximate_sum within 95–105%">✓ 95–105% OK</span>`;
 
         return `
           <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5">
             <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
               <span class="font-mono font-semibold text-xs text-[var(--foreground)]">${g}</span>
-              <span class="text-xs font-mono text-[var(--muted-foreground)]">
-                Moisture (${fmtNum(m)}%) + VS (${fmtNum(vs)}%) + Ash (${fmtNum(ash)}%) = <strong class="text-[var(--foreground)]">${fmtNum(sumWet)}%</strong> | Total Solids = <strong class="text-[var(--foreground)]">${fmtNum(tsStat.mean)}%</strong>
+              <span class="text-xs font-mono text-[var(--muted-foreground)] flex items-center gap-2">
+                <span>Moisture (${fmtNum(m)}%) + VS (${fmtNum(vs)}%) + Ash (${fmtNum(ash)}%) = <strong class="text-[var(--foreground)]">${fmtNum(sumWet)}%</strong> | Total Solids = <strong class="text-[var(--foreground)]">${fmtNum(tsStat.mean)}%</strong></span>
+                ${proxBadge}
               </span>
             </div>
             <div class="w-full h-5 rounded-lg bg-[var(--content)] overflow-hidden flex border border-[var(--border)]">
@@ -4770,6 +7285,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             ${calRecs.map(r => {
               const sibs = calRecs.filter(x => x.prepared_sample === r.prepared_sample && x.experiment === r.experiment);
+              const cleanCalNote = stripQcAuditAnnotations(r.note);
               return `
               <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-3.5 space-y-1 text-xs">
                 <div class="flex items-center justify-between font-mono">
@@ -4777,7 +7293,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <span class="flex items-center gap-1.5">${qcBadgeHtml(r.qc_status)} ${buildAuditChipHtml(r, sibs, "⚑ Audit")}</span>
                 </div>
                 <div class="text-[var(--muted-foreground)]">Sample: <span class="font-mono text-[var(--foreground)]">${r.prepared_sample}</span> · Exp: <span class="font-mono">${r.experiment}</span></div>
-                ${r.note ? `<div class="mt-1 p-2 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-[var(--foreground)]">Note: "${r.note}"</div>` : ""}
+                ${cleanCalNote ? `<div class="mt-1 p-2 rounded bg-[var(--card)] border border-[var(--border)] font-mono text-[var(--foreground)]">Note: "${cleanCalNote}"</div>` : ""}
               </div>
             `;
             }).join("")}
@@ -4793,8 +7309,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <div>
                 <h2 class="text-base font-bold text-[var(--foreground)]">Wet-Basis Proximate Mass Balance Closure (${recs.length} Observations)</h2>
                 <p class="text-xs text-[var(--muted-foreground)]">Moisture + Volatile Solids + Ash closure across prepared samples, drying protocols, and collection/prep dates.</p>
+                <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--muted-foreground)] pt-1.5">
+                  <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Moisture (M)</span>
+                  <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>Volatile Solids (VS)</span>
+                  <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Ash</span>
+                </div>
               </div>
               <div class="inline-flex rounded-lg border border-[var(--border)] bg-[var(--background)] p-0.5">
+                <button onclick="setSubMode('proxGroupMode', 'exp_method')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'exp_method' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Experiment × Method</button>
                 <button onclick="setSubMode('proxGroupMode', 'ps_exp')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'ps_exp' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Sample × Experiment</button>
                 <button onclick="setSubMode('proxGroupMode', 'ps')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'ps' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Prepared Sample</button>
                 <button onclick="setSubMode('proxGroupMode', 'by_date')" class="px-3 py-1 rounded-md text-xs font-semibold ${state.proxGroupMode === 'by_date' ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)]'}">By Collection / Prep Date</button>
@@ -4912,8 +7434,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <h2 class="text-base font-bold text-[var(--foreground)]">Compositional Cell-Wall Characterization (${compRecs.length} Observations)</h2>
               <p class="text-xs text-[var(--muted-foreground)] mt-0.5">Structural polysaccharides and Klason lignin (% dry weight).</p>
             </div>
-            <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4">
-              <div class="flex flex-wrap items-center justify-between text-xs mb-2 gap-2">
+            <div class="bg-[var(--background)] border border-[var(--border)] rounded-xl p-4 space-y-2">
+              <div class="flex flex-wrap items-center justify-between text-xs gap-2">
                 <span class="font-semibold text-[var(--foreground)]">Dry-Matter Structural Polymer Closure</span>
                 <span class="font-mono text-[var(--muted-foreground)]">Glucan (${fmtNum(gMean)}%) + Xylan (${fmtNum(xMean)}%) + Lignin (${fmtNum(lMean)}%)${aMean ? ' + Arabinan (' + fmtNum(aMean) + '%)' : ''} = <strong>${fmtNum(polySum)}% dw</strong></span>
               </div>
@@ -4922,6 +7444,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                 <div style="width: ${Math.min(100, gMean)}%" class="bg-[var(--secondary)] text-[var(--secondary-foreground)] flex items-center justify-center border-l border-[var(--border)] truncate" title="Glucan: ${fmtNum(gMean)}%">${gMean > 6 ? 'Glu ' + fmtNum(gMean, 1) + '%' : ''}</div>
                 <div style="width: ${Math.min(100, xMean + aMean)}%" class="bg-[var(--accent)] text-[var(--foreground)] flex items-center justify-center border-l border-[var(--border)] truncate" title="Hemicellulose (Xylan+Arabinan): ${fmtNum(xMean + aMean)}%">${(xMean + aMean) > 5 ? 'Xyl ' + fmtNum(xMean + aMean, 1) + '%' : ''}</div>
                 <div style="width: ${Math.min(100, remSum)}%" class="bg-[var(--card)] text-[var(--muted-foreground)] flex items-center justify-center border-l border-[var(--border)] truncate">Ash + Extractives / Protein (${fmtNum(remSum, 1)}%)</div>
+              </div>
+              <div class="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[var(--muted-foreground)] pt-0.5">
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--primary)] inline-block"></span>Lignin (${fmtNum(lMean, 1)}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--secondary)] border border-[var(--border)] inline-block"></span>Glucan (${fmtNum(gMean, 1)}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--accent)] inline-block"></span>Hemicellulose / Xylan+Arabinan (${fmtNum(xMean + aMean, 1)}%)</span>
+                <span class="inline-flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-sm bg-[var(--card)] border border-[var(--border)] inline-block"></span>Ash + Extractives / Protein (${fmtNum(remSum, 1)}%)</span>
               </div>
             </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-3">${cardsHtml}</div>
@@ -5242,44 +7770,73 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       `;
     }
 
-    function syncUrl() {
+    function syncUrl(opts = { push: false }) {
       try {
         const u = new URL(window.location.href);
         u.searchParams.set("resource", state.resource);
         u.searchParams.set("tab", state.tab);
         u.searchParams.set("qc", state.qc_status);
-        window.history.replaceState({}, "", u.toString());
+        const stateSnapshot = { resource: state.resource, tab: state.tab, qc: state.qc_status };
+        const nextUrl = u.toString();
+        if (opts && opts.push === true && u.search !== window.location.search) {
+          window.history.pushState(stateSnapshot, "", nextUrl);
+        } else {
+          window.history.replaceState(stateSnapshot, "", nextUrl);
+        }
       } catch (_) {}
     }
 
-    function render() {
+    function render(opts = { push: false }) {
       updateHeader();
       renderAiInsightsPanel();
       const filtered = getFilteredRecords();
       renderKpiStrip(filtered);
 
       const container = document.getElementById("tab-content");
-      if (state.tab === "overview") container.innerHTML = renderOverviewTab(filtered);
+      if (state.tab === "overview") {
+        container.innerHTML = renderOverviewTab(filtered);
+        if (typeof window.renderTimelineSvgConnectors === "function") {
+          if (typeof window.requestAnimationFrame === "function") {
+            window.requestAnimationFrame(() => window.renderTimelineSvgConnectors());
+          }
+          setTimeout(() => window.renderTimelineSvgConnectors(), 40);
+        }
+      }
       else if (state.tab === "proximate") container.innerHTML = renderProximateTab(filtered);
       else if (state.tab === "compositional") container.innerHTML = renderCompositionalTab(filtered);
       else if (state.tab === "elemental") container.innerHTML = renderElementalTab(filtered);
       else if (state.tab === "conversion") container.innerHTML = renderConversionTab(filtered);
-      syncUrl();
+      syncUrl(opts);
     }
+    window.addEventListener("resize", () => {
+      if (state.tab === "overview" && typeof window.renderTimelineSvgConnectors === "function") {
+        window.renderTimelineSvgConnectors();
+      }
+    });
 
     window.selectResource = function(resName) {
       if (!RECORDS_BY_RESOURCE[resName]) return;
       state.resource = resName;
       state.prepared_sample = "all";
       state.field_sample = "all";
+      state.overviewLineageExpanded = null;
       initResourceSwitcher();
       initFiltersForResource();
+      render({ push: true });
+    };
+
+    window.toggleOverviewLineage = function() {
+      const fsList = getResourceFieldSamples();
+      const currentlyOpen = state.overviewLineageExpanded !== null
+        ? Boolean(state.overviewLineageExpanded)
+        : (fsList.length <= 4);
+      state.overviewLineageExpanded = !currentlyOpen;
       render();
     };
 
     window.switchTab = function(tabName) {
       state.tab = tabName;
-      render();
+      render({ push: true });
     };
 
     window.setSubMode = function(key, val) {
@@ -5352,10 +7909,27 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     document.querySelectorAll(".tab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         state.tab = btn.dataset.tab;
-        render();
+        render({ push: true });
       });
     });
 
+    const chkP1SuppressEl = document.getElementById("chk-p1-suppress-trace");
+    if (chkP1SuppressEl) {
+      chkP1SuppressEl.checked = state.suppressTraceFlags !== false;
+      chkP1SuppressEl.addEventListener("change", e => {
+        state.suppressTraceFlags = Boolean(e.target.checked);
+        render();
+      });
+    }
+    const chkP1BlindEl = document.getElementById("chk-p1-blind-mode");
+    if (chkP1BlindEl) {
+      chkP1BlindEl.checked = Boolean(state.blindMode);
+      chkP1BlindEl.addEventListener("change", e => {
+        state.blindMode = Boolean(e.target.checked);
+        document.body.classList.toggle("blind-analyst-mode", state.blindMode);
+        render();
+      });
+    }
     document.getElementById("btn-toggle-ai").addEventListener("click", () => {
       state.showAiPanel = !state.showAiPanel;
       document.getElementById("btn-toggle-ai").textContent = state.showAiPanel ? "✨ Hide AI Brief" : "✨ Show AI Brief";
@@ -5429,6 +8003,26 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
     initSliceAndBugModals("Page 1 — Characterization & AI Brief");
     initResourceSwitcher();
     initFiltersForResource();
+    window.addEventListener("popstate", () => {
+      const p = new URLSearchParams(window.location.search);
+      const resParam = (p.get("resource") || p.get("res") || DEFAULT_RESOURCE).toLowerCase();
+      const matched = ACTIVE_RESOURCES.find(r => r.toLowerCase() === resParam) || ACTIVE_RESOURCES[0];
+      const resourceChanged = matched !== state.resource;
+      state.resource = matched;
+      const tabParam = p.get("tab") || p.get("domain") || p.get("type") || "overview";
+      state.tab = ["overview", ...TABS.map(t => t.key)].includes(tabParam) ? tabParam : "overview";
+      const qcParam = p.get("qc");
+      if (qcParam && ["pass", "all", "fail"].includes(qcParam)) {
+        state.qc_status = qcParam;
+      }
+      initResourceSwitcher();
+      if (resourceChanged) {
+        state.prepared_sample = "all";
+        state.field_sample = "all";
+        initFiltersForResource();
+      }
+      render({ push: false });
+    });
     render();
     window.refreshLiveQcOverlay(false);
   </script>
@@ -5490,11 +8084,11 @@ def build_qc_outlier_dashboard_html(
           1. Characterization &amp; AI Brief
         </a>
         <a id="nav-page-qc" href="resource_qc_outlier_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm flex items-center gap-1.5">
-          <span>2. Statistical QC &amp; Lab Notes Audit</span>
+          <span>2. Statistical Snapshot</span>
           <span id="nav-qc-badge" class="px-1.5 py-0.2 rounded-full text-[11px] font-mono bg-white/20"></span>
         </a>
         <a id="nav-page-explorer" href="resource_explorer_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
-          3. Multi-Resource Side-by-Side Explorer
+          3. Data Visualizer
         </a>
         <a id="nav-page-drift" href="../audit/db_environment_drift_dashboard.html" class="px-3 py-1.5 rounded-lg font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)] transition">
           4. DB Environment Drift
@@ -5505,125 +8099,175 @@ def build_qc_outlier_dashboard_html(
       </div>
     </nav>
 
-    <!-- Header & Statistical Screening Controls -->
-    <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-3.5">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="space-y-1 flex-1 min-w-[260px]">
-          <div class="flex flex-wrap items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
-            <h1 id="hdr-title" class="text-lg sm:text-xl font-bold text-[var(--foreground)]">BioCirV — Statistical Replicate Precision &amp; Candidate Outlier Audit</h1>
-            <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
-            <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
-            <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
-          </div>
-          <p id="hdr-desc" class="text-xs text-[var(--muted-foreground)]">
-            Two-sided Dixon's Q (&alpha;=0.05, n&ge;3), Within-Group vs. Between-Group RSD, &gt;3&times;SD<sub>pooled</sub> replicate screening, Portal/QC status filtering, and Analyst QC Decision-Making Workbench.
-          </p>
-        </div>
-
-        <div class="flex flex-wrap items-center gap-2">
-          <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
-            ↻ Refresh QC State
-          </button>
-          <button id="btn-anon-analyst" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
-            🔒 Hide Analysts
-          </button>
-          <button id="btn-theme-toggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
-            ☀️ Light Mode
-          </button>
-          <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)]">
-            📤 Export Slice (.html)
-          </button>
-          <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-500">
-            🐛 Report a Bug
-          </button>
-          <button id="btn-export-flagged-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
-            ⬇ Export Flagged Groups CSV
-          </button>
-          <button id="btn-download-records-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
-            ⬇ Export Records CSV
+    <!-- Workspace Container: Left Sticky Filter Sidebar + Right Main Content -->
+    <div class="flex flex-col lg:flex-row gap-4 items-start">
+      <!-- Left Sticky Filter Sidebar (280px) -->
+      <aside id="qc-sticky-filter-sidebar" class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-4 w-full lg:w-[280px]" style="width: 280px; position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow-y: auto; flex-shrink: 0;">
+        <div class="flex items-center justify-between border-b border-[var(--border)] pb-2">
+          <h2 class="text-xs font-bold uppercase tracking-wider text-[var(--foreground)]">Filter Controls</h2>
+          <button id="btn-reset-filters" type="button" class="px-2 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
+            Reset
           </button>
         </div>
-      </div>
 
-      <!-- Resource, Portal/QC Status, Sample, Experiment, Date Range & Trace Cutoff Controls -->
-      <div class="pt-3 border-t border-[var(--border)] flex flex-wrap items-center justify-between gap-3">
-        <div class="flex flex-wrap items-center gap-2.5">
-          <div id="resource-switcher-wrap" class="flex items-center gap-1.5">
-            <label for="flt-resource" class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
-            <button id="btn-prev-res" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">&larr;</button>
-            <select id="flt-resource" class="rounded-lg px-2.5 py-1.5 text-xs sm:text-sm font-bold border min-w-[220px]"></select>
-            <button id="btn-next-res" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">&rarr;</button>
+        <!-- 1. Flag Filters -->
+        <div class="space-y-2.5 border-b border-[var(--border)] pb-3.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Flag Filters</div>
+          <div class="space-y-1">
+            <label for="flt-sidebar-flag-type" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">Flag Type:</label>
+            <select id="flt-sidebar-flag-type" class="w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-[var(--border)] bg-[var(--background)]">
+              <option value="all_groups">All Replicate Groups</option>
+              <option value="flagged" selected>Active Flagged Only</option>
+              <option value="dixon">Dixon's Q Outlier</option>
+              <option value="rsd20">High RSD &gt; 20%</option>
+              <option value="sd3x">&gt;3&times;SD_pooled</option>
+              <option value="proximate_sum">Proximate Sum (Outside 95–105%)</option>
+              <option value="identical">Identical Replicates</option>
+            </select>
           </div>
-
-          <div class="flex items-center gap-1.5">
-            <label for="flt-portal-qc" class="text-xs font-bold uppercase tracking-wider text-[var(--primary)]">QC / Portal Filter:</label>
-            <select id="flt-portal-qc" class="rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-[var(--primary)]/50 min-w-[215px]">
+          <div class="space-y-1">
+            <label for="flt-portal-qc" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">QC / Portal Filter:</label>
+            <select id="flt-portal-qc" class="w-full rounded-lg px-2.5 py-1.5 text-xs font-semibold border border-[var(--primary)]/50 bg-[var(--background)]">
               <option value="qc_pass" selected>qc_pass = pass Only (Unquarantined)</option>
               <option value="all">All Statuses &amp; QC (Raw + Pass/Fail)</option>
               <option value="portal_compliant">Portal Compliant Only (qc_pass=pass &amp; Active)</option>
               <option value="qc_fail">qc_pass = fail Only (Quarantined)</option>
             </select>
           </div>
+        </div>
 
-          <div class="flex items-center gap-1.5">
-            <label for="flt-prepared-sample" class="text-xs font-semibold text-[var(--muted-foreground)]">Sample:</label>
-            <select id="flt-prepared-sample" class="rounded-lg px-2.5 py-1.5 text-xs font-medium border min-w-[150px]"></select>
+        <!-- 2. Choose an Analysis Type -->
+        <div class="space-y-2 border-b border-[var(--border)] pb-3.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Choose an Analysis Type</div>
+          <div class="flex flex-wrap gap-1.5" id="domain-pills"></div>
+        </div>
+
+        <!-- 3. Additional Filters -->
+        <div class="space-y-2.5">
+          <div class="text-[11px] font-bold uppercase tracking-wider text-[var(--primary)]">Additional Filters</div>
+
+          <label class="flex items-start gap-2 text-xs font-semibold text-[var(--foreground)] cursor-pointer select-none bg-[var(--background)] p-2 rounded-lg border border-[var(--border)]" title="Suppress outlier flags on low-abundance elemental data (<100 ppm for ICP/XRF) and trace sugars (<0.5% dw or <0.5 g/L)">
+            <input id="chk-suppress-trace" type="checkbox" checked class="mt-0.5 rounded border-[var(--border)] text-[var(--primary)]" />
+            <span class="flex-1 leading-snug">
+              Suppress Low-Abundance Trace Flags (&lt;100 ppm ICP/XRF, &lt;0.5% wt)
+              <span id="sidebar-suppressed-count-badge" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-mono badge-info">0 suppressed</span>
+            </span>
+          </label>
+
+          <label class="flex items-center gap-2 text-xs font-semibold text-[var(--foreground)] cursor-pointer select-none bg-[var(--background)] p-2 rounded-lg border border-[var(--border)]">
+            <input id="chk-sidebar-blind-mode" type="checkbox" class="rounded border-[var(--border)] text-[var(--primary)]" />
+            <span>Blind / Anonymize Analysts</span>
+          </label>
+
+          <div class="space-y-1">
+            <label for="sidebar-search-input" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">Keyword Search:</label>
+            <input id="sidebar-search-input" type="text" placeholder="Search sample, parameter, note..." class="w-full rounded-lg px-2.5 py-1.5 text-xs border border-[var(--border)] bg-[var(--background)]" />
           </div>
 
-          <div class="flex items-center gap-1.5">
-            <label for="flt-experiment" class="text-xs font-semibold text-[var(--muted-foreground)]">Experiment:</label>
-            <select id="flt-experiment" class="rounded-lg px-2.5 py-1.5 text-xs font-medium border min-w-[130px]"></select>
+          <div id="resource-switcher-wrap" class="space-y-1">
+            <label for="flt-resource" class="block text-[11px] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Resource:</label>
+            <div class="flex items-center gap-1">
+              <button id="btn-prev-res" type="button" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">&larr;</button>
+              <select id="flt-resource" class="flex-1 min-w-0 rounded-lg px-2 py-1.5 text-xs font-bold border"></select>
+              <button id="btn-next-res" type="button" class="px-2 py-1 rounded-lg text-xs font-bold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">&rarr;</button>
+            </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-1.5 bg-[var(--background)] px-2 py-1 rounded-lg border border-[var(--border)]">
-            <label for="flt-date-type" class="text-xs font-semibold text-[var(--muted-foreground)]">Date:</label>
-            <select id="flt-date-type" class="rounded px-1.5 py-0.5 text-xs font-medium border border-[var(--border)] bg-[var(--card)]">
+          <div class="space-y-1">
+            <label for="flt-prepared-sample" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">Sample:</label>
+            <select id="flt-prepared-sample" class="w-full rounded-lg px-2.5 py-1.5 text-xs font-medium border"></select>
+          </div>
+
+          <div class="space-y-1">
+            <label for="flt-experiment" class="block text-[11px] font-semibold text-[var(--muted-foreground)]">Experiment:</label>
+            <select id="flt-experiment" class="w-full rounded-lg px-2.5 py-1.5 text-xs font-medium border"></select>
+          </div>
+
+          <div class="space-y-1.5 bg-[var(--background)] p-2 rounded-lg border border-[var(--border)]">
+            <div class="flex items-center justify-between">
+              <label for="flt-date-type" class="text-[11px] font-semibold text-[var(--muted-foreground)]">Date:</label>
+              <button id="flt-date-clear" type="button" title="Clear date filter" class="hidden px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-80">✕</button>
+            </div>
+            <select id="flt-date-type" class="w-full rounded px-1.5 py-0.5 text-xs font-medium border border-[var(--border)] bg-[var(--card)]">
               <option value="any">Collection or Run Date</option>
               <option value="collected">Collection Date Only</option>
               <option value="run">Run / Prep Date Only</option>
             </select>
-            <input id="flt-from-date" type="date" min="2020-01-01" placeholder="2024-01-01" title="From Date (inclusive, defaults to 2024-01-01 when opened)" class="rounded px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] bg-[var(--card)]" />
-            <span class="text-xs text-[var(--muted-foreground)]">&rarr;</span>
-            <input id="flt-to-date" type="date" min="2020-01-01" placeholder="2024-01-01" title="To Date (inclusive)" class="rounded px-1.5 py-0.5 text-xs font-mono border border-[var(--border)] bg-[var(--card)]" />
-            <button id="flt-date-clear" type="button" title="Clear date filter" class="hidden px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-80">✕</button>
+            <div class="flex items-center gap-1">
+              <input id="flt-from-date" type="date" min="2020-01-01" placeholder="2024-01-01" title="From Date (inclusive, defaults to 2024-01-01 when opened)" class="flex-1 min-w-0 rounded px-1.5 py-0.5 text-[11px] font-mono border border-[var(--border)] bg-[var(--card)]" />
+              <span class="text-xs text-[var(--muted-foreground)]">&rarr;</span>
+              <input id="flt-to-date" type="date" min="2020-01-01" placeholder="2024-01-01" title="To Date (inclusive)" class="flex-1 min-w-0 rounded px-1.5 py-0.5 text-[11px] font-mono border border-[var(--border)] bg-[var(--card)]" />
+            </div>
           </div>
+        </div>
+      </aside>
 
-          <button id="btn-reset-filters" class="px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)]">
-            Reset
-          </button>
+      <!-- Right Main Content Column -->
+      <div class="flex-1 min-w-0 space-y-4 w-full" style="flex: 1; min-width: 0;">
+        <!-- Header & Statistical Screening Controls -->
+        <header class="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4 sm:p-5 shadow-sm space-y-3.5">
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div class="space-y-1 flex-1 min-w-[260px]">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span>
+                <h1 id="hdr-title" class="text-lg sm:text-xl font-bold text-[var(--foreground)]">BioCirV — Statistical Replicate Precision &amp; Candidate Outlier Audit</h1>
+                <span id="hdr-code-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-[var(--primary)] text-[var(--primary-foreground)] font-mono"></span>
+                <span id="hdr-portal-badge" class="px-2.5 py-0.5 text-xs font-semibold rounded-full"></span>
+                <span id="live-qc-overlay-badge" class="hidden px-2.5 py-0.5 text-xs font-semibold rounded-full badge-warn font-mono"></span>
+              </div>
+              <p id="hdr-desc" class="text-xs text-[var(--muted-foreground)]">
+                Two-sided Dixon's Q (&alpha;=0.05, n&ge;3), Within-Group vs. Between-Group RSD, &gt;3&times;SD<sub>pooled</sub> replicate screening, Portal/QC status filtering, and Analyst QC Decision-Making Workbench.
+              </p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2">
+              <button id="btn-refresh-qc-state" type="button" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)] transition" title="Pull latest Stage 1 QC decisions from /v1/qc/decisions">
+                ↻ Refresh QC State
+              </button>
+              <button id="btn-anon-analyst" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
+                🔒 Hide Analysts
+              </button>
+              <button id="btn-theme-toggle" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
+                ☀️ Light Mode
+              </button>
+              <button id="btn-open-slice-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--primary)]/50 hover:border-[var(--primary)]">
+                📤 Export Slice (.HTML)
+              </button>
+              <button id="btn-tray-to-workbench" type="button" onclick="window.sendSelectionTrayToWorkbench('pending')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+                ⚖️ Export to Audit Workbench
+              </button>
+              <button id="btn-open-bug-modal" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-amber-500">
+                🐛 Report a Bug
+              </button>
+              <button id="btn-export-flagged-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">
+                ⬇ Export Flagged Groups CSV
+              </button>
+              <button id="btn-download-records-csv" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:opacity-90">
+                ⬇ Export Records CSV
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- 5-Card Statistical Precision & QC KPI Strip -->
+        <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="qc-kpi-strip"></section>
+
+        <!-- Analyst QC Decision-Making & Export Workbench Banner -->
+        <section id="qc-decision-banner" class="bg-[var(--card)] border border-[var(--primary)]/50 rounded-xl p-3.5 shadow-sm"></section>
+
+        <!-- 5 Dedicated Audit Workbench Sub-Tabs -->
+        <div class="flex flex-wrap gap-1.5 bg-[var(--card)] border border-[var(--border)] rounded-xl p-1.5 shadow-sm" id="qc-sub-tabs">
+          <button data-subtab="outliers" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">1. Candidate Outlier Replicate Groups &amp; Decisions</button>
+          <button data-subtab="rsd" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">2. Within vs. Between-Group RSD Precision</button>
+          <button data-subtab="notes" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">3. Mined Lab &amp; Field Notes Audit</button>
+          <button data-subtab="explorer" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">4. Full Record Explorer &amp; Record Decisions</button>
+          <button data-subtab="review_queue" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">5. Review Queue &amp; Audit Ledger</button>
         </div>
 
-        <label class="inline-flex items-center gap-2 text-xs font-semibold text-[var(--foreground)] cursor-pointer select-none bg-[var(--background)] px-3 py-1.5 rounded-lg border border-[var(--border)]" title="Suppress outlier flags on low-abundance elemental data (<100 ppm for ICP/XRF) and trace sugars (<0.5% dw or <0.5 g/L)">
-          <input id="chk-suppress-trace" type="checkbox" checked class="rounded border-[var(--border)] text-[var(--primary)]" />
-          <span>Suppress Low-Abundance Trace Flags (&lt;100 ppm ICP/XRF, &lt;0.5% wt)</span>
-        </label>
+        <!-- Dynamic Audit Workbench Container -->
+        <main id="qc-content" class="space-y-4"></main>
       </div>
-
-      <!-- Analysis Domain Filter Pills -->
-      <div class="pt-3 border-t border-[var(--border)] flex flex-wrap items-center gap-1.5" id="domain-pills"></div>
-    </header>
-
-    <!-- 5-Card Statistical Precision & QC KPI Strip -->
-    <section class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3" id="qc-kpi-strip"></section>
-
-    <!-- Selection & Export Tray (Replicate Group Default + 1-Click Toggle to Single Point Only) -->
-    <section id="qc-selection-export-tray" class="bg-[var(--card)] border border-amber-500/40 rounded-xl p-3.5 shadow-sm"></section>
-
-    <!-- Analyst QC Decision-Making & Export Workbench Banner -->
-    <section id="qc-decision-banner" class="bg-[var(--card)] border border-[var(--primary)]/50 rounded-xl p-3.5 shadow-sm"></section>
-
-    <!-- 5 Dedicated Audit Workbench Sub-Tabs -->
-    <div class="flex flex-wrap gap-1.5 bg-[var(--card)] border border-[var(--border)] rounded-xl p-1.5 shadow-sm" id="qc-sub-tabs">
-      <button data-subtab="outliers" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold bg-[var(--primary)] text-[var(--primary-foreground)]">1. Candidate Outlier Replicate Groups &amp; Decisions</button>
-      <button data-subtab="rsd" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">2. Within vs. Between-Group RSD Precision</button>
-      <button data-subtab="notes" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">3. Mined Lab &amp; Field Notes Audit</button>
-      <button data-subtab="explorer" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">4. Full Record Explorer &amp; Record Decisions</button>
-      <button data-subtab="review_queue" class="subtab-btn px-3.5 py-2 rounded-lg text-xs font-semibold text-[var(--muted-foreground)]">5. Review Queue &amp; Audit Ledger</button>
     </div>
-
-    <!-- Dynamic Audit Workbench Container -->
-    <main id="qc-content" class="space-y-4"></main>
 
   </div>
 
@@ -5648,12 +8292,17 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     const DOMAIN_LABELS = {
-      all: "All Analytical Domains",
-      proximate: "Proximate & Calorimetry",
-      compositional: "Compositional, Ultimate & XRD",
-      elemental: "ICP & XRF Elements",
-      pretreatment: "Pretreatment & EH",
-      fermentation: "Fermentation & Gasification"
+      all: "All",
+      proximate: "Proximate",
+      calorimetry: "Calorimetry",
+      compositional: "Compositional",
+      ultimate: "Ultimate",
+      xrd: "XRD",
+      icp: "ICP",
+      xrf: "XRF",
+      pretreatment: "Pretreatment",
+      fermentation: "Fermentation",
+      gasification: "Gasification"
     };
 
     const DECISION_OPTIONS = [
@@ -5673,15 +8322,26 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     ];
 
     const COUNTY_LOOKUP = BUNDLE.ca_counties || {};
+    function normSampleKey(val) {
+      return String(val || "").trim().toLowerCase();
+    }
     const FS_LOOKUP = {};
     (BUNDLE.field_samples || []).forEach(fs => {
+      if (!fs || !fs.name) return;
       FS_LOOKUP[`${fs.resource_name}::${fs.name}`] = fs;
+      FS_LOOKUP[`${normSampleKey(fs.resource_name)}::${normSampleKey(fs.name)}`] = fs;
       if (!FS_LOOKUP[fs.name]) FS_LOOKUP[fs.name] = fs;
+      const nk = normSampleKey(fs.name);
+      if (nk && !FS_LOOKUP[nk]) FS_LOOKUP[nk] = fs;
     });
     const PS_LOOKUP = {};
     (BUNDLE.prepared_samples || []).forEach(ps => {
+      if (!ps || !ps.name) return;
       PS_LOOKUP[`${ps.resource_name}::${ps.name}`] = ps;
+      PS_LOOKUP[`${normSampleKey(ps.resource_name)}::${normSampleKey(ps.name)}`] = ps;
       if (!PS_LOOKUP[ps.name]) PS_LOOKUP[ps.name] = ps;
+      const nk = normSampleKey(ps.name);
+      if (nk && !PS_LOOKUP[nk]) PS_LOOKUP[nk] = ps;
     });
 
     const ALL_RECORDS = BUNDLE.rows.map(arr => {
@@ -5696,8 +8356,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       if ((obj.analysis_type === "ICP Elemental Analysis" || obj.analysis_type === "XRF Elemental Analysis") && obj.parameter && obj.parameter !== "(metadata only)") {
         obj.parameter = obj.parameter.charAt(0).toUpperCase() + obj.parameter.slice(1).toLowerCase();
       }
-      const fsMeta = FS_LOOKUP[`${obj.resource_name}::${obj.field_sample}`] || FS_LOOKUP[obj.field_sample] || null;
-      const psMeta = PS_LOOKUP[`${obj.resource_name}::${obj.prepared_sample}`] || PS_LOOKUP[obj.prepared_sample] || null;
+      const fsMeta = FS_LOOKUP[`${obj.resource_name}::${obj.field_sample}`] || FS_LOOKUP[`${normSampleKey(obj.resource_name)}::${normSampleKey(obj.field_sample)}`] || FS_LOOKUP[obj.field_sample] || FS_LOOKUP[normSampleKey(obj.field_sample)] || null;
+      const psMeta = PS_LOOKUP[`${obj.resource_name}::${obj.prepared_sample}`] || PS_LOOKUP[`${normSampleKey(obj.resource_name)}::${normSampleKey(obj.prepared_sample)}`] || PS_LOOKUP[obj.prepared_sample] || PS_LOOKUP[normSampleKey(obj.prepared_sample)] || null;
       obj.collected_date = fsMeta && fsMeta.collected_at ? fsMeta.collected_at : "";
       obj.geoid = fsMeta && fsMeta.geoid ? String(fsMeta.geoid) : "";
       obj.county_name = obj.geoid && COUNTY_LOOKUP[obj.geoid] ? COUNTY_LOOKUP[obj.geoid] : "";
@@ -5753,7 +8413,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     const urlParams = new URLSearchParams(window.location.search);
     const initialResParam = (urlParams.get("resource") || DEFAULT_RESOURCE).toLowerCase();
     const matchedInitialRes = ACTIVE_RESOURCES.find(r => r.toLowerCase() === initialResParam) || ACTIVE_RESOURCES[0];
-    const initialDomainParam = urlParams.get("domain") || "all";
+    const rawDomainParam = urlParams.get("domain") || urlParams.get("type") || "all";
+    const initialDomainParam = rawDomainParam === "all" ? "all" : normalizeDomainKey(rawDomainParam);
     const initialSubtabParam = urlParams.get("subtab") || "outliers";
     const initialPortalQcParam = urlParams.get("portal_qc") || "qc_pass";
 
@@ -5768,9 +8429,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       from_date: BUNDLE.slice_from_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.from_date) || "",
       to_date: BUNDLE.slice_to_date || (BUNDLE.slice_filters && BUNDLE.slice_filters.to_date) || "",
       suppressTraceFlags: true,
-      outlierFilterMode: "flagged",
+      outlierFilterMode: urlParams.get("flag") || "flagged",
       explorerFlagFilter: "all",
-      search: "",
+      search: urlParams.get("q") || "",
       showDecisionQueueTable: false,
       queueStatusFilter: "all",
       queueScopeFilter: "all",
@@ -5779,6 +8440,22 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       queueResourceScope: "all",
       anonymizeAnalyst: Boolean(BUNDLE.exclude_analyst_default)
     };
+    Object.defineProperties(state, {
+      selectedResource: { get() { return this.resource; }, set(v) { this.resource = v; } },
+      selectedDomain: { get() { return this.domain; }, set(v) { this.domain = v; } },
+      activeSubtab: { get() { return this.subtab; }, set(v) { this.subtab = v; } },
+      outliersFilter: { get() { return this.outlierFilterMode; }, set(v) { this.outlierFilterMode = v; } },
+      outliersSearch: { get() { return this.search; }, set(v) { this.search = v; } },
+      blindMode: { get() { return this.anonymizeAnalyst; }, set(v) { this.anonymizeAnalyst = Boolean(v); } }
+    });
+
+    function stripQcAuditAnnotations(noteStr) {
+      return String(noteStr || "")
+        .replace(/\\s*\\|?\\s*\\[QC_AUDIT\\b[^\\]]*\\]/gi, "")
+        .replace(/^\\s*\\|\\s*|\\s*\\|\\s*$/g, "")
+        .trim();
+    }
+    window.stripQcAuditAnnotations = stripQcAuditAnnotations;
 
     function fmtNum(v, digits = 2) {
       if (v === null || v === undefined || isNaN(v)) return "—";
@@ -5820,7 +8497,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function makeGroupDecisionKey(resourceName, g) {
-      return `grp::${resourceName}::${g.analysis_type}::${g.prepared_sample}::${g.experiment}::${g.parameter}`;
+      const repKey = window.normalizeReplicateGroupKey
+        ? window.normalizeReplicateGroupKey(g, resourceName)
+        : `${String(resourceName || "").toLowerCase()}::${g.prepared_sample || ""}::${g.analysis_type || ""}::${g.parameter || ""}::${g.prep_method || ""}::${g.experiment || ""}`;
+      return `grp::${repKey}`;
     }
 
     function makeRecordDecisionKey(recordId) {
@@ -5828,11 +8508,30 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
 
     function getDecisionEntry(key) {
-      return DECISIONS_STORE[key] || { decision: "pending", note: "", updated_at: "" };
+      if (DECISIONS_STORE[key]) return DECISIONS_STORE[key];
+      if (String(key || "").startsWith("grp::") && window.matchesReplicateGroupKey) {
+        const rawTargetKey = String(key).slice(5);
+        const matched = Object.values(DECISIONS_STORE).find(e => {
+          const eKey = e && (e.replicate_group_key || (String(e.key || "").startsWith("grp::") ? String(e.key).slice(5) : ""));
+          return eKey && window.matchesReplicateGroupKey(rawTargetKey, eKey);
+        });
+        if (matched) return matched;
+      }
+      return {
+        decision: "pending",
+        note: "",
+        assigned_to_email: window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail("") : "",
+        updated_at: ""
+      };
     }
 
     function upsertDecisionEntry(key, patch, meta) {
-      const existing = DECISIONS_STORE[key] || { decision: "pending", note: "", updated_at: "" };
+      const existing = DECISIONS_STORE[key] || {
+        decision: "pending",
+        note: "",
+        assigned_to_email: window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail("") : "",
+        updated_at: ""
+      };
       const merged = {
         ...existing,
         ...meta,
@@ -5872,7 +8571,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const sel = document.getElementById("flt-resource");
       sel.innerHTML = ACTIVE_RESOURCES.map(r => {
         const ins = BUNDLE.insights && BUNDLE.insights[r];
-        const flg = (ins && ins.outlier_screening && ins.outlier_screening.flagged_active_groups) || 0;
+        const outSum = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
+        const flg = outSum.flaggedActive || 0;
         const recs = RECORDS_BY_RESOURCE[r];
         const pTag = ins && ins.portal_excluded ? " [Portal Excluded]" : "";
         return `<option value="${r}">${r.toUpperCase()} — ${flg} Active Flag(s) (${recs.length} obs)${pTag}</option>`;
@@ -5910,11 +8610,20 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       selExp.value = expNames.includes(state.experiment) ? state.experiment : "all";
     }
 
+    function matchesActiveDomain(rowOrGroup, tabKey, domainFilter) {
+      if (!domainFilter || domainFilter === "all") return true;
+      const target = normalizeDomainKey(domainFilter);
+      if (rowOrGroup && rowOrGroup.analysis_type) {
+        return normalizeDomainKey(rowOrGroup.analysis_type) === target;
+      }
+      return tabKey === target;
+    }
+
     function getAllDomainOutlierGroups() {
       const ins = getResourceInsights();
       const resourcePortalExcluded = Boolean(ins && ins.portal_excluded);
       const byTab = (ins && ins.outlier_screening && ins.outlier_screening.by_tab) || {};
-      const keys = state.domain === "all" ? Object.keys(byTab) : [state.domain];
+      const keys = Object.keys(byTab);
       const groups = [];
       const normRange = window.normalizeDateRange
         ? window.normalizeDateRange(state.from_date, state.to_date)
@@ -5923,6 +8632,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         const t = byTab[k];
         if (!t) return;
         (t.replicate_groups || []).forEach(g => {
+          if (!matchesActiveDomain(g, k, state.domain)) return;
           if (state.prepared_sample !== "all" && g.prepared_sample !== state.prepared_sample) return;
           if (state.experiment !== "all" && g.experiment !== state.experiment) return;
           if (!isGroupMatchingPortalQc(g, state.portalQcMode, resourcePortalExcluded)) return;
@@ -5938,7 +8648,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             const ok = candidates.some(d => (!normRange.from || d >= normRange.from) && (!normRange.to || d <= normRange.to));
             if (!ok) return;
           }
-          groups.push({ ...g, domainKey: k });
+          const resolvedDomKey = g && g.analysis_type ? normalizeDomainKey(g.analysis_type) : k;
+          groups.push({ ...g, domainKey: resolvedDomKey });
         });
       });
       return groups;
@@ -5949,13 +8660,15 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const resourcePortalExcluded = Boolean(ins && ins.portal_excluded);
       if (state.portalQcMode === "portal_compliant" && resourcePortalExcluded) return [];
       const byTab = (ins && ins.outlier_screening && ins.outlier_screening.by_tab) || {};
-      const keys = state.domain === "all" ? Object.keys(byTab) : [state.domain];
+      const keys = Object.keys(byTab);
       const rows = [];
       keys.forEach(k => {
         const t = byTab[k];
         if (!t) return;
         (t.param_rsd_table || []).forEach(p => {
-          rows.push({ ...p, domainKey: k });
+          if (!matchesActiveDomain(p, k, state.domain)) return;
+          const resolvedDomKey = p && p.analysis_type ? normalizeDomainKey(p.analysis_type) : k;
+          rows.push({ ...p, domainKey: resolvedDomKey });
         });
       });
       return rows;
@@ -5963,20 +8676,22 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function isGroupMatchingFilter(g, mode, suppress) {
       if (suppress && g.below_cutoff) return false;
+      if (mode === "identical") return Boolean(g.has_identical_replicates || g.identical_replicates);
       const isPrimary = suppress ? g.active_flagged : g.raw_flagged;
       const isMod = suppress ? (g.active_flagged || g.active_rsd10) : (g.raw_flagged || g.raw_rsd10);
-      if (mode === "flagged") return isPrimary;
+      if (mode === "flagged" || mode === "active") return isPrimary;
       if (mode === "moderate") return isMod;
       if (mode === "dixon") return g.raw_dixon;
-      if (mode === "rsd20") return g.raw_rsd20;
-      if (mode === "sd3x") return g.raw_sd3x;
+      if (mode === "rsd20" || mode === "rsd") return g.raw_rsd20;
+      if (mode === "sd3x" || mode === "sd3") return g.raw_sd3x;
+      if (mode === "proximate_sum") return Boolean(g.raw_proximate_sum);
       if (mode === "unquarantined") return isPrimary && g.qc_pass_count > 0;
       if (mode === "reviewed") {
         const dKey = makeGroupDecisionKey(state.resource, g);
         const entry = DECISIONS_STORE[dKey];
         return Boolean(entry && (entry.decision !== "pending" || (entry.note && entry.note.trim())));
       }
-      if (mode === "all_groups") return true;
+      if (mode === "all_groups" || mode === "all") return true;
       return isPrimary;
     }
 
@@ -5986,24 +8701,26 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const byTab = (ins && ins.outlier_screening && ins.outlier_screening.by_tab) || {};
       const suppress = state.suppressTraceFlags;
 
-      const domains = ["all", "proximate", "compositional", "elemental", "pretreatment", "fermentation"];
+      const domains = ["all", ...DOMAIN_DEFS.map(d => d.key)];
+      const tabKeys = Object.keys(byTab);
       document.getElementById("domain-pills").innerHTML = domains.map(d => {
         let flgCnt = 0;
         let grpCnt = 0;
-        const tabKeys = d === "all" ? Object.keys(byTab) : (byTab[d] ? [d] : []);
         tabKeys.forEach(k => {
           const t = byTab[k];
           if (!t) return;
           (t.replicate_groups || []).forEach(g => {
+            if (!matchesActiveDomain(g, k, d)) return;
             if (!isGroupMatchingPortalQc(g, state.portalQcMode, resourcePortalExcluded)) return;
             grpCnt += 1;
             if (isGroupMatchingFilter(g, "flagged", suppress)) flgCnt += 1;
           });
         });
         const active = state.domain === d;
+        const label = DOMAIN_LABELS[d] || d;
         return `
           <button onclick="setDomain('${d}')" class="px-3 py-1.5 rounded-lg text-xs font-semibold border transition flex items-center gap-1.5 ${active ? 'bg-[var(--primary)] text-[var(--primary-foreground)] border-[var(--primary)]' : 'bg-[var(--background)] text-[var(--muted-foreground)] border-[var(--border)] hover:text-[var(--foreground)]'}">
-            <span>${DOMAIN_LABELS[d]}</span>
+            <span>${label}</span>
             <span class="px-1.5 py-0.2 rounded-full text-[11px] font-mono ${flgCnt > 0 ? (active ? 'bg-white/25 text-white' : 'badge-warn') : 'opacity-75'}">${flgCnt} flag / ${grpCnt} grp</span>
           </button>
         `;
@@ -6124,11 +8841,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       document.getElementById("btn-anon-analyst").textContent = state.anonymizeAnalyst ? "👤 Show Analysts" : "🔒 Hide Analysts";
 
       const encRes = encodeURIComponent(state.resource);
+      const domQueryPage2 = state.domain && state.domain !== "all" ? `&domain=${encodeURIComponent(state.domain)}` : "";
+      const domQueryPage3 = state.domain && state.domain !== "all" ? `&type=${encodeURIComponent(state.domain)}` : "";
       document.getElementById("nav-page-char").href = `${CHAR_PAGE_FILENAME}?resource=${encRes}`;
-      document.getElementById("nav-page-qc").href = `resource_qc_outlier_dashboard.html?resource=${encRes}`;
-      document.getElementById("nav-page-explorer").href = `resource_explorer_dashboard.html?resource=${encRes}`;
+      document.getElementById("nav-page-qc").href = `resource_qc_outlier_dashboard.html?resource=${encRes}${domQueryPage2}`;
+      document.getElementById("nav-page-explorer").href = `resource_explorer_dashboard.html?resource=${encRes}${domQueryPage3}`;
 
       const groups = getAllDomainOutlierGroups();
+      const paramRows = getAllDomainParamRsdRows();
       const suppress = state.suppressTraceFlags;
       const primaryGroups = groups.filter(g => isGroupMatchingFilter(g, "flagged", suppress));
       const dixonGroups = groups.filter(g => isGroupMatchingFilter(g, "dixon", suppress));
@@ -6137,12 +8857,23 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const unquarGroups = groups.filter(g => isGroupMatchingFilter(g, "unquarantined", suppress));
       const suppressedCount = groups.filter(g => g.below_cutoff && g.raw_flagged).length;
 
-      const resRecs = getResourceRecords();
-      const colDates = Array.from(new Set(resRecs.map(r => r.collected_date).filter(Boolean))).sort();
-      const prepDates = Array.from(new Set(resRecs.map(r => r.prep_date).filter(Boolean))).sort();
-      const geoids = Array.from(new Set(resRecs.map(r => r.geoid ? (r.county_name ? `${r.county_name} (${r.geoid})` : r.geoid) : "").filter(Boolean)));
-
       document.getElementById("nav-qc-badge").textContent = `⚑ ${primaryGroups.length}`;
+      const suppBadgeEl = document.getElementById("sidebar-suppressed-count-badge");
+      if (suppBadgeEl) suppBadgeEl.textContent = `${suppressedCount} suppressed`;
+      const chkBlindEl = document.getElementById("chk-sidebar-blind-mode");
+      if (chkBlindEl) chkBlindEl.checked = Boolean(state.anonymizeAnalyst);
+      const sidebarFlagEl = document.getElementById("flt-sidebar-flag-type");
+      if (sidebarFlagEl) {
+        const modeMap = { all: "all_groups", active: "flagged", rsd: "rsd20", sd3: "sd3x" };
+        const targetVal = modeMap[state.outlierFilterMode] || state.outlierFilterMode;
+        if (!sidebarFlagEl.options || Array.from(sidebarFlagEl.options).some(o => o.value === targetVal)) {
+          sidebarFlagEl.value = targetVal;
+        }
+      }
+      const sidebarSearchEl = document.getElementById("sidebar-search-input");
+      if (sidebarSearchEl && document.activeElement !== sidebarSearchEl) {
+        sidebarSearchEl.value = state.search || "";
+      }
 
       const portalModeLabel = {
         all: "All Statuses (Raw + Pass/Fail)",
@@ -6151,11 +8882,60 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         qc_fail: "qc_pass = fail Only"
       }[state.portalQcMode];
 
+      const outSummary = window.getOutlierSummary ? window.getOutlierSummary(ins) : {};
+      const activeEvalGroups = groups.filter(g => !(suppress && g.below_cutoff));
+      const multiRepGroups = activeEvalGroups.filter(g => (g.n || 0) >= 2 && g.rsd_within_pct !== null && g.rsd_within_pct !== undefined);
+      const dynWithinRsdMed = window.computeMedianNumeric
+        ? window.computeMedianNumeric(multiRepGroups.map(g => g.rsd_within_pct))
+        : null;
+      const dynWithinSdMed = window.computeMedianNumeric
+        ? window.computeMedianNumeric(multiRepGroups.map(g => g.within_sd !== undefined && g.within_sd !== null ? g.within_sd : g.sd))
+        : null;
+      const withinRsdVal = dynWithinRsdMed !== null
+        ? dynWithinRsdMed
+        : (groups.length === 0 ? (outSummary.withinRsdMedian ?? null) : null);
+      const withinSdVal = dynWithinSdMed !== null
+        ? dynWithinSdMed
+        : (groups.length === 0 ? (outSummary.withinSdMedian ?? null) : null);
+      const multiRepCount = groups.length > 0 ? multiRepGroups.length : (outSummary.rsdDefinedGroups || 0);
+      const withinKpiValue = withinRsdVal !== null && withinRsdVal !== undefined
+        ? `${fmtNum(withinRsdVal, 1)}%${withinSdVal !== null && withinSdVal !== undefined ? ` (±${fmtNum(withinSdVal, 2)})` : ""}`
+        : "N/A (n=1)";
+
+      const activeParamRows = paramRows.filter(p => !(suppress && p.below_cutoff));
+      const dynBetweenRsdMed = window.computeMedianNumeric
+        ? window.computeMedianNumeric(
+            activeParamRows.length > 0
+              ? activeParamRows.map(p => p.between_rsd_pct)
+              : activeEvalGroups.map(g => g.rsd_between_pct)
+          )
+        : null;
+      const dynBetweenSdMed = window.computeMedianNumeric
+        ? window.computeMedianNumeric(
+            activeParamRows.length > 0
+              ? activeParamRows.map(p => p.between_sd !== undefined && p.between_sd !== null ? p.between_sd : p.pooled_sd)
+              : activeEvalGroups.map(g => g.between_sd)
+          )
+        : null;
+      const betweenRsdVal = dynBetweenRsdMed !== null
+        ? dynBetweenRsdMed
+        : (groups.length === 0 ? (outSummary.betweenRsdMedian ?? null) : null);
+      const betweenSdVal = dynBetweenSdMed !== null
+        ? dynBetweenSdMed
+        : (groups.length === 0 ? (outSummary.betweenSdMedian ?? null) : null);
+      const multiMethodParamCnt = activeParamRows.filter(p => p.between_rsd_pct !== null && p.between_rsd_pct !== undefined).length;
+      const betweenKpiValue = betweenRsdVal !== null && betweenRsdVal !== undefined
+        ? `${fmtNum(betweenRsdVal, 1)}%${betweenSdVal !== null && betweenSdVal !== undefined ? ` (±${fmtNum(betweenSdVal, 2)})` : ""}`
+        : "N/A (n=1 method group)";
+      const betweenKpiSub = betweenRsdVal !== null && betweenRsdVal !== undefined
+        ? `Method-stratified across ${multiMethodParamCnt || activeParamRows.length} parameter(s)`
+        : "Single method group per parameter (k=1)";
+
       const kpis = [
-        { label: `Flagged Groups (${portalModeLabel})`, value: `${primaryGroups.length} / ${groups.length}`, sub: `Dixon Q: ${dixonGroups.length} · RSD>20%: ${rsd20Groups.length} · >3×SD: ${sd3xGroups.length}` },
+        { label: `Flag Counts (${portalModeLabel})`, value: `${primaryGroups.length} / ${groups.length}`, sub: `Dixon Q: ${dixonGroups.length} · RSD>20%: ${rsd20Groups.length} · >3×SD: ${sd3xGroups.length}` },
         { label: "Unquarantined (QC Pass) Flags", value: `${unquarGroups.length}`, sub: unquarGroups.length ? "Flagged groups with qc_pass=pass records" : "Zero unquarantined flags in current filter" },
-        { label: "Within-Replicate RSD Median", value: out.overall_within_rsd_median !== null && out.overall_within_rsd_median !== undefined ? `${fmtNum(out.overall_within_rsd_median, 1)}%` : "N/A (n=1)", sub: `Across ${out.rsd_defined_groups || 0} multi-replicate groups` },
-        { label: "Collection & Prep Dates", value: colDates.length ? colDates[0] : (prepDates.length ? `Prep ${prepDates[0]}` : "No Date"), sub: `${geoids.length ? geoids.join(', ') : 'GEOID unrecorded'} · Prep: ${prepDates.length ? prepDates.join(', ') : '—'}` },
+        { label: "Within-Replicate RSD & SD", value: withinKpiValue, sub: `Across ${multiRepCount} multi-replicate groups` },
+        { label: "Between-Sample RSD & SD (Method-Stratified)", value: betweenKpiValue, sub: betweenKpiSub },
         { label: "Trace Suppressed & Lab Notes", value: `${suppressedCount} trace · ${notes.length} notes`, sub: suppress ? "Trace floor ON (<100 ppm ICP/XRF, <0.5% wt)" : "Trace floor OFF (showing all raw flags)" }
       ];
 
@@ -6167,7 +8947,6 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         </div>
       `).join("");
 
-      const paramRows = getAllDomainParamRsdRows();
       const filteredExplorer = getFilteredExplorerRecords();
       const queueEntries = Object.values(DECISIONS_STORE);
       const openQueueCnt = queueEntries.filter(e => !e.status || e.status === "open" || e.status === "pending").length;
@@ -6197,9 +8976,19 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const dixonGroups = groups.filter(g => isGroupMatchingFilter(g, "dixon", suppress));
       const rsd20Groups = groups.filter(g => isGroupMatchingFilter(g, "rsd20", suppress));
       const sd3xGroups = groups.filter(g => isGroupMatchingFilter(g, "sd3x", suppress));
+      const proxSumGroups = groups.filter(g => isGroupMatchingFilter(g, "proximate_sum", suppress));
+      const identicalGroups = groups.filter(g => isGroupMatchingFilter(g, "identical", suppress));
       const unquarGroups = groups.filter(g => isGroupMatchingFilter(g, "unquarantined", suppress));
       const reviewedGroups = groups.filter(g => isGroupMatchingFilter(g, "reviewed", suppress));
-      const displayedGroups = groups.filter(g => isGroupMatchingFilter(g, state.outlierFilterMode, suppress));
+      const qSearch = (state.search || "").trim().toLowerCase();
+      const displayedGroups = groups.filter(g => {
+        if (!isGroupMatchingFilter(g, state.outlierFilterMode, suppress)) return false;
+        if (qSearch) {
+          const hay = `${g.prepared_sample || ""} ${g.parameter || ""} ${g.experiment || ""} ${g.prep_method || ""} ${g.analysis_type || ""} ${g.note || ""} ${(g.replicates || []).map(r => r.id).join(" ")}`.toLowerCase();
+          if (!hay.includes(qSearch)) return false;
+        }
+        return true;
+      });
 
       const filterBtns = [
         { id: "flagged", label: `Primary Flagged (${primaryGroups.length})` },
@@ -6207,6 +8996,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         { id: "dixon", label: `Dixon's Q α=0.05 (${dixonGroups.length})` },
         { id: "rsd20", label: `RSD >20% (${rsd20Groups.length})` },
         { id: "sd3x", label: `>3×SD Pooled (${sd3xGroups.length})` },
+        { id: "proximate_sum", label: `Proximate Sum (${proxSumGroups.length})` },
+        { id: "identical", label: `Identical Replicates (${identicalGroups.length})` },
         { id: "unquarantined", label: `Unquarantined / QC Pass (${unquarGroups.length})` },
         { id: "reviewed", label: `⚖️ Reviewed / Annotated (${reviewedGroups.length})` },
         { id: "all_groups", label: `All Replicate Groups (${groups.length})` }
@@ -6244,6 +9035,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   const sd3Set = new Set(g.sd3x_candidate_ids || []);
                   const candRecIds = (g.replicates || []).map(r => r.id).join("|");
                   const singleCandId = g.dixon_candidate_id || ((g.sd3x_candidate_ids && g.sd3x_candidate_ids[0]) || ((g.replicates && g.replicates[0] && g.replicates[0].id) || ""));
+                  const repGroupKey = window.normalizeReplicateGroupKey ? window.normalizeReplicateGroupKey(g, state.resource) : "";
                   const repChips = (g.replicates || []).map(rep => {
                     const isDixonCand = g.dixon_candidate_id && rep.id === g.dixon_candidate_id;
                     const isSd3Cand = sd3Set.has(rep.id);
@@ -6253,8 +9045,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                       resource_name: state.resource,
                       analysis_type: g.analysis_type,
                       prepared_sample: g.prepared_sample,
+                      prep_method: g.prep_method || "",
+                      group_context_label: g.group_context_label || g.prep_method || "",
                       experiment: g.experiment,
                       parameter: g.parameter,
+                      replicate_group_key: repGroupKey,
                       record_id: rep.id,
                       dixon_candidate_id: rep.id,
                       record_ids: candRecIds,
@@ -6264,16 +9059,30 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                       triage_scope: "group",
                       note: `Clicked replicate ${rep.id} (val=${fmtNum(rep.val, 2)} ${g.unit || ''}, n=${g.n}, group mean=${fmtNum(g.mean, 2)} ± ${fmtNum(g.sd, 2)})`
                     }));
-                    return `<span class="inline-flex items-center gap-0.5"><button type="button" onclick="window.auditPage2PointOrGroup('${chipAuditPayload}')" title="Click to select Entire Replicate Group (n=${g.n}, default) or Single Point Only (${rep.id}) · Rep ${rep.rep}, QC: ${rep.qc}" class="px-1.5 py-0.5 rounded font-mono text-xs transition ${isCand ? 'badge-warn ring-1 ring-amber-500 font-bold' : 'bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]'}">⚑ ${isCand ? '★ ' : ''}${fmtNum(rep.val, 2)}${qcTag}</button><button type="button" onclick="window.addSelectionToTray('${chipAuditPayload}')" title="Add Replicate Group (default) or Single Point (${rep.id}) to Selection &amp; Export Tray" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">📌</button><button type="button" onclick="jumpToRecord('${rep.id}')" title="Jump to Record ${rep.id} in Explorer" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">🔍</button></span>`;
+                    return `<span class="inline-flex items-center gap-0.5"><button type="button" onclick="window.auditPage2PointOrGroup('${chipAuditPayload}')" title="Click to select Entire Replicate Group (n=${g.n}, default) or Single Point Only (${rep.id}) · Rep ${rep.rep}, QC: ${rep.qc}" class="px-1.5 py-0.5 rounded font-mono text-xs transition ${isCand ? 'badge-warn ring-1 ring-amber-500 font-bold' : 'bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] hover:border-[var(--primary)]'}">⚑ ${isCand ? '★ ' : ''}${fmtNum(rep.val, 2)}${qcTag}</button><button type="button" onclick="jumpToRecord('${rep.id}')" title="Jump to Record ${rep.id} in Explorer" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">🔍</button></span>`;
                   }).join(" ");
 
                   const badges = [];
-                  if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail">Dixon Q=${fmtNum(g.dixon_q, 3)}</span>`);
-                  if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn">RSD &gt; 20%</span>`);
-                  else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">RSD 10–20%</span>`);
-                  if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn">&gt;3&times;SD<sub>pool</sub></span>`);
-                  if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail">Mixed QC</span>`);
+                  const showActiveFlags = !g.below_cutoff || !state.suppressTraceFlags;
+                  if (showActiveFlags) {
+                    if (g.raw_dixon) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Dixon Q=${fmtNum(g.dixon_q, 3)}">⚑ Dixon Outlier</span>`);
+                    if (g.raw_rsd20) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}% > 20%">⚑ RSD &gt; 20%</span>`);
+                    else if (g.raw_rsd10) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Within-group RSD ${fmtNum(g.rsd_within_pct, 1)}%">⚑ RSD 10–20%</span>`);
+                    if (g.raw_sd3x) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title=">3×SD_pooled candidate">⚑ &gt;3&times;SD_pooled</span>`);
+                    if (g.raw_proximate_sum) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-warn" title="Proximate Mass-Balance Sum = ${fmtNum(g.proximate_sum_pct, 1)}% (Data Portal requires Moisture + Ash + VS [or 100 - FC] within 95–105% per resource/experiment/method)">⚑ Proximate Sum (${fmtNum(g.proximate_sum_pct, 1)}%)</span>`);
+                    if (g.has_identical_replicates) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info" title="Informational: all replicates in group are identical (within_sd = 0) — Identical Replicates (SD=0)">⚑ Identical Replicates</span>`);
+                    if (g.qc_mixed) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono font-semibold badge-fail" title="Mixed QC (${g.qc_pass_count}P/${g.qc_fail_count}F)">⚑ Mixed QC</span>`);
+                  }
                   if (g.below_cutoff) badges.push(`<span class="px-1.5 py-0.5 rounded text-[11px] font-mono badge-info">Trace (${g.cutoff_label})</span>`);
+                  if (badges.length > 0) {
+                    const safeShowKey = String(repGroupKey || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowRes = String(state.resource || g.resource_name || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowAt = String(g.analysis_type || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowParam = String(g.parameter || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowSample = String(g.prepared_sample || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    const safeShowCand = String(singleCandId || "").replace(/"/g, "&quot;").replace(/'/g, "\\'");
+                    badges.push(`<button type="button" class="btn-show-me-flag px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--card)] text-[var(--primary)] border border-[var(--primary)]/40 hover:bg-[var(--primary)]/10 transition" data-group-key="${safeShowKey}" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ replicateGroupKey: '${safeShowKey}', resource: '${safeShowRes}', analysisType: '${safeShowAt}', parameter: '${safeShowParam}', preparedSample: '${safeShowSample}', outlierRecordId: '${safeShowCand}' }, this)" title="Show flagged replicate group and outlier in slice context">👁 Show me</button>`);
+                  }
 
                   const qcSummary = g.qc_fail_count === 0
                     ? `<span class="badge-pass px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold">Unquarantined (${g.qc_pass_count}P)</span>`
@@ -6291,9 +9100,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   const metaPayload = encodeURIComponent(JSON.stringify({
                     scope: currentTriageScope === "single" ? "single_record" : "replicate_group",
                     triage_scope: currentTriageScope,
+                    replicate_group_key: repGroupKey,
                     resource_name: state.resource,
                     analysis_type: g.analysis_type,
                     prepared_sample: g.prepared_sample,
+                    prep_method: g.prep_method || "",
+                    group_context_label: g.group_context_label || g.prep_method || "",
                     field_sample: lin.fsName || "",
                     collected_date: lin.collectedDate || "",
                     geoid: lin.geoid || "",
@@ -6304,6 +9116,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                     n: g.n,
                     mean: g.mean,
                     sd: g.sd,
+                    within_sd: g.within_sd !== undefined ? g.within_sd : g.sd,
                     rsd_within_pct: g.rsd_within_pct,
                     dixon_q: g.dixon_q,
                     dixon_candidate_id: singleCandId,
@@ -6333,21 +9146,20 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         ${pLabel} <span class="font-mono text-[11px] font-normal text-[var(--muted-foreground)]">(${g.unit || '—'})</span>
                         <div class="mt-1 flex flex-wrap gap-1">
                           <button onclick="inspectSampleParam('${g.prepared_sample}', '${g.parameter}')" class="px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] text-[10px] font-semibold hover:border-[var(--primary)]">Inspect Records &rarr;</button>
-                          <button type="button" onclick="window.addSelectionToTray('${metaPayload}')" class="px-2 py-0.5 rounded bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] text-[10px] font-semibold hover:border-[var(--primary)]">📌 Add to Tray</button>
                           <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" class="px-2 py-0.5 rounded badge-warn text-[10px] font-semibold hover:opacity-90">⚑ Audit Modal</button>
                         </div>
                       </td>
                       <td class="py-2.5 px-3"><div class="flex flex-wrap items-center gap-1"><span class="text-[11px] font-mono text-[var(--muted-foreground)]">n=${g.n}:</span> ${repChips}</div></td>
-                      <td class="py-2.5 px-3 font-mono text-right whitespace-nowrap"><strong>${fmtNum(g.mean, 2)}</strong> &plusmn; ${fmtNum(g.sd, 2)}</td>
+                      <td class="py-2.5 px-3 font-mono text-right whitespace-nowrap"><strong>${fmtNum(g.mean, 2)}</strong> &plusmn; ${fmtNum(g.within_sd !== undefined && g.within_sd !== null ? g.within_sd : g.sd, 2)}</td>
                       <td class="py-2.5 px-3 font-mono text-right whitespace-nowrap">
-                        <span class="${(g.rsd_within_pct || 0) > 20 ? 'text-red-500 font-bold' : ((g.rsd_within_pct || 0) > 10 ? 'text-amber-500 font-semibold' : 'text-[var(--foreground)]')}">${g.rsd_within_pct !== null ? fmtNum(g.rsd_within_pct, 1) + '%' : '—'}</span>
+                        <span class="${(g.rsd_within_pct || 0) > 20 ? 'text-red-500 font-bold' : ((g.rsd_within_pct || 0) > 10 ? 'text-amber-500 font-semibold' : 'text-[var(--foreground)]')}">${g.rsd_within_pct !== null && g.rsd_within_pct !== undefined ? `${fmtNum(g.rsd_within_pct, 1)}% (±${fmtNum(g.within_sd !== undefined && g.within_sd !== null ? g.within_sd : g.sd, 2)})` : '—'}</span>
                         <span class="text-[var(--muted-foreground)]"> vs </span>
-                        <span class="text-[var(--primary)]">${g.rsd_between_pct !== null && g.rsd_between_pct !== undefined ? fmtNum(g.rsd_between_pct, 1) + '%' : '—'}</span>
+                        <span class="text-[var(--primary)]">${g.rsd_between_pct !== null && g.rsd_between_pct !== undefined ? `${fmtNum(g.rsd_between_pct, 1)}%${g.between_sd !== null && g.between_sd !== undefined ? ` (±${fmtNum(g.between_sd, 2)})` : ''}` : 'N/A (n=1 method group)'}</span>
                       </td>
                       <td class="py-2.5 px-3 space-y-1">
                         <div class="flex flex-wrap gap-1">${badges.join("") || '<span class="text-[var(--muted-foreground)]">Pass</span>'}</div>
                         <div>${qcSummary}</div>
-                        ${g.note ? `<div class="text-[11px] font-mono text-[var(--muted-foreground)] italic truncate max-w-[190px]" title="${g.note.replace(/"/g, '&quot;')}">"${g.note}"</div>` : ""}
+                        ${(() => { const cn = stripQcAuditAnnotations(g.note); return cn ? `<div class="text-[11px] font-mono text-[var(--muted-foreground)] italic truncate max-w-[190px]" title="${cn.replace(/"/g, '&quot;')}">"${cn}"</div>` : ""; })()}
                       </td>
                       <td class="py-2.5 px-3 space-y-1.5 min-w-[300px]">
                         <div class="flex items-center gap-1 text-[10px]">
@@ -6362,7 +9174,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         </select>
                         <input type="text" value="${(dEntry.note || '').replace(/"/g, '&quot;')}" onchange="handleDecisionNote('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Add reviewer rationale / action note..." class="w-full rounded px-2 py-1 text-xs border border-[var(--border)] font-mono" />
                         <div class="flex items-center gap-1">
-                          <input type="email" value="${(dEntry.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email (e.g. reviewer@lbl.gov)..." class="flex-1 rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
+                          <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(dEntry.assigned_to_email) : (dEntry.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email (e.g. reviewer@lbl.gov)..." class="flex-1 rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
                           <button type="button" onclick="approveAndSyncDecision('${safeKeyAttr}', '${metaPayload}')" title="Approve decision &amp; sync to Google Sheets + Postgres" class="px-2 py-1 rounded text-[10px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90 whitespace-nowrap">⚡ Approve &amp; Sync</button>
                         </div>
                         <div class="flex flex-wrap gap-1">
@@ -6410,11 +9222,13 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const rowsHtml = paramRows.map(p => {
         const wMed = p.within_rsd_median;
         const wMax = p.within_rsd_max;
+        const wSdMed = p.within_sd_median !== undefined && p.within_sd_median !== null ? p.within_sd_median : p.pooled_sd;
         const bRsd = p.between_rsd_pct;
+        const bSd = p.between_sd !== undefined && p.between_sd !== null ? p.between_sd : null;
         const wBarPct = wMed !== null ? Math.min(100, Math.max(3, (wMed / 40) * 100)) : 0;
         const bBarPct = bRsd !== null ? Math.min(100, Math.max(3, (bRsd / 40) * 100)) : 0;
         const wBarColor = wMed === null ? "bg-gray-400" : (wMed > 20 ? "bg-red-500" : (wMed > 10 ? "bg-amber-500" : "bg-emerald-500"));
-        const flagCnt = suppress ? p.flagged_active : p.flagged_raw;
+        const flagCnt = suppress ? (p.flagged_active ?? p.flagged_replicate_groups ?? 0) : p.flagged_raw;
         const label = formatParamLabel(p.analysis_type, p.parameter);
 
         return `
@@ -6427,9 +9241,9 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <td class="py-2.5 px-3 font-mono text-center">${p.n_groups} grp <span class="text-[var(--muted-foreground)]">(${p.n_obs} obs)</span></td>
             <td class="py-2.5 px-3 font-mono text-right font-semibold">${fmtNum(p.overall_mean, 2)}</td>
             <td class="py-2.5 px-3 font-mono">
-              ${wMed !== null ? `
+              ${wMed !== null && wMed !== undefined ? `
                 <div class="flex items-center justify-between gap-2">
-                  <span><strong>${fmtNum(wMed, 1)}%</strong> <span class="text-[var(--muted-foreground)]">(max ${fmtNum(wMax, 1)}%)</span></span>
+                  <span><strong>${fmtNum(wMed, 1)}%</strong>${wSdMed !== null && wSdMed !== undefined ? ` <span class="text-[var(--foreground)]">(±${fmtNum(wSdMed, 2)})</span>` : ""} <span class="text-[var(--muted-foreground)]">(max ${fmtNum(wMax, 1)}%)</span></span>
                 </div>
                 <div class="w-full h-2 rounded-full bg-[var(--content)] overflow-hidden mt-1">
                   <div class="h-full rounded-full ${wBarColor}" style="width: ${wBarPct}%"></div>
@@ -6437,18 +9251,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               ` : `<span class="text-[var(--muted-foreground)] italic">N/A (n=1)</span>`}
             </td>
             <td class="py-2.5 px-3 font-mono">
-              ${bRsd !== null ? `
+              ${bRsd !== null && bRsd !== undefined ? `
                 <div class="flex items-center justify-between gap-2">
-                  <strong class="text-[var(--primary)]">${fmtNum(bRsd, 1)}%</strong>
-                  <span class="text-[10px] text-[var(--muted-foreground)]">across ${p.n_groups} means</span>
+                  <span><strong class="text-[var(--primary)]">${fmtNum(bRsd, 1)}%</strong>${bSd !== null && bSd !== undefined ? ` <span class="text-[var(--foreground)]">(±${fmtNum(bSd, 2)})</span>` : ""}</span>
+                  <span class="text-[10px] text-[var(--muted-foreground)]">across ${p.between_k_groups || p.n_groups} means</span>
                 </div>
                 <div class="w-full h-2 rounded-full bg-[var(--content)] overflow-hidden mt-1">
                   <div class="h-full rounded-full bg-[var(--primary)]" style="width: ${bBarPct}%"></div>
                 </div>
-              ` : `<span class="text-[var(--muted-foreground)] italic">Single group</span>`}
+              ` : `<span class="text-[var(--muted-foreground)] italic">N/A (n=1 method group)</span>`}
             </td>
-            <td class="py-2.5 px-3 font-mono text-right">${p.pooled_sd !== null ? `±${fmtNum(p.pooled_sd, 2)}` : '—'}</td>
-            <td class="py-2.5 px-3 font-mono text-center">${flagCnt > 0 ? `<span class="px-2 py-0.5 rounded font-bold badge-warn">${flagCnt}</span>` : '0'}</td>
+            <td class="py-2.5 px-3 font-mono text-right">${p.pooled_sd !== null && p.pooled_sd !== undefined ? `±${fmtNum(p.pooled_sd, 2)}` : '—'}</td>
+            <td class="py-2.5 px-3 font-mono text-center">${flagCnt > 0 ? `<div class="inline-flex items-center gap-1.5"><span class="px-2 py-0.5 rounded font-bold badge-warn">${flagCnt}</span><button type="button" class="btn-show-me-flag btn-audit-show-me px-1.5 py-0.5 rounded text-[10px] font-semibold bg-[var(--content)] text-[var(--primary)] border border-[var(--border)] hover:opacity-80 transition" onclick="event.stopPropagation(); window.openFlagShowMePopover && window.openFlagShowMePopover({ resource: state.resource, analysisType: '${escHtml(p.analysis_type || "")}', parameter: '${escHtml(p.parameter || "")}' }, this)" title="Show flagged replicate group in slice context">👁 Show me</button></div>` : '0'}</td>
             <td class="py-2.5 px-3"><span class="px-2 py-0.5 rounded text-[11px] font-semibold ${driverBadgeClass(p.driver_tone)}">${p.driver_badge}</span></td>
           </tr>
         `;
@@ -6484,7 +9298,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function getFilteredCuratedNotes() {
       const ins = getResourceInsights();
-      const rawNotes = (ins && ins.curated_notes) || [];
+      const rawNotes = ((ins && ins.curated_notes) || []).filter(n => {
+        if (state.domain !== "all" && n && n.analysis_type) {
+          return normalizeDomainKey(n.analysis_type) === state.domain;
+        }
+        return true;
+      });
       if (state.portalQcMode === "all") return rawNotes;
       const matchingRecIds = new Set(
         getResourceRecords()
@@ -6499,8 +9318,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
     function renderNotesSubtab() {
       const notes = getFilteredCuratedNotes();
-      const fsList = (BUNDLE.field_samples || []).filter(fs => fs.resource_name === state.resource && fs.note);
-      const psList = (BUNDLE.prepared_samples || []).filter(ps => ps.resource_name === state.resource && ps.note);
+      const fsList = (BUNDLE.field_samples || []).filter(fs => fs.resource_name === state.resource && stripQcAuditAnnotations(fs.note));
+      const psList = (BUNDLE.prepared_samples || []).filter(ps => ps.resource_name === state.resource && stripQcAuditAnnotations(ps.note));
 
       const toneBadgeClass = tone => {
         if (tone === "danger") return "badge-fail";
@@ -6543,8 +9362,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <div class="space-y-2">
               <h3 class="text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Field &amp; Preparation Lineage Notes (with Collection / Prep Dates &amp; GEOID)</h3>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
-                ${fsList.map(f => `<div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs"><strong class="font-mono">Field Sample ${f.name}</strong> <span class="font-mono text-[11px] text-[var(--muted-foreground)]">(Col: ${f.collected_at || 'Unrecorded'} · GEOID: ${f.geoid || '—'})</span>: "${f.note}"</div>`).join("")}
-                ${psList.map(p => `<div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs"><strong class="font-mono">Prepared Sample ${p.name}</strong> <span class="font-mono text-[11px] text-[var(--muted-foreground)]">(Prep: ${p.prep_date || 'Unrecorded'})</span>: "${p.note}"</div>`).join("")}
+                ${fsList.map(f => `<div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs"><strong class="font-mono">Field Sample ${f.name}</strong> <span class="font-mono text-[11px] text-[var(--muted-foreground)]">(Col: ${f.collected_at || 'Unrecorded'} · GEOID: ${f.geoid || '—'})</span>: "${stripQcAuditAnnotations(f.note)}"</div>`).join("")}
+                ${psList.map(p => `<div class="p-3 rounded-lg bg-[var(--background)] border border-[var(--border)] text-xs"><strong class="font-mono">Prepared Sample ${p.name}</strong> <span class="font-mono text-[11px] text-[var(--muted-foreground)]">(Prep: ${p.prep_date || 'Unrecorded'})</span>: "${stripQcAuditAnnotations(p.note)}"</div>`).join("")}
               </div>
             </div>
           ` : ""}
@@ -6573,6 +9392,11 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               isCandidate: isDixonCand || isSd3Cand,
               isDixonCand,
               isSd3Cand,
+              rawRsd20: Boolean(g.raw_rsd20),
+              rawProximateSum: Boolean(g.raw_proximate_sum),
+              proximateSumPct: g.proximate_sum_pct,
+              hasIdentical: Boolean(g.has_identical_replicates),
+              qcMixed: Boolean(g.qc_mixed),
               dixonQ: g.dixon_q,
               rsdWithin: g.rsd_within_pct,
               cutoffLabel: g.cutoff_label
@@ -6587,6 +9411,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const resRecs = getResourceRecords();
       const q = state.search.trim().toLowerCase();
       return resRecs.filter(r => {
+        if (state.domain !== "all" && r.analysis_type && normalizeDomainKey(r.analysis_type) !== state.domain) return false;
         if (!isRecordMatchingPortalQc(r, state.portalQcMode)) return false;
         if (state.prepared_sample !== "all" && r.prepared_sample !== state.prepared_sample) return false;
         if (state.experiment !== "all" && r.experiment !== state.experiment) return false;
@@ -6624,7 +9449,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         if (state.explorerFlagFilter === "flagged") return info && info.isPrimary;
         if (state.explorerFlagFilter === "candidate") return info && info.isPrimary && info.isCandidate;
         if (state.explorerFlagFilter === "suppressed") return info && info.isSuppressed;
-        if (state.explorerFlagFilter === "has_note") return Boolean(r.note);
+        if (state.explorerFlagFilter === "has_note") return Boolean(stripQcAuditAnnotations(r.note));
         if (state.explorerFlagFilter === "reviewed") {
           const entry = DECISIONS_STORE[makeRecordDecisionKey(r.record_id)];
           return Boolean(entry && (entry.decision !== "pending" || (entry.note && entry.note.trim())));
@@ -6635,7 +9460,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const inFlaggedCnt = filtered.filter(r => outlierMap[r.record_id] && outlierMap[r.record_id].isPrimary).length;
       const candCnt = filtered.filter(r => outlierMap[r.record_id] && outlierMap[r.record_id].isPrimary && outlierMap[r.record_id].isCandidate).length;
       const suppCnt = filtered.filter(r => outlierMap[r.record_id] && outlierMap[r.record_id].isSuppressed).length;
-      const noteCnt = filtered.filter(r => Boolean(r.note)).length;
+      const noteCnt = filtered.filter(r => Boolean(stripQcAuditAnnotations(r.note))).length;
       const revCnt = filtered.filter(r => {
         const entry = DECISIONS_STORE[makeRecordDecisionKey(r.record_id)];
         return Boolean(entry && (entry.decision !== "pending" || (entry.note && entry.note.trim())));
@@ -6665,11 +9490,12 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-info">Trace (${info.cutoffLabel})</span>`;
           } else if (info.isCandidate) {
             const tags = [];
-            if (info.isDixonCand) tags.push(`Dixon Q=${fmtNum(info.dixonQ, 2)}`);
-            if (info.isSd3Cand) tags.push(`>3×SD`);
-            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold badge-warn ring-1 ring-amber-500">★ ${tags.join(' · ')}</span>`;
+            if (info.isDixonCand) tags.push(`⚑ Dixon Outlier`);
+            if (info.isSd3Cand) tags.push(`⚑ >3×SD_pooled`);
+            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold badge-warn ring-1 ring-amber-500" title="Dixon Q=${fmtNum(info.dixonQ, 2)} · Within-RSD ${fmtNum(info.rsdWithin, 1)}%">${tags.join(' · ')}</span>`;
           } else if (info.isPrimary) {
-            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-warn">⚑ Grp RSD ${fmtNum(info.rsdWithin, 1)}%</span>`;
+            const pillLabel = info.rawRsd20 ? "⚑ RSD &gt; 20%" : (info.rawProximateSum ? `⚑ Proximate Sum (${fmtNum(info.proximateSumPct, 1)}%)` : "⚑ Outlier Flag");
+            statCell = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono badge-warn" title="Within-group RSD ${fmtNum(info.rsdWithin, 1)}%">${pillLabel}</span>`;
           }
         }
         const qcHtml = r.qc_status === "pass"
@@ -6708,7 +9534,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
 
         return `
           <tr class="border-t border-[var(--border)] hover:bg-[var(--background)] text-xs align-top">
-            <td class="py-2 px-2.5 font-mono font-semibold"><div class="flex items-center gap-1"><button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Click to select Entire Replicate Group (default) or Single Point Only (${r.record_id})" class="hover:text-[var(--primary)] underline decoration-dotted">⚑ ${r.record_id}</button><button type="button" onclick="window.addSelectionToTray('${metaPayload}')" title="Add to Selection &amp; Export Tray" class="px-1 py-0.5 rounded text-[10px] text-[var(--muted-foreground)] hover:text-[var(--primary)]">📌</button></div></td>
+            <td class="py-2 px-2.5 font-mono font-semibold"><div class="flex items-center gap-1"><button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Click to select Entire Replicate Group (default) or Single Point Only (${r.record_id})" class="hover:text-[var(--primary)] underline decoration-dotted">⚑ ${r.record_id}</button></div></td>
             <td class="py-2 px-2.5">${r.analysis_type}</td>
             <td class="py-2 px-2.5 font-mono">
               <div class="font-semibold text-[var(--primary)]">${r.prepared_sample}</div>
@@ -6727,15 +9553,14 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
             <td class="py-2 px-2.5 font-mono text-right font-bold">${r.value !== null ? fmtNum(r.value, 3) : '—'} <span class="font-normal text-[10px] text-[var(--muted-foreground)]">${r.unit || ''}</span></td>
             <td class="py-2 px-2.5 text-center whitespace-nowrap">${statCell}</td>
             <td class="py-2 px-2.5 text-center">${qcHtml}</td>
-            <td class="py-2 px-2.5 text-[var(--muted-foreground)] max-w-[160px] truncate" title="${(r.note || '').replace(/"/g, '&quot;')}">${r.note || ''}</td>
+            <td class="py-2 px-2.5 text-[var(--muted-foreground)] max-w-[160px] truncate" title="${stripQcAuditAnnotations(r.note).replace(/"/g, '&quot;')}">${stripQcAuditAnnotations(r.note)}</td>
             <td class="py-2 px-2.5 min-w-[250px] space-y-1">
               <select onchange="handleDecisionChange('${safeKeyAttr}', this.value, '${metaPayload}')" class="w-full rounded px-1.5 py-1 text-[11px] font-semibold border border-[var(--border)]">
                 ${DECISION_OPTIONS.map(o => `<option value="${o.value}" ${dEntry.decision === o.value ? 'selected' : ''}>${o.label}</option>`).join("")}
               </select>
               <input type="text" value="${(dEntry.note || '').replace(/"/g, '&quot;')}" onchange="handleDecisionNote('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Reviewer note..." class="w-full rounded px-1.5 py-1 text-[11px] border border-[var(--border)] font-mono" />
               <div class="flex items-center gap-1">
-                <input type="email" value="${(dEntry.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email..." class="flex-1 rounded px-1.5 py-0.5 text-[10px] border border-[var(--border)] font-mono" />
-                <button type="button" onclick="window.addSelectionToTray('${metaPayload}')" title="Add Replicate Group to Selection &amp; Export Tray" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📌 Tray</button>
+                <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(dEntry.assigned_to_email) : (dEntry.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="handleDecisionAssignee('${safeKeyAttr}', this.value, '${metaPayload}')" placeholder="Assign to email..." class="flex-1 rounded px-1.5 py-0.5 text-[10px] border border-[var(--border)] font-mono" />
                 <button type="button" onclick="window.auditPage2PointOrGroup('${metaPayload}')" title="Open Audit Finding Modal (Entire Replicate Group default vs Single Point Only)" class="px-1.5 py-0.5 rounded text-[10px] font-bold badge-warn hover:opacity-90">⚑ Audit</button>
                 <button type="button" onclick="approveAndSyncDecision('${safeKeyAttr}', '${metaPayload}')" class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚡ Sync</button>
               </div>
@@ -6749,7 +9574,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 class="text-base font-bold text-[var(--foreground)]">Complete ${state.resource.toUpperCase()} Record Explorer (${flagFiltered.length} matching records)</h2>
-              <p class="text-xs text-[var(--muted-foreground)]">Includes Collection Date, GEOID, Sample Prep/Run Date, Stat Screen status, and per-record Analyst QC Review decisions &amp; email task assignment.</p>
+              <p class="text-xs text-[var(--muted-foreground)]">Includes Collection Date, GEOID, Sample Prep/Run Date, Statistical Snapshot status, and per-record Analyst QC Review decisions &amp; email task assignment.</p>
             </div>
             <input id="flt-search-input" type="text" value="${state.search.replace(/"/g, '&quot;')}" oninput="updateSearch(this.value)" placeholder="Search record ID, parameter, GEOID, date, note..." class="rounded-lg px-3 py-1.5 text-xs border min-w-[260px]" />
           </div>
@@ -6770,7 +9595,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                   <th class="py-2 px-2.5">Exp</th>
                   <th class="py-2 px-2.5">Parameter</th>
                   <th class="py-2 px-2.5 text-right">Value</th>
-                  <th class="py-2 px-2.5 text-center">Stat Screen</th>
+                  <th class="py-2 px-2.5 text-center">Statistical Snapshot</th>
                   <th class="py-2 px-2.5 text-center">QC</th>
                   <th class="py-2 px-2.5">Bench Note</th>
                   <th class="py-2 px-2.5">⚖️ Analyst Decision &amp; Assignee</th>
@@ -6882,7 +9707,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
                         <div class="font-mono text-[11px] text-[var(--muted-foreground)]">${e.parameter || '—'}</div>
                       </td>
                       <td class="py-2.5 px-3 space-y-1 min-w-[200px]">
-                        <input type="email" value="${(e.assigned_to_email || '').replace(/"/g, '&quot;')}" onchange="assignQueueEntryEmail('${safeKeyAttr}', this.value)" placeholder="Assign to email..." class="w-full rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
+                        <input type="email" value="${(window.getDefaultAssigneeEmail ? window.getDefaultAssigneeEmail(e.assigned_to_email) : (e.assigned_to_email || '')).replace(/"/g, '&quot;')}" onchange="assignQueueEntryEmail('${safeKeyAttr}', this.value)" placeholder="Assign to email..." class="w-full rounded px-2 py-1 text-[11px] border border-[var(--border)] font-mono" />
                         ${currentAnalystEmail ? `<button type="button" onclick="assignQueueEntryEmail('${safeKeyAttr}', '${currentAnalystEmail.replace(/'/g, "\\'")}')" class="px-1.5 py-0.5 rounded text-[10px] bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">👤 Assign to Me</button>` : ''}
                       </td>
                       <td class="py-2.5 px-3 space-y-1 min-w-[250px]">
@@ -6916,7 +9741,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
               <p class="text-xs text-[var(--muted-foreground)]">Manage statistical outlier flags, whole-replicate-group vs. single-record flips, and ad-hoc audit findings. Assign tasks to team members by email address and approve write-backs to Google Sheets &amp; PostgreSQL.</p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
-              <button type="button" onclick="openSubmitFindingModal({ resource_name: state.resource, analysis_type: state.domain === 'all' ? 'Proximate Analysis' : state.domain })" class="px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90">
+              <button type="button" onclick="openSubmitFindingModal({ resource_name: state.resource, analysis_type: (DOMAIN_DEFS.find(d => d.key === state.domain) || {}).analysisType || (state.domain === 'all' ? 'Proximate Analysis' : state.domain) })" class="px-3 py-1.5 rounded-lg text-xs font-semibold badge-warn hover:opacity-90">
                 + Submit Audit Finding
               </button>
               <button type="button" onclick="syncReviewQueueWithApi()" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]">
@@ -6992,14 +9817,55 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       `;
     }
 
-    function syncUrl() {
+    function syncUrl(opts = { push: false }) {
       try {
         const u = new URL(window.location.href);
-        u.searchParams.set("resource", state.resource);
-        u.searchParams.set("domain", state.domain);
-        u.searchParams.set("subtab", state.subtab);
-        u.searchParams.set("portal_qc", state.portalQcMode);
-        window.history.replaceState({}, "", u.toString());
+        if (state.resource) {
+          u.searchParams.set("resource", state.resource);
+        } else {
+          u.searchParams.delete("resource");
+        }
+        if (state.domain && state.domain !== "all") {
+          u.searchParams.set("domain", state.domain);
+        } else {
+          u.searchParams.delete("domain");
+        }
+        if (state.subtab && state.subtab !== "outliers") {
+          u.searchParams.set("subtab", state.subtab);
+        } else {
+          u.searchParams.delete("subtab");
+        }
+        if (state.portalQcMode && state.portalQcMode !== "qc_pass") {
+          u.searchParams.set("portal_qc", state.portalQcMode);
+        } else {
+          u.searchParams.delete("portal_qc");
+        }
+        if (state.outlierFilterMode && state.outlierFilterMode !== "flagged") {
+          u.searchParams.set("flag", state.outlierFilterMode);
+        } else {
+          u.searchParams.delete("flag");
+        }
+        if (state.search && state.search.trim()) {
+          u.searchParams.set("q", state.search.trim());
+        } else {
+          u.searchParams.delete("q");
+        }
+        const stateSnapshot = {
+          resource: state.resource,
+          selectedResource: state.resource,
+          domain: state.domain,
+          selectedDomain: state.domain,
+          subtab: state.subtab,
+          activeSubtab: state.subtab,
+          portalQcMode: state.portalQcMode,
+          outliersFilter: state.outlierFilterMode,
+          outliersSearch: state.search
+        };
+        if (opts && opts.push) {
+          window.history.pushState(stateSnapshot, "", u.toString());
+        } else {
+          window.history.replaceState(stateSnapshot, "", u.toString());
+        }
       } catch (_) {}
     }
 
@@ -7022,13 +9888,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     window.addSelectionToTray = function(encodedPayload) {
       let meta = {};
       try { meta = JSON.parse(decodeURIComponent(encodedPayload)); } catch (_) { return; }
-      const itemKey = `${meta.resource_name || state.resource}||${meta.analysis_type || ''}||${meta.prepared_sample || ''}||${meta.experiment || ''}||${meta.parameter || ''}||${meta.record_id || ''}`;
+      const repGroupKey = window.normalizeReplicateGroupKey
+        ? window.normalizeReplicateGroupKey(meta, meta.resource_name || state.resource)
+        : (meta.replicate_group_key || "");
+      const itemKey = `${repGroupKey || `${meta.resource_name || state.resource}||${meta.analysis_type || ''}||${meta.prepared_sample || ''}||${meta.experiment || ''}||${meta.parameter || ''}`}||${meta.record_id || ''}`;
       const existingIdx = SELECTION_TRAY.findIndex(x => x.tray_key === itemKey);
       const item = {
         tray_key: itemKey,
+        replicate_group_key: repGroupKey,
         resource_name: meta.resource_name || state.resource,
         analysis_type: meta.analysis_type || "",
         prepared_sample: meta.prepared_sample || "",
+        prep_method: meta.prep_method || meta.group_context_label || "",
         experiment: meta.experiment || "",
         parameter: meta.parameter || "",
         record_id: meta.record_id || meta.dixon_candidate_id || "",
@@ -7038,6 +9909,10 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         record_ids: meta.triage_scope === "single"
           ? (meta.record_id || meta.dixon_candidate_id || "")
           : (meta.all_group_record_ids || meta.record_ids || meta.record_id || ""),
+        flag_type: meta.flag_type || "stat_snapshot_flagged",
+        source_label: "Page 2 — Statistical Snapshot",
+        decision_status: "in_review",
+        submitted_at: new Date().toISOString(),
         note: meta.note || ""
       };
       if (existingIdx >= 0) {
@@ -7047,9 +9922,8 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       }
       saveSelectionTray(SELECTION_TRAY);
       if (window.showQcToast) {
-        window.showQcToast(`📌 Added ${item.prepared_sample || item.record_id} (${item.triage_scope === 'group' ? 'Entire Replicate Group' : 'Single Point Only'}) to Selection & Export Tray`, "info");
+        window.showQcToast(`Staged ${item.prepared_sample || item.record_id} (${item.triage_scope === 'group' ? 'Entire Replicate Group' : 'Single Point Only'}) for Audit Workbench`, "info");
       }
-      renderSelectionExportTray();
     };
 
     window.toggleTrayItemScope = function(idx, scopeVal) {
@@ -7061,124 +9935,69 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
         ? (item.record_id || String(item.all_group_record_ids || "").split("|")[0] || "")
         : (item.all_group_record_ids || item.record_id || "");
       saveSelectionTray(SELECTION_TRAY);
-      renderSelectionExportTray();
     };
 
     window.removeTrayItem = function(idx) {
       SELECTION_TRAY.splice(idx, 1);
       saveSelectionTray(SELECTION_TRAY);
-      renderSelectionExportTray();
     };
 
     window.clearSelectionTray = function() {
       SELECTION_TRAY = [];
       saveSelectionTray(SELECTION_TRAY);
-      renderSelectionExportTray();
-    };
-
-    window.exportSelectionTrayCsv = function() {
-      if (!SELECTION_TRAY.length) return;
-      const cols = ["resource_name", "analysis_type", "prepared_sample", "experiment", "parameter", "scope", "record_id", "record_ids", "note"];
-      const csv = [
-        cols.join(","),
-        ...SELECTION_TRAY.map(it => cols.map(c => `"${String(it[c] ?? '').replace(/"/g, '""')}"`).join(","))
-      ].join("\\n");
-      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `biocirv_selection_tray_${new Date().toISOString().slice(0, 10)}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
     };
 
     window.sendSelectionTrayToWorkbench = async function(defaultDecision) {
-      if (!SELECTION_TRAY.length || !window.BioCirvQcClient) return;
-      const items = SELECTION_TRAY.map(it => ({
+      if (!window.BioCirvQcClient) return;
+      let sourceItems = SELECTION_TRAY;
+      if (!sourceItems.length) {
+        const decisionEntries = Object.values(DECISIONS_STORE || {});
+        if (decisionEntries.length) {
+          sourceItems = decisionEntries;
+        } else {
+          window.openReviewQueueSubtab();
+          return;
+        }
+      }
+      const items = sourceItems.map(it => ({
         scope: it.scope || (it.triage_scope === "single" ? "single_record" : "replicate_group"),
+        triage_scope: it.triage_scope === "single" ? "single" : "group",
+        replicate_group_key: it.replicate_group_key || (window.normalizeReplicateGroupKey ? window.normalizeReplicateGroupKey(it, it.resource_name || state.resource) : ""),
         resource_name: it.resource_name || state.resource,
         analysis_type: it.analysis_type || "",
-        prepared_sample_name: it.prepared_sample || "",
-        experiment_name: it.experiment || "",
-        parameter_name: it.parameter || "",
+        prepared_sample_name: it.prepared_sample || it.prepared_sample_name || "",
+        prep_method: it.prep_method || "",
+        experiment_name: it.experiment || it.experiment_name || "",
+        parameter_name: it.parameter || it.parameter_name || "",
+        flag_type: it.flag_type || "stat_snapshot_flagged",
+        source_label: it.source_label || "Page 2 — Statistical Snapshot",
+        decision_status: "in_review",
         record_id: it.triage_scope === "single" ? (it.record_id || "") : "",
         target_record_ids: String(it.record_ids || it.all_group_record_ids || it.record_id || "").split(/[|,\\s]+/).map(s => s.trim()).filter(Boolean),
-        decision: defaultDecision || "pending",
-        rationale_note: it.note || "Exported from Page 2 Selection & Export Tray"
+        decision: it.decision || defaultDecision || "in_review",
+        review_note: it.note || "Flagged from Page 2 — Statistical Snapshot",
+        rationale_note: it.note || "Flagged from Page 2 — Statistical Snapshot"
       }));
-      await window.BioCirvQcClient.exportTrayToWorkbench(items, defaultDecision || "pending", "Exported from Page 2 Selection & Export Tray");
+      await window.BioCirvQcClient.exportTrayToWorkbench(items, "Page 2 — Statistical Snapshot");
       await window.syncReviewQueueWithApi();
     };
 
-    function renderSelectionExportTray() {
-      const trayEl = document.getElementById("qc-selection-export-tray");
-      if (!trayEl) return;
-      if (!SELECTION_TRAY.length) {
-        trayEl.className = "bg-[var(--card)] border border-[var(--border)] rounded-xl p-3 shadow-sm flex flex-wrap items-center justify-between gap-2 text-xs";
-        trayEl.innerHTML = `
-          <div class="flex items-center gap-2 text-[var(--muted-foreground)]">
-            <span class="font-bold text-[var(--foreground)]">📌 Selection &amp; Export Tray (0 selected):</span>
-            <span>Click <strong>📌 Add to Tray</strong> or <strong>⚑</strong> on any replicate point/group to stage its <strong>Entire Replicate Group</strong> (default) or <strong>Single Point Only</strong>.</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-1.5">
-            <button type="button" onclick="window.openSliceExportModal({ resource: state.resource })" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📤 Export Slice (.HTML)</button>
-            <button type="button" id="btn-tray-to-workbench" onclick="window.openReviewQueueSubtab()" class="px-2.5 py-1 rounded text-[11px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚖️ Export to Audit Workbench</button>
-          </div>
-        `;
-        return;
-      }
-      trayEl.className = "bg-[var(--card)] border-2 border-[var(--primary)] rounded-xl p-3.5 shadow-sm space-y-2.5 text-xs";
-      trayEl.innerHTML = `
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <div class="flex items-center gap-2">
-            <span class="px-2 py-0.5 rounded font-mono font-bold bg-[var(--primary)] text-[var(--primary-foreground)]">${SELECTION_TRAY.length} Selected</span>
-            <span class="font-bold text-[var(--foreground)]">Selection &amp; Export Tray (Replicate-Group Default with 1-Click Single-Point Toggle)</span>
-          </div>
-          <div class="flex flex-wrap items-center gap-1.5">
-            <button type="button" onclick="window.exportSelectionTrayCsv()" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--secondary-foreground)] border border-[var(--border)] hover:border-[var(--primary)]">⬇ Export Tray (.CSV)</button>
-            <button type="button" onclick="window.openSliceExportModal({ resource: state.resource })" class="px-2.5 py-1 rounded text-[11px] font-semibold bg-[var(--secondary)] text-[var(--primary)] border border-[var(--border)] hover:border-[var(--primary)]">📤 Export Slice (.HTML)</button>
-            <button type="button" id="btn-tray-to-workbench" onclick="window.sendSelectionTrayToWorkbench('pending')" class="px-2.5 py-1 rounded text-[11px] font-bold bg-[var(--primary)] text-[var(--primary-foreground)] hover:opacity-90">⚖️ Export to Audit Workbench</button>
-            <button type="button" onclick="window.clearSelectionTray()" class="px-2 py-1 rounded text-[11px] text-[var(--muted-foreground)] hover:text-red-500">✕ Clear</button>
-          </div>
-        </div>
-        <div class="flex flex-wrap gap-2">
-          ${SELECTION_TRAY.map((it, idx) => {
-            const grpCnt = String(it.all_group_record_ids || "").split("|").filter(Boolean).length || 1;
-            return `
-              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--background)] border border-[var(--border)] font-mono text-[11px]">
-                <strong class="text-[var(--primary)]">${it.prepared_sample || it.record_id}</strong>
-                <span class="text-[var(--muted-foreground)]">${it.parameter || ''}</span>
-                <select onchange="window.toggleTrayItemScope(${idx}, this.value)" class="rounded px-1.5 py-0.5 text-[10px] font-semibold border border-[var(--border)] bg-[var(--card)]">
-                  <option value="group" ${it.triage_scope !== 'single' ? 'selected' : ''}>Entire Replicate Group (${grpCnt} recs)</option>
-                  <option value="single" ${it.triage_scope === 'single' ? 'selected' : ''}>Single Point Only (${it.record_id || '1 rec'})</option>
-                </select>
-                <button type="button" onclick="window.removeTrayItem(${idx})" class="text-[var(--muted-foreground)] hover:text-red-500 font-bold">&times;</button>
-              </div>
-            `;
-          }).join("")}
-        </div>
-      `;
-    }
-
-    function render() {
+    function render(opts = { push: false }) {
       renderDomainPills();
       renderHeaderAndKpis();
       renderDecisionBanner();
-      renderSelectionExportTray();
       const container = document.getElementById("qc-content");
       if (state.subtab === "outliers") container.innerHTML = renderOutliersSubtab();
       else if (state.subtab === "rsd") container.innerHTML = renderRsdSubtab();
       else if (state.subtab === "notes") container.innerHTML = renderNotesSubtab();
       else if (state.subtab === "explorer") container.innerHTML = renderExplorerSubtab();
       else if (state.subtab === "review_queue") container.innerHTML = renderReviewQueueSubtab();
-      syncUrl();
+      syncUrl(opts);
     }
 
     window.openReviewQueueSubtab = function() {
       state.subtab = "review_queue";
-      render();
+      render({ push: true });
     };
 
     window.setQueueFilter = function(field, val) {
@@ -7206,13 +10025,39 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       let meta = {};
       try { meta = JSON.parse(decodeURIComponent(encodedMeta)); } catch (_) {}
       const cur = getDecisionEntry(key);
+      const cleanEmail = (emailVal || "").trim();
       const nextDecision = cur.decision || "pending";
       upsertDecisionEntry(key, {
         decision: nextDecision,
-        assigned_to_email: (emailVal || "").trim()
+        assigned_to_email: cleanEmail
       }, meta);
-      if (cur.api_decision_id && window.BioCirvQcClient) {
-        window.BioCirvQcClient.assignDecision(cur.api_decision_id, (emailVal || "").trim());
+      const updated = getDecisionEntry(key);
+      if (window.BioCirvQcClient) {
+        if (updated.api_decision_id && typeof window.BioCirvQcClient.assignDecision === "function") {
+          window.BioCirvQcClient.assignDecision(updated.api_decision_id, cleanEmail);
+        } else if (cleanEmail && typeof window.BioCirvQcClient.submitDecision === "function") {
+          window.BioCirvQcClient.submitDecision({
+            decision_key: key,
+            replicate_group_key: updated.replicate_group_key || meta.replicate_group_key || key.replace(/^grp::/, ""),
+            scope: updated.scope || "replicate_group",
+            resource_name: updated.resource_name || meta.resource_name || state.resource,
+            analysis_type: updated.analysis_type || meta.analysis_type || state.domain,
+            parameter_name: updated.parameter || meta.parameter || "",
+            prepared_sample: updated.prepared_sample || meta.prepared_sample || "",
+            experiment: updated.experiment || meta.experiment || "",
+            record_id: updated.record_id || meta.record_id || "",
+            record_ids: updated.record_ids || meta.record_ids || "",
+            decision: nextDecision === "pending" ? "accept_with_note" : nextDecision,
+            note: updated.note || "",
+            assigned_to_email: cleanEmail
+          }).then(res => {
+            if (res && res.decision && res.decision.id && DECISIONS_STORE[key]) {
+              DECISIONS_STORE[key].api_decision_id = res.decision.id;
+              DECISIONS_STORE[key].assigned_to_email = cleanEmail;
+              saveDecisionsStore(DECISIONS_STORE);
+            }
+          }).catch(() => {});
+        }
       }
       renderDecisionBanner();
       renderHeaderAndKpis();
@@ -7325,22 +10170,24 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const res = await window.BioCirvQcClient.fetchDecisions({});
       if (res && res.ok && Array.isArray(res.decisions)) {
         res.decisions.forEach(d => {
-          const k = d.decision_key || `api::${d.id}`;
+          const repGroupKey = d.replicate_group_key || (window.normalizeReplicateGroupKey ? window.normalizeReplicateGroupKey(d, d.resource_name || state.resource) : "");
+          const k = d.decision_key || (d.scope === "replicate_group" && repGroupKey ? `grp::${repGroupKey}` : `api::${d.id}`);
           DECISIONS_STORE[k] = {
             ...(DECISIONS_STORE[k] || {}),
             key: k,
+            replicate_group_key: repGroupKey,
             api_decision_id: d.id,
             scope: d.scope || "replicate_group",
             resource_name: d.resource_name || state.resource,
             analysis_type: d.analysis_type || "",
-            prepared_sample: d.prepared_sample_name || "",
-            experiment: d.experiment_name || "",
+            prepared_sample: d.prepared_sample_name || d.prepared_sample || "",
+            experiment: d.experiment_name || d.experiment || "",
             record_id: d.record_id || "",
             record_ids: Array.isArray(d.target_record_ids) ? d.target_record_ids.join("|") : (d.target_record_ids || ""),
-            parameter: d.parameter_name || "",
+            parameter: d.parameter_name || d.parameter || "",
             decision: d.decision || "pending",
             status: d.status || "open",
-            note: d.rationale_note || "",
+            note: d.rationale_note || d.audit_note || "",
             assigned_to_email: d.assigned_to_email || "",
             reviewer_email: d.reviewer_email || "",
             synced_to_gsheet: Boolean(d.synced_to_gsheet),
@@ -7353,7 +10200,21 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     window.addEventListener("biocirv-decisions-updated", () => {
-      DECISIONS_STORE = loadDecisionsStore();
+      const fromStorage = loadDecisionsStore();
+      Object.keys(DECISIONS_STORE || {}).forEach(k => {
+        const mem = DECISIONS_STORE[k];
+        if (!fromStorage[k]) {
+          fromStorage[k] = mem;
+        } else {
+          if (mem.assigned_to_email && !fromStorage[k].assigned_to_email) {
+            fromStorage[k].assigned_to_email = mem.assigned_to_email;
+          }
+          if (mem.api_decision_id && !fromStorage[k].api_decision_id) {
+            fromStorage[k].api_decision_id = mem.api_decision_id;
+          }
+        }
+      });
+      DECISIONS_STORE = fromStorage;
       render();
     });
 
@@ -7364,7 +10225,43 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     window.handleDecisionChange = function(key, decisionVal, encodedMeta) {
       let meta = {};
       try { meta = JSON.parse(decodeURIComponent(encodedMeta)); } catch (_) {}
-      upsertDecisionEntry(key, { decision: decisionVal }, meta);
+      const prev = getDecisionEntry(key);
+      const preservedEmail = (prev && prev.assigned_to_email) ? prev.assigned_to_email : "";
+      upsertDecisionEntry(key, {
+        decision: decisionVal,
+        ...(preservedEmail ? { assigned_to_email: preservedEmail } : {})
+      }, meta);
+      const updated = getDecisionEntry(key);
+      if (decisionVal && decisionVal !== "pending" && window.BioCirvQcClient && typeof window.BioCirvQcClient.submitDecision === "function") {
+        window.BioCirvQcClient.submitDecision({
+          api_decision_id: updated.api_decision_id || null,
+          decision_key: key,
+          replicate_group_key: updated.replicate_group_key || meta.replicate_group_key || key.replace(/^grp::/, ""),
+          scope: updated.scope || "replicate_group",
+          triage_scope: updated.triage_scope || (updated.scope === "single_record" ? "single" : "group"),
+          resource_name: updated.resource_name || meta.resource_name || state.resource,
+          analysis_type: updated.analysis_type || meta.analysis_type || state.domain,
+          parameter_name: updated.parameter || meta.parameter || "",
+          prepared_sample: updated.prepared_sample || meta.prepared_sample || "",
+          experiment: updated.experiment || meta.experiment || "",
+          record_id: updated.record_id || meta.record_id || "",
+          record_ids: updated.record_ids || meta.record_ids || "",
+          flag_type: updated.flag_type || meta.flag_type || "stat_snapshot_flagged",
+          source_label: "Page 2 — Statistical Snapshot",
+          decision_status: "in_review",
+          decision: decisionVal,
+          note: updated.note || "",
+          assigned_to_email: updated.assigned_to_email || preservedEmail || null
+        }).then(res => {
+          if (res && res.decision && res.decision.id && DECISIONS_STORE[key]) {
+            DECISIONS_STORE[key].api_decision_id = res.decision.id;
+            if (preservedEmail && !DECISIONS_STORE[key].assigned_to_email) {
+              DECISIONS_STORE[key].assigned_to_email = preservedEmail;
+            }
+            saveDecisionsStore(DECISIONS_STORE);
+          }
+        }).catch(() => {});
+      }
       renderDecisionBanner();
       renderHeaderAndKpis();
     };
@@ -7451,27 +10348,28 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       state.search = "";
       initResourceSwitcher();
       initFiltersForResource();
-      render();
+      render({ push: true });
     };
 
     window.setDomain = function(d) {
-      state.domain = d;
-      render();
+      const norm = d === "all" ? "all" : normalizeDomainKey(d);
+      state.domain = DOMAIN_LABELS[norm] ? norm : "all";
+      render({ push: true });
     };
 
     window.setOutlierFilterMode = function(mode) {
       state.outlierFilterMode = mode;
-      render();
+      render({ push: false });
     };
 
     window.setExplorerFlagFilter = function(mode) {
       state.explorerFlagFilter = mode;
-      render();
+      render({ push: false });
     };
 
     window.updateSearch = function(val) {
       state.search = val;
-      render();
+      render({ push: false });
       const inp = document.getElementById("flt-search-input");
       if (inp) {
         inp.focus();
@@ -7480,10 +10378,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     };
 
     window.jumpToRecord = function(recId) {
+      if (state.domain !== "all") {
+        const targetRec = getResourceRecords().find(r => String(r.record_id) === String(recId));
+        if (targetRec && targetRec.analysis_type && normalizeDomainKey(targetRec.analysis_type) !== state.domain) {
+          state.domain = "all";
+        }
+      }
       state.search = recId;
       state.explorerFlagFilter = "all";
       state.subtab = "explorer";
-      render();
+      render({ push: true });
     };
 
     window.inspectSampleParam = function(sampleName, paramName) {
@@ -7492,13 +10396,16 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       state.search = paramName || "";
       state.explorerFlagFilter = "all";
       state.subtab = "explorer";
-      render();
+      render({ push: true });
     };
 
     window.auditPage2PointOrGroup = function(encodedPayload) {
       if (!window.openSubmitFindingModal) return;
       try {
         const payload = JSON.parse(decodeURIComponent(encodedPayload));
+        payload.flag_type = payload.flag_type || "stat_snapshot_flagged";
+        payload.source_label = payload.source_label || "Page 2 — Statistical Snapshot";
+        payload.decision_status = payload.decision_status || "in_review";
         window.openSubmitFindingModal(payload);
       } catch (_) {}
     };
@@ -7556,8 +10463,32 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     }
     document.getElementById("chk-suppress-trace").addEventListener("change", e => {
       state.suppressTraceFlags = e.target.checked;
-      render();
+      render({ push: false });
     });
+    const sidebarFlagSelectEl = document.getElementById("flt-sidebar-flag-type");
+    if (sidebarFlagSelectEl) {
+      sidebarFlagSelectEl.addEventListener("change", e => {
+        state.outlierFilterMode = e.target.value;
+        render({ push: false });
+      });
+    }
+    const sidebarBlindChkEl = document.getElementById("chk-sidebar-blind-mode");
+    if (sidebarBlindChkEl) {
+      sidebarBlindChkEl.checked = Boolean(state.anonymizeAnalyst);
+      sidebarBlindChkEl.addEventListener("change", e => {
+        state.anonymizeAnalyst = Boolean(e.target.checked);
+        document.body.classList.toggle("blind-analyst-mode", state.anonymizeAnalyst);
+        render({ push: false });
+      });
+    }
+    const sidebarSearchInputEl = document.getElementById("sidebar-search-input");
+    if (sidebarSearchInputEl) {
+      sidebarSearchInputEl.value = state.search || "";
+      sidebarSearchInputEl.addEventListener("input", e => {
+        state.search = e.target.value;
+        render({ push: false });
+      });
+    }
     document.getElementById("btn-reset-filters").addEventListener("click", () => {
       state.domain = "all";
       state.portalQcMode = "qc_pass";
@@ -7573,14 +10504,18 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
       const fltDateClearEl = document.getElementById("flt-date-clear");
       if (fltDateClearEl) fltDateClearEl.classList.add("hidden");
       state.search = "";
+      if (sidebarSearchInputEl) sidebarSearchInputEl.value = "";
       state.outlierFilterMode = "flagged";
+      if (sidebarFlagSelectEl) sidebarFlagSelectEl.value = "flagged";
       state.explorerFlagFilter = "all";
       initFiltersForResource();
-      render();
+      render({ push: false });
     });
     document.getElementById("btn-anon-analyst").addEventListener("click", () => {
       state.anonymizeAnalyst = !state.anonymizeAnalyst;
-      render();
+      document.body.classList.toggle("blind-analyst-mode", state.anonymizeAnalyst);
+      if (sidebarBlindChkEl) sidebarBlindChkEl.checked = state.anonymizeAnalyst;
+      render({ push: false });
     });
     document.getElementById("btn-theme-toggle").addEventListener("click", () => {
       const htmlEl = document.documentElement;
@@ -7591,7 +10526,7 @@ __SHARED_SLICE_AND_BUG_MODALS_HTML__
     document.querySelectorAll(".subtab-btn").forEach(btn => {
       btn.addEventListener("click", () => {
         state.subtab = btn.dataset.subtab;
-        render();
+        render({ push: true });
       });
     });
 
@@ -7699,6 +10634,33 @@ __SHARED_SLICE_AND_BUG_MODALS_JS__
     initSliceAndBugModals("Page 2 — Statistical QC & Lab Notes Audit");
     initResourceSwitcher();
     initFiltersForResource();
+    window.addEventListener("popstate", () => {
+      const p = new URLSearchParams(window.location.search);
+      const resParam = (p.get("resource") || p.get("res") || DEFAULT_RESOURCE).toLowerCase();
+      const matchedRes = ACTIVE_RESOURCES.find(r => r.toLowerCase() === resParam) || ACTIVE_RESOURCES[0];
+      const resourceChanged = matchedRes !== state.resource;
+      state.resource = matchedRes;
+      const domParam = p.get("domain") || p.get("type") || "all";
+      const normDom = domParam === "all" ? "all" : normalizeDomainKey(domParam);
+      state.domain = DOMAIN_LABELS[normDom] ? normDom : "all";
+      const subParam = p.get("subtab") || "outliers";
+      state.subtab = ["outliers", "rsd", "notes", "explorer", "review_queue"].includes(subParam) ? subParam : "outliers";
+      const pqcParam = p.get("portal_qc") || "qc_pass";
+      state.portalQcMode = ["all", "portal_compliant", "qc_pass", "qc_fail"].includes(pqcParam) ? pqcParam : "qc_pass";
+      state.outlierFilterMode = p.get("flag") || "flagged";
+      state.search = p.get("q") || "";
+      const pqcEl = document.getElementById("flt-portal-qc");
+      if (pqcEl) pqcEl.value = state.portalQcMode;
+      const searchEl = document.getElementById("sidebar-search-input");
+      if (searchEl) searchEl.value = state.search;
+      initResourceSwitcher();
+      if (resourceChanged) {
+        state.prepared_sample = "all";
+        state.experiment = "all";
+        initFiltersForResource();
+      }
+      render({ push: false });
+    });
     render();
     window.syncReviewQueueWithApi();
     if (window.refreshLiveQcOverlay) {

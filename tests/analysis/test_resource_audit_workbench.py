@@ -18,7 +18,12 @@ from analysis.metadata.resource_audit_workbench import (  # noqa: E402
     ANALYSIS_TABLE_MAP,
     build_resource_audit_workbench,
     build_workbench_payload,
+    canonical_domain_slug,
+    group_context_label,
     load_snapshot,
+    matches_replicate_group_key,
+    normalize_replicate_group_key,
+    resolve_record_table,
     unpack_snapshot_records,
 )
 from scripts.generate_dashboard_gallery import generate_gallery  # noqa: E402
@@ -111,12 +116,22 @@ def test_build_workbench_payload_detects_all_four_qc_flag_types() -> None:
     assert "proximate_sum" in all_flags
     assert "analyst_flagged" in all_flags
 
-    # Verify AH-PREP-02 proximate closure violation (>105%) is captured
+    # Verify AH-PREP-02 proximate closure violation (outside 95-105% via Data Portal formula:
+    # COALESCE(avg_moisture, 0) + COALESCE(avg_ash, 0) + COALESCE(avg_vs, 100 - COALESCE(avg_fc, 0))
+    # = 0.0 + 5.9 + 82.0 = 87.9%) is captured at both sample and stratum levels
     closure_map = payload["proximate_closure_by_sample"]
     assert "Almond Hulls::AH-PREP-02" in closure_map
     ah_prep_02 = closure_map["Almond Hulls::AH-PREP-02"]
     assert ah_prep_02["out_of_bounds"] is True
-    assert ah_prep_02["closure_sum_pct"] == pytest.approx(112.4, abs=0.2)
+    assert ah_prep_02["closure_sum_pct"] == pytest.approx(87.9, abs=0.2)
+    assert ah_prep_02["proximate_sum_pct"] == pytest.approx(87.9, abs=0.2)
+
+    stratum_map = payload["proximate_closure_by_stratum"]
+    assert "Almond Hulls::EXP-PROX-02::Milled 2mm" in stratum_map
+    assert stratum_map["Almond Hulls::EXP-PROX-02::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(
+        87.9, abs=0.2
+    )
+    assert stratum_map["Almond Hulls::EXP-PROX-02::Milled 2mm"]["out_of_bounds"] is True
 
     # Verify co-measured parameters on Almond Hulls::AH-PREP-01 include multiple parameters
     co_measured = payload["co_measured_by_sample"].get("Almond Hulls::AH-PREP-01", [])
@@ -158,15 +173,34 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     ):
         assert expected_tab in html
 
-    # 2. Facet filters
+    # 2. Facet filters & toolbar controls (WC5 & WC7)
     for filter_id in (
         "filter-resource",
         "filter-analysis-type",
         "filter-parameter",
         "filter-flag-type",
+        "filter-analyst-of-record",
+        "filter-assigned-reviewer",
         "filter-assigned-analyst",
+        "sort-queue-select",
+        "btn-toggle-kpi-strip",
+        "btn-toggle-queue-card",
+        "btn-batch-assign-open",
+        "btn-assign-analyst-of-record",
+        "decision-lock-banner",
+        "btn-revert-decision",
     ):
         assert f'id="{filter_id}"' in html
+
+    # Verify 5-state QC pass options (WC2)
+    for expected_qc_opt in (
+        "new_qc_pass = fail",
+        "new_qc_pass = pass",
+        "new_qc_pass = provisional",
+        "new_qc_pass = retest",
+        "new_qc_pass = in_review",
+    ):
+        assert expected_qc_opt in html
 
     # 3. Left pane multi-view diagnostic plot controls
     assert 'id="select-plot-style"' in html
@@ -189,8 +223,21 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     assert "Refresh QC State" in html
     assert "/v1/qc/decisions" in html
     assert "/v1/qc/decisions/sync-gsheet-batch" in html
+    assert "/v1/qc/decisions/assign-batch" in html
     assert "/sync-gsheet" in html
     assert "/assign" in html
+    assert 'id="qc-bulk-assign-bar"' in html
+    assert 'id="chk-select-all-filtered"' in html
+    assert 'id="chk-select-all-header"' in html
+    assert 'id="bulk-selected-count"' in html
+    assert 'id="btn-select-all-filtered"' in html
+    assert 'id="btn-clear-selection"' in html
+    assert 'id="bulk-assign-email"' in html
+    assert 'id="AnalystDirectoryList"' in html
+    assert 'id="btn-bulk-assign-apply"' in html
+    assert "qc-row-select-chk" in html
+    assert "bulkAssignSelected" in html
+    assert "getDefaultAssigneeEmail" in html
 
     # 5. Complete 4-step Audit Provenance & Timestamp Timeline + role-aware Stage 2 controls
     assert 'id="audit-provenance-timeline"' in html
@@ -200,10 +247,21 @@ def test_resource_audit_workbench_cli_and_dom_contract(tmp_path: Path) -> None:
     assert "Google Sheets Sync Status" in html
     assert "Sync This Decision to Google Sheets" in html
     assert 'id="badge-analyst-gsheet-readonly"' in html
+    assert "3. Data Visualizer" in html
 
     # 6. Validate inline JS syntax via node --check
     script_count = _validate_inline_js_blocks(output_html)
     assert script_count >= 1
+
+    # 7. Verify WC4/WC7 review fixes:
+    # - CSS rules for collapsible KPI strip and compact queue table
+    assert ".kpi-strip.collapsed" in html
+    assert ".table-scroll.compact" in html
+    # - Queue sort controls wire to state.queueSort
+    assert "state.queueSort = sortSelectEl.value" in html
+    # - Revert handler gates on revertData.status === "ok" instead of unconditional .finally()
+    assert 'revertData.status !== "ok"' in html
+    assert "Decision remains locked." in html
 
 
 def test_generate_dashboard_gallery_and_login_portal(tmp_path: Path) -> None:
@@ -234,6 +292,7 @@ def test_generate_dashboard_gallery_and_login_portal(tmp_path: Path) -> None:
     assert "audit/db_environment_drift_dashboard.html" in index_html
     assert 'id="badge-my-assigned-reviews"' in index_html
     assert "My Assigned Reviews" in index_html
+    assert "Interactive Data Visualizer" in index_html
     assert 'id="product-card-5-drift"' in index_html
     assert 'data-admin-only="true"' in index_html
     assert "/v1/qc/auth/me" in index_html
@@ -289,6 +348,1438 @@ def test_dashboard_artifacts_workflow_never_publishes_minimal_fixture_to_gcs() -
     workflow_path = REPO_ROOT / ".github" / "workflows" / "dashboard-artifacts.yml"
     content = workflow_path.read_text(encoding="utf-8")
     assert 'USED_MINIMAL_FIXTURE="true"' in content
-    assert 'echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}" >> "$GITHUB_ENV"' in content
-    assert 'if [ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]' in content
-    assert "dashboards/${DASHBOARDS_ENV}/latest/metadata/dashboard_data_snapshot.json" in content
+    assert 'echo "USED_MINIMAL_FIXTURE=${USED_MINIMAL_FIXTURE}"' in content
+    assert '[ "${USED_MINIMAL_FIXTURE:-false}" = "true" ]' in content
+    assert "metadata/dashboard_data_snapshot.json" in content
+
+
+def test_canonical_6_part_replicate_group_key_and_4_part_fallback() -> None:
+    """Verify 6-part replicate_group_key normalization, Pretreatment/Fermentation context slots, and domain slug mapping."""
+    assert len(ANALYSIS_TABLE_MAP) == 10
+    for display_name, expected_table in ANALYSIS_TABLE_MAP.items():
+        slug = canonical_domain_slug(display_name)
+        assert resolve_record_table(display_name) == expected_table
+        assert resolve_record_table(slug) == expected_table
+
+    # Verify edge cases on canonical_domain_slug
+    assert canonical_domain_slug(None) == "unknown"
+    assert canonical_domain_slug("") == "unknown"
+    assert canonical_domain_slug("   ") == "unknown"
+    assert canonical_domain_slug("Ash") == "xrf"
+    assert canonical_domain_slug("ash_record") == "xrf"
+    assert canonical_domain_slug("calorimetry_xrd") == "calorimetry"
+    assert canonical_domain_slug("Pretreatment & Hydrolysis") == "pretreatment"
+    assert canonical_domain_slug("Fermentation (Bioconversion)") == "fermentation"
+    assert canonical_domain_slug("ICP-OES / ICP-MS") == "icp"
+
+    # Verify group_context_label and dict-based normalize_replicate_group_key for Pretreatment & Fermentation
+    # Including real data shape where both prep_method (e.g. "Wiley Milled") and pt_method (e.g. "Dilute Acid") exist
+    from analysis.metadata.resource_insights_engine import (
+        _group_context_label as engine_group_context_label,
+    )
+    from ca_biositing.webservice.v1.endpoints.qc_review import (
+        group_context_label as qc_review_group_context_label,
+        normalize_replicate_group_key as qc_review_normalize_replicate_group_key,
+    )
+
+    pt_row = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Pretreatment & Hydrolysis",
+        "parameter": "Glucose Yield",
+        "prep_method": "Wiley Milled",
+        "pt_method": "Dilute Acid",
+        "eh_method": "Cellic CTec2",
+        "experiment": "EXP-PT-01",
+    }
+    assert group_context_label(pt_row) == "Dilute Acid · Cellic CTec2"
+    assert group_context_label(pt_row) == engine_group_context_label(pt_row)
+    assert (
+        normalize_replicate_group_key(pt_row)
+        == "corn stover::cs-prep-01::pretreatment::glucose yield::dilute acid · cellic ctec2::exp-pt-01"
+    )
+
+    # Fallback when pt_method key is absent from synthetic row
+    pt_fallback_row = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Pretreatment & Hydrolysis",
+        "parameter": "Glucose Yield",
+        "prep_method": "Dilute Acid",
+        "eh_method": "Cellic CTec2",
+        "experiment": "EXP-PT-01",
+    }
+    assert group_context_label(pt_fallback_row) == "Dilute Acid · Cellic CTec2"
+
+    ferm_row_a = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Fermentation (Bioconversion)",
+        "parameter": "Ethanol",
+        "prep_method": "Wiley Milled",
+        "pt_method": "SHF",
+        "strain": "S. cerevisiae",
+        "time_h": 48,
+        "experiment": "EXP-FERM-01",
+    }
+    ferm_row_b = {
+        **ferm_row_a,
+        "strain": "Z. mobilis",
+        "time_h": 72,
+    }
+    assert group_context_label(ferm_row_a) == "SHF · S. cerevisiae @ 48h"
+    assert group_context_label(ferm_row_a) == engine_group_context_label(ferm_row_a)
+    assert qc_review_group_context_label(ferm_row_a) == engine_group_context_label(
+        ferm_row_a
+    )
+    assert group_context_label(ferm_row_b) == "SHF · Z. mobilis @ 72h"
+    assert group_context_label(ferm_row_b) == engine_group_context_label(ferm_row_b)
+    assert qc_review_group_context_label(ferm_row_b) == engine_group_context_label(
+        ferm_row_b
+    )
+    assert normalize_replicate_group_key(ferm_row_a) != normalize_replicate_group_key(
+        ferm_row_b
+    )
+    assert (
+        normalize_replicate_group_key(ferm_row_a)
+        == "corn stover::cs-prep-01::fermentation::ethanol::shf · s. cerevisiae @ 48h::exp-ferm-01"
+    )
+    assert qc_review_normalize_replicate_group_key(
+        ferm_row_a
+    ) == normalize_replicate_group_key(ferm_row_a)
+
+    # Fermentation row without pt_method must NEVER fall back to prep_method for pt
+    ferm_no_pt_row = {
+        "resource_name": "Corn Stover",
+        "prepared_sample": "CS-PREP-01",
+        "analysis_type": "Fermentation (Bioconversion)",
+        "parameter": "Ethanol",
+        "prep_method": "Wiley Milled",
+        "strain": "S. cerevisiae",
+        "time_h": 48,
+        "experiment": "EXP-FERM-01",
+    }
+    assert engine_group_context_label(ferm_no_pt_row) == "S. cerevisiae @ 48h"
+    assert group_context_label(ferm_no_pt_row) == "S. cerevisiae @ 48h"
+    assert qc_review_group_context_label(ferm_no_pt_row) == "S. cerevisiae @ 48h"
+    assert (
+        normalize_replicate_group_key(ferm_no_pt_row)
+        == "corn stover::cs-prep-01::fermentation::ethanol::s. cerevisiae @ 48h::exp-ferm-01"
+    )
+    assert qc_review_normalize_replicate_group_key(
+        ferm_no_pt_row
+    ) == normalize_replicate_group_key(ferm_no_pt_row)
+
+    # Verify unpack_snapshot_records unpacks pt_method + time_h and constructs Pretreatment/Fermentation 6-part keys
+    synth_snapshot = {
+        "generated_utc": "2026-01-01T00:00:00Z",
+        "str_cols": [
+            "resource_name",
+            "field_sample",
+            "prepared_sample",
+            "analysis_type",
+            "parameter",
+            "unit",
+            "qc_status",
+            "analyst",
+            "provider",
+            "experiment",
+            "prep_method",
+            "pt_method",
+            "eh_method",
+            "strain",
+            "note",
+        ],
+        "dicts": {
+            "resource_name": ["Corn Stover"],
+            "field_sample": ["CS-F1"],
+            "prepared_sample": ["CS-PREP-01"],
+            "analysis_type": [
+                "Pretreatment & Hydrolysis",
+                "Fermentation (Bioconversion)",
+                "Ash",
+            ],
+            "parameter": ["Glucose Yield", "Ethanol", "SiO2"],
+            "unit": ["g/L", "%"],
+            "qc_status": ["pass"],
+            "analyst": ["a@lbl.gov"],
+            "provider": ["LBL"],
+            "experiment": ["EXP-1"],
+            "prep_method": ["Wiley Milled", "Muffle 575C"],
+            "pt_method": ["Dilute Acid", "SHF", "none"],
+            "eh_method": ["none", "Cellic CTec2"],
+            "strain": ["none", "S. cerevisiae", "Z. mobilis"],
+            "note": [""],
+        },
+        "rows": [
+            ["PT-1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 42.0, "2026-01-01", None],
+            ["FM-1", 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 1, 18.5, "2026-01-01", 48],
+            ["FM-2", 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 0, 2, 0, 1, 22.1, "2026-01-01", 72],
+            ["ASH-1", 0, 0, 0, 2, 2, 1, 0, 0, 0, 0, 1, 2, 0, 0, 0, 1, 51.0, "2026-01-01", None],
+        ],
+    }
+    unpacked = unpack_snapshot_records(synth_snapshot)
+    assert len(unpacked) == 4
+    assert (
+        unpacked[0]["replicate_group_key"]
+        == "corn stover::cs-prep-01::pretreatment::glucose yield::dilute acid · cellic ctec2::exp-1"
+    )
+    assert (
+        unpacked[1]["replicate_group_key"]
+        == "corn stover::cs-prep-01::fermentation::ethanol::shf · s. cerevisiae @ 48h::exp-1"
+    )
+    assert (
+        unpacked[2]["replicate_group_key"]
+        == "corn stover::cs-prep-01::fermentation::ethanol::shf · z. mobilis @ 72h::exp-1"
+    )
+    assert (
+        unpacked[3]["replicate_group_key"]
+        == "corn stover::cs-prep-01::xrf::sio2::muffle 575c::exp-1"
+    )
+
+    key_6 = normalize_replicate_group_key(
+        "Almond Hulls",
+        "AH-PREP-01",
+        "Proximate Analysis",
+        "Ash",
+        "Mill-1mm",
+        "EXP-2025-A",
+    )
+    assert key_6 == "almond hulls::ah-prep-01::proximate::ash::mill-1mm::exp-2025-a"
+
+    key_4 = normalize_replicate_group_key(
+        "grp::Almond Hulls::AH-PREP-01::Proximate Analysis::Ash"
+    )
+    assert key_4 == "almond hulls::ah-prep-01::proximate::ash"
+
+    assert matches_replicate_group_key(key_6, key_6) is True
+    assert (
+        matches_replicate_group_key(
+            key_6, "Almond Hulls::AH-PREP-01::Proximate Analysis::Ash"
+        )
+        is True
+    )
+    assert (
+        matches_replicate_group_key(
+            key_6,
+            "almond hulls::ah-prep-01::proximate::ash::mill-2mm::exp-2025-a",
+        )
+        is False
+    )
+
+    records = unpack_snapshot_records(load_snapshot(MINIMAL_SNAPSHOT))
+    assert records
+    for rec in records:
+        parts = rec["replicate_group_key"].split("::")
+        assert len(parts) == 6
+        assert parts[2] in {
+            "proximate",
+            "ultimate",
+            "compositional",
+            "calorimetry",
+            "xrd",
+            "icp",
+            "xrf",
+            "pretreatment",
+            "fermentation",
+            "gasification",
+        }
+
+
+def test_method_stratified_between_sd_and_between_rsd_pct_on_replicate_groups() -> None:
+    """Verify within_sd and method-stratified between_sd / between_rsd_pct on replicate groups and decisions."""
+    payload = build_workbench_payload(load_snapshot(MINIMAL_SNAPSHOT))
+    groups = payload["replicate_groups"]
+    assert groups
+
+    # Almond Hulls Proximate Ash has two prepared samples (AH-PREP-01 and AH-PREP-02) with Milled 2mm & % (wt/wt db)
+    ah_ash_key = "almond hulls::ah-prep-01::proximate::ash::milled 2mm::exp-prox-01"
+    assert ah_ash_key in groups
+    ah_ash_group = groups[ah_ash_key]
+    assert ah_ash_group["within_sd"] is not None
+    assert ah_ash_group["within_sd"] > 0
+    assert ah_ash_group["between_k_groups"] == 2
+    assert ah_ash_group["between_sd"] is not None and ah_ash_group["between_sd"] > 0
+    assert (
+        ah_ash_group["between_rsd_pct"] is not None
+        and ah_ash_group["between_rsd_pct"] > 0
+    )
+    assert len(ah_ash_group["records"]) == ah_ash_group["replicate_count"] == 4
+
+    # Single-sample stratum (k_groups < 2) must have between_sd=None and between_rsd_pct=None
+    cs_ash_key = (
+        "corn stover::cs-prep-01::proximate::ash::knife milled::exp-prox-01"
+    )
+    assert cs_ash_key in groups
+    cs_ash_group = groups[cs_ash_key]
+    assert cs_ash_group["between_k_groups"] == 1
+    assert cs_ash_group["between_sd"] is None
+    assert cs_ash_group["between_rsd_pct"] is None
+
+    # Decisions also carry within_sd, between_sd, between_rsd_pct, and between_k_groups
+    ah_decisions = [
+        d for d in payload["decisions"] if d["replicate_group_key"] == ah_ash_key
+    ]
+    assert len(ah_decisions) == 1
+    assert ah_decisions[0]["within_sd"] == ah_ash_group["within_sd"]
+    assert ah_decisions[0]["between_sd"] == ah_ash_group["between_sd"]
+    assert ah_decisions[0]["between_rsd_pct"] == ah_ash_group["between_rsd_pct"]
+
+
+def test_js_refresh_qc_state_non_colliding_ids_and_drawer_fallback(
+    tmp_path: Path,
+) -> None:
+    """Verify JS matchesReplicateGroupKey, non-colliding QC-DB- IDs, metadata preservation, and drawer fallback."""
+    node_bin = shutil.which("node")
+    if node_bin is None:
+        pytest.skip("node binary not available in PATH")
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html_text = output_html.read_text(encoding="utf-8")
+    assert 'id="btn-bulk-assign-my-email"' in html_text
+    assert 'id="btn-clear-selection"' in html_text
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html_text,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+
+    harness_js = tmp_path / "run_workbench_unit_checks.js"
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  return {
+    id: id,
+    value: "",
+    textContent: "",
+    innerHTML: "",
+    style: {},
+    className: "",
+    checked: false,
+    disabled: false,
+    classList: {
+      add: function () {},
+      remove: function () {},
+      toggle: function () {}
+    },
+    appendChild: function () {},
+    addEventListener: function () {},
+    getAttribute: function () { return ""; },
+    setAttribute: function () {},
+    querySelectorAll: function () { return []; }
+  };
+}
+global.document = {
+  getElementById: function (id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll: function () { return []; },
+  createElement: function (tag) { return makeEl(tag); }
+};
+global.window = {
+  location: { pathname: "/v1/dashboards/metadata/resource_audit_workbench.html", search: "" },
+  history: { replaceState: function () {} },
+  open: function () {}
+};
+let mockServerDecisions = [];
+global.fetch = function (url) {
+  if (String(url).indexOf("/v1/qc/auth/me") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          email: "qa.analyst@lbl.gov",
+          name: "QA Analyst",
+          role: "analyst",
+          authenticated: true
+        });
+      }
+    });
+  }
+  if (String(url).indexOf("/v1/qc/decisions") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          decisions: mockServerDecisions
+        });
+      }
+    });
+  }
+  return Promise.resolve({ ok: false, json: function () { return Promise.resolve(null); } });
+};
+"""
+        + blocks[0]
+        + """
+(async function () {
+  await new Promise((r) => setTimeout(r, 20));
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+
+  // 1. Verify JS canonicalDomainSlug, groupContextLabel, normalizeReplicateGroupKey, and matchesReplicateGroupKey
+  assert.strictEqual(hooks.canonicalDomainSlug(""), "unknown");
+  assert.strictEqual(hooks.canonicalDomainSlug(null), "unknown");
+  assert.strictEqual(hooks.canonicalDomainSlug("Ash"), "xrf");
+  assert.strictEqual(hooks.canonicalDomainSlug("calorimetry_xrd"), "calorimetry");
+  assert.strictEqual(hooks.canonicalDomainSlug("Pretreatment & Hydrolysis"), "pretreatment");
+  assert.strictEqual(hooks.canonicalDomainSlug("Fermentation (Bioconversion)"), "fermentation");
+
+  const ptObj = {
+    resource_name: "Corn Stover",
+    prepared_sample: "CS-PREP-01",
+    analysis_type: "Pretreatment & Hydrolysis",
+    parameter: "Glucose Yield",
+    prep_method: "Wiley Milled",
+    pt_method: "Dilute Acid",
+    eh_method: "Cellic CTec2",
+    experiment: "EXP-PT-01"
+  };
+  assert.strictEqual(hooks.groupContextLabel(ptObj), "Dilute Acid \u00b7 Cellic CTec2");
+  assert.strictEqual(
+    hooks.normalizeReplicateGroupKey(ptObj),
+    "corn stover::cs-prep-01::pretreatment::glucose yield::dilute acid \u00b7 cellic ctec2::exp-pt-01"
+  );
+
+  const fermObj = {
+    resource_name: "Corn Stover",
+    prepared_sample: "CS-PREP-01",
+    analysis_type: "Fermentation (Bioconversion)",
+    parameter: "Ethanol",
+    prep_method: "Wiley Milled",
+    pt_method: "SHF",
+    strain: "S. cerevisiae",
+    time_h: 48,
+    experiment: "EXP-FERM-01"
+  };
+  assert.strictEqual(hooks.groupContextLabel(fermObj), "SHF \u00b7 S. cerevisiae @ 48h");
+  assert.strictEqual(
+    hooks.normalizeReplicateGroupKey(fermObj),
+    "corn stover::cs-prep-01::fermentation::ethanol::shf \u00b7 s. cerevisiae @ 48h::exp-ferm-01"
+  );
+
+  // Fermentation row lacking pt_method key must NEVER fall back to prep_method for pt
+  const fermNoPtObj = {
+    resource_name: "Corn Stover",
+    prepared_sample: "CS-PREP-01",
+    analysis_type: "Fermentation (Bioconversion)",
+    parameter: "Ethanol",
+    prep_method: "Wiley Milled",
+    strain: "S. cerevisiae",
+    time_h: 48,
+    experiment: "EXP-FERM-01"
+  };
+  assert.strictEqual(hooks.groupContextLabel(fermNoPtObj), "S. cerevisiae @ 48h");
+  assert.strictEqual(
+    hooks.normalizeReplicateGroupKey(fermNoPtObj),
+    "corn stover::cs-prep-01::fermentation::ethanol::s. cerevisiae @ 48h::exp-ferm-01"
+  );
+
+  const k6 = "almond hulls::ah-prep-01::proximate::ash::milled 2mm::exp-prox-01";
+  const k4 = "grp::Almond Hulls::AH-PREP-01::Proximate Analysis::Ash";
+  assert.strictEqual(hooks.matchesReplicateGroupKey(k6, k6), true);
+  assert.strictEqual(hooks.matchesReplicateGroupKey(k6, k4), true);
+  assert.strictEqual(
+    hooks.matchesReplicateGroupKey(k6, "almond hulls::ah-prep-01::proximate::ash::knife milled::exp-prox-01"),
+    false
+  );
+
+  // 2. Capture static QC-0001 metadata before server refresh
+  const origQc1 = JSON.parse(JSON.stringify(hooks.state.decisionsById["QC-0001"]));
+  assert.ok(origQc1.prepared_sample, "Expected static QC-0001 to have prepared_sample");
+  assert.ok(origQc1.rsd_pct > 0, "Expected static QC-0001 to have rsd_pct > 0");
+  assert.ok(origQc1.replicate_count >= 2, "Expected static QC-0001 to have replicate_count >= 2");
+
+  // 3. Simulate server decisions:
+  //    - A bug_report row (must be ignored)
+  //    - DB id=1 (decision_id="QC-0001" from server) for an UNFLAGGED group (CAL-AH-001) -> must NOT overwrite static QC-0001; gets QC-DB-0001
+  //    - DB id=2 matching static QC-0001 via 4-part key -> merges status/note without clobbering prepared_sample/rsd_pct/replicate_count
+  mockServerDecisions = [
+    {
+      id: 99,
+      decision_id: "QC-0099",
+      record_table: "portal_bug_report",
+      flag_type: "bug_report",
+      record_id: "BUG-1"
+    },
+    {
+      id: 1,
+      decision_id: "QC-0001",
+      record_table: "icp_record",
+      record_id: "ICP-AH-001",
+      replicate_group_key: "Almond Hulls::AH-PREP-01::ICP Elemental Analysis::Potassium (K)",
+      resource_name: "Almond Hulls",
+      analysis_type: "ICP Elemental Analysis",
+      parameter_name: "Potassium (K)",
+      decision_status: "in_review",
+      review_note: "Tray item with DB id=1"
+    },
+    {
+      id: 2,
+      decision_id: "QC-0002",
+      record_table: origQc1.record_table,
+      record_id: origQc1.record_id,
+      replicate_group_key: origQc1.resource_name + "::" + origQc1.prepared_sample + "::" + origQc1.analysis_type + "::" + origQc1.parameter_name,
+      decision_status: "resolved",
+      decision_action: "reject_fail",
+      new_qc_pass: "fail",
+      review_note: "Verified outlier on static QC-0001",
+      assigned_to_email: "qa.analyst@lbl.gov",
+      synced_to_gsheet: false
+    }
+  ];
+
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+
+  // Verify bug_report row was ignored
+  assert.strictEqual(hooks.state.decisionsById["QC-DB-0099"], undefined);
+
+  // Verify static QC-0001 was NOT overwritten by server id=1, and merged server id=2 properly
+  const afterQc1 = hooks.state.decisionsById["QC-0001"];
+  assert.strictEqual(afterQc1.db_id, 2);
+  assert.strictEqual(afterQc1.decision_status, "resolved");
+  assert.strictEqual(afterQc1.review_note, "Verified outlier on static QC-0001");
+  assert.strictEqual(afterQc1.prepared_sample, origQc1.prepared_sample);
+  assert.strictEqual(afterQc1.rsd_pct, origQc1.rsd_pct);
+  assert.strictEqual(afterQc1.within_sd, origQc1.within_sd);
+  assert.strictEqual(afterQc1.replicate_count, origQc1.replicate_count);
+  assert.strictEqual(afterQc1.replicate_group_key, origQc1.replicate_group_key);
+
+  // Verify server id=1 became non-colliding QC-DB-0001 and hydrated metadata from replicate_groups
+  const dbDec1 = hooks.state.decisionsById["QC-DB-0001"];
+  assert.ok(dbDec1, "Expected QC-DB-0001 to be created");
+  assert.strictEqual(dbDec1.db_id, 1);
+  assert.strictEqual(dbDec1.prepared_sample, "AH-PREP-01");
+  assert.strictEqual(dbDec1.replicate_count, 2);
+  assert.ok(dbDec1.rsd_pct > 0);
+  assert.strictEqual(
+    dbDec1.replicate_group_key,
+    "almond hulls::ah-prep-01::icp::potassium (k)::milled 2mm::exp-icp-01"
+  );
+
+  // Verify repeated refresh does not duplicate QC-DB-0001 in decisionsOrder
+  const countBefore = hooks.state.decisionsOrder.filter((x) => x === "QC-DB-0001").length;
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+  const countAfter = hooks.state.decisionsOrder.filter((x) => x === "QC-DB-0001").length;
+  assert.strictEqual(countBefore, 1);
+  assert.strictEqual(countAfter, 1);
+
+  // Verify findReplicateGroupForDecision fallback by record_id when replicate_group_key is missing
+  const foundByRecId = hooks.findReplicateGroupForDecision({
+    record_table: "proximate_record",
+    record_id: "PROX-AH-002"
+  });
+  assert.ok(foundByRecId, "Expected findReplicateGroupForDecision to resolve group by record_id");
+  assert.strictEqual(foundByRecId.prepared_sample, "AH-PREP-01");
+
+  // Verify db_id-first and exact-6-part-before-4-part priority when two candidates share a 4-part prefix
+  hooks.state.decisionsById["QC-FERM-A"] = {
+    id: "QC-FERM-A",
+    decision_id: "QC-FERM-A",
+    db_id: null,
+    replicate_group_key: "corn stover::cs-prep-01::fermentation::ethanol::shf s. cerevisiae @ 48h::exp-1",
+    record_table: "fermentation_record",
+    record_id: "FM-A1",
+    decision_status: "open",
+    review_note: "Initial A"
+  };
+  hooks.state.decisionsById["QC-FERM-B"] = {
+    id: "QC-FERM-B",
+    decision_id: "QC-FERM-B",
+    db_id: 77,
+    replicate_group_key: "corn stover::cs-prep-01::fermentation::ethanol::shf z. mobilis @ 72h::exp-1",
+    record_table: "fermentation_record",
+    record_id: "FM-B1",
+    decision_status: "open",
+    review_note: "Initial B"
+  };
+  hooks.state.decisionsOrder.unshift("QC-FERM-B");
+  hooks.state.decisionsOrder.unshift("QC-FERM-A");
+
+  mockServerDecisions = [
+    {
+      id: 77,
+      decision_id: "QC-0077",
+      record_table: "fermentation_record",
+      record_id: "FM-B1",
+      // 4-part prefix would match QC-FERM-A first in decisionsOrder if db_id wasn't checked in Pass 1!
+      replicate_group_key: "corn stover::cs-prep-01::fermentation::ethanol",
+      decision_status: "resolved",
+      review_note: "Matched QC-FERM-B by db_id priority"
+    }
+  ];
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+  assert.strictEqual(
+    hooks.state.decisionsById["QC-FERM-B"].review_note,
+    "Matched QC-FERM-B by db_id priority"
+  );
+  assert.strictEqual(
+    hooks.state.decisionsById["QC-FERM-A"].review_note,
+    "Initial A"
+  );
+
+  // Verify Card 4: DOMAIN_DEFS, normalizeDomainKey, and matchesFacetFilters slug/label compatibility
+  assert.strictEqual(Array.isArray(hooks.DOMAIN_DEFS), true);
+  assert.strictEqual(hooks.DOMAIN_DEFS.length, 10);
+  assert.strictEqual(hooks.normalizeDomainKey("Proximate Analysis"), "proximate");
+  assert.strictEqual(hooks.normalizeDomainKey("XRD Crystallinity"), "xrd");
+  assert.strictEqual(hooks.normalizeDomainKey("Ash"), "xrf");
+  hooks.state.filters.analysisType = "proximate";
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ analysis_type: "Proximate Analysis" }),
+    true
+  );
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ analysis_type: "Calorimetry" }),
+    false
+  );
+  hooks.state.filters.analysisType = "";
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"JS unit harness failed: {proc.stderr}\n{proc.stdout}"
+
+
+def test_proximate_sum_portal_parity_and_fc_fallback() -> None:
+    """Verify build_workbench_payload computes Data Portal proximate_sum with VS priority and (100 - FC) fallback."""
+    snapshot = {
+        "str_cols": [
+            "resource_name",
+            "analysis_type",
+            "prepared_sample",
+            "field_sample",
+            "provider",
+            "prep_method",
+            "experiment",
+            "analyst",
+            "qc_status",
+            "pt_method",
+            "eh_method",
+            "vessel",
+            "strain",
+            "bioconv",
+            "well_or_block",
+            "parameter",
+            "unit",
+            "note",
+        ],
+        "dicts": {
+            "resource_name": ["Almond Hulls", "Walnut Shells"],
+            "analysis_type": ["Proximate Analysis"],
+            "prepared_sample": ["AH-S1", "WS-S1"],
+            "field_sample": ["AH-F1", "WS-F1"],
+            "provider": ["lbl"],
+            "prep_method": ["Milled 2mm"],
+            "experiment": ["EXP-A", "EXP-B"],
+            "analyst": ["QA"],
+            "qc_status": ["pass"],
+            "pt_method": [""],
+            "eh_method": [""],
+            "vessel": [""],
+            "strain": [""],
+            "bioconv": [""],
+            "well_or_block": [""],
+            "parameter": ["Moisture", "Ash", "Volatile Solids", "Fixed Carbon"],
+            "unit": ["%"],
+            "note": [""],
+        },
+        # Row format: [record_id] + 18 str_cols indices + [replicate, value, exp_date]
+        "rows": [
+            # Stratum 1 (Almond Hulls::EXP-A::Milled 2mm): Moisture=8.0, Ash=5.0, VS=75.0, FC=12.0
+            # Portal formula uses Moisture + Ash + VS = 8.0 + 5.0 + 75.0 = 88.0% (<95% -> flagged, FC ignored when VS present)
+            ["R-M1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 8.0, "2026-01-01"],
+            ["R-A1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 5.0, "2026-01-01"],
+            ["R-V1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0, 1, 75.0, "2026-01-01"],
+            ["R-F1", 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 12.0, "2026-01-01"],
+            # Stratum 2 (Walnut Shells::EXP-B::Milled 2mm): Moisture=6.0, Ash=2.0, NO VS, FC=18.0
+            # Portal formula uses Moisture + Ash + (100 - FC) = 6.0 + 2.0 + 82.0 = 90.0% (<95% -> flagged)
+            ["R-M2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 6.0, "2026-01-02"],
+            ["R-A2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1, 2.0, "2026-01-02"],
+            ["R-F2", 1, 0, 1, 1, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 3, 0, 0, 1, 18.0, "2026-01-02"],
+        ],
+    }
+    payload = build_workbench_payload(snapshot)
+    strata = payload["proximate_closure_by_stratum"]
+    assert strata["Almond Hulls::EXP-A::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(88.0)
+    assert strata["Almond Hulls::EXP-A::Milled 2mm"]["out_of_bounds"] is True
+    assert strata["Walnut Shells::EXP-B::Milled 2mm"]["proximate_sum_pct"] == pytest.approx(90.0)
+    assert strata["Walnut Shells::EXP-B::Milled 2mm"]["out_of_bounds"] is True
+
+
+def test_card12_default_assignee_and_bulk_assign_selected(tmp_path: Path) -> None:
+    """Verify Card 12: getDefaultAssigneeEmail auto-fill in drawer/bulk bar and bulkAssignSelected batch POST."""
+    node_bin = shutil.which("node")
+    if node_bin is None:
+        pytest.skip("node binary not available in PATH")
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html_text = output_html.read_text(encoding="utf-8")
+    assert 'id="btn-bulk-assign-my-email"' in html_text
+    assert 'id="btn-clear-selection"' in html_text
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html_text,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+
+    harness_js = tmp_path / "run_card12_workbench_checks.js"
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  return {
+    id: id,
+    value: "",
+    textContent: "",
+    innerHTML: "",
+    style: {},
+    className: "",
+    checked: false,
+    indeterminate: false,
+    disabled: false,
+    classList: {
+      add: function () {},
+      remove: function () {},
+      toggle: function () {}
+    },
+    appendChild: function () {},
+    addEventListener: function () {},
+    getAttribute: function () { return ""; },
+    setAttribute: function () {},
+    querySelectorAll: function () { return []; }
+  };
+}
+global.document = {
+  getElementById: function (id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll: function () { return []; },
+  createElement: function (tag) { return makeEl(tag); }
+};
+global.window = {
+  location: { pathname: "/v1/dashboards/metadata/resource_audit_workbench.html", search: "" },
+  history: { replaceState: function () {} },
+  open: function () {}
+};
+let batchRequests = [];
+global.fetch = function (url, opts) {
+  if (String(url).indexOf("/v1/qc/auth/me") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          email: "qa.analyst@lbl.gov",
+          name: "QA Analyst",
+          role: "analyst",
+          authenticated: true
+        });
+      }
+    });
+  }
+  if (String(url).indexOf("/v1/qc/decisions/assign-batch") !== -1) {
+    const body = opts && opts.body ? JSON.parse(opts.body) : {};
+    batchRequests.push(body);
+    const assignedEmail = String(body.assigned_to_email || "").trim().toLowerCase();
+    const outDecisions = (body.items || []).map(function (it, idx) {
+      return {
+        id: it.id || (200 + idx),
+        decision_id: it.decision_id,
+        record_table: it.record_table,
+        record_id: it.record_id,
+        replicate_group_key: it.replicate_group_key,
+        resource_name: it.resource_name,
+        analysis_type: it.analysis_type,
+        parameter_name: it.parameter_name,
+        decision_status: "in_review",
+        decision_action: "in_review",
+        assigned_to_email: assignedEmail,
+        assigned_by_email: "qa.analyst@lbl.gov",
+        assigned_at: "2026-04-20T12:00:00Z"
+      };
+    });
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({
+          status: "ok",
+          assigned_count: outDecisions.length,
+          assigned_to_email: assignedEmail,
+          assigned_by_email: "qa.analyst@lbl.gov",
+          decisions: outDecisions
+        });
+      }
+    });
+  }
+  if (String(url).indexOf("/v1/qc/decisions") !== -1) {
+    return Promise.resolve({
+      ok: true,
+      json: function () {
+        return Promise.resolve({ decisions: [] });
+      }
+    });
+  }
+  return Promise.resolve({ ok: false, json: function () { return Promise.resolve(null); } });
+};
+"""
+        + blocks[0]
+        + """
+(async function () {
+  await new Promise((r) => setTimeout(r, 30));
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+
+  // 1. Verify getDefaultAssigneeEmail returns authenticated user email, preserves existing assignment on QC-0001, and auto-fills unassigned #input-assigned-to and #bulk-assign-email
+  assert.strictEqual(hooks.getDefaultAssigneeEmail(), "qa.analyst@lbl.gov");
+  assert.strictEqual(hooks.getDefaultAssigneeEmail("analyst@lbl.gov"), "analyst@lbl.gov");
+  assert.strictEqual(elements["input-assigned-to"].value, "qa.analyst@lbl.gov");
+  hooks.state.decisionsById["QC-0001"].assigned_to_email = "explicit.owner@lbl.gov";
+  hooks.selectDecision("QC-0001", false);
+  assert.strictEqual(elements["input-assigned-to"].value, "explicit.owner@lbl.gov");
+  hooks.state.decisionsById["QC-0001"].assigned_to_email = "";
+  hooks.selectDecision("QC-0001", false);
+  assert.strictEqual(elements["input-assigned-to"].value, "qa.analyst@lbl.gov");
+  assert.strictEqual(elements["bulk-assign-email"].value, "qa.analyst@lbl.gov");
+
+  // 2. Verify selectAllFilteredRows selects all visible queue decisions and updates #bulk-selected-count
+  const visibleIds = hooks.getVisibleQueueDecisionIds();
+  assert.ok(visibleIds.length >= 2, "Expected at least 2 visible queue decisions");
+  hooks.selectAllFilteredRows();
+  assert.strictEqual(hooks.state.selectedIds.size, visibleIds.length);
+  assert.strictEqual(elements["bulk-selected-count"].textContent, visibleIds.length + " selected");
+  assert.strictEqual(elements["btn-bulk-assign-apply"].disabled, false);
+  assert.strictEqual(elements["btn-clear-selection"].disabled, false);
+
+  // 3. Toggle off all except first 2 rows, test fillBulkAssignMyEmail, and run bulkAssignSelected
+  hooks.clearRowSelection();
+  assert.strictEqual(hooks.state.selectedIds.size, 0);
+  assert.strictEqual(elements["btn-clear-selection"].disabled, true);
+  elements["bulk-assign-email"].value = "other@lbl.gov";
+  assert.strictEqual(hooks.fillBulkAssignMyEmail(), "qa.analyst@lbl.gov");
+  assert.strictEqual(elements["bulk-assign-email"].value, "qa.analyst@lbl.gov");
+
+  hooks.toggleRowSelection(visibleIds[0], true);
+  hooks.toggleRowSelection(visibleIds[1], true);
+  assert.strictEqual(hooks.state.selectedIds.size, 2);
+
+  elements["bulk-assign-email"].value = "Lead.Reviewer@lbl.gov";
+  const onlineRes = await hooks.bulkAssignSelected();
+  assert.strictEqual(onlineRes.online, true);
+
+  assert.strictEqual(batchRequests.length, 1);
+  assert.strictEqual(batchRequests[0].assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(batchRequests[0].items.length, 2);
+  assert.strictEqual(hooks.state.selectedIds.size, 0, "Expected selection to clear after bulk assign");
+
+  const d0 = hooks.state.decisionsById[visibleIds[0]];
+  const d1 = hooks.state.decisionsById[visibleIds[1]];
+  assert.strictEqual(d0.assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(d1.assigned_to_email, "lead.reviewer@lbl.gov");
+  assert.strictEqual(d0.decision_status, "in_review");
+  assert.strictEqual(d1.decision_status, "in_review");
+  assert.ok(d0.db_id >= 200);
+  assert.ok(d1.db_id >= 200);
+
+  // 4. Verify offline / failed POST fallback sets online=false and updates local state cleanly
+  global.fetch = function () {
+    return Promise.resolve({ ok: false, status: 503, json: function () { return Promise.resolve(null); } });
+  };
+  hooks.toggleRowSelection(visibleIds[0], true);
+  elements["bulk-assign-email"].value = "Offline.Reviewer@lbl.gov";
+  const offlineRes = await hooks.bulkAssignSelected();
+  assert.strictEqual(offlineRes.ok, true);
+  assert.strictEqual(offlineRes.online, false);
+  assert.strictEqual(offlineRes.status, "assigned_offline");
+  assert.strictEqual(hooks.state.decisionsById[visibleIds[0]].assigned_to_email, "offline.reviewer@lbl.gov");
+  assert.ok(String(elements["decision-toast"].textContent || "").indexOf("offline fallback") !== -1);
+})().catch((err) => {
+  console.error(err);
+  process.exit(1);
+});
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"Card 12 JS harness failed: {proc.stderr}\n{proc.stdout}"
+
+
+def test_card13_workbench_show_me_mini_plot_popover(tmp_path: Path) -> None:
+    """Card 13: Verify Product 4 '👁 Show me' button in Queue Table & Contextual Drawer, dark-mode default, opaque popover, 3-tier SVG points, proximate sum bar, and visualizer link."""
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html = output_html.read_text(encoding="utf-8")
+    assert '<html lang="en" data-theme="dark">' in html
+    assert 'id="btn-theme-toggle"' in html
+    assert 'id="audit-flag-show-me-popover"' in html
+    assert "background:var(--bg-card, #1e293b)" in html
+    assert "opacity:1" in html
+    assert "backdrop-filter:none" in html
+    assert 'id="show-me-mini-svg"' in html
+    assert 'id="show-me-proximate-bar"' in html
+    assert 'id="show-me-open-visualizer-link"' in html
+    assert 'id="btn-drawer-show-me-flag"' in html
+    assert "btn-show-me-flag" in html
+    assert "👁 Show me" in html
+
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+    script_body = blocks[0]
+    harness_js = tmp_path / "workbench_card13_harness.js"
+
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set(id === "audit-flag-show-me-popover" || id === "show-me-proximate-bar" ? ["hidden"] : []);
+  const attrs = {};
+  return {
+    id, value: "", checked: false, disabled: false, textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    children: [],
+    classList: {
+      add(c) { classSet.add(c); },
+      remove(c) { classSet.delete(c); },
+      toggle(c) { if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c) { return classSet.has(c); }
+    },
+    appendChild(child) { this.children.push(child); return child; },
+    addEventListener() {},
+    setAttribute(k, v) { attrs[k] = String(v); if (k === "href") this.href = String(v); },
+    getAttribute(k) { return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    querySelectorAll() { return []; }
+  };
+}
+const localStore = {};
+global.localStorage = {
+  getItem(k) { return Object.prototype.hasOwnProperty.call(localStore, k) ? localStore[k] : null; },
+  setItem(k, v) { localStore[k] = String(v); },
+  removeItem(k) { delete localStore[k]; }
+};
+global.window = {
+  location: {
+    pathname: "/v1/dashboards/metadata/resource_audit_workbench.html",
+    search: "?decision_id=QC-0001",
+    href: "http://localhost:8000/v1/dashboards/metadata/resource_audit_workbench.html?decision_id=QC-0001",
+    origin: "http://localhost:8000",
+    protocol: "http:"
+  },
+  history: { replaceState() {} },
+  addEventListener() {},
+  dispatchEvent() {}
+};
+global.document = {
+  getElementById(id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll() { return []; },
+  createElement(tag) { return makeEl(tag); },
+  body: makeEl("body")
+};
+global.BroadcastChannel = function() {
+  return { postMessage() {}, close() {}, addEventListener() {} };
+};
+global.CustomEvent = function(name, opts) { return { name, detail: opts ? opts.detail : null }; };
+global.fetch = async function() { return { ok: false, status: 404, json: async () => ({}) }; };
+"""
+        + "\n"
+        + script_body
+        + "\n"
+        + """
+(() => {
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+  assert.strictEqual(typeof hooks.openFlagShowMePopover, "function");
+  assert.strictEqual(typeof hooks.closeFlagShowMePopover, "function");
+
+  // 1. Verify queue table rows include .btn-show-me-flag button and drawer header button tracks active decision
+  const rows = elements["qc-queue-tbody"].children;
+  assert.ok(rows.length >= 2, "Expected at least 2 rendered queue rows");
+  assert.ok(rows[0].innerHTML.includes("btn-show-me-flag"), "Expected .btn-show-me-flag in queue row");
+  assert.ok(rows[0].innerHTML.includes("👁 Show me"), "Expected '👁 Show me' label in queue row");
+  assert.strictEqual(elements["btn-drawer-show-me-flag"].getAttribute("data-decision-id"), "QC-0001");
+
+  // 2. Open Show Me popover for QC-0001 and verify 3-tier SVG circles (peer #64748b, target-group #2563eb, outlier #dc2626)
+  const res1 = hooks.openFlagShowMePopover({ decisionId: "QC-0001" });
+  assert.strictEqual(res1.decisionId, "QC-0001");
+  assert.ok(res1.peerCount >= 1, "Expected peer slice points for QC-0001");
+  assert.ok(res1.targetGroupCount >= 1, "Expected target replicate group sibling points for QC-0001");
+  assert.strictEqual(res1.outlierCount, 1, "Expected 1 flagged outlier point for QC-0001");
+
+  const svgHtml = elements["show-me-mini-svg"].innerHTML;
+  assert.ok(svgHtml.includes('class="show-me-pt-peer"'), "Expected peer circle class");
+  assert.ok(svgHtml.includes('data-role="peer"'), "Expected peer data-role");
+  assert.ok(svgHtml.includes('stroke="#64748b"'), "Expected peer stroke #64748b");
+  assert.ok(svgHtml.includes('class="show-me-pt-target-group"'), "Expected target-group circle class");
+  assert.ok(svgHtml.includes('data-role="target-group"'), "Expected target-group data-role");
+  assert.ok(svgHtml.includes('stroke="#2563eb"'), "Expected target-group stroke #2563eb");
+  assert.ok(svgHtml.includes('class="show-me-pt-outlier"'), "Expected outlier circle class");
+  assert.ok(svgHtml.includes('class="show-me-outlier-pulse-ring"'), "Expected outlier outer pulse ring class");
+  assert.ok(svgHtml.includes('r="10.5"'), "Expected outer pulse ring radius 10.5");
+  assert.ok(svgHtml.includes('stroke="#60a5fa"'), "Expected blue SD band stroke #60a5fa");
+  assert.ok(svgHtml.includes('data-role="outlier"'), "Expected outlier data-role");
+  assert.ok(svgHtml.includes('stroke="#dc2626"'), "Expected outlier stroke #dc2626");
+  assert.ok(svgHtml.includes('data-record-id="PROX-AH-004"'), "Expected outlier record PROX-AH-004");
+
+  const vizHref = elements["show-me-open-visualizer-link"].getAttribute("href");
+  assert.ok(vizHref.toLowerCase().includes("resource_explorer_dashboard.html?resource=almond%20hulls"));
+  assert.ok(vizHref.includes("&highlight_rk="));
+
+  // 3. Open Show Me popover with proximate_sum flag active and verify #show-me-proximate-bar
+  const res2 = hooks.openFlagShowMePopover({
+    decisionId: "QC-0001",
+    flags: ["proximate_sum"],
+    proximateSumPct: 107.8
+  });
+  assert.strictEqual(res2.hasProximateBar, true);
+  assert.strictEqual(elements["show-me-proximate-bar"].classList.contains("hidden"), false);
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes("95–105%"));
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes('data-role="proximate-stacked-bar"'));
+  assert.ok(elements["show-me-proximate-bar"].innerHTML.includes("Proximate Closure"));
+
+  // 4. Verify nonexistent key renders honest empty state and zero synthetic data
+  const emptyRes = hooks.openFlagShowMePopover({
+    replicateGroupKey: "nonexistent::missing::proximate::ash::none::none"
+  });
+  assert.strictEqual(emptyRes.empty, true);
+  assert.ok(elements["show-me-mini-svg"].innerHTML.includes("No matching database records found in snapshot."));
+  assert.strictEqual(elements["show-me-mini-svg"].innerHTML.includes("<circle"), false);
+
+  // 5. Close popover
+  hooks.closeFlagShowMePopover();
+  assert.strictEqual(elements["audit-flag-show-me-popover"].classList.contains("hidden"), true);
+})();
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"Card 13 JS harness failed: {proc.stderr}\n{proc.stdout}"
+
+
+def test_wc1_wc2_wc4_wc5_workbench_gsheet_error_gasification_provenance_and_filters(
+    tmp_path: Path,
+) -> None:
+    """Verify WC-1 (GSheet sync error propagation), WC-2 (Gasification Reactor label),
+    WC-4 (Provenance & Lab Sample Lineage Note in drawer), and WC-5 (Current QC Status, rsd_gt_20, and Min RSD % slider)."""
+    from analysis.metadata.resource_audit_workbench import group_context_label
+
+    node_bin = shutil.which("node")
+    if not node_bin:
+        pytest.skip("node binary not available")
+
+    # Python WC-2 check
+    assert (
+        group_context_label(
+            {
+                "analysis_type": "Gasification",
+                "vessel": "Fluidized Bed",
+                "prep_method": "Pelletized",
+            }
+        )
+        == "Reactor: Fluidized Bed"
+    )
+
+    output_html = tmp_path / "resource_audit_workbench.html"
+    build_resource_audit_workbench(
+        snapshot_path=MINIMAL_SNAPSHOT,
+        output_path=output_html,
+    )
+    html = output_html.read_text(encoding="utf-8")
+    assert 'id="filter-qc-status"' in html
+    assert 'id="filter-min-rsd"' in html
+    assert "btn-rsd-preset" in html
+    assert 'id="btn-reset-filters"' in html
+    assert '<option value="rsd_gt_20">' in html
+    assert 'id="prov-source-badge"' in html
+    assert 'id="prov-lab-note-row"' in html
+    assert 'id="prov-lab-lineage-note"' in html
+    assert 'id="prov-gsheet-sync-error"' in html
+
+    blocks = [
+        block
+        for block in re.findall(
+            r"<script(?![^>]*\bsrc=)(?![^>]*application/json)[^>]*>(.*?)</script>",
+            html,
+            flags=re.S | re.I,
+        )
+        if block.strip()
+    ]
+    assert blocks
+    script_body = blocks[0]
+    harness_js = tmp_path / "workbench_wc_harness.js"
+
+    harness_code = (
+        """
+const assert = require("assert");
+const elements = {};
+function makeEl(id) {
+  const classSet = new Set(id === "prov-lab-note-row" || id === "prov-gsheet-sync-error" ? ["hidden"] : []);
+  const attrs = {};
+  return {
+    id, value: "", checked: false, disabled: false, textContent: "", innerHTML: "", className: "", href: "", style: {}, dataset: {},
+    children: [],
+    classList: {
+      add(c) { classSet.add(c); },
+      remove(c) { classSet.delete(c); },
+      toggle(c) { if (classSet.has(c)) classSet.delete(c); else classSet.add(c); },
+      contains(c) { return classSet.has(c); }
+    },
+    appendChild(child) { this.children.push(child); return child; },
+    addEventListener() {},
+    setAttribute(k, v) { attrs[k] = String(v); if (k === "href") this.href = String(v); },
+    getAttribute(k) { return Object.prototype.hasOwnProperty.call(attrs, k) ? attrs[k] : null; },
+    querySelectorAll() { return []; }
+  };
+}
+const localStore = {};
+global.localStorage = {
+  getItem(k) { return Object.prototype.hasOwnProperty.call(localStore, k) ? localStore[k] : null; },
+  setItem(k, v) { localStore[k] = String(v); },
+  removeItem(k) { delete localStore[k]; }
+};
+global.window = {
+  location: {
+    pathname: "/v1/dashboards/metadata/resource_audit_workbench.html",
+    search: "?decision_id=QC-0001",
+    href: "http://localhost:8000/v1/dashboards/metadata/resource_audit_workbench.html?decision_id=QC-0001",
+    origin: "http://localhost:8000",
+    protocol: "http:"
+  },
+  history: { replaceState() {} },
+  addEventListener() {},
+  dispatchEvent() {}
+};
+global.document = {
+  getElementById(id) {
+    if (!elements[id]) elements[id] = makeEl(id);
+    return elements[id];
+  },
+  querySelectorAll() { return []; },
+  createElement(tag) { return makeEl(tag); },
+  body: makeEl("body")
+};
+global.BroadcastChannel = function() {
+  return { postMessage() {}, close() {}, addEventListener() {} };
+};
+global.CustomEvent = function(name, opts) { return { name, detail: opts ? opts.detail : null }; };
+let mockServerDecisions = [];
+global.fetch = async function(url) {
+  if (String(url).includes("/sync-gsheet")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({
+        status: "sync_failed",
+        synced_to_gsheet: false,
+        sync_error: "record_id_not_found_in_sheet"
+      })
+    };
+  }
+  if (String(url).includes("/v1/qc/decisions")) {
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ decisions: mockServerDecisions })
+    };
+  }
+  return { ok: false, status: 404, json: async () => ({}) };
+};
+"""
+        + "\n"
+        + script_body
+        + "\n"
+        + """
+(async () => {
+  const hooks = global.window.__WORKBENCH_TEST_HOOKS__;
+  assert.ok(hooks, "Expected __WORKBENCH_TEST_HOOKS__ on window");
+
+  // WC-2: Gasification groupContextLabel and computeCanonicalMethodSignature return "Reactor: <vessel>"
+  assert.strictEqual(
+    hooks.groupContextLabel({ analysis_type: "Gasification", vessel: "Fluidized Bed", prep_method: "Pelletized" }),
+    "Reactor: Fluidized Bed"
+  );
+  assert.strictEqual(
+    hooks.computeCanonicalMethodSignature({ analysis_type: "Gasification", vessel: "Fluidized Bed", prep_method: "Pelletized" }),
+    "Reactor: Fluidized Bed"
+  );
+
+  // WC-1: syncSingleDecisionToGsheet must NOT mark synced_to_gsheet=true when API returns synced_to_gsheet=false
+  hooks.state.user.role = "admin";
+  const d1 = hooks.state.decisionsById["QC-0001"];
+  d1.db_id = 42;
+  d1.synced_to_gsheet = false;
+  hooks.syncSingleDecisionToGsheet("QC-0001");
+  await new Promise((r) => setTimeout(r, 30));
+  assert.strictEqual(d1.synced_to_gsheet, false, "Expected synced_to_gsheet to remain false on sync failure");
+  assert.strictEqual(d1.sync_error, "record_id_not_found_in_sheet");
+  assert.strictEqual(elements["prov-gsheet-sync-error"].style.display, "block");
+  assert.ok(elements["prov-gsheet-sync-error"].textContent.includes("record_id_not_found_in_sheet"));
+
+  // WC-1: syncBatchDecisionsToGsheet partial success without per-item results must NOT mark all candidates as failed
+  const d2 = hooks.state.decisionsById["QC-0002"];
+  d1.decision_status = "resolved";
+  d2.decision_status = "resolved";
+  d1.synced_to_gsheet = false;
+  d2.synced_to_gsheet = false;
+  d1.sync_error = "";
+  d2.sync_error = "";
+  global.fetch = async function(url) {
+    if (String(url).includes("/sync-gsheet-batch")) {
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({
+          status: "warning",
+          synced_count: 1,
+          failed_count: 1
+        })
+      };
+    }
+    if (String(url).includes("/v1/qc/decisions")) {
+      return { ok: true, status: 200, json: async () => ({ decisions: mockServerDecisions }) };
+    }
+    return { ok: false, status: 404, json: async () => ({}) };
+  };
+  hooks.syncBatchDecisionsToGsheet();
+  await new Promise((r) => setTimeout(r, 40));
+  assert.strictEqual(d1.sync_error || "", "", "Partial batch without per-item results must not fabricate sync_error on every candidate");
+
+  // WC-4: refreshQcStateFromApi preserves submitted_at, submitted_by_email, lab_lineage_note, and source_label
+  mockServerDecisions = [
+    {
+      id: 42,
+      decision_id: "QC-0042",
+      record_table: d1.record_table,
+      record_id: d1.record_id,
+      replicate_group_key: d1.replicate_group_key,
+      decision_status: "in_review",
+      submitted_at: "2026-10-28T14:22:00Z",
+      submitted_by_email: "field.analyst@lbl.gov",
+      lab_lineage_note: "FS: AH-FS-01 (2026-01-10) -> PS: AH-PREP-01 (Milled 2mm)",
+      source_label: "Submitted from Page 1 (Resource Overview)"
+    }
+  ];
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+  assert.strictEqual(d1.submitted_at, "2026-10-28T14:22:00Z");
+  assert.strictEqual(d1.submitted_by_email, "field.analyst@lbl.gov");
+  assert.strictEqual(d1.lab_lineage_note, "FS: AH-FS-01 (2026-01-10) -> PS: AH-PREP-01 (Milled 2mm)");
+  assert.strictEqual(d1.source_label, "Submitted from Page 1 (Resource Overview)");
+  hooks.renderContextualDrawer();
+  assert.strictEqual(elements["prov-source-badge"].textContent, "Submitted from Page 1 (Resource Overview)");
+  assert.strictEqual(elements["prov-lab-note-row"].style.display, "block");
+  assert.strictEqual(
+    elements["prov-lab-lineage-note"].textContent,
+    "FS: AH-FS-01 (2026-01-10) -> PS: AH-PREP-01 (Milled 2mm)"
+  );
+
+  // WC-5: matchesFacetFilters supports qcStatus ("pass" strictly excludes fail -> fail), flagType="rsd_gt_20", setMinRsdFilter, and resetAllFilters
+  hooks.state.filters.qcStatus = "pass";
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ current_qc_status: "fail", new_qc_status: "fail", decision: "exclude_qc_fail", rsd_pct: 12.0 }),
+    false,
+    "qcStatus='pass' must strictly filter out fail -> fail rows"
+  );
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ current_qc_status: "fail", new_qc_status: "provisional", decision: "pending", rsd_pct: 12.0 }),
+    false,
+    "qcStatus='pass' must filter out pending rows that are currently fail"
+  );
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ current_qc_status: "pass", new_qc_status: "fail", decision: "exclude_qc_fail", rsd_pct: 12.0 }),
+    false,
+    "qcStatus='pass' must filter out pass -> fail rows whose effective current status is fail"
+  );
+  assert.strictEqual(
+    hooks.matchesFacetFilters({ current_qc_status: "pass", new_qc_status: "provisional", decision: "pending", rsd_pct: 12.0 }),
+    true
+  );
+
+  hooks.state.filters.qcStatus = "fail";
+  assert.strictEqual(hooks.matchesFacetFilters({ current_qc_status: "fail", rsd_pct: 12.0 }), true);
+  assert.strictEqual(hooks.matchesFacetFilters({ current_qc_status: "pass", rsd_pct: 12.0 }), false);
+  hooks.state.filters.qcStatus = "mixed";
+  assert.strictEqual(hooks.matchesFacetFilters({ flags: ["mixed_qc"], current_qc_status: "pass" }), true);
+  assert.strictEqual(hooks.matchesFacetFilters({ flags: ["dixon_q"], current_qc_status: "pass" }), false);
+
+  hooks.state.filters.qcStatus = "";
+  hooks.state.filters.flagType = "rsd_gt_20";
+  assert.strictEqual(hooks.matchesFacetFilters({ rsd_pct: 25.4, flags: [] }), true);
+  assert.strictEqual(hooks.matchesFacetFilters({ rsd_pct: 14.0, flags: [] }), false);
+
+  hooks.state.filters.flagType = "";
+  hooks.setMinRsdFilter(15);
+  assert.strictEqual(hooks.state.filters.minRsd, 15);
+  assert.strictEqual(hooks.matchesFacetFilters({ rsd_pct: 18.2 }), true);
+  assert.strictEqual(hooks.matchesFacetFilters({ rsd_pct: 9.5 }), false);
+
+  // WC-5: resetAllFilters resets all filters cleanly
+  hooks.state.filters.search = "moisture";
+  hooks.state.filters.resource = "almond hulls";
+  hooks.state.filters.analysisType = "proximate";
+  hooks.state.filters.parameter = "ash";
+  hooks.state.filters.assignedAnalyst = "petersmith@lbl.gov";
+  hooks.resetAllFilters();
+  assert.strictEqual(hooks.state.filters.search, "");
+  assert.strictEqual(hooks.state.filters.resource, "");
+  assert.strictEqual(hooks.state.filters.analysisType, "");
+  assert.strictEqual(hooks.state.filters.parameter, "");
+  assert.strictEqual(hooks.state.filters.flagType, "");
+  assert.strictEqual(hooks.state.filters.minRsd, 0);
+  assert.strictEqual(hooks.state.filters.qcStatus, "");
+  assert.strictEqual(hooks.state.filters.assignedAnalyst, "");
+
+  // Show-Me popover demarcates qc_fail data points with diamond+cross marker (show-me-qc-fail-diamond)
+  const grp1 = hooks.findReplicateGroupForDecision(d1);
+  assert.ok(grp1 && Array.isArray(grp1.replicates) && grp1.replicates.length > 0);
+  const origQc = grp1.replicates[0].qc_status;
+  grp1.replicates[0].qc_status = "fail";
+  hooks.openFlagShowMePopover({ decisionId: "QC-0001" });
+  const failSvg = elements["show-me-mini-svg"].innerHTML;
+  assert.ok(failSvg.includes("show-me-qc-fail-diamond"), "Expected show-me-qc-fail-diamond marker for qc_fail point");
+  assert.ok(failSvg.includes('data-qc-status="fail"'), "Expected data-qc-status='fail' attribute");
+  assert.ok(failSvg.includes("[QC_FAIL]"), "Expected [QC_FAIL] label in point tooltip");
+  grp1.replicates[0].qc_status = origQc;
+
+  // Interactive Session Flag Provenance, Merging onto Existing Candidates, Filtering & Sorting:
+  // 1) Server decision with visualizer_flagged matching d1's replicate_group_key merges visualizer_flagged onto d1.flag_types
+  d1.db_id = null;
+  d2.db_id = null;
+  mockServerDecisions = [
+    {
+      id: 77,
+      decision_id: "QC-0077",
+      record_table: d1.record_table,
+      record_id: d1.record_id,
+      replicate_group_key: d1.replicate_group_key,
+      flag_type: "visualizer_flagged",
+      decision_status: "in_review",
+      decision_action: "keep_note",
+      triage_scope: "single",
+      submitted_at: "2026-10-28T16:00:00Z",
+      submitted_by_email: "visualizer.user@lbl.gov",
+      source_label: "Page 3 — Interactive Data Visualizer",
+      review_note: "Flagged single replicate in Visualizer"
+    },
+    {
+      id: 78,
+      decision_id: "QC-0078",
+      record_table: d2.record_table,
+      record_id: d2.record_id,
+      replicate_group_key: d2.replicate_group_key,
+      flag_type: "stat_snapshot_flagged",
+      decision_status: "in_review",
+      decision_action: "flag_for_review",
+      triage_scope: "group",
+      submitted_at: "2026-10-28T15:00:00Z",
+      submitted_by_email: "snapshot.user@lbl.gov",
+      source_label: "Page 2 — Statistical Snapshot",
+      review_note: "Flagged group in Statistical Snapshot"
+    }
+  ];
+  hooks.refreshQcStateFromApi();
+  await new Promise((r) => setTimeout(r, 30));
+  assert.ok(
+    Array.isArray(d1.flag_types) && d1.flag_types.includes("visualizer_flagged"),
+    "Expected visualizer_flagged merged into d1.flag_types alongside existing statistical flags"
+  );
+  assert.strictEqual(d1.scope_mode, "single");
+  assert.ok(
+    Array.isArray(d2.flag_types) && d2.flag_types.includes("stat_snapshot_flagged"),
+    "Expected stat_snapshot_flagged merged into d2.flag_types"
+  );
+
+  // 2) Filter by visualizer_flagged, stat_snapshot_flagged, and interactive_session
+  hooks.resetAllFilters();
+  hooks.state.activeQueueTab = "in_review";
+  hooks.setQuickFlagFilter("visualizer_flagged");
+  let visIds = hooks.getVisibleQueueDecisionIds();
+  assert.deepStrictEqual(visIds, ["QC-0001"]);
+
+  hooks.setQuickFlagFilter("stat_snapshot_flagged");
+  visIds = hooks.getVisibleQueueDecisionIds();
+  assert.deepStrictEqual(visIds, ["QC-0002"]);
+
+  hooks.setQuickFlagFilter("interactive_session");
+  visIds = hooks.getVisibleQueueDecisionIds();
+  assert.strictEqual(visIds.length, 2);
+
+  // 3) Queue Sorting: recent_first puts QC-0001 (16:00Z) before QC-0002 (15:00Z); flagged_by sorts snapshot.user before visualizer.user
+  hooks.setQueueSortBy("recent_first");
+  assert.deepStrictEqual(hooks.getVisibleQueueDecisionIds(), ["QC-0001", "QC-0002"]);
+  hooks.setQueueSortBy("flagged_by");
+  assert.deepStrictEqual(hooks.getVisibleQueueDecisionIds(), ["QC-0002", "QC-0001"]);
+  hooks.setQueueSortBy("scope");
+  assert.deepStrictEqual(hooks.getVisibleQueueDecisionIds(), ["QC-0002", "QC-0001"]);
+  hooks.resetAllFilters();
+  assert.strictEqual(hooks.state.filters.sortBy, "default");
+})();
+"""
+    )
+    harness_js.write_text(harness_code, encoding="utf-8")
+    proc = subprocess.run(
+        [node_bin, str(harness_js)],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, f"WC workbench JS harness failed: {proc.stderr}\n{proc.stdout}"
