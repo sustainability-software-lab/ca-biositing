@@ -1,14 +1,17 @@
 """BioCirV Public Dataset (`biocirv_public`) materialized views package.
 
-This package provides SQLAlchemy `select()` expressions for the 5 materialized
+This package provides SQLAlchemy `select()` expressions for the 2 materialized
 views in the `biocirv_public` PostgreSQL schema supporting the BioCirV Living
-Dataset (Stage 1 Zenodo release, `/v1/public` open API, and MCP server).
+Dataset (Stage 1 Zenodo release and `/v1/public` open API):
+- `mv_analytical_summary`
+- `mv_resources`
 
 All views are governed by the centralized QC and privacy filter helpers in
 `ca_biositing.datamodels.data_portal_views.common`:
 - `get_resource_filter`
 - `get_provider_filter`
 - `get_qc_status_filter`
+- `get_etl_load_date_filter`
 - `get_icp_filter`
 - `get_sum_constraints_subquery`
 """
@@ -25,13 +28,22 @@ from sqlalchemy.sql.expression import ColumnElement, FunctionElement
 
 BIOCIRV_PUBLIC_SCHEMA = "biocirv_public"
 
-# Explicit dependency order: mv_analytical_observations MUST be created/refreshed first.
+# Stage 1 release scope filters for biocirv_public.
+# `BIOCIRV_PUBLIC_ALLOWED_ANALYSIS_TYPES` restricts included analysis types.
+# `BIOCIRV_PUBLIC_ALLOWED_RESOURCES` is an optional resource allowlist (lowercased
+# resource names); when empty, all resources passing global `get_resource_filter`
+# are included.
+BIOCIRV_PUBLIC_ALLOWED_ANALYSIS_TYPES: tuple[str, ...] = (
+    "proximate",
+    "compositional",
+    "icp",
+)
+BIOCIRV_PUBLIC_ALLOWED_RESOURCES: tuple[str, ...] = ()
+
+# Materialized views in biocirv_public.
 BIOCIRV_PUBLIC_VIEW_NAMES: tuple[str, ...] = (
-    "mv_analytical_observations",
-    "mv_samples",
-    "mv_resources",
-    "mv_sample_summary",
     "mv_analytical_summary",
+    "mv_resources",
 )
 
 
@@ -158,20 +170,16 @@ def register_sqlite_udfs(engine_or_conn: Any) -> None:
             pass
 
 
-from .mv_analytical_observations import mv_analytical_observations  # noqa: E402
 from .mv_analytical_summary import mv_analytical_summary  # noqa: E402
 from .mv_resources import mv_resources  # noqa: E402
-from .mv_sample_summary import mv_sample_summary  # noqa: E402
-from .mv_samples import mv_samples  # noqa: E402
 
 __all__ = [
+    "BIOCIRV_PUBLIC_ALLOWED_ANALYSIS_TYPES",
+    "BIOCIRV_PUBLIC_ALLOWED_RESOURCES",
     "BIOCIRV_PUBLIC_SCHEMA",
     "BIOCIRV_PUBLIC_VIEW_NAMES",
-    "mv_analytical_observations",
     "mv_analytical_summary",
     "mv_resources",
-    "mv_sample_summary",
-    "mv_samples",
     "ordered_string_agg",
     "register_sqlite_udfs",
 ]

@@ -40,6 +40,7 @@ from .common import (
     get_hydrogen_avg_expr,
     get_nitrogen_avg_expr,
     get_cn_ratio_expr,
+    get_portal_status_expr,
     get_resource_filter
 )
 from .mv_biomass_volume_estimate import mv_biomass_volume_estimate
@@ -248,6 +249,7 @@ storage_notes_sq = select(
 mv_biomass_search = select(
      Resource.id,
      Resource.name,
+     get_portal_status_expr(Resource.name).label("portal_status"),
      Resource.resource_code,
      Resource.description,
      ResourceClass.name.label("resource_class"),
