@@ -432,12 +432,9 @@ def test_public_resources_list_and_lookup_without_auth(
     assert "id" not in res
     assert "resource_id" not in res
     assert res["resource_name"] == "almond_hulls"
-    assert res["resource_code"] == "ALM-01"
     assert res["field_sample_count"] == 1
     assert res["prepared_sample_count"] == 1
     assert res["provider_count"] == 1
-    assert res["county_count"] == 1
-    assert res["replicate_record_count"] == 4
     assert res["observation_count"] == 8
     assert res["has_proximate"] is True
     assert res["has_compositional"] is True
@@ -450,119 +447,24 @@ def test_public_resources_list_and_lookup_without_auth(
     assert resp_name.status_code == 200
     assert resp_name.json()["resource_name"] == "almond_hulls"
 
-    # Lookup by resource_code
-    resp_code = public_client.get("/v1/public/resources/ALM-01")
-    assert resp_code.status_code == 200
-    assert resp_code.json()["resource_name"] == "almond_hulls"
-
     # Excluded resource 'sargassum' must return 404
     resp_sarg = public_client.get("/v1/public/resources/sargassum")
     assert resp_sarg.status_code == 404
 
 
-def test_public_samples_no_fanout_and_detail(
+def test_public_resource_summaries(
     public_client: TestClient, seeded_public_data
 ):
-    """Verify /v1/public/samples does not fan out on multiple FieldSampleConditions."""
-    resp = public_client.get("/v1/public/samples")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["total"] == 1
-    sample = body["data"][0]
-    assert "id" not in sample
-    assert "prepared_sample_id" not in sample
-    assert "field_sample_id" not in sample
-    assert sample["prepared_sample_name"] == "PS-ALM-100"
-    assert sample["field_sample_name"] == "FS-ALM-100"
-    assert sample["provider_codename"] == "PROV-ALPHA"
-    assert sample["county_name"] == "Yolo"
-    assert sample["ag_treatment_name"] == "Conventional; Irrigated"
-    assert sample["processing_method_name"] == "Hulling"
-    # 4 distinct Stage 1 analytical records vs 8 parameter-level observations
-    assert sample["replicate_record_count"] == 4
-    assert sample["observation_count"] == 8
-
-    # Single sample lookup by prepared_sample_name
-    resp_detail = public_client.get("/v1/public/samples/PS-ALM-100")
-    assert resp_detail.status_code == 200
-    assert resp_detail.json()["prepared_sample_name"] == "PS-ALM-100"
-
-    # Sample summary sub-route by prepared_sample_name
-    resp_sub_summary = public_client.get(
-        "/v1/public/samples/PS-ALM-100/summary",
-        params={"parameter_name": "ash"},
-    )
-    assert resp_sub_summary.status_code == 200
-    assert resp_sub_summary.json()["total"] == 1
-    assert resp_sub_summary.json()["data"][0]["mean_value"] == pytest.approx(12.0)
-
-    # Nonexistent sample returns 404
-    assert public_client.get("/v1/public/samples/PS-NONEXISTENT").status_code == 404
-
-
-def test_public_observations_and_filters(
-    public_client: TestClient, seeded_public_data
-):
-    """Verify /v1/public/analysis/observations filters and excludes Stage 2 / failed rows."""
-    resp = public_client.get("/v1/public/analysis/observations")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["total"] == 8
-
-    # Filter by analysis_type, parameter_name, and prepared_sample_name
-    resp_ash = public_client.get(
-        "/v1/public/analysis/observations",
-        params={
-            "analysis_type": "proximate analysis",
-            "parameter_name": "ash",
-            "prepared_sample_name": "PS-ALM-100",
-            "field_sample_name": "FS-ALM-100",
-        },
-    )
-    assert resp_ash.status_code == 200
-    ash_data = resp_ash.json()["data"]
-    assert len(ash_data) == 2
-    assert sorted(r["value"] for r in ash_data) == [10.0, 14.0]
-    assert {r["technical_replicate_no"] for r in ash_data} == {1, 2}
-
-    # Ultimate analysis (excluded from Stage 1) must return 0 observations
-    resp_ult = public_client.get(
-        "/v1/public/analysis/observations",
-        params={"analysis_type": "ultimate analysis"},
-    )
-    assert resp_ult.status_code == 200
-    assert resp_ult.json()["total"] == 0
-
-
-def test_public_sample_summaries_and_resource_summaries(
-    public_client: TestClient, seeded_public_data
-):
-    """Verify replicate averaging in /sample-summaries and /summaries including std_dev."""
-    resp_ss = public_client.get(
-        "/v1/public/analysis/sample-summaries",
-        params={"parameter_name": "ash", "prepared_sample_name": "PS-ALM-100"},
-    )
-    assert resp_ss.status_code == 200
-    ss_rows = resp_ss.json()["data"]
-    assert len(ss_rows) == 1
-    ss = ss_rows[0]
-    assert ss["prepared_sample_name"] == "PS-ALM-100"
-    assert ss["mean_value"] == pytest.approx(12.0)
-    assert ss["std_dev"] == pytest.approx(2.8284, rel=1e-3)
-    assert ss["min_value"] == pytest.approx(10.0)
-    assert ss["max_value"] == pytest.approx(14.0)
-    assert ss["replicate_count"] == 2
-
+    """Verify replicate averaging in /v1/public/analysis/summaries including std_dev."""
     resp_as = public_client.get(
         "/v1/public/analysis/summaries",
-        params={"parameter_name": "ash", "county_name": "Yolo"},
+        params={"parameter_name": "ash"},
     )
     assert resp_as.status_code == 200
     as_rows = resp_as.json()["data"]
     assert len(as_rows) == 1
     summary = as_rows[0]
     assert summary["resource_name"] == "almond_hulls"
-    assert summary["county_name"] == "Yolo"
     assert summary["mean_value"] == pytest.approx(12.0)
     assert summary["std_dev"] == pytest.approx(2.8284, rel=1e-3)
     assert summary["prepared_sample_count"] == 1
@@ -595,15 +497,6 @@ def test_public_discovery_endpoints(
     }
     assert prox_param_names == {"ash", "moisture", "volatile solids"}
 
-    resp_counties = public_client.get("/v1/public/discovery/counties")
-    assert resp_counties.status_code == 200
-    counties = resp_counties.json()
-    assert len(counties) == 1
-    assert counties[0]["county_name"] == "Yolo"
-    assert counties[0]["geoid"] == "06113"
-    assert counties[0]["prepared_sample_count"] == 1
-    assert counties[0]["observation_count"] == 8
-
 
 def test_public_bounded_pagination_rejects_limit_over_100(
     public_client: TestClient, seeded_public_data
@@ -611,9 +504,6 @@ def test_public_bounded_pagination_rejects_limit_over_100(
     """Verify invalid pagination bounds (limit<=0, limit>100, skip<0, skip>10000) return HTTP 422."""
     for path in (
         "/v1/public/resources",
-        "/v1/public/samples",
-        "/v1/public/analysis/observations",
-        "/v1/public/analysis/sample-summaries",
         "/v1/public/analysis/summaries",
     ):
         for bad_params in (
@@ -779,18 +669,16 @@ def test_public_responses_contain_no_sensitive_or_excluded_strings(
     """Verify no street addresses, coordinates, notes, or QC-excluded items appear in JSON."""
     endpoints = [
         "/v1/public/resources",
-        "/v1/public/samples",
-        "/v1/public/analysis/observations",
-        "/v1/public/analysis/sample-summaries",
         "/v1/public/analysis/summaries",
         "/v1/public/discovery/analysis-types",
         "/v1/public/discovery/parameters",
-        "/v1/public/discovery/counties",
     ]
     forbidden_substrings = [
         "999 Confidential Grower Rd",
         "38.5449",
         "-121.7405",
+        "Yolo",
+        "06113",
         "PRIVATE FIELD NOTE",
         "PRIVATE PREP NOTE",
         "SECRET RECORD NOTE",
@@ -827,9 +715,6 @@ def test_public_responses_expose_no_surrogate_database_id_fields(
     }
     paginated_endpoints = [
         "/v1/public/resources",
-        "/v1/public/samples",
-        "/v1/public/analysis/observations",
-        "/v1/public/analysis/sample-summaries",
         "/v1/public/analysis/summaries",
     ]
     for ep in paginated_endpoints:
@@ -840,3 +725,28 @@ def test_public_responses_expose_no_surrogate_database_id_fields(
         for row in rows:
             leaked = set(row.keys()) & forbidden_id_keys
             assert not leaked, f"Surrogate ID key(s) {sorted(leaked)} exposed in {ep}"
+
+
+def test_public_removed_stage1_routes_return_404_and_absent_from_openapi(
+    public_client: TestClient, seeded_public_data
+):
+    """Verify removed sample/observation/county routes are absent from Stage 1 API."""
+    for removed_path in (
+        "/v1/public/samples",
+        "/v1/public/samples/PS-ALM-100",
+        "/v1/public/analysis/observations",
+        "/v1/public/analysis/sample-summaries",
+        "/v1/public/discovery/counties",
+    ):
+        assert public_client.get(removed_path).status_code == 404
+
+    openapi_paths = {
+        p for p in app.openapi()["paths"].keys() if p.startswith("/v1/public")
+    }
+    assert openapi_paths == {
+        "/v1/public/resources",
+        "/v1/public/resources/{resource}",
+        "/v1/public/analysis/summaries",
+        "/v1/public/discovery/analysis-types",
+        "/v1/public/discovery/parameters",
+    }

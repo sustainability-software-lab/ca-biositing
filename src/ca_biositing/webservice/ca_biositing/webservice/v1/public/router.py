@@ -22,14 +22,10 @@ from ca_biositing.webservice.services.public_dataset_service import (
 
 from .schemas import (
     DiscoveryAnalysisTypeItem,
-    DiscoveryCountyItem,
     DiscoveryParameterItem,
     PaginatedPublicResponse,
     PublicAnalyticalSummaryItem,
-    PublicObservationItem,
     PublicResourceItem,
-    PublicSampleItem,
-    PublicSampleSummaryItem,
 )
 
 _RATE_LIMIT_WINDOW_SECONDS = 60.0
@@ -134,9 +130,6 @@ def list_public_resources(
     resource_class: Optional[str] = Query(
         None, description="Filter by resource class (case/underscore-insensitive)"
     ),
-    resource_subclass: Optional[str] = Query(
-        None, description="Filter by resource subclass (case/underscore-insensitive)"
-    ),
     has_proximate: Optional[bool] = Query(
         None, description="Filter by presence of Proximate analysis data"
     ),
@@ -150,7 +143,6 @@ def list_public_resources(
     return PublicDatasetService.list_resources(
         session,
         resource_class=resource_class,
-        resource_subclass=resource_subclass,
         has_proximate=has_proximate,
         has_compositional=has_compositional,
         has_icp=has_icp,
@@ -162,7 +154,7 @@ def list_public_resources(
 @router.get(
     "/resources/{resource}",
     response_model=PublicResourceItem,
-    summary="Get a single biomass resource by name or resource code",
+    summary="Get a single biomass resource by name",
 )
 def get_public_resource(
     resource: str,
@@ -172,192 +164,15 @@ def get_public_resource(
 
 
 @router.get(
-    "/samples",
-    response_model=PaginatedPublicResponse[PublicSampleItem],
-    summary="List de-identified field and prepared samples in the Stage 1 release",
-)
-def list_public_samples(
-    session: SessionDep,
-    pagination: PublicPaginationDep,
-    resource: Optional[str] = Query(
-        None, description="Filter by resource name or code"
-    ),
-    county_name: Optional[str] = Query(
-        None, description="Filter by county name (e.g. 'San Joaquin')"
-    ),
-    geoid: Optional[str] = Query(
-        None, description="Filter by 5-digit county FIPS GEOID (e.g. '06077')"
-    ),
-    provider_codename: Optional[str] = Query(
-        None, description="Filter by anonymized provider codename"
-    ),
-    prep_method_name: Optional[str] = Query(
-        None, description="Filter by sample preparation method name"
-    ),
-    drying_step: Optional[bool] = Query(
-        None, description="Filter by whether preparation included a drying step"
-    ),
-) -> dict:
-    return PublicDatasetService.list_samples(
-        session,
-        resource=resource,
-        county_name=county_name,
-        geoid=geoid,
-        provider_codename=provider_codename,
-        prep_method_name=prep_method_name,
-        drying_step=drying_step,
-        skip=pagination["skip"],
-        limit=pagination["limit"],
-    )
-
-
-@router.get(
-    "/samples/{prepared_sample_name}",
-    response_model=PublicSampleItem,
-    summary="Get a single de-identified sample by prepared_sample_name",
-)
-def get_public_sample(
-    prepared_sample_name: str,
-    session: SessionDep,
-) -> dict:
-    return PublicDatasetService.get_sample(session, prepared_sample_name)
-
-
-@router.get(
-    "/samples/{prepared_sample_name}/summary",
-    response_model=PaginatedPublicResponse[PublicSampleSummaryItem],
-    summary="List analytical summaries for a specific prepared sample by prepared_sample_name",
-)
-def list_public_sample_summary_by_name(
-    prepared_sample_name: str,
-    session: SessionDep,
-    pagination: PublicPaginationDep,
-    analysis_type: Optional[str] = Query(
-        None,
-        description="Filter by Stage 1 analysis type (proximate, compositional, icp)",
-    ),
-    parameter_name: Optional[str] = Query(
-        None, description="Filter by analytical parameter name"
-    ),
-) -> dict:
-    return PublicDatasetService.list_sample_summaries(
-        session,
-        prepared_sample_name=prepared_sample_name,
-        analysis_type=analysis_type,
-        parameter_name=parameter_name,
-        skip=pagination["skip"],
-        limit=pagination["limit"],
-    )
-
-
-@router.get(
-    "/analysis/observations",
-    response_model=PaginatedPublicResponse[PublicObservationItem],
-    summary="Query technical-replicate analytical observations (Zenodo Stage 1 primary table)",
-)
-def list_public_observations(
-    session: SessionDep,
-    pagination: PublicPaginationDep,
-    resource: Optional[str] = Query(
-        None, description="Filter by resource name or code"
-    ),
-    analysis_type: Optional[str] = Query(
-        None,
-        description="Filter by Stage 1 analysis type (proximate, compositional, icp)",
-    ),
-    parameter_name: Optional[str] = Query(
-        None, description="Filter by analytical parameter name (e.g. 'moisture', 'glucan')"
-    ),
-    prepared_sample_name: Optional[str] = Query(
-        None, description="Filter by prepared_sample_name"
-    ),
-    field_sample_name: Optional[str] = Query(
-        None, description="Filter by field_sample_name"
-    ),
-    county_name: Optional[str] = Query(
-        None, description="Filter by county name"
-    ),
-    geoid: Optional[str] = Query(
-        None, description="Filter by 5-digit county FIPS GEOID"
-    ),
-    provider_codename: Optional[str] = Query(
-        None, description="Filter by anonymized provider codename"
-    ),
-    drying_step: Optional[bool] = Query(
-        None, description="Filter by whether preparation included a drying step"
-    ),
-) -> dict:
-    return PublicDatasetService.list_observations(
-        session,
-        resource=resource,
-        analysis_type=analysis_type,
-        parameter_name=parameter_name,
-        prepared_sample_name=prepared_sample_name,
-        field_sample_name=field_sample_name,
-        county_name=county_name,
-        geoid=geoid,
-        provider_codename=provider_codename,
-        drying_step=drying_step,
-        skip=pagination["skip"],
-        limit=pagination["limit"],
-    )
-
-
-@router.get(
-    "/analysis/sample-summaries",
-    response_model=PaginatedPublicResponse[PublicSampleSummaryItem],
-    summary="Query sample-level analytical summaries averaged across technical replicates",
-)
-def list_public_sample_summaries(
-    session: SessionDep,
-    pagination: PublicPaginationDep,
-    resource: Optional[str] = Query(
-        None, description="Filter by resource name or code"
-    ),
-    prepared_sample_name: Optional[str] = Query(
-        None, description="Filter by prepared_sample_name"
-    ),
-    analysis_type: Optional[str] = Query(
-        None,
-        description="Filter by Stage 1 analysis type (proximate, compositional, icp)",
-    ),
-    parameter_name: Optional[str] = Query(
-        None, description="Filter by analytical parameter name"
-    ),
-    county_name: Optional[str] = Query(
-        None, description="Filter by county name"
-    ),
-    geoid: Optional[str] = Query(
-        None, description="Filter by 5-digit county FIPS GEOID"
-    ),
-    drying_step: Optional[bool] = Query(
-        None, description="Filter by whether preparation included a drying step"
-    ),
-) -> dict:
-    return PublicDatasetService.list_sample_summaries(
-        session,
-        resource=resource,
-        prepared_sample_name=prepared_sample_name,
-        analysis_type=analysis_type,
-        parameter_name=parameter_name,
-        county_name=county_name,
-        geoid=geoid,
-        drying_step=drying_step,
-        skip=pagination["skip"],
-        limit=pagination["limit"],
-    )
-
-
-@router.get(
     "/analysis/summaries",
     response_model=PaginatedPublicResponse[PublicAnalyticalSummaryItem],
-    summary="Query resource- and county-level analytical summaries (mean, std_dev, min, max, n)",
+    summary="Query resource-level analytical summaries (mean, std_dev, min, max, n)",
 )
 def list_public_analytical_summaries(
     session: SessionDep,
     pagination: PublicPaginationDep,
     resource: Optional[str] = Query(
-        None, description="Filter by resource name or code"
+        None, description="Filter by resource name"
     ),
     analysis_type: Optional[str] = Query(
         None,
@@ -365,12 +180,6 @@ def list_public_analytical_summaries(
     ),
     parameter_name: Optional[str] = Query(
         None, description="Filter by analytical parameter name"
-    ),
-    county_name: Optional[str] = Query(
-        None, description="Filter by county name"
-    ),
-    geoid: Optional[str] = Query(
-        None, description="Filter by 5-digit county FIPS GEOID"
     ),
 ) -> dict:
     return PublicDatasetService.list_analytical_summaries(
@@ -378,8 +187,6 @@ def list_public_analytical_summaries(
         resource=resource,
         analysis_type=analysis_type,
         parameter_name=parameter_name,
-        county_name=county_name,
-        geoid=geoid,
         skip=pagination["skip"],
         limit=pagination["limit"],
     )
@@ -401,12 +208,3 @@ def list_public_analysis_types(session: SessionDep) -> list[dict]:
 )
 def list_public_parameters(session: SessionDep) -> list[dict]:
     return PublicDatasetService.list_parameters(session)
-
-
-@router.get(
-    "/discovery/counties",
-    response_model=list[DiscoveryCountyItem],
-    summary="List counties and GEOIDs represented in the Stage 1 release",
-)
-def list_public_counties(session: SessionDep) -> list[dict]:
-    return PublicDatasetService.list_counties(session)
