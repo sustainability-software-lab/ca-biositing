@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from datetime import datetime, timezone
 from prefect import task, get_run_logger
+from sqlalchemy import delete
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 from ca_biositing.pipeline.utils.engine import get_engine
@@ -30,6 +31,20 @@ def load_observation(df: pd.DataFrame):
                     record['updated_at'] = now
                     if record.get('created_at') is None:
                         record['created_at'] = now
+
+                    # Supersede any observation for this (record_id, record_type, parameter_id)
+                    # recorded under a different unit (e.g. a corrected ppm value replacing a
+                    # stale %), since unit_id is part of the upsert conflict key below and a
+                    # unit change would otherwise insert alongside the old row instead of
+                    # replacing it.
+                    session.execute(
+                        delete(Observation).where(
+                            Observation.record_id == record['record_id'],
+                            Observation.record_type == record['record_type'],
+                            Observation.parameter_id == record['parameter_id'],
+                            Observation.unit_id.is_distinct_from(record['unit_id']),
+                        )
+                    )
 
                     stmt = insert(Observation).values(record)
                     update_dict = {

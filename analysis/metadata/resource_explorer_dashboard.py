@@ -266,6 +266,9 @@ def fetch_all_resource_data() -> dict:
             LEFT JOIN decon_vessel v ON ar.vessel_id = v.id
             LEFT JOIN strain st ON ar.strain_id = st.id
             LEFT JOIN bioconversion_method bm ON ar.bioconv_id = bm.id
+            WHERE ar.analysis_type != 'ICP Elemental Analysis'
+               OR o.value IS NULL
+               OR LOWER(u.name) = 'ppm'
             ORDER BY COALESCE(r.name, r_via_ps.name, 'Unassigned'), ar.analysis_type, ar.record_id
             """
         )
