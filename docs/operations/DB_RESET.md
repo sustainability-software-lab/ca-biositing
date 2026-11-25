@@ -37,7 +37,9 @@ that uses Jinja2-templated SQL files.
     (`auth`, which holds the API credential tables) are never granted to the
     read-only role; any stale grants there are revoked.
 
-Both lists live in `resources/config/db_reset.yaml`.
+Both lists live in `resources/config/db_reset.yaml`. To move the auth tables on
+an existing database without a reset, follow
+[AUTH_SCHEMA_MIGRATION.md](AUTH_SCHEMA_MIGRATION.md).
 
 ---
 
