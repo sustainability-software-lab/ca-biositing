@@ -24,9 +24,10 @@ class ApiKey(SQLModel, table=True):
     """
 
     __tablename__ = "api_key"
+    __table_args__ = {"schema": "auth"}
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    api_user_id: int = Field(foreign_key="api_user.id", nullable=False, index=True)
+    api_user_id: int = Field(foreign_key="auth.api_user.id", nullable=False, index=True)
     name: str = Field(nullable=False)
     key_prefix: str = Field(nullable=False, index=True)
     key_hash: str = Field(nullable=False, unique=True)

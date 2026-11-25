@@ -3,11 +3,10 @@ type: Decision
 title: "DB tests use SQLite in-memory with selected tables, not Postgres or testcontainers"
 description: Fixtures use SQLite in-memory engines with only needed tables and shims for Postgres-only types; testcontainers is pinned but unused.
 tags: [testing, sqlite, postgres, fixtures, decision]
-generated: { by: "claude-code:claude-haiku-5-5", at: "2026-10-16T22:28:46Z" }
+generated: { by: "copilot-sdk:claude", at: "2026-11-25T22:15:40Z" }
 status: stable
-code_refs: ["src/ca_biositing/datamodels/tests/conftest.py", "tests/webservice/v1/conftest.py", "tests/webservice/conftest.py", "src/ca_biositing/pipeline/tests/conftest.py", "pixi.toml"]
-sources: ["commit bd42ca2", "https://github.com/sustainability-software-lab/ca-biositing/pull/490", "commit 7a41e0e", "https://github.com/sustainability-software-lab/ca-biositing/pull/112"]
 governance: context
+code_refs: [src/ca_biositing/datamodels/tests/conftest.py, tests/webservice/v1/conftest.py, tests/webservice/conftest.py, src/ca_biositing/pipeline/tests/conftest.py, pixi.toml]
 ---
 
 ## Purpose
@@ -24,7 +23,7 @@ Records the chosen test-database strategy and its trade-off. Rationale is inferr
 | src/ca_biositing/datamodels/tests/test_view_filters.py:1-10 | Compiles SQL with `postgresql.dialect()` instead of running it |
 
 ## How it works
-Each test (or function-scoped fixture) builds an in-memory SQLite DB. Postgres-only constructs (PostGIS geometry, `md5()`) are either skipped or shimmed. Sessions in the v1 suite run inside a transaction rolled back after each test.
+Each test (or function-scoped fixture) builds an in-memory SQLite DB. Models in a non-default Postgres schema (the `auth` tables, #580) need `execution_options={"schema_translate_map": {"auth": None}}` on the engine, since SQLite has no schemas. Postgres-only constructs (PostGIS geometry, `md5()`) are either skipped or shimmed. Sessions in the v1 suite run inside a transaction rolled back after each test.
 
 ## Trade-offs
 - Pro: no Docker or network; fast; runs on macOS and Linux CI runners unchanged.

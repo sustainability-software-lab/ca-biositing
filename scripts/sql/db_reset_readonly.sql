@@ -8,9 +8,8 @@
 DO $$
 DECLARE
     s TEXT;
-    t TEXT;
-    seq TEXT;
     schemas TEXT[] := ARRAY[{% for schema in schemas %}'{{ schema }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    private_schemas TEXT[] := ARRAY[{% for schema in private_schemas %}'{{ schema }}'{% if not loop.last %}, {% endif %}{% endfor %}]::TEXT[];
 BEGIN
     -- Grant read-only access to all application schemas
     FOREACH s IN ARRAY schemas LOOP
@@ -30,19 +29,12 @@ BEGIN
         RAISE NOTICE 'Granted read-only access to schema % for %', s, '{{ biocirv_readonly }}';
     END LOOP;
 
-    -- CBS-SEC-003: auth tables (and their sequences) must never be readable by the
-    -- read-only role. No-op right after a wipe; matters when re-run on a migrated DB.
-    FOR t IN SELECT c.oid::regclass::text FROM pg_class c
-             WHERE c.oid IN (to_regclass('public.api_user'), to_regclass('public.api_key'))
-    LOOP
-        EXECUTE format('REVOKE ALL ON TABLE %s FROM %I', t, '{{ biocirv_readonly }}');
-        FOR seq IN SELECT pg_get_serial_sequence(t, a.attname)
-                   FROM pg_attribute a
-                   WHERE a.attrelid = t::regclass AND a.attnum > 0 AND NOT a.attisdropped
-                     AND pg_get_serial_sequence(t, a.attname) IS NOT NULL
-        LOOP
-            EXECUTE format('REVOKE ALL ON SEQUENCE %s FROM %I', seq, '{{ biocirv_readonly }}');
-        END LOOP;
+    -- CBS-SEC-003 / #580: private schemas (auth) hold credentials and must never be
+    -- readable by the read-only role. Explicit revoke guards against stale grants.
+    FOREACH s IN ARRAY private_schemas LOOP
+        EXECUTE format('REVOKE ALL ON SCHEMA %I FROM %I', s, '{{ biocirv_readonly }}');
+        EXECUTE format('REVOKE ALL ON ALL TABLES IN SCHEMA %I FROM %I', s, '{{ biocirv_readonly }}');
+        EXECUTE format('REVOKE ALL ON ALL SEQUENCES IN SCHEMA %I FROM %I', s, '{{ biocirv_readonly }}');
     END LOOP;
 
     RAISE NOTICE 'Phase 3 Complete: Read-only access granted to %', '{{ biocirv_readonly }}';

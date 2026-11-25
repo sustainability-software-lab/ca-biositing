@@ -558,6 +558,17 @@ Alembic migration:
 The same migration adds `api_user.google_sub` (nullable, unique) in the existing
 schema.
 
+> **Coordination note (#580):** `api_user` and `api_key` now live in a dedicated
+> `auth` schema (migration `0029`) that already has the isolation described
+> below: no `USAGE` or default privileges for `biocirv_readonly`, and
+> `scripts/check_readonly_auth_grants.py` checks every table registered under
+> `ca_biositing.datamodels.models.auth`. Before PR 1, decide whether the MCP
+> tables go into `auth` (a model under `models/auth/` is then checked
+> automatically) or stay in a separate `mcp_auth` schema (which then needs its
+> own grants, a `private_schemas` entry in `resources/config/db_reset.yaml`, and
+> an entry in `MANAGED_SCHEMAS` in `alembic/env.py`). Foreign keys use
+> `auth.api_user.id`.
+
 **No inherited grants.** Migration `0002_permissions` sets
 `ALTER DEFAULT PRIVILEGES` on `public`, `ca_biositing`, and `data_portal`, so a
 new table in those schemas would automatically be readable by

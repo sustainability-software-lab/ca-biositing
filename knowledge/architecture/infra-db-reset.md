@@ -3,12 +3,11 @@ type: Architecture
 title: "Database reset tool (scripts/db_reset.py): three SQL phases, safety checks, env targets"
 description: "How the destructive schema reset works per environment: db_reset.yaml targets, wipe/ownership/readonly SQL phases, the confirmation prompt, the target-DB safety check, and the Cloud SQL role model."
 tags: [db, reset, postgres, cloud-sql, operations, destructive]
-generated: { by: "claude-code:claude-haiku-5-5", at: "2026-10-16T22:28:29Z" }
+generated: { by: "copilot-sdk:claude", at: "2026-11-25T22:15:39Z" }
 status: stable
-code_refs: ["scripts/db_reset.py", "scripts/sql/db_reset_wipe.sql", "scripts/sql/db_reset_ownership.sql", "scripts/sql/db_reset_readonly.sql", "resources/config/db_reset.yaml", "docs/operations/DB_RESET.md"]
-sources: ["scripts/db_reset.py", "docs/operations/DB_RESET.md", "resources/config/db_reset.yaml", "commit b656a19", "commit 0ccbb0f", "commit 099c441", "https://github.com/sustainability-software-lab/ca-biositing/pull/464", "https://github.com/sustainability-software-lab/ca-biositing/pull/387"]
 governance: context
-stale_after: "2027-01-16"
+code_refs: [scripts/db_reset.py, scripts/sql/db_reset_wipe.sql, scripts/sql/db_reset_ownership.sql, scripts/sql/db_reset_readonly.sql, resources/config/db_reset.yaml, docs/operations/DB_RESET.md]
+stale_after: 2027-01-16
 ---
 
 ## Purpose
@@ -25,7 +24,7 @@ Drops and rebuilds the `public`, `ca_biositing`, and `data_portal` schemas on a 
 | scripts/sql/db_reset_wipe.sql | Phase 1: `DROP SCHEMA ... CASCADE` for each schema, recreate, grant usage, `CREATE EXTENSION IF NOT EXISTS` for postgis, pg_trgm, unaccent, btree_gin |
 | scripts/sql/db_reset_ownership.sql | Phase 2: `ALTER SCHEMA ... OWNER TO biocirv_user`, grants ALL, `ALTER DEFAULT PRIVILEGES FOR ROLE postgres`, then `REASSIGN OWNED BY postgres TO biocirv_user` |
 | scripts/sql/db_reset_readonly.sql | Phase 3: `GRANT USAGE` and `SELECT` to `biocirv_readonly`, plus default privileges |
-| resources/config/db_reset.yaml | Per-env host, port, DB name, users, env-var fallbacks; schemas and extensions lists |
+| resources/config/db_reset.yaml | Per-env host, port, DB name, users, env-var fallbacks; `schemas`, `private_schemas`, and extensions lists |
 | docs/operations/DB_RESET.md | Operator guide (see Gotchas for drift) |
 | pixi.toml:215-220 | Tasks `db-reset-local`, `-local-dry-run`, `-staging`, `-staging-force`, `-prod`, `-prod-force` |
 
@@ -53,6 +52,7 @@ Each phase runs in its own transaction, after a `current_database()` check that 
 - **Next steps (printed on success)**: `pixi run migrate` (with `POSTGRES_HOST`/`POSTGRES_PORT` pointing at the proxy for cloud), then ETL.
 
 ## Gotchas
+- `private_schemas` (currently `auth`, #580) are wiped and owned by `biocirv_user` like `schemas`, but phase 3 never grants them to `biocirv_readonly` and explicitly revokes any stale grants. Never move `auth` into `schemas`: that would grant the read-only role USAGE, SELECT and default privileges on credential tables. `DatabaseResetOrchestrator.render_phase_sql()` renders a phase without connecting (used by `tests/test_db_reset.py`).
 - `reset()` connects and validates before showing the confirmation prompt (db_reset.py:310-314), so a live connection exists before the prompt. Nothing is written before the prompt, but do not treat the prompt as the first network contact.
 - Dry-run errors are caught and logged, not raised (db_reset.py:333-335). A failing dry run can look like success only in the final log line; read the log.
 - `--force` (and the `*-force` pixi tasks) skip the prompt even for production. Do not use in an unattended job.

@@ -51,7 +51,10 @@ def _wkt_to_ewkb_hex(wkt_str, srid=-1):
 @pytest.fixture(name="engine")
 def engine_fixture():
     """Create an in-memory SQLite engine for testing."""
-    engine = create_engine("sqlite:///:memory:")
+    engine = create_engine(
+        "sqlite:///:memory:",
+        execution_options={"schema_translate_map": {"auth": None}},  # SQLite has no schemas
+    )
 
     # Register mock functions for SQLite to support GeoAlchemy2 without SpatiaLite
     @event.listens_for(engine, "connect")
