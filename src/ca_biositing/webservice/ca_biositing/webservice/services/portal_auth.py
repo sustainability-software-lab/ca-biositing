@@ -294,10 +294,11 @@ def get_optional_portal_user(request: Request) -> Optional[PortalUser]:
 
     Resolution order:
     1. `biocirv_portal_token` HTTP-only cookie
-    2. Trusted `X-Auth-Request-Email` header (when behind `oauth2-proxy`)
-    3. `Authorization: Bearer <portal_jwt>` if valid portal JWT
+    2. `Authorization: Bearer <portal_jwt>` if valid portal JWT
 
-    Note: Never reads CalBioScape's `access_token` cookie.
+    Note: Never reads CalBioScape's `access_token` cookie. Identity is taken
+    only from a verified portal JWT; proxy-supplied headers such as
+    `X-Auth-Request-Email` are not trusted.
     """
     # 1. Check isolated portal cookie
     cookie_token = request.cookies.get(PORTAL_COOKIE_NAME)
@@ -306,15 +307,7 @@ def get_optional_portal_user(request: Request) -> Optional[PortalUser]:
         if user is not None:
             return user
 
-    # 2. Check trusted oauth2-proxy header
-    proxy_email = request.headers.get("X-Auth-Request-Email")
-    if proxy_email and proxy_email.strip():
-        proxy_name = request.headers.get("X-Auth-Request-User")
-        return authorize_portal_email(
-            proxy_email, name=proxy_name, auth_mode="oauth2_proxy"
-        )
-
-    # 3. Check Authorization Bearer header if a portal JWT was sent directly
+    # 2. Check Authorization Bearer header if a portal JWT was sent directly
     auth_header = request.headers.get("Authorization") or ""
     if auth_header.lower().startswith("bearer "):
         bearer_token = auth_header.split(" ", 1)[1].strip()
@@ -324,7 +317,7 @@ def get_optional_portal_user(request: Request) -> Optional[PortalUser]:
                 user.auth_mode = "bearer"
                 return user
 
-    # 4. If dashboard auth is explicitly disabled in config, return a local dev analyst
+    # 3. If dashboard auth is explicitly disabled in config, return a local dev analyst
     if not config.require_dashboard_auth:
         return PortalUser(
             sub="dev@lbl.gov",

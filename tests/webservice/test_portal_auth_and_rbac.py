@@ -491,3 +491,40 @@ def test_login_html_uses_location_replace_for_post_login_redirect() -> None:
 
     assert "window.location.replace(getNextUrl());" in BUILTIN_LOGIN_HTML
     assert "window.location.href =" not in BUILTIN_LOGIN_HTML
+
+
+@pytest.mark.parametrize(
+    ("path", "email"),
+    [
+        ("/v1/qc/gsheet-health", "admin.lead@lbl.gov"),
+        ("/v1/qc/auth/me", "someone@ucdavis.edu"),
+    ],
+)
+def test_x_auth_request_headers_do_not_authenticate_portal_requests(
+    client: TestClient, path: str, email: str
+) -> None:
+    """CBS-SEC-001: identity headers on a direct request must not authenticate."""
+    resp = client.get(
+        path,
+        headers={"X-Auth-Request-Email": email, "X-Auth-Request-User": "spoof"},
+    )
+    assert resp.status_code == 401
+
+
+def test_get_optional_portal_user_ignores_x_auth_request_headers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """CBS-SEC-001: header-only requests resolve to no portal user."""
+    from starlette.requests import Request
+
+    monkeypatch.setattr(config, "require_dashboard_auth", True)
+    monkeypatch.setattr(config, "dashboard_admin_emails", ["admin.lead@lbl.gov"])
+    request = Request(
+        {
+            "type": "http",
+            "method": "GET",
+            "path": "/",
+            "headers": [(b"x-auth-request-email", b"admin.lead@lbl.gov")],
+        }
+    )
+    assert portal_auth_module.get_optional_portal_user(request) is None
