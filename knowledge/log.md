@@ -1,3 +1,10 @@
+## 2026-11-25
+* **Update**: Updated concept `architecture/migrations.md`.
+* **Update**: Updated concept `decisions/testing-sqlite-in-memory-fixtures.md`.
+* **Update**: Updated concept `architecture/migrations.md`.
+* **Update**: Updated concept `architecture/infra-db-reset.md`.
+* **Update**: Updated concept `architecture/datamodels-auth.md`.
+
 ## 2026-10-22
 * **Update**: Linked `facts/current-state.md` to `facts/issue-536-dedupe-report-a-bug.md` (Open issue).
 * **Update**: Linked `facts/current-state.md` to `facts/pr-514.md` (Latest large merge).

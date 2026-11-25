@@ -84,6 +84,18 @@ def include_object(obj, name, type_, reflected, compare_to):
     return True
 
 
+# Schemas compared by autogenerate. None is the default (public) schema; other
+# schemas (ca_biositing, data_portal views) are managed manually.
+MANAGED_SCHEMAS = {None, "public", "auth"}
+
+
+def include_name(name, type_, parent_names):
+    """Restrict autogenerate reflection to MANAGED_SCHEMAS."""
+    if type_ == "schema":
+        return name in MANAGED_SCHEMAS
+    return True
+
+
 def render_item(type_, obj, autogen_context):
     """
     Add custom imports to the migration template for SQLModel types.
@@ -106,6 +118,8 @@ def run_migrations_offline() -> None:
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         render_item=render_item,
+        include_schemas=True,
+        include_name=include_name,
         include_object=include_object,
     )
 
@@ -135,6 +149,8 @@ def run_migrations_online() -> None:
             connection=connection,
             target_metadata=target_metadata,
             render_item=render_item,
+            include_schemas=True,
+            include_name=include_name,
             include_object=include_object,
         )
 

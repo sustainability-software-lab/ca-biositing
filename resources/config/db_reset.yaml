@@ -37,6 +37,10 @@ schemas:
   - ca_biositing
   - data_portal
 
+# Wiped and owned like `schemas`, but never granted to biocirv_readonly.
+private_schemas:
+  - auth
+
 extensions:
   - postgis
   - pg_trgm

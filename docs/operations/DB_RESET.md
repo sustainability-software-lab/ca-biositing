@@ -27,13 +27,19 @@ will be PERMANENTLY DELETED.**
 The reset process is orchestrated by a Python script (`scripts/db_reset.py`)
 that uses Jinja2-templated SQL files.
 
-1.  **Phase 1: Wipe (`db_reset_wipe.sql`)**: Drops `public`, `ca_biositing`, and
-    `data_portal` schemas. Recreates schemas as the current user and grants
-    `ALL` to `biocirv_user`. Enables extensions (`postgis`, etc.).
+1.  **Phase 1: Wipe (`db_reset_wipe.sql`)**: Drops the `public`, `ca_biositing`,
+    `data_portal`, and `auth` schemas. Recreates schemas as the current user and
+    grants `ALL` to `biocirv_user`. Enables extensions (`postgis`, etc.).
 2.  **Phase 2: Control (`db_reset_ownership.sql`)**: Grants `ALL PRIVILEGES` to
     `biocirv_user` and sets `ALTER DEFAULT PRIVILEGES` for future objects.
 3.  **Phase 3: Read-Only (`db_reset_readonly.sql`)**: Grants `SELECT` access to
-    `biocirv_readonly`.
+    `biocirv_readonly` on the `schemas` list only. Schemas in `private_schemas`
+    (`auth`, which holds the API credential tables) are never granted to the
+    read-only role; any stale grants there are revoked.
+
+Both lists live in `resources/config/db_reset.yaml`. To move the auth tables on
+an existing database without a reset, follow
+[AUTH_SCHEMA_MIGRATION.md](AUTH_SCHEMA_MIGRATION.md).
 
 ---
 

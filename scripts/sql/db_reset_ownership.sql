@@ -9,7 +9,7 @@
 DO $$
 DECLARE
     s TEXT;
-    schemas TEXT[] := ARRAY[{% for schema in schemas %}'{{ schema }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+    schemas TEXT[] := ARRAY[{% for schema in schemas + private_schemas %}'{{ schema }}'{% if not loop.last %}, {% endif %}{% endfor %}];
 BEGIN
     -- Grant schema-level control
     FOREACH s IN ARRAY schemas LOOP

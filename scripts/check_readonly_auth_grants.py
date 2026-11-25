@@ -2,7 +2,8 @@
 
 Auth tables are every SQLModel table registered by
 ``ca_biositing.datamodels.models.auth``, so new auth models are checked
-automatically. Their owned sequences are checked too.
+automatically. Their owned sequences are checked too, as is the dedicated
+auth schema itself (no USAGE, no default privileges for the role).
 
 Usage:
     DATABASE_URL=postgresql+psycopg2://... python scripts/check_readonly_auth_grants.py
@@ -37,8 +38,29 @@ def auth_table_names() -> list[str]:
     return sorted(names)
 
 
-def find_violations(conn: sa.Connection, tables: list[str]) -> list[str]:
+def find_schema_violations(conn: sa.Connection, schemas: set[str]) -> list[str]:
+    """Dedicated auth schemas must grant the role no USAGE and no default privileges."""
     violations = []
+    for schema in sorted(schemas - {"public"}):
+        if conn.execute(
+            sa.text("SELECT has_schema_privilege(:role, :s, 'USAGE')"),
+            {"role": READONLY_ROLE, "s": schema},
+        ).scalar():
+            violations.append(f"schema {schema} (USAGE)")
+        if conn.execute(
+            sa.text(
+                "SELECT 1 FROM pg_default_acl d, aclexplode(d.defaclacl) a "
+                "WHERE d.defaclnamespace = CAST(:s AS regnamespace) "
+                "AND a.grantee = CAST(:role AS regrole)"
+            ),
+            {"role": READONLY_ROLE, "s": schema},
+        ).first():
+            violations.append(f"schema {schema} (default privileges)")
+    return violations
+
+
+def find_violations(conn: sa.Connection, tables: list[str]) -> list[str]:
+    violations = find_schema_violations(conn, {t.split(".", 1)[0] for t in tables})
     for qualified in tables:
         if conn.execute(
             sa.text("SELECT has_table_privilege(:role, :t, 'SELECT')"),

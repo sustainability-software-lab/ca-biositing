@@ -3,11 +3,10 @@ type: Architecture
 title: "Alembic migrations: env.py, URL resolution, autogenerate filters, MV handling"
 description: "How alembic/env.py finds SQLModel metadata and the DB URL, which objects autogenerate ignores, how materialized views are migrated, and the chain up to revision 0026."
 tags: [alembic, migrations, database, sqlmodel, materialized-views, pixi]
-generated: { by: "claude-code:claude-haiku-5-5", at: "2026-10-22T21:27:38Z" }
+generated: { by: "copilot-sdk:claude", at: "2026-11-25T22:31:12Z" }
 status: stable
 governance: context
-code_refs: ["alembic/env.py", "alembic.ini", "alembic/versions/0026_add_food_processing_infrastructure_datasets.py", "alembic/versions/0025_add_qc_review_decision_table.py", "alembic/script.py.mako", "scripts/compile_mv_fixes.py", "scripts/db_reset.py", "src/ca_biositing/datamodels/ca_biositing/datamodels/config.py", ".github/workflows/migrations.yml", "pixi.toml"]
-sources: ["commit 7a41e0e", "commit d961724", "commit 2576d03", "commit db578ad", "commit 0ccbb0f", "https://github.com/sustainability-software-lab/ca-biositing/pull/112", "https://github.com/sustainability-software-lab/ca-biositing/pull/258", "https://github.com/sustainability-software-lab/ca-biositing/pull/362", "https://github.com/sustainability-software-lab/ca-biositing/pull/340", "https://github.com/sustainability-software-lab/ca-biositing/pull/387", "docs/pipeline/ALEMBIC_WORKFLOW.md", "alembic/AGENTS.md", "commit f8c9353", "alembic/versions/0026_add_food_processing_infrastructure_datasets.py"]
+code_refs: [alembic/env.py, alembic.ini, alembic/versions/0026_add_food_processing_infrastructure_datasets.py, alembic/versions/0025_add_qc_review_decision_table.py, alembic/script.py.mako, scripts/compile_mv_fixes.py, scripts/db_reset.py, src/ca_biositing/datamodels/ca_biositing/datamodels/config.py, .github/workflows/migrations.yml, pixi.toml]
 ---
 
 ## Purpose
@@ -23,8 +22,9 @@ Schema evolution for the ca-biositing PostgreSQL database. SQLModel classes in `
 | `alembic/env.py:44` | `target_metadata = SQLModel.metadata` |
 | `alembic/env.py:47-55` | `MAT_VIEW_NAMES` set (7 legacy view names, see gotchas) |
 | `alembic/env.py:58` | `include_object` filter |
-| `alembic/env.py:87` | `render_item` adds `import sqlmodel` for sqlmodel types |
-| `alembic/env.py:97` / `:116` | offline / online runners; online uses NullPool and `search_path=public` (line 123-124) |
+| `alembic/env.py:89-96` | `MANAGED_SCHEMAS` and `include_name`: autogenerate reflects only `public` and `auth` |
+| `alembic/env.py:99` | `render_item` adds `import sqlmodel` for sqlmodel types |
+| `alembic/env.py:109` / `:130` | offline / online runners; online uses NullPool and `search_path=public` (line 138) |
 | `alembic/script.py.mako` | revision template (header + upgrade/downgrade stubs) |
 | `src/ca_biositing/datamodels/ca_biositing/datamodels/config.py:44` | `Settings.database_url` (DATABASE_URL, then Cloud Run unix socket, then TCP) |
 | `scripts/compile_mv_fixes.py:206` | `get_latest_revision()` globs `alembic/versions/*.py` for numeric prefixes |
@@ -42,7 +42,7 @@ flowchart LR
 ```
 1. `env.py` resolves the URL and imports models, then builds the engine (online) or emits SQL (offline).
 2. `include_object` (line 58) returns False for: PostGIS system tables (`spatial_ref_sys`, `geometry_columns`, `geography_columns`, `raster_columns`, `raster_overviews`), tables named in `MAT_VIEW_NAMES`, and unique constraints whose columns equal the PK columns.
-3. Autogenerate compares only the default schema (inferred from env.py not setting `include_schemas`; confirm with a dry run). Core tables are created unqualified in `0003_core_tables.py`, so they live in `public`. The MVs live in `ca_biositing` and `data_portal` schemas and are not in `SQLModel.metadata`.
+3. Autogenerate compares the schemas in `MANAGED_SCHEMAS` (`public` and `auth`) via `include_schemas=True` plus an `include_name` filter (#580); `ca_biositing` and `data_portal` are excluded because their MVs are managed by hand. Core tables are created unqualified in `0003_core_tables.py`, so they live in `public`. The MVs live in `ca_biositing` and `data_portal` schemas and are not in `SQLModel.metadata`.
 4. Materialized views: each MV change is a revision that drops and recreates views with embedded SQL (see `0024_centralize_qc_constants_across_data_portal_views.py:26` DROP_INDEX_STATEMENTS, `:81` DROP_VIEW_STATEMENTS, `:556` CREATE_INDEX_STATEMENTS, `:611` upgrade, `:648` downgrade). `compile_mv_fixes.py` renders the SQLAlchemy definitions to text and writes the next revision.
 5. Table-only revisions such as `0026` are written by autogenerate and reviewed by hand (requirements/autogenerate-then-review).
 
@@ -50,7 +50,7 @@ flowchart LR
 - `pixi run migrate` (line 205): `alembic upgrade head` against the Docker DB.
 - `pixi run migrate-autogenerate` (line 211): `alembic revision --autogenerate` (takes no `-m`; pass one via `pixi run alembic revision --autogenerate -m ...`).
 - `pixi run compile-mv-fixes -m "..."` (line 212): writes a new MV revision. `--revision NNNN --force` overwrites an existing one.
-- `pixi run db-reset-local|-staging|-prod[-force]` (lines 215-220): `scripts/db_reset.py`, which wipes `public`, `ca_biositing`, `data_portal` and re-grants. It does not run migrations itself; the docs say run `pixi run migrate` afterwards.
+- `pixi run db-reset-local|-staging|-prod[-force]` (lines 215-220): `scripts/db_reset.py`, which wipes `public`, `ca_biositing`, `data_portal`, and the private `auth` schema and re-grants (read-only role excluded from `auth`). It does not run migrations itself; the docs say run `pixi run migrate` afterwards.
 - `pixi run cloud-migrate` / `cloud-migrate-ci`: runs the `*-migrate` Cloud Run job (`scripts/cloud-migrate-ci.sh`).
 
 ## Interfaces

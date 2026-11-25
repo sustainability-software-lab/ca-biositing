@@ -3,12 +3,11 @@ type: Architecture
 title: "Auth tables: api_user (JWT login) and api_key (hashed keys with DB rate limit)"
 description: "ApiUser and ApiKey models; raw keys never stored, only an Argon2 hash plus a plaintext 8-char prefix; rate-limit window state lives on the key row."
 tags: [datamodels, auth, api-key, jwt, rate-limit, argon2]
-generated: { by: "claude-code:claude-haiku-5-5", at: "2026-10-16T22:26:58Z" }
+generated: { by: "copilot-sdk:claude", at: "2026-11-25T22:15:38Z" }
 status: stable
-code_refs: ["src/ca_biositing/datamodels/ca_biositing/datamodels/models/auth/api_key.py", "src/ca_biositing/datamodels/ca_biositing/datamodels/models/auth/api_user.py", "src/ca_biositing/webservice/ca_biositing/webservice/services/auth_service.py", "src/ca_biositing/webservice/ca_biositing/webservice/dependencies.py"]
-sources: ["commit e289fd1", "commit 203b787", "commit db578ad", "https://github.com/sustainability-software-lab/ca-biositing/pull/248", "https://github.com/sustainability-software-lab/ca-biositing/pull/139", "https://github.com/sustainability-software-lab/ca-biositing/pull/340", "alembic/versions/0003_core_tables.py"]
 governance: constraint
-stale_after: "2026-11-16"
+code_refs: [src/ca_biositing/datamodels/ca_biositing/datamodels/models/auth/api_key.py, src/ca_biositing/datamodels/ca_biositing/datamodels/models/auth/api_user.py, src/ca_biositing/webservice/ca_biositing/webservice/services/auth_service.py, src/ca_biositing/webservice/ca_biositing/webservice/dependencies.py]
+stale_after: 2026-11-16
 ---
 
 ## Purpose
@@ -17,8 +16,8 @@ Persistence for webservice authentication: password-based users issuing JWTs, an
 ## Key files
 | Path:line | Role |
 |---|---|
-| `models/auth/api_user.py:12` | `ApiUser` table `api_user`: `username` (unique, indexed), `hashed_password`, `email`, `full_name`, `is_admin`, `disabled`, timestamps with `server_default=CURRENT_TIMESTAMP` and an ORM-side `onupdate` |
-| `models/auth/api_key.py:12` | `ApiKey` table `api_key`: `api_user_id` FK `api_user.id` (indexed), `name`, `key_prefix` (indexed, first 8 chars), `key_hash` (unique), `is_active`, `rate_limit_per_minute` (default 60), `rate_window_start` (timestamptz), `rate_window_count`, `last_used_at` (timestamptz) |
+| `models/auth/api_user.py:12` | `ApiUser` table `auth.api_user`: `username` (unique, indexed), `hashed_password`, `email`, `full_name`, `is_admin`, `disabled`, timestamps with `server_default=CURRENT_TIMESTAMP` and an ORM-side `onupdate` |
+| `models/auth/api_key.py:12` | `ApiKey` table `auth.api_key`: `api_user_id` FK `auth.api_user.id` (indexed), `name`, `key_prefix` (indexed, first 8 chars), `key_hash` (unique), `is_active`, `rate_limit_per_minute` (default 60), `rate_window_start` (timestamptz), `rate_window_count`, `last_used_at` (timestamptz) |
 | `webservice/.../services/auth_service.py:23` | `PasswordHash.recommended()` (Argon2) |
 | `webservice/.../services/auth_service.py:106-116` | `generate_api_key()` returns `(raw, prefix, hash)`; raw shown once |
 | `webservice/.../services/auth_service.py:119-146` | `validate_api_key()`: lookup by prefix, then hash verify; dummy hash on miss |
@@ -34,6 +33,7 @@ Persistence for webservice authentication: password-based users issuing JWTs, an
 - Output: `ApiUser` / `ApiKey` ORM rows; JWT access token.
 
 ## Gotchas
+- Both tables live in the dedicated `auth` schema (migration `0029`, #580). `biocirv_readonly` has no `USAGE` and no default privileges there, so new auth tables are unreadable by that role by design. Put new auth models under `models/auth/` with `__table_args__ = {"schema": "auth"}`; `scripts/check_readonly_auth_grants.py` (CI, migrations workflow) checks every table registered there plus the schema itself. Index names gain the schema prefix (`ix_auth_...`). SQLite test engines need `execution_options={"schema_translate_map": {"auth": None}}`.
 - The raw key must never be persisted (docstring, `api_key.py:13-16`). Keep it that way in any new endpoint.
 - Fixed window allows roughly 2N requests in a short burst at a window boundary (documented in `api_key.py:19-23`).
 - `updated_at` `onupdate` is SQLAlchemy-side; raw SQL updates will not bump it (inferred).
@@ -41,6 +41,8 @@ Persistence for webservice authentication: password-based users issuing JWTs, an
 - Migrations: the `api_key` table is created inside the squashed `alembic/versions/0003_core_tables.py` (squash in `db578ad`, PR #340). The original standalone migration `b3f2d1c8e9a0_add_api_key_table.py` (from `e289fd1`, PR #248) now lives under `alembic/versions_old/`. `api_user` is in `versions_old/eacbc6544a10_add_api_user_table.py`.
 
 ## History
+- `0028` (#581, CBS-SEC-003): revoked `biocirv_readonly` on `public.api_user`/`public.api_key`.
+- `0029` (#580): moved both tables to the `auth` schema.
 - `203b787` (PR #139): JWT auth for the webservice (added `ApiUser`).
 - `e289fd1` (PR #248, 2026-04-03): per-client API keys with DB-based rate limiting.
 - `db578ad` (PR #340): squashed migrations.

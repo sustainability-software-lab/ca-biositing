@@ -29,6 +29,7 @@ def auth_engine_fixture():
         echo=False,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
+        execution_options={"schema_translate_map": {"auth": None}},  # SQLite has no schemas
     )
     # Create only the api_user table (avoids PostGIS-specific tables)
     with engine.begin() as conn:

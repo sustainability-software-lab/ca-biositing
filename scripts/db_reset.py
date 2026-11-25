@@ -222,7 +222,7 @@ class DatabaseResetOrchestrator:
 ║  Action: DROP ALL SCHEMAS AND REBUILD                             ║
 ║                                                                    ║
 ║  This will:                                                        ║
-║    • Drop schemas: public, ca_biositing, data_portal              ║
+║    • Drop schemas: public, ca_biositing, data_portal, auth        ║
 ║    • Recreate public schema and extensions                        ║
 ║    • Transfer ownership to {str(config['biocirv_user']):<31} ║
 ║    • Grant read-only access to {str(config['biocirv_readonly']):<27} ║
@@ -240,8 +240,8 @@ class DatabaseResetOrchestrator:
 
         return True
 
-    def execute_phase(self, phase_num: int, sql_file: str):
-        """Execute a single phase of the reset."""
+    def render_phase_sql(self, sql_file: str) -> str:
+        """Render a phase's SQL template with the environment and schema config."""
         sql_path = Path(__file__).parent / "sql" / sql_file
 
         if not sql_path.exists():
@@ -253,13 +253,18 @@ class DatabaseResetOrchestrator:
         # Expand env vars for the template context
         context = self._expand_env_vars(self.env_config)
 
-        # Add global config to context for list-based operations
+        # Add global config to context for list-based operations.
+        # private_schemas are wiped and owned like schemas but never granted to
+        # the read-only role.
         context['schemas'] = self.config.get('schemas', [])
+        context['private_schemas'] = self.config.get('private_schemas', [])
         context['extensions'] = self.config.get('extensions', [])
 
-        # Template the SQL
-        template = Template(sql)
-        rendered_sql = template.render(**context)
+        return Template(sql).render(**context)
+
+    def execute_phase(self, phase_num: int, sql_file: str):
+        """Execute a single phase of the reset."""
+        rendered_sql = self.render_phase_sql(sql_file)
 
         if self.dry_run:
             self.logger.info(f"DRY RUN: Phase {phase_num} - {sql_file}")

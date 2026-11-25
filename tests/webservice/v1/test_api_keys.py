@@ -42,6 +42,7 @@ def key_engine_fixture():
         echo=False,
         connect_args={"check_same_thread": False},
         poolclass=StaticPool,
+        execution_options={"schema_translate_map": {"auth": None}},  # SQLite has no schemas
     )
     with engine.begin() as conn:
         ApiUser.__table__.create(conn, checkfirst=True)

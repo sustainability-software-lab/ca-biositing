@@ -2,19 +2,19 @@
 -- Database Reset: Phase 1 - Wipe Schemas and Restore Core Infrastructure
 -- ============================================================================
 -- This script is executed as the 'postgres' superuser and performs:
---   1. Drop all application schemas (ca_biositing, data_portal, public)
+--   1. Drop all application schemas (ca_biositing, data_portal, public, auth)
 --   2. Recreate the public schema
 --   3. Grant basic permissions to admin and public
 --   4. Enable required PostGIS and utility extensions
 -- ============================================================================
 
 -- Drop schemas (this will cascade-delete all contained objects)
-{% for schema in schemas %}
+{% for schema in schemas + private_schemas %}
 DROP SCHEMA IF EXISTS {{ schema }} CASCADE;
 {% endfor %}
 
 -- Recreate schemas as current user (postgres)
-{% for schema in schemas %}
+{% for schema in schemas + private_schemas %}
 CREATE SCHEMA {{ schema }};
 GRANT ALL ON SCHEMA {{ schema }} TO {{ biocirv_user }};
 {% endfor %}

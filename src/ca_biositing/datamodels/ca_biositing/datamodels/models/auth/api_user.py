@@ -22,6 +22,7 @@ class ApiUser(SQLModel, table=True):
     """
 
     __tablename__ = "api_user"
+    __table_args__ = {"schema": "auth"}
 
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(nullable=False, unique=True, index=True)
