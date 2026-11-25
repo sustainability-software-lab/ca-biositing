@@ -179,7 +179,7 @@
           "auth"
         ],
         "summary": "Refresh",
-        "description": "Issue a new access token for the currently authenticated user.\n\nRequires a valid (non-expired) token via Bearer header or cookie.\nAlso updates the HTTP-only cookie with the new token.",
+        "description": "Issue a new access token for the currently authenticated user.\n\nRequires a valid (non-expired) token via Bearer header or cookie.\nX-API-Key is not accepted, so an API key can never be exchanged for a JWT.\nAlso updates the HTTP-only cookie with the new token.",
         "operationId": "refresh_v1_auth_refresh_post",
         "responses": {
           "200": {

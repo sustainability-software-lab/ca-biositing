@@ -5,7 +5,8 @@ Covers:
 - GET /v1/auth/api-keys — list returns prefix only, not hash; supports pagination and filtering
 - DELETE /v1/auth/api-keys/{id} — revocation blocks further use
 - PATCH /v1/auth/api-keys/{id} — name/rate_limit update
-- X-API-Key grants access to non-admin endpoints (POST /v1/auth/refresh)
+- X-API-Key grants access to non-admin data endpoints (GET /v1/feedstocks/...)
+- X-API-Key cannot be exchanged for a JWT via POST /v1/auth/refresh
 - X-API-Key is blocked from admin endpoints (403)
 - Invalid / revoked X-API-Key returns 401 on non-admin endpoints
 - Rate limit enforcement returns 429
@@ -21,7 +22,11 @@ from sqlmodel import Session, create_engine
 from ca_biositing.datamodels.database import get_session
 from ca_biositing.datamodels.models import ApiKey, ApiUser
 from ca_biositing.webservice.main import app
+from ca_biositing.webservice.services.analysis_service import AnalysisService
 from ca_biositing.webservice.services.auth_service import get_password_hash
+
+# Non-admin data endpoint guarded by get_current_user (accepts X-API-Key).
+API_KEY_PROBE = "/v1/feedstocks/analysis/geoids"
 
 
 # ---------------------------------------------------------------------------
@@ -132,6 +137,12 @@ def user_token_fixture(key_client, regular_user) -> str:
     )
     assert resp.status_code == 200
     return resp.json()["access_token"]
+
+
+@pytest.fixture(name="stub_probe")
+def stub_probe_fixture(monkeypatch):
+    """Stub the probe endpoint's data lookup; the test DB has no analysis view."""
+    monkeypatch.setattr(AnalysisService, "list_geoids", staticmethod(lambda session: []))
 
 
 # ---------------------------------------------------------------------------
@@ -272,11 +283,11 @@ class TestRevokeApiKey:
         # Clear the login cookie so only X-API-Key is available for auth.
         key_client.cookies.clear()
 
-        # Revoked key must now return 401 on a non-admin endpoint (POST /v1/auth/refresh
-        # uses CurrentUserDep, which includes X-API-Key path). 401 confirms auth failed,
-        # not 403 (which would mean auth succeeded but access denied).
-        auth_resp = key_client.post(
-            "/v1/auth/refresh",
+        # Revoked key must now return 401 on a non-admin endpoint that accepts
+        # X-API-Key. 401 confirms auth failed, not 403 (which would mean auth
+        # succeeded but access denied).
+        auth_resp = key_client.get(
+            API_KEY_PROBE,
             headers={"X-API-Key": raw_key},
         )
         assert auth_resp.status_code == 401
@@ -364,7 +375,9 @@ class TestUpdateApiKey:
 class TestApiKeyAuthentication:
     """X-API-Key header authentication on protected endpoints."""
 
-    def test_valid_api_key_grants_non_admin_access(self, key_client, admin_token, admin_user):
+    def test_valid_api_key_grants_non_admin_access(
+        self, key_client, admin_token, admin_user, stub_probe
+    ):
         """Valid X-API-Key grants access to non-admin endpoints (CurrentUserDep)."""
         create_resp = key_client.post(
             "/v1/auth/api-keys",
@@ -376,12 +389,27 @@ class TestApiKeyAuthentication:
         # Clear login cookie so the request must authenticate via X-API-Key only.
         key_client.cookies.clear()
 
-        # POST /v1/auth/refresh uses CurrentUserDep — accessible via X-API-Key.
-        resp = key_client.post(
-            "/v1/auth/refresh",
+        resp = key_client.get(
+            API_KEY_PROBE,
             headers={"X-API-Key": raw_key},
         )
         assert resp.status_code == 200
+
+    def test_admin_api_key_cannot_be_exchanged_for_jwt(self, key_client, admin_token, admin_user):
+        """CBS-SEC-002: an admin-owned API key must not mint a JWT via /refresh."""
+        create_resp = key_client.post(
+            "/v1/auth/api-keys",
+            json={"name": "admin-key", "api_user_id": admin_user.id, "rate_limit_per_minute": 0},
+            headers={"Authorization": f"Bearer {admin_token}"},
+        )
+        raw_key = create_resp.json()["raw_key"]
+        key_client.cookies.clear()
+
+        resp = key_client.post("/v1/auth/refresh", headers={"X-API-Key": raw_key})
+
+        assert resp.status_code == 401
+        assert "access_token" not in resp.json()
+        assert "access_token" not in resp.cookies
 
     def test_valid_api_key_blocked_from_admin_endpoints(self, key_client, admin_token, admin_user):
         """X-API-Key must not access admin endpoints even for admin-linked keys."""
@@ -403,22 +431,23 @@ class TestApiKeyAuthentication:
         assert resp.status_code == 401
 
     def test_invalid_api_key_returns_401(self, key_client, admin_user):
-        # POST /v1/auth/refresh (non-admin, CurrentUserDep) with a bogus key → 401.
-        resp = key_client.post(
-            "/v1/auth/refresh",
+        resp = key_client.get(
+            API_KEY_PROBE,
             headers={"X-API-Key": "invalidkeyvalue12345"},
         )
         assert resp.status_code == 401
 
     def test_no_credentials_returns_401(self, key_client, admin_user):
-        resp = key_client.post("/v1/auth/refresh")
+        resp = key_client.get(API_KEY_PROBE)
         assert resp.status_code == 401
 
 
 class TestRateLimiting:
     """Rate limiting via per-key fixed-window counter."""
 
-    def test_exceeding_rate_limit_returns_429(self, key_client, admin_token, admin_user):
+    def test_exceeding_rate_limit_returns_429(
+        self, key_client, admin_token, admin_user, stub_probe
+    ):
         create_resp = key_client.post(
             "/v1/auth/api-keys",
             json={"name": "rate-limited", "api_user_id": admin_user.id, "rate_limit_per_minute": 3},
@@ -429,28 +458,25 @@ class TestRateLimiting:
         # Clear login cookie so requests must authenticate via X-API-Key only.
         key_client.cookies.clear()
 
-        # POST /v1/auth/refresh is a non-admin endpoint — accessible via X-API-Key.
         # 3 allowed requests must each succeed with 200.
-        # Clear cookies before each request: /refresh sets an access_token cookie that
-        # would take over auth on subsequent calls, bypassing the X-API-Key path.
         for _ in range(3):
-            key_client.cookies.clear()
-            resp = key_client.post(
-                "/v1/auth/refresh",
+            resp = key_client.get(
+                API_KEY_PROBE,
                 headers={"X-API-Key": raw_key},
             )
             assert resp.status_code == 200
 
         # 4th request must be rate-limited.
-        key_client.cookies.clear()
-        resp = key_client.post(
-            "/v1/auth/refresh",
+        resp = key_client.get(
+            API_KEY_PROBE,
             headers={"X-API-Key": raw_key},
         )
         assert resp.status_code == 429
         assert "Retry-After" in resp.headers
 
-    def test_unlimited_key_never_rate_limited(self, key_client, admin_token, admin_user):
+    def test_unlimited_key_never_rate_limited(
+        self, key_client, admin_token, admin_user, stub_probe
+    ):
         create_resp = key_client.post(
             "/v1/auth/api-keys",
             json={"name": "unlimited", "api_user_id": admin_user.id, "rate_limit_per_minute": 0},
@@ -462,9 +488,8 @@ class TestRateLimiting:
         key_client.cookies.clear()
 
         for _ in range(10):
-            key_client.cookies.clear()
-            resp = key_client.post(
-                "/v1/auth/refresh",
+            resp = key_client.get(
+                API_KEY_PROBE,
                 headers={"X-API-Key": raw_key},
             )
             assert resp.status_code == 200
