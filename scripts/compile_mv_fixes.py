@@ -44,6 +44,12 @@ from ca_biositing.datamodels.data_portal_views import (
 # Import ca_biositing views
 from ca_biositing.datamodels import views as ca_views
 
+# Import biocirv_public views
+from ca_biositing.datamodels.biocirv_public_views import (
+    mv_resources,
+    mv_analytical_summary,
+)
+
 # Define views with their metadata and index requirements
 # Schema and name mapping
 VIEWS = [
@@ -191,6 +197,26 @@ VIEWS = [
             "CREATE INDEX idx_usda_census_view_geoid ON ca_biositing.usda_census_view (geoid)",
         ],
     },
+    # biocirv_public schema views (Stage 1 Zenodo release: 2 views)
+    {
+        "name": "mv_resources",
+        "schema": "biocirv_public",
+        "expr": mv_resources,
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_mv_biocirv_resources_name ON biocirv_public.mv_resources (resource_name)",
+            "CREATE INDEX idx_mv_biocirv_resources_class ON biocirv_public.mv_resources (resource_class)",
+        ],
+    },
+    {
+        "name": "mv_analytical_summary",
+        "schema": "biocirv_public",
+        "expr": mv_analytical_summary,
+        "indexes": [
+            "CREATE UNIQUE INDEX idx_mv_biocirv_summary_key ON biocirv_public.mv_analytical_summary (resource_name, analysis_type, parameter_name, unit_name)",
+            "CREATE INDEX idx_mv_biocirv_summary_res_type ON biocirv_public.mv_analytical_summary (resource_name, analysis_type)",
+            "CREATE INDEX idx_mv_biocirv_summary_parameter ON biocirv_public.mv_analytical_summary (parameter_name)",
+        ],
+    },
 ]
 
 
@@ -218,13 +244,29 @@ def get_latest_revision() -> Optional[str]:
     return sorted(revisions)[-1] if revisions else None
 
 
-def generate_migration_content(revision_id: str, down_revision: str, message: str) -> str:
+def generate_migration_content(
+    revision_id: str,
+    down_revision: str,
+    message: str,
+    schema_filter: str = "all",
+    drop_biocirv_schema_on_downgrade: bool = False,
+) -> str:
     """Generate the complete migration file content."""
+
+    selected_views = (
+        VIEWS
+        if schema_filter == "all"
+        else [v for v in VIEWS if v["schema"] == schema_filter]
+    )
+    if not selected_views:
+        raise ValueError(f"No views matched schema filter: {schema_filter}")
+
+    target_schemas = list(dict.fromkeys(v["schema"] for v in selected_views))
 
     # Compile all view SQL
     view_sqls = {}
-    print("Compiling views...")
-    for view_config in VIEWS:
+    print(f"Compiling views (schema={schema_filter})...")
+    for view_config in selected_views:
         view_name = view_config["name"]
         try:
             sql = compile_view(view_config["expr"])
@@ -236,7 +278,7 @@ def generate_migration_content(revision_id: str, down_revision: str, message: st
 
     # Build DROP_INDEX_STATEMENTS
     drop_index_statements = []
-    for view_config in VIEWS:
+    for view_config in selected_views:
         schema = view_config["schema"]
         for index in view_config["indexes"]:
             parts = index.split()
@@ -246,7 +288,7 @@ def generate_migration_content(revision_id: str, down_revision: str, message: st
     # Build DROP_VIEW_STATEMENTS
     drop_view_statements = []
     # Drop in reverse order to handle dependencies (analysis_average depends on analysis_data)
-    for view_config in reversed(VIEWS):
+    for view_config in reversed(selected_views):
         view_name = view_config["name"]
         schema = view_config["schema"]
         drop_view_statements.append(f'    "DROP MATERIALIZED VIEW IF EXISTS {schema}.{view_name} CASCADE",')
@@ -254,10 +296,10 @@ def generate_migration_content(revision_id: str, down_revision: str, message: st
     # Build view SQL definitions section
     view_sql_defs = []
     # Create in original order (respecting dependencies)
-    for view_config in VIEWS:
+    for view_config in selected_views:
         view_name = view_config["name"]
         schema = view_config["schema"]
-        sql = view_sqls[view_name]
+        sql = "\n".join(line.rstrip() for line in view_sqls[view_name].splitlines())
         view_sql_defs.append(f'''{view_name.upper()}_SQL = """
 CREATE MATERIALIZED VIEW {schema}.{view_name} AS
 {sql}
@@ -265,11 +307,42 @@ CREATE MATERIALIZED VIEW {schema}.{view_name} AS
 
     # Build CREATE_INDEX_STATEMENTS
     create_index_statements = []
-    for view_config in VIEWS:
+    for view_config in selected_views:
         for index in view_config["indexes"]:
             create_index_statements.append(f'    "{index}",')
 
     date_str = datetime.date.today().isoformat()
+
+    grant_lines = []
+    for schema in target_schemas:
+        grant_lines.append(f'    op.execute("GRANT USAGE ON SCHEMA {schema} TO biocirv_readonly")')
+        grant_lines.append(f'    op.execute("GRANT SELECT ON ALL TABLES IN SCHEMA {schema} TO biocirv_readonly")')
+
+    default_priv_block = ""
+    if "biocirv_public" in target_schemas:
+        default_priv_block = """
+    for owner in ["biocirv_user", "postgres"]:
+        op.execute(f\"\"\"
+            DO $$
+            BEGIN
+                IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{owner}') THEN
+                    EXECUTE 'ALTER DEFAULT PRIVILEGES FOR ROLE {owner} IN SCHEMA biocirv_public GRANT SELECT ON TABLES TO biocirv_readonly';
+                END IF;
+            END
+            $$;
+        \"\"\")"""
+
+    downgrade_schema_line = (
+        '\n    op.execute("DROP SCHEMA IF EXISTS biocirv_public CASCADE")'
+        if drop_biocirv_schema_on_downgrade
+        else ""
+    )
+
+    schema_create_block = (
+        '    # Ensure schema exists\n    op.execute("CREATE SCHEMA IF NOT EXISTS biocirv_public")\n'
+        if "biocirv_public" in target_schemas
+        else ""
+    )
 
     content = f'''"""{message}
 
@@ -317,26 +390,23 @@ CREATE_INDEX_STATEMENTS = [
 def upgrade() -> None:
     """Recreate materialized views."""
 
-    # Drop all existing indexes
+{schema_create_block}    # Drop existing indexes
     for statement in DROP_INDEX_STATEMENTS:
         op.execute(statement)
 
-    # Drop all existing views
+    # Drop existing views
     for statement in DROP_VIEW_STATEMENTS:
         op.execute(statement)
 
-    # Create all views with new SQL (in order of definition)
-{chr(10).join([f'    op.execute({v["name"].upper()}_SQL)' for v in VIEWS])}
+    # Create views with new SQL (in order of definition)
+{chr(10).join([f'    op.execute({v["name"].upper()}_SQL)' for v in selected_views])}
 
-    # Create all indexes
+    # Create indexes
     for statement in CREATE_INDEX_STATEMENTS:
         op.execute(statement)
 
     # Grant permissions to readonly role
-    op.execute("GRANT USAGE ON SCHEMA data_portal TO biocirv_readonly")
-    op.execute("GRANT SELECT ON ALL TABLES IN SCHEMA data_portal TO biocirv_readonly")
-    op.execute("GRANT USAGE ON SCHEMA ca_biositing TO biocirv_readonly")
-    op.execute("GRANT SELECT ON ALL TABLES IN SCHEMA ca_biositing TO biocirv_readonly")
+{chr(10).join(grant_lines)}{default_priv_block}
 
 
 def downgrade() -> None:
@@ -348,7 +418,7 @@ def downgrade() -> None:
 
     # Drop views
     for statement in DROP_VIEW_STATEMENTS:
-        op.execute(statement)
+        op.execute(statement){downgrade_schema_line}
 '''
     return content
 
@@ -357,6 +427,17 @@ def main():
     parser = argparse.ArgumentParser(description="Compile SQLAlchemy views to Alembic migration.")
     parser.add_argument("-m", "--message", help="Migration message (required if creating new revision)")
     parser.add_argument("--revision", help="Specific revision ID to overwrite (e.g. 0009)")
+    parser.add_argument(
+        "--schema",
+        choices=["all", "data_portal", "ca_biositing", "biocirv_public"],
+        default="all",
+        help="Scope migration to a specific schema (default: all)",
+    )
+    parser.add_argument(
+        "--drop-schema-on-downgrade",
+        action="store_true",
+        help="Drop biocirv_public schema in downgrade() (for initial schema creation migration)",
+    )
     parser.add_argument("--force", action="store_true", help="Force overwrite of existing revision file")
 
     args = parser.parse_args()
@@ -408,7 +489,13 @@ def main():
         print(f"Creating new revision {revision_id} -> {migration_path.name}...")
 
     # Generate content
-    content = generate_migration_content(revision_id, down_revision, message)
+    content = generate_migration_content(
+        revision_id,
+        down_revision,
+        message,
+        schema_filter=args.schema,
+        drop_biocirv_schema_on_downgrade=args.drop_schema_on_downgrade,
+    )
 
     # Write file
     with open(migration_path, "w") as f:

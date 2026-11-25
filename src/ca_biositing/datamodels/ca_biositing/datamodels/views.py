@@ -589,4 +589,28 @@ def refresh_all_views(engine, log_summary=False):
                 after_count = conn.execute(text(f"SELECT COUNT(*) FROM data_portal.{view_name}")).scalar()
                 log_filter_summary(f"data_portal.{view_name}", before_count, after_count)
 
+        # 3. Refresh biocirv_public schema views.
+        from ca_biositing.datamodels.biocirv_public_views import (
+            BIOCIRV_PUBLIC_SCHEMA,
+            BIOCIRV_PUBLIC_VIEW_NAMES,
+        )
+
+        for view_name in BIOCIRV_PUBLIC_VIEW_NAMES:
+            before_count = conn.execute(
+                text(f"SELECT COUNT(*) FROM {BIOCIRV_PUBLIC_SCHEMA}.{view_name}")
+            ).scalar()
+            conn.execute(
+                text(f"REFRESH MATERIALIZED VIEW CONCURRENTLY {BIOCIRV_PUBLIC_SCHEMA}.{view_name}")
+            )
+            after_count = conn.execute(
+                text(f"SELECT COUNT(*) FROM {BIOCIRV_PUBLIC_SCHEMA}.{view_name}")
+            ).scalar()
+            if before_count and before_count > 0 and after_count == 0:
+                print(
+                    f"[WARNING] {BIOCIRV_PUBLIC_SCHEMA}.{view_name} dropped from "
+                    f"{before_count} to 0 rows — check MAX_ETL_LOAD_DATE and QC filters!"
+                )
+            if log_summary:
+                log_filter_summary(f"{BIOCIRV_PUBLIC_SCHEMA}.{view_name}", before_count, after_count)
+
         conn.commit()
