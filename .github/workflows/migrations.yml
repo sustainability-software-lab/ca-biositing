@@ -10,6 +10,7 @@ on:
       - "pixi.toml"
       - "pixi.lock"
       - ".github/workflows/migrations.yml"
+      - "scripts/check_readonly_auth_grants.py"
   push:
     branches:
       - main
@@ -20,6 +21,7 @@ on:
       - "pixi.toml"
       - "pixi.lock"
       - ".github/workflows/migrations.yml"
+      - "scripts/check_readonly_auth_grants.py"
 
 permissions:
   contents: read
@@ -65,6 +67,9 @@ jobs:
 
       - name: Run migrations (upgrade)
         run: pixi run -e py312 alembic upgrade head
+
+      - name: Verify read-only role cannot read auth tables
+        run: pixi run -e py312 python scripts/check_readonly_auth_grants.py
 
       - name: Verify migration head matches models
         run: pixi run -e py312 alembic check
