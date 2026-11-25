@@ -496,7 +496,7 @@ def test_login_html_uses_location_replace_for_post_login_redirect() -> None:
 @pytest.mark.parametrize(
     ("path", "email"),
     [
-        ("/v1/qc/gsheet-health", "petersmith@lbl.gov"),
+        ("/v1/qc/gsheet-health", "admin.lead@lbl.gov"),
         ("/v1/qc/auth/me", "someone@ucdavis.edu"),
     ],
 )
@@ -518,12 +518,13 @@ def test_get_optional_portal_user_ignores_x_auth_request_headers(
     from starlette.requests import Request
 
     monkeypatch.setattr(config, "require_dashboard_auth", True)
+    monkeypatch.setattr(config, "dashboard_admin_emails", ["admin.lead@lbl.gov"])
     request = Request(
         {
             "type": "http",
             "method": "GET",
             "path": "/",
-            "headers": [(b"x-auth-request-email", b"petersmith@lbl.gov")],
+            "headers": [(b"x-auth-request-email", b"admin.lead@lbl.gov")],
         }
     )
     assert portal_auth_module.get_optional_portal_user(request) is None
