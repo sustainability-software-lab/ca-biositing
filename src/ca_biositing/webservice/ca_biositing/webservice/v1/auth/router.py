@@ -13,7 +13,7 @@ from sqlmodel import select
 
 from ca_biositing.datamodels.models import ApiKey, ApiUser
 from ca_biositing.webservice.config import config
-from ca_biositing.webservice.dependencies import AdminUserDep, CurrentUserDep, SessionDep
+from ca_biositing.webservice.dependencies import AdminUserDep, JWTCurrentUserDep, SessionDep
 from ca_biositing.webservice.services.auth_service import (
     authenticate_user,
     create_access_token,
@@ -127,12 +127,13 @@ def register(
 
 @router.post("/refresh", response_model=Token)
 def refresh(
-    current_user: CurrentUserDep,
+    current_user: JWTCurrentUserDep,
     response: Response,
 ) -> Token:
     """Issue a new access token for the currently authenticated user.
 
     Requires a valid (non-expired) token via Bearer header or cookie.
+    X-API-Key is not accepted, so an API key can never be exchanged for a JWT.
     Also updates the HTTP-only cookie with the new token.
     """
     expires = timedelta(minutes=config.jwt_expire_minutes)
