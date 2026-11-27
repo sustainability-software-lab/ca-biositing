@@ -1,10 +1,12 @@
-import pandas as pd
-import numpy as np
 from datetime import datetime, timezone
-from prefect import task, get_run_logger
-from sqlalchemy.dialects.postgresql import insert
+
+import numpy as np
+import pandas as pd
+from prefect import get_run_logger, task
 from sqlalchemy import select
+from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
+
 from ca_biositing.pipeline.utils.engine import get_engine
 
 
@@ -22,6 +24,7 @@ def load(df: pd.DataFrame) -> bool:
         logger = get_run_logger()
     except Exception:
         import logging
+
         logger = logging.getLogger(__name__)
 
     if df is None or df.empty:
@@ -32,53 +35,107 @@ def load(df: pd.DataFrame) -> bool:
 
     try:
         # Lazy import to avoid Docker import hangs
-        from ca_biositing.datamodels.models.infrastructure.crude_oil_pipelines import InfrastructureCrudeOilPipelines
+        from ca_biositing.datamodels.models.infrastructure.crude_oil_pipelines import (
+            InfrastructureCrudeOilPipelines,
+        )
 
         now = datetime.now(timezone.utc)
-        table_columns = {c.name for c in InfrastructureCrudeOilPipelines.__table__.columns}
+        table_columns = {
+            c.name for c in InfrastructureCrudeOilPipelines.__table__.columns
+        }
         records = df.replace({np.nan: None}).to_dict(orient="records")
 
         engine = get_engine()
         with engine.connect() as conn:
             with Session(bind=conn) as session:
-                for i, record in enumerate(records):
-                    if i > 0 and i % 500 == 0:
-                        logger.info(f"Processed {i} records...")
+                batch_size = 1000
+                for start in range(0, len(records), batch_size):
+                    # Deduplicate PKs per statement (avoids PostgreSQL CardinalityViolation on
+                    # ON CONFLICT DO UPDATE); rows without object_id fall back to SERIAL.
+                    pk_batch_by_id = {}
+                    fallback_records = []
 
-                    clean_record = {k: v for k, v in record.items() if k in table_columns}
-                    clean_record["updated_at"] = now
-                    if clean_record.get("created_at") is None:
-                        clean_record["created_at"] = now
+                    for i, record in enumerate(records[start : start + batch_size], start=start):
+                        if i > 0 and i % 500 == 0:
+                            logger.info(f"Processed {i} records...")
 
-                    if clean_record.get("object_id") is not None:
-                        stmt1 = select(InfrastructureCrudeOilPipelines).where(
-                            InfrastructureCrudeOilPipelines.object_id == clean_record.get("object_id")
-                        )
-                    else:
-                        stmt1 = select(InfrastructureCrudeOilPipelines).where(
-                            InfrastructureCrudeOilPipelines.pipeline_name == clean_record.get('pipeline_name'),
-                            InfrastructureCrudeOilPipelines.operator_name == clean_record.get('operator_name'),
-                            InfrastructureCrudeOilPipelines.master_oid == clean_record.get('master_oid'),
-                        )
-                    existing_record = session.scalars(stmt1).first()
+                        clean_record = {}
+                        for k, v in record.items():
+                            if k not in table_columns or (k == "object_id" and v is None):
+                                continue
+                            if k == "object_id" and isinstance(v, float) and v.is_integer():
+                                v = int(v)
+                            clean_record[k] = v
 
-                    if existing_record:
-                        for k, v in clean_record.items():
-                            if k not in ["object_id", "created_at", "record_id"]:
-                                setattr(existing_record, k, v)
-                    else:
+                        clean_record["updated_at"] = now
+                        if clean_record.get("created_at") is None:
+                            clean_record["created_at"] = now
 
-                        stmt2 = insert(InfrastructureCrudeOilPipelines).values(clean_record)
-                        update_dict = {
-                            c.name: stmt2.excluded[c.name]
-                            for c in InfrastructureCrudeOilPipelines.__table__.columns
-                            if c.name not in ["object_id", "created_at"]
-                        }
-                        upsert_stmt = stmt2.on_conflict_do_update(
+                        if "object_id" in clean_record:
+                            obj_id = clean_record["object_id"]
+                            if obj_id in pk_batch_by_id:
+                                prev_created = pk_batch_by_id[obj_id]["created_at"]
+                                pk_batch_by_id[obj_id] = {
+                                    **pk_batch_by_id[obj_id],
+                                    **clean_record,
+                                    "created_at": prev_created,
+                                }
+                            else:
+                                pk_batch_by_id[obj_id] = clean_record
+                        else:
+                            fallback_records.append(clean_record)
+
+                    if pk_batch_by_id:
+                        pk_batch = list(pk_batch_by_id.values())
+                        stmt = insert(InfrastructureCrudeOilPipelines).values(pk_batch)
+                        update_cols = set(pk_batch[0].keys()) - {"object_id", "created_at"}
+                        update_dict = {col: stmt.excluded[col] for col in update_cols}
+                        upsert_stmt = stmt.on_conflict_do_update(
                             index_elements=["object_id"],
                             set_=update_dict,
                         )
                         session.execute(upsert_stmt)
+
+                    if fallback_records:
+                        no_pk_by_key = {}
+                        for clean_record in fallback_records:
+                            nat_key = (
+                                clean_record.get("pipeline_name"),
+                                clean_record.get("operator_name"),
+                                clean_record.get("master_oid"),
+                            )
+                            stmt1 = select(InfrastructureCrudeOilPipelines).where(
+                                InfrastructureCrudeOilPipelines.pipeline_name
+                                == clean_record.get("pipeline_name"),
+                                InfrastructureCrudeOilPipelines.operator_name
+                                == clean_record.get("operator_name"),
+                                InfrastructureCrudeOilPipelines.master_oid
+                                == clean_record.get("master_oid"),
+                            )
+                            existing_record = session.scalars(stmt1).first()
+                            if existing_record is not None:
+                                for k, v in clean_record.items():
+                                    if k not in ("object_id", "created_at"):
+                                        setattr(existing_record, k, v)
+                            elif nat_key in no_pk_by_key:
+                                prev_created = no_pk_by_key[nat_key]["created_at"]
+                                no_pk_by_key[nat_key] = {
+                                    **no_pk_by_key[nat_key],
+                                    **clean_record,
+                                    "created_at": prev_created,
+                                }
+                            else:
+                                no_pk_by_key[nat_key] = clean_record
+
+                        if no_pk_by_key:
+                            session.execute(
+                                insert(InfrastructureCrudeOilPipelines).values(
+                                    list(no_pk_by_key.values())
+                                )
+                            )
+
+                    session.flush()
+                    session.expunge_all()
 
                 session.commit()
 

@@ -1,10 +1,12 @@
-import pandas as pd
-import numpy as np
 from datetime import datetime, timezone
-from prefect import task, get_run_logger
+
+import numpy as np
+import pandas as pd
+from prefect import get_run_logger, task
+from sqlalchemy import or_, select
 from sqlalchemy.dialects.postgresql import insert
-from sqlalchemy import select
 from sqlalchemy.orm import Session
+
 from ca_biositing.pipeline.utils.engine import get_engine
 
 
@@ -18,6 +20,7 @@ def load(df: pd.DataFrame) -> bool:
         logger = get_run_logger()
     except Exception:
         import logging
+
         logger = logging.getLogger(__name__)
 
     if df is None or df.empty:
@@ -36,40 +39,107 @@ def load(df: pd.DataFrame) -> bool:
         engine = get_engine()
         with engine.connect() as conn:
             with Session(bind=conn) as session:
-                for i, record in enumerate(records):
-                    if i > 0 and i % 500 == 0:
-                        logger.info(f"Processed {i} records...")
+                batch_size = 1000
+                for start in range(0, len(records), batch_size):
+                    clean_chunk = []
+                    for i, record in enumerate(records[start : start + batch_size], start=start):
+                        if i > 0 and i % 500 == 0:
+                            logger.info(f"Processed {i} records...")
 
-                    # Keep only columns that exist in the model
-                    clean_record = {k: v for k, v in record.items() if k in table_columns}
-                        # Handle timestamps
-                    clean_record['updated_at'] = now
-                    if clean_record.get('created_at') is None:
-                        clean_record['created_at'] = now
+                        clean_record = {}
+                        for k, v in record.items():
+                            if k not in table_columns or (k == "cafo_manure_id" and v is None):
+                                continue
+                            if k == "cafo_manure_id" and isinstance(v, float) and v.is_integer():
+                                v = int(v)
+                            clean_record[k] = v
 
-                    stmt1 = select(InfrastructureCafoManureLocations).where(
-                        InfrastructureCafoManureLocations.facility_name == clean_record.get('facility_name'),
-                        InfrastructureCafoManureLocations.address_id == clean_record.get('address_id')
-                    )
-                    existing_record = session.scalars(stmt1).first()
+                        clean_record["updated_at"] = now
+                        if clean_record.get("created_at") is None:
+                            clean_record["created_at"] = now
+                        clean_chunk.append(clean_record)
 
-                    if existing_record:
-                        for k, v in clean_record.items():
-                            if k not in ["cafo_manure_id", "created_at", "record_id"]:
-                                setattr(existing_record, k, v)
-                    else:
+                    facility_names = {
+                        r.get("facility_name")
+                        for r in clean_chunk
+                        if r.get("facility_name") is not None
+                    }
+                    conditions = []
+                    if facility_names:
+                        conditions.append(
+                            InfrastructureCafoManureLocations.facility_name.in_(facility_names)
+                        )
+                    if any(r.get("facility_name") is None for r in clean_chunk):
+                        conditions.append(
+                            InfrastructureCafoManureLocations.facility_name.is_(None)
+                        )
 
-                        stmt2 = insert(InfrastructureCafoManureLocations).values(clean_record)
-                        update_dict = {
-                            c.name: stmt2.excluded[c.name]
-                            for c in InfrastructureCafoManureLocations.__table__.columns
-                            if c.name not in ["cafo_manure_id", 'created_at', 'record_id']
-                        }
-                        upsert_stmt = stmt2.on_conflict_do_update(
+                    existing_by_key = {}
+                    if conditions:
+                        stmt1 = select(InfrastructureCafoManureLocations).where(or_(*conditions))
+                        for existing in session.scalars(stmt1):
+                            existing_by_key.setdefault(
+                                (existing.facility_name, existing.address_id), existing
+                            )
+
+                    pending_by_key = {}
+                    for clean_record in clean_chunk:
+                        nat_key = (
+                            clean_record.get("facility_name"),
+                            clean_record.get("address_id"),
+                        )
+                        existing_record = existing_by_key.get(nat_key)
+                        if existing_record is not None:
+                            for k, v in clean_record.items():
+                                if k not in ("cafo_manure_id", "created_at"):
+                                    setattr(existing_record, k, v)
+                        elif nat_key in pending_by_key:
+                            prev_created = pending_by_key[nat_key]["created_at"]
+                            pending_by_key[nat_key] = {
+                                **pending_by_key[nat_key],
+                                **clean_record,
+                                "created_at": prev_created,
+                            }
+                        else:
+                            pending_by_key[nat_key] = clean_record
+
+                    # Deduplicate PKs per statement (avoids PostgreSQL CardinalityViolation on
+                    # ON CONFLICT DO UPDATE); rows without PK rely on the SERIAL sequence.
+                    pk_batch_by_id = {}
+                    no_pk_batch = []
+                    for pending in pending_by_key.values():
+                        if "cafo_manure_id" in pending:
+                            pk_id = pending["cafo_manure_id"]
+                            if pk_id in pk_batch_by_id:
+                                prev_created = pk_batch_by_id[pk_id]["created_at"]
+                                pk_batch_by_id[pk_id] = {
+                                    **pk_batch_by_id[pk_id],
+                                    **pending,
+                                    "created_at": prev_created,
+                                }
+                            else:
+                                pk_batch_by_id[pk_id] = pending
+                        else:
+                            no_pk_batch.append(pending)
+
+                    if pk_batch_by_id:
+                        pk_batch = list(pk_batch_by_id.values())
+                        stmt = insert(InfrastructureCafoManureLocations).values(pk_batch)
+                        update_cols = set(pk_batch[0].keys()) - {"cafo_manure_id", "created_at"}
+                        update_dict = {col: stmt.excluded[col] for col in update_cols}
+                        upsert_stmt = stmt.on_conflict_do_update(
                             index_elements=["cafo_manure_id"],
                             set_=update_dict,
                         )
                         session.execute(upsert_stmt)
+
+                    if no_pk_batch:
+                        session.execute(
+                            insert(InfrastructureCafoManureLocations).values(no_pk_batch)
+                        )
+
+                    session.flush()
+                    session.expunge_all()
 
                 session.commit()
 
